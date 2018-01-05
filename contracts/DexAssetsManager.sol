@@ -1,36 +1,33 @@
 /*!
  * Hubii Network - DEX Smart Contract for assets settlement.
  *
- * Copyright (C) 2017 CoinFabrik
+ * Copyright (C) 2017-2018 Hubii
  */
 pragma solidity ^0.4.15;
 
-import 'zeppelin-solidity/contracts/token/ERC20.sol';
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import './ERC20.sol';
+import './SafeMath.sol';
 
 //TO-DO: Get transactions history
 //       Remove zeppelin dependency
 //       Check security
 
 contract DexAssetsManager {
-	using SafeMath for uint256;
-
 	address private owner;
 
 	struct TransactionInfo {
 		uint256 amount;
 		uint256 timestamp;
+		address token;      //0 for ethers
 	}
 
 	struct PerUserInfo {
-		TransactionInfo[] ethersDeposit;
-		mapping (address => TransactionInfo[]) tokensDeposit;
+		TransactionInfo[] deposits;
 
 		uint256 allowedEthersWithdrawal;
 		mapping (address => uint256) allowedTokensWithdrawal;
 
-		TransactionInfo[] ethersWithdrawal;
-		mapping (address => TransactionInfo[]) tokensWithdrawal;
+		TransactionInfo[] withdrawal;
 	}
 
 	mapping (address => PerUserInfo) private userInfoMap;
@@ -38,12 +35,10 @@ contract DexAssetsManager {
 	//events
 	event OwnerChanged(address oldOwner, address newOwner);
 
-	event EthersDeposited(address from, uint256 amount);
-	event TokensDeposited(address token, address from, uint256 amount);
-	event EthersWithdrawn(address to, uint256 amount);
-	event TokensWithdrawn(address token, address to, uint256 amount);
+	event Deposit(address from, uint256 amount, address token); //token==0 for ethers
+	event Withdraw(address to, uint256 amount, address token);  //token==0 for ethers
 
-	function DexAssetsManager(address _owner) {
+	function DexAssetsManager(address _owner) public {
 		require(_owner != address(0));
 
 		owner = _owner;
@@ -55,28 +50,23 @@ contract DexAssetsManager {
 		address oldOwner = owner;
 
 		owner = newOwner;
+
 		//raise event
 		OwnerChanged(oldOwner, newOwner);
 	}
 
 	function () public payable {
-		TransactionInfo tx;
-
-		require(msg.sender != wallet);
+		require(msg.sender != owner);
 		require(msg.value > 0);
 
 		//add deposit transaction
-		tx.amount = msg.value;
-		tx.timestamp = now;
-		userInfoMap[msg.sender].ethersDeposit.push(tx);
+		userInfoMap[msg.sender].deposits.push(TransactionInfo(msg.value, now, 0));
 
 		//raise event
-		EthersDeposited(msg.sender, tx.amount);
+		Deposit(msg.sender, msg.value, 0);
 	}
 
-	function depositTokens(address tokenAddress, uint256 amount) {
-		TransactionInfo tx;
-
+	function depositTokens(address tokenAddress, uint256 amount) public {
 		require(tokenAddress != address(0));
 		require(amount > 0);
 
@@ -84,19 +74,26 @@ contract DexAssetsManager {
 		require(token.balanceOf(msg.sender) >= amount);
 
 		//add deposit transaction
-		tx.amount = amount;
-		tx.timestamp = now;
-		userInfoMap[msg.sender].tokensDeposit[tokenAddress].push(tx);
+		userInfoMap[msg.sender].deposits.push(TransactionInfo(amount, now, tokenAddress));
 
 		//raise event
-		TokensDeposited(tokenAddress, msg.sender, weiAmount);
+		Deposit(msg.sender, amount, tokenAddress);
+	}
+
+	function getDepositsCount(address user) public view onlyOwner returns (uint256) {
+		return userInfoMap[user].deposits.length;
+	}
+
+	function getDepositsCount(address user, uint index) public view onlyOwner returns (TransactionInfo) {
+		require (index < userInfoMap[user].deposits.length);
+		return userInfoMap[user].deposits[index];
 	}
 
 	function approveEthersWithdrawal(address beneficiary, uint256 amount) public onlyOwner {
 		require(beneficiary != address(0));
 		require(amount > 0);
 
-		userInfoMap[beneficiary].allowedEthersWithdrawal = userInfoMap[beneficiary].allowedEthersWithdrawal.add(amount);
+		userInfoMap[beneficiary].allowedEthersWithdrawal = SafeMath.add(userInfoMap[beneficiary].allowedEthersWithdrawal, amount);
 	}
 
 	function approveTokensWithdrawal(address tokenAddress, address beneficiary, uint256 amount) public onlyOwner {
@@ -104,29 +101,27 @@ contract DexAssetsManager {
 		require(beneficiary != address(0));
 		require(amount > 0);
 
-		userInfoMap[beneficiary].allowedTokensWithdrawal[tokenAddress] = userInfoMap[beneficiary].allowedTokensWithdrawal[tokenAddress].add(amount);
+		userInfoMap[beneficiary].allowedTokensWithdrawal[tokenAddress] = SafeMath.add(userInfoMap[beneficiary].allowedTokensWithdrawal[tokenAddress], amount);
 	}
 
-	function withdrawEthers() {
+	function withdrawEthers() public {
 		uint256 amount = userInfoMap[msg.sender].allowedEthersWithdrawal;
 		userInfoMap[msg.sender].allowedEthersWithdrawal = 0;
 
 		if (amount > 0) {
-			TransactionInfo tx;
-
-			tx.amount = amount;
-			tx.timestamp = now;
+			//add withdrawal transaction
+			userInfoMap[msg.sender].withdrawal.push(TransactionInfo(amount, now, 0));
 
 			//transfer money to sender's wallet
-			msg.sender.transfer(tx.amount);
+			msg.sender.transfer(amount);
 		}
 
 		//raise event
-		EthersWithdrawn(msg.sender, amount);
+		Withdraw(msg.sender, amount, 0);
 	}
 
 
-	function withdrawTokens(address tokenAddress) {
+	function withdrawTokens(address tokenAddress) public {
 		require(tokenAddress != address(0));
 		ERC20 token = ERC20(tokenAddress);
 
@@ -134,17 +129,15 @@ contract DexAssetsManager {
 		userInfoMap[msg.sender].allowedTokensWithdrawal[tokenAddress] = 0;
 
 		if (amount > 0) {
-			TransactionInfo tx;
-
-			tx.amount = amount;
-			tx.timestamp = now;
+			//add withdrawal transaction
+			userInfoMap[msg.sender].withdrawal.push(TransactionInfo(amount, now, tokenAddress));
 
 			//transfer tokens to sender's
-			token.transfer(tx.amount);
+			token.transfer(msg.sender, amount);
 		}
 
 		//raise event
-		TokensWithdrawn(tokenAddress, msg.sender, amount);
+		Withdraw(msg.sender, amount, tokenAddress);
 	}
 
 	modifier onlyOwner() {

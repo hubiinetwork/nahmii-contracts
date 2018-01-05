@@ -1,0 +1,14 @@
+{
+  "name": "omphalos-exchange-smart-contracts",
+  "version": "1.0.0",
+  "description": "Smart Contracts for Hubii's Omphalos Exchange",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hubii",
+  "license": "Commercial"
+}
