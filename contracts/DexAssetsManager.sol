@@ -84,7 +84,7 @@ contract DexAssetsManager {
 		return userInfoMap[user].deposits.length;
 	}
 
-	function getDepositsCount(address user, uint index) public view onlyOwner returns (TransactionInfo) {
+	function getDeposits(address user, uint index) public view onlyOwner returns (TransactionInfo) {
 		require (index < userInfoMap[user].deposits.length);
 		return userInfoMap[user].deposits[index];
 	}
