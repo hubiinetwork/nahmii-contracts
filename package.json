@@ -10,5 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Hubii",
-  "license": "Commercial"
+  "license": "Commercial",
+  "dependencies": {
+    "async": "^2.6.0"
+  }
 }
