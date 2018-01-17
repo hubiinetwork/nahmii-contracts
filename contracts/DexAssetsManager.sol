@@ -84,9 +84,12 @@ contract DexAssetsManager {
 		return userInfoMap[user].deposits.length;
 	}
 
-	function getDeposits(address user, uint index) public view onlyOwner returns (TransactionInfo) {
+	function getDeposits(address user, uint index) public view onlyOwner returns (uint256 amount, uint256 timestamp, address token) {
+		// must check address?
 		require (index < userInfoMap[user].deposits.length);
-		return userInfoMap[user].deposits[index];
+		amount = userInfoMap[user].deposits[index].amount;
+		timestamp = userInfoMap[user].deposits[index].timestamp;
+		token = userInfoMap[user].deposits[index].token;
 	}
 
 	function approveEthersWithdrawal(address beneficiary, uint256 amount) public onlyOwner {
