@@ -13,12 +13,21 @@ contract('DexAssetsManager', function () {
     const user2 = web3.eth.accounts[2];
     const gasLimit = 1400000;
     const ctraddr = DexAssetsManager.address;
+    var deployedDex = null;
+
+    //-------------------------------------------------------------------------
+
+    before("Test setup", function(done) {
+        DexAssetsManager.deployed().then(function (_d) {
+            assert.notEqual(_d, null);
+            deployedDex = _d;
+            done();
+        });
+    });
 
     //-------------------------------------------------------------------------
 
     it("Must successfully deposit ETHERs for two users via default payable() function + successful #getDeposit #getDepositsCount", function (done) {
-
-        var deployedDex = null;
 
         //
         // Helper functions
@@ -31,15 +40,15 @@ contract('DexAssetsManager', function () {
             });
         }
 
-        function _verifyDepositCount(deployed, user, n, cb) {
-            deployed.getDepositsCount(user1).then(function (count) {
+        function _verifyDepositCount(user, n, cb) {
+            deployedDex.getDepositsCount(user1).then(function (count) {
                 assert.equal(count, n, "Unexpected deposit count for user");
                 cb(null);
             });
         }
 
-        function _verifyDeposit(deployed, user, index, ethers, cb) {
-            deployed.getDeposits(user, index).then(function (args) {
+        function _verifyDeposit(user, index, ethers, cb) {
+            deployedDex.getDeposits(user, index).then(function (args) {
                 const amount = args[0];
                 const timestamp = args[1];
                 const token = args[2];
@@ -55,30 +64,21 @@ contract('DexAssetsManager', function () {
         async.waterfall(
             [
                 //
-                // Get deployed contract
-                //
-                function (cb) {
-                    DexAssetsManager.deployed().then(function (_d) {
-                        deployedDex = _d;
-                        cb(null);
-                    });
-                },
-                //
                 // Issue TXs
                 //
-                function (cb) { _sendUserTx(user1, 10, cb); },
-                function (cb) { _sendUserTx(user1, 15, cb); },
-                function (cb) { _sendUserTx(user2, 40, cb); },
-                function (cb) { _sendUserTx(user2, 25, cb); },
+                function (cb) { _sendUserTx(user1, 1, cb); },
+                function (cb) { _sendUserTx(user1, 1.5, cb); },
+                function (cb) { _sendUserTx(user2, 4, cb); },
+                function (cb) { _sendUserTx(user2, 2.5, cb); },
                 //
                 // Verify deposits.
                 //
-                function (cb) { _verifyDepositCount(deployedDex, user1, 2, cb);  },
-                function (cb) { _verifyDepositCount(deployedDex, user2, 2, cb);  },
-                function (cb) { _verifyDeposit(deployedDex, user1, 0, 10, cb); },
-                function (cb) { _verifyDeposit(deployedDex, user1, 1, 15, cb); },
-                function (cb) { _verifyDeposit(deployedDex, user2, 0, 40, cb); },
-                function (cb) { _verifyDeposit(deployedDex, user2, 1, 25, cb); }
+                function (cb) { _verifyDepositCount(user1, 2, cb);  },
+                function (cb) { _verifyDepositCount(user2, 2, cb);  },
+                function (cb) { _verifyDeposit(user1, 0, 1, cb); },
+                function (cb) { _verifyDeposit(user1, 1, 1.5, cb); },
+                function (cb) { _verifyDeposit(user2, 0, 4, cb); },
+                function (cb) { _verifyDeposit(user2, 1, 2.5, cb); }
             ],
             function () {
                 done();
@@ -96,9 +96,7 @@ contract('DexAssetsManager', function () {
                 cb(null);
             });
         }
-
-        var deployedDex = null;
-
+        
         async.waterfall([
             function (cb) { _failUserTx(coinbase, 10, cb); },
             function (cb) { _failUserTx(user1, 0, cb); }
@@ -107,33 +105,23 @@ contract('DexAssetsManager', function () {
     });
 
     //-------------------------------------------------------------------------
-   
+
+    it("Must fail call to #getDeposits with invalid index", function (done) {
+        deployedDex.getDeposits(user1, 9999).then(function(args)  { 
+            done(new Error('getDeposit with invalid index must fail'));
+        },
+        function(err) {
+            done();
+        });
+    });
+
+    
+
+    //-------------------------------------------------------------------------
+
 });
 
 
 
 
-        // it("Must fail call to default payable() contract function from owner or invalid value"), function () {
-
-        //     web3.eth.sendTransaction({ from: web3.eth.accounts[1], to: DexAssetsManager.address, value: web3.toWei(10, 'ether'), gas: 1400000 },
-        //         function (err) {
-        //             assert.equal(err == null);
-        //             web3.eth.sendTransaction({ from: web3.eth.accounts[1], to: DexAssetsManager.address, value: web3.toWei(15, 'ether'), gas: 1400000 },
-        //                 function (err) {
-        //                     assert.equal(err == null);
-        //                     web3.eth.sendTransaction({ from: web3.eth.accounts[2], to: DexAssetsManager.address, value: web3.toWei(40, 'ether'), gas: 1400000 },
-        //                         function (err) {
-        //                             assert.equal(err == null);
-        //                             web3.eth.sendTransaction({ from: web3.eth.accounts[2], to: DexAssetsManager.address, value: web3.toWei(25, 'ether'), gas: 1400000 },
-        //                                 function (err) {
-        //                                     assert.equal(err == null);
-
-        //                                     // verify balances
-
-        //                                     DexAssetsManager.
-        //                                 });
-        //                         });
-        //                 });
-        //         });
-        // }
-
+     
