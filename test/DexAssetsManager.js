@@ -5,6 +5,7 @@
  */
 
 var DexAssetsManager = artifacts.require("DexAssetsManager");
+var ERC20Token = artifacts.require("StandardTokenEx");
 
 contract('DexAssetsManager', function () {
     async = require('async');
@@ -13,15 +14,37 @@ contract('DexAssetsManager', function () {
     const user2 = web3.eth.accounts[2];
     const gasLimit = 1400000;
     const ctraddr = DexAssetsManager.address;
+    const kTokenSupply = 1000;
+    const kTokensForUser1 = 50;
     var deployedDex = null;
+    var deployedErc20 = null;
 
     //-------------------------------------------------------------------------
 
-    before("Test setup", function(done) {
+    before("Preflight: get deployed contracts", function (done) {
         DexAssetsManager.deployed().then(function (_d) {
             assert.notEqual(_d, null);
             deployedDex = _d;
+            deployedErc20 = ERC20Token.new().then(function (_t) {
+                assert.notEqual(_t, null);
+                deployedErc20 = _t;
+                _t.totalSupply = kTokenSupply;
+                done();
+            },
+                function () {
+                    done(new Error('Failed to create ERC20Token instance'));
+                });
+        },
+            function () {
+                done(new Error('Failed to get deployed contract address'));
+            });
+    });
+
+    before("Preflight: distribute test tokens", function (done) {
+        deployedErc20.testMint(user1, kTokensForUser1).then(function () {
             done();
+        }, function(err) {
+            done(new Error('Cannot assign kTokensForUser1: ' + err.message ));
         });
     });
 
@@ -115,7 +138,33 @@ contract('DexAssetsManager', function () {
         });
     });
 
-    
+    //-------------------------------------------------------------------------
+
+    it("Must deposit 5 test tokens in user 1 balance (#depositTokens)", function(done) {
+        deployedDex.depositTokens(deployedErc20.address, 5, { from: user1 }).then(function (args) {
+            done();
+        }, function(err) {
+            done(new Error('token deposit must not fail: ' + err.message));
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("Must fail if #depositTokens is called with zero address, zero amount or out of tokens", function (done) {
+        deployedDex.depositTokens(deployedErc20.address, 0, { from: user1 }).then(function (args) {
+            done(new Error('Zero amount must fail'));
+        }, function (err) {
+            deployedDex.depositTokens(0x0, 5, { from: user1 }).then(function (args) {
+                done(new Error('Zero address must fail'));
+            }, function (err) {
+                deployedDex.depositTokens(deployedErc20.address, 999999, { from: user1 }).then(function (args) {
+                    done(new Error('Out of tokens condition must fail'));
+                }, function (err) {
+                    done();
+                });
+            });
+        });
+    })
 
     //-------------------------------------------------------------------------
 
