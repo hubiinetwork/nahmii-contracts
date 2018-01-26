@@ -26,8 +26,14 @@ contract DexAssetsManager {
 	}
 
 	struct PerUserInfo {
+		uint256 tradeNonce;
 		TransactionInfo[] deposits;
 
+		// Current account balance of ethers and tokens.
+		uint256 etherBalance;
+		mapping (address => uint256) tokenBalance;
+
+		// Current maximum allowed withdrawal amount for ethers and tokens.
 		uint256 allowedEthersWithdrawal;
 		mapping (address => uint256) allowedTokensWithdrawal;
 
@@ -40,7 +46,7 @@ contract DexAssetsManager {
 	event OwnerChanged(address oldOwner, address newOwner);
 	event Deposit(address from, uint256 amount, address token); //token==0 for ethers
 	event Withdraw(address to, uint256 amount, address token);  //token==0 for ethers
-	event TradeCommitted(uint256 nonce, address walletAddress, uint256 netAmount, address token);
+	event TradeCommitted(uint256 nonce, address wallet);
 
 	function DexAssetsManager(address _owner) public {
 		require(_owner != address(0));
@@ -72,10 +78,11 @@ contract DexAssetsManager {
 		ERC20 token = ERC20(tokenAddress);
 		require(token.balanceOf(msg.sender) >= amount);
 
-		//add deposit transaction
+		// Add deposit transaction and increment balance.
 		userInfoMap[msg.sender].deposits.push(TransactionInfo(amount, now, tokenAddress));
+		userInfoMap[msg.sender].tokenBalance[tokenAddress] = SafeMath.add(userInfoMap[msg.sender].tokenBalance[tokenAddress], amount);
 
-		//raise event
+		// Raise event
 		Deposit(msg.sender, amount, tokenAddress);
 	}
 
@@ -142,42 +149,29 @@ contract DexAssetsManager {
 		Withdraw(msg.sender, amount, tokenAddress);
 	}
 
-	/* NOTICE about ExecuteTrade: 
-	   Separate functions to avoid conditional jump EVM costs. We can fusion both calls in the future. 
-	   */
-
-	/// @notice Execute a given trade in Ethereum, settling the allowed amount for subsequent withdrawal requests.
-	/// @param tradeNonce A trade-engine provided nonce for this trade.
-	/// @param wallet     The involved wallet address on this trade.
-	/// @param netAmount  The total net amount of Ethers involved in this trade.
-	function executeTradeWithEther(uint256 tradeNonce, address wallet, uint256 netAmount) public onlyOwner {
-		require(netAmount != 0);
+	/// @notice Execute a given trade, adjusting the token/ether balance, for subsequent withdrawal requests.
+	/// @param tradeNonce 		A trade-engine provided nonce for this trade. Should be consecutive for this wallet requests.
+	/// @param wallet     		The involved wallet address on this trade.
+	/// @param token			The token address for the token contract involved in this trade.
+	/// @param netAmountEth  	The total net amount of Ethers involved in this trade.
+	/// @param netAmountToken   The total net amount of Tokens involved in this trade.
+	function executeTrade(uint256 tradeNonce, address wallet, address token, uint256 netAmountEth, uint256 netAmountToken) public onlyOwner {
+		require(netAmountEth != 0);
+		require(netAmountToken != 0);
 		require(wallet != address(0));
-		require(tradeNonce >= 0);
-
-		uint256 netResult = SafeMath.add(userInfoMap[wallet].allowedEthersWithdrawal, netAmount); 
-		require(netResult >= 0);
-
-		userInfoMap[wallet].allowedEthersWithdrawal = netResult;
-		TradeCommitted(tradeNonce, wallet, netAmount, 0);
-	}
-
-
-	/// @notice Execute a given trade in ERC20 tokens, settling the allowed amount for subsequent withdrawal requests.
-	/// @param tradeNonce A trade-engine provided nonce for this trade.
-	/// @param wallet     The involved wallet address on this trade.
-	/// @param netAmount  The total net amount of ERC20 tokends involved in this trade.
-	function executeTradeWithTokens(uint256 tradeNonce, address wallet, uint256 netAmount, address token) public onlyOwner {
-		require(netAmount != 0);
-		require(wallet != address(0));
-		require(tradeNonce >= 0);
 		require(token != address(0));
+		require(tradeNonce == userInfoMap[wallet].tradeNonce + 1);
 
-		uint256 netResult = SafeMath.add(userInfoMap[wallet].allowedTokensWithdrawal[token], netAmount);
-		require(netResult >= 0);
+		uint256 netEthResult = SafeMath.add(userInfoMap[wallet].allowedEthersWithdrawal, netAmountEth); 
+		uint256 netTokenResult = SafeMath.add(userInfoMap[wallet].allowedTokensWithdrawal[token], netAmountToken);
+		require(netEthResult >= 0);
+		require(netTokenResult >= 0);
 
-		userInfoMap[wallet].allowedTokensWithdrawal[token] = netResult;
-		TradeCommitted(tradeNonce, wallet, netAmount, token);
+		userInfoMap[wallet].allowedEthersWithdrawal = netEthResult;
+		userInfoMap[wallet].allowedTokensWithdrawal[token] = netTokenResult;
+		userInfoMap[wallet].tradeNonce = tradeNonce;
+		
+		TradeCommitted(tradeNonce, wallet);
 	}
 
 	modifier onlyOwner() {
