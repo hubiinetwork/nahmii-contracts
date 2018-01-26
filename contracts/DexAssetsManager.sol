@@ -98,6 +98,17 @@ contract DexAssetsManager {
 		token = userInfoMap[user].deposits[index].token;
 	}
 
+	function getEtherBalance(address wallet) public view onlyOwner returns (uint256) {
+		require(wallet != address(0));
+		return userInfoMap[wallet].etherBalance;
+	}
+
+	function getTokenBalance(address wallet, address token) public view onlyOwner returns (uint256) {
+		require(wallet != address(0));
+		require(token != address(0));
+		return userInfoMap[wallet].tokenBalance[token];
+	}
+
 	function approveEthersWithdrawal(address beneficiary, uint256 amount) public onlyOwner {
 		require(beneficiary != address(0));
 		require(amount > 0);
