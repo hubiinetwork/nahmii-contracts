@@ -20,6 +20,9 @@ contract DexAssetsManager {
 
 	address private owner;
 
+	// 
+	// Structures
+	// -----------------------------------------------------------------------------------------------------------------
 	struct DepositInfo {
  		uint256 amount;
  		uint256 timestamp;
@@ -51,12 +54,26 @@ contract DexAssetsManager {
 		// uint256[] signature;
 	}
 
-	//events
+	// Last-Trade-Change
+	struct Ltc {
+		uint256 ordersRoot;
+		uint256 disputeStartTimestamp;
+	}
+
+	mapping (address => Ltc[]) private ltcMap;
+
+	// 
+	// Events
+	// -----------------------------------------------------------------------------------------------------------------
 	event OwnerChanged(address oldOwner, address newOwner);
 	event Deposit(address from, uint256 amount, address token); //token==0 for ethers
 	event Withdraw(address to, uint256 amount, address token);  //token==0 for ethers
 	event TradeCommitted(uint256 nonce, address wallet);
+	event StartLastTradeChallengeEvent(address wallet, uint256 ordersRoot);
 
+	// 
+	// Constructor and owner change
+	// -----------------------------------------------------------------------------------------------------------------
 	function DexAssetsManager(address _owner) public {
 		require(_owner != address(0));
 		owner = _owner;
@@ -71,7 +88,7 @@ contract DexAssetsManager {
 
 	// 
 	// Deposit functions
-	// -------------------------------------------------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------------------------
 
 	function () public payable {
 		require(msg.sender != owner);
@@ -125,20 +142,34 @@ contract DexAssetsManager {
 	
 	//
 	// Trade Challenge/Settlement Functions
-	// -------------------------------------------------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------------------------------------------
 	function startTradePropertiesChallenge(uint256[] startNonces, uint256[] endNonces, uint256 tradeCount) {
 
 	}
 
-	function startLastTradeChallenge(/* orders root */) {
-
+	// 
+	// Last-Trade-Challenge (LTC) functions
+	// ------------------------------------------------------------------------------------------------------------------
+	function startLastTradeChallenge(uint256 ordersRoot) public {
+		require(msg.sender != owner);
+		ltcMap[msg.sender].push(Ltc(ordersRoot, now));
+		StartLastTradeChallengeEvent(msg.sender, ordersRoot);
 	}
+
+	function lastTradeChallengeStage(Trade t) returns (uint256) {
+		return 0;
+	}
+
 
 	function challengeTradeOrder(Trade t) {
 
 	}
 
-	function challengeLastTrade(Trade t) {
+	// 
+	// Trade Properties Challenge (TPC) functions
+	// ------------------------------------------------------------------------------------------------------------------
+
+	function challengeTradeProperties(Trade trade, Trade candidateTrade) {
 
 	}
 
@@ -154,9 +185,6 @@ contract DexAssetsManager {
 		return 0;
 	}
 
-	function lastTradeChallengeStage(Trade t) returns (uint256) {
-		return 0;
-	}
 
 	function VoteOnTradeOrders(Trade t, uint256 option) {
 
