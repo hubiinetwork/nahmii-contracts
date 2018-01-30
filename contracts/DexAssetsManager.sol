@@ -20,8 +20,16 @@ contract DexAssetsManager {
 
 	address private owner;
 
+	struct DepositInfo {
+ 		uint256 amount;
+ 		uint256 timestamp;
+ 		address token;      //0 for ethers
+ 	}
+
 	struct PerUserInfo {
 		uint256 tradeNonce;
+
+		DepositInfo[] deposits;
 
 		// Active balance of ethers and tokens.
 		uint256 activeEtherBalance;
@@ -69,6 +77,7 @@ contract DexAssetsManager {
 		require(msg.sender != owner);
 		require(msg.value > 0);
 		userInfoMap[msg.sender].activeEtherBalance = SafeMath.add(userInfoMap[msg.sender].activeEtherBalance, msg.value);
+		userInfoMap[msg.sender].deposits.push(DepositInfo(msg.value, now, address(0)));
 		Deposit(msg.sender, msg.value, 0);
 	}
 
@@ -80,8 +89,20 @@ contract DexAssetsManager {
 		require(token.balanceOf(msg.sender) >= amount);
 
 		userInfoMap[msg.sender].activeTokenBalance[tokenAddress] = SafeMath.add(userInfoMap[msg.sender].activeTokenBalance[tokenAddress], amount);
+		userInfoMap[msg.sender].deposits.push(DepositInfo(amount, now, tokenAddress));
 		Deposit(msg.sender, amount, tokenAddress);
 	}
+
+	function deposits(address user, uint index) public view onlyOwner returns (uint256 amount, uint256 timestamp, address token) {
+ 		require (index < userInfoMap[user].deposits.length);
+ 		amount = userInfoMap[user].deposits[index].amount;
+ 		timestamp = userInfoMap[user].deposits[index].timestamp;
+ 		token = userInfoMap[user].deposits[index].token;
+ 	}
+
+	 function depositsCount(address user) public view onlyOwner returns (uint256) {
+ 		return userInfoMap[user].deposits.length;
+ 	}
 
 	//
 	// Balance functions
@@ -105,11 +126,11 @@ contract DexAssetsManager {
 	//
 	// Trade Challenge/Settlement Functions
 	// -------------------------------------------------------------------------------------------------------------------------
-	function startTradeOrdersChallenge(uint256[] startNonces, uint256[] endNonces, uint256 tradeCount) {
+	function startTradePropertiesChallenge(uint256[] startNonces, uint256[] endNonces, uint256 tradeCount) {
 
 	}
 
-	function startLastTradeChallenge() {
+	function startLastTradeChallenge(/* orders root */) {
 
 	}
 
@@ -121,7 +142,7 @@ contract DexAssetsManager {
 
 	}
 
-	function settleTrade(Trade t, address wallet ) {
+	function closeTrade(Trade t, address wallet ) {
 
 	}
 

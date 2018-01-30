@@ -63,15 +63,15 @@ contract('DexAssetsManager', function () {
             });
         }
 
-        function _verifyDepositCount(user, n, cb) {
-            deployedDex.getDepositsCount(user1).then(function (count) {
+        function _verifyDepositsCount(user, n, cb) {
+            deployedDex.depositsCount(user1).then(function (count) {
                 assert.equal(count, n, "Unexpected deposit count for user");
                 cb(null);
             });
         }
 
         function _verifyDeposit(user, index, ethers, cb) {
-            deployedDex.getDeposits(user, index).then(function (args) {
+            deployedDex.deposits(user, index).then(function (args) {
                 const amount = args[0];
                 const timestamp = args[1];
                 const token = args[2];
@@ -96,8 +96,8 @@ contract('DexAssetsManager', function () {
                 //
                 // Verify deposits.
                 //
-                function (cb) { _verifyDepositCount(user1, 2, cb);  },
-                function (cb) { _verifyDepositCount(user2, 2, cb);  },
+                function (cb) { _verifyDepositsCount(user1, 2, cb);  },
+                function (cb) { _verifyDepositsCount(user2, 2, cb);  },
                 function (cb) { _verifyDeposit(user1, 0, 1, cb); },
                 function (cb) { _verifyDeposit(user1, 1, 1.5, cb); },
                 function (cb) { _verifyDeposit(user2, 0, 4, cb); },
@@ -130,7 +130,7 @@ contract('DexAssetsManager', function () {
     //-------------------------------------------------------------------------
 
     it("Must fail call to #getDeposits with invalid index", function (done) {
-        deployedDex.getDeposits(user1, 9999).then(function(args)  { 
+        deployedDex.deposits(user1, 9999).then(function(args)  { 
             done(new Error('getDeposit with invalid index must fail'));
         },
         function(err) {
