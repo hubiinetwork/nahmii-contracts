@@ -1,23 +1,20 @@
 /*!
  * Hubii Network - DEX Smart Contract for assets settlement.
  *
- * Compliant to Omphalos 0.6 Specification.
+ * Compliant to Omphalos 0.7 Specification.
  *
  * Copyright (C) 2017-2018 Hubii
  */
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.19;
 
 import './ERC20.sol';
 import './SafeMath.sol';
 
-//TO-DO: Get transactions history
-//       Remove zeppelin dependency
-//       Check security
+pragma experimental ABIEncoderV2;
 
 contract DexAssetsManager {
 
-	uint256 constant private WITHDRAW_RELEASE_TIME_WIN_MINUTES = 1; 
-
+	uint256 private ltcDisputeTimePeriodSecs; 
 	address private owner;
 
 	// 
@@ -29,7 +26,7 @@ contract DexAssetsManager {
  		address token;      //0 for ethers
  	}
 
-	struct PerUserInfo {
+	struct PerWalletInfo {
 		uint256 tradeNonce;
 
 		DepositInfo[] deposits;
@@ -43,9 +40,17 @@ contract DexAssetsManager {
 		mapping (address => uint256) stagedTokenBalance;
 	}
 
-	mapping (address => PerUserInfo) private userInfoMap;
+	mapping (address => PerWalletInfo) private walletInfoMap;
 
-	struct Trade {}
+	struct Trade {
+		uint256 nonce;
+		address from;
+		address to;
+		int256  amount;
+		address token; // token==0 for ethers
+		uint256 tpcDisputeStartTimestamp;
+		uint256 tpcVoteStartTimestamp;
+	}
 
 	struct Settlement {
 		// uint256[] tradeNonces;
@@ -60,7 +65,7 @@ contract DexAssetsManager {
 		uint256 disputeStartTimestamp;
 	}
 
-	mapping (address => Ltc[]) private ltcMap;
+	mapping (address => Ltc) private ltcMap;
 
 	// 
 	// Events
@@ -77,6 +82,7 @@ contract DexAssetsManager {
 	function DexAssetsManager(address _owner) public {
 		require(_owner != address(0));
 		owner = _owner;
+		ltcDisputeTimePeriodSecs = 3600;
 	}
 	
 	function changeOwner(address newOwner) public onlyOwner {
@@ -93,8 +99,8 @@ contract DexAssetsManager {
 	function () public payable {
 		require(msg.sender != owner);
 		require(msg.value > 0);
-		userInfoMap[msg.sender].activeEtherBalance = SafeMath.add(userInfoMap[msg.sender].activeEtherBalance, msg.value);
-		userInfoMap[msg.sender].deposits.push(DepositInfo(msg.value, now, address(0)));
+		walletInfoMap[msg.sender].activeEtherBalance = SafeMath.add(walletInfoMap[msg.sender].activeEtherBalance, msg.value);
+		walletInfoMap[msg.sender].deposits.push(DepositInfo(msg.value, now, address(0)));
 		Deposit(msg.sender, msg.value, 0);
 	}
 
@@ -105,55 +111,61 @@ contract DexAssetsManager {
 		ERC20 token = ERC20(tokenAddress);
 		require(token.balanceOf(msg.sender) >= amount);
 
-		userInfoMap[msg.sender].activeTokenBalance[tokenAddress] = SafeMath.add(userInfoMap[msg.sender].activeTokenBalance[tokenAddress], amount);
-		userInfoMap[msg.sender].deposits.push(DepositInfo(amount, now, tokenAddress));
+		walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = SafeMath.add(walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], amount);
+		walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, now, tokenAddress));
 		Deposit(msg.sender, amount, tokenAddress);
 	}
 
 	function deposits(address user, uint index) public view onlyOwner returns (uint256 amount, uint256 timestamp, address token) {
- 		require (index < userInfoMap[user].deposits.length);
- 		amount = userInfoMap[user].deposits[index].amount;
- 		timestamp = userInfoMap[user].deposits[index].timestamp;
- 		token = userInfoMap[user].deposits[index].token;
+ 		require (index < walletInfoMap[user].deposits.length);
+ 		amount = walletInfoMap[user].deposits[index].amount;
+ 		timestamp = walletInfoMap[user].deposits[index].timestamp;
+ 		token = walletInfoMap[user].deposits[index].token;
  	}
 
 	 function depositsCount(address user) public view onlyOwner returns (uint256) {
- 		return userInfoMap[user].deposits.length;
+ 		return walletInfoMap[user].deposits.length;
  	}
 
 	//
 	// Balance functions
-	// -------------------------------------------------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------------------------
 
 	function activeBalance(address wallet, address token) public view onlyOwner returns (uint256) {
 		require(wallet != address(0));
-		return token == address(0x0) ? userInfoMap[wallet].activeEtherBalance : userInfoMap[wallet].activeTokenBalance[token];
+		return token == address(0x0) ? walletInfoMap[wallet].activeEtherBalance : walletInfoMap[wallet].activeTokenBalance[token];
 	}
 
 	function stagedBalance(address wallet, address token) public view onlyOwner returns (uint256) {
 		require(wallet != address(0));
-		return token == address(0x0) ? userInfoMap[wallet].stagedEtherBalance : userInfoMap[wallet].stagedTokenBalance[token];
+		return token == address(0x0) ? walletInfoMap[wallet].stagedEtherBalance : walletInfoMap[wallet].stagedTokenBalance[token];
 	}
 
-	function unstage(uint256 amount, address tokenAddress) {
+	function unstage(uint256 amount, address tokenAddress) public {
 		require(amount > 0);
 		require(msg.sender != owner);
+		
+		if (tokenAddress == address(0x0)) {
+			require(walletInfoMap[msg.sender].stagedEtherBalance >= amount);
+			walletInfoMap[msg.sender].stagedEtherBalance = SafeMath.sub(walletInfoMap[msg.sender].stagedEtherBalance, amount);
+			walletInfoMap[msg.sender].activeEtherBalance = SafeMath.add(walletInfoMap[msg.sender].activeEtherBalance, amount);
+		} else {
+			require(walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] >= amount);
+			walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = SafeMath.sub(walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress], amount);
+			walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = SafeMath.add(walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], amount);
+		}
 	}
 	
-	//
-	// Trade Challenge/Settlement Functions
-	// ------------------------------------------------------------------------------------------------------------------
-	function startTradePropertiesChallenge(uint256[] startNonces, uint256[] endNonces, uint256 tradeCount) {
-
-	}
-
 	// 
 	// Last-Trade-Challenge (LTC) functions
-	// ------------------------------------------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------------------------
 	function startLastTradeChallenge(uint256 ordersRoot) public {
 		require(msg.sender != owner);
-		ltcMap[msg.sender].push(Ltc(ordersRoot, now));
-		StartLastTradeChallengeEvent(msg.sender, ordersRoot);
+		require(ltcMap[msg.sender].ordersRoot != 0);
+		require(ltcMap[msg.sender].disputeStartTimestamp != 0);
+
+		ltcMap[msg.sender] = Ltc(ordersRoot, now);
+		StartLastTradeChallengeEvent(msg.sender, ordersRoot);		
 	}
 
 	function lastTradeChallengeStage(Trade t) returns (uint256) {
@@ -167,7 +179,11 @@ contract DexAssetsManager {
 
 	// 
 	// Trade Properties Challenge (TPC) functions
-	// ------------------------------------------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------------------------
+	function startTradePropertiesChallenge(uint256 startNonce, uint256 endNonce) {
+		
+	}
+
 
 	function challengeTradeProperties(Trade trade, Trade candidateTrade) {
 
@@ -192,20 +208,20 @@ contract DexAssetsManager {
 
 	//
 	// Withdraw functions
-	// -------------------------------------------------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------------------------
 
 	function withdraw(uint256 amount, address tokenAddress) public {
 		require (msg.sender != owner);
 		require (amount > 0);
 		if (token == address(0x0)) {
-			require (amount <= userInfoMap[msg.sender].activeEtherBalance);
+			require (amount <= walletInfoMap[msg.sender].activeEtherBalance);
 			msg.sender.transfer(amount);
-			userInfoMap[msg.sender].activeEtherBalance = SafeMath.sub(userInfoMap[msg.sender].activeEtherBalance, amount);
+			walletInfoMap[msg.sender].activeEtherBalance = SafeMath.sub(walletInfoMap[msg.sender].activeEtherBalance, amount);
 		} else {
-			require (amount <= userInfoMap[msg.sender].activeTokenBalance[msg.sender]);
+			require (amount <= walletInfoMap[msg.sender].activeTokenBalance[msg.sender]);
 			ERC20 token = ERC20(tokenAddress);
 			token.transfer(msg.sender, amount);
-			userInfoMap[msg.sender].activeTokenBalance[token] = SafeMath.sub(userInfoMap[msg.sender].activeTokenBalance[token], amount);
+			walletInfoMap[msg.sender].activeTokenBalance[token] = SafeMath.sub(walletInfoMap[msg.sender].activeTokenBalance[token], amount);
 		}
 
 		//raise event
