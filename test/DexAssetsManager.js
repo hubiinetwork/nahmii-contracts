@@ -20,6 +20,40 @@ contract('DexAssetsManager', function () {
     var deployedErc20 = null;
 
     //-------------------------------------------------------------------------
+    // Contract-wide helper functions
+    //-------------------------------------------------------------------------
+    
+    function _checkActiveBalance(user, etherBalance, tokenBalance, cb) {
+        deployedDex.activeBalance(user, 0).then(function (balance) {
+            assert.equal(balance, web3.toWei(etherBalance, 'ether'), "Balance (" + balance + ") != " + etherBalance);
+            deployedDex.activeBalance(user, deployedErc20.address).then(function (balance) {
+                assert.equal(balance, tokenBalance, "Token Balance (" + balance + ") != " + tokenBalance);
+                cb(null);
+            }, function (err) {
+                cb(err);
+            });
+        }, function (err) {
+            cb(err);
+        });
+    }
+
+    function _checkStagedBalance(user, etherBalance, tokenBalance, cb) {
+        deployedDex.stagedBalance(user, 0).then(function (balance) {
+            assert.equal(balance, web3.toWei(etherBalance, 'ether'));
+            deployedDex.stagedBalance(user, deployedErc20.address).then(function (balance) {
+                assert.equal(balance, tokenBalance);
+                cb(null);
+            }, function (err) {
+                cb(err);
+            });
+        }, function (err) {
+            cb(err);
+        });
+    }
+
+    //-------------------------------------------------------------------------
+    // Preflight stage
+    //-------------------------------------------------------------------------
 
     before("Preflight: get deployed contracts", function (done) {
         DexAssetsManager.deployed().then(function (_d) {
@@ -168,9 +202,34 @@ contract('DexAssetsManager', function () {
 
     //-------------------------------------------------------------------------
 
+    it("Must give correct #activeBalance in ETH/tokens for both users", function (done) {
+
+        async.waterfall(
+            [
+                function (cb) { _checkActiveBalance(user1, 2.5, 5, cb) },
+                function (cb) { _checkActiveBalance(user2, 6.5, 0, cb) },         
+            ],
+            function (err) {
+                done(err);
+            });
+    });
+
+    //-------------------------------------------------------------------------
+    
+    it("Must give correct #stagedBalance (zero at this point) for both users", function (done) {
+
+        async.waterfall(
+            [
+                function (cb) { _checkStagedBalance(user1, 0, 0, cb) },
+                function (cb) { _checkStagedBalance(user2, 0, 0, cb) },         
+            ],
+            function (err) {
+                done(err);
+            });
+    });
 });
 
 
 
 
-     
+
