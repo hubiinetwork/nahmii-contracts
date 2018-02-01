@@ -14,6 +14,8 @@ pragma experimental ABIEncoderV2;
 
 contract DexAssetsManager {
 
+	uint256 constant private LTC_DISPUTE_TIMER_SHIFT_SECS = 1800; // 30 mins
+
 	uint256 private ltcDisputeTimePeriodSecs; 
 	address private owner;
 
@@ -43,14 +45,20 @@ contract DexAssetsManager {
 	mapping (address => PerWalletInfo) private walletInfoMap;
 
 	struct Trade {
-		uint256 nonce;
-		address from;
-		address to;
-		int256  amount;
-		address token; // token==0 for ethers
-		uint256 tpcDisputeStartTimestamp;
-		uint256 tpcVoteStartTimestamp;
+		uint256 buyOrderHash;
+		uint256 sellOrderHash;
+		address buyer;
+		address seller;
+		uint256 tokenAmount;
+		uint256 etherAmount;
+		address token;
 	}
+	
+	//uint256 tpcDisputeStartTimestamp;
+	//uint256 tpcVoteStartTimestamp;
+	//struct Tpc {
+	//	uin
+	//}
 
 	struct Settlement {
 		// uint256[] tradeNonces;
@@ -59,12 +67,24 @@ contract DexAssetsManager {
 		// uint256[] signature;
 	}
 
+	struct LtcCandidate {
+		uint256 tradeHash;
+		address submitter;
+	}
+
 	// Last-Trade-Change
 	struct Ltc {
 		uint256 ordersRoot;
-		uint256 disputeStartTimestamp;
+		uint256 disputeEndTimestamp;
+		LtcCandidate[] candidates;
+		mapping (uint256 => uint256) candidateListIndexMap; // Index starts from 1
 	}
 
+	enum LtcStage { 
+		Open, Closed
+	}
+
+	mapping (uint256 => Trade) private tradeHashMap;
 	mapping (address => Ltc) private ltcMap;
 
 	// 
@@ -159,22 +179,65 @@ contract DexAssetsManager {
 	// 
 	// Last-Trade-Challenge (LTC) functions
 	// -----------------------------------------------------------------------------------------------------------------
-	function startLastTradeChallenge(uint256 ordersRoot) public {
+	function startLastTradeChallenge(uint256 _ordersRoot) public {
 		require(msg.sender != owner);
 		require(ltcMap[msg.sender].ordersRoot != 0);
-		require(ltcMap[msg.sender].disputeStartTimestamp != 0);
+		require(ltcMap[msg.sender].disputeEndTimestamp != 0);
 
-		ltcMap[msg.sender] = Ltc(ordersRoot, now);
-		StartLastTradeChallengeEvent(msg.sender, ordersRoot);		
+		ltcMap[msg.sender] = Ltc({ 
+			ordersRoot: _ordersRoot, 
+			disputeEndTimestamp: now + ltcDisputeTimePeriodSecs, 
+			candidates: new LtcCandidate[](0)
+			});
+		
+		StartLastTradeChallengeEvent(msg.sender, _ordersRoot);		
 	}
 
-	function lastTradeChallengeStage(Trade t) returns (uint256) {
-		return 0;
+	function lastTradeChallengeStage(Trade t) public returns (LtcStage) {
+		if (ltcMap[t.buyer].ordersRoot != 0) {
+			if (ltcMap[t.buyer].disputeEndTimestamp > now) {
+				return LtcStage.Closed;
+			}
+		} else if (ltcMap[t.seller].ordersRoot != 0) {
+			if (ltcMap[t.seller].disputeEndTimestamp > now) {
+				return LtcStage.Closed;
+			}
+		} else {
+			return LtcStage.Closed;
+		}
+
+		return LtcStage.Open;
 	}
 
+	function internalChallengeTradeOrder (Trade t, address wallet) private {
+		if (now >= ltcMap[wallet].disputeEndTimestamp) {
+			revert();
+		}
+		
+		uint256 tradeHash = uint256(keccak256(t));
 
-	function challengeTradeOrder(Trade t) {
+		// TODO: Check what to do when the same Trade is submitted.
+		if (ltcMap[wallet].candidateListIndexMap[tradeHash] != 0) {
+			revert();
+		}
 
+		tradeHashMap[tradeHash] = t;
+
+		ltcMap[wallet].candidates.push(LtcCandidate(tradeHash, msg.sender));
+		ltcMap[wallet].candidateListIndexMap[tradeHash] = ltcMap[wallet].candidates.length;
+
+		ltcMap[wallet].disputeEndTimestamp = SafeMath.add(ltcMap[wallet].disputeEndTimestamp, LTC_DISPUTE_TIMER_SHIFT_SECS);
+	}
+
+	function challengeTradeOrder(Trade t) public {
+		require(msg.sender != owner);
+		if (ltcMap[t.buyer].ordersRoot != 0) {
+			internalChallengeTradeOrder(t, t.buyer);
+		} else if (ltcMap[t.seller].ordersRoot != 0) {
+			internalChallengeTradeOrder(t, t.seller);
+		} else {
+			revert();
+		}
 	}
 
 	// 
