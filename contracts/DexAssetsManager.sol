@@ -1,7 +1,7 @@
 /*!
  * Hubii Network - DEX Smart Contract for assets settlement.
  *
- * Compliant to Omphalos 0.8 Specification.
+ * Compliant to Omphalos 0.9 Specification.
  *
  * Copyright (C) 2017-2018 Hubii
  */
@@ -47,6 +47,8 @@ contract DexAssetsManager {
 	struct Trade {
 		uint256 buyOrderHash;
 		uint256 sellOrderHash;
+		uint256 buyerOrderNonce;	// These ones should be obtained from orders map (accessed by hash),
+		uint256 sellerOrderNonce;   // but we dont have such information.
 		address buyer;
 		address seller;
 		uint256 tokenAmount;
@@ -76,8 +78,8 @@ contract DexAssetsManager {
 	struct Ltc {
 		uint256 ordersRoot;
 		uint256 disputeEndTimestamp;
-		LtcCandidate[] candidates;
-		mapping (uint256 => uint256) candidateListIndexMap; // Index starts from 1
+		uint256 currentLastTradeHash;
+		uint256 lastDisputeNonce;
 	}
 
 	enum LtcStage { 
@@ -95,6 +97,7 @@ contract DexAssetsManager {
 	event Withdraw(address to, uint256 amount, address token);  //token==0 for ethers
 	event TradeCommitted(uint256 nonce, address wallet);
 	event StartLastTradeChallengeEvent(address wallet, uint256 ordersRoot);
+	event ChallengeLastTradeEvent(Trade t);
 
 	// 
 	// Constructor and owner change
@@ -179,11 +182,28 @@ contract DexAssetsManager {
 	// 
 	// Last-Trade-Challenge (LTC) functions
 	// -----------------------------------------------------------------------------------------------------------------
-	function startLastTradeChallenge(address wallet, uint256 _ordersRoot) public onlyOwner {
-		require(isLtcActive(wallet));
+	function startLastTradeChallenge(Trade t, address wallet, uint256 _ordersRoot) public onlyOwner {
+		if (msg.sender != owner) {
+			wallet = msg.sender;
+		}
+
+		require(!isLtcActive(wallet));
+		require(isTradeValid(t));
+
+		if (t.buyer == wallet) {
+			require (t.buyerOrderNonce > ltcMap[wallet].lastDisputeNonce);
+		} else if (t.seller == wallet) {
+			require (t.sellerOrderNonce > ltcMap[wallet].lastDisputeNonce);
+		} else {
+			revert();
+		}
+		
+		uint256 tradeHash = uint256(keccak256(t));
+		tradeHashMap[tradeHash] = t;
 
 		ltcMap[wallet].ordersRoot = _ordersRoot;
 		ltcMap[wallet].disputeEndTimestamp = now + ltcDisputeTimePeriodSecs;
+		ltcMap[wallet].currentLastTradeHash = tradeHash; 
 
 		StartLastTradeChallengeEvent(wallet, _ordersRoot);		
 	}
@@ -198,12 +218,25 @@ contract DexAssetsManager {
 
 	function challengeLastTrade(Trade t) public {
 		require(msg.sender != owner);
+
+		uint256 tradeHash = uint256(keccak256(t));
+
 		if (isLtcActive(t.buyer)) {
-			internalChallengeTradeOrder(t, t.buyer);
+			require (t.buyerOrderNonce >= tradeHashMap[ltcMap[t.buyer].currentLastTradeHash].buyerOrderNonce);
+			
+			tradeHashMap[tradeHash] = t;
+			ltcMap[t.buyer].currentLastTradeHash = tradeHash;
+			ltcMap[t.buyer].disputeEndTimestamp = SafeMath.add(ltcMap[t.buyer].disputeEndTimestamp, LTC_DISPUTE_TIMER_SHIFT_SECS);
 		} 
 		if (isLtcActive(t.seller)) {
-			internalChallengeTradeOrder(t, t.seller);
+			require (t.sellerOrderNonce >= tradeHashMap[ltcMap[t.seller].currentLastTradeHash].sellerOrderNonce);
+
+			tradeHashMap[tradeHash] = t;
+			ltcMap[t.seller].currentLastTradeHash = tradeHash;
+			ltcMap[t.seller].disputeEndTimestamp = SafeMath.add(ltcMap[t.seller].disputeEndTimestamp, LTC_DISPUTE_TIMER_SHIFT_SECS);
 		} 
+
+		ChallengeLastTradeEvent(t);
 	}
 
 	// 
@@ -261,24 +294,18 @@ contract DexAssetsManager {
 	// Helper internal functions
 	// -----------------------------------------------------------------------------------------------------------------
 
-	function isLtcActive(address wallet) private view returns (bool) {
-		return (ltcMap[wallet].disputeEndTimestamp == 0 || now >= ltcMap[wallet].disputeEndTimestamp) ? false : true;
+	function isTradeValid(Trade t) private view returns (bool) {
+		if (t.buyer == t.seller) {
+			return false;
+		}
+		if (t.buyer == owner || t.seller == owner) {
+			return false;
+		}
+		return true;
 	}
 
-	function internalChallengeTradeOrder (Trade t, address wallet) private {
-		uint256 tradeHash = uint256(keccak256(t));
-
-		// Return if the same trade candidate is submitted.
-		if (ltcMap[wallet].candidateListIndexMap[tradeHash] != 0) {
-			return;
-		}
-
-		tradeHashMap[tradeHash] = t;
-
-		ltcMap[wallet].candidates.push(LtcCandidate(tradeHash, msg.sender));
-		//ltcMap[wallet].candidateListIndexMap[tradeHash] = ltcMap[wallet].candidates.length;
-
-		ltcMap[wallet].disputeEndTimestamp = SafeMath.add(ltcMap[wallet].disputeEndTimestamp, LTC_DISPUTE_TIMER_SHIFT_SECS);
+	function isLtcActive(address wallet) private view returns (bool) {
+		return (ltcMap[wallet].disputeEndTimestamp == 0 || now >= ltcMap[wallet].disputeEndTimestamp) ? false : true;
 	}
 
 	modifier onlyOwner() {
