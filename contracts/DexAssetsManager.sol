@@ -235,12 +235,32 @@ contract DexAssetsManager {
 		if (isLtcActive(t.buyer)) {
 			require (t.buyerOrderNonce >= tradeHashMap[ltcMap[t.buyer].currentLastTradeHash].buyerOrderNonce);
 			
+			if (ltcMap[t.buyer].ordersRoot != 0) {
+				uint256 currentHash = t.buyOrderHash;
+
+				for (uint i = ltcMap[t.buyer].ordersProofMap.length; i > 0; i--) {
+					currentHash = uint256(keccak256(currentHash, ltcMap[t.buyer].ordersProofMap[i-1]));
+				}
+
+				require(ltcMap[t.buyer].ordersRoot == currentHash);
+			}
+
 			tradeHashMap[tradeHash] = t;
 			ltcMap[t.buyer].currentLastTradeHash = tradeHash;
 			ltcMap[t.buyer].disputeEndTimestamp = SafeMath.add(ltcMap[t.buyer].disputeEndTimestamp, LTC_DISPUTE_TIMER_SHIFT_SECS);
 		} 
 		if (isLtcActive(t.seller)) {
 			require (t.sellerOrderNonce >= tradeHashMap[ltcMap[t.seller].currentLastTradeHash].sellerOrderNonce);
+
+			if (ltcMap[t.seller].ordersRoot != 0) {
+				uint256 currentHash2 = t.sellOrderHash;
+
+				for (uint j = ltcMap[t.seller].ordersProofMap.length; j > 0; j--) {
+					currentHash2 = uint256(keccak256(currentHash2, ltcMap[t.seller].ordersProofMap[j-1]));
+				}
+
+				require(ltcMap[t.seller].ordersRoot == currentHash2);
+			}
 
 			tradeHashMap[tradeHash] = t;
 			ltcMap[t.seller].currentLastTradeHash = tradeHash;
