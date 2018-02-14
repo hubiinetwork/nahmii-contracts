@@ -1,7 +1,7 @@
 /*!
  * Hubii Network - DEX Smart Contract for assets settlement.
  *
- * Compliant to Omphalos 0.9 Specification.
+ * Compliant to Omphalos 0.11 Specification.
  *
  * Copyright (C) 2017-2018 Hubii
  */
@@ -80,6 +80,7 @@ contract DexAssetsManager {
 		uint256 disputeEndTimestamp;
 		uint256 currentLastTradeHash;
 		uint256 lastDisputeNonce;
+		uint256[] ordersProofMap;
 	}
 
 	enum LtcStage { 
@@ -182,11 +183,12 @@ contract DexAssetsManager {
 	// 
 	// Last-Trade-Challenge (LTC) functions
 	// -----------------------------------------------------------------------------------------------------------------
-	function startLastTradeChallenge(Trade t, address wallet, uint256 _ordersRoot) public onlyOwner {
+	function startLastTradeChallenge(Trade t, address wallet, uint256 ordersRoot, uint256[] ordersProofMap ) public onlyOwner {
 		if (msg.sender != owner) {
 			wallet = msg.sender;
 		}
 
+		require(ordersRoot == 0 || ordersProofMap.length > 0); // to be checked.
 		require(!isLtcActive(wallet));
 		require(isTradeValid(t));
 
@@ -201,18 +203,27 @@ contract DexAssetsManager {
 		uint256 tradeHash = uint256(keccak256(t));
 		tradeHashMap[tradeHash] = t;
 
-		ltcMap[wallet].ordersRoot = _ordersRoot;
+		ltcMap[wallet].ordersRoot = ordersRoot;
+
+		if (ordersRoot == 0) {
+			for (uint i = 0; i < ordersProofMap.length; i++) {
+				ltcMap[wallet].ordersProofMap.push(ordersProofMap[i]);
+			}
+		}
+
 		ltcMap[wallet].disputeEndTimestamp = now + ltcDisputeTimePeriodSecs;
 		ltcMap[wallet].currentLastTradeHash = tradeHash; 
 
-		StartLastTradeChallengeEvent(wallet, _ordersRoot);		
+		StartLastTradeChallengeEvent(wallet, ordersRoot);		
 	}
 
-	function lastTradeChallengeStage(address wallet) public view returns (LtcStage) {
+	function lastTradeChallengeStage(address wallet) public view returns (uint256, LtcStage) {
 		if (isLtcActive(wallet)) {
-			return LtcStage.Dispute;
+			return (ltcMap[wallet].lastDisputeNonce, LtcStage.Dispute);
+		} else if (ltcMap[wallet].disputeEndTimestamp == 0) {
+			return (0, LtcStage.Closed);
 		} else {
-			return LtcStage.Closed;
+			return (ltcMap[wallet].lastDisputeNonce, LtcStage.Closed);
 		}
 	}
 
