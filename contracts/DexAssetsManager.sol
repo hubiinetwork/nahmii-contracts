@@ -55,6 +55,7 @@ contract DexAssetsManager {
 		uint256 tokenAmount;
 		uint256 etherAmount;
 		address token;
+		uint8[65] signature;
 	}
 	
 	//uint256 tpcDisputeStartTimestamp;
@@ -374,6 +375,22 @@ contract DexAssetsManager {
 		if (t.buyer == owner || t.seller == owner) {
 			return false;
 		}
+
+		bytes32 tradeHash = keccak256(t.buyOrderHash, t.sellOrderHash, t.buyerOrderNonce, t.sellerOrderNonce, t.buyer, t.seller, t.tokenAmount, t.etherAmount, t.token);
+		uint8[65] memory signature = t.signature;
+		bytes32 s;
+		bytes32 r;
+		uint8 v;
+
+		assembly {
+			r := mload(signature)
+			s := mload(add(signature, 32))
+			v := and(255, mload(add(signature, 64)))
+		}
+
+		if (ecrecover(tradeHash, v, r, s) != owner)
+			return false;
+
 		return true;
 	}
 
