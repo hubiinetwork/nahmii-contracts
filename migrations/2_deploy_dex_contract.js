@@ -3,8 +3,14 @@
  *
  * Copyright (C) 2017-2018 Hubii
  */
-var DexAssetsManager = artifacts.require("./DexAssetsManager.sol");
+var DexTrade = artifacts.require("./DexTrade.sol");
+var DexReserveFunds = artifacts.require("./DexReserveFunds.sol");
+
+// -----------------------------------------------------------------------------------------------------------------
 
 module.exports = function (deployer, network, accounts) {
-	deployer.deploy(DexAssetsManager, accounts[0]);
+	var ownerAccount = accounts[0];
+
+	deployer.deploy(DexTrade, ownerAccount);
+	deployer.deploy(DexReserveFunds, ownerAccount);
 };
