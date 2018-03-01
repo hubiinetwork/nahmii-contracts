@@ -112,10 +112,9 @@ contract DexTrade {
 	//
 	// Events
 	// -----------------------------------------------------------------------------------------------------------------
-	event OwnerChanged(address oldOwner, address newOwner);
-	event Deposit(address from, uint256 amount, address token); //token==0 for ethers
-	event Withdraw(address to, uint256 amount, address token);  //token==0 for ethers
-	event TradeCommitted(uint256 nonce, address wallet);
+	event OwnerChangedEvent(address oldOwner, address newOwner);
+	event DepositEvent(address from, uint256 amount, address token); //token==0 for ethers
+	event WithdrawEvent(address to, uint256 amount, address token);  //token==0 for ethers
 	event StartLastTradeChallengeEvent(address wallet, uint256 ordersRoot);
 	event ChallengeLastTradeEvent(Trade t);
 	event StartTradePropertiesChallengeEvent(address wallet, Trade t);
@@ -151,7 +150,7 @@ contract DexTrade {
 			owner = newOwner;
 
 			//emit event
-			OwnerChanged(oldOwner, newOwner);
+			OwnerChangedEvent(oldOwner, newOwner);
 		}
 	}
 
@@ -167,7 +166,7 @@ contract DexTrade {
 		walletInfoMap[msg.sender].deposits.push(DepositInfo(msg.value, now, address(0)));
 
 		//emit event
-		Deposit(msg.sender, msg.value, address(0));
+		DepositEvent(msg.sender, msg.value, address(0));
 	}
 
 	function depositTokens(address tokenAddress, uint256 amount) public {
@@ -186,7 +185,7 @@ contract DexTrade {
 		walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, now, tokenAddress));
 
 		//emit event
-		Deposit(msg.sender, amount, tokenAddress);
+		DepositEvent(msg.sender, amount, tokenAddress);
 	}
 
 	function deposit(address wallet, uint index) public view onlyOwner returns (uint256 amount, uint256 timestamp, address token) {
@@ -511,7 +510,7 @@ contract DexTrade {
 		}
 
 		//raise event
-		Withdraw(msg.sender, amount, token);
+		WithdrawEvent(msg.sender, amount, token);
 	}
 
 	//
