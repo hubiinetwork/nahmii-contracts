@@ -354,7 +354,10 @@ contract DexTrade {
 				tradeHashMap[tradeHash] = t[i];
 
 				require(getTpcStage(wallet, tradeHash) == TPC_STAGE.Closed); //A TPC for a wallet cannot be submitted if one is already active
-				tpcMap[wallet][tradeHash] = Tpc(SafeMath.add(now, tpcDisputeTimePeriodMs), SafeMath.add(now, tpcDisputeTimePeriodMs + tpcVotingTimePeriodMs), 0, new TpcCandidate[](0));
+				
+				tpcMap[wallet][tradeHash].disputeEndTimestamp = SafeMath.add(now, tpcDisputeTimePeriodMs);
+				tpcMap[wallet][tradeHash].votingEndTimestamp = SafeMath.add(now, tpcDisputeTimePeriodMs + tpcVotingTimePeriodMs);
+				tpcMap[wallet][tradeHash].tradeVotesCount = 0;
 
 				StartTradePropertiesChallengeEvent(wallet, t[i]);
 			}
@@ -561,7 +564,7 @@ contract DexTrade {
 		return (now < tpcMap[wallet][tradeHash].disputeEndTimestamp) ? TPC_STAGE.Dispute : TPC_STAGE.Voting;
 	}
 
-	function calculateTradeHash(Trade t) private view returns (uint256) {
+	function calculateTradeHash(Trade t) private pure returns (uint256) {
 		return uint256(keccak256(t));
 	}
 
