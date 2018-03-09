@@ -65,6 +65,7 @@ contract DexReserveFunds {
 	event AddRevenueEvent(uint256 amount, address token); //token==0 for ethers
 	event StageEvent(address from, uint256 amount, address token); //token==0 for ethers
 	event UnstageEvent(address from, uint256 amount, address token); //token==0 for ethers
+	event WithdrawEvent(address to, uint256 amount, address token); //token==0 for ethers
 
 
 	//
@@ -276,6 +277,40 @@ contract DexReserveFunds {
 	 		return renevueEtherBalance;
 		return renevueTokenBalance[tokenAddress];
  	}
+
+	//
+	// Withdraw functions
+	// -----------------------------------------------------------------------------------------------------------------
+	function withdrawEther(uint256 amount) public {
+		require(msg.sender != owner);
+		if (amount > walletInfoMap[msg.sender].stagedEtherBalance) {
+			amount = walletInfoMap[msg.sender].stagedEtherBalance;
+		}
+		require(amount > 0);
+
+		msg.sender.transfer(amount);
+		walletInfoMap[msg.sender].stagedEtherBalance = SafeMath.sub(walletInfoMap[msg.sender].stagedEtherBalance, amount);
+	
+		//raise event
+		WithdrawEvent(msg.sender, amount, address(0));
+	}
+
+	function withdrawTokens(address tokenAddress, uint256 amount) public {
+		require(msg.sender != owner);
+		require(tokenAddress != address(0));
+		if (amount > walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress]) {
+			amount = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress];
+		}
+		require(amount > 0);
+
+		ERC20 token = ERC20(tokenAddress);
+		token.transfer(msg.sender, amount);
+		walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = SafeMath.sub(walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress], amount);
+	
+		//raise event
+		WithdrawEvent(msg.sender, amount, tokenAddress);
+	}
+
 
 	//
 	// Helper internal functions
