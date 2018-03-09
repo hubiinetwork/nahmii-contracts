@@ -503,7 +503,7 @@ contract DexTrade {
 			msg.sender.transfer(amount);
 			walletInfoMap[msg.sender].activeEtherBalance = SafeMath.sub(walletInfoMap[msg.sender].activeEtherBalance, amount);
 		} else {
-			require(amount <= walletInfoMap[msg.sender].activeTokenBalance[msg.sender]);
+			require(amount <= walletInfoMap[msg.sender].activeTokenBalance[token]);
 			ERC20 token = ERC20(tokenAddress);
 			token.transfer(msg.sender, amount);
 			walletInfoMap[msg.sender].activeTokenBalance[token] = SafeMath.sub(walletInfoMap[msg.sender].activeTokenBalance[token], amount);
