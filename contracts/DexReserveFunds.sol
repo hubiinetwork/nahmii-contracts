@@ -14,6 +14,11 @@ pragma experimental ABIEncoderV2;
 
 contract DexReserveFunds {
 	//
+	// Enumerations
+	// -----------------------------------------------------------------------------------------------------------------
+	enum ACCRUAL_TARGET { StagedBalance, ActiveBalance }
+
+	//
 	// Structures
 	// -----------------------------------------------------------------------------------------------------------------
 	struct DepositInfo {
@@ -42,6 +47,17 @@ contract DexReserveFunds {
 		mapping (address => uint256) stagedTokenBalance;
 
 		DepositHistory[] depositsHistory;
+
+		ACCRUAL_TARGET accrualTarget;
+	}
+
+	struct Accrual {
+		uint256 amount;
+		address benefactorAddress;
+		address	tokenAddress;
+		uint256 timestamp;
+		uint256 hash;
+		uint8[65] signature;
 	}
 
 	//
@@ -54,8 +70,12 @@ contract DexReserveFunds {
 	uint256 aggregatedEtherBalance;
 	mapping (address => uint256) aggregatedTokenBalance;
 
-	uint256 renevueEtherBalance;
-	mapping(address => uint256) renevueTokenBalance;
+	uint256 revenueEtherBalance;
+	mapping (address => uint256) revenueTokenBalance;
+
+	mapping (address => bool) benefactorsMap;
+
+	mapping (uint256 => bool) claimedAccrualsMap;
 
 	//
 	// Events
@@ -66,7 +86,9 @@ contract DexReserveFunds {
 	event StageEvent(address from, uint256 amount, address token); //token==0 for ethers
 	event UnstageEvent(address from, uint256 amount, address token); //token==0 for ethers
 	event WithdrawEvent(address to, uint256 amount, address token); //token==0 for ethers
-
+	event AccrualTargetEvent(address wallet, ACCRUAL_TARGET accrualTarget);
+	event ClaimAccrualEvent(address wallet, ACCRUAL_TARGET accrualTarget, Accrual accrual);
+	event RegisterBenefactorEvent(address benefactorAddress);
 
 	//
 	// Constructor and owner change
@@ -77,7 +99,7 @@ contract DexReserveFunds {
 		owner = _owner;
 
 		aggregatedEtherBalance = 0;
-		renevueEtherBalance = 0;
+		revenueEtherBalance = 0;
 	}
 	
 	function changeOwner(address newOwner) public onlyOwner {
@@ -169,9 +191,9 @@ contract DexReserveFunds {
 		require(amount > 0);
 
 		if (tokenAddress == address(0)) {
-			renevueEtherBalance = SafeMath.add(renevueEtherBalance, amount);
+			revenueEtherBalance = SafeMath.add(revenueEtherBalance, amount);
 		} else {
-			renevueTokenBalance[tokenAddress] = SafeMath.add(renevueTokenBalance[tokenAddress], amount);
+			revenueTokenBalance[tokenAddress] = SafeMath.add(revenueTokenBalance[tokenAddress], amount);
 		}
 
 		//emit event
@@ -272,10 +294,10 @@ contract DexReserveFunds {
 		return walletInfoMap[wallet].stagedTokenBalance[tokenAddress];
 	}
 
-	function renevueBalance(address tokenAddress) public view onlyOwner returns (uint256) {
+	function revenueBalance(address tokenAddress) public view onlyOwner returns (uint256) {
 		if (tokenAddress == address(0))
-	 		return renevueEtherBalance;
-		return renevueTokenBalance[tokenAddress];
+	 		return revenueEtherBalance;
+		return revenueTokenBalance[tokenAddress];
  	}
 
 	//
@@ -311,6 +333,68 @@ contract DexReserveFunds {
 		WithdrawEvent(msg.sender, amount, tokenAddress);
 	}
 
+	//
+	// Accrual functions
+	// -----------------------------------------------------------------------------------------------------------------
+	function accrualTarget(ACCRUAL_TARGET accrualTarget) public {
+		require(msg.sender != owner);
+
+		walletInfoMap[msg.sender].accrualTarget = accrualTarget;
+
+		//raise event
+		AccrualTargetEvent(msg.sender, accrualTarget);
+	}
+
+	function claimAccrual(Accrual accrual) public {
+		require(isValidAccrual(accrual));
+		require(!claimedAccrualsMap[accrual.hash]);
+		require(benefactorsMap[accrual.benefactorAddress]);
+
+		if (walletInfoMap[msg.sender].accrualTarget == ACCRUAL_TARGET.ActiveBalance) {
+			if (accrual.tokenAddress == address(0)) {
+				revenueEtherBalance = SafeMath.sub(revenueEtherBalance, accrual.amount);
+				walletInfoMap[msg.sender].activeEtherBalance = SafeMath.add(walletInfoMap[msg.sender].activeEtherBalance, accrual.amount);
+				
+				walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(accrual.amount), now, walletInfoMap[msg.sender].activeEtherBalance));
+				walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(address(0), walletInfoMap[msg.sender].depositsEther.length));
+
+			} else {
+				revenueTokenBalance[accrual.tokenAddress] = SafeMath.sub(revenueTokenBalance[accrual.tokenAddress], accrual.amount);
+				walletInfoMap[msg.sender].activeTokenBalance[accrual.tokenAddress] = SafeMath.add(walletInfoMap[msg.sender].activeTokenBalance[accrual.tokenAddress], accrual.amount);				
+
+				walletInfoMap[msg.sender].depositsToken[accrual.tokenAddress].push(DepositInfo(int256(accrual.amount), now, walletInfoMap[msg.sender].activeTokenBalance[accrual.tokenAddress]));
+				walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(accrual.tokenAddress, walletInfoMap[msg.sender].depositsToken[accrual.tokenAddress].length));
+			}
+		} else if (walletInfoMap[msg.sender].accrualTarget == ACCRUAL_TARGET.StagedBalance) {
+			if (accrual.tokenAddress == address(0)) {
+				revenueEtherBalance = SafeMath.sub(revenueEtherBalance, accrual.amount);
+				walletInfoMap[msg.sender].stagedEtherBalance = SafeMath.add(walletInfoMap[msg.sender].stagedEtherBalance, accrual.amount);
+			} else {
+				revenueTokenBalance[accrual.tokenAddress] = SafeMath.sub(revenueTokenBalance[accrual.tokenAddress], accrual.amount);
+				walletInfoMap[msg.sender].stagedTokenBalance[accrual.tokenAddress] = SafeMath.add(walletInfoMap[msg.sender].stagedTokenBalance[accrual.tokenAddress], accrual.amount);				
+			}
+		} else {
+			revert();
+		}
+
+
+		claimedAccrualsMap[accrual.hash] = true;
+
+		// raise event
+		//
+		ClaimAccrualEvent(msg.sender, walletInfoMap[msg.sender].accrualTarget, accrual);
+	}
+
+	function registerBenefactor(address benefactorAddress) public onlyOwner {
+		require (benefactorAddress != owner);
+		require (benefactorAddress != address(0));
+		require (benefactorsMap[benefactorAddress] == false);
+
+		benefactorsMap[benefactorAddress] = true;
+
+		//raise event
+		RegisterBenefactorEvent(benefactorAddress);
+	}
 
 	//
 	// Helper internal functions
@@ -348,5 +432,28 @@ contract DexReserveFunds {
 			mid = deposits.length; //if not found, get the latest
 
 		return deposits[mid - 1].balance;
+	}
+
+	function isValidAccrual(Accrual a) private view returns (bool) {
+		require(a.benefactorAddress != address(0));
+		require(a.amount > 0);
+
+		//check accrual signature. the signature is based on accrual fields
+		bytes32 hashWithoutSignature = keccak256(a.amount, a.benefactorAddress, a.tokenAddress, a.timestamp);
+		uint8[65] memory signature = a.signature;
+		bytes32 s;
+		bytes32 r;
+		uint8 v;
+
+		assembly {
+			r := mload(signature)
+			s := mload(add(signature, 32))
+			v := and(255, mload(add(signature, 64)))
+		}
+
+		if (ecrecover(hashWithoutSignature, v, r, s) != owner)
+			return false;
+
+		return true;
 	}
 }
