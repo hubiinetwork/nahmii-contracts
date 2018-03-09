@@ -268,7 +268,7 @@ contract DexReserveFunds {
 	//
 	// Balance retrieval
 	// -----------------------------------------------------------------------------------------------------------------
-	function activeBalance(address wallet, address tokenAddress, uint256 timestamp) public returns (uint256) {
+	function activeBalance(address wallet, address tokenAddress, uint256 timestamp) public view returns (uint256) {
 		//if no wallet provided, get the current aggregated balance
 		if (wallet == address(0)) {
 			if (tokenAddress == address(0))
@@ -288,7 +288,7 @@ contract DexReserveFunds {
 		return activeBalanceLookup(timestamp, walletInfoMap[wallet].depositsToken[tokenAddress]);
 	}
 
-	function stagedBalance(address wallet, address tokenAddress) public returns (uint256) {
+	function stagedBalance(address wallet, address tokenAddress) public view returns (uint256) {
 		if (tokenAddress == address(0))
 			return walletInfoMap[wallet].stagedEtherBalance;
 		return walletInfoMap[wallet].stagedTokenBalance[tokenAddress];
@@ -336,13 +336,13 @@ contract DexReserveFunds {
 	//
 	// Accrual functions
 	// -----------------------------------------------------------------------------------------------------------------
-	function accrualTarget(ACCRUAL_TARGET accrualTarget) public {
+	function accrualTarget(ACCRUAL_TARGET at) public {
 		require(msg.sender != owner);
 
-		walletInfoMap[msg.sender].accrualTarget = accrualTarget;
+		walletInfoMap[msg.sender].accrualTarget = at;
 
 		//raise event
-		AccrualTargetEvent(msg.sender, accrualTarget);
+		AccrualTargetEvent(msg.sender, at);
 	}
 
 	function claimAccrual(Accrual accrual) public {
@@ -404,7 +404,7 @@ contract DexReserveFunds {
 		_;
 	}
 
-	function activeBalanceLookup(uint256 timestamp, DepositInfo[] storage deposits) internal returns (uint256) {
+	function activeBalanceLookup(uint256 timestamp, DepositInfo[] storage deposits) internal view returns (uint256) {
 		uint lo;
 		uint hi;
 		uint mid;
