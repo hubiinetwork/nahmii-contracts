@@ -60,6 +60,11 @@ contract DexReserveFunds {
 		uint8[65] signature;
 	}
 
+	struct TransferInfo {
+		address tokenAddress; // 0 for ethers.
+		uint256 amount;
+	}
+
 	//
 	// Variables
 	// -----------------------------------------------------------------------------------------------------------------
@@ -89,6 +94,7 @@ contract DexReserveFunds {
 	event AccrualTargetEvent(address wallet, ACCRUAL_TARGET accrualTarget);
 	event ClaimAccrualEvent(address wallet, ACCRUAL_TARGET accrualTarget, Accrual accrual);
 	event RegisterBenefactorEvent(address benefactorAddress);
+	event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx);
 
 	//
 	// Constructor and owner change
@@ -394,6 +400,54 @@ contract DexReserveFunds {
 
 		//raise event
 		RegisterBenefactorEvent(benefactorAddress);
+	}
+
+	//
+	// Fund Transfer functions
+	// -----------------------------------------------------------------------------------------------------------------
+	
+	function twoWayTransfer(address wallet, TransferInfo inboundTx, TransferInfo outboundTx) public onlyOwner returns (bool) {
+		require (inboundTx.amount > 0);
+		require (outboundTx.amount > 0);
+		require (wallet != address(0));
+
+		// Perform outbound (SC to W) transfers
+			
+		if (outboundTx.tokenAddress == address(0)) {
+			if (outboundTx.amount >= aggregatedEtherBalance) {
+					return false;
+			}
+
+			walletInfoMap[wallet].stagedEtherBalance = SafeMath.add(walletInfoMap[wallet].stagedEtherBalance, outboundTx.amount);
+			aggregatedEtherBalance = SafeMath.sub(aggregatedEtherBalance, outboundTx.amount);
+
+		} else {
+			if (outboundTx.amount >= aggregatedTokenBalance[outboundTx.tokenAddress]) {
+				return false;
+			}
+
+			walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress] = SafeMath.add(walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress], outboundTx.amount);
+			aggregatedTokenBalance[outboundTx.tokenAddress] = SafeMath.sub(aggregatedTokenBalance[outboundTx.tokenAddress] , outboundTx.amount);
+		}
+
+		// Perform inbound (w to SC) transfers
+
+		if (inboundTx.tokenAddress == address(0)) {
+			require(walletInfoMap[wallet].stagedEtherBalance >= inboundTx.amount);
+			walletInfoMap[wallet].stagedEtherBalance = SafeMath.sub(walletInfoMap[wallet].stagedEtherBalance, inboundTx.amount);
+			aggregatedEtherBalance = SafeMath.add(aggregatedEtherBalance, inboundTx.amount);
+
+		} else {
+			require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] >= inboundTx.amount);
+			walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] = SafeMath.sub(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress], inboundTx.amount);
+			aggregatedTokenBalance[inboundTx.tokenAddress] = SafeMath.add(aggregatedTokenBalance[inboundTx.tokenAddress], inboundTx.amount);
+		}		
+
+		//raise event
+		//
+		TwoWayTransferEvent(wallet, inboundTx, outboundTx);
+		
+		return true;
 	}
 
 	//
