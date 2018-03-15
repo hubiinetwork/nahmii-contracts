@@ -9,6 +9,7 @@ pragma solidity ^0.4.19;
 
 import './ERC20.sol';
 import './SafeMath.sol';
+import './DexReserveFunds.sol';
 
 pragma experimental ABIEncoderV2;
 
@@ -54,6 +55,7 @@ contract DexTrade {
 		uint256 etherAmount;
 		address token;
 		uint8[65] signature;
+		bool immediateSettlement;
 	}
 
 	struct Settlement {
@@ -96,6 +98,7 @@ contract DexTrade {
 	// Variables
 	// -----------------------------------------------------------------------------------------------------------------
 	address private owner;
+	address private reserveFundsContractAddress;
 
 	uint256 private ltcDisputeTimePeriodMs;
 	uint256 private ltcDisputeTimeShiftMs;
@@ -120,9 +123,12 @@ contract DexTrade {
 	event StartTradePropertiesChallengeEvent(address wallet, Trade t);
 	event ChallengeTradePropertiesEvent(address wallet, Trade t, Trade candidateT);
 	event VoteOnTradePropertiesEvent(address wallet, Trade t, Trade voteT);
+	event CloseTradeEvent(address wallet, Trade t);
+	event CloseTradePropertiesChallengeEvent(Trade t);
+	event CloseLastTradeChallengeEvent(Trade t);
 
 	//
-	// Constructor and owner change
+	// Constructor, owner and related contracts address setters
 	// -----------------------------------------------------------------------------------------------------------------
 	function DexTrade(address _owner) public {
 		require(_owner != address(0));
@@ -152,6 +158,12 @@ contract DexTrade {
 			//emit event
 			OwnerChangedEvent(oldOwner, newOwner);
 		}
+	}
+
+	function setReserveFundsContractAddress(address addr) public onlyOwner {
+		require(addr != address (0));
+
+		reserveFundsContractAddress = addr;
 	}
 
 	//
@@ -481,17 +493,64 @@ contract DexTrade {
 	}
 
 	function closeTrade(Trade t, address wallet) public {
-		uint256 tradeHash;
+		require (isTradeValid(t));
+		require (reserveFundsContractAddress != address(0));
 
 		if (msg.sender != owner) {
 			wallet = msg.sender;
 		}
 		require(wallet != address(0));
 		require(t.buyer == wallet || t.seller == wallet);
-
-		tradeHash = calculateTradeHash(t);
+		
+		uint256 tradeHash = calculateTradeHash(t);
 		require(hasTpc(wallet, tradeHash));
 		require(getTpcStage(wallet, tradeHash) == TPC_STAGE.Closed);
+
+		if ( true /* tpc in favor of t && 1 /* ltc in favor of t */ ) {
+			
+			DexReserveFunds.TransferInfo memory inbound;
+			DexReserveFunds.TransferInfo memory outbound;
+			DexReserveFunds reserveFunds = DexReserveFunds(reserveFundsContractAddress);
+
+			if (msg.sender != owner) {
+				wallet = msg.sender;
+			}
+			if (t.immediateSettlement) {
+
+				// Seller 
+				inbound.tokenAddress = t.token;
+				inbound.amount = t.tokenAmount;
+				outbound.tokenAddress = address(0);
+				outbound.amount = t.etherAmount;
+				if (!reserveFunds.twoWayTransfer(t.seller, inbound, outbound)) {
+					revert();
+				}
+
+				// Buyer
+				inbound.tokenAddress = address(0);
+				inbound.amount = t.etherAmount;
+				outbound.tokenAddress = t.token;
+				outbound.amount = t.tokenAmount;
+				if (!reserveFunds.twoWayTransfer(t.buyer, inbound, outbound)) {
+					revert();
+				}
+				
+			} else {
+
+				// do not use Reserve Fund
+
+			}
+
+			CloseTradeEvent(wallet, t);
+		}
+
+		if ( true /* exists TPC candidates*/) {
+			CloseTradePropertiesChallengeEvent(t);
+		}
+
+		if ( true /* exists LTC candidates*/ ) {
+			CloseLastTradeChallengeEvent(t);
+		}
 
 	}
 
