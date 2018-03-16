@@ -127,6 +127,9 @@ contract('DexTrade', function () {
         });
     });
 
+  
+    //-------------------------------------------------------------------------
+    // Tests start here
     //-------------------------------------------------------------------------
 
     it("T001: Must fail call to default payable() contract function from owner", function (done) {
@@ -209,74 +212,88 @@ contract('DexTrade', function () {
     // //-------------------------------------------------------------------------
 
     it("T010: Must deposit 5 test tokens in user A balance (#depositTokens)", function (done) {
-        deployedDex.depositTokens(deployedErc20.address, 5, { from: user_a }).then(function (args) {
-            done();
+        deployedErc20.approve(deployedDex.address, 5, { from: user_a } ).then(function (args) {
+            deployedDex.depositTokens(deployedErc20.address, 5, { from: user_a }).then(function (args) {
+                done();
+            }, function (err) {
+                done(new Error('token deposit must not fail: ' + err.message));
+            });
+        }, function () {
+            done(new Error('ERC20 failed to approve token transfer'));
+        })
+    });
+
+     // //-------------------------------------------------------------------------
+
+     it("T011: Must fail if #depositTokens is called from owner", function (done) {
+        deployedDex.depositTokens(deployedErc20.address, 1).then(function (args) {
+            done(new Error('token deposit must fail: ' + err.message));
         }, function (err) {
-            done(new Error('token deposit must not fail: ' + err.message));
+            done();
         });
     });
 
-    // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-    // it("T011: Must fail if #depositTokens is called with zero address", function (done) {
-    //     deployedDex.depositTokens(0x0, 5, { from: user_a }).then(function (args) {
-    //         done(new Error('Zero address must fail'));
-    //     }, function (err) {
-    //         done();
-    //     });
-    // });
+    it("T012: Must fail if #depositTokens is called with zero address", function (done) {
+        deployedDex.depositTokens(0x0, 5, { from: user_a }).then(function (args) {
+            done(new Error('Zero address must fail'));
+        }, function (err) {
+            done();
+        });
+    });
 
-    // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-    // it("T012: Must fail if #depositTokens is called with zero amount", function (done) {
-    //     deployedDex.depositTokens(deployedErc20.address, 0, { from: user_a }).then(function (args) {
-    //         done(new Error('Zero amount must fail'));
-    //     }, function (err) {
-    //         done();
-    //     });
-    // })
+    it("T013: Must fail if #depositTokens is called with zero amount", function (done) {
+        deployedDex.depositTokens(deployedErc20.address, 0, { from: user_a }).then(function (args) {
+            done(new Error('Zero amount must fail'));
+        }, function (err) {
+            done();
+        });
+    })
 
-    // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-    // it("T013: Must fail if #depositTokens is called with not enough tokens", function (done) {
-    //     deployedDex.depositTokens(deployedErc20.address, 999999, { from: user_a }).then(function (args) {
-    //         done(new Error('Out of tokens condition must fail'));
-    //     }, function (err) {
-    //         done();
-    //     });
-    // });
+    it("T014: Must fail if #depositTokens is called with not enough tokens", function (done) {
+        deployedDex.depositTokens(deployedErc20.address, 999999, { from: user_a }).then(function (args) {
+            done(new Error('Out of tokens condition must fail'));
+        }, function (err) {
+            done();
+        });
+    });
 
-    // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-    // it("T014: Must give correct #activeBalance in ETH/tokens for user A", function (done) {
-    //     _checkActiveBalance(user_a, 2.5, 5, function (err) {
-    //         done(err ? new Error('invalid user A active balance') : null);
-    //     });
-    // });
+    it("T015: Must give correct #activeBalance in ETH/tokens for user A", function (done) {
+        _checkActiveBalance(user_a, 2.5, 5, function (err) {
+            done(err ? new Error('invalid user A active balance') : null);
+        });
+    });
 
-    // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-    // it("T015: Must give correct #activeBalance in ETH/tokens for user B", function (done) {
-    //     _checkActiveBalance(user_b, 6.5, 0, function (err) {
-    //         done(err ? new Error('invalid user B active balance') : null);
-    //     });
-    // });
+    it("T016: Must give correct #activeBalance in ETH/tokens for user B", function (done) {
+        _checkActiveBalance(user_b, 6.5, 0, function (err) {
+            done(err ? new Error('invalid user B active balance') : null);
+        });
+    });
 
-    // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-    // it("T016: Must give correct #stagedBalance (zero at this point) for user A", function (done) {
-    //     _checkStagedBalance(user_a, 0, 0, function (err) {
-    //         done(err ? new Error('invalid user A staged balance') : null);
-    //     });
-    // });
+    it("T017: Must give correct #stagedBalance (zero at this point) for user A", function (done) {
+        _checkStagedBalance(user_a, 0, 0, function (err) {
+            done(err ? new Error('invalid user A staged balance') : null);
+        });
+    });
 
-    // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-    // it("T017: Must give correct #stagedBalance (zero at this point) for user B", function (done) {
-    //     _checkStagedBalance(user_b, 0, 0, function (err) {
-    //         done(err ? new Error('invalid user B staged balance') : null);
-    //     });
-    // });
+    it("T018: Must give correct #stagedBalance (zero at this point) for user B", function (done) {
+        _checkStagedBalance(user_b, 0, 0, function (err) {
+            done(err ? new Error('invalid user B staged balance') : null);
+        });
+    });
 });
 
 
