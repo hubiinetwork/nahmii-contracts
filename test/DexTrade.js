@@ -9,6 +9,8 @@ var ERC20Token = artifacts.require("StandardTokenEx");
 
 contract('DexTrade', function () {
     async = require('async');
+    ethers = require('ethers');
+    w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
     const coinbase = web3.eth.coinbase;
     const user_a = web3.eth.accounts[1];
     const user_b = web3.eth.accounts[2];
@@ -17,6 +19,7 @@ contract('DexTrade', function () {
     const kTokenSupply = 1000;
     const kTokensForUser1 = 50;
     var deployedDex = null;
+    var deployedDexIo = null; // Uses Ethers.io for convenience using structs,etc.
     var deployedErc20 = null;
 
     //-------------------------------------------------------------------------
@@ -104,6 +107,7 @@ contract('DexTrade', function () {
         DexTrade.deployed().then(function (_d) {
             assert.notEqual(_d, null);
             deployedDex = _d;
+            deployedDexIo = new ethers.Contract(_d.address, DexTrade.abi, w3prov);
             deployedErc20 = ERC20Token.new().then(function (_t) {
                 assert.notEqual(_t, null);
                 deployedErc20 = _t;
@@ -281,19 +285,49 @@ contract('DexTrade', function () {
 
     //-------------------------------------------------------------------------
 
-    it("T017: Must give correct #stagedBalance (zero at this point) for user A", function (done) {
+    it("T017: Must give correct #stagedBalance in ETH/tokens for user A", function (done) {
         _checkStagedBalance(user_a, 0, 0, function (err) {
-            done(err ? new Error('invalid user A staged balance') : null);
+            done(err ? new Error('invalid user A staged ether balance') : null);
         });
     });
 
     //-------------------------------------------------------------------------
 
-    it("T018: Must give correct #stagedBalance (zero at this point) for user B", function (done) {
+    it("T018: Must give correct #stagedBalance in ETH/tokens for user B", function (done) {
         _checkStagedBalance(user_b, 0, 0, function (err) {
-            done(err ? new Error('invalid user B staged balance') : null);
+            done(err ? new Error('invalid user B staged ether balance') : null);
         });
     });
+    
+    //-------------------------------------------------------------------------
+
+    it("T019: LTC should fail with address zero", function (done) {
+        var trade = {
+            buyOrderHash : 0, 
+            sellOrderHash : 0,
+		    buyerOrderNonce : 1,
+		    sellerOrderNonce : 1,
+		    buyer : user_b,
+		    seller : user_a,
+		    tokenAmount : 0,
+		    etherAmount : 0,
+		    token : deployedErc20.address,
+		    signature : [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 ],
+		    immediateSettlement : false
+        }
+        
+        deployedDexIo.startLastTradeChallenge(trade, user_a, 0, [ ethers.utils.bigNumberify("0") ] ).
+            then(function() {
+                done(new Error('this must fail with address zero'));
+            }, 
+            function (err) {
+                console.log(err);
+                done();
+            });
+    });
+
+    // Test: Unstage
+
 });
 
 
