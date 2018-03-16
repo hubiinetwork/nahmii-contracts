@@ -561,14 +561,14 @@ contract DexTrade {
 		require(msg.sender != owner);
 		require(amount > 0);
 		if (token == address(0x0)) {
-			require(amount <= walletInfoMap[msg.sender].activeEtherBalance);
+			require(amount <= walletInfoMap[msg.sender].stagedEtherBalance);
 			msg.sender.transfer(amount);
-			walletInfoMap[msg.sender].activeEtherBalance = SafeMath.sub(walletInfoMap[msg.sender].activeEtherBalance, amount);
+			walletInfoMap[msg.sender].stagedEtherBalance = SafeMath.sub(walletInfoMap[msg.sender].stagedEtherBalance, amount);
 		} else {
-			require(amount <= walletInfoMap[msg.sender].activeTokenBalance[token]);
+			require(amount <= walletInfoMap[msg.sender].stagedTokenBalance[token]);
 			ERC20 token = ERC20(tokenAddress);
 			token.transfer(msg.sender, amount);
-			walletInfoMap[msg.sender].activeTokenBalance[token] = SafeMath.sub(walletInfoMap[msg.sender].activeTokenBalance[token], amount);
+			walletInfoMap[msg.sender].stagedTokenBalance[token] = SafeMath.sub(walletInfoMap[msg.sender].stagedTokenBalance[token], amount);
 		}
 
 		//raise event
