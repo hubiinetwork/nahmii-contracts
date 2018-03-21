@@ -283,6 +283,7 @@ contract DexTrade {
 
 	function lastTradeChallengeStage(address wallet) public view returns (uint256, LTC_STAGE) {
 		require(wallet != address(0));
+		require(wallet != owner);
 
 		if (getLtcStage(wallet) == LTC_STAGE.Dispute) {
 			return (ltcMap[wallet].lastDisputeNonce, LTC_STAGE.Dispute);
@@ -343,8 +344,9 @@ contract DexTrade {
 		if (msg.sender != owner) {
 			wallet = msg.sender;
 		}
+		require(wallet != address(0));
 		require(hasLtc(wallet) != false);
-
+		
 		return tradeHashMap[ltcMap[wallet].currentLastTradeHash];
 	}
 
@@ -361,6 +363,7 @@ contract DexTrade {
 		require(wallet != address(0));
 
 		for (i = 0; i < t.length; i++) {
+			require (isTradeValid(t[i]));
 			if (t[i].buyer == wallet || t[i].seller == wallet) {
 				tradeHash = calculateTradeHash(t[i]);
 				tradeHashMap[tradeHash] = t[i];
