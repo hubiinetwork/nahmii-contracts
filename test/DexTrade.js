@@ -14,6 +14,8 @@ contract('DexTrade', function () {
     const coinbase = web3.eth.coinbase;
     const user_a = web3.eth.accounts[1];
     const user_b = web3.eth.accounts[2];
+    const user_c = web3.eth.accounts[3];
+    const user_d = web3.eth.accounts[4];
     const gasLimit = 1400000;
     const ctraddr = DexTrade.address;
     const kTokenSupply = 1000;
@@ -26,82 +28,47 @@ contract('DexTrade', function () {
     // Contract-wide helper functions
     //-------------------------------------------------------------------------
 
-    function _checkActiveBalance(user, etherBalance, tokenBalance, cb) {
-        deployedDex.activeBalance(user, 0).then(function (balance) {
-            assert.equal(balance, web3.toWei(etherBalance, 'ether'), "Balance (" + balance + ") != " + etherBalance);
-            deployedDex.activeBalance(user, deployedErc20.address).then(function (balance) {
-                assert.equal(balance, tokenBalance, "Token Balance (" + balance + ") != " + tokenBalance);
-                cb(null);
-            }, function (err) {
-                cb(err);
-            });
-        }, function (err) {
-            cb(err);
-        });
-    }
+    function _verifyDeposit(user, index, token, amount, opts, cb) {
+        deployedDex.deposit(user, index, opts).then(function (args) {
+            const _amount = args[0];
+            const _timestamp = args[1];
+            const _token = args[2];
 
-    function _checkStagedBalance(user, etherBalance, tokenBalance, cb) {
-        deployedDex.stagedBalance(user, 0).then(function (balance) {
-            assert.equal(balance, web3.toWei(etherBalance, 'ether'));
-            deployedDex.stagedBalance(user, deployedErc20.address).then(function (balance) {
-                assert.equal(balance, tokenBalance);
-                cb(null);
-            }, function (err) {
-                cb(err);
-            });
-        }, function (err) {
-            cb(err);
-        });
-    }
-
-    function _failPayableUserTx(user, ethers, cb) {
-        web3.eth.sendTransaction({ from: user, to: ctraddr, value: web3.toWei(ethers, 'ether'), gas: gasLimit }, function (err) {
-            cb(null ? new Error('This tx must fail') : null);
-        });
-    }
-
-    function _sendUserTx(user, ethers, cb) {
-        web3.eth.sendTransaction({ from: user, to: ctraddr, value: web3.toWei(ethers, 'ether'), gas: gasLimit }, function (err) {
-            cb(err);
-        });
-    }
-
-    function _verifyDepositsCount(user, n, cb) {
-        deployedDex.depositCount(user).then(function (count) {
-            cb(count != n ? new Error('Unexpected deposit count for user') : null);
-        }, function (err) {
-            cb(err);
-        });
-    }
-
-    function _verifyDeposit(user, index, ethers, cb) {
-        deployedDex.deposit(user, index).then(function (args) {
-            const amount = args[0];
-            const timestamp = args[1];
-            const token = args[2];
-
-            if (token != 0) {
-                cb(new Error( "Token must be 0 for ethers"));
+            if (token == 0 && (web3.toWei(amount, 'ether') != _amount)) {
+                cb(new Error("Unexpected ether deposit amount"));
                 return;
             }
-            if (web3.fromWei(amount, 'ether') != ethers) {
-                cb(new Error("Unexpected deposit amount"));
+            if (token != 0 && amount != _amount) {
+                cb(new Error("Unexpeced token deposit amount"));
                 return;
             }
-            if (timestamp == 0) {
+            if (_timestamp == 0) {
                 cb(new Error("Timestamp cannot be null"));
                 return;
             }
             cb(null);
-        }, function(err) {
+        }, function (err) {
             cb(err);
         });
     }
 
-
     //-------------------------------------------------------------------------
     // Preflight stage
     //-------------------------------------------------------------------------
+
+    before("Preflight: Check available account addresses and balances", function(done) {
+        assert.notEqual(user_a, null);
+        assert.notEqual(user_b, null);
+        assert.notEqual(user_c, null);
+        assert.notEqual(user_d, null);
+
+        assert.ok(web3.fromWei(web3.eth.getBalance(user_a), "ether") > 10);
+        assert.ok(web3.fromWei(web3.eth.getBalance(user_b), "ether") > 10);
+        assert.ok(web3.fromWei(web3.eth.getBalance(user_c), "ether") > 10);
+        assert.ok(web3.fromWei(web3.eth.getBalance(user_d), "ether") > 10);
+    
+        done();        
+    });
 
     before("Preflight: get deployed contracts", function (done) {
         DexTrade.deployed().then(function (_d) {
@@ -131,107 +98,70 @@ contract('DexTrade', function () {
         });
     });
 
-  
+
     //-------------------------------------------------------------------------
     // Tests start here
+    //
+    //
+    // Test description format:
+    // TXX: MUST {SUCCEED/FAIL} [function_name]: result of successful execution, or reason for fail.
+    //
+    // Returned error strings in Done() callback function:
+    // 'This test must fail'
+    // 'This test must succeed'
+    // Additional info can be provided after the messages above. e.g: err.toString()
+    //
     //-------------------------------------------------------------------------
 
-    it("T001: Must fail call to default payable() contract function from owner", function (done) {
-        _failPayableUserTx(coinbase, 10, done);
-    });
-
-    //-------------------------------------------------------------------------
-
-    it("T002: Must fail call to default payable() contract function with zero ethers", function (done) {
-        _failPayableUserTx(user_a, 0, done);
-    });
-
-    //-------------------------------------------------------------------------
-
-    it("T003: Must successfully deposit Ethers for user A via default payable() function", function (done) {
-        async.waterfall(
-            [
-                function (cb) { _sendUserTx(user_a, 1, cb); },
-                function (cb) { _sendUserTx(user_a, 1.5, cb); }
-            ],
-            done
-        );
+    it("T001: MUST FAIL [payable]: cannot be called from owner", function (done) {
+        web3.eth.sendTransaction({ from: coinbase, to: ctraddr, value: web3.toWei(10, 'ether'), gas: gasLimit }, function (err) {
+            done(err == null ? new Error('This test must fail') : null);
+        });
     });
 
     //-------------------------------------------------------------------------
 
-    it("T004: Must successfully deposit Ethers for user B via default payable() function", function (done) {
-        async.waterfall(
-            [
-                function (cb) { _sendUserTx(user_b, 4, cb); },
-                function (cb) { _sendUserTx(user_b, 2.5, cb); }
-            ],
-            done
-        )
+    it("T002: MUST FAIL [payable]: cannot be called with 0 ethers", function (done) {
+        web3.eth.sendTransaction({ from: user_a, to: ctraddr, value: web3.toWei(0, 'ether'), gas: gasLimit }, function (err) {
+            done(err == null ? new Error('This test must fail') : null);
+        });
     });
 
     //-------------------------------------------------------------------------
 
-    it("T005: Must return correct number of deposits for User A", function (done) {
-        _verifyDepositsCount(user_a, 2, done);
+    it("T003: MUST SUCCEED [payable]: add 2.5 Ethers to user A active balance", function (done) {
+        web3.eth.sendTransaction({ from: user_a, to: ctraddr, value: web3.toWei(2.5, 'ether'), gas: gasLimit }, function (err) {
+            done(err != null ? new Error('This test must succeed. Error: ' + err.toString()) : null);
+        });
     });
 
     //-------------------------------------------------------------------------
 
-    it("T006: Must return correct deposit entries for User B", function (done) {
-        async.waterfall([
-            function (cb) { _verifyDeposit(user_a, 0, 1, cb); },
-            function (cb) { _verifyDeposit(user_a, 1, 1.5, cb); },
-        ],
-        done);
+    it("T004: MUST SUCCEED [payable]: add 6.5 Ethers to user B active balance", function (done) {
+        web3.eth.sendTransaction({ from: user_b, to: ctraddr, value: web3.toWei(6.5, 'ether'), gas: gasLimit }, function (err) {
+            done(err != null ? new Error('This test must succeed. Error: ' + err.toString()) : null);
+        });
     });
 
-    // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-    it("T007: Must return correct number of deposits for User B", function (done) {
-        _verifyDepositsCount(user_b, 2, done);
-    });
-
-    // //-------------------------------------------------------------------------
-
-    it("T008: Must return correct deposit entries for User B", function (done) {
-        async.waterfall([
-            function (cb) { _verifyDeposit(user_b, 0, 4, cb); },
-            function (cb) { _verifyDeposit(user_b, 1, 2.5, cb); }
-        ],
-            done);
-    });
-
-    // //-------------------------------------------------------------------------
-
-    it("T009: Must fail call to #getDeposits with invalid index", function (done) {
-        deployedDex.deposit(user_a, 9999).then(function (args) {
-            done(new Error('getDeposit with invalid index must fail'));
-        },
-            function (err) {
-                done();
-            });
-    });
-
-    // //-------------------------------------------------------------------------
-
-    it("T010: Must deposit 5 test tokens in user A balance (#depositTokens)", function (done) {
-        deployedErc20.approve(deployedDex.address, 5, { from: user_a } ).then(function (args) {
+    it("T005: MUST SUCCEED [depositTokens]: 5 tokens added to A active balance", function (done) {
+        deployedErc20.approve(deployedDex.address, 5, { from: user_a }).then(function (args) {
             deployedDex.depositTokens(deployedErc20.address, 5, { from: user_a }).then(function (args) {
                 done();
             }, function (err) {
-                done(new Error('token deposit must not fail: ' + err.message));
+                done(new Error('This test must succeed. Error: ' + err.toString()));
             });
         }, function () {
-            done(new Error('ERC20 failed to approve token transfer'));
+            done(new Error('This test must succeed. Error: ERC20 failed to approve token transfer'));
         })
     });
 
-     // //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-     it("T011: Must fail if #depositTokens is called from owner", function (done) {
-        deployedDex.depositTokens(deployedErc20.address, 1).then(function (args) {
-            done(new Error('token deposit must fail: ' + err.message));
+    it("T006: MUST FAIL [depositTokens]: Cannot be called from owner address", function (done) {
+        deployedDex.depositTokens(deployedErc20.address, 5, { from: coinbase }).then(function (args) {
+            done(new Error('This test must fail'));
         }, function (err) {
             done();
         });
@@ -239,9 +169,9 @@ contract('DexTrade', function () {
 
     //-------------------------------------------------------------------------
 
-    it("T012: Must fail if #depositTokens is called with zero address", function (done) {
-        deployedDex.depositTokens(0x0, 5, { from: user_a }).then(function (args) {
-            done(new Error('Zero address must fail'));
+    it("T007: MUST FAIL [depositTokens]: Cannot be called with zero address", function (done) {
+        deployedDex.depositTokens(0, 5, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
         }, function (err) {
             done();
         });
@@ -249,19 +179,9 @@ contract('DexTrade', function () {
 
     //-------------------------------------------------------------------------
 
-    it("T013: Must fail if #depositTokens is called with zero amount", function (done) {
+    it("T008: MUST FAIL [depositTokens]: Cannot be called with zero amount", function (done) {
         deployedDex.depositTokens(deployedErc20.address, 0, { from: user_a }).then(function (args) {
-            done(new Error('Zero amount must fail'));
-        }, function (err) {
-            done();
-        });
-    })
-
-    //-------------------------------------------------------------------------
-
-    it("T014: Must fail if #depositTokens is called with not enough tokens", function (done) {
-        deployedDex.depositTokens(deployedErc20.address, 999999, { from: user_a }).then(function (args) {
-            done(new Error('Out of tokens condition must fail'));
+            done(new Error('This test must fail'));
         }, function (err) {
             done();
         });
@@ -269,62 +189,218 @@ contract('DexTrade', function () {
 
     //-------------------------------------------------------------------------
 
-    it("T015: Must give correct #activeBalance in ETH/tokens for user A", function (done) {
-        _checkActiveBalance(user_a, 2.5, 5, function (err) {
-            done(err ? new Error('invalid user A active balance') : null);
-        });
-    });
-
-    //-------------------------------------------------------------------------
-
-    it("T016: Must give correct #activeBalance in ETH/tokens for user B", function (done) {
-        _checkActiveBalance(user_b, 6.5, 0, function (err) {
-            done(err ? new Error('invalid user B active balance') : null);
-        });
-    });
-
-    //-------------------------------------------------------------------------
-
-    it("T017: Must give correct #stagedBalance in ETH/tokens for user A", function (done) {
-        _checkStagedBalance(user_a, 0, 0, function (err) {
-            done(err ? new Error('invalid user A staged ether balance') : null);
-        });
-    });
-
-    //-------------------------------------------------------------------------
-
-    it("T018: Must give correct #stagedBalance in ETH/tokens for user B", function (done) {
-        _checkStagedBalance(user_b, 0, 0, function (err) {
-            done(err ? new Error('invalid user B staged ether balance') : null);
-        });
-    });
-    
-    //-------------------------------------------------------------------------
-
-    it("T019: LTC should fail with address zero", function (done) {
-        var trade = {
-            buyOrderHash : 0, 
-            sellOrderHash : 0,
-		    buyerOrderNonce : 1,
-		    sellerOrderNonce : 1,
-		    buyer : user_b,
-		    seller : user_a,
-		    tokenAmount : 0,
-		    etherAmount : 0,
-		    token : deployedErc20.address,
-		    signature : [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 ],
-		    immediateSettlement : false
-        }
-        
-        deployedDexIo.startLastTradeChallenge(trade, user_a, 0, [ ethers.utils.bigNumberify("0") ] ).
-            then(function() {
-                done(new Error('this must fail with address zero'));
-            }, 
-            function (err) {
-                console.log(err);
+    it("T009: MUST FAIL [depositTokens]: User does not have enough tokens to deposit.", function (done) {
+        deployedErc20.approve(deployedDex.address, 9999, { from: user_a }).then(function (args) {
+            deployedDex.depositTokens(deployedErc20.address, 9999, { from: user_a }).then(function (args) {
+                done(new Error('This test must fail'));
+            }, function (err) {
                 done();
             });
+        }, function () {
+            done(new Error('This test must fail. Error: ERC20 failed to approve token transfer'));
+        })
     });
+
+    //-------------------------------------------------------------------------
+
+    it("T010: MUST SUCCEED [depositCount]: User A should have 2 deposits", function (done) {
+        deployedDex.depositCount(user_a).then(function (count) {
+            done(count != 2 ? new Error('This test must succeed. Error: Deposit count: ' + count) : null);
+        }, function (err) {
+            done(new Error('This test must succeed. Error: ' + err.toString()));
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("T011: MUST SUCCEED [depositCount]: User B should have 1 deposit", function (done) {
+        deployedDex.depositCount(user_b).then(function (count) {
+            done(count != 1 ? new Error('This test must succeed. Error: Deposit count: ' + count) : null);
+        }, function (err) {
+            done(new Error('This test must succeed. Error: ' + err.toString()));
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("T012: MUST FAIL [depositCount]: Cannot be called from non-owner address", function (done) {
+        deployedDex.depositCount(user_a, { from: user_a }).then(function (count) {
+            done(new Error('This test must fail'));;
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("T013: MUST SUCCEED [deposit]: User B should have 6.5 ETH at index 0", function (done) {
+        _verifyDeposit(user_b, 0, 0, 6.5, {}, done);
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("T014: MUST FAIL [deposit]: Invalid index deposit 1 for user B.", function (done) {
+        _verifyDeposit(user_b, 1, 0, 6.5, {}, function (err) {
+            done(err == null ? new Error('This test must fail') : null);
+        });
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T015: MUST SUCCEED [deposit]: User A should have 5 tokens at index 1", function (done) {
+        _verifyDeposit(user_a, 1, deployedErc20.address, 5, {}, done);
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T016: MUST FAIL [deposit]: Cannot be called from non-owner address", function (done) {
+        _verifyDeposit(user_a, 1, deployedErc20.address, 5, { from: user_a }, function (err) {
+            done(err == null ? new Error('This test must fail') : null);
+        });
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T017: MUST SUCCEED [activeBalance]: 2.5 ETH for User A", function (done) {
+        deployedDex.activeBalance(user_a, 0).then(function (balance) {
+            done(balance != web3.toWei(2.5, 'ether') ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T018: MUST SUCCEED [activeBalance]: 5 tokens for User A", function (done) {
+        deployedDex.activeBalance(user_a, deployedErc20.address).then(function (balance) {
+            done(balance != 5 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T019: MUST SUCCEED [activeBalance]: 0 tokens for User B", function (done) {
+        deployedDex.activeBalance(user_b, deployedErc20.address).then(function (balance) {
+            done(balance != 0 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T020: MUST FAIL [activeBalance]: cannot be called from non-owner address", function (done) {
+        deployedDex.activeBalance(user_b, deployedErc20.address, { from: user_a }).then(function (balance) {
+            done(new Error('This test must fail'));
+        },
+            function (err) {
+                done();
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T021: MUST SUCCEED [stagedBalance]: 0 ETH for User A", function (done) {
+        deployedDex.stagedBalance(user_a, 0).then(function (balance) {
+            done(balance != 0 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T022: MUST SUCCEED [stagedBalance]: 0 tokens for User A", function (done) {
+        deployedDex.stagedBalance(user_a, deployedErc20.address).then(function (balance) {
+            done(balance != 0 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T023: MUST SUCCEED [stagedBalance]: 0 tokens for User B", function (done) {
+        deployedDex.stagedBalance(user_b, deployedErc20.address).then(function (balance) {
+            done(balance != 0 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T024: MUST SUCCEED [stagedBalance]: cannot be called from non-owner address", function (done) {
+        deployedDex.stagedBalance(user_b, deployedErc20.address, { from: user_a }).then(function (balance) {
+            done(new Error('This test must fail'));
+        },
+            function (err) {
+                done();
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("T025: MUST SUCCEED [stagedBalance]: cannot be called from non-owner address", function (done) {
+        deployedDex.stagedBalance(user_b, deployedErc20.address, { from: user_a }).then(function (balance) {
+            done(new Error('This test must fail'));
+        },
+            function (err) {
+                done();
+            })
+    });
+
+
+
+
+
+
+
+
+    
+    //------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+    // //-------------------------------------------------------------------------
+
+    // it("T019: LTC should fail with address zero", function (done) {
+    //     var trade = {
+    //         buyOrderHash: 0,
+    //         sellOrderHash: 0,
+    //         buyerOrderNonce: 1,
+    //         sellerOrderNonce: 1,
+    //         buyer: user_b,
+    //         seller: user_a,
+    //         tokenAmount: 0,
+    //         etherAmount: 0,
+    //         token: deployedErc20.address,
+    //         signature: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    //         immediateSettlement: false
+    //     }
+
+    //     deployedDexIo.startLastTradeChallenge(trade, user_a, 0, [ethers.utils.bigNumberify("0")]).
+    //         then(function () {
+    //             done(new Error('this must fail with address zero'));
+    //         },
+    //             function (err) {
+    //                 console.log(err);
+    //                 done();
+    //             });
+    // });
 
     // Test: Unstage
 
