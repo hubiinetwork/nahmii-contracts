@@ -54,8 +54,8 @@ contract DexTrade {
 		uint256 tokenAmount;
 		uint256 etherAmount;
 		address token;
-		uint8[65] signature;
 		bool immediateSettlement;
+		uint8[65] signature;
 	}
 
 	struct Settlement {
@@ -245,7 +245,7 @@ contract DexTrade {
 	//
 	// Last-Trade-Challenge (LTC) functions
 	// -----------------------------------------------------------------------------------------------------------------
-	function startLastTradeChallenge(Trade t, address wallet, uint256 ordersRoot, uint256[] ordersProofMap ) public onlyOwner {
+	function startLastTradeChallenge(Trade t, address wallet, uint256 ordersRoot, uint256[] ordersProofMap ) public {
 		uint256 tradeHash;
 		uint i;
 
@@ -265,6 +265,8 @@ contract DexTrade {
 		} else {
 			revert();
 		}
+
+		return;
 
 		tradeHash = calculateTradeHash(t);
 		tradeHashMap[tradeHash] = t;
@@ -590,7 +592,7 @@ contract DexTrade {
 		}
 
 		//check trade signature. the signature is based on some trade fields
-		bytes32 tradeHashWithoutSignature = keccak256(t.buyOrderHash, t.sellOrderHash, t.buyerOrderNonce, t.sellerOrderNonce, t.buyer, t.seller, t.tokenAmount, t.etherAmount, t.token);
+		bytes32 tradeHashWithoutSignature = keccak256(t.buyOrderHash, t.sellOrderHash, t.buyerOrderNonce, t.sellerOrderNonce, t.buyer, t.seller, t.tokenAmount, t.etherAmount, t.token, t.immediateSettlement);
 		uint8[65] memory signature = t.signature;
 		bytes32 s;
 		bytes32 r;

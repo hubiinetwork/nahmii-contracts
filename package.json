@@ -13,6 +13,7 @@
   "license": "Commercial",
   "dependencies": {
     "async": "^2.6.0",
-    "ethers": "^3.0.6"
+    "ethers": "^3.0.7",
+    "solidity-keccak256": "git+https://github.com/mxmauro/solidity-keccak256.git"
   }
 }
