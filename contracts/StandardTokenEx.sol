@@ -15,7 +15,7 @@ import './SafeMath.sol';
  * @dev Basic implementation of the EIP20 standard token (also known as ERC20 token).
  */
 contract StandardTokenEx is ERC20 {
-  using SafeMath for uint;
+using SafeMath for uint;
 
   uint private total_supply;
   mapping(address => uint) private balances;

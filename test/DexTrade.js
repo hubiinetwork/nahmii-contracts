@@ -62,14 +62,12 @@ contract('DexTrade', function () {
         var hash = keccak256.create();
         hash.update(t);
         var tradeHashWithoutSignature = hash.digest();
-        console.log(tradeHashWithoutSignature);
         var signedMessage = web3.eth.sign(signer, '0x' + tradeHashWithoutSignature);
-        
-        var result = [];
-        for (var i = 2; i < 132; i += 2) {
-            result.push(parseInt(signedMessage.substr(i, 2), 16));
-        }
-
+ 
+        var result = {};
+        result.r = "0x" + signedMessage.substr(2, 64);
+        result.s = "0x" + signedMessage.substr(66, 64);
+        result.v = parseInt(signedMessage.substr(130, 2), 16) + 27;
         return result;
     }
 
