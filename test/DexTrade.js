@@ -6,7 +6,7 @@
 
 var DexTrade = artifacts.require("DexTrade");
 var ERC20Token = artifacts.require("StandardTokenEx");
-var solkeccak = require("solidity-keccak256");
+var keccak256 = require("augmented-keccak256");
 
 contract('DexTrade', function () {
     async = require('async');
@@ -59,7 +59,7 @@ contract('DexTrade', function () {
     }
 
     function signTrade(t, signer) {
-        var hash = solkeccak.create();
+        var hash = keccak256.create();
         hash.update(t);
         var tradeHashWithoutSignature = hash.digest();
         console.log(tradeHashWithoutSignature);
