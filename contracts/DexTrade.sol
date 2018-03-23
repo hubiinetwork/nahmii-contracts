@@ -7,9 +7,9 @@
  */
 pragma solidity ^0.4.19;
 
-import './ERC20.sol';
-import './SafeMath.sol';
-import './DexReserveFunds.sol';
+import "./ERC20.sol";
+import "./SafeMath.sol";
+import "./DexReserveFunds.sol";
 
 pragma experimental ABIEncoderV2;
 
@@ -98,7 +98,10 @@ contract DexTrade {
 	// Variables
 	// -----------------------------------------------------------------------------------------------------------------
 	address private owner;
-	address private reserveFundsContractAddress;
+	address private _reserveFundSmartContract;
+	address private _tokenHolderRevenueFundSmartContract;
+	address private _feesManagerSmartContract;
+	address private _periodsManagerSmartContract;
 
 	uint256 private ltcDisputeTimePeriodMs;
 	uint256 private ltcDisputeTimeShiftMs;
@@ -160,11 +163,26 @@ contract DexTrade {
 		}
 	}
 
-	function setReserveFundsContractAddress(address addr) public onlyOwner {
+	function reserveFundSmartContract(address addr) public onlyOwner {
 		require(addr != address (0));
-
-		reserveFundsContractAddress = addr;
+		_reserveFundSmartContract = addr;
 	}
+
+	function tokenHolderRevenueFundSmartContract(address addr) public onlyOwner {
+		require(addr != address (0));
+		_tokenHolderRevenueFundSmartContract = addr;
+	}
+
+	function feesManagerSmartContract(address addr) public onlyOwner {
+		require(addr != address (0));
+		_feesManagerSmartContract = addr;
+	
+	}
+	function periodsManagerSmartContract(address addr) public onlyOwner {
+		require(addr != address (0));
+		_periodsManagerSmartContract = addr;
+	}
+
 
 	//
 	// Deposit functions
@@ -499,7 +517,7 @@ contract DexTrade {
 
 	function closeTrade(Trade t, address wallet) public {
 		require (isTradeValid(t));
-		require (reserveFundsContractAddress != address(0));
+		require (_reserveFundSmartContract != address(0));
 
 		if (msg.sender != owner) {
 			wallet = msg.sender;
@@ -515,7 +533,7 @@ contract DexTrade {
 			
 			DexReserveFunds.TransferInfo memory inbound;
 			DexReserveFunds.TransferInfo memory outbound;
-			DexReserveFunds reserveFunds = DexReserveFunds(reserveFundsContractAddress);
+			DexReserveFunds reserveFunds = DexReserveFunds(_reserveFundSmartContract);
 
 			if (msg.sender != owner) {
 				wallet = msg.sender;
@@ -579,6 +597,32 @@ contract DexTrade {
 		//raise event
 		WithdrawEvent(msg.sender, amount, token);
 	}
+
+	//
+	// Settlement functions
+	// -----------------------------------------------------------------------------------------------------------------
+	function startSettlementPropertiesChallenge(Settlement settlement) public {
+
+	}
+
+	function challengeSettlementProperties(Settlement settlement, Settlement candidate) {
+
+	}
+
+	function voteOnSettlementProperties(Settlement s, uint256 opt) {
+	}
+
+	function closeSettlement(Settlement s, Trade[] trades) {
+
+	}
+
+	// Fraudulent Trade Handling functions
+	// -----------------------------------------------------------------------------------------------------------------
+	function challengeFradulentTrade(Trade candidate) {
+
+	}
+
+
 
 	//
 	// Helper internal functions
