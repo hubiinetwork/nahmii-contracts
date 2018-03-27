@@ -136,6 +136,10 @@ contract DexTrade {
     event CloseTradeEvent(address wallet, Trade t);
     event CloseTradePropertiesChallengeEvent(Trade t);
     event CloseLastTradeChallengeEvent(Trade t);
+    event StartSettlementPropertiesChallengeEvent(Settlement s);
+    event ChallengeSettlementPropertiesEvent(Settlement s, Settlement sc);
+    event VoteOnSettlementPropertiesEvent(Settlement s, uint256 opt);
+    event CloseSettlementEvent(Settlement s, Trade[] ts);
 
     //
     // Constructor, owner and related contracts address setters
@@ -290,8 +294,6 @@ contract DexTrade {
         } else {
             revert();
         }
-
-        return;
 
         tradeHash = calculateTradeHash(t);
         tradeHashMap[tradeHash] = t;
@@ -619,27 +621,26 @@ contract DexTrade {
     // Settlement functions
     // -----------------------------------------------------------------------------------------------------------------
     function startSettlementPropertiesChallenge(Settlement settlement) public {
-
+        StartSettlementPropertiesChallengeEvent(settlement);
     }
 
-    function challengeSettlementProperties(Settlement settlement, Settlement candidate) {
-
+    function challengeSettlementProperties(Settlement settlement, Settlement candidate) public {
+        ChallengeSettlementPropertiesEvent(settlement, candidate);
     }
 
-    function voteOnSettlementProperties(Settlement s, uint256 opt) {
+    function voteOnSettlementProperties(Settlement s, uint256 opt) public {
+        VoteOnSettlementPropertiesEvent(s,opt);
     }
 
-    function closeSettlement(Settlement s, Trade[] trades) {
-
+    function closeSettlement(Settlement s, Trade[] trades) public {
+        CloseSettlementEvent(s, trades);
     }
 
     // Fraudulent Trade Handling functions
     // -----------------------------------------------------------------------------------------------------------------
-    function challengeFradulentTrade(Trade candidate) {
+    function challengeFradulentTrade(Trade candidate) public {
 
     }
-
-
 
     //
     // Helper internal functions
