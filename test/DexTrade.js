@@ -374,8 +374,8 @@ contract('DexTrade', function () {
             sellOrderHash: 0,
             buyerOrderNonce: 1,
             sellerOrderNonce: 1,
-            buyer: user_b,
-            seller: user_a,
+            buyer: user_a,
+            seller: user_c,
             tokenAmount: 0,
             etherAmount: 0,
             token: deployedErc20.address,
@@ -402,8 +402,8 @@ contract('DexTrade', function () {
             sellOrderHash: 0,
             buyerOrderNonce: 1,
             sellerOrderNonce: 1,
-            buyer: user_b,
-            seller: user_a,
+            buyer: user_a,
+            seller: user_c,
             tokenAmount: 10,
             etherAmount: 80000000000,
             token: deployedErc20.address,
@@ -428,8 +428,8 @@ contract('DexTrade', function () {
             sellOrderHash: 0,
             buyerOrderNonce: 178,
             sellerOrderNonce: 286,
-            buyer: user_b,
-            seller: user_a,
+            buyer: user_a,
+            seller: user_c,
             tokenAmount: 8,
             etherAmount: 33350000000000,
             token: deployedErc20.address,
@@ -449,8 +449,36 @@ contract('DexTrade', function () {
     });
     
     //------------------------------------------------------------------------
-    /*
+    
     it("T028: MUST SUCCEED [startLastTradeChallenge]: LTC opened for user A", function (done) {
+        var trade = {
+            buyOrderHash: 0,
+            sellOrderHash: 0,
+            buyerOrderNonce: 1,
+            sellerOrderNonce: 1,
+            buyer: user_a,
+            seller: user_c,
+            tokenAmount: 3,
+            etherAmount: 500000000,
+            token: deployedErc20.address,
+            immediateSettlement: false
+        };
+
+        trade.signature = signTrade(trade, coinbase);
+
+        var d = deployedDexIo.connect(signer_a);
+        d.startLastTradeChallenge(trade, user_a, 0, [ethers.utils.bigNumberify("0")], { gasLimit: 600000 }).
+            then(function () {
+                done();
+            },
+                function (err) {
+                    done(new Error('This test must succeed. Error:' + err.toString()));
+                });
+    });
+ 
+    //------------------------------------------------------------------------
+
+    it("T029: MUST FAIL [startLastTradeChallenge]: LTC already open for user A", function (done) {
         var trade = {
             buyOrderHash: 0,
             sellOrderHash: 0,
@@ -469,17 +497,14 @@ contract('DexTrade', function () {
         var d = deployedDexIo.connect(signer_a);
         d.startLastTradeChallenge(trade, user_a, 0, [ethers.utils.bigNumberify("0")]).
             then(function () {
-                done();
+                done(new Error('This test must fail'));
             },
                 function (err) {
-                    console.log(err);
-                    done(new Error('This test must fail'));
+                    done();
                 });
     });
-    /*    
-    
-   
-    it("T029: MUST FAIL [startLastTradeChallenge]: LTC already open for user A", function (done) {});
+
+    /*
     it("T030: MUST SUCCEED [startLastTradeChallenge]: cannot be called with address zero", function (done) {});
 
     it("T031: MUST FAIL [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
