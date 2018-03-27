@@ -379,10 +379,12 @@ contract('DexTrade', function () {
             tokenAmount: 0,
             etherAmount: 0,
             token: deployedErc20.address,
-            signature: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             immediateSettlement: false
         }
-        var d = deployedDexIo.connect(signer_a);
+        
+        trade.signature = signTrade(trade, coinbase);
+
+        var d = deployedDexIo.connect(signer_owner);
         d.startLastTradeChallenge(trade, user_a, 0, [ethers.utils.bigNumberify("0")]).
             then(function () {
                 done(new Error('This test must fail'));
@@ -393,7 +395,7 @@ contract('DexTrade', function () {
     });
     
     //------------------------------------------------------------------------
-/*
+
     it("T026: MUST FAIL [startLastTradeChallenge]: cannot be called with invalid signature in Trade", function (done) {
         var trade = {
             buyOrderHash: 0,
@@ -402,10 +404,10 @@ contract('DexTrade', function () {
             sellerOrderNonce: 1,
             buyer: user_b,
             seller: user_a,
-            tokenAmount: 0,
-            etherAmount: 0,
+            tokenAmount: 10,
+            etherAmount: 80000000000,
             token: deployedErc20.address,
-            signature: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            signature: { s: [], r: [], v: [] },
             immediateSettlement: false
         }
         var d = deployedDexIo.connect(signer_a);
@@ -424,16 +426,18 @@ contract('DexTrade', function () {
         var trade = {
             buyOrderHash: 0,
             sellOrderHash: 0,
-            buyerOrderNonce: 1,
-            sellerOrderNonce: 1,
+            buyerOrderNonce: 178,
+            sellerOrderNonce: 286,
             buyer: user_b,
             seller: user_a,
-            tokenAmount: 0,
-            etherAmount: 0,
+            tokenAmount: 8,
+            etherAmount: 33350000000000,
             token: deployedErc20.address,
-            signature: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             immediateSettlement: false
-        }
+        }        
+        
+        trade.signature = signTrade(trade, coinbase);
+
         var d = deployedDexIo.connect(signer_a);
         d.startLastTradeChallenge(trade, user_a, 0, [ethers.utils.bigNumberify("0")]).
             then(function () {
@@ -443,9 +447,9 @@ contract('DexTrade', function () {
                     done();
                 });
     });
-    */
+    
     //------------------------------------------------------------------------
-
+    /*
     it("T028: MUST SUCCEED [startLastTradeChallenge]: LTC opened for user A", function (done) {
         var trade = {
             buyOrderHash: 0,
@@ -472,12 +476,12 @@ contract('DexTrade', function () {
                     done(new Error('This test must fail'));
                 });
     });
-    
+    /*    
     
    
     it("T029: MUST FAIL [startLastTradeChallenge]: LTC already open for user A", function (done) {});
     it("T030: MUST SUCCEED [startLastTradeChallenge]: cannot be called with address zero", function (done) {});
-/*
+
     it("T031: MUST FAIL [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
     it("T032: MUST SUCCEED [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
     it("T033: MUST FAIL [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
