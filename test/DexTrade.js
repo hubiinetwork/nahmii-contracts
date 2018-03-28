@@ -504,10 +504,48 @@ contract('DexTrade', function () {
                 });
     });
 
-    /*
-    it("T030: MUST SUCCEED [startLastTradeChallenge]: cannot be called with address zero", function (done) {});
+    
+    it("T030: MUST SUCCEED [startLastTradeChallenge]: LTC opened for user B", function (done) {
+        var trade = {
+            buyOrderHash: 0,
+            sellOrderHash: 0,
+            buyerOrderNonce: 2,
+            sellerOrderNonce: 2,
+            buyer: user_d,
+            seller: user_b,
+            tokenAmount: 3,
+            etherAmount: 500000000,
+            token: deployedErc20.address,
+            immediateSettlement: false
+        };
 
-    it("T031: MUST FAIL [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
+        trade.signature = signTrade(trade, coinbase);
+
+        var d = deployedDexIo.connect(signer_b);
+        d.startLastTradeChallenge(trade, user_b, 0, [ethers.utils.bigNumberify("0")], { gasLimit: 600000 }).
+            then(function () {
+                done();
+            },
+                function (err) {
+                    done(new Error('This test must succeed. Error:' + err.toString()));
+                });
+    });
+
+
+    it("T031: MUST SUCCESS [lastTradeChallengeStage]: LTC for user A w/nonce=1, dispute stage", function (done) {
+        deployedDexIo.lastTradeChallengeStage(user_a).then (function (result) {
+            if (result != null && result.nonce.eq(1) && result.stage == 1) {
+                done();
+            } else {
+                done(new Error('This test must succeed. Invalid result (nonce=' + result.nonce.toNumber() +' stage=' + result.nonce.stage));
+            }
+        },
+        function (err) {
+            done(new Error('This test must succeed. Error:' + err.toString()));
+        });
+    });
+
+    /*
     it("T032: MUST SUCCEED [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
     it("T033: MUST FAIL [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
     it("T034: MUST SUCCEED [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
