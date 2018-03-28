@@ -289,8 +289,10 @@ contract DexTrade {
 
         if (t.buyer == wallet) {
             require(t.buyerOrderNonce > ltcMap[wallet].lastDisputeNonce);
+            ltcMap[wallet].lastDisputeNonce = t.buyerOrderNonce;
         } else if (t.seller == wallet) {
             require(t.sellerOrderNonce > ltcMap[wallet].lastDisputeNonce);
+            ltcMap[wallet].lastDisputeNonce = t.sellerOrderNonce;
         } else {
             revert();
         }
@@ -311,7 +313,7 @@ contract DexTrade {
         StartLastTradeChallengeEvent(wallet, ordersRoot);        
     }
 
-    function lastTradeChallengeStage(address wallet) public view returns (uint256, LTC_STAGE) {
+    function lastTradeChallengeStage(address wallet) public view returns (uint256 nonce, LTC_STAGE stage) {
         require(wallet != address(0));
         require(wallet != owner);
 
