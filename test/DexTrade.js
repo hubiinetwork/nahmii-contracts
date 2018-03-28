@@ -12,6 +12,7 @@ contract('DexTrade', function () {
     async = require('async');
     ethers = require('ethers');
     w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
+    const address_zero = '0x0000000000000000000000000000000000000000';
     const coinbase = web3.eth.coinbase;
     const user_a = web3.eth.accounts[1];
     const user_b = web3.eth.accounts[2];
@@ -29,6 +30,7 @@ contract('DexTrade', function () {
     var deployedDex = null;
     var deployedDexIo = null; // Uses Ethers.io for convenience using structs,etc.
     var deployedErc20 = null;
+    var ltc_signature = null;
 
     //-------------------------------------------------------------------------
     // Contract-wide helper functions
@@ -385,7 +387,7 @@ contract('DexTrade', function () {
         trade.signature = signTrade(trade, coinbase);
 
         var d = deployedDexIo.connect(signer_owner);
-        d.startLastTradeChallenge(trade, user_a, 0, [ethers.utils.bigNumberify("0")]).
+        d.startLastTradeChallenge(trade, address_zero, 0, [ethers.utils.bigNumberify("0")]).
             then(function () {
                 done(new Error('This test must fail'));
             },
@@ -521,6 +523,9 @@ contract('DexTrade', function () {
 
         trade.signature = signTrade(trade, coinbase);
 
+        // save this for later comparison
+        ltc_signature = trade.signature;
+
         var d = deployedDexIo.connect(signer_b);
         d.startLastTradeChallenge(trade, user_b, 0, [ethers.utils.bigNumberify("0")], { gasLimit: 600000 }).
             then(function () {
@@ -586,9 +591,43 @@ contract('DexTrade', function () {
     it("T036: MUST SUCCEED [challengeLastTrade]: cannot be called with address zero", function (done) {});
     it("T037: MUST SUCCEED [challengeLastTrade]: cannot be called with address zero", function (done) {});
     it("T038: MUST SUCCEED [challengeLastTrade]: cannot be called with address zero", function (done) {});
-    it("T039: MUST SUCCEED [lastTradeChallengeResult]: cannot be called with address zero", function (done) {});
-    it("T040: MUST SUCCEED [lastTradeChallengeResult]: cannot be called with address zero", function (done) {});
-    it("T041: MUST SUCCEED [lastTradeChallengeResult]: cannot be called with address zero", function (done) {});
+    */
+    it("T039: MUST FAIL [lastTradeChallengeResult]: cannot be called with address zero", function (done) {
+        deployedDexIo.lastTradeChallengeResult(address_zero).then(function () {
+            done (new Error('This test must fail'));
+        }, function () {
+            done();
+        }
+        );
+    });
+
+    it("T040: MUST FAIL [lastTradeChallengeResult]: LTC not opened for user C", function (done) {
+        deployedDexIo.lastTradeChallengeResult(user_c).then(function () {
+            done(new Error('This test must fail'));
+        }, function () {
+            done();
+        }
+        );
+    });
+
+    it("T041: MUST SUCCEED [lastTradeChallengeResult]: returned last trade in LTC", function (done) {
+        deployedDexIo.lastTradeChallengeResult(user_a).then(function (t) {
+            if ((t.buyOrderHash == 0) && (t.sellOrderHash == 0) && (t.buyerOrderNonce == 2)
+            && (t.sellerOrderNonce == 2) && (t.buyer == user_d) && (t.seller == user_b) 
+            && (t.tokenAmount == 3) && (t.etherAmount == 500000000) && (t.token == deployedErc20.address)
+            && (t.immediateSettlement == false) && (t.signature.r == ltc_signature.r) 
+            && (t.signature.s == ltc_signature.s) && (t.signature.v == ltc_signature.v)) {
+                done();
+            } else {
+                done (new Error('This test must succeed. Returned trade data for user A: ' + t.toString() ));
+            }
+        }, function (err) {
+            done(new Error('This test must succeed. Error:' + err.toString()));
+        }
+        );
+    });
+   
+/*
     it("T042: MUST SUCCEED [startTradePropertiesChallenge]: cannot be called with address zero", function (done) {});
     it("T043: MUST SUCCEED [startTradePropertiesChallenge]: cannot be called with address zero", function (done) {});
     it("T044: MUST SUCCEED [startTradePropertiesChallenge]: cannot be called with address zero", function (done) {});
