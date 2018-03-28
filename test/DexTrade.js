@@ -532,12 +532,12 @@ contract('DexTrade', function () {
     });
 
 
-    it("T031: MUST SUCCESS [lastTradeChallengeStage]: LTC for user A w/nonce=1, dispute stage", function (done) {
+    it("T031: MUST SUCCEED [lastTradeChallengeStage]: LTC for user A w/nonce=1, dispute stage", function (done) {
         deployedDexIo.lastTradeChallengeStage(user_a).then (function (result) {
             if (result != null && result.nonce.eq(1) && result.stage == 1) {
                 done();
             } else {
-                done(new Error('This test must succeed. Invalid result (nonce=' + result.nonce.toNumber() +' stage=' + result.nonce.stage));
+                done(new Error('This test must succeed. Invalid result (nonce=' + result.nonce.toNumber() +' stage=' + result.stage));
             }
         },
         function (err) {
@@ -545,8 +545,41 @@ contract('DexTrade', function () {
         });
     });
 
-    /*
-    it("T032: MUST SUCCEED [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
+    it("T032: MUST FAIL [lastTradeChallengeStage]: Wallet cannot be owner", function (done) {
+        deployedDexIo.lastTradeChallengeStage(coinbase).then (function (result) {
+                done(new Error('This test must fail'));
+            },
+        function (err) {
+            done();
+        });
+    });
+
+    it("T033: MUST SUCCEED [lastTradeChallengeStage]: LTC for user B w/nonce=2, dispute stage", function (done) {
+        deployedDexIo.lastTradeChallengeStage(user_b).then (function (result) {
+            if (result != null && result.nonce.eq(2) && result.stage == 1) {
+                done();
+            } else {
+                done(new Error('This test must succeed. Invalid result (nonce=' + result.nonce.toNumber() +' stage=' + result.stage));
+            }
+        },
+        function (err) {
+            done(new Error('This test must succeed. Error:' + err.toString()));
+        });
+    });
+
+    it("T034: MUST SUCCEED [lastTradeChallengeStage]: LTC for user C w/nonce=0, closed stage", function (done) {
+        deployedDexIo.lastTradeChallengeStage(user_c).then (function (result) {
+            if (result != null && result.nonce.eq(0) && result.stage == 0) {
+                done();
+            } else {
+                done(new Error('This test must succeed. Invalid result (nonce=' + result.nonce.toNumber() +' stage=' + result.stage));
+            }
+        },
+        function (err) {
+            done(new Error('This test must succeed. Error:' + err.toString()));
+        });
+    });
+/*
     it("T033: MUST FAIL [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
     it("T034: MUST SUCCEED [lastTradeChallengeStage]: cannot be called with address zero", function (done) {});
     it("T035: MUST SUCCEED [challengeLastTrade]: cannot be called with address zero", function (done) {});
