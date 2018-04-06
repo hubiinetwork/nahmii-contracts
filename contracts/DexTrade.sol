@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii
  */
 /* solium-disable */
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.21;
 
 import "./ERC20.sol";
 import "./SafeMath.sol";
@@ -170,7 +170,7 @@ contract DexTrade {
             owner = newOwner;
 
             //emit event
-            OwnerChangedEvent(oldOwner, newOwner);
+            emit OwnerChangedEvent(oldOwner, newOwner);
         }
     }
 
@@ -207,7 +207,7 @@ contract DexTrade {
         walletInfoMap[msg.sender].deposits.push(DepositInfo(msg.value, block.timestamp, address(0)));
 
         //emit event
-        DepositEvent(msg.sender, msg.value, address(0));
+        emit DepositEvent(msg.sender, msg.value, address(0));
     }
 
     function depositTokens(address tokenAddress, uint256 amount) public {
@@ -226,7 +226,7 @@ contract DexTrade {
         walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, tokenAddress));
 
         //emit event
-        DepositEvent(msg.sender, amount, tokenAddress);
+        emit DepositEvent(msg.sender, amount, tokenAddress);
     }
 
     function deposit(address wallet, uint index) public view onlyOwner returns (uint256 amount, uint256 timestamp, address token) {
@@ -310,7 +310,7 @@ contract DexTrade {
         ltcMap[wallet].currentLastTradeHash = tradeHash; 
 
         //raise event
-        StartLastTradeChallengeEvent(wallet, ordersRoot);        
+        emit StartLastTradeChallengeEvent(wallet, ordersRoot);        
     }
 
     function lastTradeChallengeStage(address wallet) public view returns (uint256 nonce, LTC_STAGE stage) {
@@ -370,7 +370,7 @@ contract DexTrade {
         } 
 
         //emit event
-        ChallengeLastTradeEvent(t);
+        emit ChallengeLastTradeEvent(t);
     }
 
     function lastTradeChallengeResult(address wallet) public view returns (Trade) {
@@ -408,7 +408,7 @@ contract DexTrade {
                 tpcMap[wallet][tradeHash].tradeVotesCount = 0;
 
                 //emit event
-        		StartTradePropertiesChallengeEvent(wallet, t[i]);
+        		emit StartTradePropertiesChallengeEvent(wallet, t[i]);
             }
         }
     }
@@ -434,7 +434,7 @@ contract DexTrade {
             tpcMap[t.buyer][tradeHash].votingEndTimestamp = SafeMath.add(tpcMap[t.buyer][tradeHash].votingEndTimestamp, tpcDisputeTimeShiftMs);
 
             //emit event
-        	ChallengeTradePropertiesEvent(t.buyer, t, candidateT);
+        	emit ChallengeTradePropertiesEvent(t.buyer, t, candidateT);
         }
 
         if (getTpcStage(t.seller, tradeHash) == TPC_STAGE.Dispute) {
@@ -449,7 +449,7 @@ contract DexTrade {
             tpcMap[t.seller][tradeHash].votingEndTimestamp = SafeMath.add(tpcMap[t.seller][tradeHash].votingEndTimestamp, tpcDisputeTimeShiftMs);
 
             //emit event
-        	ChallengeTradePropertiesEvent(t.seller, t, candidateT);
+        	emit ChallengeTradePropertiesEvent(t.seller, t, candidateT);
         }
     }
 
@@ -477,7 +477,7 @@ contract DexTrade {
             }
 
             //emit event
-        	VoteOnTradePropertiesEvent(t.buyer, t, voteT);
+        	emit VoteOnTradePropertiesEvent(t.buyer, t, voteT);
         }
 
         if (getTpcStage(t.seller, tradeHash) == TPC_STAGE.Voting) {
@@ -494,7 +494,7 @@ contract DexTrade {
             }
 
             //emit event
-        	VoteOnTradePropertiesEvent(t.seller, t, voteT);
+        	emit VoteOnTradePropertiesEvent(t.seller, t, voteT);
         }
     }
 
@@ -583,17 +583,17 @@ contract DexTrade {
             }
 
             //emit event
-        	CloseTradeEvent(wallet, t);
+        	emit CloseTradeEvent(wallet, t);
         }
 
         if ( true /* exists TPC candidates*/) {
             //emit event
-        	CloseTradePropertiesChallengeEvent(t);
+        	emit CloseTradePropertiesChallengeEvent(t);
         }
 
         if ( true /* exists LTC candidates*/ ) {
             //emit event
-        	CloseLastTradeChallengeEvent(t);
+        	emit CloseLastTradeChallengeEvent(t);
         }
 
     }
@@ -616,26 +616,26 @@ contract DexTrade {
         }
 
         //emit event
-        WithdrawEvent(msg.sender, amount, token);
+        emit WithdrawEvent(msg.sender, amount, token);
     }
 
     //
     // Settlement functions
     // -----------------------------------------------------------------------------------------------------------------
     function startSettlementPropertiesChallenge(Settlement settlement) public {
-        StartSettlementPropertiesChallengeEvent(settlement);
+        emit StartSettlementPropertiesChallengeEvent(settlement);
     }
 
     function challengeSettlementProperties(Settlement settlement, Settlement candidate) public {
-        ChallengeSettlementPropertiesEvent(settlement, candidate);
+        emit ChallengeSettlementPropertiesEvent(settlement, candidate);
     }
 
     function voteOnSettlementProperties(Settlement s, uint256 opt) public {
-        VoteOnSettlementPropertiesEvent(s,opt);
+        emit VoteOnSettlementPropertiesEvent(s,opt);
     }
 
     function closeSettlement(Settlement s, Trade[] trades) public {
-        CloseSettlementEvent(s, trades);
+        emit CloseSettlementEvent(s, trades);
     }
 
     // Fraudulent Trade Handling functions

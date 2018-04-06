@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii
  */
 /* solium-disable */
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.21;
 
 import "./ERC20.sol";
 import "./SafeMath.sol";
@@ -120,7 +120,7 @@ contract DexReserveFunds {
             owner = newOwner;
 
             //emit event
-            OwnerChangedEvent(oldOwner, newOwner);
+            emit OwnerChangedEvent(oldOwner, newOwner);
         }
     }
 
@@ -141,7 +141,7 @@ contract DexReserveFunds {
         aggregatedEtherBalance = SafeMath.add(aggregatedEtherBalance, msg.value);
 
         //emit event
-        DepositEvent(msg.sender, msg.value, address(0));
+        emit DepositEvent(msg.sender, msg.value, address(0));
     }
 
     function depositTokens(address tokenAddress, uint256 amount) public {
@@ -165,7 +165,7 @@ contract DexReserveFunds {
         aggregatedTokenBalance[tokenAddress] = SafeMath.add(aggregatedTokenBalance[tokenAddress], amount);
 
         //emit event
-        DepositEvent(msg.sender, amount, tokenAddress);
+        emit DepositEvent(msg.sender, amount, tokenAddress);
     }
 
     function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
@@ -204,7 +204,7 @@ contract DexReserveFunds {
         }
 
         //emit event
-        AddRevenueEvent(amount, tokenAddress);
+        emit AddRevenueEvent(amount, tokenAddress);
     }
 
     //
@@ -238,7 +238,7 @@ contract DexReserveFunds {
         }
 
         //emit event
-        StageEvent(msg.sender, amount, tokenAddress);
+        emit StageEvent(msg.sender, amount, tokenAddress);
     }
 
     function unstage(address tokenAddress, uint256 amount) public {
@@ -269,7 +269,7 @@ contract DexReserveFunds {
         }
 
         //emit event
-        UnstageEvent(msg.sender, amount, tokenAddress);
+        emit UnstageEvent(msg.sender, amount, tokenAddress);
     }
 
     //
@@ -321,7 +321,7 @@ contract DexReserveFunds {
         walletInfoMap[msg.sender].stagedEtherBalance = SafeMath.sub(walletInfoMap[msg.sender].stagedEtherBalance, amount);
     
         //raise event
-        WithdrawEvent(msg.sender, amount, address(0));
+        emit WithdrawEvent(msg.sender, amount, address(0));
     }
 
     function withdrawTokens(address tokenAddress, uint256 amount) public {
@@ -337,7 +337,7 @@ contract DexReserveFunds {
         walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = SafeMath.sub(walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress], amount);
     
         //raise event
-        WithdrawEvent(msg.sender, amount, tokenAddress);
+        emit WithdrawEvent(msg.sender, amount, tokenAddress);
     }
 
     //
@@ -349,7 +349,7 @@ contract DexReserveFunds {
         walletInfoMap[msg.sender].accrualTarget = at;
 
         //raise event
-        AccrualTargetEvent(msg.sender, at);
+        emit AccrualTargetEvent(msg.sender, at);
     }
 
     function claimAccrual(Accrual accrual) public {
@@ -388,7 +388,7 @@ contract DexReserveFunds {
         claimedAccrualsMap[accrual.hash] = true;
 
         // raise event
-        ClaimAccrualEvent(msg.sender, walletInfoMap[msg.sender].accrualTarget, accrual);
+        emit ClaimAccrualEvent(msg.sender, walletInfoMap[msg.sender].accrualTarget, accrual);
     }
 
     function registerBenefactor(address benefactorAddress) public onlyOwner {
@@ -399,7 +399,7 @@ contract DexReserveFunds {
         benefactorsMap[benefactorAddress] = true;
 
         //raise event
-        RegisterBenefactorEvent(benefactorAddress);
+        emit RegisterBenefactorEvent(benefactorAddress);
     }
 
     //
@@ -444,7 +444,7 @@ contract DexReserveFunds {
         }
 
         //raise event
-        TwoWayTransferEvent(wallet, inboundTx, outboundTx);
+        emit TwoWayTransferEvent(wallet, inboundTx, outboundTx);
 
         return true;
     }
