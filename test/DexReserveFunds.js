@@ -24,7 +24,7 @@ contract('DexReserveFunds', function () {
     const signer_d = w3prov.getSigner(user_d);
     const signer_owner = w3prov.getSigner(coinbase);
     const gasLimit = 1800000;
-    const ctraddr = DexReserveFunds.address;
+    const contractAddress = DexReserveFunds.address;
     const kTokenSupply = 1000;
     const kTokensForUser1 = 50;
     var deployedDex = null;
@@ -135,19 +135,19 @@ contract('DexReserveFunds', function () {
     //-------------------------------------------------------------------------
 
     it("R001: MUST FAIL [payable]: cannot be called from owner", function (done) {
-        web3.eth.sendTransaction({ from: coinbase, to: ctraddr, value: web3.toWei(10, 'ether'), gas: gasLimit }, function (err) {
+        web3.eth.sendTransaction({ from: coinbase, to: contractAddress, value: web3.toWei(10, 'ether'), gas: gasLimit }, function (err) {
             done(err == null ? new Error('This test must fail') : null);
         });
     });
 
     it("R002: MUST FAIL [payable]: cannot be called with 0 ethers", function (done) {
-        web3.eth.sendTransaction({ from: user_a, to: ctraddr, value: web3.toWei(0, 'ether'), gas: gasLimit }, function (err) {
+        web3.eth.sendTransaction({ from: user_a, to: contractAddress, value: web3.toWei(0, 'ether'), gas: gasLimit }, function (err) {
             done(err == null ? new Error('This test must fail') : null);
         });
     });
 
     it("R003: MUST SUCCEED [payable]: add 2.5 Ethers to user A aggregate balance", function (done) {
-        web3.eth.sendTransaction({ from: user_a, to: ctraddr, value: web3.toWei(2.5, 'ether'), gas: gasLimit }, function (err) {
+        web3.eth.sendTransaction({ from: user_a, to: contractAddress, value: web3.toWei(2.5, 'ether'), gas: gasLimit }, function (err) {
             done(err != null ? new Error('This test must succeed. Error: ' + err.toString()) : null);
         });
     });
@@ -155,7 +155,7 @@ contract('DexReserveFunds', function () {
     //-------------------------------------------------------------------------
 
     it("R004: MUST SUCCEED [payable]: add 6.5 Ethers to user B aggregate balance", function (done) {
-        web3.eth.sendTransaction({ from: user_b, to: ctraddr, value: web3.toWei(6.5, 'ether'), gas: gasLimit }, function (err) {
+        web3.eth.sendTransaction({ from: user_b, to: contractAddress, value: web3.toWei(6.5, 'ether'), gas: gasLimit }, function (err) {
             done(err != null ? new Error('This test must succeed. Error: ' + err.toString()) : null);
         });
     });
@@ -277,6 +277,146 @@ contract('DexReserveFunds', function () {
     });
 
     //------------------------------------------------------------------------
+
+    it("R017: MUST SUCCEED [activeBalance]: 2.5 ETH for User A", function (done) {
+        deployedDex.activeBalance(user_a, 0, 0).then(function (balance) {
+            done(balance != web3.toWei(2.5, 'ether') ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("R018: MUST SUCCEED [activeBalance]: 5 tokens for User A", function (done) {
+        deployedDex.activeBalance(user_a, deployedErc20.address, 0).then(function (balance) {
+            done(balance != 5 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("R019: MUST SUCCEED [activeBalance]: 0 tokens for User B", function (done) {
+        deployedDex.activeBalance(user_b, deployedErc20.address, 0).then(function (balance) {
+            done(balance != 0 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("R020: MUST SUCCEED [activeBalance]: can be called from non-owner address", function (done) {
+        deployedDex.activeBalance(user_b, deployedErc20.address, 0, { from: user_a }).then(function (balance) {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("R021: MUST SUCCEED [stagedBalance]: 0 ETH for User A", function (done) {
+        deployedDex.stagedBalance(user_a, 0).then(function (balance) {
+            done(balance != 0 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("R022: MUST SUCCEED [stagedBalance]: 0 tokens for User A", function (done) {
+        deployedDex.stagedBalance(user_a, deployedErc20.address).then(function (balance) {
+            done(balance != 0 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("R023: MUST SUCCEED [stagedBalance]: 0 tokens for User B", function (done) {
+        deployedDex.stagedBalance(user_b, deployedErc20.address).then(function (balance) {
+            done(balance != 0 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //------------------------------------------------------------------------
+
+    it("R024: MUST SUCCEED [stagedBalance]: can be called from non-owner address", function (done) {
+        deployedDex.stagedBalance(user_b, deployedErc20.address, { from: user_a }).then(function (balance) {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R025: MUST FAIL [stage]: Cannot be called from owner address", function (done) {
+        deployedDex.stage(deployedErc20.address, 0, { from: coinbase }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    
+    //-------------------------------------------------------------------------
+
+    it("R026: MUST FAIL [stage]: Cannot be called with zero token amount", function (done) {
+        deployedDex.stage(deployedErc20.address, 0, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    
+    //-------------------------------------------------------------------------
+
+    it("R027: MUST FAIL [stage]: Cannot be called with zero ether amount", function (done) {
+        deployedDex.stage(0, 0, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+    
+    //-------------------------------------------------------------------------
+
+    it("R028: MUST SUCCEED [stage]: Staged 3 tokens for user A balance", function (done) {
+        deployedDex.stage(deployedErc20.address, 3, { from: user_a} ).then(function () {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R029: MUST SUCCEED [stage]: Staged 0.2 ethers for user B balance", function (done) {
+        deployedDex.stage(0, web3.toWei(0.2, 'ether'), { from: user_b} ).then(function () {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
 
 });
 
