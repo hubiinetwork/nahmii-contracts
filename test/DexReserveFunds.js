@@ -507,7 +507,7 @@ contract('DexReserveFunds', function () {
             done(new Error('This test must fail'));
         }, function (err) {
             done();
-            });
+        });
     });
 
     //-------------------------------------------------------------------------
@@ -530,6 +530,129 @@ contract('DexReserveFunds', function () {
             function (err) {
                 done(new Error('This test must succeed. Error: ' + err.toString()));
             })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R041: MUST FAIL [addRevenue]: Cannot be called from non-owner address", function (done) {
+        deployedDex.addRevenue(deployedErc20.address, 1, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R042: MUST FAIL [addRevenue]: Cannot be called with zero token amount", function (done) {
+        deployedDex.addRevenue(deployedErc20.address, 0, { from: coinbase }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R043: MUST FAIL [addRevenue]: Cannot be called with zero ether amount", function (done) {
+        deployedDex.addRevenue(0, 0, { from: coinbase }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R044: MUST SUCCEED [addRevenue]: Added 10 ether to revenue balance", function (done) {
+        deployedDex.addRevenue(0, web3.toWei(10, 'ether'), { from: coinbase }).then(function () {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R045: MUST SUCCEED [addRevenue]: Added 8 ERC20 token to revenue balance", function (done) {
+        deployedDex.addRevenue(deployedErc20.address, 8, { from: coinbase }).then(function () {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R046: MUST FAIL [revenueBalance]: Cannot be called from non-owner address", function (done) {
+        deployedDex.revenueBalance(0, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+    it("R047: MUST SUCCEED [revenueBalance]: got 8 ERC 20 tokens as revenue balance", function (done) {
+        deployedDex.revenueBalance(deployedErc20.address).then(function (balance) {
+            done(balance != 8 ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R048: MUST SUCCEED [revenueBalance]:  got 10 ethers as revenue balance", function (done) {
+        deployedDex.revenueBalance(0).then(function (balance) {
+            done(balance != web3.toWei(10, 'ether') ? new Error('This test must succeed') : null);
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R049: MUST FAIL [registerBenefactor]: Cannot be called from non-owner address", function (done) {
+        deployedDex.registerBenefactor(user_d, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R049: MUST FAIL [registerBenefactor]: Benefactor cannot be owner", function (done) {
+        deployedDex.registerBenefactor(coinbase).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R050: MUST SUCCEED [registerBenefactor]: User D registered as benefactor", function (done) {
+        deployedDex.registerBenefactor(user_d).then(function (args) {
+            done();
+        }, function (err) {
+            done(new Error('This test must succeed. Error: ' + err.toString()));;
+        });
+    });
+
+     //-------------------------------------------------------------------------
+
+     it("R051: MUST FAIL [registerBenefactor]: Benefactor cannot be registered twice", function (done) {
+        deployedDex.registerBenefactor(user_d).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
     });
 });
 
