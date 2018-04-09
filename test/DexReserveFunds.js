@@ -374,7 +374,6 @@ contract('DexReserveFunds', function () {
         });
     });
 
-    
     //-------------------------------------------------------------------------
 
     it("R026: MUST FAIL [stage]: Cannot be called with zero token amount", function (done) {
@@ -385,7 +384,7 @@ contract('DexReserveFunds', function () {
         });
     });
 
-    
+
     //-------------------------------------------------------------------------
 
     it("R027: MUST FAIL [stage]: Cannot be called with zero ether amount", function (done) {
@@ -395,11 +394,11 @@ contract('DexReserveFunds', function () {
             done();
         });
     });
-    
+
     //-------------------------------------------------------------------------
 
     it("R028: MUST SUCCEED [stage]: Staged 3 tokens for user A balance", function (done) {
-        deployedDex.stage(deployedErc20.address, 3, { from: user_a} ).then(function () {
+        deployedDex.stage(deployedErc20.address, 3, { from: user_a }).then(function () {
             done();
         },
             function (err) {
@@ -410,7 +409,7 @@ contract('DexReserveFunds', function () {
     //-------------------------------------------------------------------------
 
     it("R029: MUST SUCCEED [stage]: Staged 0.2 ethers for user B balance", function (done) {
-        deployedDex.stage(0, web3.toWei(0.2, 'ether'), { from: user_b} ).then(function () {
+        deployedDex.stage(0, web3.toWei(0.2, 'ether'), { from: user_b }).then(function () {
             done();
         },
             function (err) {
@@ -418,6 +417,120 @@ contract('DexReserveFunds', function () {
             })
     });
 
+    //-------------------------------------------------------------------------
+
+    it("R030: MUST FAIL [unstage]: Cannot be called from owner address", function (done) {
+        deployedDex.unstage(deployedErc20.address, 0, { from: coinbase }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R031: MUST FAIL [unstage]: Cannot be called with zero token amount", function (done) {
+        deployedDex.unstage(deployedErc20.address, 0, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+
+    //-------------------------------------------------------------------------
+
+    it("R032: MUST FAIL [unstage]: Cannot be called with zero ether amount", function (done) {
+        deployedDex.unstage(0, 0, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R033: MUST SUCCEED [unstage]: Unstaged 2 tokens from user A balance", function (done) {
+        deployedDex.unstage(deployedErc20.address, 2, { from: user_a }).then(function () {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R034: MUST SUCCEED [unstage]: Staged 0.1 ethers for user B balance", function (done) {
+        deployedDex.unstage(0, web3.toWei(0.1, 'ether'), { from: user_b }).then(function () {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R035: MUST FAIL [withdrawEther]: Cannot be called from owner address", function (done) {
+        deployedDex.withdrawEther(1, { from: coinbase }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R036: MUST FAIL [withdrawEther]: Cannot be called with zero token amount", function (done) {
+        deployedDex.withdrawEther(0, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R037: MUST FAIL [withdrawTokens]: Cannot be called from owner address", function (done) {
+        deployedDex.withdrawTokens(deployedErc20.address, 1, { from: coinbase }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+        });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R038: MUST FAIL [withdrawTokens]: Cannot be called with zero token amount", function (done) {
+        deployedDex.withdrawTokens(deployedErc20.address, 0, { from: user_a }).then(function (args) {
+            done(new Error('This test must fail'));
+        }, function (err) {
+            done();
+            });
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R039: MUST SUCCEED [withdrawTokens]: User A withdrawn 1 token", function (done) {
+        deployedDex.withdrawTokens(deployedErc20.address, 1, { from: user_a }).then(function () {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
+
+    //-------------------------------------------------------------------------
+
+    it("R040: MUST SUCCEED [withdrawEther]: User B withdrawn 0.05 ethers", function (done) {
+        deployedDex.withdrawEther(web3.toWei(0.05, 'ether'), { from: user_b }).then(function () {
+            done();
+        },
+            function (err) {
+                done(new Error('This test must succeed. Error: ' + err.toString()));
+            })
+    });
 });
 
 
