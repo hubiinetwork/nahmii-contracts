@@ -1,6 +1,6 @@
 # Omphalos Exchange smart contracts
 
-This is the home of code for Hubii Network Omphalos Exchange smart contracts
+This is the home of code for Hubii Omphalos Exchange smart contracts
 
 ## Practice
 ### Gitflow
