@@ -1,12 +1,18 @@
 /*!
- * Hubii Network - DEX Smart Contract for assets settlement.
+ * Hubii - Omphalos
  *
- * Compliant to Omphalos 0.11 Specification.
+ * Compliant with the Omphalos specification v0.12.
  *
- * Copyright (C) 2017-2018 Hubii
+ * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.21;
 
+/**
+@title Reserve fund
+@notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
+ There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
+
+*/
 contract ReserveFund {
 
     //

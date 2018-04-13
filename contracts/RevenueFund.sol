@@ -1,12 +1,18 @@
 /*!
- * Hubii Network - DEX Smart Contract for assets settlement.
+ * Hubii - Omphalos
  *
- * Compliant to Omphalos 0.11 Specification.
+ * Compliant with the Omphalos specification v0.12.
  *
- * Copyright (C) 2017-2018 Hubii
+ * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.21;
 
+/**
+@title Revenue fund
+@notice The target of all revenue earned in deal settlements and from which accrued revenue is split amongst
+ reserve fund contributors and revenue token holders. There will likely be 2 instances of this smart contract,
+ one for revenue from trades and one for revenue from payments.
+*/
 contract RevenueFund {
 
     //

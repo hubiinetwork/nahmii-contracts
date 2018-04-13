@@ -1,7 +1,7 @@
 /*!
- * Hubii - Smart Contract migrations.
+ * Hubii - Omphalos
  *
- * Copyright (C) 2017-2018 Hubii
+ * Copyright (C) 2017-2018 Hubii AS
  */
 const ClientFund = artifacts.require("./ClientFund.sol");
 const CommunityVote = artifacts.require("./CommunityVote.sol");
