@@ -1,12 +1,16 @@
 /*!
- * Hubii Network - DEX Smart Contract for assets settlement.
+ * Hubii - Omphalos
  *
- * Compliant to Omphalos 0.11 Specification.
+ * Compliant with the Omphalos specification v0.12.
  *
- * Copyright (C) 2017-2018 Hubii
+ * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.21;
 
+/**
+@title Community vote
+@notice An oracle for relevant decisions made by the community.
+*/
 contract CommunityVote {
 
     //

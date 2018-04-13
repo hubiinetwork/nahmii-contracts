@@ -1,12 +1,17 @@
 /*!
- * Hubii Network - DEX Smart Contract for assets settlement.
+ * Hubii - Omphalos
  *
- * Compliant to Omphalos 0.11 Specification.
+ * Compliant with the Omphalos specification v0.12.
  *
- * Copyright (C) 2017-2018 Hubii
+ * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.21;
 
+/**
+@title Client fund
+@notice Where clients’ crypto is deposited into, staged and withdrawn from.
+@dev Factored out from previous Trade smart contract.
+*/
 contract ClientFund {
 
     //

@@ -1,7 +1,7 @@
 /*!
- * Hubii Network - DEX Smart Contract for assets settlement.
+ * Hubii - Omphalos
  *
- * Copyright (C) 2017-2018 Hubii
+ * Copyright (C) 2017-2018 Hubii AS
  */
 
 var ClientFund = artifacts.require("./ClientFund.sol");
