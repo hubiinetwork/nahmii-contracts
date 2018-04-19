@@ -10,18 +10,31 @@ pragma solidity ^0.4.21;
 /**
 @title Configuration
 @notice An oracle for configuration values such as fees, challenge timeouts and stakes
+
+@dev Should try to make this contract as generic as possible. First attempt could be to have one
+function `set(bytes32 key, bytes32 value)` and one `get(bytes32 key)` function. This could be complemented
+with cast getters such as `getAsUint(bytes32 key)`.
 */
 contract Configuration {
+
+    struct Item {
+        bytes32 value;
+        uint index;
+    }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
+    address public owner;
+    mapping(string => Item) private items;
+    string[] public names;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
+    event SetEvent(string name, bytes32 value);
+    event UnsetEvent(string name);
 
     //
     // Constructor
@@ -34,16 +47,82 @@ contract Configuration {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        address oldOwner;
-
         if (newOwner != owner) {
             // Set new owner
-            oldOwner = owner;
+            address oldOwner = owner;
             owner = newOwner;
 
             // Emit event
             emit OwnerChangedEvent(oldOwner, newOwner);
         }
+    }
+
+    function has(string name) public view returns (bool) {
+        return 0 != items[name].index;
+    }
+
+    function set(string name, bytes32 value) public onlyOwner {
+        // Set item
+        uint index = 0;
+        Item storage item = items[name];
+        if (has(name)) {
+            index = item.index;
+        } else {
+            names.push(name);
+            index = names.length;
+        }
+        items[name] = Item({value : value, index : index});
+
+        // Emit event
+        emit SetEvent(name, value);
+    }
+
+    function unset(string name) public onlyOwner {
+        // Unset
+        Item storage item = items[name];
+        removeName(item.index);
+        item.index = 0;
+
+        // Emit event
+        emit UnsetEvent(name);
+    }
+
+    function removeName(uint index) internal {
+        if (index > names.length) {
+            return;
+        }
+        for (uint i = index - 1; i < names.length - 1; i++) {
+            names[i] = names[i + 1];
+        }
+        delete names[names.length - 1];
+        names.length--;
+    }
+
+    function get(string name) public view returns (bytes32) {
+        Item storage item = items[name];
+        require(0 != item.index);
+        return item.value;
+    }
+
+    function getAsString(string name) public view returns (string) {
+        bytes32 value = get(name);
+        bytes memory valueBytes = new bytes(32);
+        for (uint256 i; i < 32; i++) {
+            valueBytes[i] = value[i];
+        }
+        return string(valueBytes);
+    }
+
+    function getAsUint(string name) public view returns (uint) {
+        return uint(get(name));
+    }
+
+    function getAsBool(string name) public view returns (bool) {
+        return bool(get(name) != bytes32(0));
+    }
+
+    function getCount() public view returns (uint) {
+        return names.length;
     }
 
     //
