@@ -19,6 +19,18 @@ var SecurityBond = artifacts.require("SecurityBond");
 var TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
 var ERC20Token = artifacts.require("StandardTokenEx");
 
+//augmented sendTransaction using promises
+web3.eth.sendTransactionPromise = function(transactionObject) {
+	return new Promise((resolve, reject) => {
+		web3.eth.sendTransaction(transactionObject, function (err) {
+			if (!err)
+				resolve();
+			else
+				reject(err);
+		});
+	});
+}
+
 contract('Smart contract checks', function () {
 	var glob = {
 		owner: web3.eth.coinbase,
