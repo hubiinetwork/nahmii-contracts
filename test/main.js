@@ -16,6 +16,7 @@ var Exchange = artifacts.require("Exchange");
 var ReserveFund = artifacts.require("ReserveFund");
 var RevenueFund = artifacts.require("RevenueFund");
 var SecurityBond = artifacts.require("SecurityBond");
+var StaticConfiguration = artifacts.require("StaticConfiguration");
 var TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
 var ERC20Token = artifacts.require("StandardTokenEx");
 
@@ -189,6 +190,22 @@ contract('Smart contract checks', function () {
 		);
 	});
 
+    before("Preflight: Instantiate StaticConfiguration contract", function (done) {
+        StaticConfiguration.deployed().then(
+            function (_d) {
+                assert.notEqual(_d, null);
+
+                glob.web3StaticConfiguration = _d;
+                glob.ethersIoStaticConfiguration = new ethers.Contract(_d.address, StaticConfiguration.abi, w3prov);
+
+                done();
+            },
+            function () {
+                done(new Error('Failed to instantiate StaticConfiguration contract address'));
+            }
+        );
+    });
+
 	before("Preflight: Instantiate TokenHolderRevenueFund contract", function (done) {
 		TokenHolderRevenueFund.deployed().then(
 			function (_d) {
@@ -235,8 +252,9 @@ contract('Smart contract checks', function () {
 	require('./scenarios/CommunityVote')(glob);
 	require('./scenarios/Configuration')(glob);
 	require('./scenarios/Exchange')(glob);
-	require('./scenarios/ReserveFund')(glob);
-	require('./scenarios/RevenueFund')(glob);
-	require('./scenarios/SecurityBond')(glob);
-	require('./scenarios/TokenHolderRevenueFund')(glob);
+    require('./scenarios/ReserveFund')(glob);
+    require('./scenarios/RevenueFund')(glob);
+    require('./scenarios/SecurityBond')(glob);
+    require('./scenarios/StaticConfiguration')(glob);
+    require('./scenarios/TokenHolderRevenueFund')(glob);
 });
