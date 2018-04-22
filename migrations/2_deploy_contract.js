@@ -11,7 +11,6 @@ var Exchange = artifacts.require("./Exchange.sol");
 var ReserveFund = artifacts.require("./ReserveFund.sol");
 var RevenueFund = artifacts.require("./RevenueFund.sol");
 var SecurityBond = artifacts.require("./SecurityBond.sol");
-var StaticConfiguration = artifacts.require("./StaticConfiguration.sol");
 var TokenHolderRevenueFund = artifacts.require("./TokenHolderRevenueFund.sol");
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -26,6 +25,5 @@ module.exports = function (deployer, network, accounts) {
 	deployer.deploy(ReserveFund, ownerAccount);
 	deployer.deploy(RevenueFund, ownerAccount);
 	deployer.deploy(SecurityBond, ownerAccount);
-	deployer.deploy(StaticConfiguration, ownerAccount);
 	deployer.deploy(TokenHolderRevenueFund, ownerAccount);
 };
