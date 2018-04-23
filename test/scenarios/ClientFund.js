@@ -280,7 +280,11 @@ module.exports = function (glob) {
 		it("T016: MUST SUCCEED [activeBalance]: 2.5 ETH for User A", function (done) {
 			glob.web3ClientFund.activeBalance(glob.user_a, 0).then(
 				function (balance) {
-					done(balance != web3.toWei(2.5, 'ether') ? new Error('This test must succeed') : null);
+					if (balance != web3.toWei(2.5, 'ether')) {
+						done(new Error('Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].'));
+						return;
+					}
+					done();
 				},
 				function (err) {
 					done(new Error('This test must succeed. Error: ' + err.toString()));
@@ -293,7 +297,11 @@ module.exports = function (glob) {
 		it("T017: MUST SUCCEED [activeBalance]: 5 tokens for User A", function (done) {
 			glob.web3ClientFund.activeBalance(glob.user_a, glob.web3Erc20.address).then(
 				function (balance) {
-					done(balance != 5 ? new Error('This test must succeed') : null);
+					if (balance != 5) {
+						done(new Error('Wrong balance [' + balance.toString() + ' tokens].'));
+						return;
+					}
+					done();
 				},
 				function (err) {
 					done(new Error('This test must succeed. Error: ' + err.toString()));
@@ -306,7 +314,11 @@ module.exports = function (glob) {
 		it("T018: MUST SUCCEED [activeBalance]: 0 tokens for User B", function (done) {
 			glob.web3ClientFund.activeBalance(glob.user_b, glob.web3Erc20.address).then(
 				function (balance) {
-					done(balance != 0 ? new Error('This test must succeed') : null);
+					if (balance != 0) {
+						done(new Error('Wrong balance [' + balance.toString() + ' tokens].'));
+						return;
+					}
+					done();
 				},
 				function (err) {
 					done(new Error('This test must succeed. Error: ' + err.toString()));
@@ -319,7 +331,11 @@ module.exports = function (glob) {
 		it("T019: MUST SUCCEED [stagedBalance]: 0 ETH for User A", function (done) {
 			glob.web3ClientFund.stagedBalance(glob.user_a, 0).then(
 				function (balance) {
-					done(balance != 0 ? new Error('This test must succeed') : null);
+					if (balance != web3.toWei(0, 'ether')) {
+						done(new Error('Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].'));
+						return;
+					}
+					done();
 				},
 				function (err) {
 					done(new Error('This test must succeed. Error: ' + err.toString()));
@@ -332,7 +348,11 @@ module.exports = function (glob) {
 		it("T020: MUST SUCCEED [stagedBalance]: 0 tokens for User A", function (done) {
 			glob.web3ClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address).then(
 				function (balance) {
-					done(balance != 0 ? new Error('This test must succeed') : null);
+					if (balance != 0) {
+						done(new Error('Wrong balance [' + balance.toString() + ' tokens].'));
+						return;
+					}
+					done();
 				},
 				function (err) {
 					done(new Error('This test must succeed. Error: ' + err.toString()));
@@ -345,10 +365,108 @@ module.exports = function (glob) {
 		it("T021: MUST SUCCEED [stagedBalance]: 0 tokens for User B", function (done) {
 			glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address).then(
 				function (balance) {
-					done(balance != 0 ? new Error('This test must succeed') : null);
+					if (balance != 0) {
+						done(new Error('Wrong balance [' + balance.toString() + ' tokens].'));
+						return;
+					}
+					done();
 				},
 				function (err) {
 					done(new Error('This test must succeed. Error: ' + err.toString()));
+				}
+			);
+		});
+
+		//------------------------------------------------------------------------
+
+		it("T022: MUST SUCCEED [setServiceActivationTimeout]: Set the service activation timeout to 0", function (done) {
+			glob.web3ClientFund.setServiceActivationTimeout(0).then(
+				function (balance) {
+					done();
+				},
+				function (err) {
+					done(new Error('This test must succeed. Error: ' + err.toString()));
+				}
+			);
+		});
+
+		it("T023: MUST SUCCEED [registerService]: Register ReserveFunds SC as a service", function (done) {
+			glob.web3ClientFund.registerService(glob.web3ReserveFund.address).then(
+				function () {
+					done();
+				},
+				function (err) {
+					done(new Error('This test must succeed. Error: ' + err.toString()));
+				}
+			);
+		});
+
+		it("T024: MUST FAIL [registerService]: Register ClientFund SC as a service", function (done) {
+			glob.web3ClientFund.registerService(glob.web3ClientFund.address).then(
+				function () {
+					done(new Error('This test must fail'));
+				},
+				function (err) {
+					done();
+				}
+			);
+		});
+
+		it("T025: MUST FAIL [registerService]: Register UnitTestHelpers SC as a service from non-owner", function (done) {
+			glob.web3ClientFund.registerService(glob.web3UnitTestHelpers.address, { from: glob.user_a }).then(
+				function () {
+					done(new Error('This test must fail'));
+				},
+				function (err) {
+					done();
+				}
+			);
+		});
+
+		it("T026: MUST SUCCEED [registerService]: Register UnitTestHelpers SC as a service", function (done) {
+			glob.web3ClientFund.registerService(glob.web3UnitTestHelpers.address).then(
+				function () {
+					done();
+				},
+				function (err) {
+					done(new Error('This test must succeed. Error: ' + err.toString()));
+				}
+			);
+		});
+
+		it("T027: MUST SUCCEED [disableRegisteredService]: Disable UnitTestHelpers as a service for User A", function (done) {
+			glob.web3ClientFund.disableRegisteredService(glob.web3UnitTestHelpers.address, { from: glob.user_a }).then(
+				function () {
+					done();
+				},
+				function (err) {
+					done(new Error('This test must succeed. Error: ' + err.toString()));
+				}
+			);
+		}); 
+
+		//------------------------------------------------------------------------
+
+		/*
+		it("T027: MUST SUCCEED [transferFromActiveToStagedBalance]: Disable UnitTestHelpers as a service for User A", function (done) {
+			glob.web3UnitTestHelpers.transferFromActiveToStagedBalance(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(1, 'ether'), 0).then(
+				function () {
+					done(null);
+				},
+				function (err) {
+					done(new Error('This test must succeed. Error: ' + err.toString()));
+				}
+			);
+		});
+		*/
+
+		it("T028: MUST FAIL [transferFromActiveToStagedBalance]: User A disabled unit test helper SC as a service", function (done) {
+			glob.web3UnitTestHelpers.transferFromActiveToStagedBalance(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(1, 'ether'), 0).then(
+				function () {
+					done(new Error('This test must fail'));
+				},
+				function (err) {
+					done();
 				}
 			);
 		});

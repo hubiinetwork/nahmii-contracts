@@ -89,6 +89,10 @@ contract ClientFund {
         }
     }
 
+    function setServiceActivationTimeout(uint256 timeout) public onlyOwner {
+        serviceActivationTimeout = timeout;
+    }
+
     //
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
@@ -239,35 +243,6 @@ contract ClientFund {
         emit DepositToStagedBalance(destWallet, amount, token);
     }
 
-	/*
-    function stage(uint256 amount, address tokenAddress) public onlyExchange {
-        if (tokenAddress == address(0)) {
-            //clamp amount to move
-            if (amount > walletInfoMap[msg.sender].activeEtherBalance)
-                amount = walletInfoMap[msg.sender].activeEtherBalance;
-            if (amount == 0)
-                return;
-
-            //move from active balance to staged
-            walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.sub(amount);
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
-        } else {
-            //clamp amount to move
-            if (amount > walletInfoMap[msg.sender].activeTokenBalance[tokenAddress])
-                amount = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress];
-            if (amount == 0)
-                return;
-
-            //move from active balance to staged
-            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].sub(amount);
-            walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);
-        }
-
-        //emit event
-        emit StageEvent(msg.sender, amount, tokenAddress);
-    }
-	*/
-
     function unstage(uint256 amount, address token) public notOwner {
         if (token == address(0)) {
             //clamp amount to move
@@ -333,9 +308,8 @@ contract ClientFund {
     //
     // Service functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyOwner {
+    function registerService(address service) public onlyOwner notNullAddress(service) notMySelfAddress(service) {
         require(service != owner);
-        require(service != address(0));
 
         //ensure service is not already registered
         require(registeredServicesMap[service] == 0);
@@ -347,10 +321,11 @@ contract ClientFund {
         emit RegisterServiceEvent(service);
     }
 
-    function enableRegisteredService(address service) public onlyOwner {
-        require(msg.sender != owner);
-        require(service != address(0));
+    function enableRegisteredService(address service) public notOwner notNullAddress(service) {
         require(msg.sender != service);
+
+        //ensure service is registered
+        require(registeredServicesMap[service] != 0);
 
         //enable service for given wallet
         disabledServicesMap[indexFromWalletService(msg.sender, service)] = false;
@@ -359,10 +334,11 @@ contract ClientFund {
         emit EnableRegisteredServiceEvent(msg.sender, service);
     }
 
-    function disableRegisteredService(address service) public onlyOwner {
-        require(msg.sender != owner);
-        require(service != address(0));
+    function disableRegisteredService(address service) public notOwner notNullAddress(service) {
         require(msg.sender != service);
+
+        //ensure service is registered
+        require(registeredServicesMap[service] != 0);
 
         //disable service for given wallet
         disabledServicesMap[indexFromWalletService(msg.sender, service)] = true;
@@ -407,6 +383,11 @@ contract ClientFund {
 
     modifier notOwner() {
         require(msg.sender != owner);
+        _;
+    }
+
+    modifier notMySelfAddress(address _address) {
+        require(_address != address(this));
         _;
     }
 }
