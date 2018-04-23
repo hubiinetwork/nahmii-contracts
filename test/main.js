@@ -235,8 +235,8 @@ contract('Smart contract checks', function () {
 	require('./scenarios/CommunityVote')(glob);
 	require('./scenarios/Configuration')(glob);
 	require('./scenarios/Exchange')(glob);
-	require('./scenarios/ReserveFund')(glob);
-	require('./scenarios/RevenueFund')(glob);
-	require('./scenarios/SecurityBond')(glob);
-	require('./scenarios/TokenHolderRevenueFund')(glob);
+    require('./scenarios/ReserveFund')(glob);
+    require('./scenarios/RevenueFund')(glob);
+    require('./scenarios/SecurityBond')(glob);
+    require('./scenarios/TokenHolderRevenueFund')(glob);
 });
