@@ -18,6 +18,7 @@ var RevenueFund = artifacts.require("RevenueFund");
 var SecurityBond = artifacts.require("SecurityBond");
 var TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
 var ERC20Token = artifacts.require("StandardTokenEx");
+var UnitTestHelpers = artifacts.require("UnitTestHelpers");
 
 //augmented sendTransaction using promises
 web3.eth.sendTransactionPromise = function(transactionObject) {
@@ -88,6 +89,21 @@ contract('Smart contract checks', function () {
 			}
 		);
 	});
+
+	before("Preflight: Instantiate unit test helper contract", function (done) {
+		UnitTestHelpers.new().then(
+			function (_t) {
+				assert.notEqual(_t, null);
+				glob.web3UnitTestHelpers = _t;
+
+				done();
+			},
+			function () {
+				done(new Error('Failed to instantiate UnitTestHelpers instance'));
+			}
+		);
+	});
+	
 
 	before("Preflight: Instantiate ClientFund contract", function (done) {
 		ClientFund.deployed().then(
