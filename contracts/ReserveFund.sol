@@ -210,6 +210,7 @@ contract ReserveFund {
     function closeAccrualPeriod() public onlyOwner {
 
 
+
 		emit CloseAccrualPeriodEvent();
 
     }
@@ -292,38 +293,7 @@ contract ReserveFund {
 		emit ClaimAccrualEvent(tokenAddress);
 	}
 
-    function balanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) public view returns (uint256) {
-		require (startBlock < endBlock);
-		require (wallet != address(0));
-
-		uint256[] storage balanceBlockNumbers = tokenAddress == 0 ? walletInfoMap[wallet].etherBalanceBlockNumbers : walletInfoMap[wallet].tokenBalanceBlockNumbers[tokenAddress];
-
-        if (0 == balanceBlockNumbers.length || 0 == endBlock.sub(startBlock)) {
-            return 0;
-        }
-
-        uint i = 0;
-        while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= startBlock) {
-            i++;
-        }
-
-        uint low = 0 == i ? startBlock : balanceBlockNumbers[i - 1];
-        uint res = balanceBlockNumbers[i].mul(balanceBlockNumbers[i].sub(startBlock)).div(balanceBlockNumbers[i].sub(low));
-        i++;
-
-        while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= endBlock) {
-            res = res.add(balanceBlockNumbers[i++]);	
-        }
-
-        if (i >= balanceBlockNumbers.length) {
-            res = res.add(balanceBlockNumbers[i].mul(endBlock.sub(balanceBlockNumbers[i - 1])));
-        } else if (balanceBlockNumbers[i - 1] < endBlock) {
-            res = res.add(balanceBlockNumbers[i].mul(endBlock.sub(balanceBlockNumbers[i - 1])).div(balanceBlockNumbers[i].sub(balanceBlockNumbers[i - 1])));
-        }
-
-        return res;
-    }
-
+    
     function stage(address tokenAddress, uint256 amount) public {
         require(msg.sender != owner);
 
@@ -408,6 +378,7 @@ contract ReserveFund {
 	}
 
     function twoWayTransfer(address wallet, TransferInfo inboundTx, TransferInfo outboundTx) public onlyOwner returns (bool) {
+		//require (msg.sender == exchangeSmartContract);
 		require (inboundTx.amount > 0);
 		require (outboundTx.amount > 0);
 		require (wallet != address(0));
@@ -467,6 +438,38 @@ contract ReserveFund {
     //
     // Internal helper functions
     // -----------------------------------------------------------------------------------------------------------------
+
+	function balanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) internal view returns (uint256) {
+		require (startBlock < endBlock);
+		require (wallet != address(0));
+
+		uint256[] storage balanceBlockNumbers = tokenAddress == 0 ? walletInfoMap[wallet].etherBalanceBlockNumbers : walletInfoMap[wallet].tokenBalanceBlockNumbers[tokenAddress];
+
+        if (0 == balanceBlockNumbers.length || 0 == endBlock.sub(startBlock)) {
+            return 0;
+        }
+
+        uint i = 0;
+        while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= startBlock) {
+            i++;
+        }
+
+        uint low = 0 == i ? startBlock : balanceBlockNumbers[i - 1];
+        uint res = balanceBlockNumbers[i].mul(balanceBlockNumbers[i].sub(startBlock)).div(balanceBlockNumbers[i].sub(low));
+        i++;
+
+        while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= endBlock) {
+            res = res.add(balanceBlockNumbers[i++]);	
+        }
+
+        if (i >= balanceBlockNumbers.length) {
+            res = res.add(balanceBlockNumbers[i].mul(endBlock.sub(balanceBlockNumbers[i - 1])));
+        } else if (balanceBlockNumbers[i - 1] < endBlock) {
+            res = res.add(balanceBlockNumbers[i].mul(endBlock.sub(balanceBlockNumbers[i - 1])).div(balanceBlockNumbers[i].sub(balanceBlockNumbers[i - 1])));
+        }
+
+        return res;
+    }
 
     //
     // Modifiers
