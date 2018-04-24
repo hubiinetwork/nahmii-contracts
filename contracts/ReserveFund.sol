@@ -64,6 +64,13 @@ contract ReserveFund {
         // Block numbers at which address a has had its ether balance updated
         mapping(address => uint256[]) tokenBalanceBlockNumbers;
         mapping(address => uint256) lastTokenBalanceBlockNumber;
+
+		// Accrual block tracking
+		mapping(address => uint256[]) tokenAccrualBlockNumbers;
+		uint256[] etherAccrualBlockNumbers;		
+
+		mapping(address => uint256[]) tokenClaimAccrualBlockNumbers;
+		uint256[] etherClaimAccrualBlockNumbers;	
 	}
 
 	struct TransferInfo {
@@ -88,7 +95,7 @@ contract ReserveFund {
 
     uint256[] etherAccrualBlockNumbers;
     mapping(address => uint256[]) tokenAccrualBlockNumbers;
-
+	
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -97,6 +104,8 @@ contract ReserveFund {
     event StageEvent(address wallet, uint256 amount, address tokenAddress);
     event WithdrawEvent(address wallet, uint256 amount, address tokenAddress);
     event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx);
+	event ClaimAccrualEvent(address tokenAddress);
+	event CloseAccrualPeriodEvent();
 
     //
     // Constructor
@@ -200,10 +209,120 @@ contract ReserveFund {
 
     function closeAccrualPeriod() public onlyOwner {
 
+
+		emit CloseAccrualPeriodEvent();
+
     }
 
-    function balanceBlocksIn(address addr, address currency, uint256 startBlock, uint256 endBlock) public {
-        
+	function claimAccrual(address tokenAddress) public {
+		uint256 bn_low;
+		uint256 bn_up; 
+		uint256 lenAccrualBlocks;
+		uint256 lenClaimAccrualBlocks;
+
+		/* lower bound = last accrual block number claimed for currency c by msg.sender OR,
+		   first accrual block number if last_accrual block number */
+
+		/* upper bound = last accrual block number */
+
+		if (tokenAddress == address(0)) {
+			lenAccrualBlocks = walletInfoMap[msg.sender].etherAccrualBlockNumbers.length;
+			lenClaimAccrualBlocks = walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers.length;
+			require (lenAccrualBlocks > 0);
+
+			bn_up = etherAccrualBlockNumbers[lenAccrualBlocks - 1];
+
+			if (walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers.length == 0) {
+				
+				/* no block numbers for claimed accruals yet, use first accrual block number  */
+
+				require(walletInfoMap[msg.sender].etherAccrualBlockNumbers.length > 0);
+				bn_low = walletInfoMap[msg.sender].etherAccrualBlockNumbers[0];
+			}
+			else {
+				bn_low = walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers[lenClaimAccrualBlocks - 1];
+			}
+		}
+		else {
+			lenAccrualBlocks = walletInfoMap[msg.sender].tokenAccrualBlockNumbers[tokenAddress].length;
+			lenClaimAccrualBlocks = walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[tokenAddress].length;
+			require (lenAccrualBlocks > 0);
+
+			bn_up = tokenAccrualBlockNumbers[tokenAddress][lenAccrualBlocks - 1];
+
+			if (walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[tokenAddress].length == 0) {
+				
+				/* no block numbers for claimed accruals yet, use first accrual block number  */
+
+				require(walletInfoMap[msg.sender].tokenAccrualBlockNumbers[tokenAddress].length > 0);
+				bn_low = walletInfoMap[msg.sender].tokenAccrualBlockNumbers[tokenAddress][0];
+			}
+			else {
+				bn_low = walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[tokenAddress][lenClaimAccrualBlocks - 1];
+			}
+		}
+		
+		uint256 bb = balanceBlocksIn(msg.sender, tokenAddress, bn_low, bn_up);
+
+		require (bn_low != bn_up); // avoid division by 0
+
+		ERC20 tokenInstance = ERC20(tokenAddress);
+		uint256 totalSupply = tokenAddress == 0 ? aggregatedEtherBalance : tokenInstance.totalSupply();
+		uint256 fraction = bb.div(totalSupply.mul(bn_low.sub(bn_up)));
+		uint256 amount = fraction.mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]);
+
+		/* Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c */
+
+		if (tokenAddress == address(0)) {
+			aggregatedEtherBalance.sub(amount);
+			walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
+		} else {
+			aggregatedTokenBalance[tokenAddress].sub(amount);
+			walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);			
+		}
+
+		/* Store upperbound as the last claimed accrual block number for currency */
+
+		if (tokenAddress == address(0)) {
+			walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers.push(bn_up);
+		} 
+		else {
+			walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[tokenAddress].push(bn_up);
+		}
+
+		emit ClaimAccrualEvent(tokenAddress);
+	}
+
+    function balanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) public view returns (uint256) {
+		require (startBlock < endBlock);
+		require (wallet != address(0));
+
+		uint256[] storage balanceBlockNumbers = tokenAddress == 0 ? walletInfoMap[wallet].etherBalanceBlockNumbers : walletInfoMap[wallet].tokenBalanceBlockNumbers[tokenAddress];
+
+        if (0 == balanceBlockNumbers.length || 0 == endBlock.sub(startBlock)) {
+            return 0;
+        }
+
+        uint i = 0;
+        while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= startBlock) {
+            i++;
+        }
+
+        uint low = 0 == i ? startBlock : balanceBlockNumbers[i - 1];
+        uint res = balanceBlockNumbers[i].mul(balanceBlockNumbers[i].sub(startBlock)).div(balanceBlockNumbers[i].sub(low));
+        i++;
+
+        while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= endBlock) {
+            res = res.add(balanceBlockNumbers[i++]);	
+        }
+
+        if (i >= balanceBlockNumbers.length) {
+            res = res.add(balanceBlockNumbers[i].mul(endBlock.sub(balanceBlockNumbers[i - 1])));
+        } else if (balanceBlockNumbers[i - 1] < endBlock) {
+            res = res.add(balanceBlockNumbers[i].mul(endBlock.sub(balanceBlockNumbers[i - 1])).div(balanceBlockNumbers[i].sub(balanceBlockNumbers[i - 1])));
+        }
+
+        return res;
     }
 
     function stage(address tokenAddress, uint256 amount) public {
