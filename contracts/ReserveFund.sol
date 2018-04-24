@@ -266,9 +266,8 @@ contract ReserveFund {
 
 		require (bn_low != bn_up); // avoid division by 0
 
-		ERC20 tokenInstance = ERC20(tokenAddress);
-		uint256 totalSupply = tokenAddress == 0 ? aggregatedEtherBalance : tokenInstance.totalSupply();
-		uint256 fraction = bb.div(totalSupply.mul(bn_low.sub(bn_up)));
+		uint256 balance = tokenAddress == address(0) ? aggregatedEtherBalance : aggregatedTokenBalance[tokenAddress];
+		uint256 fraction = bb.div(balance.mul(bn_low.sub(bn_up)));
 		uint256 amount = fraction.mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]);
 
 		/* Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c */
