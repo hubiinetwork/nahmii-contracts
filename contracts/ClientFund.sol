@@ -167,14 +167,14 @@ contract ClientFund {
 
             //move from active balance to staged
             walletInfoMap[sourceWallet].activeEtherBalance = walletInfoMap[sourceWallet].activeEtherBalance.sub(amount);
-            walletInfoMap[destWallet].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
+            walletInfoMap[destWallet].stagedEtherBalance = walletInfoMap[destWallet].stagedEtherBalance.add(amount);
         } else {
             //check for sufficient balance
             require(amount <= walletInfoMap[sourceWallet].activeTokenBalance[token]);
 
             //move from active balance to staged
             walletInfoMap[sourceWallet].activeTokenBalance[token] = walletInfoMap[sourceWallet].activeTokenBalance[token].sub(amount);
-            walletInfoMap[destWallet].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add(amount);
+            walletInfoMap[destWallet].stagedTokenBalance[token] = walletInfoMap[destWallet].stagedTokenBalance[token].add(amount);
         }
 
         //emit event
@@ -358,7 +358,7 @@ contract ClientFund {
         return disabledServicesMap[indexFromWalletService(wallet, service)];
     }
 
-    function isAcceptedServiceForWallet(address wallet, address service) private view returns (bool) {
+    function isAcceptedServiceForWallet(address service, address wallet) private view returns (bool) {
         if (service == wallet)
             return false;
         if (registeredServicesMap[service] == 0)

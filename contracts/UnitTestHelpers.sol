@@ -24,12 +24,32 @@ contract UnitTestHelpers {
     function UnitTestHelpers() public {
     }
 
+    function () public payable {
+    }
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function invalidCallToTransferFromActiveToStagedBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token)public  {
+    function callToTransferFromActiveToStagedBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token) public {
         require(clientFunds != address(0));
         ClientFund sc = ClientFund(clientFunds);
         sc.transferFromActiveToStagedBalance(sourceWallet, destWallet, amount, token);
+    }
+
+    function callToWithdrawFromActiveBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token) public {
+        require(clientFunds != address(0));
+        ClientFund sc = ClientFund(clientFunds);
+        sc.withdrawFromActiveBalance(sourceWallet, destWallet, amount, token);
+    }
+
+    function callToDepositEthersToStagedBalance(address clientFunds, address destWallet) public payable {
+        require(clientFunds != address(0));
+        ClientFund sc = ClientFund(clientFunds);
+        sc.depositEthersToStagedBalance.value(msg.value)(destWallet);
+    }
+
+    function callToDepositTokensToStagedBalance(address clientFunds, address destWallet, address token, uint256 amount) public {
+        require(clientFunds != address(0));
+        ClientFund sc = ClientFund(clientFunds);
+        sc.depositTokensToStagedBalance(destWallet, token, amount);
     }
 }
