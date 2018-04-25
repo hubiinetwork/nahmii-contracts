@@ -303,7 +303,7 @@ contract ReserveFund {
             require(amount > 0);
 
             walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.sub(amount);
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
+            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
 
             walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeEtherBalance));
 
@@ -314,7 +314,7 @@ contract ReserveFund {
             require(amount > 0);
 
             walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].sub(amount);
-            walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].sub(amount);
+            walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);
 
             walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress]));
 
