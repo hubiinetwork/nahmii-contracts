@@ -135,7 +135,7 @@ contract ReserveFund {
             walletInfoMap[msg.sender].etherBalanceBlockNumbers.push(block.number);
             walletInfoMap[msg.sender].lastEtherBalanceBlockNumber = block.number;
          
-            walletInfoMap[msg.sender].activeEtherBalance.add(msg.value);
+            walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.add(msg.value);
 		    aggregatedEtherBalance = aggregatedEtherBalance.add(msg.value);
         }
 
