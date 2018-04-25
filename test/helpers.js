@@ -22,3 +22,18 @@ module.exports.augmentWeb3 = function (web3)
 		});
 	}
 }
+
+module.exports.TestCounter = function ()
+{
+	function TestCounter()
+	{
+		var testCounter = 0;
+
+		this.next = function()
+		{
+			testCounter++;
+			return "T" + ("000" + testCounter.toString()).slice(-3);
+		}
+	}
+	return new TestCounter();
+}

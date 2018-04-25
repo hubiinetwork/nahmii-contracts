@@ -27,10 +27,17 @@ contract ClientFund {
         address token;      //0 for ethers
     }
 
+    struct WithdrawalInfo {
+        uint256 amount;
+        uint256 timestamp;
+        address token;      //0 for ethers
+    }
+
     struct WalletInfo {
         uint256 tradeNonce;
 
         DepositInfo[] deposits;
+        WithdrawalInfo[] withdrawals;
 
         // Active balance of ethers and tokens.
         uint256 activeEtherBalance;
@@ -278,7 +285,10 @@ contract ClientFund {
 
         //check for sufficient balance
         require(amount <= walletInfoMap[msg.sender].stagedEtherBalance);
+
+        //subtract to per-wallet staged balance
         walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
+        walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, address(0)));
 
         //execute transfer
         msg.sender.transfer(amount);
@@ -295,7 +305,10 @@ contract ClientFund {
 
         //check for sufficient balance
         require(amount <= walletInfoMap[msg.sender].stagedTokenBalance[token]);
+
+        //subtract to per-wallet staged balance
         walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub(amount);
+        walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, token));
 
         //execute transfer
         erc20_token = ERC20(token);
@@ -303,6 +316,18 @@ contract ClientFund {
 
         //emit event
         emit WithdrawEvent(msg.sender, amount, token);
+    }
+
+    function withdrawal(address wallet, uint index) public view onlyOwner returns (uint256 amount, uint256 timestamp, address token) {
+        require(index < walletInfoMap[wallet].withdrawals.length);
+
+        amount = walletInfoMap[wallet].withdrawals[index].amount;
+        timestamp = walletInfoMap[wallet].withdrawals[index].timestamp;
+        token = walletInfoMap[wallet].withdrawals[index].token;
+    }
+
+    function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
+        return walletInfoMap[wallet].withdrawals.length;
     }
 
     //

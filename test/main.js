@@ -40,10 +40,6 @@ contract('Smart contract checks', function () {
 		signer_d: w3prov.getSigner(this.user_d),
 
 		gasLimit: 1800000
-
-		//var web3ClientFund = null;
-		//var ethersIoClientFund = null; // Uses Ethers.io for convenience using structs,etc.
-		//var web3Erc20 = null;
 	};
 
 	const minRequiredEthersPerUser = 10;
@@ -54,7 +50,7 @@ contract('Smart contract checks', function () {
 	// Preflight stage
 	//-------------------------------------------------------------------------
 
-	before("Preflight: Check available account addresses and balances", function(done) {
+	before("Preflight: Check available account addresses and balances", async() => {
 		assert.notEqual(glob.user_a, null);
 		assert.notEqual(glob.user_b, null);
 		assert.notEqual(glob.user_c, null);
@@ -64,171 +60,170 @@ contract('Smart contract checks', function () {
 		assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_b), "ether") >= minRequiredEthersPerUser);
 		assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_c), "ether") >= minRequiredEthersPerUser);
 		assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_d), "ether") >= minRequiredEthersPerUser);
-
-		done();
 	});
 
-	before("Preflight: Instantiate test token", function (done) {
-		ERC20Token.new().then(function (_t) {
+	before("Preflight: Instantiate test token", async() => {
+		try {
+			let _t = await ERC20Token.new();
 			assert.notEqual(_t, null);
 			glob.web3Erc20 = _t;
 
 			glob.web3Erc20.totalSupply = initialTokensSupply;
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate ERC20Token instance. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate ERC20Token instance. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Deploy unit test helper contract for validation tests", function (done) {
-		UnitTestHelpers.new().then(function (_t) {
+	before("Preflight: Deploy unit test helper contract for validation tests", async() => {
+		try {
+			let _t = await UnitTestHelpers.new();
 			assert.notEqual(_t, null);
+
 			glob.web3UnitTestHelpers_SUCCESS_TESTS = _t;
 			glob.ethersUnitTestHelpers_SUCCESS_TESTS = new ethers.Contract(_t.address, UnitTestHelpers.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to create a new instance of UnitTestHelpers. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to create a new instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Deploy a second instance of unit test helper contract for other tests", function (done) {
-		UnitTestHelpers.new().then(function (_t) {
+	before("Preflight: Deploy a second instance of unit test helper contract for other tests", async() => {
+		try {
+			let _t = await UnitTestHelpers.new();
 			assert.notEqual(_t, null);
+
 			glob.web3UnitTestHelpers_FAIL_TESTS = _t;
 			glob.ethersUnitTestHelpers_FAIL_TESTS = new ethers.Contract(_t.address, UnitTestHelpers.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to create a second instance of UnitTestHelpers. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to create a second instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Instantiate ClientFund contract", function (done) {
-		ClientFund.deployed().then(function (_d) {
+	before("Preflight: Instantiate ClientFund contract", async() => {
+		try {
+			let _d = await ClientFund.deployed();
 			assert.notEqual(_d, null);
 
 			glob.web3ClientFund = _d;
 			glob.ethersIoClientFund = new ethers.Contract(_d.address, ClientFund.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate ClientFund contract address. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate ClientFund contract address. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Instantiate CommunityVote contract", function (done) {
-		CommunityVote.deployed().then(function (_d) {
+	before("Preflight: Instantiate CommunityVote contract", async() => {
+		try {
+			let _d = await CommunityVote.deployed();
 			assert.notEqual(_d, null);
 
 			glob.web3CommunityVote = _d;
 			glob.ethersIoCommunityVote = new ethers.Contract(_d.address, CommunityVote.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate CommunityVote contract address. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate CommunityVote contract address. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Instantiate Configuration contract", function (done) {
-		Configuration.deployed().then(function (_d) {
+	before("Preflight: Instantiate Configuration contract", async() => {
+		try {
+			let _d = await Configuration.deployed();
 			assert.notEqual(_d, null);
 
 			glob.web3Configuration = _d;
 			glob.ethersIoConfiguration = new ethers.Contract(_d.address, Configuration.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate Configuration contract address. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate Configuration contract address. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Instantiate Exchange contract", function (done) {
-		Exchange.deployed().then(function (_d) {
+	before("Preflight: Instantiate Exchange contract", async() => {
+		try {
+			let _d = await Exchange.deployed();
 			assert.notEqual(_d, null);
 
 			glob.web3Exchange = _d;
 			glob.ethersIoExchange = new ethers.Contract(_d.address, Exchange.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate Exchange contract address. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate Exchange contract address. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Instantiate ReserveFund contract", function (done) {
-		ReserveFund.deployed().then(function (_d) {
+	before("Preflight: Instantiate ReserveFund contract", async() => {
+		try {
+			let _d = await ReserveFund.deployed();
 			assert.notEqual(_d, null);
 
 			glob.web3ReserveFund = _d;
 			glob.ethersIoReserveFund = new ethers.Contract(_d.address, ReserveFund.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate ReserveFund contract address. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate ReserveFund contract address. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Instantiate RevenueFund contract", function (done) {
-		RevenueFund.deployed().then(function (_d) {
+	before("Preflight: Instantiate RevenueFund contract", async() => {
+		try {
+			let _d = await RevenueFund.deployed();
 			assert.notEqual(_d, null);
 
 			glob.web3RevenueFund = _d;
 			glob.ethersIoRevenueFund = new ethers.Contract(_d.address, RevenueFund.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate RevenueFund contract address. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate RevenueFund contract address. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Instantiate SecurityBond contract", function (done) {
-		SecurityBond.deployed().then(function (_d) {
+	before("Preflight: Instantiate SecurityBond contract", async() => {
+		try {
+			let _d = await SecurityBond.deployed();
 			assert.notEqual(_d, null);
 
 			glob.web3SecurityBond = _d;
 			glob.ethersIoSecurityBond = new ethers.Contract(_d.address, SecurityBond.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate SecurityBond contract address. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate SecurityBond contract address. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Instantiate TokenHolderRevenueFund contract", function (done) {
-		TokenHolderRevenueFund.deployed().then(function (_d) {
+	before("Preflight: Instantiate TokenHolderRevenueFund contract", async() => {
+		try {
+			let _d = await TokenHolderRevenueFund.deployed();
 			assert.notEqual(_d, null);
 
 			glob.web3TokenHolderRevenueFund = _d;
 			glob.ethersIoTokenHolderRevenueFund = new ethers.Contract(_d.address, TokenHolderRevenueFund.abi, w3prov);
-
-			done();
-		}).catch(function (err) {
-			done(new Error('Failed to instantiate TokenHolderRevenueFund contract address. [Error: ' + err.toString() + ']'));
-		});
+		}
+		catch (err) {
+			assert(false, 'Failed to instantiate TokenHolderRevenueFund contract address. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Distribute test ethers", function (done) {
-		web3.eth.sendTransactionPromise({ from: glob.owner, to: glob.web3UnitTestHelpers_SUCCESS_TESTS.address, value: web3.toWei('10', "ether") }).then(function () {
-			return web3.eth.sendTransactionPromise({ from: glob.owner, to: glob.web3UnitTestHelpers_FAIL_TESTS.address, value: web3.toWei('10', "ether") });
-		}).then(function () {
-			done();
-		}).catch(function (err) {
-			done(new Error('Cannot distribute money to smart contracts. [Error: ' + err.toString() + ']'));
-		});
+	before("Preflight: Distribute test ethers", async() => {
+		try {
+			await web3.eth.sendTransactionPromise({ from: glob.owner, to: glob.web3UnitTestHelpers_SUCCESS_TESTS.address, value: web3.toWei('10', "ether") });
+			await web3.eth.sendTransactionPromise({ from: glob.owner, to: glob.web3UnitTestHelpers_FAIL_TESTS.address, value: web3.toWei('10', "ether") });
+		}
+		catch (err) {
+			assert(false, 'Cannot distribute money to smart contracts. [Error: ' + err.toString() + ']');
+		}
 	});
 
-	before("Preflight: Distribute test tokens", function (done) {
-		glob.web3Erc20.testMint(glob.user_a, initialTokensForAll).then(function () {
-			return glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
-		}).then(function () {
-			return glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
-		}).then(function () {
-			done();
-		}).catch(function (err) {
-			done(new Error('Cannot assign tokens for user A. [Error: ' + err.toString() + ']'));
-		});
+	before("Preflight: Distribute test tokens", async() => {
+		try {
+			await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
+		}
+		catch (err) {
+			assert(false, 'Cannot assign tokens for users and smart contracts. [Error: ' + err.toString() + ']');
+		}
 	});
 
 	//-------------------------------------------------------------------------
