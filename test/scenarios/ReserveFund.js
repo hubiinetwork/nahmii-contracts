@@ -2,6 +2,7 @@ module.exports = function (glob) {
 
 	describe("ReserveFund", function () {
 
+		
 		// Local test-wide variables
 		// ------------------------------------------------------------------------------------------------------
 		const TOKEN_DEPOSIT_AMOUNT_A = 5;
@@ -20,9 +21,22 @@ module.exports = function (glob) {
 		var etherDepositBlockNumber_userC = -1;
 		var etherDepositBlockNumber_owner = -1;
 		var tokenDepositBlockNumber_owner = -1;
+
+		// Helper functions
+		// -----------------------------------------------------------------------------------------------------
+		Number.prototype.pad = function(size) {
+			var s = String(this);
+			while (s.length < (size || 2)) {s = "0" + s;}
+			return s;
+		}
+
+		function testId() {
+			return "T" + (++testNum).pad(3);
+		}
+		var testNum = 0;
 		// ------------------------------------------------------------------------------------------------------
 
-		it("T001: MUST SUCCEED [payable]: Owner deposits " + ETHER_DEPOSIT_AMOUNT_OWNER + "ETH", function (done) {
+		it( testId() + ": MUST SUCCEED [payable]: Owner deposits " + ETHER_DEPOSIT_AMOUNT_OWNER + "ETH", function (done) {
 			web3.eth.sendTransaction({
 				from: glob.owner,
 				to: glob.web3ReserveFund.address,
@@ -44,7 +58,7 @@ module.exports = function (glob) {
 			})
 		});
 
-		it("T002: MUST SUCCEED [payable]: User B deposits " + ETHER_DEPOSIT_AMOUNT_B + "ETH", function (done) {
+		it( testId() + ": MUST SUCCEED [payable]: User B deposits " + ETHER_DEPOSIT_AMOUNT_B + "ETH", function (done) {
 			web3.eth.sendTransaction({
 				from: glob.user_b,
 				to: glob.web3ReserveFund.address,
@@ -66,7 +80,7 @@ module.exports = function (glob) {
 			})
 		});
 
-		it("T003: MUST SUCCEED [payable]: User C deposits " + ETHER_DEPOSIT_AMOUNT_C + "ETH", function (done) {
+		it( testId() + ": MUST SUCCEED [payable]: User C deposits " + ETHER_DEPOSIT_AMOUNT_C + "ETH", function (done) {
 			web3.eth.sendTransaction({
 				from: glob.user_c,
 				to: glob.web3ReserveFund.address,
@@ -88,7 +102,7 @@ module.exports = function (glob) {
 			})
 		});
 
-		it("T004: MUST FAIL [payable]: Cannot be called with zero amount ", function (done) {
+		it( testId() + ": MUST FAIL [payable]: Cannot be called with zero amount ", function (done) {
 			web3.eth.sendTransaction({
 				from: glob.user_c,
 				to: glob.web3ReserveFund.address,
@@ -100,7 +114,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T005: MUST FAIL [depositToken]: Cannot be called with zero amount", function (done) {
+		it( testId() + ": MUST FAIL [depositToken]: Cannot be called with zero amount", function (done) {
 			glob.web3ReserveFund.depositTokens(glob.web3Erc20.address, 0, { from: glob.user_a })
 				.then((result) => {
 					done(new Error('This test must fail'));
@@ -110,7 +124,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T006: MUST FAIL [depositToken]: Cannot be called with null token address", function (done) {
+		it( testId() + ": MUST FAIL [depositToken]: Cannot be called with null token address", function (done) {
 			glob.web3ReserveFund.depositTokens(0, TOKEN_DEPOSIT_AMOUNT_A, { from: glob.user_a })
 				.then((result) => {
 					done(new Error('This test must fail'));
@@ -120,7 +134,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T007: MUST SUCCEED [depositToken]: Owner deposits " + TOKEN_DEPOSIT_AMOUNT_OWNER + " tokens", function (done) {
+		it( testId() + ": MUST SUCCEED [depositToken]: Owner deposits " + TOKEN_DEPOSIT_AMOUNT_OWNER + " tokens", function (done) {
 			glob.web3Erc20.approve(glob.web3ReserveFund.address, TOKEN_DEPOSIT_AMOUNT_OWNER)
 				.then(() => {
 					glob.web3ReserveFund.depositTokens(glob.web3Erc20.address, TOKEN_DEPOSIT_AMOUNT_OWNER)
@@ -137,7 +151,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T008: MUST SUCCEED [depositToken]: User A deposits " + TOKEN_DEPOSIT_AMOUNT_A + " tokens", function (done) {
+		it( testId() + ": MUST SUCCEED [depositToken]: User A deposits " + TOKEN_DEPOSIT_AMOUNT_A + " tokens", function (done) {
 			glob.web3Erc20.approve(glob.web3ReserveFund.address, TOKEN_DEPOSIT_AMOUNT_A, { from: glob.user_a })
 				.then(() => {
 					glob.web3ReserveFund.depositTokens(glob.web3Erc20.address, TOKEN_DEPOSIT_AMOUNT_A, { from: glob.user_a })
@@ -154,7 +168,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T009: MUST SUCCEED [depositToken]: User B deposits " + TOKEN_DEPOSIT_AMOUNT_B + " tokens", function (done) {
+		it( testId() + ": MUST SUCCEED [depositToken]: User B deposits " + TOKEN_DEPOSIT_AMOUNT_B + " tokens", function (done) {
 			glob.web3Erc20.approve(glob.web3ReserveFund.address, TOKEN_DEPOSIT_AMOUNT_B, { from: glob.user_b })
 				.then(() => {
 					glob.web3ReserveFund.depositTokens(glob.web3Erc20.address, TOKEN_DEPOSIT_AMOUNT_B, { from: glob.user_b })
@@ -171,7 +185,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T010: MUST SUCCEED [deposit]: User A deposit at index 0 is " + TOKEN_DEPOSIT_AMOUNT_A + " tokens ", function (done) {
+		it( testId() + ": MUST SUCCEED [deposit]: User A deposit at index 0 is " + TOKEN_DEPOSIT_AMOUNT_A + " tokens ", function (done) {
 			glob.web3ReserveFund.deposit(glob.user_a, 0)
 				.then((depositData) => {
 					if (depositData[0] != TOKEN_DEPOSIT_AMOUNT_A) {
@@ -196,7 +210,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T011: MUST SUCCEED [deposit]: User B deposit at index 0 is " + ETHER_DEPOSIT_AMOUNT_B + " ETH", function (done) {
+		it( testId() + ": MUST SUCCEED [deposit]: User B deposit at index 0 is " + ETHER_DEPOSIT_AMOUNT_B + " ETH", function (done) {
 			glob.web3ReserveFund.deposit(glob.user_b, 0)
 				.then((depositData) => {
 					if (web3.fromWei(depositData[0]) != ETHER_DEPOSIT_AMOUNT_B) {
@@ -221,7 +235,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T012: MUST SUCCEED [deposit]: User B deposit at index 1 is " + TOKEN_DEPOSIT_AMOUNT_B + " tokens", function (done) {
+		it( testId() + ": MUST SUCCEED [deposit]: User B deposit at index 1 is " + TOKEN_DEPOSIT_AMOUNT_B + " tokens", function (done) {
 			glob.web3ReserveFund.deposit(glob.user_b, 1)
 				.then((depositData) => {
 					if (depositData[0] != TOKEN_DEPOSIT_AMOUNT_B) {
@@ -246,7 +260,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T013: MUST SUCCEED [depositCount]: User A deposit count equals 1", function (done) {
+		it( testId() + ": MUST SUCCEED [depositCount]: User A deposit count equals 1", function (done) {
 			glob.web3ReserveFund.depositCount(glob.user_a)
 				.then((depositCount) => {
 					if (depositCount != 1) {
@@ -261,7 +275,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T014: MUST SUCCEED [depositCount]: User B deposit count equals 2", function (done) {
+		it( testId() + ": MUST SUCCEED [depositCount]: User B deposit count equals 2", function (done) {
 			glob.web3ReserveFund.depositCount(glob.user_b)
 				.then((depositCount) => {
 					if (depositCount != 2) {
@@ -276,7 +290,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T015: MUST SUCCEED [periodAccrualBalance]: Period accrual balance equals" + ETHER_DEPOSIT_AMOUNT_OWNER + " ETH", async () => {
+		it( testId() + ": MUST SUCCEED [periodAccrualBalance]: Period accrual balance equals" + ETHER_DEPOSIT_AMOUNT_OWNER + " ETH", async () => {
 			try {
 				let balance = await glob.web3ReserveFund.periodAccrualBalance(0);
 				if (balance != web3.toWei(ETHER_DEPOSIT_AMOUNT_OWNER, 'ether')) {
@@ -292,7 +306,7 @@ module.exports = function (glob) {
 			}
 		});
 
-		it("T016: MUST SUCCEED [aggregateAccrualBalance]: Aggregate accrual balance equals " + ETHER_DEPOSIT_AMOUNT_OWNER + "ETH", function (done) {
+		it( testId() + ": MUST SUCCEED [aggregateAccrualBalance]: Aggregate accrual balance equals " + ETHER_DEPOSIT_AMOUNT_OWNER + "ETH", function (done) {
 			glob.web3ReserveFund.aggregateAccrualBalance(0)
 				.then((balance) => {
 					if (balance != web3.toWei(ETHER_DEPOSIT_AMOUNT_OWNER, 'ether')) {
@@ -307,15 +321,15 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T017: MUST SUCCEED [closeAccrualPeriod]", function (done) {
+		it( testId() + ": MUST SUCCEED [closeAccrualPeriod]", function (done) {
 			done();
 		});
 
-		it("T018: MUST SUCCEED [claimAccrual]", function (done) {
+		it( testId() + ": MUST SUCCEED [claimAccrual]", function (done) {
 			done();
 		});
 
-		it("T019: MUST SUCCEED [stage]: User A stages " + TOKEN_STAGE_AMOUNT_A + " token units", function (done) {
+		it( testId() + ": MUST SUCCEED [stage]: User A stages " + TOKEN_STAGE_AMOUNT_A + " token units", function (done) {
 			glob.web3ReserveFund.stage(glob.web3Erc20.address, TOKEN_STAGE_AMOUNT_A, { from: glob.user_a })
 				.then(() => {
 					done();
@@ -325,7 +339,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T020: MUST SUCCEED [stagedBalance]: User A staged balance equals " + TOKEN_STAGE_AMOUNT_A + " tokens", function (done) {
+		it( testId() + ": MUST SUCCEED [stagedBalance]: User A staged balance equals " + TOKEN_STAGE_AMOUNT_A + " tokens", function (done) {
 			glob.web3ReserveFund.stagedBalance(glob.user_a, glob.web3Erc20.address)
 				.then((balance) => {
 					if (balance != TOKEN_STAGE_AMOUNT_A) {
@@ -340,7 +354,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T021: MUST SUCCEED [activeBalance]: User A active balance equals " + (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A) + " tokens", function (done) {
+		it( testId() + ": MUST SUCCEED [activeBalance]: User A active balance equals " + (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A) + " tokens", function (done) {
 			glob.web3ReserveFund.activeBalance(glob.user_a, glob.web3Erc20.address)
 				.then((balance) => {
 					if (balance != (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A)) {
@@ -355,11 +369,11 @@ module.exports = function (glob) {
 				});
 		});
 
-		it("T022: MUST SUCCEED [withdrawEther]", function (done) {
+		it( testId() + ": MUST SUCCEED [withdrawEther]", function (done) {
 			done();
 		});
 
-		it("T023: MUST SUCCEED [withdrawTokens]", function (done) {
+		it( testId() + ": MUST SUCCEED [withdrawTokens]", function (done) {
 			done();
 		});
 	});
