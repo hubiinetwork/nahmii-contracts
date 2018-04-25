@@ -178,7 +178,8 @@ contract ReserveFund {
 	}
 
 	function deposit(address wallet, uint index) public view returns (int256 amount, address token, uint256 blockNumber) {
- 		require(index < walletInfoMap[wallet].depositsHistory.length);
+ 		require(wallet != address(0));
+		 require(index < walletInfoMap[wallet].depositsHistory.length);
 
 		DepositHistory storage dh = walletInfoMap[wallet].depositsHistory[index];
 		//NOTE: Code duplication in order to keep compiler happy and avoid warnings
