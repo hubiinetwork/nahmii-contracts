@@ -122,8 +122,8 @@ contract ReserveFund {
         require(msg.value > 0);
 
         if (msg.sender == owner) {
-            periodAccrualEtherBalance.add(msg.value);
-            aggregateAccrualEtherBalance.add(msg.value);
+            periodAccrualEtherBalance = periodAccrualEtherBalance.add(msg.value);
+            aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add(msg.value);
             etherAccrualBlockNumbers.push(block.number);
         }
         else {
@@ -135,7 +135,7 @@ contract ReserveFund {
             walletInfoMap[msg.sender].lastEtherBalanceBlockNumber = block.number;
          
             walletInfoMap[msg.sender].activeEtherBalance.add(msg.value);
-		    aggregatedEtherBalance.add(msg.value);
+		    aggregatedEtherBalance = aggregatedEtherBalance.add(msg.value);
         }
 
 		//add to per-wallet active balance
@@ -150,10 +150,10 @@ contract ReserveFund {
 		require(tokenAddress != address(0));
 		require(amount > 0);
         ERC20 token = ERC20(tokenAddress);
-
+            
         if (msg.sender == owner) {
-            periodAccrualTokenBalance[tokenAddress].add(amount);
-            aggregateAccrualTokenBalance[tokenAddress].add(amount);
+            periodAccrualTokenBalance[tokenAddress] = periodAccrualTokenBalance[tokenAddress].add(amount);
+            aggregateAccrualTokenBalance[tokenAddress] = aggregateAccrualTokenBalance[tokenAddress].add(amount);
             tokenAccrualBlockNumbers[tokenAddress].push(block.number);
         }
         else {
@@ -164,12 +164,12 @@ contract ReserveFund {
             walletInfoMap[msg.sender].tokenBalanceBlockNumbers[tokenAddress].push(block.number);
             walletInfoMap[msg.sender].lastTokenBalanceBlockNumber[tokenAddress] = block.number;
         
-            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].add(amount);
-		    aggregatedTokenBalance[tokenAddress].add(amount);
+            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].add(amount);
+		    aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].add(amount);
         }
 
         require(token.transferFrom(msg.sender, this, amount));
-        walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(tokenAddress, walletInfoMap[msg.sender].depositsToken[tokenAddress].length - 1));
+        walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress]));
 		walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(tokenAddress, walletInfoMap[msg.sender].depositsToken[tokenAddress].length - 1));
 
         //emit event
@@ -274,11 +274,11 @@ contract ReserveFund {
 		/* Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c */
 
 		if (tokenAddress == address(0)) {
-			aggregatedEtherBalance.sub(amount);
-			walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
+			aggregatedEtherBalance = aggregatedEtherBalance.sub(amount);
+			walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
 		} else {
-			aggregatedTokenBalance[tokenAddress].sub(amount);
-			walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);			
+			aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].sub(amount);
+			walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);			
 		}
 
 		/* Store upperbound as the last claimed accrual block number for currency */
@@ -302,8 +302,8 @@ contract ReserveFund {
                 amount = walletInfoMap[msg.sender].activeEtherBalance;
             require(amount > 0);
 
-            walletInfoMap[msg.sender].activeEtherBalance.sub(amount);
-            walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
+            walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.sub(amount);
+            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
 
             walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeEtherBalance));
 
@@ -313,8 +313,8 @@ contract ReserveFund {
                 amount = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress];
             require(amount > 0);
 
-            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].sub(amount);
-            walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].sub(amount);
+            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].sub(amount);
+            walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].sub(amount);
 
             walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress]));
 
@@ -355,7 +355,7 @@ contract ReserveFund {
 		require(amount > 0);
 
 		msg.sender.transfer(amount);
-		walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
+		walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
 	
 		//raise event
 		emit WithdrawEvent(msg.sender, amount, address(0));
@@ -371,7 +371,7 @@ contract ReserveFund {
 
 		ERC20 token = ERC20(tokenAddress);
 		token.transfer(msg.sender, amount);
-		walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].sub(amount);
+		walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].sub(amount);
 	
 		//raise event
 		emit WithdrawEvent(msg.sender, amount, tokenAddress);
@@ -390,29 +390,29 @@ contract ReserveFund {
 					return false;
 			}
 
-			walletInfoMap[wallet].stagedEtherBalance.add(outboundTx.amount);
-			aggregatedEtherBalance.sub(outboundTx.amount);
+			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add(outboundTx.amount);
+			aggregatedEtherBalance = aggregatedEtherBalance.sub(outboundTx.amount);
 
 		} else {
 			if (outboundTx.amount >= aggregatedTokenBalance[outboundTx.tokenAddress]) {
 				return false;
 			}
 
-			walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress].add(outboundTx.amount);
-			aggregatedTokenBalance[outboundTx.tokenAddress].sub(outboundTx.amount);
+			walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress].add(outboundTx.amount);
+			aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub(outboundTx.amount);
 		}
 
 		// Perform inbound (w to SC) transfers
 
 		if (inboundTx.tokenAddress == address(0)) {
 			require(walletInfoMap[wallet].stagedEtherBalance >= inboundTx.amount);
-			walletInfoMap[wallet].stagedEtherBalance.sub(inboundTx.amount);
-			aggregatedEtherBalance.add(inboundTx.amount);
+			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.sub(inboundTx.amount);
+			aggregatedEtherBalance = aggregatedEtherBalance.add(inboundTx.amount);
 
 		} else {
 			require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] >= inboundTx.amount);
-			walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress].sub(inboundTx.amount);
-			aggregatedTokenBalance[inboundTx.tokenAddress].add(inboundTx.amount);
+			walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress].sub(inboundTx.amount);
+			aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add(inboundTx.amount);
 		}		
 
 		//raise event
