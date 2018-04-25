@@ -205,15 +205,16 @@ contract('Smart contract checks', function () {
 		);
 	});
 
-	before("Preflight: distribute test tokens", function (done) {
-		glob.web3Erc20.testMint(glob.user_a, initialTokensForUserA).then(
-			function () {
-				done();
-			},
-			function (err) {
-				done(new Error('Cannot assign tokens for user A: ' + err.toString()));
-			}
-		);
+	before("Preflight: distribute test tokens", async () => {
+		try {
+			await glob.web3Erc20.testMint(glob.user_a, initialTokensForUserA);
+			await glob.web3Erc20.testMint(glob.user_b, 100);
+			await glob.web3Erc20.testMint(glob.owner, 100);
+		}
+		catch (err) {
+			done(new Error('Cannot assign tokens. Error is: ' + err.toString()));
+		}
+
 	});
 
 
