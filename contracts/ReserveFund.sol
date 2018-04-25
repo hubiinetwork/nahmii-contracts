@@ -34,6 +34,7 @@ contract ReserveFund {
  		int256 amount;
  		uint256 timestamp;
 		uint256 balance;
+		uint256 block;
  	}
 
 	struct PerWalletInfo {
@@ -139,7 +140,7 @@ contract ReserveFund {
         }
 
 		//add to per-wallet active balance
-		walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(msg.value), now, walletInfoMap[msg.sender].activeEtherBalance));
+		walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(msg.value), now, walletInfoMap[msg.sender].activeEtherBalance, block.number));
 		walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(address(0), walletInfoMap[msg.sender].depositsEther.length - 1));
 
 		//emit event
@@ -169,7 +170,7 @@ contract ReserveFund {
         }
 
         require(token.transferFrom(msg.sender, this, amount));
-        walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress]));
+        walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], block.number));
 		walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(tokenAddress, walletInfoMap[msg.sender].depositsToken[tokenAddress].length - 1));
 
         //emit event
@@ -183,15 +184,14 @@ contract ReserveFund {
 		//NOTE: Code duplication in order to keep compiler happy and avoid warnings
 		if (dh.tokenAddress == address(0)) {
 			DepositInfo[] storage di = walletInfoMap[wallet].depositsEther;
-
 			amount = di[dh.listIndex].amount;
 			token = address(0);
-            blockNumber = walletInfoMap[wallet].etherBalanceBlockNumbers[index];
+            blockNumber = di[dh.listIndex].block;
 		} else {
 			DepositInfo[] storage diT = walletInfoMap[wallet].depositsToken[dh.tokenAddress];
 			amount = diT[dh.listIndex].amount;
 			token = dh.tokenAddress;
-            blockNumber = walletInfoMap[wallet].tokenBalanceBlockNumbers[dh.tokenAddress][index];
+            blockNumber = diT[dh.listIndex].block;
 		}
  	}
 
@@ -305,7 +305,7 @@ contract ReserveFund {
             walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.sub(amount);
             walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
 
-            walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeEtherBalance));
+            walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeEtherBalance, block.number));
 
             walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(address(0), walletInfoMap[msg.sender].depositsEther.length - 1));
         } else {
@@ -316,7 +316,7 @@ contract ReserveFund {
             walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].sub(amount);
             walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);
 
-            walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress]));
+            walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], block.number));
 
             walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(tokenAddress, walletInfoMap[msg.sender].depositsToken[tokenAddress].length - 1));
         }
