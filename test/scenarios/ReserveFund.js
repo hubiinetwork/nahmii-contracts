@@ -17,6 +17,7 @@ module.exports = function (glob) {
 		const ETHER_STAGE_AMOUNT_C = 3.14159;
 
 		const ETHER_WITHDRAW_AMOUNT_C = 2;
+		const TOKEN_WITHDRAW_AMOUNT_A = 1;
 
 		var tokenDepositBlockNumber_userA = -1;
 		var tokenDepositBlockNumber_userB = -1;
@@ -352,6 +353,16 @@ module.exports = function (glob) {
 			done();
 		});
 
+		it(testId() + ": MUST FAIL [stage]: Cannot be called by owner", function (done) {
+			glob.web3ReserveFund.stage(glob.web3Erc20.address, TOKEN_STAGE_AMOUNT_A, { from: glob.owner })
+				.then(() => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				});
+		});
+
 		it(testId() + ": MUST SUCCEED [stage]: User A stages " + TOKEN_STAGE_AMOUNT_A + " token units", function (done) {
 			glob.web3ReserveFund.stage(glob.web3Erc20.address, TOKEN_STAGE_AMOUNT_A, { from: glob.user_a })
 				.then(() => {
@@ -390,6 +401,46 @@ module.exports = function (glob) {
 				.catch((err) => {
 					done(new Error('This test must succeed. Error is: ' + err.toString()));
 				});
+		});
+
+		it(testId() + ": MUST SUCCEED [withdrawTokens]: User A withdraws " + TOKEN_WITHDRAW_AMOUNT_A + " tokens from it's staged balance", function (done) {
+
+			glob.web3Erc20.balanceOf(glob.user_a)
+				.then((preWithdrawBalance) => {
+
+					glob.web3ReserveFund.withdrawTokens(glob.web3Erc20.address, TOKEN_WITHDRAW_AMOUNT_A, { from: glob.user_a })
+						.then(() => {
+
+							// Check new balance
+
+							glob.web3Erc20.balanceOf(glob.user_a)
+								.then((postWithdrawBalance) => {
+
+									const expectedBalance = new web3.BigNumber(preWithdrawBalance).add(TOKEN_WITHDRAW_AMOUNT_A);
+
+									if (new web3.BigNumber(postWithdrawBalance).eq(expectedBalance)) {
+										
+										// Staged token balance must be correct.
+
+										glob.web3ReserveFund.stagedBalance(glob.user_a, glob.web3Erc20.address).then( (newStagedBalance) => {
+											done();
+										}).catch( (err) => {
+											done(new Error('This test must succeed. Cannot get *new* staged balance. Error is ' + err.toString()));
+										})
+									}
+									else {
+										done(new Error('This test must succeed. Expected token balance: ' + expectedBalance +' but got: ' + postWithdrawBalance));
+									}
+
+								}).catch((err) => done(new Error('This test must succeed. Cannot get token balance. Error is' + err.toString())));
+
+						})
+						.catch((err) => {
+							done(new Error('This test must succeed. Error is:' + err.toString()));
+						});
+
+				})
+				.catch((err) => done(new Error('This test must succeed. Cannot get token balance. Error is' + err.toString())));
 		});
 
 		it(testId() + ": MUST SUCCEED [activeBalance]: User C active ether balance equals " + ETHER_DEPOSIT_AMOUNT_C + " ETHs", function (done) {
