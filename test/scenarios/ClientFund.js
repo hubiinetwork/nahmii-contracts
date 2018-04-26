@@ -386,8 +386,8 @@ module.exports = function (glob) {
 				let newActiveBalance = await glob.web3ClientFund.activeBalance(glob.user_a, 0);
 				let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0);
 
-				assert.equal(newStagedBalance - oldStagedBalance, web3.toWei(0.2, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance - oldStagedBalance, 'ether') + ' ethers].');
-				assert.equal(oldActiveBalance - newActiveBalance, web3.toWei(0.2, 'ether'), 'Wrong active balance [Diff ' + web3.fromWei(oldActiveBalance - newActiveBalance, 'ether') + ' ethers].');
+				assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.2, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
+				assert.equal(newActiveBalance.sub(oldActiveBalance), web3.toWei(-0.2, 'ether'), 'Wrong active balance [Diff ' + web3.fromWei(newActiveBalance.sub(oldActiveBalance), 'ether') + ' ethers].');
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -418,8 +418,8 @@ module.exports = function (glob) {
 				let newActiveBalance = await glob.web3ClientFund.activeBalance(glob.user_a, glob.web3Erc20.address);
 				let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
 
-				assert.equal(newStagedBalance - oldStagedBalance, 6, 'Wrong staged balance [Diff ' + (newStagedBalance - oldStagedBalance).toString() + ' tokens].');
-				assert.equal(oldActiveBalance - newActiveBalance, 6, 'Wrong active balance [Diff ' + (oldActiveBalance - newActiveBalance).toString() + ' tokens].');
+				assert.equal(newStagedBalance.sub(oldStagedBalance), 6, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
+				assert.equal(newActiveBalance.sub(oldActiveBalance), -6, 'Wrong active balance [Diff ' + newActiveBalance.sub(oldActiveBalance).toString() + ' tokens].');
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -450,8 +450,8 @@ module.exports = function (glob) {
 				let newActiveBalance = await glob.web3ClientFund.activeBalance(glob.user_a, 0);
 				let newEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
 
-				assert.equal(newEthersBalance - oldEthersBalance, web3.toWei(0.3, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newEthersBalance - oldEthersBalance, 'ether') + ' ethers].');
-				assert.equal(oldActiveBalance - newActiveBalance, web3.toWei(0.3, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(oldActiveBalance - newActiveBalance, 'ether') + ' ethers].');
+				assert.equal(newEthersBalance.sub(oldEthersBalance), web3.toWei(0.3, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newEthersBalance.sub(oldEthersBalance), 'ether') + ' ethers].');
+				assert.equal(newActiveBalance.sub(oldActiveBalance), web3.toWei(-0.3, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newActiveBalance.sub(oldActiveBalance), 'ether') + ' ethers].');
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -482,8 +482,8 @@ module.exports = function (glob) {
 				let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_c, 0);
 				let newEthersBalance = await web3.eth.getBalancePromise(glob.web3ClientFund.address);
 
-				assert.equal(newEthersBalance - oldEthersBalance, web3.toWei(0.4, 'ether'), 'Wrong SC balance [Diff ' + web3.fromWei(newEthersBalance - oldEthersBalance, 'ether') + ' ethers].');
-				assert.equal(newStagedBalance - oldStagedBalance, web3.toWei(0.4, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newStagedBalance - oldStagedBalance, 'ether') + ' ethers].');
+				assert.equal(newEthersBalance.sub(oldEthersBalance), web3.toWei(0.4, 'ether'), 'Wrong SC balance [Diff ' + web3.fromWei(newEthersBalance.sub(oldEthersBalance), 'ether') + ' ethers].');
+				assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.4, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -503,25 +503,25 @@ module.exports = function (glob) {
 		});
 
 		//------------------------------------------------------------------------
-/*
+
 		it(testCounter.next() + ": MUST SUCCEED [depositTokensToStagedBalance]: UnitTestHelpers_SUCCESS deposits 4 tokens to User D", async() => {
 			try {
-				await glob.web3Erc20.approve(glob.web3ClientFund.address, 4, { from: glob.web3UnitTestHelpers_SUCCESS_TESTS.address });
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.erc20_approve(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
 			}
 			try {
 				let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
-				let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.web3ClientFund.address);
+				let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
 
 				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToDepositTokensToStagedBalance(glob.web3ClientFund.address, glob.user_d, glob.web3Erc20.address, 4);
 
 				let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
-				let newTokensBalance = await glob.web3Erc20.balanceOf(glob.web3ClientFund.address);
+				let newTokensBalance = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
 
-				assert.equal(newTokensBalance - oldTokensBalance, 4, 'Wrong SC balance [Diff ' + (newTokensBalance - oldTokensBalance).toString() + ' tokens].');
-				assert.equal(newStagedBalance - oldStagedBalance, 4, 'Wrong balance [Diff ' + (newStagedBalance - oldStagedBalance).toString() + ' tokens].');
+				assert.equal(newTokensBalance.sub(oldTokensBalance), -4, 'Wrong SC balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
+				assert.equal(newStagedBalance.sub(oldStagedBalance), 4, 'Wrong balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -532,7 +532,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [depositTokensToStagedBalance]: UnitTestHelpers_FAIL deposits 4 tokens to User A", async() => {
 			try {
-				await glob.web3Erc20.approve(glob.web3ClientFund.address, 4, { from: glob.web3UnitTestHelpers_FAIL_TESTS.address });
+				await glob.web3UnitTestHelpers_FAIL_TESTS.erc20_approve(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -545,12 +545,6 @@ module.exports = function (glob) {
 				assert(err.toString().includes('revert'), err.toString());
 			}
 		});
-*/
-		//------------------------------------------------------------------------
-
-		/*
-		unstage(uint256 amount, address token) 
-		*/
 
 		//------------------------------------------------------------------------
 
@@ -568,8 +562,8 @@ module.exports = function (glob) {
 				let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0);
 				let newEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
 
-				assert.equal(newEthersBalance.add(totalGasPrice) - oldEthersBalance, web3.toWei(0.1, 'ether'), 'Wrong user D balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice) - oldEthersBalance, 'ether') + ' ethers].');
-				assert.equal(oldStagedBalance - newStagedBalance, web3.toWei(0.1, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(oldStagedBalance - newStagedBalance, 'ether') + ' ethers].');
+				assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0.1, 'ether'), 'Wrong user D balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
+				assert.equal(oldStagedBalance.sub(newStagedBalance), web3.toWei(0.1, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(oldStagedBalance.sub(newStagedBalance), 'ether') + ' ethers].');
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -587,10 +581,6 @@ module.exports = function (glob) {
 				assert(err.toString().includes('revert'), err.toString());
 			}
 		});
-
-		//-------------------------------------------------------------------------
-
-
 	});
 };
 

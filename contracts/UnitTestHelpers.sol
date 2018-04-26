@@ -53,4 +53,10 @@ contract UnitTestHelpers {
         ClientFund sc = ClientFund(clientFunds);
         sc.depositTokensToStagedBalance(destWallet, token, amount);
     }
+
+    function erc20_approve(address token, address spender, uint256 value) public {
+        require(token != address(0));
+        ERC20 tok = ERC20(token);
+        tok.approve(spender, value);
+    }
 }

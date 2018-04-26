@@ -44,7 +44,7 @@ contract('Smart contract checks', function () {
 
 	const minRequiredEthersPerUser = 10;
 	const initialTokensSupply = 1000;
-	const initialTokensForAll = 50;
+	const initialTokensForAll = 100;
 
 	//-------------------------------------------------------------------------
 	// Preflight stage
@@ -218,6 +218,9 @@ contract('Smart contract checks', function () {
 	before("Preflight: Distribute test tokens", async() => {
 		try {
 			await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.user_b, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.user_c, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.user_d, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
 		}
