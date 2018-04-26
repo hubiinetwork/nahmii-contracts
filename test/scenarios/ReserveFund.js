@@ -25,6 +25,7 @@ module.exports = function (glob) {
 		var etherDepositBlockNumber_userC = -1;
 		var etherDepositBlockNumber_owner = -1;
 		var tokenDepositBlockNumber_owner = -1;
+		var firstEtherAccrualBlockNumber = -1;
 
 		// Helper functions
 		// -----------------------------------------------------------------------------------------------------
@@ -51,6 +52,7 @@ module.exports = function (glob) {
 					web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
 						if (!err)
 							etherDepositBlockNumber_owner = receipt.blockNumber;
+							firstEtherAccrualBlockNumber = receipt.blockNumber;
 
 						done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
 						return;
@@ -345,6 +347,37 @@ module.exports = function (glob) {
 				});
 		});
 
+
+		it(testId() + ": MUST SUCCEED [activeBalance]: Contract aggregated Ether balance equals " + (ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C ) + " ETH", function (done) {
+			glob.web3ReserveFund.activeBalance(0,0)
+				.then((balance) => {
+					if (balance != web3.toWei( (ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C) ) ) {
+						done(new Error('This test must succeed. Error: Aggregated Ether balance  differs: ' +
+							balance + ' != ' + web3.toWei(ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C)));
+						return;
+					}
+					done();
+				})
+				.catch((err) => {
+					done(new Error('This test must succeed. Error is: ' + err.toString()));
+				});
+		});
+
+		it(testId() + ": MUST SUCCEED [activeBalance]: Contract aggregated token balance equals " + (TOKEN_DEPOSIT_AMOUNT_A + TOKEN_DEPOSIT_AMOUNT_B) + " tokens", function (done) {
+			glob.web3ReserveFund.activeBalance(0, glob.web3Erc20.address)
+				.then((balance) => {
+					if (balance != (TOKEN_DEPOSIT_AMOUNT_A + TOKEN_DEPOSIT_AMOUNT_B)) {
+						done(new Error('This test must succeed. Error: Aggregated Token balance  differs: ' +
+							balance + ' != ' + (TOKEN_DEPOSIT_AMOUNT_A + TOKEN_DEPOSIT_AMOUNT_B)));
+						return;
+					}
+					done();
+				})
+				.catch((err) => {
+					done(new Error('This test must succeed. Error is: ' + err.toString()));
+				});
+		});	
+
 		it(testId() + ": MUST SUCCEED [closeAccrualPeriod]", function (done) {
 			done();
 		});
@@ -373,6 +406,21 @@ module.exports = function (glob) {
 				});
 		});
 
+		it(testId() + ": MUST SUCCEED [activeBalance]: User A active balance equals " + (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A) + " tokens", function (done) {
+			glob.web3ReserveFund.activeBalance(glob.user_a, glob.web3Erc20.address)
+				.then((balance) => {
+					if (balance != (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A)) {
+						done(new Error('This test must succeed. Error: Active balance  differs: ' +
+							balance + ' != ' + (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A)));
+						return;
+					}
+					done();
+				})
+				.catch((err) => {
+					done(new Error('This test must succeed. Error is: ' + err.toString()));
+				});
+		});
+
 		it(testId() + ": MUST SUCCEED [stagedBalance]: User A staged balance equals " + TOKEN_STAGE_AMOUNT_A + " tokens", function (done) {
 			glob.web3ReserveFund.stagedBalance(glob.user_a, glob.web3Erc20.address)
 				.then((balance) => {
@@ -388,20 +436,6 @@ module.exports = function (glob) {
 				});
 		});
 
-		it(testId() + ": MUST SUCCEED [activeBalance]: User A active balance equals " + (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A) + " tokens", function (done) {
-			glob.web3ReserveFund.activeBalance(glob.user_a, glob.web3Erc20.address)
-				.then((balance) => {
-					if (balance != (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A)) {
-						done(new Error('This test must succeed. Error: Active balance  differs: ' +
-							balance + ' != ' + (TOKEN_DEPOSIT_AMOUNT_A - TOKEN_STAGE_AMOUNT_A)));
-						return;
-					}
-					done();
-				})
-				.catch((err) => {
-					done(new Error('This test must succeed. Error is: ' + err.toString()));
-				});
-		});
 
 		it(testId() + ": MUST SUCCEED [withdrawTokens]: User A withdraws " + TOKEN_WITHDRAW_AMOUNT_A + " tokens from it's staged balance", function (done) {
 
@@ -534,8 +568,71 @@ module.exports = function (glob) {
 				})
 		});
 
-		it(testId() + ": MUST SUCCEED [withdrawTokens]", function (done) {
-			done();
+		it(testId() + ": MUST SUCCEED [twoWayTransfer]: Inbound (to SC): 1 ETH. Outbound (to user A): 1 token ", async() => {
+
+			try {
+				// LOGIC: 
+				// 
+				// wallet_balance.staged  += outbound.Amount;
+				// aggregatedEtherBalance -= outbound.Amount;
+				// wallet_balance.staged  -= inbound.Amount;
+				// aggregatedEtherBalance += inbound.Amount;
+
+				const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: '1000000000000000000' }; // 1ETH in Wei				                    
+				const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: '1' };
+
+				var preTxWalletBalance = await glob.web3ReserveFund.stagedBalance(glob.user_a, 0);
+				var preTxEtherBalance  = await glob.web3ReserveFund.activeBalance(0, 0);
+
+				var ctx = glob.ethersIoReserveFund.connect(glob.signer_owner);
+	
+				var result = await ctx.twoWayTransfer(glob.user_a, inboundTx, outboundTx, { gasLimit: 600000 });
+
+				assert.equal(result, true, 'TwoWayTransfer returned FALSE (check if amount exceeded aggregated balance).');
+				
+				var postTxWalletBalance = await glob.web3ReserveFund.stagedBalance(glob.user_a);
+				var postTxEtherBalance  = await glob.web3ReserveFund.activeBalance(0, 0);
+				var expectedPostTxWalletBalance = preTxWalletBalance - inboundTx[1] + outboundTx[1];
+				var expectedPostTxEtherBalance  = preTxEtherBalance  + inboundTx[1] - outboundTx[1];
+
+				assert.equal(postTxWalletBalance, expectedPostTxWalletBalance, 'Wallet balance differs. Expected: ' + expectedPostTxWalletBalance + ' but got: ' + postTxWalletBalance);
+				assert.equal(postTxEtherBalance,  expectedPostTxEtherBalance,  'Aggregate balance differs. Expected: ' + expectedPostTxEtherBalance + ' but got: ' + postTxEtherBalance);
+			}
+			catch(err) {
+				assert(false, 'This test must succeed. Error is:' + err.toString());
+			}
+		} );
+
+		it(testId() + ": MUST SUCCEED [claimAccrual]: User A claims ether accrual", async () => {
+
+			// According to the accrual allocation algorithm, user A should obtain staged funds from
+			// the accrual funding by:
+			//
+			//  aggregate_accrual_balance * BalanceBlocks_A / (aggregatedEtherBalance_A * (BNLOW - BNUP))
+			//
+			// BNLOW and BNUP are lower and upper bounds of balance blocks: 
+			// 
+			// lower bound = last accrual block number claimed for ETH by msg.sender OR,
+		    // first accrual block number if last_accrual block number */
+			//
+			// upper bound = last accrual block number 
+			
+			// try {
+
+			// 	// bn_low = no block numbers for claimed accruals yet, use first accrual block number 
+
+			// 	const bn_low = firstEtherAccrualBlockNumber;
+			// 	const bn_up  = 
+
+
+
+			// 	await glob.web3Erc20.claimAccrual({user_a});
+			// }
+			// catch(err) {
+
+			// }
+			
+
 		});
 	});
 };
