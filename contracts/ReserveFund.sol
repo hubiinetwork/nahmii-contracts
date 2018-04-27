@@ -104,7 +104,7 @@ contract ReserveFund {
     event DepositEvent(address wallet, uint256 amount, address tokenAddress);
     event StageEvent(address wallet, uint256 amount, address tokenAddress);
     event WithdrawEvent(address wallet, uint256 amount, address tokenAddress);
-    event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx);
+    event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx, TWOWAYTX_STATUS status);
 	event ClaimAccrualEvent(address tokenAddress);
 	event CloseAccrualPeriodEvent();
 
@@ -222,8 +222,7 @@ contract ReserveFund {
 		uint256 lenAccrualBlocks;
 		uint256 lenClaimAccrualBlocks;
 
-		/* lower bound = last accrual block number claimed for currency c by msg.sender OR,
-		   first accrual block number if last_accrual block number */
+		/* lower bound = last accrual block number claimed for currency c by msg.sender OR 0 */
 
 		/* upper bound = last accrual block number */
 
@@ -236,10 +235,8 @@ contract ReserveFund {
 
 			if (walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers.length == 0) {
 				
-				/* no block numbers for claimed accruals yet, use first accrual block number  */
-
-				require(walletInfoMap[msg.sender].etherAccrualBlockNumbers.length > 0);
-				bn_low = walletInfoMap[msg.sender].etherAccrualBlockNumbers[0];
+				/* no block numbers for claimed accruals yet  */
+				bn_low = 0;
 			}
 			else {
 				bn_low = walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers[lenClaimAccrualBlocks - 1];
@@ -254,10 +251,8 @@ contract ReserveFund {
 
 			if (walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[tokenAddress].length == 0) {
 				
-				/* no block numbers for claimed accruals yet, use first accrual block number  */
-
-				require(walletInfoMap[msg.sender].tokenAccrualBlockNumbers[tokenAddress].length > 0);
-				bn_low = walletInfoMap[msg.sender].tokenAccrualBlockNumbers[tokenAddress][0];
+				/* no block numbers for claimed accruals yet */
+				bn_low = 0;
 			}
 			else {
 				bn_low = walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[tokenAddress][lenClaimAccrualBlocks - 1];
@@ -378,27 +373,29 @@ contract ReserveFund {
 		emit WithdrawEvent(msg.sender, amount, tokenAddress);
 	}
 
-    function twoWayTransfer(address wallet, TransferInfo inboundTx, TransferInfo outboundTx) public onlyOwner returns (bool) {
+	function outboundTransferSupported(address wallet, TransferInfo tx) public onlyOwner returns (bool) {
+		return (wallet == address(0) ? 
+			outboundTx.amount < aggregatedEtherBalance :
+			outboundTx.amount < aggregatedTokenBalance[outboundTx.tokenAddress]);
+	}
+
+    function twoWayTransfer(address wallet, TransferInfo inboundTx, TransferInfo outboundTx) public onlyOwner {
 		//require (msg.sender == exchangeSmartContract);
 		require (inboundTx.amount > 0);
 		require (outboundTx.amount > 0);
 		require (wallet != address(0));
 
+		TWOWAYTX_STATUS status = TWOWAYTX_STATUS.SUCCESS;
+
 		// Perform outbound (SC to W) transfers
 			
 		if (outboundTx.tokenAddress == address(0)) {
-			if (outboundTx.amount >= aggregatedEtherBalance) {
-					return false;
-			}
-
+			require (outboundTx.amount >= aggregatedEtherBalance);
 			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add(outboundTx.amount);
 			aggregatedEtherBalance = aggregatedEtherBalance.sub(outboundTx.amount);
 
 		} else {
-			if (outboundTx.amount >= aggregatedTokenBalance[outboundTx.tokenAddress]) {
-				return false;
-			}
-
+			require (outboundTx.amount >= aggregatedTokenBalance[outboundTx.tokenAddress]);
 			walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress].add(outboundTx.amount);
 			aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub(outboundTx.amount);
 		}
@@ -418,9 +415,7 @@ contract ReserveFund {
 
 		//raise event
 		//
-		emit TwoWayTransferEvent(wallet, inboundTx, outboundTx);
-		
-		return true;
+		emit TwoWayTransferEvent(wallet, inboundTx, outboundTx, status);
 	}
 
     function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
