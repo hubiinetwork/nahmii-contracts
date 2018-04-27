@@ -2,6 +2,7 @@ module.exports = function (glob) {
 
 	describe("ReserveFund", function () {
 
+		var ethers = require('ethers');
 
 		// Local test-wide variables
 		// ------------------------------------------------------------------------------------------------------
@@ -568,7 +569,7 @@ module.exports = function (glob) {
 				})
 		});
 
-		it(testId() + ": MUST SUCCEED [twoWayTransfer]: Inbound (to SC): 1 ETH. Outbound (to user A): 1 token ", async() => {
+		it(testId() + ": MUST SUCCEED [twoWayTransfer]: Inbound (C to SC): 1 ETH. Outbound (SC to C): 1 token ", async() => {
 
 			try {
 				// LOGIC: 
@@ -578,25 +579,37 @@ module.exports = function (glob) {
 				// wallet_balance.staged  -= inbound.Amount;
 				// aggregatedEtherBalance += inbound.Amount;
 
-				const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: '1000000000000000000' }; // 1ETH in Wei				                    
-				const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: '1' };
+				const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', 
+									amount: ethers.utils.bigNumberify('1000000000000000000') }; // 1ETH in Wei
+				const outboundTx = { tokenAddress: glob.web3Erc20.address, 
+									amount: ethers.utils.bigNumberify('1')  };
 
-				var preTxWalletBalance = await glob.web3ReserveFund.stagedBalance(glob.user_a, 0);
-				var preTxEtherBalance  = await glob.web3ReserveFund.activeBalance(0, 0);
+				var preTxEtherWalletBalance = await glob.web3ReserveFund.stagedBalance(glob.user_c, 0);
+				var preTxTokenWalletBalance = await glob.web3ReserveFund.stagedBalance(glob.user_c, glob.web3Erc20.address);
+				var preTxAggregateTokenBalance = await glob.web3ReserveFund.activeBalance(0, glob.web3Erc20.address);
+				var preTxAggregateEtherBalance = await glob.web3ReserveFund.activeBalance(0, 0);
 
 				var ctx = glob.ethersIoReserveFund.connect(glob.signer_owner);
-	
-				var result = await ctx.twoWayTransfer(glob.user_a, inboundTx, outboundTx, { gasLimit: 600000 });
-
-				assert.equal(result, true, 'TwoWayTransfer returned FALSE (check if amount exceeded aggregated balance).');
+				var result = await ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 });
+				//await ctx.events.
 				
-				var postTxWalletBalance = await glob.web3ReserveFund.stagedBalance(glob.user_a);
-				var postTxEtherBalance  = await glob.web3ReserveFund.activeBalance(0, 0);
-				var expectedPostTxWalletBalance = preTxWalletBalance - inboundTx[1] + outboundTx[1];
-				var expectedPostTxEtherBalance  = preTxEtherBalance  + inboundTx[1] - outboundTx[1];
+				//console.log(result);
+				//assert(result.value == true, 'TwoWayTransfer returned FALSE (check if amount exceeded aggregated balance).');
+				
+				var postTxEtherWalletBalance = await glob.web3ReserveFund.stagedBalance(glob.user_c, 0);
+				var postTxTokenWalletBalance = await glob.web3ReserveFund.stagedBalance(glob.user_c, glob.web3Erc20.address);
+				var postTxAggregateTokenBalance = await glob.web3ReserveFund.activeBalance(0, glob.web3Erc20.address);
+				var postTxAggregateEtherBalance  = await glob.web3ReserveFund.activeBalance(0, 0);
 
-				assert.equal(postTxWalletBalance, expectedPostTxWalletBalance, 'Wallet balance differs. Expected: ' + expectedPostTxWalletBalance + ' but got: ' + postTxWalletBalance);
-				assert.equal(postTxEtherBalance,  expectedPostTxEtherBalance,  'Aggregate balance differs. Expected: ' + expectedPostTxEtherBalance + ' but got: ' + postTxEtherBalance);
+				var expectedTxEtherWalletBalance = new web3.BigNumber(preTxEtherWalletBalance).sub(inboundTx.amount);
+				var expectedTxTokenWalletBalance  = new web3.BigNumber(preTxTokenWalletBalance).add(outboundTx.amount);
+				var expectedTxAggregateEtherBalance  = new web3.BigNumber(preTxAggregateEtherBalance).add(inboundTx.amount);
+				var expectedTxAggregateTokenBalance  = new web3.BigNumber(preTxAggregateTokenBalance).sub(outboundTx.amount);
+
+				assert(postTxEtherWalletBalance.eq(expectedTxEtherWalletBalance), 'Wallet staged ETH balance differs.');
+				assert(postTxTokenWalletBalance.eq(expectedTxTokenWalletBalance),  'Wallet staged token balance differs.');
+				assert(postTxAggregateTokenBalance.eq(expectedTxAggregateTokenBalance), 'Aggregate ETH balance differs. ');
+				assert(postTxAggregateEtherBalance.eq(expectedTxAggregateEtherBalance),  'Aggregate token balance differs. ');
 			}
 			catch(err) {
 				assert(false, 'This test must succeed. Error is:' + err.toString());
