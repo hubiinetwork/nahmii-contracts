@@ -11,8 +11,10 @@ module.exports = function (glob) {
 		const TOKEN_DEPOSIT_AMOUNT_OWNER = 50;
 
 		const ETHER_DEPOSIT_AMOUNT_OWNER = 3;
+		const ETHER_DEPOSIT_AMOUNT_A = 4.7;
 		const ETHER_DEPOSIT_AMOUNT_B = 0.25;
 		const ETHER_DEPOSIT_AMOUNT_C = 3.14159;
+		const ETHER_DEPOSIT_AMOUNT_A_PREACCRUAL = 10;
 
 		const TOKEN_STAGE_AMOUNT_A = 1;
 		const ETHER_STAGE_AMOUNT_C = 3.14159;
@@ -22,10 +24,14 @@ module.exports = function (glob) {
 
 		var tokenDepositBlockNumber_userA = -1;
 		var tokenDepositBlockNumber_userB = -1;
+		var tokenDepositBlockNumber_owner = -1;
+
+		var etherDepositBlockNumber_userA = -1;
+		var etherDepositBlockNumber_userA_preAcc = -1;
 		var etherDepositBlockNumber_userB = -1;
 		var etherDepositBlockNumber_userC = -1;
 		var etherDepositBlockNumber_owner = -1;
-		var tokenDepositBlockNumber_owner = -1;
+		
 		var firstEtherAccrualBlockNumber = -1;
 
 		// Helper functions
@@ -54,6 +60,50 @@ module.exports = function (glob) {
 						if (!err)
 							etherDepositBlockNumber_owner = receipt.blockNumber;
 							firstEtherAccrualBlockNumber = receipt.blockNumber;
+
+						done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
+						return;
+					});
+				}
+				else {
+					done(new Error('This test must succeed. Error is: ' + err.toString()));
+				}
+			})
+		});
+
+		it(testId() + ": MUST SUCCEED [payable]: User A deposits " + ETHER_DEPOSIT_AMOUNT_A + "ETH", function (done) {
+			web3.eth.sendTransaction({
+				from: glob.user_a,
+				to: glob.web3ReserveFund.address,
+				value: web3.toWei(ETHER_DEPOSIT_AMOUNT_A, 'ether'),
+				gas: glob.gasLimit
+			}, function (err, txHash) {
+				if (!err) {
+					web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
+						if (!err)
+							etherDepositBlockNumber_userA = receipt.blockNumber;
+
+						done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
+						return;
+					});
+				}
+				else {
+					done(new Error('This test must succeed. Error is: ' + err.toString()));
+				}
+			})
+		});
+
+		it(testId() + ": MUST SUCCEED [payable]: User B deposits " + ETHER_DEPOSIT_AMOUNT_B + "ETH", function (done) {
+			web3.eth.sendTransaction({
+				from: glob.user_b,
+				to: glob.web3ReserveFund.address,
+				value: web3.toWei(ETHER_DEPOSIT_AMOUNT_B, 'ether'),
+				gas: glob.gasLimit
+			}, function (err, txHash) {
+				if (!err) {
+					web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
+						if (!err)
+							etherDepositBlockNumber_userB = receipt.blockNumber;
 
 						done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
 						return;
@@ -616,6 +666,63 @@ module.exports = function (glob) {
 			}
 		} );
 
+		it(testId() + ": MUST FAIL [twoWayTransfer]: Cannot be called by non-owner ", function(done)  {
+
+			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', 
+									amount: ethers.utils.bigNumberify('1000000000000000000') }; // 1ETH in Wei
+			const outboundTx = { tokenAddress: glob.web3Erc20.address, 
+									amount: ethers.utils.bigNumberify('1')  };
+			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
+			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
+				.then( (result) => {
+					done(new Error('This test must fail'));
+				})
+				.catch ( (err) => {
+					done();
+				})
+		});
+
+		it(testId() + ": MUST FAIL [twoWayTransfer]: Cannot be called with inbound amount of zero ", function(done)  {
+
+			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: 0 }; 
+			const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: '1'  };
+			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
+			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
+				.then( (result) => {
+					done(new Error('This test must fail'));
+				})
+				.catch ( (err) => {
+					done();
+				})
+		});
+
+		it(testId() + ": MUST FAIL [twoWayTransfer]: Cannot be called with outbound amount of zero ", function (done) {
+
+			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('1000000000000000000') };
+			const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: 0 };
+			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
+			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
+				.then((result) => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				})
+		});
+
+
+		it(testId() + ": MUST FAIL [claimAccrual]: User A claims accrual for a token without accrual deposits", (done) => {
+			const MOCK_TOKEN_XYZ = '0xcafeefac0000dddd0000cccc0000bbbb0000aaaa';
+
+			glob.web3ReserveFund.claimAccrual(MOCK_TOKEN_XYZ)
+				.then(() => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				});
+		});
+
 		it(testId() + ": MUST SUCCEED [claimAccrual]: User A claims ether accrual", async () => {
 
 			// According to the accrual allocation algorithm, user A should obtain staged funds from
@@ -623,27 +730,59 @@ module.exports = function (glob) {
 			//
 			//  aggregate_accrual_balance * BalanceBlocks_A / (aggregatedEtherBalance_A * (BNLOW - BNUP))
 			//
-			// BNLOW and BNUP are lower and upper bounds of balance blocks: 
-			// 
-			// lower bound = last accrual block number claimed for ETH by msg.sender OR,
-		    // first accrual block number if last_accrual block number */
-			//
+			// lower bound = last accrual block number claimed for ETH by msg.sender OR 0 */
 			// upper bound = last accrual block number 
 			
-			// try {
+			try {
 
-			// 	// bn_low = no block numbers for claimed accruals yet, use first accrual block number 
+				// First we deposit a bunch of more ETHs for this user 
 
-			// 	const bn_low = firstEtherAccrualBlockNumber;
-			// 	const bn_up  = 
+				web3.eth.sendTransaction({
+					from: glob.user_a,
+					to: glob.web3ReserveFund.address,
+					value: web3.toWei(ETHER_DEPOSIT_AMOUNT_A_PREACCRUAL, 'ether'),
+					gas: glob.gasLimit
+				}, function (err, txHash) {
+					if (!err) {
+						web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
+							if (!err)
+								etherDepositBlockNumber_userA_preAcc = receipt.blockNumber;
+	
+							throw('Cannot get pre-accrual value TX receipt: ' + err.toString());
+						});
+					}
+					else {
+						throw('Cannot issue pre-accrual TX ' + err.toString());
+					}
+				})
+
+				//
+
+				// User A must have registered now:
+				// balanceBlocks: [ 0 , BB = user_A_balance * block_span ]
+				// balanceBlockNumbers: [ deposit_block_A, deposit_block_B ]
+
+
+				// bn_low = zero as no previous claims  
+				// bn_up  = the last block where owner deposited ETH.
+
+				const bn_low = 0;
+				const bn_up  = etherDepositBlockNumber_owner;
+
+				// there is only 1 block in which user A deposited ETH so:
+
+				// const balanceBlocks = 
+				// const frac   = 
 
 
 
-			// 	await glob.web3Erc20.claimAccrual({user_a});
-			// }
-			// catch(err) {
 
-			// }
+
+				await glob.web3Erc20.claimAccrual({user_a});
+			}
+			catch(err) {
+
+			}
 			
 
 		});
