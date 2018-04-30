@@ -81,7 +81,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_t, null);
 
 			glob.web3UnitTestHelpers_SUCCESS_TESTS = _t;
-			glob.ethersUnitTestHelpers_SUCCESS_TESTS = new ethers.Contract(_t.address, UnitTestHelpers.abi, w3prov);
+			glob.ethersUnitTestHelpers_SUCCESS_TESTS = new ethers.Contract(_t.address, UnitTestHelpers.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to create a new instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
@@ -94,7 +94,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_t, null);
 
 			glob.web3UnitTestHelpers_FAIL_TESTS = _t;
-			glob.ethersUnitTestHelpers_FAIL_TESTS = new ethers.Contract(_t.address, UnitTestHelpers.abi, w3prov);
+			glob.ethersUnitTestHelpers_FAIL_TESTS = new ethers.Contract(_t.address, UnitTestHelpers.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to create a second instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
@@ -107,7 +107,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_d, null);
 
 			glob.web3ClientFund = _d;
-			glob.ethersIoClientFund = new ethers.Contract(_d.address, ClientFund.abi, w3prov);
+			glob.ethersIoClientFund = new ethers.Contract(_d.address, ClientFund.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to instantiate ClientFund contract address. [Error: ' + err.toString() + ']');
@@ -120,7 +120,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_d, null);
 
 			glob.web3CommunityVote = _d;
-			glob.ethersIoCommunityVote = new ethers.Contract(_d.address, CommunityVote.abi, w3prov);
+			glob.ethersIoCommunityVote = new ethers.Contract(_d.address, CommunityVote.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to instantiate CommunityVote contract address. [Error: ' + err.toString() + ']');
@@ -133,7 +133,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_d, null);
 
 			glob.web3Configuration = _d;
-			glob.ethersIoConfiguration = new ethers.Contract(_d.address, Configuration.abi, w3prov);
+			glob.ethersIoConfiguration = new ethers.Contract(_d.address, Configuration.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to instantiate Configuration contract address. [Error: ' + err.toString() + ']');
@@ -146,7 +146,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_d, null);
 
 			glob.web3Exchange = _d;
-			glob.ethersIoExchange = new ethers.Contract(_d.address, Exchange.abi, w3prov);
+			glob.ethersIoExchange = new ethers.Contract(_d.address, Exchange.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to instantiate Exchange contract address. [Error: ' + err.toString() + ']');
@@ -159,7 +159,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_d, null);
 
 			glob.web3ReserveFund = _d;
-			glob.ethersIoReserveFund = new ethers.Contract(_d.address, ReserveFund.abi, w3prov);
+			glob.ethersIoReserveFund = new ethers.Contract(_d.address, ReserveFund.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to instantiate ReserveFund contract address. [Error: ' + err.toString() + ']');
@@ -172,7 +172,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_d, null);
 
 			glob.web3RevenueFund = _d;
-			glob.ethersIoRevenueFund = new ethers.Contract(_d.address, RevenueFund.abi, w3prov);
+			glob.ethersIoRevenueFund = new ethers.Contract(_d.address, RevenueFund.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to instantiate RevenueFund contract address. [Error: ' + err.toString() + ']');
@@ -185,7 +185,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_d, null);
 
 			glob.web3SecurityBond = _d;
-			glob.ethersIoSecurityBond = new ethers.Contract(_d.address, SecurityBond.abi, w3prov);
+			glob.ethersIoSecurityBond = new ethers.Contract(_d.address, SecurityBond.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to instantiate SecurityBond contract address. [Error: ' + err.toString() + ']');
@@ -198,7 +198,7 @@ contract('Smart contract checks', function () {
 			assert.notEqual(_d, null);
 
 			glob.web3TokenHolderRevenueFund = _d;
-			glob.ethersIoTokenHolderRevenueFund = new ethers.Contract(_d.address, TokenHolderRevenueFund.abi, w3prov);
+			glob.ethersIoTokenHolderRevenueFund = new ethers.Contract(_d.address, TokenHolderRevenueFund.abi, glob.signer_owner);
 		}
 		catch (err) {
 			assert(false, 'Failed to instantiate TokenHolderRevenueFund contract address. [Error: ' + err.toString() + ']');
