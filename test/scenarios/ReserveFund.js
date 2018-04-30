@@ -71,28 +71,6 @@ module.exports = function (glob) {
 			})
 		});
 
-		it(testId() + ": MUST SUCCEED [payable]: User A deposits " + ETHER_DEPOSIT_AMOUNT_A + "ETH", function (done) {
-			web3.eth.sendTransaction({
-				from: glob.user_a,
-				to: glob.web3ReserveFund.address,
-				value: web3.toWei(ETHER_DEPOSIT_AMOUNT_A, 'ether'),
-				gas: glob.gasLimit
-			}, function (err, txHash) {
-				if (!err) {
-					web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
-						if (!err)
-							etherDepositBlockNumber_userA = receipt.blockNumber;
-
-						done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
-						return;
-					});
-				}
-				else {
-					done(new Error('This test must succeed. Error is: ' + err.toString()));
-				}
-			})
-		});
-
 		it(testId() + ": MUST SUCCEED [payable]: User B deposits " + ETHER_DEPOSIT_AMOUNT_B + "ETH", function (done) {
 			web3.eth.sendTransaction({
 				from: glob.user_b,
@@ -115,27 +93,27 @@ module.exports = function (glob) {
 			})
 		});
 
-		it(testId() + ": MUST SUCCEED [payable]: User B deposits " + ETHER_DEPOSIT_AMOUNT_B + "ETH", function (done) {
-			web3.eth.sendTransaction({
-				from: glob.user_b,
-				to: glob.web3ReserveFund.address,
-				value: web3.toWei(ETHER_DEPOSIT_AMOUNT_B, 'ether'),
-				gas: glob.gasLimit
-			}, function (err, txHash) {
-				if (!err) {
-					web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
-						if (!err)
-							etherDepositBlockNumber_userB = receipt.blockNumber;
+		// it(testId() + ": MUST SUCCEED [payable]: User B deposits " + ETHER_DEPOSIT_AMOUNT_B + "ETH", function (done) {
+		// 	web3.eth.sendTransaction({
+		// 		from: glob.user_b,
+		// 		to: glob.web3ReserveFund.address,
+		// 		value: web3.toWei(ETHER_DEPOSIT_AMOUNT_B, 'ether'),
+		// 		gas: glob.gasLimit
+		// 	}, function (err, txHash) {
+		// 		if (!err) {
+		// 			web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
+		// 				if (!err)
+		// 					etherDepositBlockNumber_userB = receipt.blockNumber;
 
-						done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
-						return;
-					});
-				}
-				else {
-					done(new Error('This test must succeed. Error is: ' + err.toString()));
-				}
-			})
-		});
+		// 				done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
+		// 				return;
+		// 			});
+		// 		}
+		// 		else {
+		// 			done(new Error('This test must succeed. Error is: ' + err.toString()));
+		// 		}
+		// 	})
+		// });
 
 		it(testId() + ": MUST SUCCEED [payable]: User C deposits " + ETHER_DEPOSIT_AMOUNT_C + "ETH", function (done) {
 			web3.eth.sendTransaction({
@@ -223,6 +201,28 @@ module.exports = function (glob) {
 				.catch((err) => {
 					done(new Error('This test must succeed (failed to approve token transfer). Error is: ' + err.toString()));
 				});
+		});
+
+		it(testId() + ": MUST SUCCEED [payable]: User A deposits " + ETHER_DEPOSIT_AMOUNT_A + "ETH", function (done) {
+			web3.eth.sendTransaction({
+				from: glob.user_a,
+				to: glob.web3ReserveFund.address,
+				value: web3.toWei(ETHER_DEPOSIT_AMOUNT_A, 'ether'),
+				gas: glob.gasLimit
+			}, function (err, txHash) {
+				if (!err) {
+					web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
+						if (!err)
+							etherDepositBlockNumber_userA = receipt.blockNumber;
+
+						done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
+						return;
+					});
+				}
+				else {
+					done(new Error('This test must succeed. Error is: ' + err.toString()));
+				}
+			})
 		});
 
 		it(testId() + ": MUST SUCCEED [depositToken]: User B deposits " + TOKEN_DEPOSIT_AMOUNT_B + " tokens", function (done) {
@@ -317,10 +317,10 @@ module.exports = function (glob) {
 				});
 		});
 
-		it(testId() + ": MUST SUCCEED [depositCount]: User A deposit count equals 1", function (done) {
+		it(testId() + ": MUST SUCCEED [depositCount]: User A deposit count equals 2", function (done) {
 			glob.web3ReserveFund.depositCount(glob.user_a)
 				.then((depositCount) => {
-					if (depositCount != 1) {
+					if (depositCount != 2) {
 						done(new Error('This test must succeed. Error: Deposit count differs: ' +
 							depositCount + ' != 1'));
 						return;
@@ -399,12 +399,12 @@ module.exports = function (glob) {
 		});
 
 
-		it(testId() + ": MUST SUCCEED [activeBalance]: Contract aggregated Ether balance equals " + (ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C ) + " ETH", function (done) {
+		it(testId() + ": MUST SUCCEED [activeBalance]: Contract aggregated Ether balance equals " + (ETHER_DEPOSIT_AMOUNT_A + ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C ) + " ETH", function (done) {
 			glob.web3ReserveFund.activeBalance(0,0)
 				.then((balance) => {
-					if (balance != web3.toWei( (ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C) ) ) {
+					if (balance != web3.toWei( (ETHER_DEPOSIT_AMOUNT_A + ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C) ) ) {
 						done(new Error('This test must succeed. Error: Aggregated Ether balance  differs: ' +
-							balance + ' != ' + web3.toWei(ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C)));
+							balance + ' != ' + web3.toWei(ETHER_DEPOSIT_AMOUNT_A + ETHER_DEPOSIT_AMOUNT_B + ETHER_DEPOSIT_AMOUNT_C)));
 						return;
 					}
 					done();
@@ -619,6 +619,39 @@ module.exports = function (glob) {
 				})
 		});
 
+
+		it(testId() + ": MUST SUCCEED [outboundTransferSupported]: Can we send TX 0.001 ETH to User C? Return TRUE", function (done) {
+			const outboundTx = {
+				tokenAddress: '0x0000000000000000000000000000000000000000',
+				amount: ethers.utils.bigNumberify('1000000000000000')
+			};
+
+			var ctx = glob.ethersIoReserveFund.connect(glob.signer_owner);
+			ctx.outboundTransferSupported(outboundTx)
+				.then((result) => {
+					done(result ? null : new Error("This test is expected to return TRUE"));
+				})
+				.catch((err) => {
+					done(new Error("This test must succeed. Error is: " + err.toString()));
+				});
+		});
+
+		it(testId() + ": MUST SUCCEED [outboundTransferSupported]:  Can we send 400 ETH to User C? Return FALSE  ", function (done) {
+			const outboundTx = {
+				tokenAddress: '0x0000000000000000000000000000000000000000',
+				amount: ethers.utils.bigNumberify('400000000000000000000')
+			};
+
+			var ctx = glob.ethersIoReserveFund.connect(glob.signer_owner);
+			ctx.outboundTransferSupported(outboundTx)
+				.then((result) => {
+					done(result ? new Error("This test is expected to return TRUE)") : null);
+				})
+				.catch((err) => {
+					done(new Error("This test must succeed. Error is: " + err.toString()));
+				});
+		});
+
 		it(testId() + ": MUST SUCCEED [twoWayTransfer]: Inbound (C to SC): 1 ETH. Outbound (SC to C): 1 token ", async() => {
 
 			try {
@@ -710,7 +743,6 @@ module.exports = function (glob) {
 				})
 		});
 
-
 		it(testId() + ": MUST FAIL [claimAccrual]: User A claims accrual for a token without accrual deposits", (done) => {
 			const MOCK_TOKEN_XYZ = '0xcafeefac0000dddd0000cccc0000bbbb0000aaaa';
 
@@ -746,9 +778,12 @@ module.exports = function (glob) {
 					if (!err) {
 						web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
 							if (!err)
+							{
 								etherDepositBlockNumber_userA_preAcc = receipt.blockNumber;
-	
-							throw('Cannot get pre-accrual value TX receipt: ' + err.toString());
+							}
+							else {
+								throw('Cannot get pre-accrual value TX receipt: ' + err.toString());
+							}
 						});
 					}
 					else {

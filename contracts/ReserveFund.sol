@@ -104,7 +104,7 @@ contract ReserveFund {
     event DepositEvent(address wallet, uint256 amount, address tokenAddress);
     event StageEvent(address wallet, uint256 amount, address tokenAddress);
     event WithdrawEvent(address wallet, uint256 amount, address tokenAddress);
-    event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx, TWOWAYTX_STATUS status);
+    event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx);
 	event ClaimAccrualEvent(address tokenAddress);
 	event CloseAccrualPeriodEvent();
 
@@ -209,7 +209,6 @@ contract ReserveFund {
     }
 
     function closeAccrualPeriod() public onlyOwner {
-
 
 
 		emit CloseAccrualPeriodEvent();
@@ -373,10 +372,10 @@ contract ReserveFund {
 		emit WithdrawEvent(msg.sender, amount, tokenAddress);
 	}
 
-	function outboundTransferSupported(address wallet, TransferInfo tx) public onlyOwner returns (bool) {
-		return (wallet == address(0) ? 
-			outboundTx.amount < aggregatedEtherBalance :
-			outboundTx.amount < aggregatedTokenBalance[outboundTx.tokenAddress]);
+	function outboundTransferSupported(TransferInfo outboundTx) public view onlyOwner returns (bool) {
+		return (outboundTx.tokenAddress == 0 ?  
+			outboundTx.amount <= aggregatedEtherBalance :
+			outboundTx.amount <= aggregatedTokenBalance[outboundTx.tokenAddress]);
 	}
 
     function twoWayTransfer(address wallet, TransferInfo inboundTx, TransferInfo outboundTx) public onlyOwner {
@@ -385,17 +384,15 @@ contract ReserveFund {
 		require (outboundTx.amount > 0);
 		require (wallet != address(0));
 
-		TWOWAYTX_STATUS status = TWOWAYTX_STATUS.SUCCESS;
-
 		// Perform outbound (SC to W) transfers
 			
 		if (outboundTx.tokenAddress == address(0)) {
-			require (outboundTx.amount >= aggregatedEtherBalance);
+			require (outboundTx.amount <= aggregatedEtherBalance);
 			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add(outboundTx.amount);
 			aggregatedEtherBalance = aggregatedEtherBalance.sub(outboundTx.amount);
 
 		} else {
-			require (outboundTx.amount >= aggregatedTokenBalance[outboundTx.tokenAddress]);
+			require (outboundTx.amount <= aggregatedTokenBalance[outboundTx.tokenAddress]);
 			walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress].add(outboundTx.amount);
 			aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub(outboundTx.amount);
 		}
@@ -403,19 +400,19 @@ contract ReserveFund {
 		// Perform inbound (w to SC) transfers
 
 		if (inboundTx.tokenAddress == address(0)) {
-			require(walletInfoMap[wallet].stagedEtherBalance >= inboundTx.amount);
+			require(walletInfoMap[wallet].stagedEtherBalance <= inboundTx.amount);
 			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.sub(inboundTx.amount);
 			aggregatedEtherBalance = aggregatedEtherBalance.add(inboundTx.amount);
 
 		} else {
-			require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] >= inboundTx.amount);
+			require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] <= inboundTx.amount);
 			walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress].sub(inboundTx.amount);
 			aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add(inboundTx.amount);
 		}		
 
 		//raise event
 		//
-		emit TwoWayTransferEvent(wallet, inboundTx, outboundTx, status);
+		emit TwoWayTransferEvent(wallet, inboundTx, outboundTx);
 	}
 
     function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
