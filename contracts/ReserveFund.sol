@@ -400,12 +400,12 @@ contract ReserveFund {
 		// Perform inbound (w to SC) transfers
 
 		if (inboundTx.tokenAddress == address(0)) {
-			require(walletInfoMap[wallet].stagedEtherBalance <= inboundTx.amount);
+			require(walletInfoMap[wallet].stagedEtherBalance >= inboundTx.amount);
 			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.sub(inboundTx.amount);
 			aggregatedEtherBalance = aggregatedEtherBalance.add(inboundTx.amount);
 
 		} else {
-			require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] <= inboundTx.amount);
+			require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] >= inboundTx.amount);
 			walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress].sub(inboundTx.amount);
 			aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add(inboundTx.amount);
 		}		
