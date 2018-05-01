@@ -21,6 +21,41 @@ module.exports.augmentWeb3 = function (web3)
 			});
 		});
 	}
+
+	web3.eth.getTransactionPromise = function (transactionHash) { 
+		return new Promise(function (resolve, reject) {
+			web3.eth.getTransaction(transactionHash, function (err, receipt) {
+				if (!err)
+					resolve(receipt);
+				else
+					reject(err);
+			});
+		});
+	}
+
+	web3.eth.getTransactionReceiptPromise = function (hashString) { 
+		return new Promise(function (resolve, reject) {
+			web3.eth.getTransactionReceipt(hashString, function (err, receipt) {
+				if (!err)
+					resolve(receipt);
+				else
+					reject(err);
+			});
+		});
+	}
+
+	web3.eth.getBlockPromise = function (blockHashOrBlockNumber, returnTransactionObjects) { 
+		return new Promise(function (resolve, reject) {
+			if (typeof returnTransactionObjects === 'undefined')
+				returnTransactionObjects = false;
+			web3.eth.getBlock(transactionHash, returnTransactionObjects, function (err, receipt) {
+				if (!err)
+					resolve(receipt);
+				else
+					reject(err);
+			});
+		});
+	}
 }
 
 module.exports.TestCounter = function ()
