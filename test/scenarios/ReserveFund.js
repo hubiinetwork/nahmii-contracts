@@ -4,6 +4,7 @@ module.exports = function (glob) {
 
 		var ethers = require('ethers');
 
+
 		// Local test-wide variables
 		// ------------------------------------------------------------------------------------------------------
 		const TOKEN_DEPOSIT_AMOUNT_A = 5;
@@ -14,7 +15,9 @@ module.exports = function (glob) {
 		const ETHER_DEPOSIT_AMOUNT_A = 4.7;
 		const ETHER_DEPOSIT_AMOUNT_B = 0.25;
 		const ETHER_DEPOSIT_AMOUNT_C = 3.14159;
-		const ETHER_DEPOSIT_AMOUNT_A_PREACCRUAL = 10;
+
+		var ETHER_DEPOSIT_AMOUNT_D = [ 3, 1.2, 4 ];
+		var etherDepositBlockNumber_userD = [ -1, -1, -1 ];
 
 		const TOKEN_STAGE_AMOUNT_A = 1;
 		const ETHER_STAGE_AMOUNT_C = 3.14159;
@@ -46,6 +49,39 @@ module.exports = function (glob) {
 			return "T" + (++testNum).pad(3);
 		}
 		var testNum = 0;
+
+		// "Promisified helpers"
+		// -----------------------------------------------------------------------------------------------------
+
+		var getTxBlock = function (_tx) { 
+			return new Promise(function (resolve, reject) {
+				web3.eth.getTransactionReceipt(_tx, function (err, receipt) {
+					if (!err) {
+						resolve(receipt.blockNumber);
+					}
+					else {
+						reject(err);
+					}
+				});
+			});
+		}
+
+		var sendTx = function (_from, _to, _amountWei) {
+			return new Promise(function (resolve, reject) {
+				web3.eth.sendTransaction({
+					from: _from,
+					to: _to,
+					value: _amountWei,
+					gas: glob.gasLimit
+				}, function (err, txHash) {
+					if (!err)
+						resolve(txHash);
+					else
+						reject(err);
+				})
+			})
+		}
+		
 		// ------------------------------------------------------------------------------------------------------
 
 		it(testId() + ": MUST SUCCEED [payable]: Owner deposits " + ETHER_DEPOSIT_AMOUNT_OWNER + "ETH", function (done) {
@@ -743,6 +779,35 @@ module.exports = function (glob) {
 				})
 		});
 
+		it(testId() + ": MUST FAIL [twoWayTransfer]: Not enough aggregate balance for Outbound TX ", function (done) {
+
+			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('1000000000000000000') };
+			const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: 9999 };
+			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
+			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
+				.then((result) => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				})
+		});
+
+		it(testId() + ": MUST FAIL [twoWayTransfer]: Not enough wallet staged balance for Inbound TX ", function (done) {
+
+			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('40000000000000000000000') };
+			const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: 1 };
+			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
+			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
+				.then((result) => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				})
+		});
+
+
 		it(testId() + ": MUST FAIL [claimAccrual]: User A claims accrual for a token without accrual deposits", (done) => {
 			const MOCK_TOKEN_XYZ = '0xcafeefac0000dddd0000cccc0000bbbb0000aaaa';
 
@@ -755,71 +820,93 @@ module.exports = function (glob) {
 				});
 		});
 
-		it(testId() + ": MUST SUCCEED [claimAccrual]: User A claims ether accrual", async () => {
+		it(testId() + ": MUST SUCCEED [claimAccrual]: User D claims ether accrual", async () => {
 
-			// According to the accrual allocation algorithm, user A should obtain staged funds from
-			// the accrual funding by:
-			//
-			//  aggregate_accrual_balance * BalanceBlocks_A / (aggregatedEtherBalance_A * (BNLOW - BNUP))
-			//
-			// lower bound = last accrual block number claimed for ETH by msg.sender OR 0 */
-			// upper bound = last accrual block number 
-			
+			// First we do a bunch of deposits for user D and record the block numbers 
+			// -----------------------------------------------------------------------
+
 			try {
 
-				// First we deposit a bunch of more ETHs for this user 
+				/* (!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+				
+				   This issues  dummy TXs (pennies to B) to span the deposits over several blocks 
+				   on Ganache/TestRPC with automining OFF.
+	
+				   May work different on TestNet (all TXs could perfectly be mined on the same block!) 
 
-				web3.eth.sendTransaction({
-					from: glob.user_a,
-					to: glob.web3ReserveFund.address,
-					value: web3.toWei(ETHER_DEPOSIT_AMOUNT_A_PREACCRUAL, 'ether'),
-					gas: glob.gasLimit
-				}, function (err, txHash) {
-					if (!err) {
-						web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
-							if (!err)
-							{
-								etherDepositBlockNumber_userA_preAcc = receipt.blockNumber;
-							}
-							else {
-								throw('Cannot get pre-accrual value TX receipt: ' + err.toString());
-							}
-						});
-					}
-					else {
-						throw('Cannot issue pre-accrual TX ' + err.toString());
-					}
-				})
+				   (!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)				
+				*/
 
-				//
+				var tx0 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[0]));
+				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
+				var tx1 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[1]));
+				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
+				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
+				var tx2 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[2]));
 
-				// User A must have registered now:
-				// balanceBlocks: [ 0 , BB = user_A_balance * block_span ]
-				// balanceBlockNumbers: [ deposit_block_A, deposit_block_B ]
+				etherDepositBlockNumber_userD[0] = await getTxBlock(tx0);
+				etherDepositBlockNumber_userD[1] = await getTxBlock(tx1);
+				etherDepositBlockNumber_userD[2] = await getTxBlock(tx2);
 
+				for (i = 0; i < etherDepositBlockNumber_userD.length; i++)
+					console.log("etherDeposit[" + i + "] of " + ETHER_DEPOSIT_AMOUNT_D[i] + "ETH @ block " + etherDepositBlockNumber_userD[i]);
+			}
+			catch (err) {
+				assert(false, 'Cannot execute deposit for user D. Reason:  ' + err.toString());
+			}
 
-				// bn_low = zero as no previous claims  
+			try {
+
+				// User D must have now:
+				// deposits  = [ 3, 1.2, 4 ];
+				// balanceBlocks: [ 0 * 3,  (BBN1-BBN0) * 1.2, (BBN2-BBN1) * 4 ] 
+				// balanceBlockNumbers: [ BBN0, BBN1, BBN2 ]
+
+				// e.g: Blocks 168, 170, 173   -> balanceBlocks[0, 2 * 1.2, 3 * 4] = [0,2.4,12]
+
+				// bn_low = zero as no previous claims  for User D
 				// bn_up  = the last block where owner deposited ETH.
 
 				const bn_low = 0;
-				const bn_up  = etherDepositBlockNumber_owner;
+				const bn_up = etherDepositBlockNumber_owner;
 
-				// there is only 1 block in which user A deposited ETH so:
+				// Balance blocks In. 
 
-				// const balanceBlocks = 
-				// const frac   = 
+				const bbIn = 1;
 
+				// According to the accrual allocation algorithm, user A should obtain staged funds from
+				// the accrual funding by:
+				//
+				//  aggregate_accrual_balance * bbIn / (aggregatedEtherBalance * (BNLOW - BNUP))
+				//
 
+				var aggregateEtherBalance = await glob.web3ReserveFund.activeBalance(0, 0);
+				var aggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
+				var blockSpan = bn_up - bn_low;
 
+				const amount = (aggregateAccrualBalance * bbIn) / ( aggregateEtherBalance * blockSpan);
+				
+				const expectedPostAggregateEtherBalance = aggregateEtherBalance - amount;
+				const expectedPostUserBalance = ETHER_DEPOSIT_AMOUNT_D[0] + ETHER_DEPOSIT_AMOUNT_D[1] + ETHER_DEPOSIT_AMOUNT_D[2];
 
+				await glob.web3ReserveFund.claimAccrual(glob.user_d);
 
-				await glob.web3Erc20.claimAccrual({user_a});
+				// 
+				// Check post-claim balances
+				//
+				var postAggregateEtherBalance = await glob.web3ReserveFund.activeBalance(0, 0);
+				var postAggregateAccrualBalance = await glob.web3ReserveFund.aggregateAcrualBalance(0);
+
+				assert.equal(postAggregateEtherBalance == expectedPostAggregateEtherBalance,
+					 'Post aggregate-ETH balance differs: ' + postAggregateEtherBalance + ' expected:' + expectedPostAggregateEtherBalance);
+				assert.equal(postAggregateAccrualBalance == expectedPostAggregateAccrualBalance, 
+					'Post acrual-ETH balance differs: ' + postAggregateAccrualBalance + ' expected:' + expectedPostAggregateAccrualBalance);
 			}
-			catch(err) {
+
+			catch (err) {
+				assert(false, 'This test must succeed. Error is: ' + err.toString());
 
 			}
-			
-
 		});
 	});
 };
