@@ -18,6 +18,7 @@
     "truffle": "^4.1.6"
   },
   "devDependencies": {
+    "bluebird": "^3.5.1",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1"
   }
