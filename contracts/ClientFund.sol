@@ -7,7 +7,7 @@
  */
 pragma solidity ^0.4.21;
 
-import "./SafeMath.sol";
+import "./SafeMathUint.sol";
 import "./ERC20.sol";
 
 /**
@@ -16,7 +16,7 @@ import "./ERC20.sol";
 @dev Factored out from previous Trade smart contract.
 */
 contract ClientFund {
-    using SafeMath for uint256; 
+    using SafeMathUint for uint256;
 
     //
     // Structures

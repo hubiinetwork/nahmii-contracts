@@ -7,7 +7,7 @@
  */
 pragma solidity ^0.4.21;
 
-import "./SafeMath.sol";
+import "./SafeMathUint.sol";
 import "./ERC20.sol";
 import "./ClientFund.sol";
 
@@ -16,7 +16,7 @@ import "./ClientFund.sol";
 @notice A dummy SC where several functions are added to assist in unit testing.
 */
 contract UnitTestHelpers {
-    using SafeMath for uint256; 
+    using SafeMathUint for uint256;
 
     //
     // Constructor
