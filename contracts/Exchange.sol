@@ -265,20 +265,20 @@ contract Exchange {
     }
 
     function isGenuineTradeMakerFee(Trade trade) private view returns (bool) {
-        int256 feePartsPer = int256(configuration.partsPer());
-        uint256 rollingVolume = (LiquidityRole.Maker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
-        return (trade.singleFees.intended <= trade.amount.mul(int(configuration.getTradeMakerFee(0, 0))).div(feePartsPer))
-        && (trade.singleFees.intended == trade.amount.mul(int(configuration.getTradeMakerFee(0, rollingVolume))).div(feePartsPer))
-        && (trade.singleFees.intended >= trade.amount.mul(int(configuration.getTradeMakerMinimumFee(0))).div(feePartsPer));
+        int256 feePartsPer = configuration.PARTS_PER();
+        int256 discountTier = int256(LiquidityRole.Maker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
+        return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(0, 0)).div(feePartsPer))
+        && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(0, discountTier)).div(feePartsPer))
+        && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeMakerMinimumFee(0)).div(feePartsPer));
     }
 
     function isGenuineTradeTakerFee(Trade trade) private view returns (bool) {
-        int256 feePartsPer = int256(configuration.partsPer());
+        int256 feePartsPer = configuration.PARTS_PER();
         int256 amountConjugate = trade.amount.div(trade.rate);
-        uint256 rollingVolume = (LiquidityRole.Taker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
-        return (trade.singleFees.conjugate <= amountConjugate.mul(int(configuration.getTradeTakerFee(0, 0))).div(feePartsPer))
-        && (trade.singleFees.conjugate == amountConjugate.mul(int(configuration.getTradeTakerFee(0, rollingVolume))).div(feePartsPer))
-        && (trade.singleFees.conjugate >= amountConjugate.mul(int(configuration.getTradeTakerMinimumFee(0))).div(feePartsPer));
+        int256 discountTier = int256(LiquidityRole.Taker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
+        return (trade.singleFees.conjugate <= amountConjugate.mul(configuration.getTradeTakerFee(0, 0)).div(feePartsPer))
+        && (trade.singleFees.conjugate == amountConjugate.mul(configuration.getTradeTakerFee(0, discountTier)).div(feePartsPer))
+        && (trade.singleFees.conjugate >= amountConjugate.mul(configuration.getTradeTakerMinimumFee(0)).div(feePartsPer));
     }
 
     function isGenuineByTradeBuyer(Trade trade) private view returns (bool) {
@@ -321,10 +321,10 @@ contract Exchange {
     }
 
     function isGenuinePaymentFee(Payment payment) private view returns (bool) {
-        int256 feePartsPer = int256(configuration.partsPer());
-        return (payment.singleFee <= payment.amount.mul(int(configuration.getPaymentFee(0, 0))).div(feePartsPer))
-        && (payment.singleFee == payment.amount.mul(int(configuration.getPaymentFee(0, uint(payment.amount)))).div(feePartsPer))
-        && (payment.singleFee >= payment.amount.mul(int(configuration.getPaymentMinimumFee(0))).div(feePartsPer));
+        int256 feePartsPer = int256(configuration.PARTS_PER());
+        return (payment.singleFee <= payment.amount.mul(configuration.getPaymentFee(0, 0)).div(feePartsPer))
+        && (payment.singleFee == payment.amount.mul(configuration.getPaymentFee(0, payment.amount)).div(feePartsPer))
+        && (payment.singleFee >= payment.amount.mul(configuration.getPaymentMinimumFee(0)).div(feePartsPer));
     }
 
     function isGenuineByPaymentSource(Payment payment) private pure returns (bool) {
