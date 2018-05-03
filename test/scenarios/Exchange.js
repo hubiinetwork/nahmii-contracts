@@ -25,6 +25,8 @@ module.exports = (glob) => {
             truffleConfiguration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
             provider = glob.signer_owner.provider;
+
+            await ethersExchange.changeConfiguration(ethersConfiguration.address);
         });
 
         describe('constructor', () => {
@@ -142,8 +144,6 @@ module.exports = (glob) => {
                 await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(0), utils.parseUnits('0.0001', 18), overrideOptions);
                 await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(0), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
                 await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(0), utils.parseUnits('0.0002', 18), overrideOptions);
-
-                await ethersExchange.changeConfiguration(ethersConfiguration.address);
             });
 
             beforeEach(async () => {
@@ -655,8 +655,6 @@ module.exports = (glob) => {
 
                 await ethersConfiguration.setPaymentFee(utils.bigNumberify(0), utils.parseUnits('0.002', 18), [], [], overrideOptions);
                 await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(0), utils.parseUnits('0.0002', 18), overrideOptions);
-
-                await ethersExchange.changeConfiguration(ethersConfiguration.address);
             });
 
             beforeEach(async () => {
@@ -709,10 +707,6 @@ module.exports = (glob) => {
                     topics: [topic]
                 };
             });
-
-            // it('should succeed temporarily', async () => {
-            //     ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions).should.be.fulfilled;
-            // });
 
             it('should revert if payment is genuine', async () => {
                 ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions).should.be.rejected;
@@ -925,6 +919,199 @@ module.exports = (glob) => {
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
+        });
+
+        describe.only('challengeFraudulentDealBySuccessiveTrades()', () => {
+            let overrideOptions, firstTrade, lastTrade, currency, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+                currency = '0x0000000000000000000000000000000000000001';
+            });
+
+            beforeEach(async () => {
+                firstTrade = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('1000', 18),
+                            residuals: {
+                                current: utils.parseUnits('400', 18),
+                                previous: utils.parseUnits('500', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9599.9', 18),
+                                previous: utils.parseUnits('9500', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.4', 18),
+                                previous: utils.parseUnits('9.5', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.1', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('1000', 18),
+                            residuals: {
+                                current: utils.parseUnits('600', 18),
+                                previous: utils.parseUnits('700', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19500', 18),
+                                previous: utils.parseUnits('19600', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.4998', 18),
+                                previous: utils.parseUnits('19.4', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.0', 18),
+                            conjugate: utils.parseUnits('0.0002', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('100', 18),
+                            net: utils.parseUnits('100', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.1', 18),
+                            net: utils.parseUnits('0.1', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.0002', 18)
+                    },
+                    blockNumber: utils.bigNumberify(1234)
+                };
+
+                lastTrade = {
+                    nonce: utils.bigNumberify(2),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(2),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('1000', 18),
+                            residuals: {
+                                current: utils.parseUnits('400', 18),
+                                previous: utils.parseUnits('500', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9599.9', 18),
+                                previous: utils.parseUnits('9500', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.4', 18),
+                                previous: utils.parseUnits('9.5', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.1', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(3),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('1000', 18),
+                            residuals: {
+                                current: utils.parseUnits('600', 18),
+                                previous: utils.parseUnits('700', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19500', 18),
+                                previous: utils.parseUnits('19600', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.4998', 18),
+                                previous: utils.parseUnits('19.4', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.0', 18),
+                            conjugate: utils.parseUnits('0.0002', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('100', 18),
+                            net: utils.parseUnits('100', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.1', 18),
+                            net: utils.parseUnits('0.1', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.0002', 18)
+                    },
+                    blockNumber: utils.bigNumberify(1234)
+                };
+
+                const firstHash = hashTrade(firstTrade);
+                firstTrade.seal = {
+                    hash: firstHash,
+                    signature: fromRpcSig(await web3.eth.sign(glob.owner, firstHash))
+                };
+
+                const lastHash = hashTrade(lastTrade);
+                lastTrade.seal = {
+                    hash: lastHash,
+                    signature: fromRpcSig(await web3.eth.sign(glob.owner, lastHash))
+                };
+
+                topic = ethersExchange.interface.events.ChallengeFraudulentDealBySuccessiveTradesEvent.topics[0];
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: [topic]
+                };
+            });
+
+            it('should revert if trades are genuine', async () => {
+                await ethersExchange.challengeFraudulentDealBySuccessiveTrades(firstTrade, lastTrade, glob.user_a, currency, overrideOptions);
+            })
         });
     });
 };
