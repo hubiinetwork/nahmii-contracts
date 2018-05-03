@@ -1,11 +1,11 @@
 pragma solidity ^0.4.21;
 
 /**
- * @title     SafeMath
+ * @title     SafeMathUint
  * @dev       Math operations with safety checks that throw on error
- * copyright Copyright (c) 2016 Smart Contract Solutions, Inc.
+ * Copyright  (C) 2017-2018 Hubii AS based on Open-Zeppelin's SafeMath library
  */
-library SafeMath {
+library SafeMathUint {
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a * b;
         assert(a == 0 || c / a == b);
