@@ -34,8 +34,8 @@ module.exports = function (glob) {
 		var etherDepositBlockNumber_userB = -1;
 		var etherDepositBlockNumber_userC = -1;
 		var etherDepositBlockNumber_owner = -1;
-		
-		var firstEtherAccrualBlockNumber = -1;
+
+		var lastOwnerDepositBlock = -1;
 
 		// Helper functions
 		// -----------------------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ module.exports = function (glob) {
 					web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
 						if (!err)
 							etherDepositBlockNumber_owner = receipt.blockNumber;
-							firstEtherAccrualBlockNumber = receipt.blockNumber;
+							lastOwnerDepositBlock = receipt.blockNumber;
 
 						done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
 						return;
@@ -128,28 +128,6 @@ module.exports = function (glob) {
 				}
 			})
 		});
-
-		// it(testId() + ": MUST SUCCEED [payable]: User B deposits " + ETHER_DEPOSIT_AMOUNT_B + "ETH", function (done) {
-		// 	web3.eth.sendTransaction({
-		// 		from: glob.user_b,
-		// 		to: glob.web3ReserveFund.address,
-		// 		value: web3.toWei(ETHER_DEPOSIT_AMOUNT_B, 'ether'),
-		// 		gas: glob.gasLimit
-		// 	}, function (err, txHash) {
-		// 		if (!err) {
-		// 			web3.eth.getTransactionReceipt(txHash, function (err, receipt) {
-		// 				if (!err)
-		// 					etherDepositBlockNumber_userB = receipt.blockNumber;
-
-		// 				done(err ? new Error('This test must succeed. Error is: ' + err.toString()) : null);
-		// 				return;
-		// 			});
-		// 		}
-		// 		else {
-		// 			done(new Error('This test must succeed. Error is: ' + err.toString()));
-		// 		}
-		// 	})
-		// });
 
 		it(testId() + ": MUST SUCCEED [payable]: User C deposits " + ETHER_DEPOSIT_AMOUNT_C + "ETH", function (done) {
 			web3.eth.sendTransaction({
@@ -211,6 +189,7 @@ module.exports = function (glob) {
 					glob.web3ReserveFund.depositTokens(glob.web3Erc20.address, TOKEN_DEPOSIT_AMOUNT_OWNER)
 						.then((result) => {
 							tokenDepositBlockNumber_owner = result.receipt.blockNumber;
+							lastOwnerDepositBlock = result.receipt.blockNumber;
 							done();
 						})
 						.catch((err) => {
@@ -807,6 +786,35 @@ module.exports = function (glob) {
 				})
 		});
 
+		it(testId() + ": MUST FAIL [closeAccrualPeriod]: Accrual period cannot be called by non-owner", function(done) {
+			glob.web3ReserveFund.closeAccrualPeriod({ from: glob.user_c })
+			.then((result) => {
+				done(new Error('This test must fail'));
+			})
+			.catch((err) => {
+				done();
+			})
+		});
+
+		it(testId() + ": MUST SUCCEED [closeAccrualPeriod]: Owner closes current accrual period", async () => {
+			try {
+				const preCloseEthAccrual = await glob.web3ReserveFund.periodAccrualBalance(0);
+				const preCloseTokenAccrual = await glob.web3ReserveFund.periodAccrualBalance(glob.web3Erc20.address);
+				assert(preCloseEthAccrual.eq(0) == false, '(pre-CloseAccrual) periodAccrualBalance for ETH is zero');
+				assert(preCloseTokenAccrual.eq(0) == false, '(pre-CloseAccrual) periodAccrualBalance for ERC20 is zero');
+
+				await glob.web3ReserveFund.closeAccrualPeriod();
+
+				const postCloseEthAccrual = await glob.web3ReserveFund.periodAccrualBalance(0);
+				const postCloseTokenAccrual = await glob.web3ReserveFund.periodAccrualBalance(glob.web3Erc20.address);
+				assert(postCloseEthAccrual.eq(0)  == true, '(post-CloseAccrual) periodAccrualBalance for ETH is NOT zero but ' + postCloseEthAccrual);
+				assert(postCloseTokenAccrual.eq(0) == true , '(post-CloseAccrual) periodAccrualBalance for ERC20 is NOT zero but ' + postCloseTokenAccrual);
+
+			}
+			catch(err) {
+				assert(false, 'This test must succeed. Error is: ' + err.toString());
+			}
+		});
 
 		it(testId() + ": MUST FAIL [claimAccrual]: User A claims accrual for a token without accrual deposits", (done) => {
 			const MOCK_TOKEN_XYZ = '0xcafeefac0000dddd0000cccc0000bbbb0000aaaa';
@@ -843,6 +851,7 @@ module.exports = function (glob) {
 				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
 				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
 				var tx2 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[2]));
+				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
 
 				etherDepositBlockNumber_userD[0] = await getTxBlock(tx0);
 				etherDepositBlockNumber_userD[1] = await getTxBlock(tx1);
@@ -865,15 +874,19 @@ module.exports = function (glob) {
 				// e.g: Blocks 168, 170, 173   -> balanceBlocks[0, 2 * 1.2, 3 * 4] = [0,2.4,12]
 
 				// bn_low = zero as no previous claims  for User D
-				// bn_up  = the last block where owner deposited ETH.
+				// bn_up  = the last block where owner deposited *any currency*
 
 				const bn_low = 0;
-				const bn_up = etherDepositBlockNumber_owner;
+				const bn_up = lastOwnerDepositBlock;
 
 				// Balance blocks In. 
-
-				const bbIn = 1;
-
+				//
+				// This is the accumulation of balance between a range of blocks 
+				// (see balanceBlocks above)
+				
+				bbIn = (etherDepositBlockNumber_userD[1] - etherDepositBlockNumber_userD[0]) * ETHER_DEPOSIT_AMOUNT_D[0];
+				bbIn += (etherDepositBlockNumber_userD[2] - etherDepositBlockNumber_userD[1]) * ETHER_DEPOSIT_AMOUNT_D[1];
+				
 				// According to the accrual allocation algorithm, user A should obtain staged funds from
 				// the accrual funding by:
 				//
@@ -884,23 +897,33 @@ module.exports = function (glob) {
 				var aggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
 				var blockSpan = bn_up - bn_low;
 
-				const amount = (aggregateAccrualBalance * bbIn) / ( aggregateEtherBalance * blockSpan);
+				console.log("bbIn=" + bbIn);
+
+				console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance + "blockSpan=" + blockSpan);
+				const fraction =  (bbIn / ( aggregateEtherBalance * blockSpan) );
+				const amount = aggregateAccrualBalance * fraction;
+
+				console.log("f= " + fraction + " amount = " + amount);
 				
 				const expectedPostAggregateEtherBalance = aggregateEtherBalance - amount;
 				const expectedPostUserBalance = ETHER_DEPOSIT_AMOUNT_D[0] + ETHER_DEPOSIT_AMOUNT_D[1] + ETHER_DEPOSIT_AMOUNT_D[2];
+				const expectedPostAggregateAccrualBalance = aggregateAccrualBalance;
 
-				await glob.web3ReserveFund.claimAccrual(glob.user_d);
+				await glob.web3ReserveFund.claimAccrual('0x0000000000000000000000000000000000000000', { from: glob.user_d });
 
 				// 
 				// Check post-claim balances
 				//
 				var postAggregateEtherBalance = await glob.web3ReserveFund.activeBalance(0, 0);
-				var postAggregateAccrualBalance = await glob.web3ReserveFund.aggregateAcrualBalance(0);
+				var postAggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
+				var postUserBalance = await glob.web3ReserveFund.stagedBalance(glob.user_d, 0);
 
-				assert.equal(postAggregateEtherBalance == expectedPostAggregateEtherBalance,
-					 'Post aggregate-ETH balance differs: ' + postAggregateEtherBalance + ' expected:' + expectedPostAggregateEtherBalance);
-				assert.equal(postAggregateAccrualBalance == expectedPostAggregateAccrualBalance, 
-					'Post acrual-ETH balance differs: ' + postAggregateAccrualBalance + ' expected:' + expectedPostAggregateAccrualBalance);
+				assert(postAggregateEtherBalance.eq(expectedPostAggregateEtherBalance),
+					 'Post aggregate-ETH balance differs: ' + postAggregateEtherBalance + ' but expected:' + expectedPostAggregateEtherBalance);
+				assert(postAggregateAccrualBalance.eq(expectedPostAggregateAccrualBalance), 
+					'Post accrual-ETH balance differs: ' + postAggregateAccrualBalance + ' but expected:' + expectedPostAggregateAccrualBalance);
+				assert(postUserBalance.eq(expectedPostUserBalance), 
+						'Post staged-ETH  user balance differs: ' + postUserBalance + ' but expected:' + expectedPostUserBalance);
 			}
 
 			catch (err) {
