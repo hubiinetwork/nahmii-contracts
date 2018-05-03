@@ -16,11 +16,11 @@ pragma experimental ABIEncoderV2;
 */
 
 import './ERC20.sol';
-import './SafeMath.sol';
+import './SafeMathUint.sol';
 
 contract ReserveFund {
 
-    using SafeMath for uint256;
+    using SafeMathUint for uint256;
 
     //
 	// Structures
