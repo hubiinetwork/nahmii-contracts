@@ -5,10 +5,11 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
 import "./SafeMathInt.sol";
+import "./SafeMathUInt.sol";
 import "./Configuration.sol";
 
 /**
@@ -17,12 +18,15 @@ import "./Configuration.sol";
 */
 contract Exchange {
     using SafeMathInt for int256;
+    using SafeMathUint for uint256;
 
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
     enum OperationalMode {Normal, Exit}
     enum LiquidityRole {Maker, Taker}
+    enum CurrencyRole {Intended, Conjugate}
+    enum TraderRole {Buyer, Seller}
 
     //
     // Structures
@@ -109,7 +113,7 @@ contract Exchange {
         uint256 blockNumber;
     }
 
-    struct Party {
+    struct PaymentParty {
         address _address;
         uint256 nonce;
         CurrentPreviousInt256 balances;
@@ -123,8 +127,8 @@ contract Exchange {
 
         address currency;
 
-        Party source;
-        Party destination;
+        PaymentParty source;
+        PaymentParty destination;
 
         // Transfer is always in direction from source to destination
         SingleNetInt256 transfers;
@@ -154,8 +158,10 @@ contract Exchange {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
-    event ChallengeFraudulentDealByTradeEvent(Trade t, address challenger, address seizedWallet);
-    event ChallengeFraudulentDealByPaymentEvent(Payment t, address challenger, address seizedWallet);
+    event ChallengeFraudulentDealByTradeEvent(Trade trade, address challenger, address seizedWallet);
+    event ChallengeFraudulentDealByPaymentEvent(Payment payment, address challenger, address seizedWallet);
+    event ChallengeFraudulentDealBySuccessiveTradesEvent(Trade firstTrade, Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeFraudulentDealBySucessorPaymentEvent(Payment firstPayment, Payment lastPayment, address challenger, address seizedWallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
 
     //
@@ -250,6 +256,101 @@ contract Exchange {
         }
 
         emit ChallengeFraudulentDealByPaymentEvent(payment, msg.sender, seizedWallet);
+    }
+
+    function challengeFraudulentDealBySuccessiveTrades(
+        Trade firstTrade,
+        Trade lastTrade,
+        address wallet,
+        address currency
+    )
+    public
+    challengeableTradePair(firstTrade, lastTrade, wallet, currency)
+    {
+        TraderRole firstTraderRole = (wallet == firstTrade.buyer._address ? TraderRole.Buyer : TraderRole.Seller);
+        TraderRole lastTraderRole = (wallet == lastTrade.buyer._address ? TraderRole.Buyer : TraderRole.Seller);
+
+        require(isTraderSuccessiveTrades(firstTrade, firstTraderRole, lastTrade, lastTraderRole));
+
+        CurrencyRole firstCurrencyRole = (currency == firstTrade.currencies.intended ? CurrencyRole.Intended : CurrencyRole.Conjugate);
+        CurrencyRole lastCurrencyRole = (currency == lastTrade.currencies.intended ? CurrencyRole.Intended : CurrencyRole.Conjugate);
+
+        bool genuineBalance = isGenuineSuccessiveTradeBalances(firstTrade, lastTrade,
+            firstTraderRole, lastTraderRole, firstCurrencyRole, lastCurrencyRole);
+
+        bool genuineNetFee = isGenuineSuccessiveTradeNetFees(firstTrade, lastTrade,
+            firstTraderRole, lastTraderRole, firstCurrencyRole, lastCurrencyRole);
+
+        require(!genuineBalance || !genuineNetFee);
+
+        operationalMode = OperationalMode.Exit;
+        fraudulentTrade = lastTrade;
+
+        //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
+        addToSeizedWallets(wallet);
+
+        emit ChallengeFraudulentDealBySuccessiveTradesEvent(firstTrade, lastTrade, msg.sender, wallet);
+    }
+
+    function isTraderSuccessiveTrades(
+        Trade firstTrade,
+        TraderRole firstTraderRole,
+        Trade lastTrade,
+        TraderRole lastTraderRole
+    )
+    private
+    pure
+    returns (bool) {
+        uint256 firstNonce = (TraderRole.Buyer == firstTraderRole ? firstTrade.buyer.nonce : firstTrade.seller.nonce);
+        uint256 lastNonce = (TraderRole.Buyer == lastTraderRole ? lastTrade.buyer.nonce : lastTrade.seller.nonce);
+        return lastNonce == firstNonce.add(1);
+    }
+
+    function isGenuineSuccessiveTradeBalances(
+        Trade firstTrade,
+        Trade lastTrade,
+        TraderRole firstTraderRole,
+        TraderRole lastTraderRole,
+        CurrencyRole firstCurrencyRole,
+        CurrencyRole lastCurrencyRole
+    )
+    private
+    pure
+    returns (bool)
+    {
+        IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TraderRole.Buyer == firstTraderRole ? firstTrade.buyer.balances : firstTrade.seller.balances);
+        IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (TraderRole.Buyer == lastTraderRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
+
+        CurrentPreviousInt256 memory firstCurrentPreviousBalances = (CurrencyRole.Intended == firstCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        CurrentPreviousInt256 memory lastCurrentPreviousBalances = (CurrencyRole.Intended == lastCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
+
+        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
+    }
+
+    function isGenuineSuccessiveTradeNetFees(Trade firstTrade,
+        Trade lastTrade,
+        TraderRole firstTraderRole,
+        TraderRole lastTraderRole,
+        CurrencyRole firstCurrencyRole,
+        CurrencyRole lastCurrencyRole
+    )
+    private
+    pure
+    returns (bool)
+    {
+        IntendedConjugateInt256 memory firstIntendedConjugateNetFees = (TraderRole.Buyer == firstTraderRole ? firstTrade.buyer.netFees : firstTrade.seller.netFees);
+        IntendedConjugateInt256 memory lastIntendedConjugateNetFees = (TraderRole.Buyer == lastTraderRole ? lastTrade.buyer.netFees : lastTrade.seller.netFees);
+
+        int256 firstNetFee = (CurrencyRole.Intended == firstCurrencyRole ? firstIntendedConjugateNetFees.intended : firstIntendedConjugateNetFees.conjugate);
+        int256 lastNetFee = (CurrencyRole.Intended == lastCurrencyRole ? lastIntendedConjugateNetFees.intended : lastIntendedConjugateNetFees.conjugate);
+
+        int256 lastSingleFee = 0;
+        if (TraderRole.Buyer == lastTraderRole && CurrencyRole.Intended == lastCurrencyRole)
+            lastSingleFee = lastTrade.singleFees.intended;
+        else if (TraderRole.Seller == lastTraderRole && CurrencyRole.Conjugate == lastCurrencyRole)
+            lastSingleFee = lastTrade.singleFees.conjugate;
+
+        return lastNetFee == firstNetFee.add(lastSingleFee);
     }
 
     /// @notice Get the seized status of given wallet
@@ -364,6 +465,11 @@ contract Exchange {
         }
     }
 
+    function isSignedByOwner(bytes32 hash, Signature signature) private view returns (bool) {
+        address signer = ecrecover(hash, signature.v, signature.r, signature.s);
+        return signer == owner;
+    }
+
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
@@ -377,10 +483,18 @@ contract Exchange {
         _;
     }
 
-    // TODO Fix
     modifier signedByOwner(bytes32 hash, Signature signature) {
-        address signer = ecrecover(hash, signature.v, signature.r, signature.s);
-        require(signer == owner);
+        require(isGenuineSignature(hash, signature, owner));
+        _;
+    }
+
+    modifier challengeableTradePair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
+        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
+        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
+        require(wallet == firstTrade.buyer._address || wallet == firstTrade.seller._address);
+        require(wallet == lastTrade.buyer._address || wallet == lastTrade.seller._address);
+        require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
+        require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
         _;
     }
 }
