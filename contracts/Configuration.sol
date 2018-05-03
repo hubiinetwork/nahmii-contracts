@@ -17,48 +17,48 @@ contract Configuration {
     // Custom types
     // -----------------------------------------------------------------------------------------------------------------
     struct TieredDiscount {
-        uint tier;
-        uint value;
+        int256 tier;
+        int256 value;
     }
 
     struct DiscountableFee {
-        uint blockNumber;
-        uint nominal;
+        uint256 blockNumber;
+        int256 nominal;
         TieredDiscount[] discounts;
     }
 
     struct StaticFee {
-        uint blockNumber;
-        uint nominal;
+        uint256 blockNumber;
+        int256 nominal;
     }
 
     struct Lot {
         address currency;
-        uint amount;
+        int256 amount;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint constant public PARTS_PER = 1e18;
+    int256 constant public PARTS_PER = 1e18;
     address public owner;
 
-    mapping(uint => DiscountableFee) tradeMakerFees;
-    mapping(uint => DiscountableFee) tradeTakerFees;
-    mapping(uint => DiscountableFee) paymentFees;
-    uint[] public tradeMakerFeeBlockNumbers;
-    uint[] public tradeTakerFeeBlockNumbers;
-    uint[] public paymentFeeBlockNumbers;
+    mapping(uint256 => DiscountableFee) tradeMakerFees;
+    mapping(uint256 => DiscountableFee) tradeTakerFees;
+    mapping(uint256 => DiscountableFee) paymentFees;
+    uint256[] public tradeMakerFeeBlockNumbers;
+    uint256[] public tradeTakerFeeBlockNumbers;
+    uint256[] public paymentFeeBlockNumbers;
 
-    mapping(uint => StaticFee) tradeMakerMinimumFees;
-    mapping(uint => StaticFee) tradeTakerMinimumFees;
-    mapping(uint => StaticFee) paymentMinimumFees;
-    uint[] public tradeMakerMinimumFeeBlockNumbers;
-    uint[] public tradeTakerMinimumFeeBlockNumbers;
-    uint[] public paymentMinimumFeeBlockNumbers;
+    mapping(uint256 => StaticFee) tradeMakerMinimumFees;
+    mapping(uint256 => StaticFee) tradeTakerMinimumFees;
+    mapping(uint256 => StaticFee) paymentMinimumFees;
+    uint256[] public tradeMakerMinimumFeeBlockNumbers;
+    uint256[] public tradeTakerMinimumFeeBlockNumbers;
+    uint256[] public paymentMinimumFeeBlockNumbers;
 
-    uint public cancelOrderChallengeTimeout;
-    uint public dealChallengeTimeout;
+    uint256 public cancelOrderChallengeTimeout;
+    uint256 public dealChallengeTimeout;
 
     Lot public unchallengeDealSettlementOrderByTradeStake;
 
@@ -66,21 +66,21 @@ contract Configuration {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
-    event SetPartsPerEvent(uint partsPer);
-    event SetTradeMakerFeeEvent(uint blockNumber, uint nominal, uint[] discountTiers, uint[] discountValues);
-    event SetTradeTakerFeeEvent(uint blockNumber, uint nominal, uint[] discountTiers, uint[] discountValues);
-    event SetPaymentFeeEvent(uint blockNumber, uint nominal, uint[] discountTiers, uint[] discountValues);
-    event SetTradeMakerMinimumFeeEvent(uint blockNumber, uint nominal);
-    event SetTradeTakerMinimumFeeEvent(uint blockNumber, uint nominal);
-    event SetPaymentMinimumFeeEvent(uint blockNumber, uint nominal);
-    event SetCancelOrderChallengeTimeout(uint timeout);
-    event SetDealChallengeTimeout(uint timeout);
-    event SetUnchallengeDealSettlementOrderByTradeStakeEvent(address currency, uint amount);
+    event SetPartsPerEvent(int256 partsPer);
+    event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
+    event SetTradeTakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
+    event SetPaymentFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
+    event SetTradeMakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
+    event SetTradeTakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
+    event SetPaymentMinimumFeeEvent(uint256 blockNumber, int256 nominal);
+    event SetCancelOrderChallengeTimeout(uint256 timeout);
+    event SetDealChallengeTimeout(uint256 timeout);
+    event SetUnchallengeDealSettlementOrderByTradeStakeEvent(address currency, int256 amount);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    function Configuration(address _owner) public notNullAddress(_owner) {
+    constructor(address _owner) public notNullAddress(_owner) {
         owner = _owner;
     }
 
@@ -104,11 +104,11 @@ contract Configuration {
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
-    function getTradeMakerFee(uint blockNumber, uint discountTier) public view returns (uint) {
+    function getTradeMakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
         require(0 < tradeMakerFeeBlockNumbers.length);
-        uint index = getIndexOfLower(tradeMakerFeeBlockNumbers, blockNumber);
+        uint256 index = getIndexOfLower(tradeMakerFeeBlockNumbers, blockNumber);
         if (0 < index) {
-            uint setBlockNumber = tradeMakerFeeBlockNumbers[index - 1];
+            uint256 setBlockNumber = tradeMakerFeeBlockNumbers[index - 1];
             DiscountableFee storage fee = tradeMakerFees[setBlockNumber];
             return getDiscountableFee(fee, discountTier);
         } else
@@ -120,25 +120,25 @@ contract Configuration {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeMakerFee(uint blockNumber, uint nominal, uint[] discountTiers, uint[] discountValues) public onlyOwner {
+    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyOwner {
         DiscountableFee storage fee = tradeMakerFees[blockNumber];
         setDiscountableFee(fee, tradeMakerFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
         emit SetTradeMakerFeeEvent(blockNumber, nominal, discountTiers, discountValues);
     }
 
     /// @notice Get number of trade maker fee tiers
-    function getTradeMakerFeesCount() public view returns (uint) {
+    function getTradeMakerFeesCount() public view returns (uint256) {
         return tradeMakerFeeBlockNumbers.length;
     }
 
     /// @notice Get trade taker relative fee at given block number, possibly discounted by discount tier value
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
-    function getTradeTakerFee(uint blockNumber, uint discountTier) public view returns (uint) {
+    function getTradeTakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
         require(0 < tradeTakerFeeBlockNumbers.length);
-        uint index = getIndexOfLower(tradeTakerFeeBlockNumbers, blockNumber);
+        uint256 index = getIndexOfLower(tradeTakerFeeBlockNumbers, blockNumber);
         if (0 < index) {
-            uint setBlockNumber = tradeTakerFeeBlockNumbers[index - 1];
+            uint256 setBlockNumber = tradeTakerFeeBlockNumbers[index - 1];
             DiscountableFee storage fee = tradeTakerFees[setBlockNumber];
             return getDiscountableFee(fee, discountTier);
         } else
@@ -150,25 +150,25 @@ contract Configuration {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeTakerFee(uint blockNumber, uint nominal, uint[] discountTiers, uint[] discountValues) public onlyOwner {
+    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyOwner {
         DiscountableFee storage fee = tradeTakerFees[blockNumber];
         setDiscountableFee(fee, tradeTakerFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
         emit SetTradeTakerFeeEvent(blockNumber, nominal, discountTiers, discountValues);
     }
 
     /// @notice Get number of trade taker fee tiers
-    function getTradeTakerFeesCount() public view returns (uint) {
+    function getTradeTakerFeesCount() public view returns (uint256) {
         return tradeTakerFeeBlockNumbers.length;
     }
 
     /// @notice Get payment relative fee at given block number, possibly discounted by discount tier value
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
-    function getPaymentFee(uint blockNumber, uint discountTier) public view returns (uint) {
+    function getPaymentFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
         require(0 < paymentFeeBlockNumbers.length);
-        uint index = getIndexOfLower(paymentFeeBlockNumbers, blockNumber);
+        uint256 index = getIndexOfLower(paymentFeeBlockNumbers, blockNumber);
         if (0 < index) {
-            uint setBlockNumber = paymentFeeBlockNumbers[index - 1];
+            uint256 setBlockNumber = paymentFeeBlockNumbers[index - 1];
             DiscountableFee storage fee = paymentFees[setBlockNumber];
             return getDiscountableFee(fee, discountTier);
         } else
@@ -180,24 +180,24 @@ contract Configuration {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setPaymentFee(uint blockNumber, uint nominal, uint[] discountTiers, uint[] discountValues) public onlyOwner {
+    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyOwner {
         DiscountableFee storage fee = paymentFees[blockNumber];
         setDiscountableFee(fee, paymentFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
         emit SetPaymentFeeEvent(blockNumber, nominal, discountTiers, discountValues);
     }
 
     /// @notice Get number of payment fee tiers
-    function getPaymentFeesCount() public view returns (uint) {
+    function getPaymentFeesCount() public view returns (uint256) {
         return paymentFeeBlockNumbers.length;
     }
 
     /// @notice Get trade maker minimum relative fee at given block number
     /// @param blockNumber Lower block number for the tier
-    function getTradeMakerMinimumFee(uint blockNumber) public view returns (uint) {
+    function getTradeMakerMinimumFee(uint256 blockNumber) public view returns (int256) {
         require(0 < tradeMakerMinimumFeeBlockNumbers.length);
-        uint index = getIndexOfLower(tradeMakerMinimumFeeBlockNumbers, blockNumber);
+        uint256 index = getIndexOfLower(tradeMakerMinimumFeeBlockNumbers, blockNumber);
         if (0 < index) {
-            uint setBlockNumber = tradeMakerMinimumFeeBlockNumbers[index - 1];
+            uint256 setBlockNumber = tradeMakerMinimumFeeBlockNumbers[index - 1];
             StaticFee storage fee = tradeMakerMinimumFees[setBlockNumber];
             return fee.nominal;
         } else
@@ -207,24 +207,24 @@ contract Configuration {
     /// @notice Set trade maker minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setTradeMakerMinimumFee(uint blockNumber, uint nominal) public {
+    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal) public {
         StaticFee storage fee = tradeMakerMinimumFees[blockNumber];
         setStaticFee(fee, tradeMakerMinimumFeeBlockNumbers, blockNumber, nominal);
         emit SetTradeMakerMinimumFeeEvent(blockNumber, nominal);
     }
 
     /// @notice Get number of minimum trade maker fee tiers
-    function getTradeMakerMinimumFeesCount() public view returns (uint) {
+    function getTradeMakerMinimumFeesCount() public view returns (uint256) {
         return tradeMakerMinimumFeeBlockNumbers.length;
     }
 
     /// @notice Get trade taker minimum relative fee at given block number
     /// @param blockNumber Lower block number for the tier
-    function getTradeTakerMinimumFee(uint blockNumber) public view returns (uint) {
+    function getTradeTakerMinimumFee(uint256 blockNumber) public view returns (int256) {
         require(0 < tradeTakerMinimumFeeBlockNumbers.length);
-        uint index = getIndexOfLower(tradeTakerMinimumFeeBlockNumbers, blockNumber);
+        uint256 index = getIndexOfLower(tradeTakerMinimumFeeBlockNumbers, blockNumber);
         if (0 < index) {
-            uint setBlockNumber = tradeTakerMinimumFeeBlockNumbers[index - 1];
+            uint256 setBlockNumber = tradeTakerMinimumFeeBlockNumbers[index - 1];
             StaticFee storage fee = tradeTakerMinimumFees[setBlockNumber];
             return fee.nominal;
         } else
@@ -234,24 +234,24 @@ contract Configuration {
     /// @notice Set trade taker minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setTradeTakerMinimumFee(uint blockNumber, uint nominal) public {
+    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal) public {
         StaticFee storage fee = tradeTakerMinimumFees[blockNumber];
         setStaticFee(fee, tradeTakerMinimumFeeBlockNumbers, blockNumber, nominal);
         emit SetTradeTakerMinimumFeeEvent(blockNumber, nominal);
     }
 
     /// @notice Get number of minimum trade taker fee tiers
-    function getTradeTakerMinimumFeesCount() public view returns (uint) {
+    function getTradeTakerMinimumFeesCount() public view returns (uint256) {
         return tradeTakerMinimumFeeBlockNumbers.length;
     }
 
     /// @notice Get payment minimum relative fee at given block number
     /// @param blockNumber Lower block number for the tier
-    function getPaymentMinimumFee(uint blockNumber) public view returns (uint) {
+    function getPaymentMinimumFee(uint256 blockNumber) public view returns (int256) {
         require(0 < paymentMinimumFeeBlockNumbers.length);
-        uint index = getIndexOfLower(paymentMinimumFeeBlockNumbers, blockNumber);
+        uint256 index = getIndexOfLower(paymentMinimumFeeBlockNumbers, blockNumber);
         if (0 < index) {
-            uint setBlockNumber = paymentMinimumFeeBlockNumbers[index - 1];
+            uint256 setBlockNumber = paymentMinimumFeeBlockNumbers[index - 1];
             StaticFee storage fee = paymentMinimumFees[setBlockNumber];
             return fee.nominal;
         } else
@@ -261,27 +261,27 @@ contract Configuration {
     /// @notice Set payment minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setPaymentMinimumFee(uint blockNumber, uint nominal) public {
+    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal) public {
         StaticFee storage fee = paymentMinimumFees[blockNumber];
         setStaticFee(fee, paymentMinimumFeeBlockNumbers, blockNumber, nominal);
         emit SetPaymentMinimumFeeEvent(blockNumber, nominal);
     }
 
     /// @notice Get number of minimum payment fee tiers
-    function getPaymentMinimumFeesCount() public view returns (uint) {
+    function getPaymentMinimumFeesCount() public view returns (uint256) {
         return paymentMinimumFeeBlockNumbers.length;
     }
 
     /// @notice Set timeout of cancel order challenge
     /// @param timeout Timeout duration
-    function setCancelOrderChallengeTimeout(uint timeout) public onlyOwner {
+    function setCancelOrderChallengeTimeout(uint256 timeout) public onlyOwner {
         cancelOrderChallengeTimeout = timeout;
         emit SetCancelOrderChallengeTimeout(timeout);
     }
 
     /// @notice Set timeout of deal challenge
     /// @param timeout Timeout duration
-    function setDealChallengeTimeout(uint timeout) public onlyOwner {
+    function setDealChallengeTimeout(uint256 timeout) public onlyOwner {
         dealChallengeTimeout = timeout;
         emit SetDealChallengeTimeout(timeout);
     }
@@ -289,13 +289,13 @@ contract Configuration {
     /// @notice Set currency and amount that will be gained when someone successfully unchallenges deal settlement order by trade
     /// @param currency Address of currency gained (0 represents ETH)
     /// @param amount Amount gained
-    function setUnchallengeDealSettlementOrderByTradeStake(address currency, uint amount) public onlyOwner {
+    function setUnchallengeDealSettlementOrderByTradeStake(address currency, int256 amount) public onlyOwner {
         unchallengeDealSettlementOrderByTradeStake = Lot({currency : currency, amount : amount});
         emit SetUnchallengeDealSettlementOrderByTradeStakeEvent(currency, amount);
     }
 
-    function setDiscountableFee(DiscountableFee storage fee, uint[] storage feeBlockNumbers,
-        uint blockNumber, uint nominal, uint[] discountTiers, uint[] discountValues) internal onlyOwner {
+    function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,
+        uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) internal onlyOwner {
         require(discountTiers.length == discountValues.length);
 
         if (0 == feeBlockNumbers.length || blockNumber != fee.blockNumber)
@@ -305,12 +305,12 @@ contract Configuration {
         fee.nominal = nominal;
 
         fee.discounts.length = 0;
-        for (uint i = 0; i < discountTiers.length; i++)
+        for (uint256 i = 0; i < discountTiers.length; i++)
             fee.discounts.push(TieredDiscount({tier : discountTiers[i], value : discountValues[i]}));
     }
 
-    function getDiscountableFee(DiscountableFee storage fee, uint discountTier) internal view returns (uint) {
-        uint index = getIndexOfLowerTier(fee.discounts, discountTier);
+    function getDiscountableFee(DiscountableFee storage fee, int discountTier) internal view returns (int256) {
+        uint256 index = getIndexOfLowerTier(fee.discounts, discountTier);
         if (0 < index) {
             TieredDiscount storage discount = fee.discounts[index - 1];
             return fee.nominal * (PARTS_PER - discount.value) / PARTS_PER;
@@ -318,8 +318,8 @@ contract Configuration {
             return fee.nominal;
     }
 
-    function setStaticFee(StaticFee storage fee, uint[] storage feeBlockNumbers,
-        uint blockNumber, uint nominal) internal onlyOwner {
+    function setStaticFee(StaticFee storage fee, uint256[] storage feeBlockNumbers,
+        uint256 blockNumber, int256 nominal) internal onlyOwner {
 
         if (0 == feeBlockNumbers.length || blockNumber != fee.blockNumber)
             addOrdered(feeBlockNumbers, blockNumber);
@@ -328,15 +328,15 @@ contract Configuration {
         fee.nominal = nominal;
     }
 
-    function addOrdered(uint[] storage arr, uint num) internal {
-        uint i = 0;
+    function addOrdered(uint256[] storage arr, uint256 num) internal {
+        uint256 i = 0;
         while (i < arr.length && arr[i] < num)
             i++;
 
         if (i < arr.length) {
             arr.push(arr[arr.length - 1]);
 
-            for (uint j = arr.length - 2; j > i; j--)
+            for (uint256 j = arr.length - 2; j > i; j--)
                 arr[j] = arr[j - 1];
 
             arr[i] = num;
@@ -344,15 +344,15 @@ contract Configuration {
             arr.push(num);
     }
 
-    function getIndexOfLower(uint[] arr, uint num) internal pure returns (uint) {
-        for (uint i = arr.length; i > 0; i--)
+    function getIndexOfLower(uint256[] arr, uint256 num) internal pure returns (uint256) {
+        for (uint256 i = arr.length; i > 0; i--)
             if (num >= arr[i - 1])
                 return i;
         return 0;
     }
 
-    function getIndexOfLowerTier(TieredDiscount[] arr, uint num) internal pure returns (uint) {
-        for (uint i = arr.length; i > 0; i--)
+    function getIndexOfLowerTier(TieredDiscount[] arr, int256 num) internal pure returns (uint256) {
+        for (uint256 i = arr.length; i > 0; i--)
             if (num >= arr[i - 1].tier)
                 return i;
         return 0;

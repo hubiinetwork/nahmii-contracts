@@ -161,7 +161,7 @@ contract Exchange {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor (address _owner) public notNullAddress(_owner) {
+    constructor(address _owner) public notNullAddress(_owner) {
         owner = _owner;
     }
 
