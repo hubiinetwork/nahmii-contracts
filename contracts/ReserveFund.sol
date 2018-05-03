@@ -93,6 +93,7 @@ contract ReserveFund {
     mapping (address => uint256) periodAccrualTokenBalance;
 
 	address[] accrualPeriodTokenList;
+	mapping (address => int) isAccruedTokenMap;
 	mapping (address => PerWalletInfo) private walletInfoMap;
 
 	uint256[] accrualBlockNumbers;
@@ -125,7 +126,6 @@ contract ReserveFund {
         if (msg.sender == owner) {
             periodAccrualEtherBalance = periodAccrualEtherBalance.add(msg.value);
             aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add(msg.value);
-            accrualBlockNumbers.push(block.number);
         }
         else {
             uint256 blockSpan = block.number.sub(walletInfoMap[msg.sender].lastEtherBalanceBlockNumber);
@@ -155,7 +155,12 @@ contract ReserveFund {
         if (msg.sender == owner) {
             periodAccrualTokenBalance[tokenAddress] = periodAccrualTokenBalance[tokenAddress].add(amount);
             aggregateAccrualTokenBalance[tokenAddress] = aggregateAccrualTokenBalance[tokenAddress].add(amount);
-            accrualBlockNumbers.push(block.number);
+			
+			if (isAccruedTokenMap[tokenAddress] == 0)
+			{
+				accrualPeriodTokenList.push(tokenAddress);
+				isAccruedTokenMap[tokenAddress] = 1;
+			}
         }
         else {
             uint256 blockSpan = block.number.sub(walletInfoMap[msg.sender].lastTokenBalanceBlockNumber[tokenAddress]);
@@ -212,12 +217,16 @@ contract ReserveFund {
 
 		// Register this block
 		accrualBlockNumbers.push(block.number);
+
+		// TO-DO: Store period accrual Balances at this block 
+		// 
+
 		
-		// Clear accruals 
+		// Store and clear accruals 
 
 		periodAccrualEtherBalance = 0;
 		for (uint256 i = 0; i < accrualPeriodTokenList.length; i++) {
-			periodAccrualTokenBalance[accrualPeriodTokenList[i]] == 0;
+			periodAccrualTokenBalance[accrualPeriodTokenList[i]] = 0;
 		}
 
 		
