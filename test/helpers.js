@@ -1,26 +1,12 @@
+var BlueBird = require("bluebird");
+
 module.exports.augmentWeb3 = function (web3)
 {
-	web3.eth.sendTransactionPromise = function(transactionObject) {
-		return new Promise((resolve, reject) => {
-			web3.eth.sendTransaction(transactionObject, function (err) {
-				if (!err)
-					resolve();
-				else
-					reject(err);
-			});
-		});
-	}
-
-	web3.eth.getBalancePromise = function(addressHexString) {
-		return new Promise((resolve, reject) => {
-			web3.eth.getBalance(addressHexString, function (err, balance) {
-				if (!err)
-					resolve(balance);
-				else
-					reject(err);
-			});
-		});
-	}
+	web3.eth.sendTransactionPromise = BlueBird.promisify(web3.eth.sendTransaction);
+	web3.eth.getBalancePromise = BlueBird.promisify(web3.eth.getBalance);
+	web3.eth.getTransactionPromise = BlueBird.promisify(web3.eth.getTransaction);
+	web3.eth.getTransactionReceiptPromise = BlueBird.promisify(web3.eth.getTransactionReceipt);
+	web3.eth.getBlockPromise = BlueBird.promisify(web3.eth.getBlock);
 }
 
 module.exports.TestCounter = function ()
