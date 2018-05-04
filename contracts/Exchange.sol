@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.21;
-pragma experimental ABIEncoderV2 ;
+pragma experimental ABIEncoderV2;
 
 import "./SafeMathInt.sol";
 import "./Configuration.sol";
@@ -83,6 +83,11 @@ contract Exchange {
         Signature signature;
     }
 
+    struct PartyExchangeSeals {
+        Seal party;
+        Seal exchange;
+    }
+
     struct Trade {
         uint256 nonce;
         bool immediateSettlement;
@@ -104,6 +109,32 @@ contract Exchange {
         uint256 blockNumber;
     }
 
+    struct Party {
+        address _address;
+        uint256 nonce;
+        CurrentPreviousInt256 balances;
+        int256 netFee;
+    }
+
+    struct Payment {
+        uint256 nonce;
+        bool immediateSettlement;
+        int256 amount;
+
+        address currency;
+
+        Party source;
+        Party destination;
+
+        // Transfer is always in direction from source to destination
+        SingleNetInt256 transfers;
+
+        int256 singleFee;
+
+        PartyExchangeSeals seals;
+        uint256 blockNumber;
+    }
+
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -112,6 +143,7 @@ contract Exchange {
     OperationalMode public operationalMode = OperationalMode.Normal;
 
     Trade public fraudulentTrade;
+    Payment public fraudulentPayment;
 
     address[] public seizedWallets;
     mapping(address => bool) seizedWalletsMap;
@@ -123,12 +155,13 @@ contract Exchange {
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
     event ChallengeFraudulentDealByTradeEvent(Trade t, address challenger, address seizedWallet);
+    event ChallengeFraudulentDealByPaymentEvent(Payment t, address challenger, address seizedWallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    function Exchange(address _owner) public notNullAddress(_owner) {
+    constructor (address _owner) public notNullAddress(_owner) {
         owner = _owner;
     }
 
@@ -156,21 +189,21 @@ contract Exchange {
     function challengeFraudulentDealByTrade(Trade trade) public {
         // Gauge the genuineness of maker and taker fees. Depending on whether maker is buyer or seller
         // this result is baked into genuineness by buyer and seller below.
-        bool genuineMakerFee = isGenuineMakerFee(trade);
-        bool genuineTakerFee = isGenuineTakerFee(trade);
+        bool genuineMakerFee = isGenuineTradeMakerFee(trade);
+        bool genuineTakerFee = isGenuineTradeTakerFee(trade);
 
         // Genuineness that does not related to buyer or seller
-        bool genuine = (getHashOfTrade(trade) == trade.seal.hash);
+        bool genuineSeal = isGenuineTradeSeal(trade);
 
         // Genuineness affected by buyer
-        bool genuineByBuyer = isGenuineByBuyer(trade)
+        bool genuineByBuyer = isGenuineByTradeBuyer(trade)
         && (LiquidityRole.Maker == trade.buyer.liquidityRole ? genuineMakerFee : genuineTakerFee);
 
         // Genuineness affected by seller
-        bool genuineBySeller = isGenuineBySeller(trade)
+        bool genuineBySeller = isGenuineByTradeSeller(trade)
         && (LiquidityRole.Maker == trade.seller.liquidityRole ? genuineMakerFee : genuineTakerFee);
 
-        require(!genuine || !genuineByBuyer || !genuineBySeller);
+        require(!genuineSeal || !genuineByBuyer || !genuineBySeller);
 
         operationalMode = OperationalMode.Exit;
         fraudulentTrade = trade;
@@ -188,6 +221,37 @@ contract Exchange {
         emit ChallengeFraudulentDealByTradeEvent(trade, msg.sender, seizedWallet);
     }
 
+    /// @notice Submit a payment candidate in continuous Fraudulent Deal Challenge (FDC)
+    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
+    /// @param payment Fraudulent payment candidate
+    function challengeFraudulentDealByPayment(Payment payment) public {
+        // Genuineness that does not related to buyer or seller
+        bool genuineSeals = isGenuinePaymentSeals(payment);
+
+        // Genuineness affected by source
+        bool genuineBySource = isGenuineByPaymentSource(payment) && isGenuinePaymentFee(payment);
+
+        // Genuineness affected by destination
+        bool genuineByDestination = isGenuineByPaymentDestination(payment);
+
+        require(!genuineSeals || !genuineBySource || !genuineByDestination);
+
+        operationalMode = OperationalMode.Exit;
+        fraudulentPayment = payment;
+
+        address seizedWallet;
+        if (!genuineBySource)
+            seizedWallet = payment.source._address;
+        if (!genuineByDestination)
+            seizedWallet = payment.destination._address;
+        if (address(0) != seizedWallet) {
+            //            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
+            addToSeizedWallets(seizedWallet);
+        }
+
+        emit ChallengeFraudulentDealByPaymentEvent(payment, msg.sender, seizedWallet);
+    }
+
     /// @notice Get the seized status of given wallet
     /// @return true if wallet is seized, false otherwise
     function isSeizedWallet(address _address) public view returns (bool) {
@@ -200,7 +264,7 @@ contract Exchange {
         return seizedWallets.length;
     }
 
-    function isGenuineMakerFee(Trade trade) private view returns (bool) {
+    function isGenuineTradeMakerFee(Trade trade) private view returns (bool) {
         int256 feePartsPer = int256(configuration.partsPer());
         uint256 rollingVolume = (LiquidityRole.Maker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
         return (trade.singleFees.intended <= trade.amount.mul(int(configuration.getTradeMakerFee(0, 0))).div(feePartsPer))
@@ -208,7 +272,7 @@ contract Exchange {
         && (trade.singleFees.intended >= trade.amount.mul(int(configuration.getTradeMakerMinimumFee(0))).div(feePartsPer));
     }
 
-    function isGenuineTakerFee(Trade trade) private view returns (bool) {
+    function isGenuineTradeTakerFee(Trade trade) private view returns (bool) {
         int256 feePartsPer = int256(configuration.partsPer());
         int256 amountConjugate = trade.amount.div(trade.rate);
         uint256 rollingVolume = (LiquidityRole.Taker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
@@ -217,7 +281,7 @@ contract Exchange {
         && (trade.singleFees.conjugate >= amountConjugate.mul(int(configuration.getTradeTakerMinimumFee(0))).div(feePartsPer));
     }
 
-    function isGenuineByBuyer(Trade trade) private view returns (bool) {
+    function isGenuineByTradeBuyer(Trade trade) private view returns (bool) {
         return (trade.buyer._address != trade.seller._address)
         && (trade.buyer._address != owner)
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.singleFees.intended))
@@ -227,7 +291,7 @@ contract Exchange {
         && (trade.buyer.order.residuals.previous >= trade.buyer.order.residuals.current);
     }
 
-    function isGenuineBySeller(Trade trade) private view returns (bool) {
+    function isGenuineByTradeSeller(Trade trade) private view returns (bool) {
         return (trade.buyer._address != trade.seller._address)
         && (trade.seller._address != owner)
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))
@@ -235,6 +299,42 @@ contract Exchange {
         && (trade.seller.order.amount >= trade.seller.order.residuals.current)
         && (trade.seller.order.amount >= trade.seller.order.residuals.previous)
         && (trade.seller.order.residuals.previous >= trade.seller.order.residuals.current);
+    }
+
+    function isGenuineTradeSeal(Trade trade) private view returns (bool) {
+        return (hashTrade(trade) == trade.seal.hash)
+        && (isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
+    }
+
+    function isGenuinePaymentSeals(Payment payment) private view returns (bool) {
+        bytes32 hash = hashPayment(payment);
+        return (hash == payment.seals.exchange.hash)
+        && (hash == payment.seals.party.hash)
+        && (isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner))
+        && (isGenuineSignature(hash, payment.seals.party.signature, payment.source._address));
+    }
+
+    function isGenuineSignature(bytes32 hash, Signature signature, address signer) private pure returns (bool) {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHash = keccak256(prefix, hash);
+        return ecrecover(prefixedHash, signature.v, signature.r, signature.s) == signer;
+    }
+
+    function isGenuinePaymentFee(Payment payment) private view returns (bool) {
+        int256 feePartsPer = int256(configuration.partsPer());
+        return (payment.singleFee <= payment.amount.mul(int(configuration.getPaymentFee(0, 0))).div(feePartsPer))
+        && (payment.singleFee == payment.amount.mul(int(configuration.getPaymentFee(0, uint(payment.amount)))).div(feePartsPer))
+        && (payment.singleFee >= payment.amount.mul(int(configuration.getPaymentMinimumFee(0))).div(feePartsPer));
+    }
+
+    function isGenuineByPaymentSource(Payment payment) private pure returns (bool) {
+        return (payment.source._address != payment.destination._address)
+        && (payment.source.balances.current == payment.source.balances.previous.sub(payment.transfers.single).sub(payment.singleFee));
+    }
+
+    function isGenuineByPaymentDestination(Payment payment) private pure returns (bool) {
+        return (payment.source._address != payment.destination._address)
+        && (payment.destination.balances.current == payment.destination.balances.previous.add(payment.transfers.single));
     }
 
     function addToSeizedWallets(address _address) private {
@@ -245,8 +345,13 @@ contract Exchange {
     }
 
     // TODO Implement fully
-    function getHashOfTrade(Trade trade) private pure returns (bytes32) {
+    function hashTrade(Trade trade) private pure returns (bytes32) {
         return keccak256(bytes32(trade.nonce));
+    }
+
+    // TODO Implement fully
+    function hashPayment(Payment payment) private pure returns (bytes32) {
+        return keccak256(bytes32(payment.nonce));
     }
 
     /// @notice Change the configuration contract
@@ -272,6 +377,7 @@ contract Exchange {
         _;
     }
 
+    // TODO Fix
     modifier signedByOwner(bytes32 hash, Signature signature) {
         address signer = ecrecover(hash, signature.v, signature.r, signature.s);
         require(signer == owner);

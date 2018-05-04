@@ -133,7 +133,7 @@ module.exports = (glob) => {
         });
 
         describe('challengeFraudulentDealByTrade()', () => {
-            let hash, signature, trade, overrideOptions, topic, filter;
+            let trade, overrideOptions, topic, filter;
 
             before(async () => {
                 overrideOptions = {gasLimit: 1e6};
@@ -227,11 +227,10 @@ module.exports = (glob) => {
                     blockNumber: utils.bigNumberify(1234)
                 };
 
-                hash = hashString(trade.nonce.toNumber());
-                signature = fromRpcSig(await web3.eth.sign(glob.owner, hash));
+                const hash = hashTrade(trade);
                 trade.seal = {
                     hash: hash,
-                    signature: signature
+                    signature: fromRpcSig(await web3.eth.sign(glob.owner, hash))
                 };
 
                 topic = ethersExchange.interface.events.ChallengeFraudulentDealByTradeEvent.topics[0];
@@ -245,7 +244,7 @@ module.exports = (glob) => {
                 return ethersExchange.challengeFraudulentDealByTrade(trade, overrideOptions).should.be.rejected;
             });
 
-            describe('if hash field differs from calculated', () => {
+            describe('if hash differs from calculated', () => {
                 beforeEach(() => {
                     trade.seal.hash = utils.id('some non-existent hash');
                 });
@@ -647,8 +646,292 @@ module.exports = (glob) => {
                 });
             });
         });
+
+        describe('challengeFraudulentDealByPayment()', () => {
+            let payment, overrideOptions, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 1e6};
+
+                await ethersConfiguration.setPaymentFee(utils.bigNumberify(0), utils.parseUnits('0.002', 18), [], [], overrideOptions);
+                await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(0), utils.parseUnits('0.0002', 18), overrideOptions);
+
+                await ethersExchange.changeConfiguration(ethersConfiguration.address);
+            });
+
+            beforeEach(async () => {
+                payment = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    currency: '0x0000000000000000000000000000000000000001',
+                    source: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('9399.8', 18),
+                            previous: utils.parseUnits('9500', 18)
+                        },
+                        netFee: utils.parseUnits('0.2', 18)
+                    },
+                    destination: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('19700', 18),
+                            previous: utils.parseUnits('19600', 18)
+                        },
+                        netFee: utils.parseUnits('0.0', 18)
+                    },
+                    transfers: {
+                        single: utils.parseUnits('100', 18),
+                        net: utils.parseUnits('100', 18)
+                    },
+                    singleFee: utils.parseUnits('0.2', 18),
+                    blockNumber: utils.bigNumberify(1234)
+                };
+
+                const hash = hashPayment(payment);
+                payment.seals = {
+                    party: {
+                        hash: hash,
+                        signature: fromRpcSig(await web3.eth.sign(glob.user_a, hash))
+                    },
+                    exchange: {
+                        hash: hash,
+                        signature: fromRpcSig(await web3.eth.sign(glob.owner, hash))
+                    }
+                };
+
+                topic = ethersExchange.interface.events.ChallengeFraudulentDealByPaymentEvent.topics[0];
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: [topic]
+                };
+            });
+
+            // it('should succeed temporarily', async () => {
+            //     ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions).should.be.fulfilled;
+            // });
+
+            it('should revert if payment is genuine', async () => {
+                ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions).should.be.rejected;
+            });
+
+            describe('if not signed by owner', () => {
+                beforeEach(() => {
+                    payment.seals.exchange.signature = payment.seals.party.signature;
+                });
+
+                it('should record fraudulent payment, toggle operational mode and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        ethersExchange.isSeizedWallet(payment.destination._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.false;
+                    seizedDestination.should.be.false;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if not signed by source party', () => {
+                beforeEach(() => {
+                    payment.seals.party.signature = payment.seals.exchange.signature;
+                });
+
+                it('should record fraudulent payment, toggle operational mode and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        ethersExchange.isSeizedWallet(payment.destination._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.false;
+                    seizedDestination.should.be.false;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if party hash differs from calculated', () => {
+                beforeEach(() => {
+                    payment.seals.party.hash = utils.id('some non-existent hash');
+                });
+
+                it('should record fraudulent payment, toggle operational mode and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        ethersExchange.isSeizedWallet(payment.destination._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.false;
+                    seizedDestination.should.be.false;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if exchange hash differs from calculated', () => {
+                beforeEach(() => {
+                    payment.seals.exchange.hash = utils.id('some non-existent hash');
+                });
+
+                it('should record fraudulent payment, toggle operational mode and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        ethersExchange.isSeizedWallet(payment.destination._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.false;
+                    seizedDestination.should.be.false;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if source address equals destination address', () => {
+                beforeEach(async () => {
+                    payment.source._address = payment.destination._address;
+                });
+
+                it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if source\'s current intended balance field differs from calculated', () => {
+                beforeEach(async () => {
+                    payment.source.balances.current = utils.bigNumberify(0);
+                });
+
+                it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (source\'s) payment fee is greater than the nominal payment fee', () => {
+                beforeEach(async () => {
+                    payment.singleFee = payment.singleFee.mul(utils.bigNumberify(10));
+                });
+
+                it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (source\'s) payment fee is different than provided by Configuration contract', () => {
+                beforeEach(async () => {
+                    payment.singleFee = payment.singleFee.mul(utils.bigNumberify(90)).div(utils.bigNumberify(100));
+                });
+
+                it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (source\'s) payment fee is smaller than the minimum payment fee', () => {
+                beforeEach(async () => {
+                    payment.singleFee = payment.singleFee.div(utils.bigNumberify(100));
+                });
+
+                it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if destination\'s current intended balance field differs from calculated', () => {
+                beforeEach(async () => {
+                    payment.destination.balances.current = utils.bigNumberify(0);
+                });
+
+                it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(payment.source._address),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedSource.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+        });
     });
 };
+
+const hashTrade = (trade) => hashString(trade.nonce.toNumber());
+
+const hashPayment = (payment) => hashString(payment.nonce.toNumber());
 
 const hashString = (data) => {
     hasher.update(data);
