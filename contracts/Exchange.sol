@@ -8,7 +8,7 @@
 pragma solidity ^0.4.21;
 pragma experimental ABIEncoderV2 ;
 
-import "./SafeMathUint.sol";
+import "./SafeMathInt.sol";
 import "./Configuration.sol";
 
 /**
@@ -16,7 +16,7 @@ import "./Configuration.sol";
 @notice The orchestrator of trades and payments on-chain.
 */
 contract Exchange {
-    using SafeMathUint for uint256;
+    using SafeMathInt for int256;
 
     //
     // Enums
@@ -27,24 +27,24 @@ contract Exchange {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct CurrentPreviousUint256 {
-        uint256 current;
-        uint256 previous;
+    struct CurrentPreviousInt256 {
+        int256 current;
+        int256 previous;
     }
 
-    struct SingleNetUint256 {
-        uint256 single;
-        uint256 net;
+    struct SingleNetInt256 {
+        int256 single;
+        int256 net;
     }
 
-    struct IntendedConjugateCurrentPreviousUint256 {
-        CurrentPreviousUint256 intended;
-        CurrentPreviousUint256 conjugate;
+    struct IntendedConjugateCurrentPreviousInt256 {
+        CurrentPreviousInt256 intended;
+        CurrentPreviousInt256 conjugate;
     }
 
-    struct IntendedConjugateSingleNetUint256 {
-        SingleNetUint256 intended;
-        SingleNetUint256 conjugate;
+    struct IntendedConjugateSingleNetInt256 {
+        SingleNetInt256 intended;
+        SingleNetInt256 conjugate;
     }
 
     struct IntendedConjugateAddress {
@@ -52,14 +52,14 @@ contract Exchange {
         address conjugate;
     }
 
-    struct IntendedConjugateUint256 {
-        uint256 intended;
-        uint256 conjugate;
+    struct IntendedConjugateInt256 {
+        int256 intended;
+        int256 conjugate;
     }
 
     struct Order {
-        uint256 amount;
-        CurrentPreviousUint256 residuals;
+        int256 amount;
+        CurrentPreviousInt256 residuals;
     }
 
     struct Trader {
@@ -68,8 +68,8 @@ contract Exchange {
         uint256 rollingVolume;
         LiquidityRole liquidityRole;
         Order order;
-        IntendedConjugateCurrentPreviousUint256 balances;
-        IntendedConjugateUint256 netFees;
+        IntendedConjugateCurrentPreviousInt256 balances;
+        IntendedConjugateInt256 netFees;
     }
 
     struct Signature {
@@ -86,8 +86,8 @@ contract Exchange {
     struct Trade {
         uint256 nonce;
         bool immediateSettlement;
-        uint256 amount;
-        uint256 rate;
+        int256 amount;
+        int256 rate;
 
         IntendedConjugateAddress currencies;
 
@@ -96,9 +96,9 @@ contract Exchange {
 
         // Intended transfer is always in direction from seller to buyer
         // Conjugate transfer is always in direction from buyer to seller
-        IntendedConjugateSingleNetUint256 transfers;
+        IntendedConjugateSingleNetInt256 transfers;
 
-        IntendedConjugateUint256 singleFees;
+        IntendedConjugateInt256 singleFees;
 
         Seal seal;
         uint256 blockNumber;
@@ -201,20 +201,20 @@ contract Exchange {
     }
 
     function isGenuineMakerFee(Trade trade) private view returns (bool) {
-        uint256 feePartsPer = configuration.partsPer();
+        int256 feePartsPer = int256(configuration.partsPer());
         uint256 rollingVolume = (LiquidityRole.Maker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
-        return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(0, 0)).div(feePartsPer))
-        && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(0, rollingVolume)).div(feePartsPer))
-        && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeMakerMinimumFee(0)).div(feePartsPer));
+        return (trade.singleFees.intended <= trade.amount.mul(int(configuration.getTradeMakerFee(0, 0))).div(feePartsPer))
+        && (trade.singleFees.intended == trade.amount.mul(int(configuration.getTradeMakerFee(0, rollingVolume))).div(feePartsPer))
+        && (trade.singleFees.intended >= trade.amount.mul(int(configuration.getTradeMakerMinimumFee(0))).div(feePartsPer));
     }
 
     function isGenuineTakerFee(Trade trade) private view returns (bool) {
-        uint256 feePartsPer = configuration.partsPer();
-        uint256 amountConjugate = trade.amount.div(trade.rate);
+        int256 feePartsPer = int256(configuration.partsPer());
+        int256 amountConjugate = trade.amount.div(trade.rate);
         uint256 rollingVolume = (LiquidityRole.Taker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
-        return (trade.singleFees.conjugate <= amountConjugate.mul(configuration.getTradeTakerFee(0, 0)).div(feePartsPer))
-        && (trade.singleFees.conjugate == amountConjugate.mul(configuration.getTradeTakerFee(0, rollingVolume)).div(feePartsPer))
-        && (trade.singleFees.conjugate >= amountConjugate.mul(configuration.getTradeTakerMinimumFee(0)).div(feePartsPer));
+        return (trade.singleFees.conjugate <= amountConjugate.mul(int(configuration.getTradeTakerFee(0, 0))).div(feePartsPer))
+        && (trade.singleFees.conjugate == amountConjugate.mul(int(configuration.getTradeTakerFee(0, rollingVolume))).div(feePartsPer))
+        && (trade.singleFees.conjugate >= amountConjugate.mul(int(configuration.getTradeTakerMinimumFee(0))).div(feePartsPer));
     }
 
     function isGenuineByBuyer(Trade trade) private view returns (bool) {
