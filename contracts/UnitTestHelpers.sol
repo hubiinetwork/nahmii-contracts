@@ -30,16 +30,16 @@ contract UnitTestHelpers {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function callToTransferFromDepositedToStagedBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token) public {
+    function callToTransferFromActiveToStagedBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token) public {
         require(clientFunds != address(0));
         ClientFund sc = ClientFund(clientFunds);
-        sc.transferFromDepositedToStagedBalance(sourceWallet, destWallet, amount, token);
+        sc.transferFromActiveToStagedBalance(sourceWallet, destWallet, amount, token);
     }
 
-    function callToWithdrawFromDepositedBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token) public {
+    function callToWithdrawFromActiveBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token) public {
         require(clientFunds != address(0));
         ClientFund sc = ClientFund(clientFunds);
-        sc.withdrawFromDepositedBalance(sourceWallet, destWallet, amount, token);
+        sc.withdrawFromActiveBalance(sourceWallet, destWallet, amount, token);
     }
 
     function callToDepositEthersToStagedBalance(address clientFunds, address destWallet) public payable {
