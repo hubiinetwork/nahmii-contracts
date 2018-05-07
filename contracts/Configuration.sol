@@ -123,7 +123,11 @@ contract Configuration {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyOwner {
+    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    public
+    onlyOwner
+    onlyLaterBlockNumber(blockNumber)
+    {
         DiscountableFee storage fee = tradeMakerFees[blockNumber];
         setDiscountableFee(fee, tradeMakerFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
         emit SetTradeMakerFeeEvent(blockNumber, nominal, discountTiers, discountValues);
@@ -153,7 +157,11 @@ contract Configuration {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyOwner {
+    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    public
+    onlyOwner
+    onlyLaterBlockNumber(blockNumber)
+    {
         DiscountableFee storage fee = tradeTakerFees[blockNumber];
         setDiscountableFee(fee, tradeTakerFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
         emit SetTradeTakerFeeEvent(blockNumber, nominal, discountTiers, discountValues);
@@ -183,7 +191,11 @@ contract Configuration {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyOwner {
+    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    public
+    onlyOwner
+    onlyLaterBlockNumber(blockNumber)
+    {
         DiscountableFee storage fee = paymentFees[blockNumber];
         setDiscountableFee(fee, paymentFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
         emit SetPaymentFeeEvent(blockNumber, nominal, discountTiers, discountValues);
@@ -210,7 +222,11 @@ contract Configuration {
     /// @notice Set trade maker minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal) public {
+    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal)
+    public
+    onlyOwner
+    onlyLaterBlockNumber(blockNumber)
+    {
         StaticFee storage fee = tradeMakerMinimumFees[blockNumber];
         setStaticFee(fee, tradeMakerMinimumFeeBlockNumbers, blockNumber, nominal);
         emit SetTradeMakerMinimumFeeEvent(blockNumber, nominal);
@@ -237,7 +253,11 @@ contract Configuration {
     /// @notice Set trade taker minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal) public {
+    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal)
+    public
+    onlyOwner
+    onlyLaterBlockNumber(blockNumber)
+    {
         StaticFee storage fee = tradeTakerMinimumFees[blockNumber];
         setStaticFee(fee, tradeTakerMinimumFeeBlockNumbers, blockNumber, nominal);
         emit SetTradeTakerMinimumFeeEvent(blockNumber, nominal);
@@ -264,7 +284,11 @@ contract Configuration {
     /// @notice Set payment minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal) public {
+    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal)
+    public
+    onlyOwner
+    onlyLaterBlockNumber(blockNumber)
+    {
         StaticFee storage fee = paymentMinimumFees[blockNumber];
         setStaticFee(fee, paymentMinimumFeeBlockNumbers, blockNumber, nominal);
         emit SetPaymentMinimumFeeEvent(blockNumber, nominal);
@@ -301,8 +325,7 @@ contract Configuration {
         uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) internal onlyOwner {
         require(discountTiers.length == discountValues.length);
 
-        if (0 == feeBlockNumbers.length || blockNumber != fee.blockNumber)
-            addOrdered(feeBlockNumbers, blockNumber);
+        feeBlockNumbers.push(blockNumber);
 
         fee.blockNumber = blockNumber;
         fee.nominal = nominal;
@@ -324,27 +347,10 @@ contract Configuration {
     function setStaticFee(StaticFee storage fee, uint256[] storage feeBlockNumbers,
         uint256 blockNumber, int256 nominal) internal onlyOwner {
 
-        if (0 == feeBlockNumbers.length || blockNumber != fee.blockNumber)
-            addOrdered(feeBlockNumbers, blockNumber);
+        feeBlockNumbers.push(blockNumber);
 
         fee.blockNumber = blockNumber;
         fee.nominal = nominal;
-    }
-
-    function addOrdered(uint256[] storage arr, uint256 num) internal {
-        uint256 i = 0;
-        while (i < arr.length && arr[i] < num)
-            i++;
-
-        if (i < arr.length) {
-            arr.push(arr[arr.length - 1]);
-
-            for (uint256 j = arr.length - 2; j > i; j--)
-                arr[j] = arr[j - 1];
-
-            arr[i] = num;
-        } else
-            arr.push(num);
     }
 
     function getIndexOfLower(uint256[] arr, uint256 num) internal pure returns (uint256) {
@@ -371,6 +377,11 @@ contract Configuration {
 
     modifier onlyOwner() {
         require(msg.sender == owner);
+        _;
+    }
+
+    modifier onlyLaterBlockNumber(uint256 blockNumber) {
+        require(blockNumber > block.number);
         _;
     }
 }
