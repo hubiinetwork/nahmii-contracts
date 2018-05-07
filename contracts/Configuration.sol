@@ -40,7 +40,7 @@ contract Configuration {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint public partsPer = 1e18;
+    uint constant public PARTS_PER = 1e18;
     address public owner;
 
     mapping(uint => DiscountableFee) tradeMakerFees;
@@ -99,13 +99,6 @@ contract Configuration {
             // Emit event
             emit OwnerChangedEvent(oldOwner, newOwner);
         }
-    }
-
-    /// @notice Set amount that represents entirety (100%). Default is one quintillion (10**18).
-    /// @param _partsPer Amount that represents the entirety
-    function setPartsPer(uint _partsPer) public onlyOwner {
-        partsPer = _partsPer;
-        emit SetPartsPerEvent(_partsPer);
     }
 
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value
@@ -320,7 +313,7 @@ contract Configuration {
         uint index = getIndexOfLowerTier(fee.discounts, discountTier);
         if (0 < index) {
             TieredDiscount storage discount = fee.discounts[index - 1];
-            return fee.nominal * (partsPer - discount.value) / partsPer;
+            return fee.nominal * (PARTS_PER - discount.value) / PARTS_PER;
         } else
             return fee.nominal;
     }
