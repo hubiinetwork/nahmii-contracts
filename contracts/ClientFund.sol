@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 
 import "./SafeMathInt.sol";
 import "./ERC20.sol";
