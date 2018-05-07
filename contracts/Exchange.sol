@@ -167,7 +167,7 @@ contract Exchange {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor (address _owner) public notNullAddress(_owner) {
+    constructor(address _owner) public notNullAddress(_owner) {
         owner = _owner;
     }
 
@@ -258,8 +258,12 @@ contract Exchange {
         emit ChallengeFraudulentDealByPaymentEvent(payment, msg.sender, seizedWallet);
     }
 
-    function challengeFraudulentDealBySuccessiveTrades(Trade firstTrade, Trade lastTrade,
-        address wallet, address currency)
+    function challengeFraudulentDealBySuccessiveTrades(
+        Trade firstTrade,
+        Trade lastTrade,
+        address wallet,
+        address currency
+    )
     public
     challengeableTradePair(firstTrade, lastTrade, wallet, currency)
     {
@@ -286,10 +290,17 @@ contract Exchange {
         emit ChallengeFraudulentDealBySuccessiveTradesEvent(firstTrade, lastTrade, msg.sender, wallet);
     }
 
-    function isGenuineSuccessiveTradeBalances(Trade firstTrade, Trade lastTrade,
-        CurrencyRole firstCurrencyRole, CurrencyRole lastCurrencyRole,
-        TraderRole firstTraderRole, TraderRole lastTraderRole)
-    private pure returns (bool)
+    function isGenuineSuccessiveTradeBalances(
+        Trade firstTrade,
+        Trade lastTrade,
+        CurrencyRole firstCurrencyRole,
+        CurrencyRole lastCurrencyRole,
+        TraderRole firstTraderRole,
+        TraderRole lastTraderRole
+    )
+    private
+    pure
+    returns (bool)
     {
         IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TraderRole.Buyer == firstTraderRole ? firstTrade.buyer.balances : firstTrade.seller.balances);
         IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (TraderRole.Buyer == lastTraderRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
@@ -300,10 +311,16 @@ contract Exchange {
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
-    function isGenuineSuccessiveTradeNetFees(Trade firstTrade, Trade lastTrade,
-        CurrencyRole firstCurrencyRole, CurrencyRole lastCurrencyRole,
-        TraderRole firstTraderRole, TraderRole lastTraderRole)
-    private pure returns (bool)
+    function isGenuineSuccessiveTradeNetFees(Trade firstTrade,
+        Trade lastTrade,
+        CurrencyRole firstCurrencyRole,
+        CurrencyRole lastCurrencyRole,
+        TraderRole firstTraderRole,
+        TraderRole lastTraderRole
+    )
+    private
+    pure
+    returns (bool)
     {
         IntendedConjugateInt256 memory firstIntendedConjugateNetFees = (TraderRole.Buyer == firstTraderRole ? firstTrade.buyer.netFees : firstTrade.seller.netFees);
         IntendedConjugateInt256 memory lastIntendedConjugateNetFees = (TraderRole.Buyer == lastTraderRole ? lastTrade.buyer.netFees : lastTrade.seller.netFees);
