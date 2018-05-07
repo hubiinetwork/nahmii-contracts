@@ -52,7 +52,7 @@ module.exports = (glob) => {
 
         describe('partsPer()', () => {
             it('should get the value initialized at construction time', async () => {
-                const partsPer = await instance.partsPer.call();
+                const partsPer = await instance.PARTS_PER.call();
                 partsPer.toNumber().should.equal(1e18);
             });
         });
