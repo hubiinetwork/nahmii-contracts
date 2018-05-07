@@ -1,7 +1,7 @@
 pragma solidity ^0.4.21;
 
-import "./SafeMath.sol";
-import "./SafeMathInt.sol";
+import "../SafeMathUint.sol";
+import "../SafeMathInt.sol";
 
 /**
  * @title     SafeMathUIntInt
@@ -16,18 +16,18 @@ library SafeMathUintInt {
 
     function u_add(uint256 a, int256 b) internal pure returns (uint256) {
         if (b >= 0) {
-            return SafeMath.add(a, uint256(b));
+            return SafeMathUint.add(a, uint256(b));
         }
         uint256 b1 = ~uint256(b) + 1;
-        return SafeMath.sub(a, b1);
+        return SafeMathUint.sub(a, b1);
     }
 
     function u_sub(uint256 a, int256 b) internal pure returns (uint256) {
         if (b >= 0) {
-            return SafeMath.sub(a, uint256(b));
+            return SafeMathUint.sub(a, uint256(b));
         }
         uint256 b1 = ~uint256(b) + 1;
-        return SafeMath.add(a, b1);
+        return SafeMathUint.add(a, b1);
     }
 
     function s_add(int256 a, uint256 b) internal pure returns (int256) {
