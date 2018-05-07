@@ -57,28 +57,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('setPartsPer()', () => {
-            describe('if called with sender that is owner', () => {
-                after(async () => {
-                    await instance.setPartsPer(1e18);
-                });
-
-                it('should successfully set new value and emit event', async () => {
-                    const result = await instance.setPartsPer(1e15);
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetPartsPerEvent');
-                    const partsPer = await instance.partsPer.call();
-                    partsPer.toNumber().should.equal(1e15);
-                });
-            });
-
-            describe('if called with sender that is not owner', () => {
-                it('fail to set new value', async () => {
-                    instance.setPartsPer(1e15, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-        });
-
         describe('getTradeMakerFee()', () => {
             before(async () => {
                 await instance.setTradeMakerFee(0, 1e15, [1, 10], [1e17, 2e17])
