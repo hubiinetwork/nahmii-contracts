@@ -7,11 +7,14 @@
  */
 pragma solidity ^0.4.21;
 
+import "./SafeMathInt.sol";
+
 /**
 @title Configuration
 @notice An oracle for configurations such as fees, challenge timeouts and stakes
 */
 contract Configuration {
+    using SafeMathInt for int256;
 
     //
     // Custom types
@@ -313,7 +316,7 @@ contract Configuration {
         uint256 index = getIndexOfLowerTier(fee.discounts, discountTier);
         if (0 < index) {
             TieredDiscount storage discount = fee.discounts[index - 1];
-            return fee.nominal * (PARTS_PER - discount.value) / PARTS_PER;
+            return fee.nominal.mul(PARTS_PER.sub(discount.value)).div(PARTS_PER);
         } else
             return fee.nominal;
     }
