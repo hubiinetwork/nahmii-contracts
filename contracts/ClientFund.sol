@@ -7,7 +7,7 @@
  */
 pragma solidity ^0.4.21;
 
-import "./SafeMathUint.sol";
+import "./SafeMathInt.sol";
 import "./ERC20.sol";
 
 /**
@@ -16,19 +16,19 @@ import "./ERC20.sol";
 @dev Factored out from previous Trade smart contract.
 */
 contract ClientFund {
-    using SafeMathUint for uint256;
+    using SafeMathInt for int256;
 
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct DepositInfo {
-        uint256 amount;
+        int256 amount;
         uint256 timestamp;
         address token;      //0 for ethers
     }
 
     struct WithdrawalInfo {
-        uint256 amount;
+        int256 amount;
         uint256 timestamp;
         address token;      //0 for ethers
     }
@@ -39,13 +39,17 @@ contract ClientFund {
         DepositInfo[] deposits;
         WithdrawalInfo[] withdrawals;
 
-        // Active balance of ethers and tokens.
-        uint256 activeEtherBalance;
-        mapping (address => uint256) activeTokenBalance;
+        // Deposited balance of ethers and tokens.
+        int256 depositedEtherBalance;
+        mapping (address => int256) depositedTokenBalance;
 
         // Staged balance of ethers and tokens.
-        uint256 stagedEtherBalance;
-        mapping (address => uint256) stagedTokenBalance;
+        int256 stagedEtherBalance;
+        mapping (address => int256) stagedTokenBalance;
+
+        // Settled balance of ethers and tokens.
+        int256 settledEtherBalance;
+        mapping (address => int256) settledTokenBalance;
     }
 
     //
@@ -54,20 +58,21 @@ contract ClientFund {
     address private owner;
     mapping (address => WalletInfo) private walletInfoMap;
 
-    uint256 serviceActivationTimeout;
-    mapping (address => uint256) registeredServicesMap;
-    mapping (uint256 => bool) disabledServicesMap;
+    uint256 private serviceActivationTimeout;
+    mapping (address => uint256) private registeredServicesMap;
+    mapping (address => mapping (address => bool)) private disabledServicesMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
-    event DepositEvent(address from, uint256 amount, address token); //token==0 for ethers
-    event TransferFromActiveToStagedBalanceEvent(address from, address to, uint256 amount, address token); //token==0 for ethers
-    event WithdrawFromActiveBalanceEvent(address from, address to, uint256 amount, address token); //token==0 for ethers
-    event DepositToStagedBalance(address to, uint256 amount, address token); //token==0 for ethers
-    event UnstageEvent(address from, uint256 amount, address token); //token==0 for ethers
-    event WithdrawEvent(address to, uint256 amount, address token);  //token==0 for ethers
+    event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
+    event TransferFromDepositedToSettledBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
+    event WithdrawFromDepositedBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
+    event DepositToSettledBalance(address to, int256 amount, address token); //token==0 for ethers
+    event StageEvent(address from, int256 amount, address token); //token==0 for ethers
+    event UnstageEvent(address from, int256 amount, address token); //token==0 for ethers
+    event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
     event RegisterServiceEvent(address service);
     event EnableRegisteredServiceEvent(address wallet, address service);
     event DisableRegisteredServiceEvent(address wallet, address service);
@@ -75,7 +80,7 @@ contract ClientFund {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    function ClientFund(address _owner) public notNullAddress(_owner) {
+    constructor(address _owner) public notNullAddress(_owner) {
         owner = _owner;
         serviceActivationTimeout = 30 * 3600; //30 minutes
     }
@@ -104,36 +109,36 @@ contract ClientFund {
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function () public notOwner payable {
-        require(msg.value > 0);
+        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
-        //add to per-wallet active balance
-        walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.add(msg.value);
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(msg.value, block.timestamp, address(0)));
+        //add to per-wallet deposited balance
+        walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.add_nn(amount);
+        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
 
         //emit event
-        emit DepositEvent(msg.sender, msg.value, address(0));
+        emit DepositEvent(msg.sender, amount, address(0));
     }
 
     //NOTE: msg.sender must call ERC20.approve first
-    function depositTokens(address token, uint256 amount) notOwner public {
+    function depositTokens(address token, int256 amount) notOwner public {
         ERC20 erc20_token;
 
         require(token != address(0));
-        require(amount > 0);
+        require(amount.isNonZeroPositiveInt256());
 
         //try to execute token transfer
         erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(msg.sender, this, amount));
+        require(erc20_token.transferFrom(msg.sender, this, uint256(amount)));
 
-        //add to per-wallet active balance
-        walletInfoMap[msg.sender].activeTokenBalance[token] = walletInfoMap[msg.sender].activeTokenBalance[token].add(amount);
+        //add to per-wallet deposited balance
+        walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].add_nn(amount);
         walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, token));
 
         //emit event
         emit DepositEvent(msg.sender, amount, token);
     }
 
-    function deposit(address wallet, uint index) public view onlyOwner returns (uint256 amount, uint256 timestamp, address token) {
+    function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
         require(index < walletInfoMap[wallet].deposits.length);
 
         amount = walletInfoMap[wallet].deposits[index].amount;
@@ -148,47 +153,50 @@ contract ClientFund {
     //
     // Balance functions
     // -----------------------------------------------------------------------------------------------------------------
-    function activeBalance(address wallet, address token) public view returns (uint256) {
+    function depositedBalance(address wallet, address token) public view returns (int256) {
         require(wallet != address(0));
 
-        return token == address(0) ? walletInfoMap[wallet].activeEtherBalance : walletInfoMap[wallet].activeTokenBalance[token];
+        return token == address(0) ? walletInfoMap[wallet].depositedEtherBalance : walletInfoMap[wallet].depositedTokenBalance[token];
     }
 
-    function stagedBalance(address wallet, address token) public view returns (uint256) {
+    function stagedBalance(address wallet, address token) public view returns (int256) {
         require(wallet != address(0));
 
         return token == address(0) ? walletInfoMap[wallet].stagedEtherBalance : walletInfoMap[wallet].stagedTokenBalance[token];
     }
 
-    function transferFromActiveToStagedBalance(address sourceWallet, address destWallet, uint256 amount, address token) public notOwner {
+    function settledBalance(address wallet, address token) public view returns (int256) {
+        require(wallet != address(0));
+
+        return token == address(0) ? walletInfoMap[wallet].settledEtherBalance : walletInfoMap[wallet].settledTokenBalance[token];
+    }
+
+    //
+    // Transfers functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function transferFromDepositedToSettledBalance(address sourceWallet, address destWallet, int256 amount, address token) public notOwner {
         require(isAcceptedServiceForWallet(msg.sender, sourceWallet));
         require(isAcceptedServiceForWallet(msg.sender, destWallet));
         require(sourceWallet != address(0));
         require(destWallet != address(0));
         require(sourceWallet != destWallet);
-        require(amount > 0);
+        require(SafeMathInt.isNonZeroPositiveInt256(amount));
 
         if (token == address(0)) {
-            //check for sufficient balance
-            require(amount <= walletInfoMap[sourceWallet].activeEtherBalance);
-
-            //move from active balance to staged
-            walletInfoMap[sourceWallet].activeEtherBalance = walletInfoMap[sourceWallet].activeEtherBalance.sub(amount);
-            walletInfoMap[destWallet].stagedEtherBalance = walletInfoMap[destWallet].stagedEtherBalance.add(amount);
+            //move from deposited balance to settled (sub_nn will check for sufficient balance)
+            walletInfoMap[sourceWallet].depositedEtherBalance = walletInfoMap[sourceWallet].depositedEtherBalance.sub_nn(amount);
+            walletInfoMap[destWallet].settledEtherBalance = walletInfoMap[destWallet].stagedEtherBalance.add(amount);
         } else {
-            //check for sufficient balance
-            require(amount <= walletInfoMap[sourceWallet].activeTokenBalance[token]);
-
-            //move from active balance to staged
-            walletInfoMap[sourceWallet].activeTokenBalance[token] = walletInfoMap[sourceWallet].activeTokenBalance[token].sub(amount);
-            walletInfoMap[destWallet].stagedTokenBalance[token] = walletInfoMap[destWallet].stagedTokenBalance[token].add(amount);
+            //move from deposited balance to settled (sub_nn will check for sufficient balance)
+            walletInfoMap[sourceWallet].depositedTokenBalance[token] = walletInfoMap[sourceWallet].depositedTokenBalance[token].sub_nn(amount);
+            walletInfoMap[destWallet].settledTokenBalance[token] = walletInfoMap[destWallet].settledTokenBalance[token].add(amount);
         }
 
         //emit event
-        emit TransferFromActiveToStagedBalanceEvent(sourceWallet, destWallet, amount, token);
+        emit TransferFromDepositedToSettledBalanceEvent(sourceWallet, destWallet, amount, token);
     }
 
-    function withdrawFromActiveBalance(address sourceWallet, address destWallet, uint256 amount, address token) public notOwner {
+    function withdrawFromDepositedBalance(address sourceWallet, address destWallet, int256 amount, address token) public notOwner {
         ERC20 erc20_token;
 
         require(isAcceptedServiceForWallet(msg.sender, sourceWallet));
@@ -196,81 +204,132 @@ contract ClientFund {
         require(sourceWallet != address(0));
         require(destWallet != address(0));
         require(sourceWallet != destWallet);
-        require(amount > 0);
+        require(amount.isNonZeroPositiveInt256());
 
         if (token == address(0)) {
-            //check for sufficient balance
-            require(amount <= walletInfoMap[sourceWallet].activeEtherBalance);
-            walletInfoMap[sourceWallet].activeEtherBalance = walletInfoMap[sourceWallet].activeEtherBalance.sub(amount);
+            //(sub_nn will check for sufficient balance)
+            walletInfoMap[sourceWallet].depositedEtherBalance = walletInfoMap[sourceWallet].depositedEtherBalance.sub_nn(amount);
 
             //execute transfer
-            destWallet.transfer(amount);
+            destWallet.transfer(uint256(amount));
         } else {
-            //check for sufficient balance
-            require(amount <= walletInfoMap[sourceWallet].activeTokenBalance[token]);
-            walletInfoMap[sourceWallet].activeTokenBalance[token] = walletInfoMap[sourceWallet].activeTokenBalance[token].sub(amount);
+            //(sub_nn will check for sufficient balance)
+            walletInfoMap[sourceWallet].depositedTokenBalance[token] = walletInfoMap[sourceWallet].depositedTokenBalance[token].sub_nn(amount);
 
             //execute transfer
             erc20_token = ERC20(token);
-            erc20_token.transfer(destWallet, amount);
+            erc20_token.transfer(destWallet, uint256(amount));
         }
 
         //emit event
-        emit WithdrawFromActiveBalanceEvent(sourceWallet, destWallet, amount, token);
+        emit WithdrawFromDepositedBalanceEvent(sourceWallet, destWallet, amount, token);
     }
 
-    function depositEthersToStagedBalance(address destWallet) public payable notOwner {
+    function depositEthersToSettledBalance(address destWallet) public payable notOwner {
         require(isAcceptedServiceForWallet(msg.sender, destWallet));
         require(destWallet != address(0));
-        require(msg.value > 0);
+        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet staged balance
-        walletInfoMap[destWallet].stagedEtherBalance = walletInfoMap[destWallet].stagedEtherBalance.add(msg.value);
+        walletInfoMap[destWallet].settledEtherBalance = walletInfoMap[destWallet].settledEtherBalance.add_nn(amount);
 
         //emit event
-        emit DepositToStagedBalance(destWallet, msg.value, address(0));
+        emit DepositToSettledBalance(destWallet, amount, address(0));
     }
 
     //NOTE: msg.sender must call ERC20.approve first
-    function depositTokensToStagedBalance(address destWallet, address token, uint256 amount) public notOwner {
+    function depositTokensToSettledBalance(address destWallet, address token, int256 amount) public notOwner {
         ERC20 erc20_token;
 
         require(isAcceptedServiceForWallet(msg.sender, destWallet));
         require(destWallet != address(0));
-        require(amount > 0);
+        require(amount.isNonZeroPositiveInt256());
 
-        //add to per-wallet staged balance
-        walletInfoMap[destWallet].stagedTokenBalance[token] = walletInfoMap[destWallet].stagedTokenBalance[token].add(amount);
+        //add to per-wallet settled balance
+        walletInfoMap[destWallet].settledTokenBalance[token] = walletInfoMap[destWallet].settledTokenBalance[token].add_nn(amount);
 
         //try to execute token transfer
         erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(msg.sender, destWallet, amount));
+        require(erc20_token.transferFrom(msg.sender, destWallet, uint256(amount)));
 
         //emit event
-        emit DepositToStagedBalance(destWallet, amount, token);
+        emit DepositToSettledBalance(destWallet, amount, token);
     }
 
-    function unstage(uint256 amount, address token) public notOwner {
+    function stage(int256 amount, address token) public notOwner {
+        require(amount.isPositiveInt256());
+        int256 amount_copy;
+        int256 to_move;
+
         if (token == address(0)) {
             //clamp amount to move
-            if (amount > walletInfoMap[msg.sender].stagedEtherBalance)
-                amount = walletInfoMap[msg.sender].stagedEtherBalance;
+            amount = amount.clampMax(walletInfoMap[msg.sender].depositedEtherBalance.add(walletInfoMap[msg.sender].settledEtherBalance));
+            if (amount <= 0)
+                return;
+
+            amount_copy = amount;
+
+            //move from settled balance to staged, if balance greater than zero
+            if (walletInfoMap[msg.sender].settledEtherBalance > 0) {
+                to_move = amount.clampMax(walletInfoMap[msg.sender].settledEtherBalance);
+
+                walletInfoMap[msg.sender].settledEtherBalance = walletInfoMap[msg.sender].settledEtherBalance.sub(to_move);
+                amount = amount.sub(to_move);
+            }
+
+            //move (remaining) from deposited balance to staged
+            walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.sub_nn(amount);
+
+            //add to staged balance
+            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add_nn(amount_copy);
+        } else {
+            //clamp amount to move
+            amount = amount.clampMax(walletInfoMap[msg.sender].depositedTokenBalance[token].add(walletInfoMap[msg.sender].settledTokenBalance[token]));
+            if (amount <= 0)
+                return;
+
+            amount_copy = amount;
+
+            //move from settled balance to staged, if balance greater than zero
+            if (walletInfoMap[msg.sender].settledTokenBalance[token] > 0) {
+                to_move = amount.clampMax(walletInfoMap[msg.sender].settledTokenBalance[token]);
+
+                walletInfoMap[msg.sender].settledTokenBalance[token] = walletInfoMap[msg.sender].settledTokenBalance[token].sub(to_move);
+                amount = amount.sub(to_move);
+            }
+
+            //move (remaining) from deposited balance to staged
+            walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].sub_nn(amount);
+
+            //add to staged balance
+            walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount_copy);
+        }
+
+        //emit event
+        emit StageEvent(msg.sender, amount, token);
+    }
+
+    function unstage(int256 amount, address token) public notOwner {
+        require(amount.isPositiveInt256());
+
+        if (token == address(0)) {
+            //clamp amount to move
+            amount = amount.clampMax(walletInfoMap[msg.sender].stagedEtherBalance);
             if (amount == 0)
                 return;
 
-            //move from staged balance to active
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
-            walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.add(amount);
+            //move from staged balance to deposited
+            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub_nn(amount);
+            walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.add_nn(amount);
         } else {
             //clamp amount to move
-            if (amount > walletInfoMap[msg.sender].stagedTokenBalance[token])
-                amount = walletInfoMap[msg.sender].stagedTokenBalance[token];
+            amount = amount.clampMax(walletInfoMap[msg.sender].stagedTokenBalance[token]);
             if (amount == 0)
                 return;
 
             //move between balances
-            walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub(amount);
-            walletInfoMap[msg.sender].activeTokenBalance[token] = walletInfoMap[msg.sender].activeTokenBalance[token].add(amount);
+            walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub_nn(amount);
+            walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].add_nn(amount);
         }
 
         //emit event
@@ -280,45 +339,45 @@ contract ClientFund {
     //
     // Withdrawal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function withdrawEthers(uint256 amount) public notOwner {
-        require(amount > 0);
+    function withdrawEthers(int256 amount) public notOwner {
+        require(amount.isNonZeroPositiveInt256());
 
         //check for sufficient balance
         require(amount <= walletInfoMap[msg.sender].stagedEtherBalance);
 
         //subtract to per-wallet staged balance
-        walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
+        walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub_nn(amount);
         walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, address(0)));
 
         //execute transfer
-        msg.sender.transfer(amount);
+        msg.sender.transfer(uint256(amount));
 
         //emit event
         emit WithdrawEvent(msg.sender, amount, address(0));
     }
 
-    function withdrawTokens(uint256 amount, address token) public notOwner {
+    function withdrawTokens(int256 amount, address token) public notOwner {
         ERC20 erc20_token;
 
         require(token != address(0));
-        require(amount > 0);
+        require(amount.isNonZeroPositiveInt256());
 
         //check for sufficient balance
         require(amount <= walletInfoMap[msg.sender].stagedTokenBalance[token]);
 
         //subtract to per-wallet staged balance
-        walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub(amount);
+        walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub_nn(amount);
         walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, token));
 
         //execute transfer
         erc20_token = ERC20(token);
-        erc20_token.transfer(msg.sender, amount);
+        erc20_token.transfer(msg.sender, uint256(amount));
 
         //emit event
         emit WithdrawEvent(msg.sender, amount, token);
     }
 
-    function withdrawal(address wallet, uint index) public view onlyOwner returns (uint256 amount, uint256 timestamp, address token) {
+    function withdrawal(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
         require(index < walletInfoMap[wallet].withdrawals.length);
 
         amount = walletInfoMap[wallet].withdrawals[index].amount;
@@ -353,7 +412,7 @@ contract ClientFund {
         require(registeredServicesMap[service] != 0);
 
         //enable service for given wallet
-        disabledServicesMap[indexFromWalletService(msg.sender, service)] = false;
+        disabledServicesMap[service][msg.sender] = false;
 
         //emit event
         emit EnableRegisteredServiceEvent(msg.sender, service);
@@ -366,7 +425,7 @@ contract ClientFund {
         require(registeredServicesMap[service] != 0);
 
         //disable service for given wallet
-        disabledServicesMap[indexFromWalletService(msg.sender, service)] = true;
+        disabledServicesMap[service][msg.sender] = true;
 
         //emit event
         emit DisableRegisteredServiceEvent(msg.sender, service);
@@ -375,12 +434,9 @@ contract ClientFund {
     //
     // Private methods
     // -----------------------------------------------------------------------------------------------------------------
-    function indexFromWalletService(address wallet, address service) private pure returns (uint256) {
-        return uint256(keccak256(wallet, service));
-    }
 
     function isWalletServiceDisabled(address wallet, address service) private view returns (bool) {
-        return disabledServicesMap[indexFromWalletService(wallet, service)];
+        return disabledServicesMap[service][wallet];
     }
 
     function isAcceptedServiceForWallet(address service, address wallet) private view returns (bool) {
@@ -390,7 +446,7 @@ contract ClientFund {
             return false;
         if (block.timestamp < registeredServicesMap[service])
             return false;
-        return !disabledServicesMap[indexFromWalletService(wallet, service)];
+        return !disabledServicesMap[service][wallet];
     }
 
     //

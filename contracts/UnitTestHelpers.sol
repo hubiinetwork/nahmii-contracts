@@ -21,7 +21,7 @@ contract UnitTestHelpers {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    function UnitTestHelpers() public {
+    constructor() public {
     }
 
     function () public payable {
@@ -30,28 +30,28 @@ contract UnitTestHelpers {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function callToTransferFromActiveToStagedBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token) public {
+    function callToTransferFromDepositedToSettledBalance(address clientFunds, address sourceWallet, address destWallet, int256 amount, address token) public {
         require(clientFunds != address(0));
         ClientFund sc = ClientFund(clientFunds);
-        sc.transferFromActiveToStagedBalance(sourceWallet, destWallet, amount, token);
+        sc.transferFromDepositedToSettledBalance(sourceWallet, destWallet, amount, token);
     }
 
-    function callToWithdrawFromActiveBalance(address clientFunds, address sourceWallet, address destWallet, uint256 amount, address token) public {
+    function callToWithdrawFromDepositedBalance(address clientFunds, address sourceWallet, address destWallet, int256 amount, address token) public {
         require(clientFunds != address(0));
         ClientFund sc = ClientFund(clientFunds);
-        sc.withdrawFromActiveBalance(sourceWallet, destWallet, amount, token);
+        sc.withdrawFromDepositedBalance(sourceWallet, destWallet, amount, token);
     }
 
-    function callToDepositEthersToStagedBalance(address clientFunds, address destWallet) public payable {
+    function callToDepositEthersToSettledBalance(address clientFunds, address destWallet) public payable {
         require(clientFunds != address(0));
         ClientFund sc = ClientFund(clientFunds);
-        sc.depositEthersToStagedBalance.value(msg.value)(destWallet);
+        sc.depositEthersToSettledBalance.value(msg.value)(destWallet);
     }
 
-    function callToDepositTokensToStagedBalance(address clientFunds, address destWallet, address token, uint256 amount) public {
+    function callToDepositTokensToSettledBalance(address clientFunds, address destWallet, address token, int256 amount) public {
         require(clientFunds != address(0));
         ClientFund sc = ClientFund(clientFunds);
-        sc.depositTokensToStagedBalance(destWallet, token, amount);
+        sc.depositTokensToSettledBalance(destWallet, token, amount);
     }
 
     function erc20_approve(address token, address spender, uint256 value) public {
