@@ -1,6 +1,6 @@
 module.exports = function (glob) {
 
-	describe("ReserveFund", function () {
+	describe.only("ReserveFund", function () {
 
 		var ethers = require('ethers');
 
@@ -899,7 +899,7 @@ module.exports = function (glob) {
 
 				console.log("bbIn=" + bbIn);
 
-				console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance + "blockSpan=" + blockSpan);
+				console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance + " blockSpan=" + blockSpan);
 				const fraction =  (bbIn / ( aggregateEtherBalance * blockSpan) );
 				const amount = aggregateAccrualBalance * fraction;
 
@@ -909,9 +909,14 @@ module.exports = function (glob) {
 				const expectedPostUserBalance = ETHER_DEPOSIT_AMOUNT_D[0] + ETHER_DEPOSIT_AMOUNT_D[1] + ETHER_DEPOSIT_AMOUNT_D[2];
 				const expectedPostAggregateAccrualBalance = aggregateAccrualBalance;
 
+                await glob.web3ReserveFund.closeAccrualPeriod();
+
 				await glob.web3ReserveFund.claimAccrual('0x0000000000000000000000000000000000000000', { from: glob.user_d });
 
-				// 
+				const result = await glob.web3ReserveFund.getClaimAccrualData();
+				console.log(result.map((n) => n.toString()));
+
+				//
 				// Check post-claim balances
 				//
 				var postAggregateEtherBalance = await glob.web3ReserveFund.activeBalance(0, 0);
@@ -920,9 +925,9 @@ module.exports = function (glob) {
 
 				assert(postAggregateEtherBalance.eq(expectedPostAggregateEtherBalance),
 					 'Post aggregate-ETH balance differs: ' + postAggregateEtherBalance + ' but expected:' + expectedPostAggregateEtherBalance);
-				assert(postAggregateAccrualBalance.eq(expectedPostAggregateAccrualBalance), 
+				assert(postAggregateAccrualBalance.eq(expectedPostAggregateAccrualBalance),
 					'Post accrual-ETH balance differs: ' + postAggregateAccrualBalance + ' but expected:' + expectedPostAggregateAccrualBalance);
-				assert(postUserBalance.eq(expectedPostUserBalance), 
+				assert(postUserBalance.eq(expectedPostUserBalance),
 						'Post staged-ETH  user balance differs: ' + postUserBalance + ' but expected:' + expectedPostUserBalance);
 			}
 
