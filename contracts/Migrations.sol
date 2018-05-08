@@ -1,15 +1,17 @@
 /*!
  * Hubii - Omphalos
  *
+ * Compliant with the Omphalos specification v0.12.
+ *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 
 contract Migrations {
     address public owner;
     uint public last_completed_migration;
 
-    function Migrations() public {
+    constructor() public {
         owner = msg.sender;
     }
 

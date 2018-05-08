@@ -5,7 +5,10 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
+
+import "./SafeMathInt.sol";
+import "./ERC20.sol";
 
 /**
 @title Community vote
@@ -26,7 +29,7 @@ contract CommunityVote {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    function CommunityVote(address _owner) public notNullAddress(_owner) {
+    constructor(address _owner) public notNullAddress(_owner) {
         owner = _owner;
     }
 
@@ -44,6 +47,21 @@ contract CommunityVote {
             // Emit event
             emit OwnerChangedEvent(oldOwner, newOwner);
         }
+    }
+
+    //
+    // Results functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function getDoubleSpenders() public pure returns(uint256) {
+        return 0;
+    }
+
+    function getHighestAbsoluteDealNonce() public pure returns(uint256) {
+        return 0;
+    }
+    
+    function isDataAvailable() public pure returns(bool) {
+        return false;
     }
 
     //
