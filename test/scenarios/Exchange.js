@@ -122,7 +122,7 @@ module.exports = (glob) => {
 
         describe('isSeizedWallet()', () => {
             it('should equal value initialized', async () => {
-                const result = await ethersExchange.isSeizedWallet('0x000000000000000000000000000000000000000a');
+                const result = await ethersExchange.isSeizedWallet(glob.user_a);
                 result.should.be.false;
             });
         });
@@ -163,7 +163,7 @@ module.exports = (glob) => {
                         conjugate: '0x0000000000000000000000000000000000000002'
                     },
                     buyer: {
-                        _address: '0x000000000000000000000000000000000000000a',
+                        _address: glob.user_a,
                         nonce: utils.bigNumberify(1),
                         rollingVolume: utils.bigNumberify(0),
                         liquidityRole: liquidityRoles.indexOf('Maker'),
@@ -190,7 +190,7 @@ module.exports = (glob) => {
                         }
                     },
                     seller: {
-                        _address: '0x000000000000000000000000000000000000000b',
+                        _address: glob.user_b,
                         nonce: utils.bigNumberify(1),
                         rollingVolume: utils.bigNumberify(0),
                         liquidityRole: liquidityRoles.indexOf('Taker'),
@@ -233,11 +233,7 @@ module.exports = (glob) => {
                     blockNumber: utils.bigNumberify(blockNumber10)
                 };
 
-                const hash = hashTrade(trade);
-                trade.seal = {
-                    hash: hash,
-                    signature: fromRpcSig(await web3.eth.sign(glob.owner, hash))
-                };
+                trade = await augmentTradeSeal(trade, glob.owner);
 
                 topic = ethersExchange.interface.events.ChallengeFraudulentDealByTradeEvent.topics[0];
                 filter = {
@@ -246,11 +242,13 @@ module.exports = (glob) => {
                 };
             });
 
-            it('should revert if trade is genuine', async () => {
-                return ethersExchange.challengeFraudulentDealByTrade(trade, overrideOptions).should.be.rejected;
+            describe('if trade is genuine', () => {
+                it('should revert', async () => {
+                    return ethersExchange.challengeFraudulentDealByTrade(trade, overrideOptions).should.be.rejected;
+                });
             });
 
-            describe    ('if hash differs from calculated', () => {
+            describe('if hash differs from calculated', () => {
                 beforeEach(() => {
                     trade.seal.hash = utils.id('some non-existent hash');
                 });
@@ -260,8 +258,8 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, seizedSeller, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
-                        ethersExchange.isSeizedWallet(trade.seller._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        ethersExchange.isSeizedWallet(glob.user_b),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -282,7 +280,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_b),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -302,7 +300,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.owner),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -322,7 +320,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -342,7 +340,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -362,7 +360,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -382,7 +380,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -402,7 +400,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -422,7 +420,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -442,7 +440,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -462,7 +460,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(trade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -670,7 +668,7 @@ module.exports = (glob) => {
                     amount: utils.parseUnits('100', 18),
                     currency: '0x0000000000000000000000000000000000000001',
                     source: {
-                        _address: glob.user_a,
+                        _address: glob.user_c,
                         nonce: utils.bigNumberify(1),
                         balances: {
                             current: utils.parseUnits('9399.8', 18),
@@ -679,7 +677,7 @@ module.exports = (glob) => {
                         netFee: utils.parseUnits('0.2', 18)
                     },
                     destination: {
-                        _address: glob.user_b,
+                        _address: glob.user_d,
                         nonce: utils.bigNumberify(1),
                         balances: {
                             current: utils.parseUnits('19700', 18),
@@ -695,17 +693,7 @@ module.exports = (glob) => {
                     blockNumber: utils.bigNumberify(blockNumber10)
                 };
 
-                const hash = hashPayment(payment);
-                payment.seals = {
-                    party: {
-                        hash: hash,
-                        signature: fromRpcSig(await web3.eth.sign(glob.user_a, hash))
-                    },
-                    exchange: {
-                        hash: hash,
-                        signature: fromRpcSig(await web3.eth.sign(glob.owner, hash))
-                    }
-                };
+                payment = await augmentPaymentSeals(payment, glob.user_c, glob.owner);
 
                 topic = ethersExchange.interface.events.ChallengeFraudulentDealByPaymentEvent.topics[0];
                 filter = {
@@ -714,8 +702,10 @@ module.exports = (glob) => {
                 };
             });
 
-            it('should revert if payment is genuine', async () => {
-                ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions).should.be.rejected;
+            describe('if payment it genuine', () => {
+                it('should revert', async () => {
+                    ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions).should.be.rejected;
+                });
             });
 
             describe('if not signed by owner', () => {
@@ -728,8 +718,8 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
-                        ethersExchange.isSeizedWallet(payment.source._address),
-                        ethersExchange.isSeizedWallet(payment.destination._address),
+                        ethersExchange.isSeizedWallet(glob.user_c),
+                        ethersExchange.isSeizedWallet(glob.user_d),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -750,8 +740,8 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
-                        ethersExchange.isSeizedWallet(payment.source._address),
-                        ethersExchange.isSeizedWallet(payment.destination._address),
+                        ethersExchange.isSeizedWallet(glob.user_c),
+                        ethersExchange.isSeizedWallet(glob.user_d),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -772,8 +762,8 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
-                        ethersExchange.isSeizedWallet(payment.source._address),
-                        ethersExchange.isSeizedWallet(payment.destination._address),
+                        ethersExchange.isSeizedWallet(glob.user_c),
+                        ethersExchange.isSeizedWallet(glob.user_d),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -794,8 +784,8 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
-                        ethersExchange.isSeizedWallet(payment.source._address),
-                        ethersExchange.isSeizedWallet(payment.destination._address),
+                        ethersExchange.isSeizedWallet(glob.user_c),
+                        ethersExchange.isSeizedWallet(glob.user_d),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -1013,7 +1003,7 @@ module.exports = (glob) => {
                         intended: utils.parseUnits('0.1', 18),
                         conjugate: utils.parseUnits('0.0002', 18)
                     },
-                    blockNumber: utils.bigNumberify(1234)
+                    blockNumber: utils.bigNumberify(blockNumber10)
                 };
 
                 lastTrade = {
@@ -1093,20 +1083,11 @@ module.exports = (glob) => {
                         intended: utils.parseUnits('0.1', 18),
                         conjugate: utils.parseUnits('0.00005', 18)
                     },
-                    blockNumber: utils.bigNumberify(2345)
+                    blockNumber: utils.bigNumberify(blockNumber10)
                 };
 
-                const firstHash = hashTrade(firstTrade);
-                firstTrade.seal = {
-                    hash: firstHash,
-                    signature: fromRpcSig(await web3.eth.sign(glob.owner, firstHash))
-                };
-
-                const lastHash = hashTrade(lastTrade);
-                lastTrade.seal = {
-                    hash: lastHash,
-                    signature: fromRpcSig(await web3.eth.sign(glob.owner, lastHash))
-                };
+                firstTrade = await augmentTradeSeal(firstTrade, glob.owner);
+                lastTrade = await augmentTradeSeal(lastTrade, glob.owner);
 
                 topic = ethersExchange.interface.events.ChallengeFraudulentDealBySuccessiveTradesEvent.topics[0];
                 filter = {
@@ -1121,7 +1102,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trader role\'s nonce in last trae is not incremented by 1 relative to first trade', () => {
+            describe('if trade party\'s nonce in last trade is not incremented by 1 relative to first trade', () => {
                 beforeEach(() => {
                     lastTrade.seller.nonce = firstTrade.buyer.nonce + 2;
                 });
@@ -1131,7 +1112,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trader role\'s previous balance in last trade is not equal to current balance in first trade', () => {
+            describe('if trade party\'s previous balance in last trade is not equal to current balance in first trade', () => {
                 beforeEach(() => {
                     lastTrade.seller.balances.intended.previous = lastTrade.seller.balances.intended.current;
                 });
@@ -1141,7 +1122,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedSource, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(firstTrade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -1151,7 +1132,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trader role\'s net fee in last trade is not incremented by single fee in last trade relative to net fee in first trade', () => {
+            describe('if trade party\'s net fee in last trade is not incremented by single fee in last trade relative to net fee in first trade', () => {
                 beforeEach(() => {
                     lastTrade.seller.netFees.intended = lastTrade.seller.netFees.intended.mul(utils.bigNumberify(2));
                 });
@@ -1161,7 +1142,7 @@ module.exports = (glob) => {
                     const [operationalMode, fraudulentTrade, seizedSource, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
-                        ethersExchange.isSeizedWallet(firstTrade.buyer._address),
+                        ethersExchange.isSeizedWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalMode.should.equal(1);
@@ -1171,7 +1152,168 @@ module.exports = (glob) => {
                 });
             });
         });
+
+        describe('challengeFraudulentDealBySuccessivePayments()', () => {
+            let overrideOptions, firstPayment, lastPayment, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+            });
+
+            beforeEach(async () => {
+                firstPayment = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    currency: '0x0000000000000000000000000000000000000001',
+                    source: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('9399.8', 18),
+                            previous: utils.parseUnits('9500', 18)
+                        },
+                        netFee: utils.parseUnits('0.2', 18)
+                    },
+                    destination: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('19700', 18),
+                            previous: utils.parseUnits('19600', 18)
+                        },
+                        netFee: utils.parseUnits('0.0', 18)
+                    },
+                    transfers: {
+                        single: utils.parseUnits('100', 18),
+                        net: utils.parseUnits('100', 18)
+                    },
+                    singleFee: utils.parseUnits('0.2', 18),
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                lastPayment = {
+                    nonce: utils.bigNumberify(2),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('50', 18),
+                    currency: '0x0000000000000000000000000000000000000001',
+                    source: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(3),
+                        balances: {
+                            current: utils.parseUnits('19649.9', 18),
+                            previous: utils.parseUnits('19700', 18)
+                        },
+                        netFee: utils.parseUnits('0.1', 18)
+                    },
+                    destination: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(2),
+                        balances: {
+                            current: utils.parseUnits('9449.8', 18),
+                            previous: utils.parseUnits('9399.8', 18)
+                        },
+                        netFee: utils.parseUnits('0.2', 18)
+                    },
+                    transfers: {
+                        single: utils.parseUnits('50', 18),
+                        net: utils.parseUnits('-50', 18)
+                    },
+                    singleFee: utils.parseUnits('0.1', 18),
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                firstPayment = await augmentPaymentSeals(firstPayment, glob.user_a, glob.owner);
+                lastPayment = await augmentPaymentSeals(lastPayment, glob.user_b, glob.owner);
+
+                topic = ethersExchange.interface.events.ChallengeFraudulentDealBySuccessivePaymentsEvent.topics[0];
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: [topic]
+                };
+            });
+
+            describe('if payments are genuine', () => {
+                it('should revert', async () => {
+                    ethersExchange.challengeFraudulentDealBySuccessivePayments(firstPayment, lastPayment, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment party\'s nonce in last payment is not incremented by 1 relative to first payment', () => {
+                beforeEach(() => {
+                    lastPayment.destination.nonce = firstPayment.source.nonce + 2;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.challengeFraudulentDealBySuccessivePayments(firstPayment, lastPayment, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment party\'s previous balance in last payment is not equal to current balance in first payment', () => {
+                beforeEach(() => {
+                    lastPayment.destination.balances.previous = lastPayment.destination.balances.current;
+                });
+
+                it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealBySuccessivePayments(firstPayment, lastPayment, glob.user_a, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
+                    seizedSource.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if payment party\'s net fee in last payment is not incremented by single fee in last payment relative to net fee in first payment', () => {
+                beforeEach(() => {
+                    lastPayment.destination.netFee = lastPayment.destination.netFee.mul(utils.bigNumberify(2));
+                });
+
+                it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealBySuccessivePayments(firstPayment, lastPayment, glob.user_a, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
+                    seizedSource.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+        });
     });
+};
+
+const augmentTradeSeal = async (trade, address) => {
+    const hash = hashTrade(trade);
+    trade.seal = {
+        hash: hash,
+        signature: fromRpcSig(await web3.eth.sign(address, hash))
+    };
+    return trade;
+};
+
+const augmentPaymentSeals = async (payment, partyAddress, exchangeAddress) => {
+    const hash = hashPayment(payment);
+    payment.seals = {
+        party: {
+            hash: hash,
+            signature: fromRpcSig(await web3.eth.sign(partyAddress, hash))
+        },
+        exchange: {
+            hash: hash,
+            signature: fromRpcSig(await web3.eth.sign(exchangeAddress, hash))
+        }
+    };
+    return payment;
 };
 
 const hashTrade = (trade) => hashString(trade.nonce.toNumber());
