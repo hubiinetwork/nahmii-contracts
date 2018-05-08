@@ -18,6 +18,7 @@ module.exports = (glob) => {
         let truffleExchange, ethersExchange;
         let truffleConfiguration, ethersConfiguration;
         let provider;
+        let blockNumber0, blockNumber10;
 
         before(async () => {
             truffleExchange = glob.web3Exchange;
@@ -25,6 +26,11 @@ module.exports = (glob) => {
             truffleConfiguration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
             provider = glob.signer_owner.provider;
+        });
+
+        beforeEach(async () => {
+            blockNumber0 = await provider.getBlockNumber();
+            blockNumber10 = blockNumber0 + 10;
         });
 
         describe('constructor', () => {
@@ -135,18 +141,18 @@ module.exports = (glob) => {
         describe('challengeFraudulentDealByTrade()', () => {
             let trade, overrideOptions, topic, filter;
 
-            before(async () => {
+            beforeEach(async () => {
                 overrideOptions = {gasLimit: 1e6};
-
-                await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(0), utils.parseUnits('0.001', 18), [], [], overrideOptions);
-                await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(0), utils.parseUnits('0.0001', 18), overrideOptions);
-                await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(0), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
-                await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(0), utils.parseUnits('0.0002', 18), overrideOptions);
 
                 await ethersExchange.changeConfiguration(ethersConfiguration.address);
             });
 
             beforeEach(async () => {
+                await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.001', 18), [], [], overrideOptions);
+                await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
+                await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
+                await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
+
                 trade = {
                     nonce: utils.bigNumberify(1),
                     immediateSettlement: true,
@@ -224,7 +230,7 @@ module.exports = (glob) => {
                         intended: utils.parseUnits('0.1', 18),
                         conjugate: utils.parseUnits('0.0002', 18)
                     },
-                    blockNumber: utils.bigNumberify(1234)
+                    blockNumber: utils.bigNumberify(blockNumber10)
                 };
 
                 const hash = hashTrade(trade);
@@ -235,7 +241,7 @@ module.exports = (glob) => {
 
                 topic = ethersExchange.interface.events.ChallengeFraudulentDealByTradeEvent.topics[0];
                 filter = {
-                    fromBlock: await provider.getBlockNumber(),
+                    fromBlock: blockNumber0,
                     topics: [topic]
                 };
             });
@@ -244,7 +250,7 @@ module.exports = (glob) => {
                 return ethersExchange.challengeFraudulentDealByTrade(trade, overrideOptions).should.be.rejected;
             });
 
-            describe('if hash differs from calculated', () => {
+            describe    ('if hash differs from calculated', () => {
                 beforeEach(() => {
                     trade.seal.hash = utils.id('some non-existent hash');
                 });
@@ -653,13 +659,13 @@ module.exports = (glob) => {
             before(async () => {
                 overrideOptions = {gasLimit: 1e6};
 
-                await ethersConfiguration.setPaymentFee(utils.bigNumberify(0), utils.parseUnits('0.002', 18), [], [], overrideOptions);
-                await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(0), utils.parseUnits('0.0002', 18), overrideOptions);
-
                 await ethersExchange.changeConfiguration(ethersConfiguration.address);
             });
 
             beforeEach(async () => {
+                await ethersConfiguration.setPaymentFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [], [], overrideOptions);
+                await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
+
                 payment = {
                     nonce: utils.bigNumberify(1),
                     immediateSettlement: true,
@@ -688,7 +694,7 @@ module.exports = (glob) => {
                         net: utils.parseUnits('100', 18)
                     },
                     singleFee: utils.parseUnits('0.2', 18),
-                    blockNumber: utils.bigNumberify(1234)
+                    blockNumber: utils.bigNumberify(blockNumber10)
                 };
 
                 const hash = hashPayment(payment);
@@ -705,14 +711,10 @@ module.exports = (glob) => {
 
                 topic = ethersExchange.interface.events.ChallengeFraudulentDealByPaymentEvent.topics[0];
                 filter = {
-                    fromBlock: await provider.getBlockNumber(),
+                    fromBlock: blockNumber0,
                     topics: [topic]
                 };
             });
-
-            // it('should succeed temporarily', async () => {
-            //     ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions).should.be.fulfilled;
-            // });
 
             it('should revert if payment is genuine', async () => {
                 ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions).should.be.rejected;
