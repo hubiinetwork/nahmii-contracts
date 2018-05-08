@@ -136,7 +136,7 @@ contract RevenueFund {
         address token;
         ERC20 erc20_token;
 
-        require(registeredBeneficiariesFulfilledPercent == 100 * PARTS_PER);
+        require(registeredBeneficiariesFulfilledPercent == PARTS_PER);
 
         //execute ethers transfer
         remaining = periodAccrualEtherBalance.toUInt256();
@@ -172,7 +172,7 @@ contract RevenueFund {
                     to_transfer = remaining;
 
                 if (to_transfer > 0) {
-                    erc20_token.transfer(msg.sender, to_transfer);
+                    erc20_token.transfer(beneficiary, to_transfer);
 
                     remaining = remaining.sub(to_transfer);
                 }
@@ -201,9 +201,11 @@ contract RevenueFund {
     // Beneficiary functions
     // -----------------------------------------------------------------------------------------------------------------
     //NOTE: RegisterBeneficiary checks if fulfillment will exceed 100% so unregisted other beneficiaries first if needed.
-    function RegisterBeneficiary(address beneficiary, uint256 fraction) public onlyOwner notNullAddress(beneficiary) {
+    function registerBeneficiary(address beneficiary, uint256 fraction) public onlyOwner notNullAddress(beneficiary) {
         require(fraction > 0);
-        require(registeredBeneficiariesFulfilledPercent + fraction <= 100 * PARTS_PER);
+        require(registeredBeneficiariesFulfilledPercent + fraction <= PARTS_PER);
+
+        require(registeredBeneficiariesMap[beneficiary].fraction == 0); //ensure not registered yet
 
         //add the beneficiary to the list if not registered previously (deregistering does not remove it from the list)
         if (!registeredBeneficiariesMap[beneficiary].on_list) {
@@ -219,7 +221,7 @@ contract RevenueFund {
         emit RegisterBeneficiaryEvent(beneficiary, fraction);
     }
 
-    function DeregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) {
+    function deregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) {
         if (registeredBeneficiariesMap[beneficiary].fraction > 0) {
             //decrement fullfillment percent
             registeredBeneficiariesFulfilledPercent = registeredBeneficiariesFulfilledPercent - registeredBeneficiariesMap[beneficiary].fraction;

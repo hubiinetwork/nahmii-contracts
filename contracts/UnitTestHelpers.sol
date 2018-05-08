@@ -11,6 +11,7 @@ import "./SafeMathUint.sol";
 import "./ERC20.sol";
 import "./AccrualBeneficiaryInterface.sol";
 import "./ClientFund.sol";
+import "./RevenueFund.sol";
 
 /**
 @title UnitTestHelpers
@@ -26,6 +27,11 @@ contract UnitTestHelpers is AccrualBeneficiaryInterface {
     }
 
     function () public payable {
+    }
+
+    function send_money(address target, uint256 amount) public {
+        require(amount > 0);
+        require(target.call.value(amount)());
     }
 
     //
@@ -67,7 +73,12 @@ contract UnitTestHelpers is AccrualBeneficiaryInterface {
     //
     // Helpers for RevenueFunc SC
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public {
+    function callToDepositTokens_REVFUND(address revenueFunds, address token, int256 amount) public {
+        require(revenueFunds != address(0));
+        RevenueFund sc = RevenueFund(revenueFunds);
+        sc.depositTokens(token, amount);
+    }
 
+    function closeAccrualPeriod() public {
     }
 }
