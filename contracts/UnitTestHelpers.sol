@@ -9,13 +9,15 @@ pragma solidity ^0.4.21;
 
 import "./SafeMathUint.sol";
 import "./ERC20.sol";
+import "./AccrualBeneficiaryInterface.sol";
 import "./ClientFund.sol";
+import "./RevenueFund.sol";
 
 /**
 @title UnitTestHelpers
 @notice A dummy SC where several functions are added to assist in unit testing.
 */
-contract UnitTestHelpers {
+contract UnitTestHelpers is AccrualBeneficiaryInterface {
     using SafeMathUint for uint256;
 
     //
@@ -27,8 +29,22 @@ contract UnitTestHelpers {
     function () public payable {
     }
 
+    function send_money(address target, uint256 amount) public {
+        require(amount > 0);
+        require(target.call.value(amount)());
+    }
+
     //
-    // Functions
+    // Helpers for testing ERC20
+    // -----------------------------------------------------------------------------------------------------------------
+    function erc20_approve(address token, address spender, uint256 value) public {
+        require(token != address(0));
+        ERC20 tok = ERC20(token);
+        tok.approve(spender, value);
+    }
+
+    //
+    // Helper for ClientFunds SC
     // -----------------------------------------------------------------------------------------------------------------
     function callToTransferFromDepositedToSettledBalance(address clientFunds, address sourceWallet, address destWallet, int256 amount, address token) public {
         require(clientFunds != address(0));
@@ -54,9 +70,15 @@ contract UnitTestHelpers {
         sc.depositTokensToSettledBalance(destWallet, token, amount);
     }
 
-    function erc20_approve(address token, address spender, uint256 value) public {
-        require(token != address(0));
-        ERC20 tok = ERC20(token);
-        tok.approve(spender, value);
+    //
+    // Helpers for RevenueFunc SC
+    // -----------------------------------------------------------------------------------------------------------------
+    function callToDepositTokens_REVFUND(address revenueFunds, address token, int256 amount) public {
+        require(revenueFunds != address(0));
+        RevenueFund sc = RevenueFund(revenueFunds);
+        sc.depositTokens(token, amount);
+    }
+
+    function closeAccrualPeriod() public {
     }
 }

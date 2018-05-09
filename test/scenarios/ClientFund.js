@@ -4,7 +4,39 @@ module.exports = function (glob) {
 	var testCounter = Helpers.TestCounter();
 
 	describe("ClientFund", function () {
-		it(testCounter.next() + ": MUST FAIL [payable]: cannot be called from owner", async() => {
+		it(testCounter.next() + ": MUST SUCCEED [payable]: add 2.5 Ethers to user A deposited balance", async() => {
+			try {
+				await web3.eth.sendTransactionPromise({
+						from: glob.user_a,
+						to: glob.web3ClientFund.address,
+						value: web3.toWei(2.5, 'ether'),
+						gas: glob.gasLimit
+					});
+			}
+			catch (err) {
+				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST SUCCEED [payable]: add 6.5 Ethers to user B deposited balance", async() => {
+			try {
+				await web3.eth.sendTransactionPromise({
+						from: glob.user_b,
+						to: glob.web3ClientFund.address,
+						value: web3.toWei(6.5, 'ether'),
+						gas: glob.gasLimit
+					});
+			}
+			catch (err) {
+				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST FAIL [payable]: Cannot be called from owner", async() => {
 			try {
 				await web3.eth.sendTransactionPromise({
 						from: glob.owner,
@@ -33,38 +65,6 @@ module.exports = function (glob) {
 			}
 			catch (err) {
 				assert(err.toString().includes('revert'), err.toString());
-			}
-		});
-
-		//-------------------------------------------------------------------------
-
-		it(testCounter.next() + ": MUST SUCCEED [payable]: add 2.5 Ethers to user A deposited balance", async() => {
-			try {
-				await web3.eth.sendTransactionPromise({
-						from: glob.user_a,
-						to: glob.web3ClientFund.address,
-						value: web3.toWei(2.5, 'ether'),
-						gas: glob.gasLimit
-					});
-			}
-			catch (err) {
-				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-			}
-		});
-
-		//-------------------------------------------------------------------------
-
-		it(testCounter.next() + ": MUST SUCCEED [payable]: add 6.5 Ethers to user B deposited balance", async() => {
-			try {
-				await web3.eth.sendTransactionPromise({
-						from: glob.user_b,
-						to: glob.web3ClientFund.address,
-						value: web3.toWei(6.5, 'ether'),
-						gas: glob.gasLimit
-					});
-			}
-			catch (err) {
-				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
 			}
 		});
 
@@ -509,7 +509,7 @@ module.exports = function (glob) {
 				await glob.web3UnitTestHelpers_SUCCESS_TESTS.erc20_approve(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
 			}
 			catch (err) {
-				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+				assert(false, 'Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
 			}
 			try {
 				let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
@@ -535,7 +535,7 @@ module.exports = function (glob) {
 				await glob.web3UnitTestHelpers_FAIL_TESTS.erc20_approve(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
 			}
 			catch (err) {
-				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+				assert(false, 'Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
 			}
 			try {
 				await glob.web3UnitTestHelpers_FAIL_TESTS.callToDepositTokensToSettledBalance(glob.web3ClientFund.address, glob.user_a, glob.web3Erc20.address, 4);
