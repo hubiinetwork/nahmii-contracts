@@ -101,8 +101,8 @@ contract ClientFund {
         }
     }
 
-    function setServiceActivationTimeout(uint256 timeout) public onlyOwner {
-        serviceActivationTimeout = timeout;
+    function setServiceActivationTimeout(uint256 timeoutInSeconds) public onlyOwner {
+        serviceActivationTimeout = timeoutInSeconds;
     }
 
     //

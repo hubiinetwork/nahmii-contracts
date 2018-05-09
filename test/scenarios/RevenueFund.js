@@ -78,7 +78,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST SUCCEED [depositTokens]: UnitTestHelpers_MISC_1 'collaborates' with 10 tokens", async() => {
 			try {
-				await glob.web3UnitTestHelpers_MISC_1.erc20_approve(glob.web3Erc20.address, glob.web3RevenueFund.address, 10);
+				await glob.web3UnitTestHelpers_MISC_1.callToApprove_ERC20(glob.web3Erc20.address, glob.web3RevenueFund.address, 10);
 			}
 			catch (err) {
 				assert(false, 'Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
@@ -87,7 +87,7 @@ module.exports = function (glob) {
 				let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(glob.web3Erc20.address);
 				let oldAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(glob.web3Erc20.address);
 
-				await glob.web3UnitTestHelpers_MISC_1.callToDepositTokens_REVFUND(glob.web3RevenueFund.address, glob.web3Erc20.address, 10, {gasLimit: glob.gasLimit});
+				await glob.web3UnitTestHelpers_MISC_1.callToDepositTokens_REVENUEFUND(glob.web3RevenueFund.address, glob.web3Erc20.address, 10, {gasLimit: glob.gasLimit});
 
 				let newPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(glob.web3Erc20.address);
 				let newAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(glob.web3Erc20.address);
@@ -116,7 +116,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [depositTokens]: cannot be called with 0 tokens", async() => {
 			try {
-				await glob.web3UnitTestHelpers_MISC_2.callToDepositTokens_REVFUND(glob.web3RevenueFund.address, glob.web3Erc20.address, 0);
+				await glob.web3UnitTestHelpers_MISC_2.callToDepositTokens_REVENUEFUND(glob.web3RevenueFund.address, glob.web3Erc20.address, 0);
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
