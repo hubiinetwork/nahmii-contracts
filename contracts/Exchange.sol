@@ -163,6 +163,8 @@ contract Exchange {
     event ChallengeFraudulentDealByPaymentEvent(Payment payment, address challenger, address seizedWallet);
     event ChallengeFraudulentDealBySuccessiveTradesEvent(Trade firstTrade, Trade lastTrade, address challenger, address seizedWallet);
     event ChallengeFraudulentDealBySuccessivePaymentsEvent(Payment firstPayment, Payment lastPayment, address challenger, address seizedWallet);
+    event ChallengeFraudulentDealByPaymentSucceedingTradeEvent(Trade trade, Payment payment, address challenger, address seizedWallet);
+    event ChallengeFraudulentDealByTradeSucceedingPaymentEvent(Payment payment, Trade trade, address challenger, address seizedWallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
 
     //
@@ -259,6 +261,12 @@ contract Exchange {
         emit ChallengeFraudulentDealByPaymentEvent(payment, msg.sender, seizedWallet);
     }
 
+    /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
+    /// @param firstTrade Reference trade
+    /// @param lastTrade Fraudulent trade candidate
+    /// @param wallet Address of concerned wallet
+    /// @param currency Address of concerned currency (0 if ETH)
     function challengeFraudulentDealBySuccessiveTrades(
         Trade firstTrade,
         Trade lastTrade,
@@ -266,21 +274,19 @@ contract Exchange {
         address currency
     )
     public
-    challengeableTradePair(firstTrade, lastTrade, wallet, currency)
+    challengeableTradesPair(firstTrade, lastTrade, wallet, currency)
     {
         TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
         TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
 
-        uint256 firstNonce = (TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.nonce : firstTrade.seller.nonce);
-        uint256 lastNonce = (TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.nonce : lastTrade.seller.nonce);
-        require(lastNonce == firstNonce.add(1));
+        require(isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
         CurrencyRole firstCurrencyRole = (currency == firstTrade.currencies.intended ? CurrencyRole.Intended : CurrencyRole.Conjugate);
         CurrencyRole lastCurrencyRole = (currency == lastTrade.currencies.intended ? CurrencyRole.Intended : CurrencyRole.Conjugate);
 
         require(
-            !isGenuineSuccessiveTradeBalances(firstTrade, lastTrade, firstTradePartyRole, lastTradePartyRole, firstCurrencyRole, lastCurrencyRole)
-        || !isGenuineSuccessiveTradeNetFees(firstTrade, lastTrade, firstTradePartyRole, lastTradePartyRole, firstCurrencyRole, lastCurrencyRole)
+            !isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole)
+        || !isGenuineSuccessiveTradesNetFees(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole)
         );
 
         operationalMode = OperationalMode.Exit;
@@ -292,24 +298,27 @@ contract Exchange {
         emit ChallengeFraudulentDealBySuccessiveTradesEvent(firstTrade, lastTrade, msg.sender, wallet);
     }
 
+    /// @notice Submit two payment candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
+    /// @param firstPayment Reference payment
+    /// @param lastPayment Fraudulent payment candidate
+    /// @param wallet Address of concerned wallet
     function challengeFraudulentDealBySuccessivePayments(
         Payment firstPayment,
         Payment lastPayment,
         address wallet
     )
     public
-    challengeablePaymentPair(firstPayment, lastPayment, wallet)
+    challengeablePaymentsPair(firstPayment, lastPayment, wallet)
     {
         PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.source._address ? PaymentPartyRole.Source : PaymentPartyRole.Destination);
         PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.source._address ? PaymentPartyRole.Source : PaymentPartyRole.Destination);
 
-        uint256 firstNonce = (PaymentPartyRole.Source == firstPaymentPartyRole ? firstPayment.source.nonce : firstPayment.destination.nonce);
-        uint256 lastNonce = (PaymentPartyRole.Source == lastPaymentPartyRole ? lastPayment.source.nonce : lastPayment.destination.nonce);
-        require(lastNonce == firstNonce.add(1));
+        require(isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
         require(
-            !isGenuineSuccessivePaymentBalances(firstPayment, lastPayment, firstPaymentPartyRole, lastPaymentPartyRole)
-        || !isGenuineSuccessivePaymentNetFees(firstPayment, lastPayment, firstPaymentPartyRole, lastPaymentPartyRole)
+            !isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)
+        || !isGenuineSuccessivePaymentsNetFees(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)
         );
 
         operationalMode = OperationalMode.Exit;
@@ -319,6 +328,78 @@ contract Exchange {
         addToSeizedWallets(wallet);
 
         emit ChallengeFraudulentDealBySuccessivePaymentsEvent(firstPayment, lastPayment, msg.sender, wallet);
+    }
+
+    /// @notice Submit trade and subsequent payment candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
+    /// @param trade Reference trade
+    /// @param payment Fraudulent payment candidate
+    /// @param wallet Address of concerned wallet
+    /// @param currency Address of concerned currency of trade (0 if ETH)
+    function challengeFraudulentDealByPaymentSucceedingTrade(
+        Trade trade,
+        Payment payment,
+        address wallet,
+        address currency
+    )
+    public
+    challengeableTradePaymentPair(trade, payment, wallet, currency)
+    {
+        TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
+        PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? PaymentPartyRole.Source : PaymentPartyRole.Destination);
+
+        require(isSuccessiveTradePaymentPartyNonces(trade, tradePartyRole, payment, paymentPartyRole));
+
+        CurrencyRole currencyRole = (currency == trade.currencies.intended ? CurrencyRole.Intended : CurrencyRole.Conjugate);
+
+        require(
+            !isGenuineSuccessiveTradePaymentBalances(trade, tradePartyRole, currencyRole, payment, paymentPartyRole)
+        || !isGenuineSuccessiveTradePaymentNetFees(trade, tradePartyRole, currencyRole, payment, paymentPartyRole)
+        );
+
+        operationalMode = OperationalMode.Exit;
+        fraudulentPayment = payment;
+
+        //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
+        addToSeizedWallets(wallet);
+
+        emit ChallengeFraudulentDealByPaymentSucceedingTradeEvent(trade, payment, msg.sender, wallet);
+    }
+
+    /// @notice Submit payment and subsequent trade candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
+    /// @param payment Reference payment
+    /// @param trade Fraudulent trade candidate
+    /// @param wallet Address of concerned wallet
+    /// @param currency Address of concerned currency of trade (0 if ETH)
+    function challengeFraudulentDealByTradeSucceedingPayment(
+        Payment payment,
+        Trade trade,
+        address wallet,
+        address currency
+    )
+    public
+    challengeableTradePaymentPair(trade, payment, wallet, currency)
+    {
+        PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? PaymentPartyRole.Source : PaymentPartyRole.Destination);
+        TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
+
+        require(isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
+
+        CurrencyRole currencyRole = (currency == trade.currencies.intended ? CurrencyRole.Intended : CurrencyRole.Conjugate);
+
+        require(
+            !isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, currencyRole)
+        || !isGenuineSuccessivePaymentTradeNetFees(payment, paymentPartyRole, trade, tradePartyRole, currencyRole)
+        );
+
+        operationalMode = OperationalMode.Exit;
+        fraudulentTrade = trade;
+
+        //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
+        addToSeizedWallets(wallet);
+
+        emit ChallengeFraudulentDealByTradeSucceedingPaymentEvent(payment, trade, msg.sender, wallet);
     }
 
     /// @notice Get the seized status of given wallet
@@ -406,12 +487,68 @@ contract Exchange {
         && (payment.destination.balances.current == payment.destination.balances.previous.add(payment.transfers.single));
     }
 
-    function isGenuineSuccessiveTradeBalances(
+    function isSuccessiveTradesPartyNonces(
         Trade firstTrade,
-        Trade lastTrade,
         TradePartyRole firstTradePartyRole,
-        TradePartyRole lastTradePartyRole,
+        Trade lastTrade,
+        TradePartyRole lastTradePartyRole
+    )
+    private
+    pure returns (bool)
+    {
+        uint256 firstNonce = (TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.nonce : firstTrade.seller.nonce);
+        uint256 lastNonce = (TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.nonce : lastTrade.seller.nonce);
+        return lastNonce == firstNonce.add(1);
+    }
+
+    function isSuccessivePaymentsPartyNonces(
+        Payment firstPayment,
+        PaymentPartyRole firstPaymentPartyRole,
+        Payment lastPayment,
+        PaymentPartyRole lastPaymentPartyRole
+    )
+    private
+    pure returns (bool)
+    {
+        uint256 firstNonce = (PaymentPartyRole.Source == firstPaymentPartyRole ? firstPayment.source.nonce : firstPayment.destination.nonce);
+        uint256 lastNonce = (PaymentPartyRole.Source == lastPaymentPartyRole ? lastPayment.source.nonce : lastPayment.destination.nonce);
+        return lastNonce == firstNonce.add(1);
+    }
+
+    function isSuccessiveTradePaymentPartyNonces(
+        Trade trade,
+        TradePartyRole tradePartyRole,
+        Payment payment,
+        PaymentPartyRole paymentPartyRole
+    )
+    private
+    pure returns (bool)
+    {
+        uint256 firstNonce = (TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
+        uint256 lastNonce = (PaymentPartyRole.Source == paymentPartyRole ? payment.source.nonce : payment.destination.nonce);
+        return lastNonce == firstNonce.add(1);
+    }
+
+    function isSuccessivePaymentTradePartyNonces(
+        Payment payment,
+        PaymentPartyRole paymentPartyRole,
+        Trade trade,
+        TradePartyRole tradePartyRole
+    )
+    private
+    pure returns (bool)
+    {
+        uint256 firstNonce = (PaymentPartyRole.Source == paymentPartyRole ? payment.source.nonce : payment.destination.nonce);
+        uint256 lastNonce = (TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
+        return lastNonce == firstNonce.add(1);
+    }
+
+    function isGenuineSuccessiveTradesBalances(
+        Trade firstTrade,
+        TradePartyRole firstTradePartyRole,
         CurrencyRole firstCurrencyRole,
+        Trade lastTrade,
+        TradePartyRole lastTradePartyRole,
         CurrencyRole lastCurrencyRole
     )
     private
@@ -419,18 +556,18 @@ contract Exchange {
     returns (bool)
     {
         IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.balances : firstTrade.seller.balances);
-        IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
-
         CurrentPreviousInt256 memory firstCurrentPreviousBalances = (CurrencyRole.Intended == firstCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+
+        IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
         CurrentPreviousInt256 memory lastCurrentPreviousBalances = (CurrencyRole.Intended == lastCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
-    function isGenuineSuccessivePaymentBalances(
+    function isGenuineSuccessivePaymentsBalances(
         Payment firstPayment,
-        Payment lastPayment,
         PaymentPartyRole firstPaymentPartyRole,
+        Payment lastPayment,
         PaymentPartyRole lastPaymentPartyRole
     )
     private
@@ -443,12 +580,50 @@ contract Exchange {
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
-    function isGenuineSuccessiveTradeNetFees(
+    function isGenuineSuccessiveTradePaymentBalances(
+        Trade trade,
+        TradePartyRole tradePartyRole,
+        CurrencyRole currencyRole,
+        Payment payment,
+        PaymentPartyRole paymentPartyRole
+    )
+    private
+    pure
+    returns (bool)
+    {
+        IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
+        CurrentPreviousInt256 memory firstCurrentPreviousBalances = (CurrencyRole.Intended == currencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+
+        CurrentPreviousInt256 memory lastCurrentPreviousBalances = (PaymentPartyRole.Source == paymentPartyRole ? payment.source.balances : payment.destination.balances);
+
+        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
+    }
+
+    function isGenuineSuccessivePaymentTradeBalances(
+        Payment payment,
+        PaymentPartyRole paymentPartyRole,
+        Trade trade,
+        TradePartyRole tradePartyRole,
+        CurrencyRole currencyRole
+    )
+    private
+    pure
+    returns (bool)
+    {
+        CurrentPreviousInt256 memory firstCurrentPreviousBalances = (PaymentPartyRole.Source == paymentPartyRole ? payment.source.balances : payment.destination.balances);
+
+        IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
+        CurrentPreviousInt256 memory lastCurrentPreviousBalances = (CurrencyRole.Intended == currencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+
+        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
+    }
+
+    function isGenuineSuccessiveTradesNetFees(
         Trade firstTrade,
-        Trade lastTrade,
         TradePartyRole firstTradePartyRole,
-        TradePartyRole lastTradePartyRole,
         CurrencyRole firstCurrencyRole,
+        Trade lastTrade,
+        TradePartyRole lastTradePartyRole,
         CurrencyRole lastCurrencyRole
     )
     private
@@ -456,9 +631,9 @@ contract Exchange {
     returns (bool)
     {
         IntendedConjugateInt256 memory firstIntendedConjugateNetFees = (TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.netFees : firstTrade.seller.netFees);
-        IntendedConjugateInt256 memory lastIntendedConjugateNetFees = (TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.netFees : lastTrade.seller.netFees);
-
         int256 firstNetFee = (CurrencyRole.Intended == firstCurrencyRole ? firstIntendedConjugateNetFees.intended : firstIntendedConjugateNetFees.conjugate);
+
+        IntendedConjugateInt256 memory lastIntendedConjugateNetFees = (TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.netFees : lastTrade.seller.netFees);
         int256 lastNetFee = (CurrencyRole.Intended == lastCurrencyRole ? lastIntendedConjugateNetFees.intended : lastIntendedConjugateNetFees.conjugate);
 
         int256 lastSingleFee = 0;
@@ -470,10 +645,10 @@ contract Exchange {
         return lastNetFee == firstNetFee.add(lastSingleFee);
     }
 
-    function isGenuineSuccessivePaymentNetFees(
+    function isGenuineSuccessivePaymentsNetFees(
         Payment firstPayment,
-        Payment lastPayment,
         PaymentPartyRole firstPaymentPartyRole,
+        Payment lastPayment,
         PaymentPartyRole lastPaymentPartyRole
     )
     private
@@ -481,9 +656,56 @@ contract Exchange {
     returns (bool)
     {
         int256 firstNetFee = (PaymentPartyRole.Source == firstPaymentPartyRole ? firstPayment.source.netFee : firstPayment.destination.netFee);
+
         int256 lastNetFee = (PaymentPartyRole.Source == lastPaymentPartyRole ? lastPayment.source.netFee : lastPayment.destination.netFee);
 
         int256 lastSingleFee = (PaymentPartyRole.Source == lastPaymentPartyRole ? lastPayment.singleFee : 0);
+
+        return lastNetFee == firstNetFee.add(lastSingleFee);
+    }
+
+    function isGenuineSuccessiveTradePaymentNetFees(
+        Trade trade,
+        TradePartyRole tradePartyRole,
+        CurrencyRole currencyRole,
+        Payment payment,
+        PaymentPartyRole paymentPartyRole
+    )
+    private
+    pure
+    returns (bool)
+    {
+        IntendedConjugateInt256 memory firstIntendedConjugateNetFees = (TradePartyRole.Buyer == tradePartyRole ? trade.buyer.netFees : trade.seller.netFees);
+        int256 firstNetFee = (CurrencyRole.Intended == currencyRole ? firstIntendedConjugateNetFees.intended : firstIntendedConjugateNetFees.conjugate);
+
+        int256 lastNetFee = (PaymentPartyRole.Source == paymentPartyRole ? payment.source.netFee : payment.destination.netFee);
+
+        int256 lastSingleFee = (PaymentPartyRole.Source == paymentPartyRole ? payment.singleFee : 0);
+
+        return lastNetFee == firstNetFee.add(lastSingleFee);
+    }
+
+    function isGenuineSuccessivePaymentTradeNetFees(
+        Payment payment,
+        PaymentPartyRole paymentPartyRole,
+        Trade trade,
+        TradePartyRole tradePartyRole,
+        CurrencyRole currencyRole
+    )
+    private
+    pure
+    returns (bool)
+    {
+        int256 firstNetFee = (PaymentPartyRole.Source == paymentPartyRole ? payment.source.netFee : payment.destination.netFee);
+
+        IntendedConjugateInt256 memory firstIntendedConjugateNetFees = (TradePartyRole.Buyer == tradePartyRole ? trade.buyer.netFees : trade.seller.netFees);
+        int256 lastNetFee = (CurrencyRole.Intended == currencyRole ? firstIntendedConjugateNetFees.intended : firstIntendedConjugateNetFees.conjugate);
+
+        int256 lastSingleFee = 0;
+        if (TradePartyRole.Buyer == tradePartyRole && CurrencyRole.Intended == currencyRole)
+            lastSingleFee = trade.singleFees.intended;
+        else if (TradePartyRole.Seller == tradePartyRole && CurrencyRole.Conjugate == currencyRole)
+            lastSingleFee = trade.singleFees.conjugate;
 
         return lastNetFee == firstNetFee.add(lastSingleFee);
     }
@@ -538,23 +760,38 @@ contract Exchange {
         _;
     }
 
-    modifier challengeableTradePair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
+
+    modifier challengeableTradesPair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
         require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
-        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
         require(wallet == firstTrade.buyer._address || wallet == firstTrade.seller._address);
-        require(wallet == lastTrade.buyer._address || wallet == lastTrade.seller._address);
         require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
+
+        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
+        require(wallet == lastTrade.buyer._address || wallet == lastTrade.seller._address);
         require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
         _;
     }
 
-    modifier challengeablePaymentPair(Payment firstPayment, Payment lastPayment, address wallet) {
+    modifier challengeablePaymentsPair(Payment firstPayment, Payment lastPayment, address wallet) {
         require(isGenuineSignature(firstPayment.seals.party.hash, firstPayment.seals.party.signature, firstPayment.source._address));
         require(isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
+        require(wallet == firstPayment.source._address || wallet == firstPayment.destination._address);
+
         require(isGenuineSignature(lastPayment.seals.party.hash, lastPayment.seals.party.signature, lastPayment.source._address));
         require(isGenuineSignature(lastPayment.seals.exchange.hash, lastPayment.seals.exchange.signature, owner));
-        require(wallet == firstPayment.source._address || wallet == firstPayment.destination._address);
         require(wallet == lastPayment.source._address || wallet == lastPayment.destination._address);
+        _;
+    }
+
+    modifier challengeableTradePaymentPair(Trade trade, Payment payment, address wallet, address currency) {
+        require(isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
+        require(wallet == trade.buyer._address || wallet == trade.seller._address);
+        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+
+        require(isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.source._address));
+        require(isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
+        require(wallet == payment.source._address || wallet == payment.destination._address);
+        require(currency == payment.currency);
         _;
     }
 }

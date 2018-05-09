@@ -715,7 +715,7 @@ module.exports = (glob) => {
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, seizedDestination, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(glob.user_c),
@@ -724,7 +724,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.false;
+                    seizedWallet.should.be.false;
                     seizedDestination.should.be.false;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
@@ -737,7 +737,7 @@ module.exports = (glob) => {
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, seizedDestination, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(glob.user_c),
@@ -746,7 +746,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.false;
+                    seizedWallet.should.be.false;
                     seizedDestination.should.be.false;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
@@ -759,7 +759,7 @@ module.exports = (glob) => {
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, seizedDestination, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(glob.user_c),
@@ -768,7 +768,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.false;
+                    seizedWallet.should.be.false;
                     seizedDestination.should.be.false;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
@@ -781,7 +781,7 @@ module.exports = (glob) => {
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, seizedDestination, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, seizedDestination, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(glob.user_c),
@@ -790,7 +790,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.false;
+                    seizedWallet.should.be.false;
                     seizedDestination.should.be.false;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
@@ -803,7 +803,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(payment.source._address),
@@ -811,7 +811,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -823,7 +823,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(payment.source._address),
@@ -831,7 +831,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -843,7 +843,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(payment.source._address),
@@ -851,7 +851,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -863,7 +863,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(payment.source._address),
@@ -871,7 +871,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -883,7 +883,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(payment.source._address),
@@ -891,7 +891,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -903,7 +903,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent payment, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(payment.source._address),
@@ -911,7 +911,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -1119,7 +1119,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealBySuccessiveTrades(firstTrade, lastTrade, glob.user_a, currency, overrideOptions);
-                    const [operationalMode, fraudulentTrade, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentTrade, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
                         ethersExchange.isSeizedWallet(glob.user_a),
@@ -1127,7 +1127,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -1139,7 +1139,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealBySuccessiveTrades(firstTrade, lastTrade, glob.user_a, currency, overrideOptions);
-                    const [operationalMode, fraudulentTrade, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentTrade, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentTrade(),
                         ethersExchange.isSeizedWallet(glob.user_a),
@@ -1147,7 +1147,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -1256,7 +1256,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealBySuccessivePayments(firstPayment, lastPayment, glob.user_a, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(glob.user_a),
@@ -1264,7 +1264,7 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -1276,7 +1276,7 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
                     await ethersExchange.challengeFraudulentDealBySuccessivePayments(firstPayment, lastPayment, glob.user_a, overrideOptions);
-                    const [operationalMode, fraudulentPayment, seizedSource, logs] = await Promise.all([
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersExchange.operationalMode(),
                         ethersExchange.fraudulentPayment(),
                         ethersExchange.isSeizedWallet(glob.user_a),
@@ -1284,7 +1284,381 @@ module.exports = (glob) => {
                     ]);
                     operationalMode.should.equal(1);
                     fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
-                    seizedSource.should.be.true;
+                    seizedWallet.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+        });
+
+        describe('challengeFraudulentDealByPaymentSucceedingTrade()', () => {
+            let overrideOptions, currency, trade, payment, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+                currency = '0x0000000000000000000000000000000000000001';
+            });
+
+            beforeEach(async () => {
+                trade = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            residuals: {
+                                current: utils.parseUnits('0', 18),
+                                previous: utils.parseUnits('100', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9599.9', 18),
+                                previous: utils.parseUnits('9500', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.4', 18),
+                                previous: utils.parseUnits('9.5', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.1', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            residuals: {
+                                current: utils.parseUnits('0', 18),
+                                previous: utils.parseUnits('100', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19500', 18),
+                                previous: utils.parseUnits('19600', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.4998', 18),
+                                previous: utils.parseUnits('19.4', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.1', 18),
+                            conjugate: utils.parseUnits('0.0002', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('100', 18),
+                            net: utils.parseUnits('100', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.1', 18),
+                            net: utils.parseUnits('0.1', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.0002', 18)
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                payment = {
+                    nonce: utils.bigNumberify(2),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('50', 18),
+                    currency: '0x0000000000000000000000000000000000000001',
+                    source: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(3),
+                        balances: {
+                            current: utils.parseUnits('19500', 18),
+                            previous: utils.parseUnits('19500', 18)
+                        },
+                        netFee: utils.parseUnits('0.2', 18)
+                    },
+                    destination: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(2),
+                        balances: {
+                            current: utils.parseUnits('9649.9', 18),
+                            previous: utils.parseUnits('9599.9', 18)
+                        },
+                        netFee: utils.parseUnits('0.1', 18)
+                    },
+                    transfers: {
+                        single: utils.parseUnits('50', 18),
+                        net: utils.parseUnits('-50', 18)
+                    },
+                    singleFee: utils.parseUnits('0.1', 18),
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                trade = await augmentTradeSeal(trade, glob.owner);
+                payment = await augmentPaymentSeals(payment, glob.user_b, glob.owner);
+
+                topic = ethersExchange.interface.events.ChallengeFraudulentDealByPaymentSucceedingTradeEvent.topics[0];
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: [topic]
+                };
+            });
+
+            describe('if trade and payment are genuine', () => {
+                it('should revert', async () => {
+                    ethersExchange.challengeFraudulentDealByPaymentSucceedingTrade(trade, payment, glob.user_a, currency, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment party\'s nonce in payment is not incremented by 1 relative to trade', () => {
+                beforeEach(() => {
+                    payment.destination.nonce = trade.buyer.nonce + 2;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.challengeFraudulentDealByPaymentSucceedingTrade(trade, payment, glob.user_a, currency, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment party\'s previous balance in payment is not equal to current balance in trade', () => {
+                beforeEach(() => {
+                    payment.destination.balances.previous = payment.destination.balances.current;
+                });
+
+                it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPaymentSucceedingTrade(trade, payment, glob.user_a, currency, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedWallet.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if payment party\'s net fee in payment is not incremented by single fee in payment relative to net fee in trade', () => {
+                beforeEach(() => {
+                    payment.destination.netFee = payment.destination.netFee.mul(utils.bigNumberify(2));
+                });
+
+                it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByPaymentSucceedingTrade(trade, payment, glob.user_a, currency, overrideOptions);
+                    const [operationalMode, fraudulentPayment, seizedWallet, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentPayment(),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
+                    seizedWallet.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+        });
+
+        describe('challengeFraudulentDealByTradeSucceedingPayment()', () => {
+            let overrideOptions, currency, payment, trade, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+                currency = '0x0000000000000000000000000000000000000001';
+            });
+
+            beforeEach(async () => {
+                payment = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    currency: '0x0000000000000000000000000000000000000001',
+                    source: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('9399.8', 18),
+                            previous: utils.parseUnits('9500', 18)
+                        },
+                        netFee: utils.parseUnits('0.2', 18)
+                    },
+                    destination: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('19700', 18),
+                            previous: utils.parseUnits('19600', 18)
+                        },
+                        netFee: utils.parseUnits('0.0', 18)
+                    },
+                    transfers: {
+                        single: utils.parseUnits('100', 18),
+                        net: utils.parseUnits('100', 18)
+                    },
+                    singleFee: utils.parseUnits('0.2', 18),
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                trade = {
+                    nonce: utils.bigNumberify(2),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('50', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(3),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('50', 18),
+                            residuals: {
+                                current: utils.parseUnits('0', 18),
+                                previous: utils.parseUnits('50', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19749.9', 18),
+                                previous: utils.parseUnits('19700', 18),
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.4998', 18),
+                                previous: utils.parseUnits('19.5498', 18),
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.1', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(2),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('50', 18),
+                            residuals: {
+                                current: utils.parseUnits('0', 18),
+                                previous: utils.parseUnits('50', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9349.8', 18),
+                                previous: utils.parseUnits('9399.8', 18),
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.49990', 18),
+                                previous: utils.parseUnits('9.44995', 18),
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.2', 18),
+                            conjugate: utils.parseUnits('0.00005', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('50', 18),
+                            net: utils.parseUnits('-50', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.05', 18),
+                            net: utils.parseUnits('0.05', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.00005', 18)
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                payment = await augmentPaymentSeals(payment, glob.user_a, glob.owner);
+                trade = await augmentTradeSeal(trade, glob.owner);
+
+                topic = ethersExchange.interface.events.ChallengeFraudulentDealByTradeSucceedingPaymentEvent.topics[0];
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: [topic]
+                };
+            });
+
+            describe('if payment and trade are genuine', () => {
+                it('should revert', async () => {
+                    ethersExchange.challengeFraudulentDealByTradeSucceedingPayment(payment, trade, glob.user_a, currency, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if trade party\'s nonce in trade is not incremented by 1 relative to payment', () => {
+                beforeEach(() => {
+                    trade.seller.nonce = payment.source.nonce + 2;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.challengeFraudulentDealByTradeSucceedingPayment(payment, trade, glob.user_a, currency, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if trade party\'s previous balance in trade is not equal to current balance in payment', () => {
+                beforeEach(() => {
+                    trade.seller.balances.intended.previous = trade.seller.balances.intended.current;
+                });
+
+                it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByTradeSucceedingPayment(payment, trade, glob.user_a, currency, overrideOptions);
+                    const [operationalMode, fraudulentTrade, seizedWallet, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentTrade(),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedWallet.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if trade party\'s net fee in trade is not incremented by single fee in trade relative to net fee in payment', () => {
+                beforeEach(() => {
+                    trade.seller.netFees.intended = trade.seller.netFees.intended.mul(utils.bigNumberify(2));
+                });
+
+                it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeFraudulentDealByTradeSucceedingPayment(payment, trade, glob.user_a, currency, overrideOptions);
+                    const [operationalMode, fraudulentTrade, seizedWallet, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentTrade(),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
