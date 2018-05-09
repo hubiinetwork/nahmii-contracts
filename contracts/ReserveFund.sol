@@ -225,23 +225,15 @@ contract ReserveFund {
 
 		// Register this block
 		accrualBlockNumbers.push(block.number);
-
-		// TO-DO: Store period accrual Balances at this block
-		//
-
-
-		// Store and clear accruals
-
+		
+		// Clear accruals
 		periodAccrualEtherBalance = 0;
 		for (uint256 i = 0; i < accrualPeriodTokenList.length; i++) {
 			periodAccrualTokenBalance[accrualPeriodTokenList[i]] = 0;
 		}
 
-
 		emit CloseAccrualPeriodEvent();
     }
-
-	uint256[9] claimAccrualData;
 
 	function claimAccrual(address tokenAddress) public {
 		uint256 bn_low;
@@ -284,22 +276,9 @@ contract ReserveFund {
 		require (bn_low != bn_up); // avoid division by 0
 
 		uint256 balance = tokenAddress == address(0) ? aggregatedEtherBalance : aggregatedTokenBalance[tokenAddress];
-        //		uint256 partsPer = 1e18;
-		uint256 fraction = bb.mul(1e18).div(balance.mul(bn_up.sub(bn_low)));
+		uint256 fraction =bb.mul(1e18).mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(balance.mul(bn_up.sub(bn_low)).mul(1e18));
         uint256 amount = fraction.mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(1e18);
-        //        		uint256 fraction = bb.div(balance.mul(bn_up.sub(bn_low)));
-        //        		uint256 amount = fraction.mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]);
-
-		claimAccrualData[0] = bn_low;
-		claimAccrualData[1] = bn_up;
-		claimAccrualData[2] = bb;
-		claimAccrualData[3] = balance;
-		claimAccrualData[4] = fraction;
-		claimAccrualData[5] = amount;
-		claimAccrualData[6] = bb.mul(1e18).div(balance.mul(bn_up.sub(bn_low))).mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(1e18);
-		claimAccrualData[7] = bb.mul(1e18).mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(balance.mul(bn_up.sub(bn_low)).mul(1e18));
-		claimAccrualData[8] = bb.mul(1e18).mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).add(balance.mul(bn_up.sub(bn_low)).mul(1e18).div(2)).div(balance.mul(bn_up.sub(bn_low)).mul(1e18));
-
+        
 		/* Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c */
 
 		if (tokenAddress == address(0)) {
@@ -322,11 +301,7 @@ contract ReserveFund {
 		emit ClaimAccrualEvent(tokenAddress);
 	}
 
-	function getClaimAccrualData() public view returns (uint256[9]) {
-		return claimAccrualData;
-	}
-
-    function stage(address tokenAddress, uint256 amount) public {
+	function stage(address tokenAddress, uint256 amount) public {
         require(msg.sender != owner);
 
         if (tokenAddress == address(0)) {
@@ -340,6 +315,7 @@ contract ReserveFund {
             walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeEtherBalance, block.number));
 
             walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(address(0), walletInfoMap[msg.sender].depositsEther.length - 1));
+			aggregatedEtherBalance = aggregatedEtherBalance.add(amount);
         } else {
             if (amount > walletInfoMap[msg.sender].activeTokenBalance[tokenAddress])
                 amount = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress];
@@ -351,6 +327,7 @@ contract ReserveFund {
             walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], block.number));
 
             walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(tokenAddress, walletInfoMap[msg.sender].depositsToken[tokenAddress].length - 1));
+			aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].add(amount);
         }
 
         //emit event

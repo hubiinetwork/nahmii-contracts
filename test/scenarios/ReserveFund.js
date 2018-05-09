@@ -883,9 +883,13 @@ module.exports = function (glob) {
 				//
 				// This is the accumulation of balance between a range of blocks 
 				// (see balanceBlocks above)
-				
-				bbIn = (etherDepositBlockNumber_userD[1] - etherDepositBlockNumber_userD[0]) * ETHER_DEPOSIT_AMOUNT_D[0];
-				bbIn += (etherDepositBlockNumber_userD[2] - etherDepositBlockNumber_userD[1]) * ETHER_DEPOSIT_AMOUNT_D[1];
+
+				const deposit0 = web3.toWei(ETHER_DEPOSIT_AMOUNT_D[0]);
+				const deposit1 = web3.toWei(ETHER_DEPOSIT_AMOUNT_D[1]);
+				const deposit2 = web3.toWei(ETHER_DEPOSIT_AMOUNT_D[2]);
+
+				bbIn = (etherDepositBlockNumber_userD[1] - etherDepositBlockNumber_userD[0]) * deposit0;
+				bbIn += (etherDepositBlockNumber_userD[2] - etherDepositBlockNumber_userD[1]) * deposit1;
 				
 				// According to the accrual allocation algorithm, user A should obtain staged funds from
 				// the accrual funding by:
@@ -895,18 +899,20 @@ module.exports = function (glob) {
 
 				var aggregateEtherBalance = await glob.web3ReserveFund.activeBalance(0, 0);
 				var aggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
+				var userBalance = await glob.web3ReserveFund.stagedBalance(glob.user_d, 0);
+
 				var blockSpan = bn_up - bn_low;
 
-				console.log("bbIn=" + bbIn);
+				console.log("bn_low=" + bn_low + " bn_up=" +  bn_up + " bbIn=" + bbIn);
 
-				console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance + " blockSpan=" + blockSpan);
-				const fraction =  (bbIn / ( aggregateEtherBalance * blockSpan) );
-				const amount = aggregateAccrualBalance * fraction;
+				console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance + " blockSpan= " + blockSpan);
+				const fraction = new web3.BigNumber(bbIn).div(aggregateEtherBalance.mul(blockSpan));
+				const amount = aggregateAccrualBalance.mul(fraction);
 
 				console.log("f= " + fraction + " amount = " + amount);
 				
-				const expectedPostAggregateEtherBalance = aggregateEtherBalance - amount;
-				const expectedPostUserBalance = ETHER_DEPOSIT_AMOUNT_D[0] + ETHER_DEPOSIT_AMOUNT_D[1] + ETHER_DEPOSIT_AMOUNT_D[2];
+				const expectedPostAggregateEtherBalance = aggregateEtherBalance.sub(amount);
+				const expectedPostUserBalance = userBalance.add(amount);
 				const expectedPostAggregateAccrualBalance = aggregateAccrualBalance;
 
                 await glob.web3ReserveFund.closeAccrualPeriod();
@@ -927,8 +933,8 @@ module.exports = function (glob) {
 					 'Post aggregate-ETH balance differs: ' + postAggregateEtherBalance + ' but expected:' + expectedPostAggregateEtherBalance);
 				assert(postAggregateAccrualBalance.eq(expectedPostAggregateAccrualBalance),
 					'Post accrual-ETH balance differs: ' + postAggregateAccrualBalance + ' but expected:' + expectedPostAggregateAccrualBalance);
-				assert(postUserBalance.eq(expectedPostUserBalance),
-						'Post staged-ETH  user balance differs: ' + postUserBalance + ' but expected:' + expectedPostUserBalance);
+				assert(postUserBalance.eq(web3.toWei(expectedPostUserBalance)), 
+						'Post staged-ETH  user balance differs: ' + postUserBalance + ' but expected:' + web3.toWei(expectedPostUserBalance));
 			}
 
 			catch (err) {
