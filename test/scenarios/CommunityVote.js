@@ -1,7 +1,5 @@
 module.exports = function (glob) {
 	describe("CommunityVote", function () {
-		it("T001: TO-DO", function (done) {
-			done();
-		});
+		//NOTE: Currently no tests for this SC because it is almost a NO-OP
 	});
 };
