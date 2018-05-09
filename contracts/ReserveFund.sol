@@ -315,7 +315,7 @@ contract ReserveFund {
             walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeEtherBalance, block.number));
 
             walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(address(0), walletInfoMap[msg.sender].depositsEther.length - 1));
-			aggregatedEtherBalance = aggregatedEtherBalance.add(amount);
+			walletInfoMap[msg.sender].etherBalances.push(walletInfoMap[msg.sender].activeEtherBalance);
         } else {
             if (amount > walletInfoMap[msg.sender].activeTokenBalance[tokenAddress])
                 amount = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress];
@@ -327,7 +327,7 @@ contract ReserveFund {
             walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], block.number));
 
             walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(tokenAddress, walletInfoMap[msg.sender].depositsToken[tokenAddress].length - 1));
-			aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].add(amount);
+			walletInfoMap[msg.sender].tokenBalances[tokenAddress].push(walletInfoMap[msg.sender].activeTokenBalance[tokenAddress]);
         }
 
         //emit event
