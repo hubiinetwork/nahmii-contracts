@@ -308,6 +308,18 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
+		it(testCounter.next() + ": MUST FAIL [setServiceActivationTimeout]: Non-owner trying to set the service activation timeout", async() => {
+			try {
+				await glob.web3ClientFund.setServiceActivationTimeout(30, { from: glob.user_a });
+				assert(false, 'This test must fail.');
+			}
+			catch (err) {
+				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
 		it(testCounter.next() + ": MUST SUCCEED [registerService]: Register ReserveFunds SC as a service", async() => {
 			try {
 				await glob.web3ClientFund.registerService(glob.web3ReserveFund.address);
