@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -104,6 +104,8 @@ contract ReserveFund {
 
 	uint256[] accrualBlockNumbers;
 
+	mapping (address => bool) registeredServices;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -114,11 +116,13 @@ contract ReserveFund {
     event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx);
 	event ClaimAccrualEvent(address tokenAddress);
 	event CloseAccrualPeriodEvent();
+	event RegisterServiceEvent(address serviceAddress);
+	event DeregisterServiceEvent(address serviceAddress);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    function ReserveFund(address _owner) public notNullAddress(_owner) {
+    constructor(address _owner) public notNullAddress(_owner) {
 		owner = _owner;
     }
 
@@ -221,7 +225,7 @@ contract ReserveFund {
         return tokenAddress == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress];
     }
 
-    function closeAccrualPeriod() public onlyOwner {
+    function closeAccrualPeriod() public onlyOwnerOrService {
 
 		// Register this block
 		accrualBlockNumbers.push(block.number);
@@ -442,6 +446,20 @@ contract ReserveFund {
         }
     }
 
+	function registerService(address serviceAddress) public onlyOwner {
+		require(registeredServices[serviceAddress] == false);
+		registeredServices[serviceAddress] = true;
+
+		emit RegisterServiceEvent(serviceAddress);
+	}
+
+	function deregisterService(address serviceAddress) public onlyOwner {
+		require(registeredServices[serviceAddress] == true);
+		registeredServices[serviceAddress] = false;
+
+		emit DeregisterServiceEvent(serviceAddress);
+	}
+
     //
     // Internal helper functions
     // -----------------------------------------------------------------------------------------------------------------
@@ -492,4 +510,9 @@ contract ReserveFund {
         require(msg.sender == owner);
         _;
     }
+
+	modifier onlyOwnerOrService {
+		require(msg.sender == owner || registeredServices[msg.sender] == true);
+		_;
+	}
 }
