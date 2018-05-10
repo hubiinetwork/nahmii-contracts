@@ -297,9 +297,9 @@ module.exports = function (glob) {
 
 		//------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [setServiceActivationTimeout]: Set the service activation timeout to 0", async() => {
+		it(testCounter.next() + ": MUST SUCCEED [setServiceActivationTimeout]: Set the service activation timeout to 5 seconds", async() => {
 			try {
-				await glob.web3ClientFund.setServiceActivationTimeout(0);
+				await glob.web3ClientFund.setServiceActivationTimeout(5);
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -386,14 +386,28 @@ module.exports = function (glob) {
 			}
 		});
 
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST FAIL [transferFromDepositedToSettledBalance]: User A uses UnitTestHelpers_SUCCESS as a service to send 0.2 ETH to User D but before timeout", async() => {
+			try {
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToTransferFromDepositedToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.2, 'ether'), 0);
+				assert(false, 'This test must fail.');
+			}
+			catch (err) {
+				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
 		//------------------------------------------------------------------------
 
 		it(testCounter.next() + ": MUST SUCCEED [transferFromDepositedToSettledBalance]: User A uses UnitTestHelpers_SUCCESS as a service to send 0.2 ETH to User D", async() => {
 			try {
+				await Helpers.sleep(5000);
+
 				let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
 				let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0);
 
-				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToTransferFromDepositedToSettledBalance(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.2, 'ether'), 0);
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToTransferFromDepositedToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.2, 'ether'), 0);
 
 				let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
 				let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0);
@@ -410,7 +424,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [transferFromDepositedToSettledBalance]: User A disabled UnitTestHelpers_FAIL as a service to send 0.2 ETH to User D", async() => {
 			try {
-				await glob.web3UnitTestHelpers_FAIL_TESTS.callToTransferFromDepositedToSettledBalance(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.2, 'ether'), 0);
+				await glob.web3UnitTestHelpers_FAIL_TESTS.callToTransferFromDepositedToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.2, 'ether'), 0);
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
@@ -425,7 +439,7 @@ module.exports = function (glob) {
 				let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address);
 				let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
 
-				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToTransferFromDepositedToSettledBalance(glob.web3ClientFund.address, glob.user_a, glob.user_d, 6, glob.web3Erc20.address);
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToTransferFromDepositedToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, 6, glob.web3Erc20.address);
 
 				let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address);
 				let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
@@ -442,7 +456,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [transferFromDepositedToSettledBalance]: User A disabled UnitTestHelpers_FAIL as a service to send 6 tokens to User D", async() => {
 			try {
-				await glob.web3UnitTestHelpers_FAIL_TESTS.callToTransferFromDepositedToSettledBalance(glob.web3ClientFund.address, glob.user_a, glob.user_d, 6, glob.web3Erc20.address);
+				await glob.web3UnitTestHelpers_FAIL_TESTS.callToTransferFromDepositedToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, 6, glob.web3Erc20.address);
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
@@ -457,7 +471,7 @@ module.exports = function (glob) {
 				let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
 				let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
 
-				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToWithdrawFromDepositedBalance(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.3, 'ether'), 0);
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToWithdrawFromDepositedBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.3, 'ether'), 0);
 
 				let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
 				let newEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
@@ -474,7 +488,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [withdrawFromDepositedBalance]: User A disabled unit test helper SC as a service to withdraw 0.3 ETH to User D", async() => {
 			try {
-				await glob.web3UnitTestHelpers_FAIL_TESTS.callToWithdrawFromDepositedBalance(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.3, 'ether'), 0);
+				await glob.web3UnitTestHelpers_FAIL_TESTS.callToWithdrawFromDepositedBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.3, 'ether'), 0);
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
@@ -489,7 +503,7 @@ module.exports = function (glob) {
 				let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_c, 0);
 				let oldEthersBalance = await web3.eth.getBalancePromise(glob.web3ClientFund.address);
 
-				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToDepositEthersToSettledBalance(glob.web3ClientFund.address, glob.user_c, { value: web3.toWei(0.4, 'ether') });
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToDepositEthersToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_c, { value: web3.toWei(0.4, 'ether') });
 
 				let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_c, 0);
 				let newEthersBalance = await web3.eth.getBalancePromise(glob.web3ClientFund.address);
@@ -506,7 +520,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [depositEthersToSettledBalance]: UnitTestHelpers_FAIL deposits 0.4 ETH to User A", async() => {
 			try {
-				await glob.web3UnitTestHelpers_FAIL_TESTS.callToDepositEthersToSettledBalance(glob.web3ClientFund.address, glob.user_a, { value: web3.toWei(0.4, 'ether') });
+				await glob.web3UnitTestHelpers_FAIL_TESTS.callToDepositEthersToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, { value: web3.toWei(0.4, 'ether') });
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
@@ -518,7 +532,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST SUCCEED [depositTokensToSettledBalance]: UnitTestHelpers_SUCCESS deposits 4 tokens to User D", async() => {
 			try {
-				await glob.web3UnitTestHelpers_SUCCESS_TESTS.erc20_approve(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToApprove_ERC20(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
 			}
 			catch (err) {
 				assert(false, 'Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
@@ -527,7 +541,7 @@ module.exports = function (glob) {
 				let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
 				let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
 
-				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToDepositTokensToSettledBalance(glob.web3ClientFund.address, glob.user_d, glob.web3Erc20.address, 4);
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToDepositTokensToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_d, glob.web3Erc20.address, 4);
 
 				let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
 				let newTokensBalance = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
@@ -544,13 +558,13 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [depositTokensToSettledBalance]: UnitTestHelpers_FAIL deposits 4 tokens to User A", async() => {
 			try {
-				await glob.web3UnitTestHelpers_FAIL_TESTS.erc20_approve(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
+				await glob.web3UnitTestHelpers_FAIL_TESTS.callToApprove_ERC20(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
 			}
 			catch (err) {
 				assert(false, 'Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
 			}
 			try {
-				await glob.web3UnitTestHelpers_FAIL_TESTS.callToDepositTokensToSettledBalance(glob.web3ClientFund.address, glob.user_a, glob.web3Erc20.address, 4);
+				await glob.web3UnitTestHelpers_FAIL_TESTS.callToDepositTokensToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.web3Erc20.address, 4);
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {

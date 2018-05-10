@@ -23,3 +23,8 @@ module.exports.TestCounter = function ()
 	}
 	return new TestCounter();
 }
+
+module.exports.sleep = function (ms)
+{
+	return new Promise(resolve => setTimeout(resolve, ms));
+}

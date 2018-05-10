@@ -103,14 +103,14 @@ contract SecurityBond {
         }
     }
 
-    function setWithdrawalTimeout(uint256 timeout) public onlyOwner {
-        withdrawalTimeout = timeout;
+    function setWithdrawalTimeout(uint256 timeoutInSeconds) public onlyOwner {
+        withdrawalTimeout = timeoutInSeconds;
     }
 
     //
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
-    function () public notOwner payable {
+    function () public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet active balance
@@ -122,7 +122,7 @@ contract SecurityBond {
     }
 
     //NOTE: msg.sender must call ERC20.approve first
-    function depositTokens(address token, int256 amount) notOwner public {
+    function depositTokens(address token, int256 amount) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -182,11 +182,11 @@ contract SecurityBond {
             
             //move from active balance to staged
             activeEtherBalance = activeEtherBalance.sub_nn(amount);
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add_nn(amount);
+            walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(amount);
 
             //add substage info
             start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0); 
-            walletInfoMap[msg.sender].subStagedEtherBalances.list.push(SubStageItem(amount, start_time));
+            walletInfoMap[wallet].subStagedEtherBalances.list.push(SubStageItem(amount, start_time));
         } else {
             //clamp amount to move
             amount = amount.clampMax(activeTokenBalance[token]);
@@ -195,11 +195,11 @@ contract SecurityBond {
 
             //move from active balance to staged
             activeTokenBalance[token] = activeTokenBalance[token].sub_nn(amount);
-            walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount);
+            walletInfoMap[wallet].stagedTokenBalance[token] = walletInfoMap[wallet].stagedTokenBalance[token].add_nn(amount);
 
             //add substage info
             start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0); 
-            walletInfoMap[msg.sender].subStagedTokenBalances[token].list.push(SubStageItem(amount, start_time));
+            walletInfoMap[wallet].subStagedTokenBalances[token].list.push(SubStageItem(amount, start_time));
         }
 
         //emit event
@@ -224,7 +224,7 @@ contract SecurityBond {
             if (current_index >= walletInfoMap[msg.sender].subStagedEtherBalances.list.length) {
                 break;
             }
-            if (block.timestamp >= walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].start_timestamp) {
+            if (block.timestamp < walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].start_timestamp) {
                 break;
             }
 
@@ -270,7 +270,7 @@ contract SecurityBond {
             if (current_index >= walletInfoMap[msg.sender].subStagedTokenBalances[token].list.length) {
                 break;
             }
-            if (block.timestamp >= walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].start_timestamp) {
+            if (block.timestamp < walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].start_timestamp) {
                 break;
             }
 
