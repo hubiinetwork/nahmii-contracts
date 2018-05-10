@@ -37,6 +37,8 @@ module.exports = function (glob) {
 
 		var lastOwnerDepositBlock = -1;
 
+		const MOCK_SERVICE_ADDRESS = '0xCAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE';
+
 		// Helper functions
 		// -----------------------------------------------------------------------------------------------------
 		Number.prototype.pad = function (size) {
@@ -444,14 +446,6 @@ module.exports = function (glob) {
 				});
 		});	
 
-		it(testId() + ": MUST SUCCEED [closeAccrualPeriod]", function (done) {
-			done();
-		});
-
-		it(testId() + ": MUST SUCCEED [claimAccrual]", function (done) {
-			done();
-		});
-
 		it(testId() + ": MUST FAIL [stage]: Cannot be called by owner", function (done) {
 			glob.web3ReserveFund.stage(glob.web3Erc20.address, TOKEN_STAGE_AMOUNT_A, { from: glob.owner })
 				.then(() => {
@@ -786,6 +780,68 @@ module.exports = function (glob) {
 				})
 		});
 
+		it(testId() + ": MUST SUCCEED [registerService]: Register a mock service  ", function(done) {
+			glob.web3ReserveFund.registerService(MOCK_SERVICE_ADDRESS)
+			.then(() => {
+				done();
+			})
+			.catch((err) => {
+				done(new Error('This test must succeed. Error is: ' + err.toString()));
+			});
+
+		});
+
+		it(testId() + ": MUST FAIL [registerService]: Cannot be called from non-owner address ", function (done) {
+			glob.web3ReserveFund.registerService(MOCK_SERVICE_ADDRESS, { from: glob.user_a })
+				.then(() => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				});
+		});
+
+		it(testId() + ": MUST FAIL [registerService]: Register a mock service twice  ", function (done) {
+			glob.web3ReserveFund.registerService(MOCK_SERVICE_ADDRESS)
+				.then(() => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				});
+
+		});
+
+		it(testId() + ": MUST FAIL [deregisterService]: Cannot be called from non-owner address ", function (done) {
+			glob.web3ReserveFund.deregisterService(MOCK_SERVICE_ADDRESS, { from: glob.user_a })
+				.then(() => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				});
+		});
+
+		it(testId() + ": MUST SUCCEED [deregisterService]: Deregister a mock service  ", function(done) {
+			glob.web3ReserveFund.deregisterService(MOCK_SERVICE_ADDRESS)
+			.then(() => {
+				done();
+			})
+			.catch((err) => {
+				done(new Error('This test must succeed. Error is: ' + err.toString()));
+			});
+		});
+
+		it(testId() + ": MUST FAIL [deregisterService]: Deregister a non-existent or already unregistered service  ", function(done) {
+			glob.web3ReserveFund.deregisterService(MOCK_SERVICE_ADDRESS)
+				.then(() => {
+					done(new Error('This test must fail'));
+				})
+				.catch((err) => {
+					done();
+				});
+		});
+
 		it(testId() + ": MUST FAIL [closeAccrualPeriod]: Accrual period cannot be called by non-owner", function(done) {
 			glob.web3ReserveFund.closeAccrualPeriod({ from: glob.user_c })
 			.then((result) => {
@@ -845,17 +901,17 @@ module.exports = function (glob) {
 				   (!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)				
 				*/
 
-				var tx0 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[0]));
-				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
-				var tx1 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[1]));
-				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
-				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
-				var tx2 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[2]));
-				await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
+				// var tx0 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[0]));
+				// await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
+				// var tx1 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[1]));
+				// await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
+				// await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
+				// var tx2 = await sendTx(glob.user_d, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_D[2]));
+				// await sendTx(glob.user_b, glob.web3ReserveFund.address, web3.toWei(0.00000001, 'ether'));
 
-				etherDepositBlockNumber_userD[0] = await getTxBlock(tx0);
-				etherDepositBlockNumber_userD[1] = await getTxBlock(tx1);
-				etherDepositBlockNumber_userD[2] = await getTxBlock(tx2);
+				// etherDepositBlockNumber_userD[0] = await getTxBlock(tx0);
+				// etherDepositBlockNumber_userD[1] = await getTxBlock(tx1);
+				// etherDepositBlockNumber_userD[2] = await getTxBlock(tx2);
 
 				for (i = 0; i < etherDepositBlockNumber_userD.length; i++)
 					console.log("etherDeposit[" + i + "] of " + ETHER_DEPOSIT_AMOUNT_D[i] + "ETH @ block " + etherDepositBlockNumber_userD[i]);
