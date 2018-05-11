@@ -173,6 +173,8 @@ contract Exchange {
     event ChallengeFraudulentDealByTradeSucceedingPaymentEvent(Payment payment, Trade trade, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByTradeOrderResidualsEvent(Trade firstTrade, Trade lastTrade, address challenger, address seizedWallet);
     event ChallengeDoubleSpentOrdersEvent(Trade firstTrade, Trade lastTrade, address challenger, address seizedWallet);
+    event SettleDealAsTradeEvent(Trade trade, address wallet);
+    event SettleDealAsPaymentEvent(Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
 
     //
@@ -487,6 +489,16 @@ contract Exchange {
     /// @return Number of wallets
     function seizedWalletsCount() public view returns (uint256) {
         return seizedWallets.length;
+    }
+
+    function settleDealAsTrade(Trade trade, address wallet) public {
+
+        emit SettleDealAsTradeEvent(trade, wallet);
+    }
+
+    function settleDealAsPayment(Payment payment, address wallet) public {
+
+        emit SettleDealAsPaymentEvent(payment, wallet);
     }
 
     function isGenuineTradeMakerFee(Trade trade) private view returns (bool) {

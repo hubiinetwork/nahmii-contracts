@@ -167,7 +167,7 @@ module.exports = (glob) => {
                         rollingVolume: utils.bigNumberify(0),
                         liquidityRole: liquidityRoles.indexOf('Maker'),
                         order: {
-                            amount: utils.parseUnits('1000', 18),
+                            amount: utils.parseUnits('100', 18),
                             hashes: {
                                 party: hashString('some party buy order hash'),
                                 exchange: hashString('some exchange buy order hash')
@@ -198,7 +198,7 @@ module.exports = (glob) => {
                         rollingVolume: utils.bigNumberify(0),
                         liquidityRole: liquidityRoles.indexOf('Taker'),
                         order: {
-                            amount: utils.parseUnits('1000', 18),
+                            amount: utils.parseUnits('100', 18),
                             hashes: {
                                 party: hashString('some party sell order hash'),
                                 exchange: hashString('some exchange sell order hash')
@@ -2184,6 +2184,217 @@ module.exports = (glob) => {
                     fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
                     seizedWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+        });
+
+        describe('settleDealAsTrade()', () => {
+            let trade, overrideOptions, topic, filter;
+
+            beforeEach(async () => {
+                overrideOptions = {gasLimit: 2e6};
+            });
+
+            beforeEach(async () => {
+                await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.001', 18), [], [], overrideOptions);
+                await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
+                await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
+                await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
+
+                trade = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('400', 18),
+                                previous: utils.parseUnits('500', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9599.9', 18),
+                                previous: utils.parseUnits('9500', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.4', 18),
+                                previous: utils.parseUnits('9.5', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.1', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('600', 18),
+                                previous: utils.parseUnits('700', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19500', 18),
+                                previous: utils.parseUnits('19600', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.4998', 18),
+                                previous: utils.parseUnits('19.4', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.0', 18),
+                            conjugate: utils.parseUnits('0.0002', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('100', 18),
+                            net: utils.parseUnits('100', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.1', 18),
+                            net: utils.parseUnits('0.1', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.0002', 18)
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                trade = await augmentTradeSeal(trade, glob.owner);
+
+                topic = ethersExchange.interface.events.SettleDealAsTradeEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe.only('if isImmediateSettlement is true', () => {
+                it('should settle both trade parties', async () => {
+                    await ethersExchange.settleDealAsTrade(trade, glob.user_a, overrideOptions);
+                });
+            });
+
+            describe('if isImmediateSettlement is false', () => {
+                beforeEach(() => {
+                   trade.immediateSettlement = false;
+                });
+
+                describe('if reserve fund does not support settlement', () => {
+                    it('should settle both trade parties', async () => {
+                        await ethersExchange.settleDealAsTrade(trade, glob.user_a, overrideOptions);
+                    });
+                });
+
+                describe('if reserve fund does support settlement', () => {
+                    it('should settle only provided party', async () => {
+                        await ethersExchange.settleDealAsTrade(trade, glob.user_a, overrideOptions);
+                    });
+                });
+            });
+        });
+
+        describe('settleDealAsPayment()', () => {
+            let payment, overrideOptions, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 1e6};
+            });
+
+            beforeEach(async () => {
+                await ethersConfiguration.setPaymentFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [], [], overrideOptions);
+                await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
+
+                payment = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    currency: '0x0000000000000000000000000000000000000001',
+                    source: {
+                        _address: glob.user_c,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('9399.8', 18),
+                            previous: utils.parseUnits('9500', 18)
+                        },
+                        netFee: utils.parseUnits('0.2', 18)
+                    },
+                    destination: {
+                        _address: glob.user_d,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('19700', 18),
+                            previous: utils.parseUnits('19600', 18)
+                        },
+                        netFee: utils.parseUnits('0.0', 18)
+                    },
+                    transfers: {
+                        single: utils.parseUnits('100', 18),
+                        net: utils.parseUnits('100', 18)
+                    },
+                    singleFee: utils.parseUnits('0.2', 18),
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                payment = await augmentPaymentSeals(payment, glob.user_c, glob.owner);
+
+                topic = ethersExchange.interface.events.ChallengeFraudulentDealByPaymentEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe.only('if isImmediateSettlement is true', () => {
+                it('should settle both payment parties', async () => {
+                    await ethersExchange.settleDealAsPayment(payment, glob.user_a, overrideOptions);
+                });
+            });
+
+            describe('if isImmediateSettlement is false', () => {
+                beforeEach(() => {
+                    payment.immediateSettlement = false;
+                });
+
+                describe('if reserve fund does not support settlement', () => {
+                    it('should settle both payment parties', async () => {
+                        await ethersExchange.settleDealAsPayment(payment, glob.user_a, overrideOptions);
+                    });
+                });
+
+                describe('if reserve fund does support settlement', () => {
+                    it('should settle only provided party', async () => {
+                        await ethersExchange.settleDealAsPayment(payment, glob.user_a, overrideOptions);
+                    });
                 });
             });
         });
