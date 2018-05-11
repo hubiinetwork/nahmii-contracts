@@ -275,13 +275,13 @@ contract ReserveFund {
 			}
 		}
 
-		uint256 bb = balanceBlocksIn(msg.sender, tokenAddress, bn_low, bn_up);
+		uint256 bb = internalBalanceBlocksIn(msg.sender, tokenAddress, bn_low, bn_up);
 
 		require (bn_low != bn_up); // avoid division by 0
 
-		uint256 balance = tokenAddress == address(0) ? aggregatedEtherBalance : aggregatedTokenBalance[tokenAddress];
-		uint256 fraction =bb.mul(1e18).mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(balance.mul(bn_up.sub(bn_low)).mul(1e18));
-        uint256 amount = fraction.mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(1e18);
+		uint256 balance =  tokenAddress == address(0) ? aggregatedEtherBalance : aggregatedTokenBalance[tokenAddress];
+		uint256 fraction = bb.mul(1e18).mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(balance.mul(bn_up.sub(bn_low)).mul(1e18));
+        uint256 amount =   fraction.mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(1e18);
         
 		/* Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c */
 
@@ -473,11 +473,18 @@ contract ReserveFund {
 		emit DeregisterServiceEvent(serviceAddress);
 	}
 
+	//
+    // Debugging helper functions
+    // -----------------------------------------------------------------------------------------------------------------
+	function debugBalanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) external view onlyOwner returns (uint256) {
+		return internalBalanceBlocksIn(wallet, tokenAddress, startBlock, endBlock);
+	}
+
     //
     // Internal helper functions
     // -----------------------------------------------------------------------------------------------------------------
 
-	function balanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) internal view returns (uint256) {
+	function internalBalanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) internal view returns (uint256) {
 		require (startBlock < endBlock);
 		require (wallet != address(0));
 
