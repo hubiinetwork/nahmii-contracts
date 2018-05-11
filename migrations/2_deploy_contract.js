@@ -21,7 +21,6 @@ module.exports = function (deployer, network, accounts) {
 	var ownerAccount = accounts[0];
 
 	deployer.deploy(SafeMathIntLib);
-	deployer.deploy(SafeMathUintLib);
 	deployer.link(SafeMathIntLib, ClientFund);
 	deployer.link(SafeMathIntLib, CommunityVote);
 	deployer.link(SafeMathIntLib, Configuration);
@@ -30,6 +29,9 @@ module.exports = function (deployer, network, accounts) {
 	deployer.link(SafeMathIntLib, RevenueFund);
 	deployer.link(SafeMathIntLib, SecurityBond);
 	deployer.link(SafeMathIntLib, TokenHolderRevenueFund);
+    deployer.deploy(SafeMathUintLib);
+    deployer.link(SafeMathUintLib, Exchange);
+    deployer.link(SafeMathUintLib, RevenueFund);
 	deployer.deploy(ClientFund, ownerAccount);
 	deployer.deploy(CommunityVote, ownerAccount);
 	deployer.deploy(Configuration, ownerAccount);

@@ -16,7 +16,7 @@ module.exports = (glob) => {
         let truffleExchange, ethersExchange;
         let truffleConfiguration, ethersConfiguration;
         let provider;
-        let blockNumber0, blockNumber10;
+        let blockNumber0, blockNumber10, blockNumber20;
 
         before(async () => {
             truffleExchange = glob.web3Exchange;
@@ -31,6 +31,7 @@ module.exports = (glob) => {
         beforeEach(async () => {
             blockNumber0 = await provider.getBlockNumber();
             blockNumber10 = blockNumber0 + 10;
+            blockNumber20 = blockNumber0 + 20;
         });
 
         describe('constructor', () => {
@@ -142,7 +143,7 @@ module.exports = (glob) => {
             let trade, overrideOptions, topic, filter;
 
             beforeEach(async () => {
-                overrideOptions = {gasLimit: 1e6};
+                overrideOptions = {gasLimit: 2e6};
             });
 
             beforeEach(async () => {
@@ -167,7 +168,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Maker'),
                         order: {
                             amount: utils.parseUnits('1000', 18),
-                            partyHash: hashString('some party buy order hash'),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('400', 18),
                                 previous: utils.parseUnits('500', 18)
@@ -195,7 +199,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Taker'),
                         order: {
                             amount: utils.parseUnits('1000', 18),
-                            partyHash: hashString('some party sell order hash'),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('600', 18),
                                 previous: utils.parseUnits('700', 18)
@@ -942,7 +949,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Maker'),
                         order: {
                             amount: utils.parseUnits('100', 18),
-                            partyHash: hashString('some party buy order hash'),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('100', 18)
@@ -970,7 +980,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Taker'),
                         order: {
                             amount: utils.parseUnits('100', 18),
-                            partyHash: hashString('some party sell order hash'),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('100', 18)
@@ -1024,7 +1037,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Taker'),
                         order: {
                             amount: utils.parseUnits('50', 18),
-                            partyHash: hashString('some party buy order hash'),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('50', 18)
@@ -1052,7 +1068,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Maker'),
                         order: {
                             amount: utils.parseUnits('50', 18),
-                            partyHash: hashString('some party sell order hash'),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('50', 18)
@@ -1319,7 +1338,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Maker'),
                         order: {
                             amount: utils.parseUnits('100', 18),
-                            partyHash: hashString('some party buy order hash'),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('100', 18)
@@ -1347,7 +1369,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Taker'),
                         order: {
                             amount: utils.parseUnits('100', 18),
-                            partyHash: hashString('some party sell order hash'),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('100', 18)
@@ -1539,7 +1564,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Taker'),
                         order: {
                             amount: utils.parseUnits('50', 18),
-                            partyHash: hashString('some party buy order hash'),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('50', 18)
@@ -1567,7 +1595,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Maker'),
                         order: {
                             amount: utils.parseUnits('50', 18),
-                            partyHash: hashString('some party sell order hash'),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('50', 18)
@@ -1697,7 +1728,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Maker'),
                         order: {
                             amount: utils.parseUnits('100', 18),
-                            partyHash: hashString('some party buy order hash'),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('500', 18),
                                 previous: utils.parseUnits('600', 18)
@@ -1725,7 +1759,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Taker'),
                         order: {
                             amount: utils.parseUnits('100', 18),
-                            partyHash: hashString('some party sell order hash'),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('100', 18)
@@ -1779,7 +1816,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Maker'),
                         order: {
                             amount: utils.parseUnits('100', 18),
-                            partyHash: hashString('some party buy order hash'),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('400', 18),
                                 previous: utils.parseUnits('500', 18)
@@ -1807,7 +1847,10 @@ module.exports = (glob) => {
                         liquidityRole: liquidityRoles.indexOf('Taker'),
                         order: {
                             amount: utils.parseUnits('100', 18),
-                            partyHash: hashString('some party sell order hash'),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
                             residuals: {
                                 current: utils.parseUnits('0', 18),
                                 previous: utils.parseUnits('100', 18)
@@ -1902,6 +1945,248 @@ module.exports = (glob) => {
                 });
             });
         });
+
+        describe('challengeDoubleSpentOrders()', () => {
+            let overrideOptions, firstTrade, lastTrade, currency, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+                currency = '0x0000000000000000000000000000000000000001';
+            });
+
+            beforeEach(async () => {
+                firstTrade = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party buy order hash at nonce 1'),
+                                exchange: hashString('some exchange buy order hash at nonce 1')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('0', 18),
+                                previous: utils.parseUnits('100', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9599.9', 18),
+                                previous: utils.parseUnits('9500', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.4', 18),
+                                previous: utils.parseUnits('9.5', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.1', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party sell order hash at nonce 1'),
+                                exchange: hashString('some exchange sell order hash at nonce 1')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('0', 18),
+                                previous: utils.parseUnits('100', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19500', 18),
+                                previous: utils.parseUnits('19600', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.4998', 18),
+                                previous: utils.parseUnits('19.4', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.1', 18),
+                            conjugate: utils.parseUnits('0.0002', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('100', 18),
+                            net: utils.parseUnits('100', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.1', 18),
+                            net: utils.parseUnits('0.1', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.0002', 18)
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                lastTrade = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(2),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party buy order hash at nonce 2'),
+                                exchange: hashString('some exchange buy order hash at nonce 2')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('0', 18),
+                                previous: utils.parseUnits('100', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9699.8', 18),
+                                previous: utils.parseUnits('9599.9', 18),
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.3', 18),
+                                previous: utils.parseUnits('9.4', 18),
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.2', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(2),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party sell order hash at nonce 2'),
+                                exchange: hashString('some exchange sell order hash at nonce 2')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('0', 18),
+                                previous: utils.parseUnits('100', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19400', 18),
+                                previous: utils.parseUnits('19500', 18),
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.5996', 18),
+                                previous: utils.parseUnits('19.4998', 18),
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.0', 18),
+                            conjugate: utils.parseUnits('0.0004', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('100', 18),
+                            net: utils.parseUnits('200', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.1', 18),
+                            net: utils.parseUnits('0.2', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.0002', 18)
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                firstTrade = await augmentTradeSeal(firstTrade, glob.owner);
+                lastTrade = await augmentTradeSeal(lastTrade, glob.owner);
+
+                topic = ethersExchange.interface.events.ChallengeDoubleSpentOrdersEvent.topics[0];
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: [topic]
+                };
+            });
+
+            describe('if trades are genuine', () => {
+                it('should revert', async () => {
+                    ethersExchange.challengeDoubleSpentOrders(firstTrade, lastTrade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if first trade\'s buy order equals last trade\'s buy order', () => {
+                beforeEach(() => {
+                    lastTrade.buyer.order.hashes.exchange = firstTrade.buyer.order.hashes.exchange;
+                });
+
+                it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeDoubleSpentOrders(firstTrade, lastTrade, overrideOptions);
+                    const [operationalMode, fraudulentTrade, seizedWallet, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentTrade(),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
+                    seizedWallet.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if first trade\'s sell order equals last trade\'s sell order', () => {
+                beforeEach(() => {
+                    lastTrade.seller.order.hashes.exchange = firstTrade.seller.order.hashes.exchange;
+                });
+
+                it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
+                    await ethersExchange.challengeDoubleSpentOrders(firstTrade, lastTrade, overrideOptions);
+                    const [operationalMode, fraudulentTrade, seizedWallet, logs] = await Promise.all([
+                        ethersExchange.operationalMode(),
+                        ethersExchange.fraudulentTrade(),
+                        ethersExchange.isSeizedWallet(glob.user_a),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalMode.should.equal(1);
+                    fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
+                    seizedWallet.should.be.true;
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+        });
     });
 };
 
@@ -1933,9 +2218,10 @@ const hashTrade = (trade) => hashString(trade.nonce.toNumber());
 
 const hashPayment = (payment) => hashString(payment.nonce.toNumber());
 
-const hashString = (data) => {
+const hashString = (...data) => {
     const hasher = keccak256.create();
-    hasher.update(data);
+    data.forEach((d) => hasher.update(d));
+    // hasher.update(data);
     return `0x${hasher.digest()}`;
 };
 
