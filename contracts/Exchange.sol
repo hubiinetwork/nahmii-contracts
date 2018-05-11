@@ -64,6 +64,7 @@ contract Exchange {
 
     struct Order {
         int256 amount;
+        bytes32 partyHash;
         CurrentPreviousInt256 residuals;
     }
 
@@ -165,6 +166,7 @@ contract Exchange {
     event ChallengeFraudulentDealBySuccessivePaymentsEvent(Payment firstPayment, Payment lastPayment, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByPaymentSucceedingTradeEvent(Trade trade, Payment payment, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByTradeSucceedingPaymentEvent(Payment payment, Trade trade, address challenger, address seizedWallet);
+    event ChallengeFraudulentDealByTradeOrderResidualsEvent(Trade firstTrade, Trade lastTrade, address challenger, address seizedWallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
 
     //
@@ -262,6 +264,7 @@ contract Exchange {
     }
 
     /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// to be tested for succession differences
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
@@ -274,7 +277,7 @@ contract Exchange {
         address currency
     )
     public
-    challengeableTradesPair(firstTrade, lastTrade, wallet, currency)
+    challengeableBySuccessionTradesPair(firstTrade, lastTrade, wallet, currency)
     {
         TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
         TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
@@ -299,6 +302,7 @@ contract Exchange {
     }
 
     /// @notice Submit two payment candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// to be tested for succession differences
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param firstPayment Reference payment
     /// @param lastPayment Fraudulent payment candidate
@@ -309,7 +313,7 @@ contract Exchange {
         address wallet
     )
     public
-    challengeablePaymentsPair(firstPayment, lastPayment, wallet)
+    challengeableBySuccessionPaymentsPair(firstPayment, lastPayment, wallet)
     {
         PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.source._address ? PaymentPartyRole.Source : PaymentPartyRole.Destination);
         PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.source._address ? PaymentPartyRole.Source : PaymentPartyRole.Destination);
@@ -331,6 +335,7 @@ contract Exchange {
     }
 
     /// @notice Submit trade and subsequent payment candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// to be tested for succession differences
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param trade Reference trade
     /// @param payment Fraudulent payment candidate
@@ -343,7 +348,7 @@ contract Exchange {
         address currency
     )
     public
-    challengeableTradePaymentPair(trade, payment, wallet, currency)
+    challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
         TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
         PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? PaymentPartyRole.Source : PaymentPartyRole.Destination);
@@ -367,6 +372,7 @@ contract Exchange {
     }
 
     /// @notice Submit payment and subsequent trade candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// to be tested for succession differences
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param payment Reference payment
     /// @param trade Fraudulent trade candidate
@@ -379,7 +385,7 @@ contract Exchange {
         address currency
     )
     public
-    challengeableTradePaymentPair(trade, payment, wallet, currency)
+    challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
         PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? PaymentPartyRole.Source : PaymentPartyRole.Destination);
         TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
@@ -400,6 +406,37 @@ contract Exchange {
         addToSeizedWallets(wallet);
 
         emit ChallengeFraudulentDealByTradeSucceedingPaymentEvent(payment, trade, msg.sender, wallet);
+    }
+
+    /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
+    /// trade order residual differences
+    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
+    /// @param firstTrade Reference trade
+    /// @param lastTrade Fraudulent trade candidate
+    /// @param wallet Address of concerned wallet
+    /// @param currency Address of concerned currency (0 if ETH)
+    function challengeFraudulentDealByTradeOrderResiduals(
+        Trade firstTrade,
+        Trade lastTrade,
+        address wallet,
+        address currency
+    )
+    public
+    challengeableByOrderResidualsTradesPair(firstTrade, lastTrade, wallet, currency)
+    {
+        TradePartyRole tradePartyRole = (wallet == firstTrade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
+
+        require(isSuccessiveTradesPartyNonces(firstTrade, tradePartyRole, lastTrade, tradePartyRole));
+
+        require(!isGenuineSuccessiveTradeOrderResiduals(firstTrade, lastTrade, tradePartyRole));
+
+        operationalMode = OperationalMode.Exit;
+        fraudulentTrade = lastTrade;
+
+        //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
+        addToSeizedWallets(wallet);
+
+        emit ChallengeFraudulentDealByTradeOrderResidualsEvent(firstTrade, lastTrade, msg.sender, wallet);
     }
 
     /// @notice Get the seized status of given wallet
@@ -452,8 +489,8 @@ contract Exchange {
     }
 
     function isGenuineTradeSeal(Trade trade) private view returns (bool) {
-        return (hashTrade(trade) == trade.seal.hash)
-        && (isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
+        return (hashTrade(trade) == trade.seal.hash)/*
+        && (isGenuineSignature(trade.seal.hash, trade.seal.signature, owner))*/;
     }
 
     function isGenuinePaymentSeals(Payment payment) private view returns (bool) {
@@ -645,6 +682,22 @@ contract Exchange {
         return lastNetFee == firstNetFee.add(lastSingleFee);
     }
 
+    function isGenuineSuccessiveTradeOrderResiduals(
+        Trade firstTrade,
+        Trade lastTrade,
+        TradePartyRole tradePartyRole
+    )
+    private
+    pure
+    returns (bool)
+    {
+        int256 firstCurrentResiduals;
+        int256 lastPreviousResiduals;
+        (firstCurrentResiduals, lastPreviousResiduals) = (TradePartyRole.Buyer == tradePartyRole) ? (firstTrade.buyer.order.residuals.current, lastTrade.buyer.order.residuals.previous) : (firstTrade.seller.order.residuals.current, lastTrade.seller.order.residuals.previous);
+
+        return firstCurrentResiduals == lastPreviousResiduals;
+    }
+
     function isGenuineSuccessivePaymentsNetFees(
         Payment firstPayment,
         PaymentPartyRole firstPaymentPartyRole,
@@ -760,8 +813,7 @@ contract Exchange {
         _;
     }
 
-
-    modifier challengeableTradesPair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
+    modifier challengeableBySuccessionTradesPair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
         require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
         require(wallet == firstTrade.buyer._address || wallet == firstTrade.seller._address);
         require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
@@ -772,7 +824,7 @@ contract Exchange {
         _;
     }
 
-    modifier challengeablePaymentsPair(Payment firstPayment, Payment lastPayment, address wallet) {
+    modifier challengeableBySuccessionPaymentsPair(Payment firstPayment, Payment lastPayment, address wallet) {
         require(isGenuineSignature(firstPayment.seals.party.hash, firstPayment.seals.party.signature, firstPayment.source._address));
         require(isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
         require(wallet == firstPayment.source._address || wallet == firstPayment.destination._address);
@@ -783,7 +835,7 @@ contract Exchange {
         _;
     }
 
-    modifier challengeableTradePaymentPair(Trade trade, Payment payment, address wallet, address currency) {
+    modifier challengeableBySuccessionTradePaymentPair(Trade trade, Payment payment, address wallet, address currency) {
         require(isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
         require(wallet == trade.buyer._address || wallet == trade.seller._address);
         require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
@@ -792,6 +844,18 @@ contract Exchange {
         require(isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
         require(wallet == payment.source._address || wallet == payment.destination._address);
         require(currency == payment.currency);
+        _;
+    }
+
+    modifier challengeableByOrderResidualsTradesPair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
+        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
+        require(currency == firstTrade.currencies.intended);
+
+        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
+        require(currency == lastTrade.currencies.intended);
+
+        require((wallet == firstTrade.buyer._address && wallet == lastTrade.buyer._address)
+            || (wallet == firstTrade.seller._address && wallet == lastTrade.seller._address));
         _;
     }
 }
