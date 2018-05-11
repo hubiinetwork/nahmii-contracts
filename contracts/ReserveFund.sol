@@ -239,7 +239,7 @@ contract ReserveFund {
 		emit CloseAccrualPeriodEvent();
     }
 
-	function claimAccrual(address tokenAddress) public {
+	function claimAccrual(address tokenAddress, bool compoundAccrual) public {
 		uint256 bn_low;
 		uint256 bn_up;
 		uint256 lenClaimAccrualBlocks;
@@ -287,10 +287,23 @@ contract ReserveFund {
 
 		if (tokenAddress == address(0)) {
 			aggregatedEtherBalance = aggregatedEtherBalance.sub(amount);
-			walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
+
+			if (compoundAccrual) {
+				walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.add(amount);
+			}
+			else {
+				walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
+			}
 		} else {
 			aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].sub(amount);
-			walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);
+			
+			if (compoundAccrual) {
+				walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].add(amount);
+			}
+			else {
+				walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);		
+			}
+		
 		}
 
 		/* Store upperbound as the last claimed accrual block number for currency */
