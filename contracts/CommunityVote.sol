@@ -52,16 +52,16 @@ contract CommunityVote {
     //
     // Results functions
     // -----------------------------------------------------------------------------------------------------------------
-    function getDoubleSpenders() public pure returns(uint256) {
+    function getDoubleSpenders() public pure returns (uint256) {
         return 0;
     }
 
-    function getHighestAbsoluteDealNonce() public pure returns(uint256) {
+    function getHighestAbsoluteDealNonce() public pure returns (uint256) {
         return 0;
     }
-    
-    function isDataAvailable() public pure returns(bool) {
-        return false;
+
+    function isDataAvailable() public pure returns (bool) {
+        return true;
     }
 
     //
