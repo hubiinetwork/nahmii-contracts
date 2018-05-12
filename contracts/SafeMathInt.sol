@@ -90,6 +90,14 @@ library SafeMathInt {
         return (a >= 0);
     }
 
+    function isNonZeroNegativeInt256(int256 a) public pure returns (bool) {
+        return (a < 0);
+    }
+
+    function isNegativeInt256(int256 a) public pure returns (bool) {
+        return (a <= 0);
+    }
+
     //
     //Clamping functions.
     //
