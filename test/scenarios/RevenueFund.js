@@ -279,7 +279,53 @@ module.exports = function (glob) {
 			}
 		});
 
-		//-------------------------------------------------------------------------
+        //-------------------------------------------------------------------------
+
+        it(testCounter.next() + ": MUST FAIL [registerService]: Register UnitTestHelpers_FAIL SC as a service from non-owner", async() => {
+            try {
+                await glob.web3RevenueFund.registerService(glob.web3UnitTestHelpers_FAIL_TESTS.address, { from: glob.user_a });
+                assert(false, 'This test must fail.');
+            }
+            catch (err) {
+                assert(err.toString().includes('revert'), err.toString());
+            }
+        });
+
+        //-------------------------------------------------------------------------
+
+        it(testCounter.next() + ": MUST SUCCEED [registerService]: Register UnitTestHelpers_SUCCESS SC as a service", async() => {
+            try {
+                await glob.web3RevenueFund.registerService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
+            }
+            catch (err) {
+                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+            }
+        });
+
+         //-------------------------------------------------------------------------
+
+        it(testCounter.next() + ": MUST FAIL [deregisterService]: Deregister UnitTestHelpers_FAIL SC as a service from non-owner", async() => {
+            try {
+                await glob.web3RevenueFund.deregisterService(glob.web3UnitTestHelpers_FAIL_TESTS.address, { from: glob.user_a });
+                assert(false, 'This test must fail.');
+            }
+            catch (err) {
+                assert(err.toString().includes('revert'), err.toString());
+            }
+        });
+
+        //-------------------------------------------------------------------------
+
+        it(testCounter.next() + ": MUST SUCCEED [deregisterService]: Deregister UnitTestHelpers_SUCCESS SC as a service", async() => {
+            try {
+                await glob.web3RevenueFund.deregisterService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
+            }
+            catch (err) {
+                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+            }
+        });
+
+        //-------------------------------------------------------------------------
 
 		it(testCounter.next() + ": MUST FAIL [closeAccrualPeriod]: Calling without 100% beneficiaries again", async() => {
 			try {
