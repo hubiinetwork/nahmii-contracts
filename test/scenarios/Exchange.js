@@ -52,13 +52,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('operationalMode()', () => {
-            it('should equal value initialized', async () => {
-                const operationalMode = await truffleExchange.operationalMode.call();
-                operationalMode.toNumber().should.equal(0);
-            });
-        });
-
         describe('fraudulentTrade()', () => {
             it('should equal value initialized', async () => {
                 const fraudulentTrade = await ethersExchange.fraudulentTrade();

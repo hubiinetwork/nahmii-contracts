@@ -31,8 +31,6 @@ contract Exchange {
     // -----------------------------------------------------------------------------------------------------------------
     address public owner;
 
-    Types.OperationalMode public operationalMode = Types.OperationalMode.Normal;
-
     uint256 public maxKnownDealNonce;
 
     address[] public seizedWallets;
@@ -94,7 +92,7 @@ contract Exchange {
 
         if (true /*DSC in favor of trade*/) {
 
-            if ((Types.OperationalMode.Normal == operationalMode && communityVote.isDataAvailable())
+            if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < maxKnownDealNonce)) {
 
                 Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
