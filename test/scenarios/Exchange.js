@@ -23,9 +23,13 @@ module.exports = (glob) => {
             ethersExchange = glob.ethersIoExchange;
             truffleConfiguration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
+            truffleRevenueFund = glob.web3RevenueFund;
+            ethersRevenueFund = glob.ethersIoRevenueFund;
+
             provider = glob.signer_owner.provider;
 
             await ethersExchange.changeConfiguration(ethersConfiguration.address);
+            await ethersExchange.changeRevenueFund(ethersRevenueFund.address);
         });
 
         beforeEach(async () => {
@@ -115,6 +119,90 @@ module.exports = (glob) => {
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
                     truffleExchange.changeConfiguration('0x0123456789abcdef0123456789abcdef01234567', {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('changeClientFund()', () => {
+            describe('if called with owner as sender', () => {
+                let clientFund;
+
+                beforeEach(async () => {
+                    clientFund = await truffleExchange.clientFund.call();
+                });
+
+                afterEach(async () => {
+                    await truffleExchange.changeClientFund(clientFund);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await truffleExchange.changeClientFund('0x0123456789abcdef0123456789abcdef01234567');
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeClientFundEvent');
+                    const clientFund = await truffleExchange.clientFund();
+                    clientFund.should.equal('0x0123456789abcdef0123456789abcdef01234567');
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    truffleExchange.changeClientFund('0x0123456789abcdef0123456789abcdef01234567', {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('changeRevenueFund()', () => {
+            describe('if called with owner as sender', () => {
+                let revenueFund;
+
+                beforeEach(async () => {
+                    revenueFund = await truffleExchange.revenueFund.call();
+                });
+
+                afterEach(async () => {
+                    await truffleExchange.changeRevenueFund(revenueFund);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await truffleExchange.changeRevenueFund('0x0123456789abcdef0123456789abcdef01234567');
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeRevenueFundEvent');
+                    const revenueFund = await truffleExchange.revenueFund();
+                    revenueFund.should.equal('0x0123456789abcdef0123456789abcdef01234567');
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    truffleExchange.changeRevenueFund('0x0123456789abcdef0123456789abcdef01234567', {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('changeCommunityVote()', () => {
+            describe('if called with owner as sender', () => {
+                let communityVote;
+
+                beforeEach(async () => {
+                    communityVote = await truffleExchange.communityVote.call();
+                });
+
+                afterEach(async () => {
+                    await truffleExchange.changeCommunityVote(communityVote);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await truffleExchange.changeCommunityVote('0x0123456789abcdef0123456789abcdef01234567');
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeCommunityVoteEvent');
+                    const communityVote = await truffleExchange.communityVote();
+                    communityVote.should.equal('0x0123456789abcdef0123456789abcdef01234567');
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    truffleExchange.changeCommunityVote('0x0123456789abcdef0123456789abcdef01234567', {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -2228,8 +2316,8 @@ module.exports = (glob) => {
                         },
                         balances: {
                             intended: {
-                                current: utils.parseUnits('9599.9', 18),
-                                previous: utils.parseUnits('9500', 18)
+                                current: utils.parseUnits('9599.8', 18),
+                                previous: utils.parseUnits('9499.9', 18)
                             },
                             conjugate: {
                                 current: utils.parseUnits('9.4', 18),
@@ -2237,7 +2325,7 @@ module.exports = (glob) => {
                             }
                         },
                         netFees: {
-                            intended: utils.parseUnits('0.1', 18),
+                            intended: utils.parseUnits('0.2', 18),
                             conjugate: utils.parseUnits('0.0', 18)
                         }
                     },
@@ -2263,23 +2351,23 @@ module.exports = (glob) => {
                                 previous: utils.parseUnits('19600', 18)
                             },
                             conjugate: {
-                                current: utils.parseUnits('19.4998', 18),
-                                previous: utils.parseUnits('19.4', 18)
+                                current: utils.parseUnits('19.4996', 18),
+                                previous: utils.parseUnits('19.5998', 18)
                             }
                         },
                         netFees: {
                             intended: utils.parseUnits('0.0', 18),
-                            conjugate: utils.parseUnits('0.0002', 18)
+                            conjugate: utils.parseUnits('0.0004', 18)
                         }
                     },
                     transfers: {
                         intended: {
                             single: utils.parseUnits('100', 18),
-                            net: utils.parseUnits('100', 18)
+                            net: utils.parseUnits('200', 18)
                         },
                         conjugate: {
                             single: utils.parseUnits('0.1', 18),
-                            net: utils.parseUnits('0.1', 18)
+                            net: utils.parseUnits('0.2', 18)
                         }
                     },
                     singleFees: {
@@ -2298,7 +2386,7 @@ module.exports = (glob) => {
                 };
             });
 
-            describe.only('if isImmediateSettlement is true', () => {
+            describe('if isImmediateSettlement is true', () => {
                 it('should settle both trade parties', async () => {
                     await ethersExchange.settleDealAsTrade(trade, glob.user_a, overrideOptions);
                 });
@@ -2374,7 +2462,7 @@ module.exports = (glob) => {
                 };
             });
 
-            describe.only('if isImmediateSettlement is true', () => {
+            describe('if isImmediateSettlement is true', () => {
                 it('should settle both payment parties', async () => {
                     await ethersExchange.settleDealAsPayment(payment, glob.user_a, overrideOptions);
                 });
