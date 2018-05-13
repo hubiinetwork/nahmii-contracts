@@ -9,8 +9,12 @@ pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
 import "./SafeMathInt.sol";
-import "./SafeMathUInt.sol";
+//import "./SafeMathUInt.sol";
 import "./Configuration.sol";
+import "./RevenueFund.sol";
+import "./ClientFund.sol";
+import "./CommunityVote.sol";
+import "./ERC20.sol";
 
 /**
 @title Exchange
@@ -26,6 +30,8 @@ contract Exchange {
     enum OperationalMode {Normal, Exit}
     enum LiquidityRole {Maker, Taker}
     enum CurrencyRole {Intended, Conjugate}
+    enum DealType {Trade, Payment}
+    enum Sidedness {OneSided, TwoSided}
     enum TradePartyRole {Buyer, Seller}
     enum PaymentPartyRole {Source, Destination}
 
@@ -110,8 +116,8 @@ contract Exchange {
         TradeParty buyer;
         TradeParty seller;
 
-        // Intended transfer is always in direction from seller to buyer
-        // Conjugate transfer is always in direction from buyer to seller
+        // Positive intended transfer is always in direction from seller to buyer
+        // Positive conjugate transfer is always in direction from buyer to seller
         IntendedConjugateSingleNetInt256 transfers;
 
         IntendedConjugateInt256 singleFees;
@@ -137,13 +143,21 @@ contract Exchange {
         PaymentParty source;
         PaymentParty destination;
 
-        // Transfer is always in direction from source to destination
+        // Positive transfer is always in direction from source to destination
         SingleNetInt256 transfers;
 
         int256 singleFee;
 
         PartyExchangeSeals seals;
         uint256 blockNumber;
+    }
+
+    struct Settlement {
+        uint256 nonce;
+        DealType dealType;
+        Sidedness sidedness;
+        address[2] wallets;
+
     }
 
     //
@@ -153,6 +167,8 @@ contract Exchange {
 
     OperationalMode public operationalMode = OperationalMode.Normal;
 
+    uint256 public maxKnownDealNonce;
+
     Trade public fraudulentTrade;
     Payment public fraudulentPayment;
 
@@ -160,6 +176,12 @@ contract Exchange {
     mapping(address => bool) seizedWalletsMap;
 
     Configuration public configuration;
+    ClientFund public clientFund;
+    RevenueFund public revenueFund;
+    CommunityVote public communityVote;
+
+    Settlement[] public settlements;
+    mapping(address => uint256[]) walletSettlementIndexMap;
 
     //
     // Events
@@ -176,6 +198,9 @@ contract Exchange {
     event SettleDealAsTradeEvent(Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
+    event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
+    event ChangeRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
+    event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
 
     //
     // Constructor
@@ -491,14 +516,155 @@ contract Exchange {
         return seizedWallets.length;
     }
 
-    function settleDealAsTrade(Trade trade, address wallet) public {
+    function settleDealAsTrade(Trade trade, address wallet)
+    public
+    signedBy(trade.seal.hash, trade.seal.signature, owner)
+    {
+        if (msg.sender != owner)
+            wallet = msg.sender;
+
+        //        require(isDSCExpired(trade, wallet');
+        require(isTradeParty(trade, wallet));
+
+        if (true /*DSC in favor of trade*/) {
+
+            if ((OperationalMode.Normal == operationalMode && communityVote.isDataAvailable())
+                || (trade.nonce < maxKnownDealNonce)) {
+
+                TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? TradePartyRole.Buyer : TradePartyRole.Seller);
+
+                int256 partyInboundTransferIntended;
+                int256 partyInboundTransferConjugate;
+                if ((0 < trade.transfers.intended.net && TradePartyRole.Buyer == tradePartyRole)
+                    || (0 > trade.transfers.intended.net && TradePartyRole.Seller == tradePartyRole))
+                    partyInboundTransferIntended = trade.transfers.intended.net;
+                if ((0 < trade.transfers.conjugate.net && TradePartyRole.Seller == tradePartyRole)
+                    || (0 > trade.transfers.conjugate.net && TradePartyRole.Buyer == tradePartyRole))
+                    partyInboundTransferConjugate = trade.transfers.conjugate.net;
+
+                if (false == trade.immediateSettlement &&
+                false/*reserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate)*/) {
+                    // reserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate)
+                    addOneSidedSettlementInfoFromTrade(trade, wallet);
+                } else {
+                    settleTradeTransfers(trade);
+                    settleTradeFees(trade);
+                    addTwoSidedSettlementInfoFromTrade(trade);
+                }
+            }
+        } else {
+            // TODO Consider recipient of seized funds
+            //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
+            addToSeizedWallets(wallet);
+        }
 
         emit SettleDealAsTradeEvent(trade, wallet);
     }
 
-    function settleDealAsPayment(Payment payment, address wallet) public {
+    function settleDealAsPayment(Payment payment, address wallet)
+    public
+    signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
+    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.source._address)
+    {
 
         emit SettleDealAsPaymentEvent(payment, wallet);
+    }
+
+    function settleTradeTransfers(Trade trade) private {
+        if (0 < trade.transfers.intended.net.sub(trade.buyer.netFees.intended)) {// Transfer from seller to buyer
+            clientFund.transferFromDepositedToSettledBalance(
+                trade.seller._address,
+                trade.buyer._address,
+                trade.transfers.intended.net.sub(trade.buyer.netFees.intended),
+                trade.currencies.intended
+            );
+
+        } else if (0 > trade.transfers.intended.net.sub(trade.seller.netFees.intended)) {// Transfer from buyer to seller
+            clientFund.transferFromDepositedToSettledBalance(
+                trade.buyer._address,
+                trade.seller._address,
+                trade.transfers.intended.net.mul(- 1).sub(trade.seller.netFees.intended),
+                trade.currencies.intended
+            );
+        }
+
+        if (0 < trade.transfers.conjugate.net.sub(trade.seller.netFees.conjugate)) {// Transfer from buyer to seller
+            clientFund.transferFromDepositedToSettledBalance(
+                trade.buyer._address,
+                trade.seller._address,
+                trade.transfers.conjugate.net.sub(trade.seller.netFees.conjugate),
+                trade.currencies.conjugate
+            );
+
+        } else if (0 > trade.transfers.conjugate.net.sub(trade.buyer.netFees.conjugate)) {// Transfer from seller to buyer
+            clientFund.transferFromDepositedToSettledBalance(
+                trade.seller._address,
+                trade.buyer._address,
+                trade.transfers.conjugate.net.mul(- 1).sub(trade.buyer.netFees.conjugate),
+                trade.currencies.conjugate
+            );
+        }
+    }
+
+    function addOneSidedSettlementInfoFromTrade(Trade trade, address wallet) private {
+        settlements.push(
+            Settlement(trade.nonce, DealType.Trade, Sidedness.OneSided, [wallet, address(0)])
+        );
+        walletSettlementIndexMap[wallet].push(settlements.length - 1);
+    }
+
+    function addTwoSidedSettlementInfoFromTrade(Trade trade) private {
+        settlements.push(
+            Settlement(trade.nonce, DealType.Trade, Sidedness.TwoSided, [trade.buyer._address, trade.seller._address])
+        );
+        walletSettlementIndexMap[trade.buyer._address].push(settlements.length - 1);
+        walletSettlementIndexMap[trade.seller._address].push(settlements.length - 1);
+    }
+
+    function settleTradeFees(Trade trade) private {
+        if (0 < trade.buyer.netFees.intended) {
+            clientFund.withdrawFromDepositedBalance(
+                trade.buyer._address,
+                revenueFund,
+                trade.buyer.netFees.intended,
+                trade.currencies.intended
+            );
+            if (address(0) != trade.currencies.intended)
+                revenueFund.recordDepositTokens(ERC20(trade.currencies.intended), trade.buyer.netFees.intended);
+        }
+
+        if (0 < trade.buyer.netFees.conjugate) {
+            clientFund.withdrawFromDepositedBalance(
+                trade.buyer._address,
+                revenueFund,
+                trade.buyer.netFees.conjugate,
+                trade.currencies.conjugate
+            );
+            if (address(0) != trade.currencies.conjugate)
+                revenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.buyer.netFees.conjugate);
+        }
+
+        if (0 < trade.seller.netFees.intended) {
+            clientFund.withdrawFromDepositedBalance(
+                trade.seller._address,
+                revenueFund,
+                trade.seller.netFees.intended,
+                trade.currencies.intended
+            );
+            if (address(0) != trade.currencies.intended)
+                revenueFund.recordDepositTokens(ERC20(trade.currencies.intended), trade.seller.netFees.intended);
+        }
+
+        if (0 < trade.seller.netFees.conjugate) {
+            clientFund.withdrawFromDepositedBalance(
+                trade.seller._address,
+                revenueFund,
+                trade.seller.netFees.conjugate,
+                trade.currencies.conjugate
+            );
+            if (address(0) != trade.currencies.conjugate)
+                revenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.seller.netFees.conjugate);
+        }
     }
 
     function isGenuineTradeMakerFee(Trade trade) private view returns (bool) {
@@ -812,6 +978,14 @@ contract Exchange {
         return lastNetFee == firstNetFee.add(lastSingleFee);
     }
 
+    function isTradeParty(Trade trade, address wallet) private pure returns (bool) {
+        return wallet == trade.buyer._address || wallet == trade.seller._address;
+    }
+
+    function isPaymentParty(Payment payment, address wallet) private pure returns (bool) {
+        return wallet == payment.source._address || wallet == payment.destination._address;
+    }
+
     function addToSeizedWallets(address _address) private {
         if (!seizedWalletsMap[_address]) {
             seizedWallets.push(_address);
@@ -844,9 +1018,34 @@ contract Exchange {
         }
     }
 
-    function isSignedByOwner(bytes32 hash, Signature signature) private view returns (bool) {
-        address signer = ecrecover(hash, signature.v, signature.r, signature.s);
-        return signer == owner;
+    /// @notice Change the client fund contract
+    /// @param newClientFund The (address of) ClientFund contract instance
+    function changeClientFund(ClientFund newClientFund) public onlyOwner {
+        if (newClientFund != clientFund) {
+            ClientFund oldClientFund = clientFund;
+            clientFund = newClientFund;
+            emit ChangeClientFundEvent(oldClientFund, clientFund);
+        }
+    }
+
+    /// @notice Change the revenue fund contract
+    /// @param newRevenueFund The (address of) RevenueFund contract instance
+    function changeRevenueFund(RevenueFund newRevenueFund) public onlyOwner {
+        if (newRevenueFund != revenueFund) {
+            RevenueFund oldRevenueFund = revenueFund;
+            revenueFund = newRevenueFund;
+            emit ChangeRevenueFundEvent(oldRevenueFund, revenueFund);
+        }
+    }
+
+    /// @notice Change the community vote contract
+    /// @param newCommunityVote The (address of) CommunityVote contract instance
+    function changeCommunityVote(CommunityVote newCommunityVote) public onlyOwner {
+        if (newCommunityVote != communityVote) {
+            CommunityVote oldCommunityVote = communityVote;
+            communityVote = newCommunityVote;
+            emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
+        }
     }
 
     //
@@ -862,18 +1061,18 @@ contract Exchange {
         _;
     }
 
-    modifier signedByOwner(bytes32 hash, Signature signature) {
-        require(isGenuineSignature(hash, signature, owner));
+    modifier signedBy(bytes32 hash, Signature signature, address signer) {
+        require(isGenuineSignature(hash, signature, signer));
         _;
     }
 
     modifier challengeableBySuccessionTradesPair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
-        require(wallet == firstTrade.buyer._address || wallet == firstTrade.seller._address);
+        require(isTradeParty(firstTrade, wallet));
         require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
         require(hashTrade(firstTrade) == firstTrade.seal.hash);
         require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
 
-        require(wallet == lastTrade.buyer._address || wallet == lastTrade.seller._address);
+        require(isTradeParty(lastTrade, wallet));
         require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
         require(hashTrade(lastTrade) == lastTrade.seal.hash);
         require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
@@ -884,13 +1083,13 @@ contract Exchange {
     modifier challengeableBySuccessionPaymentsPair(Payment firstPayment, Payment lastPayment, address wallet) {
         require(firstPayment.currency == lastPayment.currency);
 
-        require(wallet == firstPayment.source._address || wallet == firstPayment.destination._address);
+        require(isPaymentParty(firstPayment, wallet));
         require(hashPaymentAsParty(firstPayment) == firstPayment.seals.party.hash);
         require(hashPaymentAsExchange(firstPayment) == firstPayment.seals.exchange.hash);
         require(isGenuineSignature(firstPayment.seals.party.hash, firstPayment.seals.party.signature, firstPayment.source._address));
         require(isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
 
-        require(wallet == lastPayment.source._address || wallet == lastPayment.destination._address);
+        require(isPaymentParty(lastPayment, wallet));
         require(hashPaymentAsParty(lastPayment) == lastPayment.seals.party.hash);
         require(hashPaymentAsExchange(lastPayment) == lastPayment.seals.exchange.hash);
         require(isGenuineSignature(lastPayment.seals.party.hash, lastPayment.seals.party.signature, lastPayment.source._address));
@@ -902,12 +1101,12 @@ contract Exchange {
     modifier challengeableBySuccessionTradePaymentPair(Trade trade, Payment payment, address wallet, address currency) {
         require(currency == payment.currency);
 
-        require(wallet == trade.buyer._address || wallet == trade.seller._address);
+        require(isTradeParty(trade, wallet));
         require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
         require(hashTrade(trade) == trade.seal.hash);
         require(isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
 
-        require(wallet == payment.source._address || wallet == payment.destination._address);
+        require(isPaymentParty(payment, wallet));
         require(hashPaymentAsParty(payment) == payment.seals.party.hash);
         require(hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
         require(isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.source._address));
