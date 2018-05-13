@@ -30,8 +30,6 @@ contract Fraud {
     // -----------------------------------------------------------------------------------------------------------------
     address public owner;
 
-    Types.OperationalMode public operationalMode = Types.OperationalMode.Normal;
-
     Types.Trade public fraudulentTrade;
     Types.Payment public fraudulentPayment;
 
@@ -103,7 +101,7 @@ contract Fraud {
 
         require(!genuineSeal || !genuineByBuyer || !genuineBySeller);
 
-        operationalMode = Types.OperationalMode.Exit;
+        configuration.setOperationalModeExit();
         fraudulentTrade = trade;
 
         address seizedWallet;
@@ -134,7 +132,7 @@ contract Fraud {
 
         require(!genuineSeals || !genuineBySource || !genuineByDestination);
 
-        operationalMode = Types.OperationalMode.Exit;
+        configuration.setOperationalModeExit();
         fraudulentPayment = payment;
 
         address seizedWallet;
@@ -179,7 +177,7 @@ contract Fraud {
         || !isGenuineSuccessiveTradesNetFees(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole)
         );
 
-        operationalMode = Types.OperationalMode.Exit;
+        configuration.setOperationalModeExit();
         fraudulentTrade = lastTrade;
 
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
@@ -212,7 +210,7 @@ contract Fraud {
         || !isGenuineSuccessivePaymentsNetFees(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)
         );
 
-        operationalMode = Types.OperationalMode.Exit;
+        configuration.setOperationalModeExit();
         fraudulentPayment = lastPayment;
 
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
@@ -249,7 +247,7 @@ contract Fraud {
         || !isGenuineSuccessiveTradePaymentNetFees(trade, tradePartyRole, currencyRole, payment, paymentPartyRole)
         );
 
-        operationalMode = Types.OperationalMode.Exit;
+        configuration.setOperationalModeExit();
         fraudulentPayment = payment;
 
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
@@ -286,7 +284,7 @@ contract Fraud {
         || !isGenuineSuccessivePaymentTradeNetFees(payment, paymentPartyRole, trade, tradePartyRole, currencyRole)
         );
 
-        operationalMode = Types.OperationalMode.Exit;
+        configuration.setOperationalModeExit();
         fraudulentTrade = trade;
 
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
@@ -317,7 +315,7 @@ contract Fraud {
 
         require(!isGenuineSuccessiveTradeOrderResiduals(firstTrade, lastTrade, tradePartyRole));
 
-        operationalMode = Types.OperationalMode.Exit;
+        configuration.setOperationalModeExit();
         fraudulentTrade = lastTrade;
 
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
@@ -342,7 +340,7 @@ contract Fraud {
 
         require(doubleSpentBuyOrder || doubleSpentSellOrder);
 
-        operationalMode = Types.OperationalMode.Exit;
+        configuration.setOperationalModeExit();
         fraudulentTrade = lastTrade;
 
         address seizedWallet;

@@ -17,6 +17,11 @@ contract Configuration {
     using SafeMathInt for int256;
 
     //
+    // Enums
+    // -----------------------------------------------------------------------------------------------------------------
+    enum OperationalMode {Normal, Exit}
+
+    //
     // Custom types
     // -----------------------------------------------------------------------------------------------------------------
     struct TieredDiscount {
@@ -43,6 +48,8 @@ contract Configuration {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
+    OperationalMode public operationalMode = OperationalMode.Normal;
+
     int256 constant public PARTS_PER = 1e18;
     address public owner;
 
@@ -69,6 +76,7 @@ contract Configuration {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
+    event SetOperationalModeExitEvent();
     event SetPartsPerEvent(int256 partsPer);
     event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetTradeTakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
@@ -102,6 +110,24 @@ contract Configuration {
             // Emit event
             emit OwnerChangedEvent(oldOwner, newOwner);
         }
+    }
+
+    /// @notice Return true if operational mode is Normal
+    function isOperationalModeNormal() public view returns (bool) {
+        return OperationalMode.Normal == operationalMode;
+    }
+
+    /// @notice Return true if operational mode is Exit
+    function isOperationalModeExit() public view returns (bool) {
+        return OperationalMode.Exit == operationalMode;
+    }
+
+    /// @notice Set operational mode to Exit
+    /// @dev Once operational mode is set to Exit it may not be set back to Normal
+    function setOperationalModeExit() public onlyOwner {
+        operationalMode = OperationalMode.Exit;
+
+        emit SetOperationalModeExitEvent();
     }
 
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value

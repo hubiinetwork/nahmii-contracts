@@ -10,7 +10,6 @@ library Types {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
-    enum OperationalMode {Normal, Exit}
     enum LiquidityRole {Maker, Taker}
     enum CurrencyRole {Intended, Conjugate}
     enum DealType {Trade, Payment}

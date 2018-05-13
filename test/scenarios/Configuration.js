@@ -1,6 +1,5 @@
 const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
-const Configuration = artifacts.require('Configuration');
 
 chai.use(chaiAsPromised);
 chai.should();
@@ -60,6 +59,43 @@ module.exports = (glob) => {
             describe('if called with sender that is not current owner', () => {
                 it('should fail to set new owner', async () => {
                     truffleInstance.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('operationalMode()', () => {
+            it('should equal value initialized', async () => {
+                const operationalMode = await truffleInstance.operationalMode.call();
+                operationalMode.toNumber().should.equal(0);
+            });
+        });
+
+        describe('isOperationalModeNormal()', () => {
+            it('should equal value initialized', async () => {
+                const operationalModeNormal = await truffleInstance.isOperationalModeNormal.call();
+                operationalModeNormal.should.be.true;
+            });
+        });
+
+        describe('isOperationalModeExit()', () => {
+            it('should equal value initialized', async () => {
+                const operationalModeExit = await truffleInstance.isOperationalModeExit.call();
+                operationalModeExit.should.be.false;
+            });
+        });
+
+        describe('setOperationalModeExit()', () => {
+            describe('if called with owner as sender', () => {
+                it('should set exit operational mode', async () => {
+                    await truffleInstance.setOperationalModeExit();
+                    const operationalModeExit = await truffleInstance.isOperationalModeExit.call();
+                    operationalModeExit.should.be.true;
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    truffleInstance.setOperationalModeExit({from: glob.user_a}).should.be.rejected;
                 });
             });
         });
