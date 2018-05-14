@@ -67,6 +67,10 @@ library SafeMathInt {
     //
     //Conversion and validation functions.
     //
+    function abs(int256 a) public pure returns (int256) {
+        return a < 0 ? mul(a, -1) : a;
+    }
+
     function toNonZeroInt256(uint256 a) public pure returns (int256) {
         require(a > 0 && a < (uint256(1) << 255));
         return int256(a);
