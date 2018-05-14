@@ -80,6 +80,9 @@ contract Exchange {
         }
     }
 
+    /// @notice Settle deal that is a trade
+    /// @param trade The trade to be settled
+    /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
     function settleDealAsTrade(Types.Trade trade, address wallet)
     public
     signedBy(trade.seal.hash, trade.seal.signature, owner)
@@ -87,10 +90,9 @@ contract Exchange {
         if (msg.sender != owner)
             wallet = msg.sender;
 
-        //        require(isDSCExpired(trade, wallet');
         require(isTradeParty(trade, wallet));
 
-        if (true /*DSC in favor of trade*/) {
+        if (true /*dealSettlementChallengeResult(wallet, trade) == Qualified*/) {
 
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < maxKnownDealNonce)) {
@@ -101,14 +103,14 @@ contract Exchange {
                 int256 partyInboundTransferConjugate;
                 if ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
                     || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole))
-                    partyInboundTransferIntended = trade.transfers.intended.net;
+                    partyInboundTransferIntended = trade.transfers.intended.net.abs();
                 if ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
                     || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole))
-                    partyInboundTransferConjugate = trade.transfers.conjugate.net;
+                    partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
 
                 if (false == trade.immediateSettlement &&
                 false/*reserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate)*/) {
-                    // reserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate)
+                    // reserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
                     addOneSidedSettlementInfoFromTrade(trade, wallet);
                 } else {
                     settleTradeTransfers(trade);
@@ -116,7 +118,7 @@ contract Exchange {
                     addTwoSidedSettlementInfoFromTrade(trade);
                 }
             }
-        } else {
+        } else if (false /*dealSettlementChallengeResult(wallet, trade) == Disqualified*/) {
             // TODO Consider recipient of seized funds
             //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
             addToSeizedWallets(wallet);
@@ -125,12 +127,46 @@ contract Exchange {
         emit SettleDealAsTradeEvent(trade, wallet);
     }
 
+    /// @notice Settle deal that is a payment
+    /// @param payment The payment to be settled
+    /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
     function settleDealAsPayment(Types.Payment payment, address wallet)
     public
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
     signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.source._address)
     {
+        if (msg.sender != owner)
+            wallet = msg.sender;
 
+        require(isPaymentParty(payment, wallet));
+
+        if (true /*dealSettlementChallengeResult(wallet, payment) == Qualified*/) {
+
+            if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
+                || (payment.nonce < maxKnownDealNonce)) {
+
+                Types.PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? Types.PaymentPartyRole.Source : Types.PaymentPartyRole.Destination);
+
+                int256 partyInboundTransfer;
+                if ((0 < payment.transfers.net && Types.PaymentPartyRole.Source == paymentPartyRole)
+                    || (0 > payment.transfers.net && Types.PaymentPartyRole.Destination == paymentPartyRole))
+                    partyInboundTransfer = payment.transfers.net.abs();
+
+                if (false == payment.immediateSettlement &&
+                false/*reserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)*/) {
+                    // reserveFund.oneWayTransfer(wallet, payment.currencies.intended, partyInboundTransfer);
+                    addOneSidedSettlementInfoFromPayment(payment, wallet);
+                } else {
+                    settlePaymentTransfers(payment);
+                    settlePaymentFees(payment);
+                    addTwoSidedSettlementInfoFromPayment(payment);
+                }
+            }
+        } else if (false /*dealSettlementChallengeResult(wallet, payment) == Disqualified*/) {
+            // TODO Consider recipient of seized funds
+            //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
+            addToSeizedWallets(wallet);
+        }
         emit SettleDealAsPaymentEvent(payment, wallet);
     }
 
@@ -170,6 +206,25 @@ contract Exchange {
         }
     }
 
+    function settlePaymentTransfers(Types.Payment payment) private {
+        if (0 < payment.transfers.net.sub(payment.source.netFee)) {// Transfer from seller to buyer
+            clientFund.transferFromDepositedToSettledBalance(
+                payment.source._address,
+                payment.destination._address,
+                payment.transfers.net.sub(payment.source.netFee),
+                payment.currency
+            );
+
+        } else if (0 > payment.transfers.net.sub(payment.destination.netFee)) {// Transfer from buyer to seller
+            clientFund.transferFromDepositedToSettledBalance(
+                payment.destination._address,
+                payment.source._address,
+                payment.transfers.net.sub(payment.destination.netFee),
+                payment.currency
+            );
+        }
+    }
+
     function addOneSidedSettlementInfoFromTrade(Types.Trade trade, address wallet) private {
         settlements.push(
             Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.OneSided, [wallet, address(0)])
@@ -183,6 +238,21 @@ contract Exchange {
         );
         walletSettlementIndexMap[trade.buyer._address].push(settlements.length - 1);
         walletSettlementIndexMap[trade.seller._address].push(settlements.length - 1);
+    }
+
+    function addOneSidedSettlementInfoFromPayment(Types.Payment payment, address wallet) private {
+        settlements.push(
+            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.OneSided, [wallet, address(0)])
+        );
+        walletSettlementIndexMap[wallet].push(settlements.length - 1);
+    }
+
+    function addTwoSidedSettlementInfoFromPayment(Types.Payment payment) private {
+        settlements.push(
+            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.source._address, payment.destination._address])
+        );
+        walletSettlementIndexMap[payment.source._address].push(settlements.length - 1);
+        walletSettlementIndexMap[payment.destination._address].push(settlements.length - 1);
     }
 
     function settleTradeFees(Types.Trade trade) private {
@@ -228,6 +298,30 @@ contract Exchange {
             );
             if (address(0) != trade.currencies.conjugate)
                 revenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.seller.netFees.conjugate);
+        }
+    }
+
+    function settlePaymentFees(Types.Payment payment) private {
+        if (0 < payment.source.netFee) {
+            clientFund.withdrawFromDepositedBalance(
+                payment.source._address,
+                revenueFund,
+                payment.source.netFee,
+                payment.currency
+            );
+            if (address(0) != payment.currency)
+                revenueFund.recordDepositTokens(ERC20(payment.currency), payment.source.netFee);
+        }
+
+        if (0 < payment.destination.netFee) {
+            clientFund.withdrawFromDepositedBalance(
+                payment.destination._address,
+                revenueFund,
+                payment.destination.netFee,
+                payment.currency
+            );
+            if (address(0) != payment.currency)
+                revenueFund.recordDepositTokens(ERC20(payment.currency), payment.destination.netFee);
         }
     }
 
