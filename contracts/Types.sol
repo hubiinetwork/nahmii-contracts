@@ -15,6 +15,7 @@ library Types {
     enum DealType {Trade, Payment}
     enum Sidedness {OneSided, TwoSided}
     enum TradePartyRole {Buyer, Seller}
+    enum Intention {Buy, Sell}
     enum PaymentPartyRole {Source, Destination}
 
     //
@@ -55,7 +56,7 @@ library Types {
         bytes32 exchange;
     }
 
-    struct Order {
+    struct TradeOrder {
         int256 amount;
         PartyExchangeHashes hashes;
         CurrentPreviousInt256 residuals;
@@ -82,7 +83,7 @@ library Types {
         uint256 nonce;
         uint256 rollingVolume;
         LiquidityRole liquidityRole;
-        Order order;
+        TradeOrder order;
         IntendedConjugateCurrentPreviousInt256 balances;
         IntendedConjugateInt256 netFees;
     }
@@ -134,6 +135,25 @@ library Types {
         uint256 blockNumber;
     }
 
+    struct OrderPlacement {
+        Intention intention;
+        bool immediateSettlement;
+        int256 amount;
+        int256 rate;
+
+        IntendedConjugateAddress currencies;
+
+        CurrentPreviousInt256 residuals;
+    }
+
+    struct Order {
+        uint256 nonce;
+        address _address;
+        OrderPlacement placement;
+        PartyExchangeSeals seals;
+        uint256 blockNumber;
+    }
+
     struct Settlement {
         uint256 nonce;
         DealType dealType;
@@ -145,17 +165,27 @@ library Types {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     // TODO Implement fully
-    function hashTrade(Types.Trade trade) internal pure returns (bytes32) {
+    function hashTrade(Trade trade) internal pure returns (bytes32) {
         return keccak256(bytes32(trade.nonce));
     }
 
     // TODO Implement fully
-    function hashPaymentAsParty(Types.Payment payment) internal pure returns (bytes32) {
+    function hashPaymentAsParty(Payment payment) internal pure returns (bytes32) {
         return keccak256(bytes32(payment.nonce));
     }
 
     // TODO Implement fully
-    function hashPaymentAsExchange(Types.Payment payment) internal pure returns (bytes32) {
+    function hashPaymentAsExchange(Payment payment) internal pure returns (bytes32) {
         return keccak256(bytes32(payment.nonce));
+    }
+
+    // TODO Implement fully
+    function hashOrderAsParty(Order order) internal pure returns (bytes32) {
+        return keccak256(bytes32(order.nonce));
+    }
+
+    // TODO Implement fully
+    function hashOrderAsExchange(Order order) internal pure returns (bytes32) {
+        return keccak256(bytes32(order.nonce));
     }
 }
