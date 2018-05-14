@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const utils = require('ethers').utils;
+const ethers = require('ethers');
 const ethutil = require('ethereumjs-util');
 const keccak256 = require("augmented-keccak256");
 
@@ -9,12 +9,16 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
 
+const utils = ethers.utils;
+
 const liquidityRoles = ['Maker', 'Taker'];
+const intentions = ['Buy', 'Sell'];
 
 module.exports = (glob) => {
     describe('Exchange', () => {
         let truffleExchange, ethersExchange;
         let truffleConfiguration, ethersConfiguration;
+        let truffleRevenueFund, ethersRevenueFund;
         let provider;
         let blockNumber0, blockNumber10, blockNumber20;
 
@@ -77,6 +81,99 @@ module.exports = (glob) => {
             describe('if called with sender that is not (current) owner', () => {
                 it('should revert', async () => {
                     truffleExchange.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('getCancelledOrdersCount()', () => {
+            it('should equal value initialized', async () => {
+                const count = await ethersExchange.getCancelledOrdersCount(glob.owner);
+                count.toNumber().should.equal(0);
+            });
+        });
+
+        describe('getCancelledOrders()', () => {
+            it('should equal value initialized', async () => {
+                const orders = await ethersExchange.getCancelledOrderNonces(glob.owner, 0);
+                orders.should.be.an('array').that.has.lengthOf(10);
+                orders[0][0].toNumber().should.equal(0);
+            });
+        });
+
+        describe('cancelOrder()', () => {
+            let overrideOptions, order, topic, filter;
+
+            before(() => {
+                overrideOptions = {gasLimit: 1e6};
+            });
+
+            beforeEach(async () => {
+                order = {
+                    nonce: utils.bigNumberify(1),
+                    _address: glob.owner,
+                    placement: {
+                        intention: intentions.indexOf('Buy'),
+                        immediateSettlement: true,
+                        amount: utils.parseUnits('100', 18),
+                        rate: utils.bigNumberify(1000),
+                        currencies: {
+                            intended: '0x0000000000000000000000000000000000000001',
+                            conjugate: '0x0000000000000000000000000000000000000002'
+                        },
+                        residuals: {
+                            current: utils.parseUnits('400', 18),
+                            previous: utils.parseUnits('500', 18)
+                        }
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                order = await augmentOrderSeals(order, glob.owner, glob.owner);
+
+                topic = ethersExchange.interface.events.CancelOrderEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe('if order is genuine', () => {
+                it('should successfully cancel order', async () => {
+                    await ethersExchange.cancelOrder(order, overrideOptions);
+                    const count = await ethersExchange.getCancelledOrdersCount(glob.owner);
+                    count.toNumber().should.equal(1);
+                    const orders = await ethersExchange.getCancelledOrders(glob.owner, 0);
+                    orders[0][0].toNumber().should.equal(order.nonce.toNumber())
+                });
+            });
+
+            describe('if _address differs from msg.sender', () => {
+                beforeEach(() => {
+                    order._address = glob.user_a;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.cancelOrder(order, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if not signed by correct party', () => {
+                beforeEach(() => {
+                    order.seals.party.hash = order.seals.exchange.hash;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.cancelOrder(order, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if not signed by exchange', () => {
+                beforeEach(() => {
+                    order.seals.exchange.hash = order.seals.party.hash;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.cancelOrder(order, overrideOptions).should.be.rejected;
                 });
             });
         });
@@ -338,7 +435,7 @@ module.exports = (glob) => {
 
             describe('if isImmediateSettlement is false', () => {
                 beforeEach(() => {
-                   trade.immediateSettlement = false;
+                    trade.immediateSettlement = false;
                 });
 
                 describe('if reserve fund does not support settlement', () => {
@@ -443,28 +540,78 @@ const augmentTradeSeal = async (trade, address) => {
 };
 
 const augmentPaymentSeals = async (payment, partyAddress, exchangeAddress) => {
-    const hash = hashPayment(payment);
+    const partyHash = hashPaymentAsParty(payment);
     payment.seals = {
         party: {
-            hash: hash,
-            signature: fromRpcSig(await web3.eth.sign(partyAddress, hash))
-        },
-        exchange: {
-            hash: hash,
-            signature: fromRpcSig(await web3.eth.sign(exchangeAddress, hash))
+            hash: partyHash,
+            signature: fromRpcSig(await web3.eth.sign(partyAddress, partyHash))
         }
+    };
+    const exchangeHash = hashPaymentAsExchange(payment);
+    payment.seals.exchange = {
+        hash: partyHash,
+        signature: fromRpcSig(await web3.eth.sign(exchangeAddress, exchangeHash))
     };
     return payment;
 };
 
-const hashTrade = (trade) => hashString(trade.nonce.toNumber());
+const augmentOrderSeals = async (order, partyAddress, exchangeAddress) => {
+    const partyHash = hashOrderAsParty(order);
+    order.seals = {
+        party: {
+            hash: partyHash,
+            signature: fromRpcSig(await web3.eth.sign(partyAddress, partyHash))
+        },
+    };
+    const exchangeHash = hashOrderAsExchange(order);
+    order.seals.exchange = {
+        hash: exchangeHash,
+        signature: fromRpcSig(await web3.eth.sign(exchangeAddress, exchangeHash))
+    };
+    return order;
+};
 
-const hashPayment = (payment) => hashString(payment.nonce.toNumber());
+const hashTrade = (trade) => {
+    return hashString(
+        trade.nonce.toNumber()
+    );
+};
+
+const hashPaymentAsParty = (payment) => {
+    return hashString(
+        payment.nonce.toNumber()
+    );
+};
+
+const hashPaymentAsExchange = (payment) => {
+    return hashTypedItems(
+        {value: toRpcSig(payment.seals.party.signature), type: 'string'}
+    );
+};
+
+const hashOrderAsParty = (order) => {
+    return hashString(
+        order.nonce.toNumber()
+    );
+};
+
+const hashOrderAsExchange = (order) => {
+    return hashTypedItems(
+        {value: order.placement.residuals.current.toHexString(), type: 'hex'},
+        {value: order.placement.residuals.previous.toHexString(), type: 'hex'},
+        {value: toRpcSig(order.seals.party.signature), type: 'string'}
+    );
+};
 
 const hashString = (...data) => {
     const hasher = keccak256.create();
     data.forEach((d) => hasher.update(d));
-    // hasher.update(data);
+    return `0x${hasher.digest()}`;
+};
+
+const hashTypedItems = (...data) => {
+    const hasher = keccak256.create();
+    data.forEach((d) => hasher.update(d.value, d.type));
     return `0x${hasher.digest()}`;
 };
 
@@ -475,4 +622,12 @@ const fromRpcSig = (sig) => {
         r: `0x${sig.r.toString('hex')}`,
         s: `0x${sig.s.toString('hex')}`
     };
+};
+
+const toRpcSig = (sig) => {
+    return ethutil.toRpcSig(
+        sig.v.toNumber(),
+        Buffer.from(sig.r.slice(2), 'hex'),
+        Buffer.from(sig.s.slice(2), 'hex')
+    );
 };

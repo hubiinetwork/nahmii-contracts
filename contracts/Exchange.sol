@@ -44,14 +44,15 @@ contract Exchange {
     Types.Settlement[] public settlements;
     mapping(address => uint256[]) walletSettlementIndexMap;
 
-    mapping(address => mapping(uint256 => mapping(uint256 => bool))) walletTradeCancelledOrdersMap;
-    mapping(address => mapping(uint256 => uint256)) walletTradeCancelledOrderTimeoutsMap;
+    mapping(address => mapping(uint256 => bool)) walletOrderNonceCancelledMap;
+    mapping(address => Types.Order[]) walletOrderCancelledListMap;
+    mapping(address => uint256) walletOrderCancelledTimeoutMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
-    event CancelOrderEvent(Types.Order order, Types.Trade trade);
+    event CancelOrderEvent(Types.Order order, address wallet);
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
@@ -81,17 +82,49 @@ contract Exchange {
         }
     }
 
+    /// @notice Get count of cancelled orders for given wallet
+    /// @param wallet The wallet for which to return the count of cancelled orders
+    function getCancelledOrdersCount(address wallet) public view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < walletOrderCancelledListMap[wallet].length; i++) {
+            Types.Order storage order = walletOrderCancelledListMap[wallet][i];
+            if (walletOrderNonceCancelledMap[wallet][order.nonce])
+                count++;
+        }
+        return count;
+    }
+
+    /// @notice Get 10 cancelled orders for given wallet starting at given start index
+    /// @param wallet The wallet for which to return the nonces of cancelled orders
+    /// @param startIndex The start index from which to extract order nonces, used for pagination
+    function getCancelledOrders(address wallet, uint256 startIndex) public view returns (Types.Order[10]) {
+        Types.Order[10] memory returnOrders;
+        uint256 i = 0;
+        uint256 j = startIndex;
+        while (i < 10 && j < walletOrderCancelledListMap[wallet].length) {
+            Types.Order storage order = walletOrderCancelledListMap[wallet][j];
+            if (walletOrderNonceCancelledMap[wallet][order.nonce]) {
+                returnOrders[i] = order;
+                i++;
+            }
+            j++;
+        }
+        return returnOrders;
+    }
+
     /// @notice Cancel order
-    function cancelOrder(Types.Order order, Types.Trade trade)
+    /// @param order The order to cancel
+    function cancelOrder(Types.Order order)
     public
     equalAddresses(msg.sender, order._address)
     signedBy(order.seals.party.hash, order.seals.party.signature, order._address)
     signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
     {
-        walletTradeCancelledOrdersMap[msg.sender][trade.nonce][order.nonce] = true;
-        walletTradeCancelledOrderTimeoutsMap[msg.sender][trade.nonce] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
+        walletOrderNonceCancelledMap[msg.sender][order.nonce] = true;
+        walletOrderCancelledListMap[msg.sender].push(order);
+        walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
 
-        emit CancelOrderEvent(order, trade);
+        emit CancelOrderEvent(order, msg.sender);
     }
 
     /// @notice Settle deal that is a trade
