@@ -34,8 +34,6 @@ contract ClientFund {
     }
 
     struct WalletInfo {
-        uint256 tradeNonce;
-
         DepositInfo[] deposits;
         WithdrawalInfo[] withdrawals;
 
