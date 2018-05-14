@@ -14,7 +14,7 @@ var ClientFund = artifacts.require("ClientFund");
 var CommunityVote = artifacts.require("CommunityVote");
 var Configuration = artifacts.require("Configuration");
 var Exchange = artifacts.require("Exchange");
-var Fraud = artifacts.require("Fraud");
+var AntiFraud = artifacts.require("AntiFraud");
 var ReserveFund = artifacts.require("ReserveFund");
 var RevenueFund = artifacts.require("RevenueFund");
 var SecurityBond = artifacts.require("SecurityBond");
@@ -142,14 +142,14 @@ contract('Smart contract checks', function () {
 		}
 	});
 
-	before("Preflight: Instantiate Fraud contract", async() => {
+	before("Preflight: Instantiate AntiFraud contract", async() => {
 		try {
-			glob.web3Fraud = await Fraud.deployed();
-			assert.notEqual(glob.web3Fraud, null);
-			glob.ethersIoFraud = new ethers.Contract(glob.web3Fraud.address, Fraud.abi, glob.signer_owner);
+			glob.web3AntiFraud = await AntiFraud.deployed();
+			assert.notEqual(glob.web3AntiFraud, null);
+			glob.ethersIoAntiFraud = new ethers.Contract(glob.web3AntiFraud.address, AntiFraud.abi, glob.signer_owner);
 		}
 		catch (err) {
-			assert(false, 'Failed to instantiate Fraud contract address. [Error: ' + err.toString() + ']');
+			assert(false, 'Failed to instantiate AntiFraud contract address. [Error: ' + err.toString() + ']');
 		}
 	});
 
@@ -243,7 +243,7 @@ contract('Smart contract checks', function () {
 	require('./scenarios/CommunityVote')(glob);
 	require('./scenarios/Configuration')(glob);
 	require('./scenarios/Exchange')(glob);
-	require('./scenarios/Fraud')(glob);
+	require('./scenarios/AntiFraud')(glob);
     require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
