@@ -18,10 +18,10 @@ import "./ERC20.sol";
 import "./Types.sol";
 
 /**
-@title Exchange
-@notice The orchestrator of trades and payments on-chain.
+@title AntiFraud
+@notice Host of fraud detection logics
 */
-contract Fraud {
+contract AntiFraud {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

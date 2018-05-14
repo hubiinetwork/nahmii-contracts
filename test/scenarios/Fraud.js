@@ -12,7 +12,7 @@ chai.should();
 const liquidityRoles = ['Maker', 'Taker'];
 
 module.exports = (glob) => {
-    describe('Fraud', () => {
+    describe('AntiFraud', () => {
         let truffleExchange, ethersExchange;
         let truffleConfiguration, ethersConfiguration;
         let provider;
