@@ -44,10 +44,14 @@ contract Exchange {
     Types.Settlement[] public settlements;
     mapping(address => uint256[]) walletSettlementIndexMap;
 
+    mapping(address => mapping(uint256 => mapping(uint256 => bool))) walletTradeCancelledOrdersMap;
+    mapping(address => mapping(uint256 => uint256)) walletTradeCancelledOrderTimeoutsMap;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
+    event CancelOrderEvent(Types.Order order, Types.Trade trade);
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
@@ -71,13 +75,23 @@ contract Exchange {
     function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
         if (newOwner != owner) {
             address oldOwner = owner;
-
-            // Set new owner
             owner = newOwner;
 
-            // Emit event
             emit OwnerChangedEvent(oldOwner, newOwner);
         }
+    }
+
+    /// @notice Cancel order
+    function cancelOrder(Types.Order order, Types.Trade trade)
+    public
+    equalAddresses(msg.sender, order._address)
+    signedBy(order.seals.party.hash, order.seals.party.signature, order._address)
+    signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
+    {
+        walletTradeCancelledOrdersMap[msg.sender][trade.nonce][order.nonce] = true;
+        walletTradeCancelledOrderTimeoutsMap[msg.sender][trade.nonce] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
+
+        emit CancelOrderEvent(order, trade);
     }
 
     /// @notice Settle deal that is a trade
@@ -396,6 +410,11 @@ contract Exchange {
 
     modifier onlyOwner() {
         require(msg.sender == owner);
+        _;
+    }
+
+    modifier equalAddresses(address _address1, address _address2) {
+        require(_address1 == _address2);
         _;
     }
 
