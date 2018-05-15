@@ -44,15 +44,17 @@ contract Exchange {
     Types.Settlement[] public settlements;
     mapping(address => uint256[]) walletSettlementIndexMap;
 
-    mapping(address => mapping(uint256 => bool)) walletOrderNonceCancelledMap;
+    mapping(address => mapping(bytes32 => bool)) walletOrderExchangeHashCancelledMap;
     mapping(address => Types.Order[]) walletOrderCancelledListMap;
+    mapping(address => mapping(bytes32 => uint256)) walletOrderExchangeHashIndexMap;
     mapping(address => uint256) walletOrderCancelledTimeoutMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
-    event CancelOrderEvent(Types.Order order, address wallet);
+    event CancelOrdersEvent(Types.Order[] orders, address wallet);
+    event ChallengeCancelledOrderEvent(Types.Order order, Types.Trade trade, address wallet);
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
@@ -88,7 +90,7 @@ contract Exchange {
         uint256 count = 0;
         for (uint256 i = 0; i < walletOrderCancelledListMap[wallet].length; i++) {
             Types.Order storage order = walletOrderCancelledListMap[wallet][i];
-            if (walletOrderNonceCancelledMap[wallet][order.nonce])
+            if (walletOrderExchangeHashCancelledMap[wallet][order.seals.exchange.hash])
                 count++;
         }
         return count;
@@ -103,7 +105,7 @@ contract Exchange {
         uint256 j = startIndex;
         while (i < 10 && j < walletOrderCancelledListMap[wallet].length) {
             Types.Order storage order = walletOrderCancelledListMap[wallet][j];
-            if (walletOrderNonceCancelledMap[wallet][order.nonce]) {
+            if (walletOrderExchangeHashCancelledMap[wallet][order.seals.exchange.hash]) {
                 returnOrders[i] = order;
                 i++;
             }
@@ -112,19 +114,48 @@ contract Exchange {
         return returnOrders;
     }
 
-    /// @notice Cancel order
-    /// @param order The order to cancel
-    function cancelOrder(Types.Order order)
+    /// @notice Cancel orders
+    /// @param orders The orders to cancel
+    function cancelOrders(Types.Order[] orders)
     public
-    equalAddresses(msg.sender, order._address)
-    signedBy(order.seals.party.hash, order.seals.party.signature, order._address)
-    signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
     {
-        walletOrderNonceCancelledMap[msg.sender][order.nonce] = true;
-        walletOrderCancelledListMap[msg.sender].push(order);
+        for (uint256 i = 0; i < orders.length; i++) {
+            require(msg.sender == orders[i]._address);
+            require(isGenuineSignature(orders[i].seals.party.hash, orders[i].seals.party.signature, orders[i]._address));
+            require(isGenuineSignature(orders[i].seals.exchange.hash, orders[i].seals.exchange.signature, owner));
+
+            walletOrderExchangeHashCancelledMap[msg.sender][orders[i].seals.exchange.hash] = true;
+            walletOrderCancelledListMap[msg.sender].push(orders[i]);
+            walletOrderExchangeHashIndexMap[msg.sender][orders[i].seals.exchange.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
+        }
+
         walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
 
-        emit CancelOrderEvent(order, msg.sender);
+        emit CancelOrdersEvent(orders, msg.sender);
+    }
+
+    /// @notice Challenge cancelled order
+    /// @param trade The trade that challenges a cancelled order
+    /// @param wallet The concerned wallet
+    function challengeCancelledOrder(Types.Trade trade, address wallet)
+    public
+    signedBy(trade.seal.hash, trade.seal.signature, owner)
+    {
+        require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
+
+        bytes32 orderExchangeHash = (
+        wallet == trade.buyer._address ?
+        trade.buyer.order.hashes.exchange :
+        trade.seller.order.hashes.exchange
+        );
+
+        require(walletOrderExchangeHashCancelledMap[wallet][orderExchangeHash]);
+
+        walletOrderExchangeHashCancelledMap[wallet][orderExchangeHash] = false;
+
+        uint256 orderIndex = walletOrderExchangeHashIndexMap[wallet][orderExchangeHash];
+        Types.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
+        emit ChallengeCancelledOrderEvent(order, trade, msg.sender);
     }
 
     /// @notice Settle deal that is a trade

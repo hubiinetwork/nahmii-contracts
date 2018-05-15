@@ -5,6 +5,9 @@ const ethers = require('ethers');
 const ethutil = require('ethereumjs-util');
 const keccak256 = require("augmented-keccak256");
 
+const Configuration = artifacts.require("Configuration");
+// var MockedConfiguration = artifacts.require("MockedConfiguration");
+
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
@@ -94,16 +97,117 @@ module.exports = (glob) => {
 
         describe('getCancelledOrders()', () => {
             it('should equal value initialized', async () => {
-                const orders = await ethersExchange.getCancelledOrderNonces(glob.owner, 0);
+                const orders = await ethersExchange.getCancelledOrders(glob.owner, 0);
                 orders.should.be.an('array').that.has.lengthOf(10);
                 orders[0][0].toNumber().should.equal(0);
             });
         });
 
-        describe('cancelOrder()', () => {
-            let overrideOptions, order, topic, filter;
+        describe.only('cancelOrders()', () => {
+            let overrideOptions, order1, order2, topic, filter;
 
             before(() => {
+                overrideOptions = {gasLimit: 1e6};
+            });
+
+            beforeEach(async () => {
+                order1 = {
+                    nonce: utils.bigNumberify(1),
+                    _address: glob.owner,
+                    placement: {
+                        intention: intentions.indexOf('Buy'),
+                        immediateSettlement: true,
+                        amount: utils.parseUnits('100', 18),
+                        rate: utils.bigNumberify(1000),
+                        currencies: {
+                            intended: '0x0000000000000000000000000000000000000001',
+                            conjugate: '0x0000000000000000000000000000000000000002'
+                        },
+                        residuals: {
+                            current: utils.parseUnits('400', 18),
+                            previous: utils.parseUnits('500', 18)
+                        }
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                order1 = await augmentOrderSeals(order1, glob.owner, glob.owner);
+
+                order2 = {
+                    nonce: utils.bigNumberify(2),
+                    _address: glob.owner,
+                    placement: {
+                        intention: intentions.indexOf('Sell'),
+                        immediateSettlement: true,
+                        amount: utils.parseUnits('100', 18),
+                        rate: utils.bigNumberify(1000),
+                        currencies: {
+                            intended: '0x0000000000000000000000000000000000000001',
+                            conjugate: '0x0000000000000000000000000000000000000002'
+                        },
+                        residuals: {
+                            current: utils.parseUnits('600', 18),
+                            previous: utils.parseUnits('700', 18)
+                        }
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber20)
+                };
+
+                order2 = await augmentOrderSeals(order2, glob.owner, glob.owner);
+
+                topic = ethersExchange.interface.events.CancelOrdersEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe('if orders are genuine', () => {
+                it('should successfully cancel order', async () => {
+                    await ethersExchange.cancelOrders([order1, order2], overrideOptions);
+                    const count = await ethersExchange.getCancelledOrdersCount(glob.owner);
+                    count.toNumber().should.equal(2);
+                    const orders = await ethersExchange.getCancelledOrders(glob.owner, 0);
+                    orders[0][0].toNumber().should.equal(order1.nonce.toNumber());
+                    orders[1][0].toNumber().should.equal(order2.nonce.toNumber());
+                });
+            });
+
+            describe('if _address differs from msg.sender', () => {
+                beforeEach(() => {
+                    order1._address = glob.user_a;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if not signed by correct party', () => {
+                beforeEach(() => {
+                    order1.seals.party.hash = order1.seals.exchange.hash;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if not signed by exchange', () => {
+                beforeEach(() => {
+                    order1.seals.exchange.hash = order1.seals.party.hash;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
+                });
+            });
+        });
+
+        describe('challengeCancelledOrder()', () => {
+            let overrideOptions, order, trade, topic, filter;
+
+            before(async () => {
                 overrideOptions = {gasLimit: 1e6};
             });
 
@@ -130,52 +234,172 @@ module.exports = (glob) => {
 
                 order = await augmentOrderSeals(order, glob.owner, glob.owner);
 
-                topic = ethersExchange.interface.events.CancelOrderEvent.topics[0];
+                trade = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.owner,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: order.seals.party.hash,
+                                exchange: order.seals.exchange.hash
+                            },
+                            residuals: {
+                                current: utils.parseUnits('400', 18),
+                                previous: utils.parseUnits('500', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9599.8', 18),
+                                previous: utils.parseUnits('9499.9', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.4', 18),
+                                previous: utils.parseUnits('9.5', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.2', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('600', 18),
+                                previous: utils.parseUnits('700', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19500', 18),
+                                previous: utils.parseUnits('19600', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.4996', 18),
+                                previous: utils.parseUnits('19.5998', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.0', 18),
+                            conjugate: utils.parseUnits('0.0004', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('100', 18),
+                            net: utils.parseUnits('200', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.1', 18),
+                            net: utils.parseUnits('0.2', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.0002', 18)
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                trade = await augmentTradeSeal(trade, glob.owner);
+
+                topic = ethersExchange.interface.events.ChallengeCancelledOrderEvent.topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
                 };
             });
 
-            describe('if order is genuine', () => {
-                it('should successfully cancel order', async () => {
+            describe('if order cancelled', () => {
+                describe('if cancel order challenge timeout has not expired', () => {
+                    let cancelOrderChallengeTimeout;
+
+                    beforeEach(async () => {
+                        cancelOrderChallengeTimeout = await ethersConfiguration.cancelOrderChallengeTimeout();
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
+                        await ethersExchange.cancelOrder(order, overrideOptions);
+                    });
+
+                    afterEach(async () => {
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(cancelOrderChallengeTimeout);
+                    });
+
+                    it('should successfully accept the challenge candidate trade', async () => {
+                        await ethersExchange.challengeCancelledOrder(trade, glob.owner, overrideOptions);
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(topic);
+                    });
+                });
+
+                describe('if cancel order challenge timeout has expired', () => {
+                    let cancelOrderChallengeTimeout;
+
+                    beforeEach(async () => {
+                        cancelOrderChallengeTimeout = await ethersConfiguration.cancelOrderChallengeTimeout();
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(0);
+                        await ethersExchange.cancelOrder(order, overrideOptions);
+                    });
+
+                    afterEach(async () => {
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(cancelOrderChallengeTimeout);
+                    });
+
+                    it('should revert', async () => {
+                        ethersExchange.challengeCancelledOrder(trade, glob.owner, overrideOptions).should.be.rejected;
+                    });
+                });
+            });
+
+            describe('if order has not been cancelled', () => {
+                let cancelOrderChallengeTimeout;
+
+                beforeEach(async () => {
+                    cancelOrderChallengeTimeout = await ethersConfiguration.cancelOrderChallengeTimeout();
+                    await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
                     await ethersExchange.cancelOrder(order, overrideOptions);
-                    const count = await ethersExchange.getCancelledOrdersCount(glob.owner);
-                    count.toNumber().should.equal(1);
-                    const orders = await ethersExchange.getCancelledOrders(glob.owner, 0);
-                    orders[0][0].toNumber().should.equal(order.nonce.toNumber())
-                });
-            });
 
-            describe('if _address differs from msg.sender', () => {
-                beforeEach(() => {
-                    order._address = glob.user_a;
+                    trade.buyer.order.hashes.exchange = hashString('some exchange buyer order hash');
+                });
+
+                afterEach(async () => {
+                    await ethersConfiguration.setCancelOrderChallengeTimeout(cancelOrderChallengeTimeout);
                 });
 
                 it('should revert', async () => {
-                    ethersExchange.cancelOrder(order, overrideOptions).should.be.rejected;
+                    ethersExchange.challengeCancelledOrder(trade, glob.owner, overrideOptions).should.be.rejected;
                 });
             });
 
-            describe('if not signed by correct party', () => {
+            describe('if trade is not signed by owner', () => {
                 beforeEach(() => {
-                    order.seals.party.hash = order.seals.exchange.hash;
+                   trade.seal.hash = hashString('some trade hash');
                 });
 
                 it('should revert', async () => {
-                    ethersExchange.cancelOrder(order, overrideOptions).should.be.rejected;
+                    ethersExchange.challengeCancelledOrder(trade, glob.owner, overrideOptions).should.be.rejected;
                 });
-            });
-
-            describe('if not signed by exchange', () => {
-                beforeEach(() => {
-                    order.seals.exchange.hash = order.seals.party.hash;
-                });
-
-                it('should revert', async () => {
-                    ethersExchange.cancelOrder(order, overrideOptions).should.be.rejected;
-                });
-            });
+            })
         });
 
         describe('configuration()', () => {
@@ -317,6 +541,7 @@ module.exports = (glob) => {
             })
         });
 
+        // TODO Complete: topic/event in logs
         describe('settleDealAsTrade()', () => {
             let trade, overrideOptions, topic, filter;
 
@@ -452,6 +677,7 @@ module.exports = (glob) => {
             });
         });
 
+        // TODO Complete: topic/event in logs
         describe('settleDealAsPayment()', () => {
             let payment, overrideOptions, topic, filter;
 
