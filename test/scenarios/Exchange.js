@@ -16,6 +16,7 @@ const utils = ethers.utils;
 
 const liquidityRoles = ['Maker', 'Taker'];
 const intentions = ['Buy', 'Sell'];
+const challengePhases = ['Dispute', 'Closed'];
 
 module.exports = (glob) => {
     describe('Exchange', () => {
@@ -103,7 +104,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe.only('cancelOrders()', () => {
+        describe('cancelOrders()', () => {
             let overrideOptions, order1, order2, topic, filter;
 
             before(() => {
@@ -338,7 +339,7 @@ module.exports = (glob) => {
                     beforeEach(async () => {
                         cancelOrderChallengeTimeout = await ethersConfiguration.cancelOrderChallengeTimeout();
                         await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-                        await ethersExchange.cancelOrder(order, overrideOptions);
+                        await ethersExchange.cancelOrders([order], overrideOptions);
                     });
 
                     afterEach(async () => {
@@ -358,7 +359,7 @@ module.exports = (glob) => {
                     beforeEach(async () => {
                         cancelOrderChallengeTimeout = await ethersConfiguration.cancelOrderChallengeTimeout();
                         await ethersConfiguration.setCancelOrderChallengeTimeout(0);
-                        await ethersExchange.cancelOrder(order, overrideOptions);
+                        await ethersExchange.cancelOrders([order], overrideOptions);
                     });
 
                     afterEach(async () => {
@@ -377,7 +378,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     cancelOrderChallengeTimeout = await ethersConfiguration.cancelOrderChallengeTimeout();
                     await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-                    await ethersExchange.cancelOrder(order, overrideOptions);
+                    await ethersExchange.cancelOrders([order], overrideOptions);
 
                     trade.buyer.order.hashes.exchange = hashString('some exchange buyer order hash');
                 });
@@ -393,13 +394,93 @@ module.exports = (glob) => {
 
             describe('if trade is not signed by owner', () => {
                 beforeEach(() => {
-                   trade.seal.hash = hashString('some trade hash');
+                    trade.seal.hash = hashString('some trade hash');
                 });
 
                 it('should revert', async () => {
                     ethersExchange.challengeCancelledOrder(trade, glob.owner, overrideOptions).should.be.rejected;
                 });
             })
+        });
+
+        describe('cancelledOrdersChallengePhase()', () => {
+
+            describe('if no order has been cancelled for wallet', () => {
+                it('should return value corresponding to Closed', async () => {
+                    const phase = await ethersExchange.cancelledOrdersChallengePhase(glob.user_a);
+                    phase.should.equal(challengePhases.indexOf('Closed'));
+                });
+            });
+
+            describe('if order has been cancelled for wallet', () => {
+                let overrideOptions, order;
+
+                before(() => {
+                    overrideOptions = {gasLimit: 1e6};
+                });
+
+                beforeEach(async () => {
+                    order = {
+                        nonce: utils.bigNumberify(1),
+                        _address: glob.owner,
+                        placement: {
+                            intention: intentions.indexOf('Buy'),
+                            immediateSettlement: true,
+                            amount: utils.parseUnits('100', 18),
+                            rate: utils.bigNumberify(1000),
+                            currencies: {
+                                intended: '0x0000000000000000000000000000000000000001',
+                                conjugate: '0x0000000000000000000000000000000000000002'
+                            },
+                            residuals: {
+                                current: utils.parseUnits('400', 18),
+                                previous: utils.parseUnits('500', 18)
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    };
+
+                    order = await augmentOrderSeals(order, glob.owner, glob.owner);
+                });
+
+                describe('if cancelled order challenge timeout has not expired', () => {
+                    let cancelOrderChallengeTimeout;
+
+                    beforeEach(async () => {
+                        cancelOrderChallengeTimeout = await ethersConfiguration.cancelOrderChallengeTimeout();
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
+                        await ethersExchange.cancelOrders([order], overrideOptions);
+                    });
+
+                    afterEach(async () => {
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(cancelOrderChallengeTimeout);
+                    });
+
+                    it('should return value corresponding to Dispute', async () => {
+                        const phase = await ethersExchange.cancelledOrdersChallengePhase(glob.owner);
+                        phase.should.equal(challengePhases.indexOf('Dispute'));
+                    });
+                });
+
+                describe('if cancelled order challenge timeout has expired', () => {
+                    let cancelOrderChallengeTimeout;
+
+                    beforeEach(async () => {
+                        cancelOrderChallengeTimeout = await ethersConfiguration.cancelOrderChallengeTimeout();
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(0);
+                        await ethersExchange.cancelOrders([order], overrideOptions);
+                    });
+
+                    afterEach(async () => {
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(cancelOrderChallengeTimeout);
+                    });
+
+                    it('should return value corresponding to Dispute', async () => {
+                        const phase = await ethersExchange.cancelledOrdersChallengePhase(glob.owner);
+                        phase.should.equal(challengePhases.indexOf('Closed'));
+                    });
+                });
+            });
         });
 
         describe('configuration()', () => {

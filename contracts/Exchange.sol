@@ -25,6 +25,10 @@ contract Exchange {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
+    //
+    // Enums
+    // -----------------------------------------------------------------------------------------------------------------
+    enum ChallengePhase {Dispute, Closed}
 
     //
     // Variables
@@ -156,6 +160,17 @@ contract Exchange {
         uint256 orderIndex = walletOrderExchangeHashIndexMap[wallet][orderExchangeHash];
         Types.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
         emit ChallengeCancelledOrderEvent(order, trade, msg.sender);
+    }
+
+    /// @notice Get current phase of a wallets cancelled order challenge
+    /// @param wallet The address of wallet for which the cancelled order challenge phase is returned
+    function cancelledOrdersChallengePhase(address wallet) public view returns (ChallengePhase) {
+        if (0 == walletOrderCancelledListMap[wallet].length)
+            return ChallengePhase.Closed;
+        if (block.timestamp < walletOrderCancelledTimeoutMap[wallet])
+            return ChallengePhase.Dispute;
+        else
+            return ChallengePhase.Closed;
     }
 
     /// @notice Settle deal that is a trade
