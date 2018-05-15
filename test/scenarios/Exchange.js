@@ -4,9 +4,7 @@ const chaiAsPromised = require("chai-as-promised");
 const ethers = require('ethers');
 const ethutil = require('ethereumjs-util');
 const keccak256 = require("augmented-keccak256");
-
-const Configuration = artifacts.require("Configuration");
-// var MockedConfiguration = artifacts.require("MockedConfiguration");
+const Exchange = artifacts.require("Exchange");
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -48,13 +46,6 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await truffleExchange.owner.call();
-                owner.should.equal(glob.owner);
-            });
-        });
-
-        describe('owner()', () => {
-            it('should equal value initialized at construction time', async () => {
                 const owner = await truffleExchange.owner.call();
                 owner.should.equal(glob.owner);
             });
@@ -483,6 +474,285 @@ module.exports = (glob) => {
             });
         });
 
+        describe('getDealSettlementChallengeFromTradeCount()', () => {
+            it('should return value initialized ', async () => {
+                const count = await ethersExchange.getDealSettlementChallengeFromTradeCount(glob.user_a);
+                count.toNumber().should.equal(0);
+            });
+        });
+
+        describe('getDealSettlementChallengeFromPaymentCount()', () => {
+            it('should return value initialized ', async () => {
+                const count = await ethersExchange.getDealSettlementChallengeFromPaymentCount(glob.user_a);
+                count.toNumber().should.equal(0);
+            });
+        });
+
+        describe('startDealSettlementChallengeFromTrade()', () => {
+            let overrideOptions, trade, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+            });
+
+            beforeEach(async () => {
+                trade = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    rate: utils.bigNumberify(1000),
+                    currencies: {
+                        intended: '0x0000000000000000000000000000000000000001',
+                        conjugate: '0x0000000000000000000000000000000000000002'
+                    },
+                    buyer: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Maker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party buy order hash'),
+                                exchange: hashString('some exchange buy order hash')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('400', 18),
+                                previous: utils.parseUnits('500', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('9599.8', 18),
+                                previous: utils.parseUnits('9499.9', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('9.4', 18),
+                                previous: utils.parseUnits('9.5', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.2', 18),
+                            conjugate: utils.parseUnits('0.0', 18)
+                        }
+                    },
+                    seller: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        rollingVolume: utils.bigNumberify(0),
+                        liquidityRole: liquidityRoles.indexOf('Taker'),
+                        order: {
+                            amount: utils.parseUnits('100', 18),
+                            hashes: {
+                                party: hashString('some party sell order hash'),
+                                exchange: hashString('some exchange sell order hash')
+                            },
+                            residuals: {
+                                current: utils.parseUnits('600', 18),
+                                previous: utils.parseUnits('700', 18)
+                            }
+                        },
+                        balances: {
+                            intended: {
+                                current: utils.parseUnits('19500', 18),
+                                previous: utils.parseUnits('19600', 18)
+                            },
+                            conjugate: {
+                                current: utils.parseUnits('19.4996', 18),
+                                previous: utils.parseUnits('19.5998', 18)
+                            }
+                        },
+                        netFees: {
+                            intended: utils.parseUnits('0.0', 18),
+                            conjugate: utils.parseUnits('0.0004', 18)
+                        }
+                    },
+                    transfers: {
+                        intended: {
+                            single: utils.parseUnits('100', 18),
+                            net: utils.parseUnits('200', 18)
+                        },
+                        conjugate: {
+                            single: utils.parseUnits('0.1', 18),
+                            net: utils.parseUnits('0.2', 18)
+                        }
+                    },
+                    singleFees: {
+                        intended: utils.parseUnits('0.1', 18),
+                        conjugate: utils.parseUnits('0.0002', 18)
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                trade = await augmentTradeSeal(trade, glob.owner);
+
+                topic = ethersExchange.interface.events.StartDealSettlementChallengeFromTradeEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe('if when there is no ongoing deal settlement challenge and caller is owner or trade party', () => {
+                it('should operate successfully', async () => {
+                    await ethersExchange.startDealSettlementChallengeFromTrade(trade, glob.user_a, overrideOptions);
+                    const count = await ethersExchange.getDealSettlementChallengeFromTradeCount(glob.user_a);
+                    count.toNumber().should.equal(1);
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if trade is not signed by owner', () => {
+                beforeEach(async () => {
+                    trade.seal.signature = await sign(glob.user_a, trade.seal.hash);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.startDealSettlementChallengeFromTrade(trade, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if called by neither owner nor trade party', () => {
+                let ethersExchangeUserC;
+
+                beforeEach(() => {
+                    ethersExchangeUserC = ethersExchange.connect(glob.signer_c);
+                });
+
+                it('should revert', async () => {
+                    ethersExchangeUserC.startDealSettlementChallengeFromTrade(trade, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if called before an ongoing deal settlement challenge has expired', () => {
+                let dealSettlementChallengeTimeout;
+
+                beforeEach(async () => {
+                    dealSettlementChallengeTimeout = await ethersConfiguration.dealChallengeTimeout();
+                    await ethersConfiguration.setDealChallengeTimeout(1e3);
+                    await ethersExchange.startDealSettlementChallengeFromTrade(trade, glob.user_a, overrideOptions);
+                });
+
+                afterEach(async () => {
+                    await ethersConfiguration.setDealChallengeTimeout(dealSettlementChallengeTimeout);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.startDealSettlementChallengeFromTrade(trade, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+        });
+
+        describe('startDealSettlementChallengeFromPayment()', () => {
+            let overrideOptions, payment, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+            });
+
+            beforeEach(async () => {
+                payment = {
+                    nonce: utils.bigNumberify(1),
+                    immediateSettlement: true,
+                    amount: utils.parseUnits('100', 18),
+                    currency: '0x0000000000000000000000000000000000000001',
+                    source: {
+                        _address: glob.user_a,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('9399.8', 18),
+                            previous: utils.parseUnits('9500', 18)
+                        },
+                        netFee: utils.parseUnits('0.2', 18)
+                    },
+                    destination: {
+                        _address: glob.user_b,
+                        nonce: utils.bigNumberify(1),
+                        balances: {
+                            current: utils.parseUnits('19700', 18),
+                            previous: utils.parseUnits('19600', 18)
+                        },
+                        netFee: utils.parseUnits('0.0', 18)
+                    },
+                    transfers: {
+                        single: utils.parseUnits('100', 18),
+                        net: utils.parseUnits('100', 18)
+                    },
+                    singleFee: utils.parseUnits('0.2', 18),
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                payment = await augmentPaymentSeals(payment, glob.user_a, glob.owner);
+
+                topic = ethersExchange.interface.events.StartDealSettlementChallengeFromPaymentEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe('if when there is no ongoing deal settlement challenge and caller is owner or payment party', () => {
+                it('should operate successfully', async () => {
+                    await ethersExchange.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions);
+                    const count = await ethersExchange.getDealSettlementChallengeFromPaymentCount(glob.user_a);
+                    count.toNumber().should.equal(1);
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if payment is not signed by owner', () => {
+                beforeEach(async () => {
+                    payment.seals.exchange.signature = await sign(glob.user_b, payment.seals.exchange.hash);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment is not signed by payment source', () => {
+                beforeEach(async () => {
+                    payment.seals.party.signature = await sign(glob.user_b, payment.seals.party.hash);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if called by neither owner nor trade party', () => {
+                let ethersExchangeUserC;
+
+                beforeEach(() => {
+                    ethersExchangeUserC = ethersExchange.connect(glob.signer_c);
+                });
+
+                it('should revert', async () => {
+                    ethersExchangeUserC.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if called before an ongoing deal settlement challenge has expired', () => {
+                let dealSettlementChallengeTimeout;
+
+                beforeEach(async () => {
+                    dealSettlementChallengeTimeout = await ethersConfiguration.dealChallengeTimeout();
+                    await ethersConfiguration.setDealChallengeTimeout(1e3);
+                    await ethersExchange.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions);
+                });
+
+                afterEach(async () => {
+                    await ethersConfiguration.setDealChallengeTimeout(dealSettlementChallengeTimeout);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions).should.be.rejected;
+                });
+            });
+        });
+
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
                 const configuration = await ethersExchange.configuration();
@@ -841,7 +1111,7 @@ const augmentTradeSeal = async (trade, address) => {
     const hash = hashTrade(trade);
     trade.seal = {
         hash: hash,
-        signature: fromRpcSig(await web3.eth.sign(address, hash))
+        signature: await sign(address, hash)
     };
     return trade;
 };
@@ -851,13 +1121,13 @@ const augmentPaymentSeals = async (payment, partyAddress, exchangeAddress) => {
     payment.seals = {
         party: {
             hash: partyHash,
-            signature: fromRpcSig(await web3.eth.sign(partyAddress, partyHash))
+            signature: await sign(partyAddress, partyHash)
         }
     };
     const exchangeHash = hashPaymentAsExchange(payment);
     payment.seals.exchange = {
-        hash: partyHash,
-        signature: fromRpcSig(await web3.eth.sign(exchangeAddress, exchangeHash))
+        hash: exchangeHash,
+        signature: await sign(exchangeAddress, exchangeHash)
     };
     return payment;
 };
@@ -867,13 +1137,13 @@ const augmentOrderSeals = async (order, partyAddress, exchangeAddress) => {
     order.seals = {
         party: {
             hash: partyHash,
-            signature: fromRpcSig(await web3.eth.sign(partyAddress, partyHash))
+            signature: await sign(partyAddress, partyHash)
         },
     };
     const exchangeHash = hashOrderAsExchange(order);
     order.seals.exchange = {
         hash: exchangeHash,
-        signature: fromRpcSig(await web3.eth.sign(exchangeAddress, exchangeHash))
+        signature: await sign(exchangeAddress, exchangeHash)
     };
     return order;
 };
@@ -920,6 +1190,11 @@ const hashTypedItems = (...data) => {
     const hasher = keccak256.create();
     data.forEach((d) => hasher.update(d.value, d.type));
     return `0x${hasher.digest()}`;
+};
+
+const sign = async (address, hash) => {
+    const sig = await web3.eth.sign(address, hash);
+    return fromRpcSig(sig);
 };
 
 const fromRpcSig = (sig) => {

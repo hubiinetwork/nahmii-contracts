@@ -28,7 +28,13 @@ contract Exchange {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
-    enum ChallengePhase {Dispute, Closed}
+    struct DealSettlementChallenge {
+        uint256 nonce;
+        Types.DealType dealType;
+        uint256 timeout;
+        Types.ChallengeStatus status;
+        uint256 dealIndex;
+    }
 
     //
     // Variables
@@ -48,10 +54,15 @@ contract Exchange {
     Types.Settlement[] public settlements;
     mapping(address => uint256[]) walletSettlementIndexMap;
 
-    mapping(address => mapping(bytes32 => bool)) walletOrderExchangeHashCancelledMap;
-    mapping(address => Types.Order[]) walletOrderCancelledListMap;
-    mapping(address => mapping(bytes32 => uint256)) walletOrderExchangeHashIndexMap;
-    mapping(address => uint256) walletOrderCancelledTimeoutMap;
+    mapping(address => mapping(bytes32 => bool)) public walletOrderExchangeHashCancelledMap;
+    mapping(address => Types.Order[]) public walletOrderCancelledListMap;
+    mapping(address => mapping(bytes32 => uint256)) public walletOrderExchangeHashIndexMap;
+    mapping(address => uint256) public walletOrderCancelledTimeoutMap;
+
+    mapping(address => DealSettlementChallenge) walletDealSettlementChallengeMap;
+
+    mapping(address => Types.Trade[]) public walletDealSettlementChallengedTradesMap;
+    mapping(address => Types.Payment[]) public walletDealSettlementChallengedPaymentsMap;
 
     //
     // Events
@@ -59,6 +70,8 @@ contract Exchange {
     event OwnerChangedEvent(address oldOwner, address newOwner);
     event CancelOrdersEvent(Types.Order[] orders, address wallet);
     event ChallengeCancelledOrderEvent(Types.Order order, Types.Trade trade, address wallet);
+    event StartDealSettlementChallengeFromTradeEvent(Types.Trade trade, address wallet);
+    event StartDealSettlementChallengeFromPaymentEvent(Types.Payment payment, address wallet);
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
@@ -164,13 +177,88 @@ contract Exchange {
 
     /// @notice Get current phase of a wallets cancelled order challenge
     /// @param wallet The address of wallet for which the cancelled order challenge phase is returned
-    function cancelledOrdersChallengePhase(address wallet) public view returns (ChallengePhase) {
+    function cancelledOrdersChallengePhase(address wallet) public view returns (Types.ChallengePhase) {
         if (0 == walletOrderCancelledListMap[wallet].length)
-            return ChallengePhase.Closed;
+            return Types.ChallengePhase.Closed;
         if (block.timestamp < walletOrderCancelledTimeoutMap[wallet])
-            return ChallengePhase.Dispute;
+            return Types.ChallengePhase.Dispute;
         else
-            return ChallengePhase.Closed;
+            return Types.ChallengePhase.Closed;
+    }
+
+    /// @notice Get the number of current and past deal settlement challenges from trade for given wallet
+    /// @param wallet The wallet for which to return count
+    function getDealSettlementChallengeFromTradeCount(address wallet) public view returns (uint256) {
+        return walletDealSettlementChallengedTradesMap[wallet].length;
+    }
+
+    /// @notice Get the number of current and past deal settlement challenges from payment for given wallet
+    /// @param wallet The wallet for which to return count
+    function getDealSettlementChallengeFromPaymentCount(address wallet) public view returns (uint256) {
+        return walletDealSettlementChallengedPaymentsMap[wallet].length;
+    }
+
+    /// @notice Start deal settlement challenge on deal of trade type
+    /// @param trade The challenged deal
+    /// @param wallet The relevant deal party
+    function startDealSettlementChallengeFromTrade(Types.Trade trade, address wallet)
+    public
+    signedBy(trade.seal.hash, trade.seal.signature, owner)
+    {
+        if (msg.sender != owner)
+            wallet = msg.sender;
+
+        require(isOwner() || isTradeParty(trade, wallet));
+
+        require(
+            0 == walletDealSettlementChallengeMap[wallet].nonce ||
+            block.timestamp >= walletDealSettlementChallengeMap[wallet].timeout
+        );
+
+        walletDealSettlementChallengedTradesMap[msg.sender].push(trade);
+
+        DealSettlementChallenge memory challenge = DealSettlementChallenge(
+            trade.nonce,
+            Types.DealType.Trade,
+            block.timestamp + configuration.dealChallengeTimeout(),
+            Types.ChallengeStatus.Qualified,
+            walletDealSettlementChallengedTradesMap[wallet].length - 1
+        );
+        walletDealSettlementChallengeMap[wallet] = challenge;
+
+        emit StartDealSettlementChallengeFromTradeEvent(trade, wallet);
+    }
+
+    /// @notice Start deal settlement challenge on deal of payment type
+    /// @param payment The challenged deal
+    /// @param wallet The relevant deal party
+    function startDealSettlementChallengeFromPayment(Types.Payment payment, address wallet)
+    public
+    signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
+    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.source._address)
+    {
+        if (msg.sender != owner)
+            wallet = msg.sender;
+
+        require(isOwner() || isPaymentParty(payment, wallet));
+
+        require(
+            0 == walletDealSettlementChallengeMap[wallet].nonce ||
+            block.timestamp >= walletDealSettlementChallengeMap[wallet].timeout
+        );
+
+        walletDealSettlementChallengedPaymentsMap[msg.sender].push(payment);
+
+        DealSettlementChallenge memory challenge = DealSettlementChallenge(
+            payment.nonce,
+            Types.DealType.Payment,
+            block.timestamp + configuration.dealChallengeTimeout(),
+            Types.ChallengeStatus.Qualified,
+            walletDealSettlementChallengedPaymentsMap[wallet].length - 1
+        );
+        walletDealSettlementChallengeMap[wallet] = challenge;
+
+        emit StartDealSettlementChallengeFromPaymentEvent(payment, wallet);
     }
 
     /// @notice Settle deal that is a trade
@@ -424,6 +512,10 @@ contract Exchange {
         return ecrecover(prefixedHash, signature.v, signature.r, signature.s) == signer;
     }
 
+    function isOwner() private view returns (bool) {
+        return msg.sender == owner;
+    }
+
     function isTradeParty(Types.Trade trade, address wallet) private pure returns (bool) {
         return wallet == trade.buyer._address || wallet == trade.seller._address;
     }
@@ -488,94 +580,22 @@ contract Exchange {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(isOwner());
         _;
     }
 
-    modifier equalAddresses(address _address1, address _address2) {
-        require(_address1 == _address2);
+    modifier onlyTradeParty(Types.Trade trade, address wallet) {
+        require(isTradeParty(trade, wallet));
+        _;
+    }
+
+    modifier onlyPaymentParty(Types.Payment payment, address wallet) {
+        require(isPaymentParty(payment, wallet));
         _;
     }
 
     modifier signedBy(bytes32 hash, Types.Signature signature, address signer) {
         require(isGenuineSignature(hash, signature, signer));
-        _;
-    }
-
-    modifier challengeableBySuccessionTradesPair(Types.Trade firstTrade, Types.Trade lastTrade, address wallet, address currency) {
-        require(isTradeParty(firstTrade, wallet));
-        require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
-        require(Types.hashTrade(firstTrade) == firstTrade.seal.hash);
-        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
-
-        require(isTradeParty(lastTrade, wallet));
-        require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
-        require(Types.hashTrade(lastTrade) == lastTrade.seal.hash);
-        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
-
-        _;
-    }
-
-    modifier challengeableBySuccessionPaymentsPair(Types.Payment firstPayment, Types.Payment lastPayment, address wallet) {
-        require(firstPayment.currency == lastPayment.currency);
-
-        require(isPaymentParty(firstPayment, wallet));
-        require(Types.hashPaymentAsParty(firstPayment) == firstPayment.seals.party.hash);
-        require(Types.hashPaymentAsExchange(firstPayment) == firstPayment.seals.exchange.hash);
-        require(isGenuineSignature(firstPayment.seals.party.hash, firstPayment.seals.party.signature, firstPayment.source._address));
-        require(isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
-
-        require(isPaymentParty(lastPayment, wallet));
-        require(Types.hashPaymentAsParty(lastPayment) == lastPayment.seals.party.hash);
-        require(Types.hashPaymentAsExchange(lastPayment) == lastPayment.seals.exchange.hash);
-        require(isGenuineSignature(lastPayment.seals.party.hash, lastPayment.seals.party.signature, lastPayment.source._address));
-        require(isGenuineSignature(lastPayment.seals.exchange.hash, lastPayment.seals.exchange.signature, owner));
-
-        _;
-    }
-
-    modifier challengeableBySuccessionTradePaymentPair(Types.Trade trade, Types.Payment payment, address wallet, address currency) {
-        require(currency == payment.currency);
-
-        require(isTradeParty(trade, wallet));
-        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
-        require(Types.hashTrade(trade) == trade.seal.hash);
-        require(isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
-
-        require(isPaymentParty(payment, wallet));
-        require(Types.hashPaymentAsParty(payment) == payment.seals.party.hash);
-        require(Types.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
-        require(isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.source._address));
-        require(isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
-
-        _;
-    }
-
-    modifier challengeableByOrderResidualsTradesPair(Types.Trade firstTrade, Types.Trade lastTrade, address wallet, address currency) {
-        require((wallet == firstTrade.buyer._address && wallet == lastTrade.buyer._address)
-            || (wallet == firstTrade.seller._address && wallet == lastTrade.seller._address));
-
-        require((firstTrade.buyer.order.hashes.party == lastTrade.buyer.order.hashes.party)
-            || (firstTrade.seller.order.hashes.party == lastTrade.seller.order.hashes.party));
-
-        require(currency == firstTrade.currencies.intended);
-        require(Types.hashTrade(firstTrade) == firstTrade.seal.hash);
-        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
-
-        require(currency == lastTrade.currencies.intended);
-        require(Types.hashTrade(lastTrade) == lastTrade.seal.hash);
-        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
-
-        _;
-    }
-
-    modifier challengeableByDoubleSpentOrderTradesPair(Types.Trade firstTrade, Types.Trade lastTrade) {
-        require(Types.hashTrade(firstTrade) == firstTrade.seal.hash);
-        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
-
-        require(Types.hashTrade(lastTrade) == lastTrade.seal.hash);
-        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
-
         _;
     }
 }

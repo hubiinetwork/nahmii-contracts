@@ -17,6 +17,8 @@ library Types {
     enum TradePartyRole {Buyer, Seller}
     enum Intention {Buy, Sell}
     enum PaymentPartyRole {Source, Destination}
+    enum ChallengePhase {Dispute, Closed}
+    enum ChallengeStatus {Qualified, Disqualified}
 
     //
     // Structures
