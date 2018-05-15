@@ -28,19 +28,18 @@ Helpers.augmentWeb3(web3);
 
 contract('Smart contract checks', function () {
 	var glob = {
-		owner: web3.eth.coinbase,
+		owner: web3.eth.accounts[0],
 		user_a: web3.eth.accounts[1],
 		user_b: web3.eth.accounts[2],
 		user_c: web3.eth.accounts[3],
 		user_d: web3.eth.accounts[4],
-		signer_owner: w3prov.getSigner(this.owner),
-		signer_a: w3prov.getSigner(this.user_a),
-		signer_b: w3prov.getSigner(this.user_b),
-		signer_c: w3prov.getSigner(this.user_c),
-		signer_d: w3prov.getSigner(this.user_d),
-
 		gasLimit: 1800000
 	};
+	glob.signer_owner = w3prov.getSigner(glob.owner);
+	glob.signer_a = w3prov.getSigner(glob.user_a);
+	glob.signer_b = w3prov.getSigner(glob.user_b);
+	glob.signer_c = w3prov.getSigner(glob.user_c);
+	glob.signer_d = w3prov.getSigner(glob.user_d);
 
 	const minRequiredEthersPerUser = 10;
 	const initialTokensSupply = 1000;
