@@ -16,11 +16,13 @@ pragma experimental ABIEncoderV2;
 */
 
 import './ERC20.sol';
-import './SafeMathUint.sol';
+import './SafeMathInt.sol';
+import './SafeMathUInt.sol';
 
 contract ReserveFund {
 
-    using SafeMathUint for uint256;
+    using SafeMathInt for int256;
+	using SafeMathUint for uint256;
 
     //
 	// Structures
@@ -33,7 +35,7 @@ contract ReserveFund {
     struct DepositInfo {
  		int256 amount;
  		uint256 timestamp;
-		uint256 balance;
+		int256 balance;
 		uint256 block;
  	}
 
@@ -43,30 +45,30 @@ contract ReserveFund {
 		mapping (address => DepositInfo[]) depositsToken;
 
 		// Active balance of ethers and tokens.
-		uint256 activeEtherBalance;
-		mapping (address => uint256) activeTokenBalance;
+		int256 activeEtherBalance;
+		mapping (address => int256) activeTokenBalance;
 
 		// Staged balance of ethers and tokens.
-		uint256 stagedEtherBalance;
-		mapping (address => uint256) stagedTokenBalance;
+		int256 stagedEtherBalance;
+		mapping (address => int256) stagedTokenBalance;
 
 		DepositHistory[] depositsHistory;
 
         // Calculated ether balances after each transfer to/from wallet
-        uint256[] etherBalances;
+        int256[] etherBalances;
 
         // Calculated ether balance blocks at each transfer to/from wallet
-        uint256[] etherBalanceBlocks;
+        int256[] etherBalanceBlocks;
 
         // Block numbers at which address a has had its ether balance updated
         uint256[] etherBalanceBlockNumbers;
         uint256 lastEtherBalanceBlockNumber;
 
         // Calculated token balance after each transfer to/from wallet
-        mapping(address => uint256[]) tokenBalances;
+        mapping(address => int256[]) tokenBalances;
 
         // Calculated token balance blocks at each transfer to/from wallet
-        mapping(address => uint256[]) tokenBalanceBlocks;
+        mapping(address => int256[]) tokenBalanceBlocks;
 
         // Block numbers at which address a has had its ether balance updated
         mapping(address => uint256[]) tokenBalanceBlockNumbers;
@@ -82,7 +84,7 @@ contract ReserveFund {
 
 	struct TransferInfo {
 		address tokenAddress; // 0 for ethers.
-		uint256 amount;
+		int256 amount;
 	}
 
     //
@@ -90,13 +92,13 @@ contract ReserveFund {
     // -----------------------------------------------------------------------------------------------------------------
     address private owner;
 
-    uint256 aggregatedEtherBalance;
-	mapping (address => uint256) aggregatedTokenBalance;
+    int256 aggregatedEtherBalance;
+	mapping (address => int256) aggregatedTokenBalance;
 
-    uint256 aggregateAccrualEtherBalance;
-    uint256 periodAccrualEtherBalance;
-    mapping (address => uint256) aggregateAccrualTokenBalance;
-    mapping (address => uint256) periodAccrualTokenBalance;
+    int256 aggregateAccrualEtherBalance;
+    int256 periodAccrualEtherBalance;
+    mapping (address => int256) aggregateAccrualTokenBalance;
+    mapping (address => int256) periodAccrualTokenBalance;
 
 	address[] accrualPeriodTokenList;
 	mapping (address => int) isAccruedTokenMap;
@@ -110,9 +112,9 @@ contract ReserveFund {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
-    event DepositEvent(address wallet, uint256 amount, address tokenAddress);
-    event StageEvent(address wallet, uint256 amount, address tokenAddress);
-    event WithdrawEvent(address wallet, uint256 amount, address tokenAddress);
+    event DepositEvent(address wallet, int256 amount, address tokenAddress);
+    event StageEvent(address wallet, int256 amount, address tokenAddress);
+    event WithdrawEvent(address wallet, int256 amount, address tokenAddress);
     event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx);
 	event ClaimAccrualEvent(address tokenAddress);
 	event CloseAccrualPeriodEvent();
@@ -132,40 +134,41 @@ contract ReserveFund {
 
     function () public payable {
         require(msg.value > 0);
+		int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         if (msg.sender == owner) {
-            periodAccrualEtherBalance = periodAccrualEtherBalance.add(msg.value);
-            aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add(msg.value);
+            periodAccrualEtherBalance = periodAccrualEtherBalance.add_nn(amount);
+            aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add_nn(amount);
         }
         else {
             uint256 blockSpan = block.number.sub(walletInfoMap[msg.sender].lastEtherBalanceBlockNumber);
-            uint256 balanceBlock = walletInfoMap[msg.sender].activeEtherBalance.mul(blockSpan);
+            int256 balanceBlock = walletInfoMap[msg.sender].activeEtherBalance.mul_nn(SafeMathInt.toInt256(blockSpan));
 
             walletInfoMap[msg.sender].etherBalanceBlocks.push(balanceBlock);
             walletInfoMap[msg.sender].etherBalanceBlockNumbers.push(block.number);
             walletInfoMap[msg.sender].lastEtherBalanceBlockNumber = block.number;
 
-            walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.add(msg.value);
+            walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.add_nn(amount);
             walletInfoMap[msg.sender].etherBalances.push(walletInfoMap[msg.sender].activeEtherBalance);
-            aggregatedEtherBalance = aggregatedEtherBalance.add(msg.value);
+            aggregatedEtherBalance = aggregatedEtherBalance.add_nn(amount);
         }
 
 		//add to per-wallet active balance
-		walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(msg.value), now, walletInfoMap[msg.sender].activeEtherBalance, block.number));
+		walletInfoMap[msg.sender].depositsEther.push(DepositInfo(amount, now, walletInfoMap[msg.sender].activeEtherBalance, block.number));
 		walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(address(0), walletInfoMap[msg.sender].depositsEther.length - 1));
 
 		//emit event
-		emit DepositEvent(msg.sender, msg.value, address(0));
+		emit DepositEvent(msg.sender, amount, address(0));
 	}
 
-	function depositTokens(address tokenAddress, uint256 amount) public {
+	function depositTokens(address tokenAddress, int256 amount) public {
 		require(tokenAddress != address(0));
 		require(amount > 0);
         ERC20 token = ERC20(tokenAddress);
 
         if (msg.sender == owner) {
-            periodAccrualTokenBalance[tokenAddress] = periodAccrualTokenBalance[tokenAddress].add(amount);
-            aggregateAccrualTokenBalance[tokenAddress] = aggregateAccrualTokenBalance[tokenAddress].add(amount);
+            periodAccrualTokenBalance[tokenAddress] = periodAccrualTokenBalance[tokenAddress].add_nn(amount);
+            aggregateAccrualTokenBalance[tokenAddress] = aggregateAccrualTokenBalance[tokenAddress].add_nn(amount);
 
 			if (isAccruedTokenMap[tokenAddress] == 0)
 			{
@@ -175,19 +178,20 @@ contract ReserveFund {
         }
         else {
             uint256 blockSpan = block.number.sub(walletInfoMap[msg.sender].lastTokenBalanceBlockNumber[tokenAddress]);
-            uint256 balanceBlock = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].mul(blockSpan);
+            int256 balanceBlock = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].mul(SafeMathInt.toInt256(blockSpan));
 
             walletInfoMap[msg.sender].tokenBalanceBlocks[tokenAddress].push(balanceBlock);
             walletInfoMap[msg.sender].tokenBalanceBlockNumbers[tokenAddress].push(block.number);
             walletInfoMap[msg.sender].lastTokenBalanceBlockNumber[tokenAddress] = block.number;
 
-            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].add(amount);
+            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].add_nn(amount);
             walletInfoMap[msg.sender].tokenBalances[tokenAddress].push(walletInfoMap[msg.sender].activeTokenBalance[tokenAddress]);
-            aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].add(amount);
+            aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].add_nn(amount);
         }
 
-        require(token.transferFrom(msg.sender, this, amount));
-        walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], block.number));
+		// Amount must be >0 so there's no problem with conversion to unsigned.
+        require(token.transferFrom(msg.sender, this, uint256 (amount)));
+        walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(amount, now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], block.number));
 		walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(tokenAddress, walletInfoMap[msg.sender].depositsToken[tokenAddress].length - 1));
 
         //emit event
@@ -217,11 +221,11 @@ contract ReserveFund {
         return walletInfoMap[wallet].depositsHistory.length;
     }
 
-    function periodAccrualBalance(address tokenAddress) public view returns (uint256) {
+    function periodAccrualBalance(address tokenAddress) public view returns (int256) {
         return tokenAddress == address(0) ? periodAccrualEtherBalance : periodAccrualTokenBalance[tokenAddress];
     }
 
-    function aggregateAccrualBalance(address tokenAddress) public view returns (uint256) {
+    function aggregateAccrualBalance(address tokenAddress) public view returns (int256) {
         return tokenAddress == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress];
     }
 
@@ -275,33 +279,34 @@ contract ReserveFund {
 			}
 		}
 
-		uint256 bb = internalBalanceBlocksIn(msg.sender, tokenAddress, bn_low, bn_up);
+		int256 bb = internalBalanceBlocksIn(msg.sender, tokenAddress, bn_low, bn_up);
 
 		require (bn_low != bn_up); // avoid division by 0
 
-		uint256 balance =  tokenAddress == address(0) ? aggregatedEtherBalance : aggregatedTokenBalance[tokenAddress];
-		uint256 fraction = bb.mul(1e18).mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(balance.mul(bn_up.sub(bn_low)).mul(1e18));
-        uint256 amount =   fraction.mul(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div(1e18);
+		int256 blockspan = SafeMathInt.toInt256(bn_up.sub(bn_low));
+		int256 balance =  tokenAddress == address(0) ? aggregatedEtherBalance : aggregatedTokenBalance[tokenAddress];
+		int256 fraction = bb.mul_nn(1e18).mul_nn(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div_nn(balance.mul_nn(blockspan).mul_nn(1e18));
+        int256 amount =   fraction.mul_nn(tokenAddress == 0 ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[tokenAddress]).div_nn(1e18);
         
 		/* Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c */
 
 		if (tokenAddress == address(0)) {
-			aggregatedEtherBalance = aggregatedEtherBalance.sub(amount);
+			aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(amount);
 
 			if (compoundAccrual) {
-				walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.add(amount);
+				walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.add_nn(amount);
 			}
 			else {
-				walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
+				walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add_nn(amount);
 			}
 		} else {
-			aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].sub(amount);
+			aggregatedTokenBalance[tokenAddress] = aggregatedTokenBalance[tokenAddress].sub_nn(amount);
 			
 			if (compoundAccrual) {
-				walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].add(amount);
+				walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].add_nn(amount);
 			}
 			else {
-				walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);		
+				walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add_nn(amount);		
 			}
 		
 		}
@@ -318,7 +323,7 @@ contract ReserveFund {
 		emit ClaimAccrualEvent(tokenAddress);
 	}
 
-	function stage(address tokenAddress, uint256 amount) public {
+	function stage(address tokenAddress, int256 amount) public {
         require(msg.sender != owner);
 
         if (tokenAddress == address(0)) {
@@ -326,10 +331,10 @@ contract ReserveFund {
                 amount = walletInfoMap[msg.sender].activeEtherBalance;
             require(amount > 0);
 
-            walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.sub(amount);
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add(amount);
+            walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.sub_nn(amount);
+            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add_nn(amount);
 
-            walletInfoMap[msg.sender].depositsEther.push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeEtherBalance, block.number));
+            walletInfoMap[msg.sender].depositsEther.push(DepositInfo(amount, now, walletInfoMap[msg.sender].activeEtherBalance, block.number));
 
             walletInfoMap[msg.sender].depositsHistory.push(DepositHistory(address(0), walletInfoMap[msg.sender].depositsEther.length - 1));
 			walletInfoMap[msg.sender].etherBalances.push(walletInfoMap[msg.sender].activeEtherBalance);
@@ -338,8 +343,8 @@ contract ReserveFund {
                 amount = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress];
             require(amount > 0);
 
-            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].sub(amount);
-            walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add(amount);
+            walletInfoMap[msg.sender].activeTokenBalance[tokenAddress] = walletInfoMap[msg.sender].activeTokenBalance[tokenAddress].sub_nn(amount);
+            walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].add_nn(amount);
 
             walletInfoMap[msg.sender].depositsToken[tokenAddress].push(DepositInfo(int256(amount), now, walletInfoMap[msg.sender].activeTokenBalance[tokenAddress], block.number));
 
@@ -351,7 +356,7 @@ contract ReserveFund {
         emit StageEvent(msg.sender, amount, tokenAddress);
     }
 
-	function activeBalance(address wallet, address tokenAddress) public view returns (uint256) {
+	function activeBalance(address wallet, address tokenAddress) public view returns (int256) {
 		//if no wallet provided, get the current aggregated balance
 		if (wallet == address(0)) {
 			if (tokenAddress == address(0))
@@ -367,27 +372,27 @@ contract ReserveFund {
 		}
     }
 
-	function stagedBalance(address wallet, address tokenAddress) public view returns (uint256) {
+	function stagedBalance(address wallet, address tokenAddress) public view returns (int256) {
 		if (tokenAddress == address(0))
 			return walletInfoMap[wallet].stagedEtherBalance;
 		return walletInfoMap[wallet].stagedTokenBalance[tokenAddress];
 	}
 
-    function withdrawEther(uint256 amount) public {
+    function withdrawEther(int256 amount) public {
 		require(msg.sender != owner);
 		if (amount > walletInfoMap[msg.sender].stagedEtherBalance) {
 			amount = walletInfoMap[msg.sender].stagedEtherBalance;
 		}
 		require(amount > 0);
 
-		msg.sender.transfer(amount);
-		walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub(amount);
+		msg.sender.transfer(uint256(amount));
+		walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub_nn(amount);
 
 		//raise event
 		emit WithdrawEvent(msg.sender, amount, address(0));
 	}
 
-	function withdrawTokens(address tokenAddress, uint256 amount) public {
+	function withdrawTokens(address tokenAddress, int256 amount) public {
 		require(msg.sender != owner);
 		require(tokenAddress != address(0));
 		if (amount > walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress]) {
@@ -396,8 +401,8 @@ contract ReserveFund {
 		require(amount > 0);
 
 		ERC20 token = ERC20(tokenAddress);
-		token.transfer(msg.sender, amount);
-		walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].sub(amount);
+		token.transfer(msg.sender, uint256(amount));
+		walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress] = walletInfoMap[msg.sender].stagedTokenBalance[tokenAddress].sub_nn(amount);
 
 		//raise event
 		emit WithdrawEvent(msg.sender, amount, tokenAddress);
@@ -419,26 +424,26 @@ contract ReserveFund {
 
 		if (outboundTx.tokenAddress == address(0)) {
 			require (outboundTx.amount <= aggregatedEtherBalance);
-			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add(outboundTx.amount);
-			aggregatedEtherBalance = aggregatedEtherBalance.sub(outboundTx.amount);
+			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(outboundTx.amount);
+			aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(outboundTx.amount);
 
 		} else {
 			require (outboundTx.amount <= aggregatedTokenBalance[outboundTx.tokenAddress]);
-			walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress].add(outboundTx.amount);
-			aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub(outboundTx.amount);
+			walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress].add_nn(outboundTx.amount);
+			aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub_nn(outboundTx.amount);
 		}
 
 		// Perform inbound (w to SC) transfers
 
 		if (inboundTx.tokenAddress == address(0)) {
 			require(walletInfoMap[wallet].stagedEtherBalance >= inboundTx.amount);
-			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.sub(inboundTx.amount);
-			aggregatedEtherBalance = aggregatedEtherBalance.add(inboundTx.amount);
+			walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.sub_nn(inboundTx.amount);
+			aggregatedEtherBalance = aggregatedEtherBalance.add_nn(inboundTx.amount);
 
 		} else {
 			require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] >= inboundTx.amount);
-			walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress].sub(inboundTx.amount);
-			aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add(inboundTx.amount);
+			walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress].sub_nn(inboundTx.amount);
+			aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add_nn(inboundTx.amount);
 		}
 
 		//raise event
@@ -476,7 +481,7 @@ contract ReserveFund {
 	//
     // Debugging helper functions
     // -----------------------------------------------------------------------------------------------------------------
-	function debugBalanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) external view onlyOwner returns (uint256) {
+	function debugBalanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) external view onlyOwner returns (int256) {
 		return internalBalanceBlocksIn(wallet, tokenAddress, startBlock, endBlock);
 	}
 
@@ -484,12 +489,12 @@ contract ReserveFund {
     // Internal helper functions
     // -----------------------------------------------------------------------------------------------------------------
 
-	function internalBalanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) internal view returns (uint256) {
+	function internalBalanceBlocksIn(address wallet, address tokenAddress, uint256 startBlock, uint256 endBlock) internal view returns (int256) {
 		require (startBlock < endBlock);
 		require (wallet != address(0));
 
-        uint256[] storage balances = tokenAddress == 0 ? walletInfoMap[wallet].etherBalances : walletInfoMap[wallet].tokenBalances[tokenAddress];
-        uint256[] storage balanceBlocks = tokenAddress == 0 ? walletInfoMap[wallet].etherBalanceBlocks : walletInfoMap[wallet].tokenBalanceBlocks[tokenAddress];
+        int256[] storage balances = tokenAddress == 0 ? walletInfoMap[wallet].etherBalances : walletInfoMap[wallet].tokenBalances[tokenAddress];
+        int256[] storage balanceBlocks = tokenAddress == 0 ? walletInfoMap[wallet].etherBalanceBlocks : walletInfoMap[wallet].tokenBalanceBlocks[tokenAddress];
         uint256[] storage balanceBlockNumbers = tokenAddress == 0 ? walletInfoMap[wallet].etherBalanceBlockNumbers : walletInfoMap[wallet].tokenBalanceBlockNumbers[tokenAddress];
 
         if (balanceBlockNumbers.length == 0 || endBlock.sub(startBlock) == 0) {
@@ -502,17 +507,17 @@ contract ReserveFund {
         }
 
         uint low = 0 == i ? startBlock : balanceBlockNumbers[i - 1];
-        uint res = balanceBlocks[i].mul(balanceBlockNumbers[i].sub(startBlock)).div(balanceBlockNumbers[i].sub(low));
+        int256 res = balanceBlocks[i].mul_nn(SafeMathInt.toInt256(balanceBlockNumbers[i].sub(startBlock))).div_nn(SafeMathInt.toInt256(balanceBlockNumbers[i].sub(low)));
         i++;
 
         while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= endBlock) {
-            res = res.add(balanceBlocks[i++]);
+            res = res.add_nn(balanceBlocks[i++]);
         }
 
         if (i >= balanceBlockNumbers.length) {
-            res = res.add(balances[i - 1].mul(endBlock.sub(balanceBlockNumbers[i - 1])));
+            res = res.add_nn(balances[i - 1].mul_nn(SafeMathInt.toInt256(endBlock.sub(balanceBlockNumbers[i - 1]))));
         } else if (balanceBlockNumbers[i - 1] < endBlock) {
-            res = res.add(balanceBlocks[i].mul(endBlock.sub(balanceBlockNumbers[i - 1])).div(balanceBlockNumbers[i].sub(balanceBlockNumbers[i - 1])));
+            res = res.add_nn(balanceBlocks[i].mul_nn(SafeMathInt.toInt256(endBlock.sub(balanceBlockNumbers[i - 1]))).div_nn(SafeMathInt.toInt256(balanceBlockNumbers[i].sub(balanceBlockNumbers[i - 1]))));
         }
 
         return res;
