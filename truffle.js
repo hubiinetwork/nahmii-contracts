@@ -5,6 +5,12 @@ module.exports = {
             port: 8545,
             network_id: "*",
             gas: 6000000
+        },
+        ganache_for_test: {
+            host: "localhost",
+            port: 8456,
+            network_id: "*",
+            gas: 6000000
         }
     },
     solc: {
