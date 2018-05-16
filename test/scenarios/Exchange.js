@@ -629,13 +629,13 @@ module.exports = (glob) => {
                 let dealSettlementChallengeTimeout;
 
                 beforeEach(async () => {
-                    dealSettlementChallengeTimeout = await ethersConfiguration.dealChallengeTimeout();
-                    await ethersConfiguration.setDealChallengeTimeout(1e3);
+                    dealSettlementChallengeTimeout = await ethersConfiguration.dealSettlementChallengeTimeout();
+                    await ethersConfiguration.setDealSettlementChallengeTimeout(1e3);
                     await ethersExchange.startDealSettlementChallengeFromTrade(trade, glob.user_a, overrideOptions);
                 });
 
                 afterEach(async () => {
-                    await ethersConfiguration.setDealChallengeTimeout(dealSettlementChallengeTimeout);
+                    await ethersConfiguration.setDealSettlementChallengeTimeout(dealSettlementChallengeTimeout);
                 });
 
                 it('should revert', async () => {
@@ -738,13 +738,13 @@ module.exports = (glob) => {
                 let dealSettlementChallengeTimeout;
 
                 beforeEach(async () => {
-                    dealSettlementChallengeTimeout = await ethersConfiguration.dealChallengeTimeout();
-                    await ethersConfiguration.setDealChallengeTimeout(1e3);
+                    dealSettlementChallengeTimeout = await ethersConfiguration.dealSettlementChallengeTimeout();
+                    await ethersConfiguration.setDealSettlementChallengeTimeout(1e3);
                     await ethersExchange.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions);
                 });
 
                 afterEach(async () => {
-                    await ethersConfiguration.setDealChallengeTimeout(dealSettlementChallengeTimeout);
+                    await ethersConfiguration.setDealSettlementChallengeTimeout(dealSettlementChallengeTimeout);
                 });
 
                 it('should revert', async () => {

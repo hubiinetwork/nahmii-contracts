@@ -220,7 +220,7 @@ contract Exchange {
         DealSettlementChallenge memory challenge = DealSettlementChallenge(
             trade.nonce,
             Types.DealType.Trade,
-            block.timestamp + configuration.dealChallengeTimeout(),
+            block.timestamp + configuration.dealSettlementChallengeTimeout(),
             Types.ChallengeStatus.Qualified,
             walletDealSettlementChallengedTradesMap[wallet].length - 1
         );
@@ -252,7 +252,7 @@ contract Exchange {
         DealSettlementChallenge memory challenge = DealSettlementChallenge(
             payment.nonce,
             Types.DealType.Payment,
-            block.timestamp + configuration.dealChallengeTimeout(),
+            block.timestamp + configuration.dealSettlementChallengeTimeout(),
             Types.ChallengeStatus.Qualified,
             walletDealSettlementChallengedPaymentsMap[wallet].length - 1
         );

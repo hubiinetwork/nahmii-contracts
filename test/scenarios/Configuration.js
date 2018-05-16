@@ -458,37 +458,37 @@ module.exports = (glob) => {
             });
         });
 
-        describe('dealChallengeTimeout()', () => {
+        describe('dealSettlementChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await truffleInstance.dealChallengeTimeout.call();
+                const value = await truffleInstance.dealSettlementChallengeTimeout.call();
                 value.toNumber().should.equal(0);
             });
         });
 
-        describe('setDealChallengeTimeout()', () => {
+        describe('setDealSettlementChallengeTimeout()', () => {
             describe('if called with sender that is owner', () => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await truffleInstance.dealChallengeTimeout.call();
+                    initialValue = await truffleInstance.dealSettlementChallengeTimeout.call();
                 });
 
                 after(async () => {
-                    await truffleInstance.setDealChallengeTimeout(initialValue);
+                    await truffleInstance.setDealSettlementChallengeTimeout(initialValue);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setDealChallengeTimeout(100);
+                    const result = await truffleInstance.setDealSettlementChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDealChallengeTimeout');
-                    const value = await truffleInstance.dealChallengeTimeout.call();
+                    result.logs[0].event.should.equal('SetDealSettlementChallengeTimeout');
+                    const value = await truffleInstance.dealSettlementChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setDealChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
+                    truffleInstance.setDealSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

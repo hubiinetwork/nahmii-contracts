@@ -68,7 +68,7 @@ contract Configuration {
     uint256[] public paymentMinimumFeeBlockNumbers;
 
     uint256 public cancelOrderChallengeTimeout;
-    uint256 public dealChallengeTimeout;
+    uint256 public dealSettlementChallengeTimeout;
 
     Lot public unchallengeDealSettlementOrderByTradeStake;
 
@@ -85,7 +85,7 @@ contract Configuration {
     event SetTradeTakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetPaymentMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetCancelOrderChallengeTimeout(uint256 timeout);
-    event SetDealChallengeTimeout(uint256 timeout);
+    event SetDealSettlementChallengeTimeout(uint256 timeout);
     event SetUnchallengeDealSettlementOrderByTradeStakeEvent(address currency, int256 amount);
 
     //
@@ -334,9 +334,9 @@ contract Configuration {
 
     /// @notice Set timeout of deal challenge
     /// @param timeout Timeout duration
-    function setDealChallengeTimeout(uint256 timeout) public onlyOwner {
-        dealChallengeTimeout = timeout;
-        emit SetDealChallengeTimeout(timeout);
+    function setDealSettlementChallengeTimeout(uint256 timeout) public onlyOwner {
+        dealSettlementChallengeTimeout = timeout;
+        emit SetDealSettlementChallengeTimeout(timeout);
     }
 
     /// @notice Set currency and amount that will be gained when someone successfully unchallenges deal settlement order by trade
