@@ -62,9 +62,14 @@ contract Exchange {
         int256 conjugate;
     }
 
+    struct PartyExchangeHashes {
+        bytes32 party;
+        bytes32 exchange;
+    }
+
     struct Order {
         int256 amount;
-        bytes32 partyHash;
+        PartyExchangeHashes hashes;
         CurrentPreviousInt256 residuals;
     }
 
@@ -167,6 +172,7 @@ contract Exchange {
     event ChallengeFraudulentDealByPaymentSucceedingTradeEvent(Trade trade, Payment payment, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByTradeSucceedingPaymentEvent(Payment payment, Trade trade, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByTradeOrderResidualsEvent(Trade firstTrade, Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeDoubleSpentOrdersEvent(Trade firstTrade, Trade lastTrade, address challenger, address seizedWallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
 
     //
@@ -439,6 +445,38 @@ contract Exchange {
         emit ChallengeFraudulentDealByTradeOrderResidualsEvent(firstTrade, lastTrade, msg.sender, wallet);
     }
 
+    /// @notice Submit two trade candidates in continuous Double Spent Order Challenge (DSOC)
+    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
+    /// @param firstTrade Reference trade
+    /// @param lastTrade Fraudulent trade candidate
+    function challengeDoubleSpentOrders(
+        Trade firstTrade,
+        Trade lastTrade
+    )
+    public
+    challengeableByDoubleSpentOrderTradesPair(firstTrade, lastTrade)
+    {
+        bool doubleSpentBuyOrder = firstTrade.buyer.order.hashes.exchange == lastTrade.buyer.order.hashes.exchange;
+        bool doubleSpentSellOrder = firstTrade.seller.order.hashes.exchange == lastTrade.seller.order.hashes.exchange;
+
+        require(doubleSpentBuyOrder || doubleSpentSellOrder);
+
+        operationalMode = OperationalMode.Exit;
+        fraudulentTrade = lastTrade;
+
+        address seizedWallet;
+        if (doubleSpentBuyOrder)
+            seizedWallet = lastTrade.buyer._address;
+        if (doubleSpentSellOrder)
+            seizedWallet = lastTrade.seller._address;
+        if (address(0) != seizedWallet) {
+            //            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
+            addToSeizedWallets(seizedWallet);
+        }
+
+        emit ChallengeDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, seizedWallet);
+    }
+
     /// @notice Get the seized status of given wallet
     /// @return true if wallet is seized, false otherwise
     function isSeizedWallet(address _address) public view returns (bool) {
@@ -489,16 +527,15 @@ contract Exchange {
     }
 
     function isGenuineTradeSeal(Trade trade) private view returns (bool) {
-        return (hashTrade(trade) == trade.seal.hash)/*
-        && (isGenuineSignature(trade.seal.hash, trade.seal.signature, owner))*/;
+        return (hashTrade(trade) == trade.seal.hash)
+        && (isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
     }
 
     function isGenuinePaymentSeals(Payment payment) private view returns (bool) {
-        bytes32 hash = hashPayment(payment);
-        return (hash == payment.seals.exchange.hash)
-        && (hash == payment.seals.party.hash)
-        && (isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner))
-        && (isGenuineSignature(hash, payment.seals.party.signature, payment.source._address));
+        return (hashPaymentAsParty(payment) == payment.seals.party.hash)
+        && (hashPaymentAsExchange(payment) == payment.seals.exchange.hash)
+        && (isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.source._address))
+        && (isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
     }
 
     function isGenuineSignature(bytes32 hash, Signature signature, address signer) private pure returns (bool) {
@@ -776,7 +813,12 @@ contract Exchange {
     }
 
     // TODO Implement fully
-    function hashPayment(Payment payment) private pure returns (bytes32) {
+    function hashPaymentAsParty(Payment payment) private pure returns (bytes32) {
+        return keccak256(bytes32(payment.nonce));
+    }
+
+    // TODO Implement fully
+    function hashPaymentAsExchange(Payment payment) private pure returns (bytes32) {
         return keccak256(bytes32(payment.nonce));
     }
 
@@ -814,48 +856,79 @@ contract Exchange {
     }
 
     modifier challengeableBySuccessionTradesPair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
-        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
         require(wallet == firstTrade.buyer._address || wallet == firstTrade.seller._address);
         require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
+        require(hashTrade(firstTrade) == firstTrade.seal.hash);
+        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
 
-        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
         require(wallet == lastTrade.buyer._address || wallet == lastTrade.seller._address);
         require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
+        require(hashTrade(lastTrade) == lastTrade.seal.hash);
+        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
+
         _;
     }
 
     modifier challengeableBySuccessionPaymentsPair(Payment firstPayment, Payment lastPayment, address wallet) {
+        require(firstPayment.currency == lastPayment.currency);
+
+        require(wallet == firstPayment.source._address || wallet == firstPayment.destination._address);
+        require(hashPaymentAsParty(firstPayment) == firstPayment.seals.party.hash);
+        require(hashPaymentAsExchange(firstPayment) == firstPayment.seals.exchange.hash);
         require(isGenuineSignature(firstPayment.seals.party.hash, firstPayment.seals.party.signature, firstPayment.source._address));
         require(isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
-        require(wallet == firstPayment.source._address || wallet == firstPayment.destination._address);
 
+        require(wallet == lastPayment.source._address || wallet == lastPayment.destination._address);
+        require(hashPaymentAsParty(lastPayment) == lastPayment.seals.party.hash);
+        require(hashPaymentAsExchange(lastPayment) == lastPayment.seals.exchange.hash);
         require(isGenuineSignature(lastPayment.seals.party.hash, lastPayment.seals.party.signature, lastPayment.source._address));
         require(isGenuineSignature(lastPayment.seals.exchange.hash, lastPayment.seals.exchange.signature, owner));
-        require(wallet == lastPayment.source._address || wallet == lastPayment.destination._address);
+
         _;
     }
 
     modifier challengeableBySuccessionTradePaymentPair(Trade trade, Payment payment, address wallet, address currency) {
-        require(isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
+        require(currency == payment.currency);
+
         require(wallet == trade.buyer._address || wallet == trade.seller._address);
         require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+        require(hashTrade(trade) == trade.seal.hash);
+        require(isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
 
+        require(wallet == payment.source._address || wallet == payment.destination._address);
+        require(hashPaymentAsParty(payment) == payment.seals.party.hash);
+        require(hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
         require(isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.source._address));
         require(isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
-        require(wallet == payment.source._address || wallet == payment.destination._address);
-        require(currency == payment.currency);
+
         _;
     }
 
     modifier challengeableByOrderResidualsTradesPair(Trade firstTrade, Trade lastTrade, address wallet, address currency) {
-        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
-        require(currency == firstTrade.currencies.intended);
-
-        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
-        require(currency == lastTrade.currencies.intended);
-
         require((wallet == firstTrade.buyer._address && wallet == lastTrade.buyer._address)
             || (wallet == firstTrade.seller._address && wallet == lastTrade.seller._address));
+
+        require((firstTrade.buyer.order.hashes.party == lastTrade.buyer.order.hashes.party)
+            || (firstTrade.seller.order.hashes.party == lastTrade.seller.order.hashes.party));
+
+        require(currency == firstTrade.currencies.intended);
+        require(hashTrade(firstTrade) == firstTrade.seal.hash);
+        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
+
+        require(currency == lastTrade.currencies.intended);
+        require(hashTrade(lastTrade) == lastTrade.seal.hash);
+        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
+
+        _;
+    }
+
+    modifier challengeableByDoubleSpentOrderTradesPair(Trade firstTrade, Trade lastTrade) {
+        require(hashTrade(firstTrade) == firstTrade.seal.hash);
+        require(isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
+
+        require(hashTrade(lastTrade) == lastTrade.seal.hash);
+        require(isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
+
         _;
     }
 }
