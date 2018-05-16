@@ -72,6 +72,7 @@ contract Exchange {
     event ChallengeCancelledOrderEvent(Types.Order order, Types.Trade trade, address wallet);
     event StartDealSettlementChallengeFromTradeEvent(Types.Trade trade, address wallet);
     event StartDealSettlementChallengeFromPaymentEvent(Types.Payment payment, address wallet);
+    event ChallengeDealSettlementByOrderEvent(Types.Order order, uint256 nonce, Types.DealType dealType, address wallet);
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
@@ -281,6 +282,86 @@ contract Exchange {
         );
         uint256 dealIndex = walletDealSettlementChallengeMap[wallet].dealIndex;
         return walletDealSettlementChallengedPaymentsMap[wallet][dealIndex];
+    }
+
+    function challengeDealSettlementByOrder(Types.Order order)
+    public
+    signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
+    signedBy(order.seals.party.hash, order.seals.party.signature, order._address)
+    {
+        address wallet = order._address;
+
+        // Buy order -> Conjugate currency and amount
+        // Sell order -> Intended currency and amount
+        int256 orderAmount;
+        address orderCurrency;
+        if (Types.Intention.Sell == order.placement.intention) {
+            orderCurrency = order.placement.currencies.intended;
+            orderAmount = order.placement.amount;
+        }
+        else {// Types.Intention.Buy == order.placement.intention
+            orderCurrency = order.placement.currencies.conjugate;
+            orderAmount = order.placement.amount.div(order.placement.rate);
+        }
+
+        DealSettlementChallenge storage challenge = walletDealSettlementChallengeMap[wallet];
+        require(
+            0 < challenge.nonce
+            && block.timestamp < challenge.timeout
+        && !walletOrderExchangeHashCancelledMap[wallet][order.seals.exchange.hash]
+        );
+
+        int256 balance;
+        if (Types.DealType.Trade == challenge.dealType) {
+            balance = getTradeBalance(
+                walletDealSettlementChallengedTradesMap[wallet][challenge.dealIndex],
+                wallet,
+                orderCurrency
+            );
+
+        } else {//Types.DealType.Payment == challenge.dealType
+            balance = getPaymentBalance(
+                walletDealSettlementChallengedPaymentsMap[wallet][challenge.dealIndex],
+                wallet,
+                orderCurrency
+            );
+        }
+
+        require(orderAmount > balance);
+
+        challenge.status = Types.ChallengeStatus.Disqualified;
+        emit ChallengeDealSettlementByOrderEvent(order, challenge.nonce, challenge.dealType, msg.sender);
+    }
+
+    function getTradeBalance(Types.Trade trade, address wallet, address currency) private pure returns (int256) {
+        require(0 < trade.nonce);
+        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+
+        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        Types.CurrencyRole tradeCurrencyRole = (currency == trade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
+
+        if (Types.TradePartyRole.Buyer == tradePartyRole)
+            if (Types.CurrencyRole.Intended == tradeCurrencyRole)
+                return trade.buyer.balances.intended.current;
+            else // Types.CurrencyRole.Conjugate == currencyRole
+                return trade.buyer.balances.conjugate.current;
+        else // Types.TradePartyRole.Seller == tradePartyRole
+            if (Types.CurrencyRole.Intended == tradeCurrencyRole)
+                return trade.seller.balances.intended.current;
+            else // Types.CurrencyRole.Conjugate == currencyRole
+                return trade.seller.balances.conjugate.current;
+    }
+
+    function getPaymentBalance(Types.Payment payment, address wallet, address currency) private pure returns (int256) {
+        require(0 < payment.nonce);
+        require(currency == payment.currency);
+
+        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? Types.PaymentPartyRole.Source : Types.PaymentPartyRole.Destination);
+
+        if (Types.PaymentPartyRole.Source == paymentPartyRole)
+            return payment.source.balances.current;
+        else //Types.PaymentPartyRole.Destination == paymentPartyRole
+            return payment.destination.balances.current;
     }
 
     /// @notice Settle deal that is a trade

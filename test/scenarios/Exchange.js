@@ -593,7 +593,7 @@ module.exports = (glob) => {
                 };
             });
 
-            describe('if when there is no ongoing deal settlement challenge and caller is owner or trade party', () => {
+            describe('if there is no ongoing deal settlement challenge and caller is owner or trade party', () => {
                 it('should operate successfully', async () => {
                     await ethersExchange.startDealSettlementChallengeFromTrade(trade, glob.user_a, overrideOptions);
                     const count = await ethersExchange.getDealSettlementChallengeFromTradeCount(glob.user_a);
@@ -692,7 +692,7 @@ module.exports = (glob) => {
                 };
             });
 
-            describe('if when there is no ongoing deal settlement challenge and caller is owner or payment party', () => {
+            describe('if there is no ongoing deal settlement challenge and caller is owner or payment party', () => {
                 it('should operate successfully', async () => {
                     await ethersExchange.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions);
                     const count = await ethersExchange.getDealSettlementChallengeFromPaymentCount(glob.user_a);
@@ -957,7 +957,7 @@ module.exports = (glob) => {
                 await ethersExchange.startDealSettlementChallengeFromPayment(payment, glob.user_a, overrideOptions);
             });
 
-            describe('if called with address whose deal settlement challenge was started on trade', () => {
+            describe('if called with address whose deal settlement challenge was started on payment', () => {
                 it('should operate successfully', async () => {
                     const result = await ethersExchange.getChallengedDealAsPayment(glob.user_a);
                     result[0].toNumber().should.equal(payment.nonce.toNumber());
@@ -970,7 +970,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with address whose deal settlement challenge was started on payment', () => {
+            describe('if called with address whose deal settlement challenge was started on trade', () => {
                 let trade;
 
                 beforeEach(async () => {
@@ -1069,6 +1069,184 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersExchange.getChallengedDealAsPayment(glob.user_b).should.be.rejected;
+                });
+            });
+        });
+
+        describe('challengeDealSettlementByOrder()', () => {
+            let overrideOptions, order, trade, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+            });
+
+            beforeEach(async () => {
+                order = {
+                    nonce: utils.bigNumberify(1),
+                    _address: glob.user_a,
+                    placement: {
+                        intention: intentions.indexOf('Buy'),
+                        immediateSettlement: true,
+                        amount: utils.parseUnits('100', 18),
+                        rate: utils.bigNumberify(1000),
+                        currencies: {
+                            intended: '0x0000000000000000000000000000000000000001',
+                            conjugate: '0x0000000000000000000000000000000000000002'
+                        },
+                        residuals: {
+                            current: utils.parseUnits('400', 18),
+                            previous: utils.parseUnits('500', 18)
+                        }
+                    },
+                    blockNumber: utils.bigNumberify(blockNumber10)
+                };
+
+                order = await augmentOrderSeals(order, glob.user_a, glob.owner);
+
+                // trade = {
+                //     nonce: utils.bigNumberify(1),
+                //     immediateSettlement: true,
+                //     amount: utils.parseUnits('100', 18),
+                //     rate: utils.bigNumberify(1000),
+                //     currencies: {
+                //         intended: '0x0000000000000000000000000000000000000001',
+                //         conjugate: '0x0000000000000000000000000000000000000002'
+                //     },
+                //     buyer: {
+                //         _address: glob.user_a,
+                //         nonce: utils.bigNumberify(1),
+                //         rollingVolume: utils.bigNumberify(0),
+                //         liquidityRole: liquidityRoles.indexOf('Maker'),
+                //         order: {
+                //             amount: utils.parseUnits('100', 18),
+                //             hashes: {
+                //                 party: hashString('some party buy order hash'),
+                //                 exchange: hashString('some exchange buy order hash')
+                //             },
+                //             residuals: {
+                //                 current: utils.parseUnits('400', 18),
+                //                 previous: utils.parseUnits('500', 18)
+                //             }
+                //         },
+                //         balances: {
+                //             intended: {
+                //                 current: utils.parseUnits('9599.8', 18),
+                //                 previous: utils.parseUnits('9499.9', 18)
+                //             },
+                //             conjugate: {
+                //                 current: utils.parseUnits('9.4', 18),
+                //                 previous: utils.parseUnits('9.5', 18)
+                //             }
+                //         },
+                //         netFees: {
+                //             intended: utils.parseUnits('0.2', 18),
+                //             conjugate: utils.parseUnits('0.0', 18)
+                //         }
+                //     },
+                //     seller: {
+                //         _address: glob.user_b,
+                //         nonce: utils.bigNumberify(1),
+                //         rollingVolume: utils.bigNumberify(0),
+                //         liquidityRole: liquidityRoles.indexOf('Taker'),
+                //         order: {
+                //             amount: utils.parseUnits('100', 18),
+                //             hashes: {
+                //                 party: hashString('some party sell order hash'),
+                //                 exchange: hashString('some exchange sell order hash')
+                //             },
+                //             residuals: {
+                //                 current: utils.parseUnits('600', 18),
+                //                 previous: utils.parseUnits('700', 18)
+                //             }
+                //         },
+                //         balances: {
+                //             intended: {
+                //                 current: utils.parseUnits('19500', 18),
+                //                 previous: utils.parseUnits('19600', 18)
+                //             },
+                //             conjugate: {
+                //                 current: utils.parseUnits('19.4996', 18),
+                //                 previous: utils.parseUnits('19.5998', 18)
+                //             }
+                //         },
+                //         netFees: {
+                //             intended: utils.parseUnits('0.0', 18),
+                //             conjugate: utils.parseUnits('0.0004', 18)
+                //         }
+                //     },
+                //     transfers: {
+                //         intended: {
+                //             single: utils.parseUnits('100', 18),
+                //             net: utils.parseUnits('200', 18)
+                //         },
+                //         conjugate: {
+                //             single: utils.parseUnits('0.1', 18),
+                //             net: utils.parseUnits('0.2', 18)
+                //         }
+                //     },
+                //     singleFees: {
+                //         intended: utils.parseUnits('0.1', 18),
+                //         conjugate: utils.parseUnits('0.0002', 18)
+                //     },
+                //     blockNumber: utils.bigNumberify(blockNumber10)
+                // };
+
+                // trade = await augmentTradeSeal(trade, glob.owner);
+
+                topic = ethersExchange.interface.events.ChallengeDealSettlementByOrderEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe.only('if not signed by correct party', () => {
+                beforeEach(() => {
+                    order.seals.party.signature = order.seals.exchange.signature;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.challengeDealSettlementByOrder(order, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if there is no ongoing deal settlement challenge', async () => {
+                beforeEach(() => {
+                    order._address = glob.user_b
+                });
+
+                it('should revert');
+            });
+
+            describe('if order has previously been cancelled', async () => {
+                it('should revert');
+            });
+
+            describe('if there is ongoing deal settlement challenge from trade', () => {
+                describe('if order currency different than trade currencies', () => {
+                    it('should revert');
+                });
+
+                describe('if order amount is within limits of deal balance', () => {
+                    it('should revert');
+                });
+
+                describe('if order amount is beyond limits of deal balance', () => {
+                    it('should record challenge disqualification and emit event');
+                });
+            });
+
+            describe('if there is ongoing deal settlement challenge from payment', () => {
+                describe('if order currency different than payment currency', () => {
+                    it('should revert');
+                });
+
+                describe('if order amount is within limits of deal balance', () => {
+                    it('should revert');
+                });
+
+                describe('if order amount is beyond limits of deal balance', () => {
+                    it('should record challenge disqualification and emit event');
                 });
             });
         });
