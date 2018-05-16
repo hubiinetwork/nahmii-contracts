@@ -215,7 +215,7 @@ contract Exchange {
             block.timestamp >= walletDealSettlementChallengeMap[wallet].timeout
         );
 
-        walletDealSettlementChallengedTradesMap[msg.sender].push(trade);
+        walletDealSettlementChallengedTradesMap[wallet].push(trade);
 
         DealSettlementChallenge memory challenge = DealSettlementChallenge(
             trade.nonce,
@@ -247,7 +247,7 @@ contract Exchange {
             block.timestamp >= walletDealSettlementChallengeMap[wallet].timeout
         );
 
-        walletDealSettlementChallengedPaymentsMap[msg.sender].push(payment);
+        walletDealSettlementChallengedPaymentsMap[wallet].push(payment);
 
         DealSettlementChallenge memory challenge = DealSettlementChallenge(
             payment.nonce,
@@ -259,6 +259,28 @@ contract Exchange {
         walletDealSettlementChallengeMap[wallet] = challenge;
 
         emit StartDealSettlementChallengeFromPaymentEvent(payment, wallet);
+    }
+
+    /// @notice Get challenged deal that is a trade
+    /// @param wallet The wallet whose challenged deal will be searched for
+    function getChallengedDealAsTrade(address wallet) public view returns (Types.Trade) {
+        require(
+            0 < walletDealSettlementChallengeMap[wallet].nonce
+            && Types.DealType.Trade == walletDealSettlementChallengeMap[wallet].dealType
+        );
+        uint256 dealIndex = walletDealSettlementChallengeMap[wallet].dealIndex;
+        return walletDealSettlementChallengedTradesMap[wallet][dealIndex];
+    }
+
+    /// @notice Get challenged deal that is a payment
+    /// @param wallet The wallet whose challenged deal will be searched for
+    function getChallengedDealAsPayment(address wallet) public view returns (Types.Payment) {
+        require(
+            0 < walletDealSettlementChallengeMap[wallet].nonce
+            && Types.DealType.Payment == walletDealSettlementChallengeMap[wallet].dealType
+        );
+        uint256 dealIndex = walletDealSettlementChallengeMap[wallet].dealIndex;
+        return walletDealSettlementChallengedPaymentsMap[wallet][dealIndex];
     }
 
     /// @notice Settle deal that is a trade
