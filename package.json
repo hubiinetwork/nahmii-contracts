@@ -15,7 +15,7 @@
     "async": "^2.6.0",
     "augmented-keccak256": "git+https://github.com/CoinFabrik/augmented-keccak256.git",
     "ethers": "^3.0.7",
-    "truffle": "^4.1.6"
+    "truffle": "^4.1.8"
   },
   "devDependencies": {
     "bluebird": "^3.5.1",
