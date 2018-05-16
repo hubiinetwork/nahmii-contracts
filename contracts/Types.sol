@@ -190,4 +190,18 @@ library Types {
     function hashOrderAsExchange(Order order) internal pure returns (bytes32) {
         return keccak256(bytes32(order.nonce));
     }
+
+    function isTradeParty(Types.Trade trade, address wallet) internal pure returns (bool) {
+        return wallet == trade.buyer._address || wallet == trade.seller._address;
+    }
+
+    function isPaymentParty(Types.Payment payment, address wallet) internal pure returns (bool) {
+        return wallet == payment.source._address || wallet == payment.destination._address;
+    }
+
+    function isGenuineSignature(bytes32 hash, Types.Signature signature, address signer) internal pure returns (bool) {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHash = keccak256(prefix, hash);
+        return ecrecover(prefixedHash, signature.v, signature.r, signature.s) == signer;
+    }
 }

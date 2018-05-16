@@ -18,10 +18,10 @@ import "./ERC20.sol";
 import "./Types.sol";
 
 /**
-@title AntiFraud
+@title FraudulentDealChallenge
 @notice Host of fraud detection logics
 */
-contract AntiFraud {
+contract FraudulentDealChallenge {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
