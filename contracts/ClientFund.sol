@@ -350,7 +350,6 @@ contract ClientFund {
         emit UnstageEvent(msg.sender, amount, token);
     }
 
-
     function seizeDepositedAndSettledBalances(address sourceWallet, address targetWallet) public onlyRegisteredService notNullAddress(sourceWallet) notNullAddress(targetWallet) {
         int256 amount;
         uint256 i;
