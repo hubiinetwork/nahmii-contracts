@@ -14,6 +14,7 @@ var ClientFund = artifacts.require("ClientFund");
 var CommunityVote = artifacts.require("CommunityVote");
 var Configuration = artifacts.require("Configuration");
 var Exchange = artifacts.require("Exchange");
+var DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
 var FraudulentDealChallenge = artifacts.require("FraudulentDealChallenge");
 var ReserveFund = artifacts.require("ReserveFund");
 var RevenueFund = artifacts.require("RevenueFund");
