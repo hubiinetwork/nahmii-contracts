@@ -13,12 +13,13 @@ module.exports = function (glob) {
 
 		const ETHER_DEPOSIT_AMOUNT_OWNER = 3;
 		const ETHER_DEPOSIT_AMOUNT_A = 4.7;
+		const ETHER_DEPOSIT_AMOUNT_A2 = 1.0;
 		const ETHER_DEPOSIT_AMOUNT_B = 0.25;
 		const ETHER_DEPOSIT_AMOUNT_C = 3.14159;
 
 		var ETHER_DEPOSIT_AMOUNT_D = [3, 1.2, 4];
 		var etherDepositBlockNumber_userD = [-1, -1, -1];
-
+		
 		const TOKEN_STAGE_AMOUNT_A = 1;
 		const ETHER_STAGE_AMOUNT_C = 3.14159;
 
@@ -31,6 +32,7 @@ module.exports = function (glob) {
 
 		var etherDepositBlockNumber_userA = -1;
 		var etherDepositBlockNumber_userA_preAcc = -1;
+		var etherDepositBlockNumber_userA2 = -1;
 		var etherDepositBlockNumber_userB = -1;
 		var etherDepositBlockNumber_userC = -1;
 		var etherDepositBlockNumber_owner = -1;
@@ -888,11 +890,15 @@ module.exports = function (glob) {
 				etherDepositBlockNumber_userD[1] = await getTxBlock(tx1);
 				etherDepositBlockNumber_userD[2] = await getTxBlock(tx2);
 
+				var txa = await sendTx(glob.user_a, glob.web3ReserveFund.address, web3.toWei(ETHER_DEPOSIT_AMOUNT_A2));
+
+				etherDepositBlockNumber_userA2 = await getTxBlock(txa);
+
 				// 	for (i = 0; i < etherDepositBlockNumber_userD.length; i++)
 				// 		console.log("etherDeposit[" + i + "] of " + ETHER_DEPOSIT_AMOUNT_D[i] + "ETH @ block " + etherDepositBlockNumber_userD[i]);
 			}
 			catch (err) {
-				assert(false, 'Cannot execute deposit for user D. Reason:  ' + err.toString());
+				assert(false, 'Cannot execute close-accrual-stage deposit for users. Reason:  ' + err.toString());
 			}
 
 			try {
@@ -930,9 +936,6 @@ module.exports = function (glob) {
 
 		it(testId() + ": MUST SUCCEED [claimAccrual]: User D claims ether accrual (use Active Balance)", async () => {
 
-			// First we do a bunch of deposits for user D and record the block numbers 
-			// -----------------------------------------------------------------------
-
 			try {
 
 				let BN = web3.BigNumber.another({ DECIMAL_PLACES: 0, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN });
@@ -958,15 +961,15 @@ module.exports = function (glob) {
 				var userBalance = await glob.web3ReserveFund.activeBalance(glob.user_d, 0);
 				userBalance = new BN(userBalance);
 
-				// console.log("bn_low=" + bn_low + " bn_up=" + bn_up + " bbIn=" + bbIn);
+				//console.log("bn_low=" + bn_low + " bn_up=" + bn_up + " bbIn=" + bbIn);
 
-				// console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance);
-				// console.log("userBalance=" + userBalance);
+				//console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance);
+				//console.log("userBalance=" + userBalance);
 
 				let fraction = bbIn.mul(bn_1e18).mul(aggregateAccrualBalance).div(aggregateEtherBalance.mul(bn_up.sub(bn_low)).mul(bn_1e18));
 				let amount = fraction.mul(aggregateAccrualBalance).div(bn_1e18);
 
-				// console.log("f= " + fraction + " amount = " + amount);
+				//console.log("f= " + fraction + " amount = " + amount);
 
 				const expectedPostAggregateEtherBalance = aggregateEtherBalance.sub(amount);
 				const expectedPostUserBalance = userBalance.add(amount);
@@ -981,9 +984,9 @@ module.exports = function (glob) {
 				var postAggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
 				var postUserBalance = await glob.web3ReserveFund.activeBalance(glob.user_d, 0);
 
-				// console.log('post Aggregate (active) ETH balance =' + postAggregateEtherBalance);
-				// console.log('post Accrual balance =' + postAggregateAccrualBalance);
-				// console.log('post Active User balance =' + postUserBalance);
+				console.log('post Aggregate (active) ETH balance =' + postAggregateEtherBalance);
+				console.log('post Accrual balance =' + postAggregateAccrualBalance);
+				console.log('post Active User balance =' + postUserBalance);
 
 
 				assert(expectedPostAggregateEtherBalance.eq(postAggregateEtherBalance),
@@ -999,5 +1002,74 @@ module.exports = function (glob) {
 
 			}
 		});
+
+		it(testId() + ": MUST SUCCEED [claimAccrual]: User A claims ether accrual (use Staged Balance)", async () => {
+
+			try {
+
+				let BN = web3.BigNumber.another({ DECIMAL_PLACES: 0, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN });
+
+				const bn_1e18 = new BN(_1e18);
+				// bn_low = zero as no previous claims  for User D
+				// bn_up  = the last block where owner deposited *any currency*
+
+				const bn_low = new BN(0);
+				const bn_up = new BN(lastAccrualBlock);
+
+				// Balance blocks In. 
+
+				var bbIn = await glob.web3ReserveFund.debugBalanceBlocksIn(glob.user_a, 0, bn_low, bn_up);
+				bbIn = new BN(bbIn);
+
+				var aggregateEtherBalance = await glob.web3ReserveFund.activeBalance(0, 0);
+				aggregateEtherBalance = new BN(aggregateEtherBalance);
+
+				var aggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
+				aggregateAccrualBalance = new BN(aggregateAccrualBalance);
+
+				var userBalance = await glob.web3ReserveFund.stagedBalance(glob.user_a, 0);
+				userBalance = new BN(userBalance);
+
+				console.log("bn_low=" + bn_low + " bn_up=" + bn_up + " bbIn=" + bbIn);
+
+				console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance);
+				console.log("userBalance=" + userBalance);
+
+				let fraction = bbIn.mul(bn_1e18).mul(aggregateAccrualBalance).div(aggregateEtherBalance.mul(bn_up.sub(bn_low)).mul(bn_1e18));
+				let amount = fraction.mul(aggregateAccrualBalance).div(bn_1e18);
+
+				console.log("f= " + fraction + " amount = " + amount);
+
+				const expectedPostAggregateEtherBalance = aggregateEtherBalance.sub(amount);
+				const expectedPostUserBalance = userBalance.add(amount);
+				const expectedPostAggregateAccrualBalance = aggregateAccrualBalance;
+
+				await glob.web3ReserveFund.claimAccrual('0x0000000000000000000000000000000000000000', false, { from: glob.user_a });
+
+				//
+				// Check post-claim balances
+				//
+				var postAggregateEtherBalance = await glob.web3ReserveFund.activeBalance(0, 0);
+				var postAggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
+				var postUserBalance = await glob.web3ReserveFund.stagedBalance(glob.user_a, 0);
+
+				console.log('post Aggregate (active) ETH balance =' + postAggregateEtherBalance);
+				console.log('post Accrual balance =' + postAggregateAccrualBalance);
+				console.log('post Active User balance =' + postUserBalance);
+
+				assert(expectedPostAggregateEtherBalance.eq(postAggregateEtherBalance),
+					'Post aggregate-ETH balance differs: ' + postAggregateEtherBalance + ' but expected:' + expectedPostAggregateEtherBalance);
+				assert(expectedPostAggregateAccrualBalance.eq(postAggregateAccrualBalance),
+					'Post accrual-ETH balance differs: ' + postAggregateAccrualBalance + ' but expected:' + expectedPostAggregateAccrualBalance);
+				assert(expectedPostUserBalance.eq(postUserBalance),
+					'Post staged-ETH  user balance differs: ' + postUserBalance + ' but expected:' + web3.toWei(expectedPostUserBalance));
+			}
+
+			catch (err) {
+				assert(false, 'This test must succeed. Error is: ' + err.toString());
+
+			}
+		});
+
 	});
 };
