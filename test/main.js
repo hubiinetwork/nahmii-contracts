@@ -198,6 +198,7 @@ contract('Smart contract checks', function () {
 
 	before("Preflight: Distribute test tokens", async() => {
 		try {
+			await glob.web3Erc20.testMint(glob.owner, 100);
 			await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.user_b, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.user_c, initialTokensForAll);
