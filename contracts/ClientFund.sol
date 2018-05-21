@@ -73,7 +73,7 @@ contract ClientFund {
     event DepositToSettledBalance(address to, int256 amount, address token); //token==0 for ethers
     event StageEvent(address from, int256 amount, address token); //token==0 for ethers
     event UnstageEvent(address from, int256 amount, address token); //token==0 for ethers
-    event SeizeEvent(address sourceWallet, address targetWallet);
+    event SeizeDepositedAndSettledBalancesEvent(address sourceWallet, address targetWallet);
     event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
     event RegisterServiceEvent(address service);
     event EnableRegisteredServiceEvent(address wallet, address service);
@@ -386,7 +386,7 @@ contract ClientFund {
         }
 
         //emit event
-        emit SeizeEvent(sourceWallet, targetWallet);
+        emit SeizeDepositedAndSettledBalancesEvent(sourceWallet, targetWallet);
     }
 
     //
