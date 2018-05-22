@@ -9,6 +9,7 @@ pragma solidity ^0.4.23;
 
 import "./SafeMathInt.sol";
 import "./SafeMathUint.sol";
+import "./Ownable.sol";
 import "./ERC20.sol";
 import "./AccrualBeneficiaryInterface.sol";
 
@@ -18,7 +19,7 @@ import "./AccrualBeneficiaryInterface.sol";
  reserve fund contributors and revenue token holders. There will likely be 2 instances of this smart contract,
  one for revenue from trades and one for revenue from payments.
 */
-contract RevenueFund {
+contract RevenueFund is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -38,8 +39,6 @@ contract RevenueFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
-
     int256 periodAccrualEtherBalance;
     mapping (address => int256) periodAccrualTokenBalance;
     address[] periodAccrualTokenList;
@@ -57,7 +56,6 @@ contract RevenueFund {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
     event CloseAccrualPeriodEvent();
     event RegisterBeneficiaryEvent(address beneficiary, uint256 fraction);
@@ -66,8 +64,7 @@ contract RevenueFund {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
@@ -253,16 +250,6 @@ contract RevenueFund {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
-    modifier notOwner() {
-        require(msg.sender != owner);
         _;
     }
 

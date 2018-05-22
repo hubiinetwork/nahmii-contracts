@@ -15,11 +15,12 @@ pragma experimental ABIEncoderV2;
 
 */
 
-import './ERC20.sol';
 import './SafeMathInt.sol';
 import './SafeMathUInt.sol';
+import "./Ownable.sol";
+import './ERC20.sol';
 
-contract ReserveFund {
+contract ReserveFund is Ownable {
 
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
@@ -90,8 +91,6 @@ contract ReserveFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
-
     int256 aggregatedEtherBalance;
     mapping (address => int256) aggregatedTokenBalance;
 
@@ -111,7 +110,6 @@ contract ReserveFund {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event DepositEvent(address wallet, int256 amount, address tokenAddress);
     event StageEvent(address wallet, int256 amount, address tokenAddress);
     event WithdrawEvent(address wallet, int256 amount, address tokenAddress);
@@ -124,14 +122,12 @@ contract ReserveFund {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-
     function () public payable {
         require(msg.value > 0);
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
@@ -528,11 +524,6 @@ contract ReserveFund {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
         _;
     }
 

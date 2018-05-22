@@ -8,6 +8,7 @@
 pragma solidity ^0.4.23;
 
 import "./SafeMathInt.sol";
+import "./Ownable.sol";
 import "./ERC20.sol";
 
 /**
@@ -15,7 +16,7 @@ import "./ERC20.sol";
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Factored out from previous Trade smart contract.
 */
-contract ClientFund {
+contract ClientFund is Ownable {
     using SafeMathInt for int256;
 
     //
@@ -56,7 +57,6 @@ contract ClientFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
     mapping (address => WalletInfo) private walletInfoMap;
 
     uint256 private serviceActivationTimeout;
@@ -66,7 +66,6 @@ contract ClientFund {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
     event TransferFromDepositedToSettledBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
     event WithdrawFromDepositedBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
@@ -82,27 +81,13 @@ contract ClientFund {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
         serviceActivationTimeout = 30 * 3600; //30 minutes
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        address oldOwner;
-
-        if (newOwner != owner) {
-            // Set new owner
-            oldOwner = owner;
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
-
     function setServiceActivationTimeout(uint256 timeoutInSeconds) public onlyOwner {
         serviceActivationTimeout = timeoutInSeconds;
     }
@@ -510,18 +495,8 @@ contract ClientFund {
         _;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
     modifier onlyRegisteredService() {
         require(registeredServicesMap[msg.sender] != 0);
-        _;
-    }
-
-    modifier notOwner() {
-        require(msg.sender != owner);
         _;
     }
 

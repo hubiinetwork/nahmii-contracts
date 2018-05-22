@@ -7,14 +7,23 @@
  */
 pragma solidity ^0.4.23;
 
-contract Migrations {
-    address public owner;
+import "./Ownable.sol";
+
+contract Migrations is Ownable {
+    //
+    // Variables
+    // -----------------------------------------------------------------------------------------------------------------
     uint public last_completed_migration;
 
-    constructor() public {
-        owner = msg.sender;
+    //
+    // Constructor
+    // -----------------------------------------------------------------------------------------------------------------
+    constructor() public Ownable(msg.sender)  {
     }
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     function setCompleted(uint completed) public onlyOwner {
         last_completed_migration = completed;
     }
@@ -22,10 +31,5 @@ contract Migrations {
     function upgrade(address newAddress) public onlyOwner {
         Migrations upgraded = Migrations(newAddress);
         upgraded.setCompleted(last_completed_migration);
-    }
-
-    modifier onlyOwner() {
-        require (msg.sender == owner);
-        _;
     }
 }

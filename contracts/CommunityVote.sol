@@ -8,45 +8,18 @@
 pragma solidity ^0.4.23;
 
 import "./SafeMathInt.sol";
+import "./Ownable.sol";
 import "./ERC20.sol";
 
 /**
 @title Community vote
 @notice An oracle for relevant decisions made by the community.
 */
-contract CommunityVote {
-
-    //
-    // Variables
-    // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
-
-    //
-    // Events
-    // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
-
+contract CommunityVote is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
-    }
-
-    //
-    // Functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        address oldOwner;
-
-        if (newOwner != owner) {
-            // Set new owner
-            oldOwner = owner;
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
+    constructor(address _owner) public Ownable(_owner) {
     }
 
     //
@@ -69,11 +42,6 @@ contract CommunityVote {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
         _;
     }
 }

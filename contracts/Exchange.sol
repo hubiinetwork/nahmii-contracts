@@ -10,13 +10,14 @@ pragma experimental ABIEncoderV2;
 
 import "./SafeMathInt.sol";
 import "./SafeMathUInt.sol";
+import "./Ownable.sol";
 import "./Configuration.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract Exchange {
+contract Exchange is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -149,8 +150,6 @@ contract Exchange {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public owner;
-
     OperationalMode public operationalMode = OperationalMode.Normal;
 
     Trade public fraudulentTrade;
@@ -164,7 +163,6 @@ contract Exchange {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event ChallengeFraudulentDealByTradeEvent(Trade trade, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByPaymentEvent(Payment payment, address challenger, address seizedWallet);
     event ChallengeFraudulentDealBySuccessiveTradesEvent(Trade firstTrade, Trade lastTrade, address challenger, address seizedWallet);
@@ -178,27 +176,12 @@ contract Exchange {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-
-    /// @notice Change the owner of this contract
-    /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        if (newOwner != owner) {
-            address oldOwner = owner;
-
-            // Set new owner
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
 
     /// @notice Submit a trade candidate in continuous Fraudulent Deal Challenge (FDC)
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
@@ -845,12 +828,7 @@ contract Exchange {
         _;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
-    modifier signedByOwner(bytes32 hash, Signature signature) {
+     modifier signedByOwner(bytes32 hash, Signature signature) {
         require(isGenuineSignature(hash, signature, owner));
         _;
     }
