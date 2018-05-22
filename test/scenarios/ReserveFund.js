@@ -1,6 +1,6 @@
 module.exports = function (glob) {
 
-	describe.only("ReserveFund", function () {
+	describe("ReserveFund", function () {
 
 		var ethers = require('ethers');
 
@@ -984,10 +984,9 @@ module.exports = function (glob) {
 				var postAggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
 				var postUserBalance = await glob.web3ReserveFund.activeBalance(glob.user_d, 0);
 
-				console.log('post Aggregate (active) ETH balance =' + postAggregateEtherBalance);
-				console.log('post Accrual balance =' + postAggregateAccrualBalance);
-				console.log('post Active User balance =' + postUserBalance);
-
+				//console.log('post Aggregate (active) ETH balance =' + postAggregateEtherBalance);
+				//console.log('post Accrual balance =' + postAggregateAccrualBalance);
+				//console.log('post Active User balance =' + postUserBalance);
 
 				assert(expectedPostAggregateEtherBalance.eq(postAggregateEtherBalance),
 					'Post aggregate-ETH balance differs: ' + postAggregateEtherBalance + ' but expected:' + expectedPostAggregateEtherBalance);
@@ -1030,15 +1029,15 @@ module.exports = function (glob) {
 				var userBalance = await glob.web3ReserveFund.stagedBalance(glob.user_a, 0);
 				userBalance = new BN(userBalance);
 
-				console.log("bn_low=" + bn_low + " bn_up=" + bn_up + " bbIn=" + bbIn);
+				//console.log("bn_low=" + bn_low + " bn_up=" + bn_up + " bbIn=" + bbIn);
 
-				console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance);
-				console.log("userBalance=" + userBalance);
+				//console.log("activeBalance=" + aggregateEtherBalance + " accrualBalance=" + aggregateAccrualBalance);
+				//console.log("userBalance=" + userBalance);
 
 				let fraction = bbIn.mul(bn_1e18).mul(aggregateAccrualBalance).div(aggregateEtherBalance.mul(bn_up.sub(bn_low)).mul(bn_1e18));
 				let amount = fraction.mul(aggregateAccrualBalance).div(bn_1e18);
 
-				console.log("f= " + fraction + " amount = " + amount);
+				//console.log("f= " + fraction + " amount = " + amount);
 
 				const expectedPostAggregateEtherBalance = aggregateEtherBalance.sub(amount);
 				const expectedPostUserBalance = userBalance.add(amount);
@@ -1053,9 +1052,9 @@ module.exports = function (glob) {
 				var postAggregateAccrualBalance = await glob.web3ReserveFund.aggregateAccrualBalance(0);
 				var postUserBalance = await glob.web3ReserveFund.stagedBalance(glob.user_a, 0);
 
-				console.log('post Aggregate (active) ETH balance =' + postAggregateEtherBalance);
-				console.log('post Accrual balance =' + postAggregateAccrualBalance);
-				console.log('post Active User balance =' + postUserBalance);
+				//console.log('post Aggregate (active) ETH balance =' + postAggregateEtherBalance);
+				//console.log('post Accrual balance =' + postAggregateAccrualBalance);
+				//console.log('post Active User balance =' + postUserBalance);
 
 				assert(expectedPostAggregateEtherBalance.eq(postAggregateEtherBalance),
 					'Post aggregate-ETH balance differs: ' + postAggregateEtherBalance + ' but expected:' + expectedPostAggregateEtherBalance);
