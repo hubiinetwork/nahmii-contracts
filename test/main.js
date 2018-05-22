@@ -34,6 +34,11 @@ contract('Smart contract checks', function () {
         user_b: web3.eth.accounts[2],
         user_c: web3.eth.accounts[3],
         user_d: web3.eth.accounts[4],
+        user_e: web3.eth.accounts[5],
+        user_f: web3.eth.accounts[6],
+        user_g: web3.eth.accounts[7],
+        user_h: web3.eth.accounts[8],
+        user_i: web3.eth.accounts[9],
 
         gasLimit: 1800000
     };
@@ -43,6 +48,11 @@ contract('Smart contract checks', function () {
     glob.signer_b = w3prov.getSigner(glob.user_b);
     glob.signer_c = w3prov.getSigner(glob.user_c);
     glob.signer_d = w3prov.getSigner(glob.user_d);
+    glob.signer_e = w3prov.getSigner(glob.user_e);
+    glob.signer_f = w3prov.getSigner(glob.user_f);
+    glob.signer_g = w3prov.getSigner(glob.user_g);
+    glob.signer_h = w3prov.getSigner(glob.user_h);
+    glob.signer_i = w3prov.getSigner(glob.user_i);
 
     const minRequiredEthersPerUser = 10;
     const initialTokensSupply = 1000;
@@ -57,11 +67,21 @@ contract('Smart contract checks', function () {
         assert.notEqual(glob.user_b, null);
         assert.notEqual(glob.user_c, null);
         assert.notEqual(glob.user_d, null);
+        assert.notEqual(glob.user_e, null);
+        assert.notEqual(glob.user_f, null);
+        assert.notEqual(glob.user_g, null);
+        assert.notEqual(glob.user_h, null);
+        assert.notEqual(glob.user_i, null);
 
         assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_a), "ether") >= minRequiredEthersPerUser);
         assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_b), "ether") >= minRequiredEthersPerUser);
         assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_c), "ether") >= minRequiredEthersPerUser);
         assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_d), "ether") >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_e), "ether") >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_f), "ether") >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_g), "ether") >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_h), "ether") >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_i), "ether") >= minRequiredEthersPerUser);
     });
 
     before("Preflight: Instantiate test token", async () => {
