@@ -48,6 +48,9 @@ contract ClientFund {
         // Settled balance of ethers and tokens.
         int256 settledEtherBalance;
         mapping (address => int256) settledTokenBalance;
+
+        address[] inUseTokenList;
+        mapping (address => bool) inUseTokenMap;
     }
 
     //
@@ -70,6 +73,7 @@ contract ClientFund {
     event DepositToSettledBalance(address to, int256 amount, address token); //token==0 for ethers
     event StageEvent(address from, int256 amount, address token); //token==0 for ethers
     event UnstageEvent(address from, int256 amount, address token); //token==0 for ethers
+    event SeizeDepositedAndSettledBalancesEvent(address sourceWallet, address targetWallet);
     event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
     event RegisterServiceEvent(address service);
     event EnableRegisteredServiceEvent(address wallet, address service);
@@ -131,6 +135,12 @@ contract ClientFund {
         //add to per-wallet deposited balance
         walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].add_nn(amount);
         walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, token));
+
+        //add token to in-use list
+        if (!walletInfoMap[msg.sender].inUseTokenMap[token]) {
+            walletInfoMap[msg.sender].inUseTokenMap[token] = true;
+            walletInfoMap[msg.sender].inUseTokenList.push(token);
+        }
 
         //emit event
         emit DepositEvent(msg.sender, amount, token);
@@ -246,6 +256,12 @@ contract ClientFund {
         //add to per-wallet settled balance
         walletInfoMap[destWallet].settledTokenBalance[token] = walletInfoMap[destWallet].settledTokenBalance[token].add_nn(amount);
 
+        //add token to in-use list
+        if (!walletInfoMap[destWallet].inUseTokenMap[token]) {
+            walletInfoMap[destWallet].inUseTokenMap[token] = true;
+            walletInfoMap[destWallet].inUseTokenList.push(token);
+        }
+
         //try to execute token transfer
         erc20_token = ERC20(token);
         require(erc20_token.transferFrom(msg.sender, destWallet, uint256(amount)));
@@ -332,6 +348,45 @@ contract ClientFund {
 
         //emit event
         emit UnstageEvent(msg.sender, amount, token);
+    }
+
+    function seizeDepositedAndSettledBalances(address sourceWallet, address targetWallet) public onlyRegisteredService notNullAddress(sourceWallet) notNullAddress(targetWallet) {
+        int256 amount;
+        uint256 i;
+        uint256 len;
+
+        //seize ethers
+        amount = walletInfoMap[sourceWallet].depositedEtherBalance.add(walletInfoMap[sourceWallet].settledEtherBalance);
+        assert(amount >= 0);
+
+        walletInfoMap[sourceWallet].depositedEtherBalance = 0;
+        walletInfoMap[sourceWallet].settledEtherBalance = 0;
+        //add to staged balance
+        walletInfoMap[targetWallet].stagedEtherBalance = walletInfoMap[targetWallet].stagedEtherBalance.add_nn(amount);
+
+        //seize tokens
+        len = walletInfoMap[sourceWallet].inUseTokenList.length;
+        for (i = 0; i < len; i++) {
+            address token = walletInfoMap[sourceWallet].inUseTokenList[i];
+
+            amount = walletInfoMap[sourceWallet].depositedTokenBalance[token].add(walletInfoMap[sourceWallet].settledTokenBalance[token]);
+            assert(amount >= 0);
+
+            walletInfoMap[sourceWallet].depositedTokenBalance[token] = 0;
+            walletInfoMap[sourceWallet].settledTokenBalance[token] = 0;
+
+            //add to staged balance
+            walletInfoMap[targetWallet].stagedTokenBalance[token] = walletInfoMap[targetWallet].stagedTokenBalance[token].add_nn(amount);
+
+            //add token to in-use list
+            if (!walletInfoMap[targetWallet].inUseTokenMap[token]) {
+                walletInfoMap[targetWallet].inUseTokenMap[token] = true;
+                walletInfoMap[targetWallet].inUseTokenList.push(token);
+            }
+        }
+
+        //emit event
+        emit SeizeDepositedAndSettledBalancesEvent(sourceWallet, targetWallet);
     }
 
     //
@@ -457,6 +512,11 @@ contract ClientFund {
 
     modifier onlyOwner() {
         require(msg.sender == owner);
+        _;
+    }
+
+    modifier onlyRegisteredService() {
+        require(registeredServicesMap[msg.sender] != 0);
         _;
     }
 
