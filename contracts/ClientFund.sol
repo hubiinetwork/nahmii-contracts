@@ -10,13 +10,15 @@ pragma solidity ^0.4.23;
 import "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./ERC20.sol";
+import "./BeneficiaryReceiver.sol";
+import "./BeneficiarySender.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Factored out from previous Trade smart contract.
 */
-contract ClientFund is Ownable {
+contract ClientFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
     using SafeMathInt for int256;
 
     //
@@ -81,7 +83,7 @@ contract ClientFund is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address _owner) Ownable(_owner) BeneficiaryReceiver() BeneficiarySender() public {
         serviceActivationTimeout = 30 * 3600; //30 minutes
     }
 
@@ -96,18 +98,26 @@ contract ClientFund is Ownable {
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function () public notOwner payable {
+        storeEthers(msg.sender);
+    }
+
+    function storeEthers(address wallet) public notOwner payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet deposited balance
-        walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.add_nn(amount);
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
+        walletInfoMap[wallet].depositedEtherBalance = walletInfoMap[wallet].depositedEtherBalance.add_nn(amount);
+        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
 
         //emit event
-        emit DepositEvent(msg.sender, amount, address(0));
+        emit DepositEvent(wallet, amount, address(0));
     }
 
-    //NOTE: msg.sender must call ERC20.approve first
     function depositTokens(address token, int256 amount) notOwner public {
+        storeTokens(msg.sender, amount, token);
+    }
+
+    //NOTE: 'wallet' must call ERC20.approve first
+    function storeTokens(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -115,20 +125,20 @@ contract ClientFund is Ownable {
 
         //try to execute token transfer
         erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(msg.sender, this, uint256(amount)));
+        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
 
         //add to per-wallet deposited balance
-        walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].add_nn(amount);
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, token));
+        walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].add_nn(amount);
+        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, token));
 
         //add token to in-use list
-        if (!walletInfoMap[msg.sender].inUseTokenMap[token]) {
-            walletInfoMap[msg.sender].inUseTokenMap[token] = true;
-            walletInfoMap[msg.sender].inUseTokenList.push(token);
+        if (!walletInfoMap[wallet].inUseTokenMap[token]) {
+            walletInfoMap[wallet].inUseTokenMap[token] = true;
+            walletInfoMap[wallet].inUseTokenList.push(token);
         }
 
         //emit event
-        emit DepositEvent(msg.sender, amount, token);
+        emit DepositEvent(wallet, amount, token);
     }
 
     function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
