@@ -124,7 +124,8 @@ contract Configuration {
 
     /// @notice Set operational mode to Exit
     /// @dev Once operational mode is set to Exit it may not be set back to Normal
-    function setOperationalModeExit() public onlyOwner {
+    // TODO Need to limit who can set operational mode
+    function setOperationalModeExit() public /*onlyOwner*/ {
         operationalMode = OperationalMode.Exit;
 
         emit SetOperationalModeExitEvent();

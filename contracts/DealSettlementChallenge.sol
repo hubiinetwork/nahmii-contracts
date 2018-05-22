@@ -125,10 +125,12 @@ contract DealSettlementChallenge {
             require(msg.sender == orders[i]._address);
             require(Types.isGenuineSignature(orders[i].seals.party.hash, orders[i].seals.party.signature, orders[i]._address));
             require(Types.isGenuineSignature(orders[i].seals.exchange.hash, orders[i].seals.exchange.signature, owner));
+        }
 
-            walletOrderExchangeHashCancelledMap[msg.sender][orders[i].seals.exchange.hash] = true;
-            walletOrderCancelledListMap[msg.sender].push(orders[i]);
-            walletOrderExchangeHashIndexMap[msg.sender][orders[i].seals.exchange.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
+        for (uint256 j = 0; j < orders.length; j++) {
+            walletOrderExchangeHashCancelledMap[msg.sender][orders[j].seals.exchange.hash] = true;
+            walletOrderCancelledListMap[msg.sender].push(orders[j]);
+            walletOrderExchangeHashIndexMap[msg.sender][orders[j].seals.exchange.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
         }
 
         walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
