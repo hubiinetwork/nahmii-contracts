@@ -310,18 +310,18 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getDealSettlementChallengeFromTradeCount()', () => {
+        describe('dealSettlementChallengeFromTradeCount()', () => {
             it('should return value initialized ', async () => {
                 const address = Wallet.createRandom().address;
-                const count = await ethersDealSettlementChallengeOwner.getDealSettlementChallengeFromTradeCount(address);
+                const count = await ethersDealSettlementChallengeOwner.dealSettlementChallengeFromTradeCount(address);
                 count.toNumber().should.equal(0);
             });
         });
 
-        describe('getDealSettlementChallengeFromPaymentCount()', () => {
+        describe('dealSettlementChallengeFromPaymentCount()', () => {
             it('should return value initialized ', async () => {
                 const address = Wallet.createRandom().address;
-                const count = await ethersDealSettlementChallengeOwner.getDealSettlementChallengeFromPaymentCount(address);
+                const count = await ethersDealSettlementChallengeOwner.dealSettlementChallengeFromPaymentCount(address);
                 count.toNumber().should.equal(0);
             });
         });
@@ -348,7 +348,7 @@ module.exports = (glob) => {
 
                 it('should operate successfully', async () => {
                     await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
-                    const count = await ethersDealSettlementChallengeOwner.getDealSettlementChallengeFromTradeCount(trade.buyer._address);
+                    const count = await ethersDealSettlementChallengeOwner.dealSettlementChallengeFromTradeCount(trade.buyer._address);
                     count.toNumber().should.equal(1);
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -395,35 +395,6 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                // payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                //
-                // const paymentWeb3 = await mocks.mockPayment(
-                //     glob.owner,
-                //     {
-                //         source: {_address: glob.user_a},
-                //         blockNumber: utils.bigNumberify(blockNumber10)
-                //     }
-                // );
-                // const paymentEthutil = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-
-                // console.log(JSON.stringify(paymentWeb3, null, 2));
-                // console.log(JSON.stringify(paymentEthutil, null, 2));
-
-                // const hash = hashPaymentAsParty(payment);
-                // console.log(hash);
-                //
-                // console.log(await web3.eth.sign(glob.user_a, hash));
-                //
-                // const prefixedHash = new Buffer(
-                //     hashTypedItems(
-                //         {value: '\x19Ethereum Signed Message:\n32', type: 'string'},
-                //         {value: hash.toString('hex'), types: 'hex'}
-                //     ).slice(2), 'hex'
-                // );
-                // const sig = ethutil.ecsign(prefixedHash, new Buffer('ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f', 'hex'));
-                // const sigRPC = ethutil.toRpcSig(sig.v, sig.r, sig.s);
-                // console.log(sigRPC);
-
                 topic = ethersDealSettlementChallengeOwner.interface.events.StartDealSettlementChallengeFromPaymentEvent.topics[0];
                 filter = {
                     fromBlock: blockNumber0,
@@ -438,7 +409,7 @@ module.exports = (glob) => {
 
                 it('should operate successfully', async () => {
                     await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions);
-                    const count = await ethersDealSettlementChallengeOwner.getDealSettlementChallengeFromPaymentCount(payment.source._address);
+                    const count = await ethersDealSettlementChallengeOwner.dealSettlementChallengeFromPaymentCount(payment.source._address);
                     count.toNumber().should.equal(1);
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -573,6 +544,82 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(trade.buyer._address).should.be.rejected;
+                });
+            });
+        });
+
+        describe('dealSettlementChallengePhase()', () => {
+            describe('if no deal settlement challenge has been started for given wallet', () => {
+                it('should return 0 and Closed', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await ethersDealSettlementChallengeOwner.dealSettlementChallengePhase(address);
+                    result[0].eq(utils.bigNumberify(0)).should.be.true;
+                    result[1].should.equal(mocks.challengePhases.indexOf('Closed'));
+                });
+            });
+
+            describe('if deal settlement challenge has been started for given wallet', () => {
+                let overrideOptions, trade;
+
+                before(async () => {
+                    overrideOptions = {gasLimit: 2e6};
+                });
+
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                });
+
+                describe('if deal settlement challenge is ongoing for given wallet', () => {
+                    beforeEach(async () => {
+                       await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions)
+                    });
+
+                    it('should return challenged deal nonce and Dispute', async () => {
+                        const result = await ethersDealSettlementChallengeOwner.dealSettlementChallengePhase(trade.buyer._address);
+                        result[0].eq(trade.nonce).should.be.true;
+                        result[1].should.equal(mocks.challengePhases.indexOf('Dispute'));
+                    });
+                });
+
+                describe('if deal settlement challenge has completed for given wallet', () => {
+                    beforeEach(async () => {
+                        await ethersConfiguration.setDealSettlementChallengeTimeout(0);
+                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions)
+                    });
+
+                    it('should return challenged deal nonce and Closed', async () => {
+                        const result = await ethersDealSettlementChallengeOwner.dealSettlementChallengePhase(trade.buyer._address);
+                        result[0].eq(trade.nonce).should.be.true;
+                        result[1].should.equal(mocks.challengePhases.indexOf('Closed'));
+                    });
+                });
+            });
+        });
+
+        describe('dealSettlementChallengeStatus()', () => {
+            describe('if no deal settlement challenge has been started for given wallet', () => {
+                it('should return Unknown', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await ethersDealSettlementChallengeOwner.dealSettlementChallengeStatus(address, 0);
+                    result.should.equal(mocks.challengeStatuses.indexOf('Unknown'));
+                });
+            });
+
+            describe('if deal settlement challenge has been started for given wallet', () => {
+                let overrideOptions, trade;
+
+                before(async () => {
+                    overrideOptions = {gasLimit: 2e6};
+                });
+
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions)
+                });
+
+                it('should return challenged deal challenge status', async () => {
+                    const result = await ethersDealSettlementChallengeOwner.dealSettlementChallengeStatus(trade.buyer._address, trade.nonce);
+                    result.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
                 });
             });
         });

@@ -175,13 +175,13 @@ contract DealSettlementChallenge {
 
     /// @notice Get the number of current and past deal settlement challenges from trade for given wallet
     /// @param wallet The wallet for which to return count
-    function getDealSettlementChallengeFromTradeCount(address wallet) public view returns (uint256) {
+    function dealSettlementChallengeFromTradeCount(address wallet) public view returns (uint256) {
         return walletDealSettlementChallengedTradesMap[wallet].length;
     }
 
     /// @notice Get the number of current and past deal settlement challenges from payment for given wallet
     /// @param wallet The wallet for which to return count
-    function getDealSettlementChallengeFromPaymentCount(address wallet) public view returns (uint256) {
+    function dealSettlementChallengeFromPaymentCount(address wallet) public view returns (uint256) {
         return walletDealSettlementChallengedPaymentsMap[wallet].length;
     }
 
@@ -270,6 +270,34 @@ contract DealSettlementChallenge {
         return walletDealSettlementChallengedPaymentsMap[wallet][dealIndex];
     }
 
+    /// @notice Get deal settlement challenge phase of given wallet
+    /// @param wallet The wallet whose challenge phase will be returned
+    function dealSettlementChallengePhase(address wallet) public view returns (uint, Types.ChallengePhase) {
+        if (msg.sender != owner)
+            wallet = msg.sender;
+        if (0 == walletDealSettlementChallengeInfoMap[wallet].nonce)
+            return (0, Types.ChallengePhase.Closed);
+        else if (block.timestamp < walletDealSettlementChallengeInfoMap[wallet].timeout)
+            return (walletDealSettlementChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Dispute);
+        else
+            return (walletDealSettlementChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Closed);
+    }
+
+    /// @notice Get deal settlement challenge phase of given wallet
+    /// @param wallet The wallet whose challenge phase will be returned
+    /// @param nonce The nonce of the challenged deal
+    function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeStatus) {
+        if (msg.sender != owner)
+            wallet = msg.sender;
+        if ((0 == walletDealSettlementChallengeInfoMap[wallet].nonce) ||
+            (nonce != walletDealSettlementChallengeInfoMap[wallet].nonce))
+            return Types.ChallengeStatus.Unknown;
+        else
+            return walletDealSettlementChallengeInfoMap[wallet].status;
+    }
+
+    /// @notice Challenge the deal settlement by providing order candidate
+    /// @param order The order candidate that challenges the challenged deal
     function challengeDealSettlementByOrder(Types.Order order)
     public
     signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
