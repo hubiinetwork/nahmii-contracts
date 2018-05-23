@@ -7,7 +7,7 @@
  */
 pragma solidity ^0.4.23;
 
-contract BeneficiaryReceiver {
+contract Beneficiary {
     function storeEthers(address wallet) public payable;
 
     //NOTE: 'wallet' must call ERC20.approve first

@@ -8,21 +8,19 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
-/**
-@title Reserve fund
-@notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
- There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
-
-*/
-
 import './SafeMathInt.sol';
 import './SafeMathUInt.sol';
 import "./Ownable.sol";
 import './ERC20.sol';
-import "./BeneficiaryReceiver.sol";
-import "./BeneficiarySender.sol";
+import "./Beneficiary.sol";
+import "./Benefactor.sol";
 
-contract ReserveFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
+/**
+@title Reserve fund
+@notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
+ There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
+*/
+contract ReserveFund is Ownable, Beneficiary, Benefactor {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -123,7 +121,7 @@ contract ReserveFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) BeneficiaryReceiver() BeneficiarySender() public {
+    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() public {
     }
 
     //
@@ -363,10 +361,12 @@ contract ReserveFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
         emit StageEvent(msg.sender, amount, token);
     }
 
-    function stageTo(address token, int256 amount, address receiver) public notOwner {
-        BeneficiaryReceiver receiver_sc;
+    function stageTo(address token, int256 amount, address beneficiary) public notOwner {
+        Beneficiary beneficiary_sc;
 
         require(amount.isPositiveInt256());
+
+        beneficiary_sc = Beneficiary(beneficiary);
 
         if (token == address(0)) {
             //clamp amount to move
@@ -377,7 +377,7 @@ contract ReserveFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
             walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.sub_nn(amount);
 
             //transfer funds to the beneficiary
-            receiver_sc.storeEthers.value(uint256(amount))(msg.sender);
+            beneficiary_sc.storeEthers.value(uint256(amount))(msg.sender);
         } else {
             ERC20 erc20_token;
 
@@ -390,14 +390,14 @@ contract ReserveFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
 
             //first approve token transfer
             erc20_token = ERC20(token);
-            require(erc20_token.approve(receiver, uint256(amount)));
+            require(erc20_token.approve(beneficiary, uint256(amount)));
 
             //transfer funds to the beneficiary
-            receiver_sc.storeTokens(msg.sender, amount, token);
+            beneficiary_sc.storeTokens(msg.sender, amount, token);
         }
 
         //emit event
-        emit StageToEvent(msg.sender, amount, token, receiver);
+        emit StageToEvent(msg.sender, amount, token, beneficiary);
     }
 
     function activeBalance(address wallet, address token) public view returns (int256) {
