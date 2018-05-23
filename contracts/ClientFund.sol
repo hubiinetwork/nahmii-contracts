@@ -73,6 +73,7 @@ contract ClientFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
     event WithdrawFromDepositedBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
     event DepositToSettledBalance(address to, int256 amount, address token); //token==0 for ethers
     event StageEvent(address from, int256 amount, address token); //token==0 for ethers
+    event StageToEvent(address from, int256 amount, address token, address beneficiary); //token==0 for ethers
     event UnstageEvent(address from, int256 amount, address token); //token==0 for ethers
     event SeizeDepositedAndSettledBalancesEvent(address sourceWallet, address targetWallet);
     event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
@@ -229,9 +230,11 @@ contract ClientFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
     }
 
     function depositEthersToSettledBalance(address destWallet) public payable notOwner {
+        int256 amount;
+
         require(isAcceptedServiceForWallet(msg.sender, destWallet));
         require(destWallet != address(0));
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet staged balance
         walletInfoMap[destWallet].settledEtherBalance = walletInfoMap[destWallet].settledEtherBalance.add_nn(amount);
@@ -266,9 +269,10 @@ contract ClientFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
     }
 
     function stage(int256 amount, address token) public notOwner {
-        require(amount.isPositiveInt256());
         int256 amount_copy;
         int256 to_move;
+
+        require(amount.isPositiveInt256());
 
         if (token == address(0)) {
             //clamp amount to move
@@ -316,6 +320,70 @@ contract ClientFund is Ownable, BeneficiaryReceiver, BeneficiarySender {
 
         //emit event
         emit StageEvent(msg.sender, amount, token);
+    }
+
+    function stageTo(int256 amount, address token, address receiver) public notOwner {
+        int256 amount_copy;
+        int256 to_move;
+        BeneficiaryReceiver receiver_sc;
+
+        require(amount.isPositiveInt256());
+        require(isValidRegisteredReceiver(receiver));
+
+        receiver_sc = BeneficiaryReceiver(receiver);
+
+        if (token == address(0)) {
+            //clamp amount to move
+            amount = amount.clampMax(walletInfoMap[msg.sender].depositedEtherBalance.add(walletInfoMap[msg.sender].settledEtherBalance));
+            if (amount <= 0)
+                return;
+
+            amount_copy = amount;
+
+            //move from settled balance to staged, if balance greater than zero
+            if (walletInfoMap[msg.sender].settledEtherBalance > 0) {
+                to_move = amount.clampMax(walletInfoMap[msg.sender].settledEtherBalance);
+
+                walletInfoMap[msg.sender].settledEtherBalance = walletInfoMap[msg.sender].settledEtherBalance.sub(to_move);
+                amount = amount.sub(to_move);
+            }
+
+            //move (remaining) from deposited balance
+            walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.sub_nn(amount);
+
+            //transfer funds to the beneficiary
+            receiver_sc.storeEthers.value(uint256(amount))(msg.sender);
+        } else {
+            ERC20 erc20_token;
+
+            //clamp amount to move
+            amount = amount.clampMax(walletInfoMap[msg.sender].depositedTokenBalance[token].add(walletInfoMap[msg.sender].settledTokenBalance[token]));
+            if (amount <= 0)
+                return;
+
+            amount_copy = amount;
+
+            //move from settled balance to staged, if balance greater than zero
+            if (walletInfoMap[msg.sender].settledTokenBalance[token] > 0) {
+                to_move = amount.clampMax(walletInfoMap[msg.sender].settledTokenBalance[token]);
+
+                walletInfoMap[msg.sender].settledTokenBalance[token] = walletInfoMap[msg.sender].settledTokenBalance[token].sub(to_move);
+                amount = amount.sub(to_move);
+            }
+
+            //move (remaining) from deposited balance to staged
+            walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].sub_nn(amount);
+
+            //first approve token transfer
+            erc20_token = ERC20(token);
+            require(erc20_token.approve(receiver, uint256(amount)));
+
+            //transfer funds to the beneficiary
+            receiver_sc.storeTokens(msg.sender, amount, token);
+        }
+
+        //emit event
+        emit StageToEvent(msg.sender, amount, token, receiver);
     }
 
     function unstage(int256 amount, address token) public notOwner {
