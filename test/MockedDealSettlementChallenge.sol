@@ -128,7 +128,7 @@ contract MockedDealSettlementChallenge {
     //    function startDealSettlementChallengeFromPayment(Types.Payment payment, address wallet)
     //    public
     //    signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    //    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address)
+    //    signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, payment.sender._address)
     //    {
     //        if (msg.sender != owner)
     //            wallet = msg.sender;
@@ -173,7 +173,7 @@ contract MockedDealSettlementChallenge {
     //    function challengeDealSettlementByOrder(Types.Order order)
     //    public
     //    signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
-    //    signedBy(order.seals.party.hash, order.seals.party.signature, order._address)
+    //    signedBy(order.seals.exchange.hash, order.seals.exchange.signature, order._address)
     //    {
     //        DealSettlementChallengeInfo memory challenge;
     //        emit ChallengeDealSettlementByOrderEvent(order, challenge.nonce, challenge.dealType, msg.sender);

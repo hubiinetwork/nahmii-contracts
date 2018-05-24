@@ -122,7 +122,7 @@ contract DealSettlementChallenge {
     {
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i]._address);
-            require(Types.isGenuineSignature(orders[i].seals.party.hash, orders[i].seals.party.signature, orders[i]._address));
+            require(Types.isGenuineSignature(orders[i].seals.wallet.hash, orders[i].seals.wallet.signature, orders[i]._address));
             require(Types.isGenuineSignature(orders[i].seals.exchange.hash, orders[i].seals.exchange.signature, owner));
         }
 
@@ -221,7 +221,7 @@ contract DealSettlementChallenge {
     function startDealSettlementChallengeFromPayment(Types.Payment payment, address wallet)
     public
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address)
+    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address)
     {
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -300,7 +300,7 @@ contract DealSettlementChallenge {
     function challengeDealSettlementByOrder(Types.Order order)
     public
     signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
-    signedBy(order.seals.party.hash, order.seals.party.signature, order._address)
+    signedBy(order.seals.wallet.hash, order.seals.wallet.signature, order._address)
     {
         address wallet = order._address;
 

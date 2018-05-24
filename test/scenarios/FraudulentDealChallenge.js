@@ -777,7 +777,7 @@ module.exports = (glob) => {
             describe('if not signed by exchange', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                    payment.seals.exchange.signature = payment.seals.party.signature;
+                    payment.seals.exchange.signature = payment.seals.wallet.signature;
                 });
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
@@ -797,10 +797,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not signed by party', () => {
+            describe('if not signed by wallet', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                    payment.seals.party.signature = payment.seals.exchange.signature;
+                    payment.seals.wallet.signature = payment.seals.exchange.signature;
                 });
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
@@ -820,10 +820,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if party hash differs from calculated', () => {
+            describe('if wallet hash differs from calculated', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                    payment.seals.party.hash = utils.id('some non-existent hash');
+                    payment.seals.wallet.hash = utils.id('some non-existent hash');
                 });
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
@@ -2196,7 +2196,7 @@ module.exports = (glob) => {
                             order: {
                                 amount: utils.parseUnits('1000', 18),
                                 hashes: {
-                                    party: firstTrade.buyer.order.hashes.party
+                                    wallet: firstTrade.buyer.order.hashes.wallet
                                 },
                                 residuals: {
                                     current: utils.parseUnits('300', 18),
@@ -2225,7 +2225,7 @@ module.exports = (glob) => {
                             order: {
                                 amount: utils.parseUnits('1000', 18),
                                 hashes: {
-                                    party: firstTrade.seller.order.hashes.party
+                                    wallet: firstTrade.seller.order.hashes.wallet
                                 },
                                 residuals: {
                                     current: utils.parseUnits('500', 18),
@@ -2281,7 +2281,7 @@ module.exports = (glob) => {
                             order: {
                                 amount: utils.parseUnits('1000', 18),
                                 hashes: {
-                                    party: firstTrade.buyer.order.hashes.party
+                                    wallet: firstTrade.buyer.order.hashes.wallet
                                 },
                                 residuals: {
                                     current: utils.parseUnits('300', 18),
@@ -2310,7 +2310,7 @@ module.exports = (glob) => {
                             order: {
                                 amount: utils.parseUnits('1000', 18),
                                 hashes: {
-                                    party: firstTrade.seller.order.hashes.party
+                                    wallet: firstTrade.seller.order.hashes.wallet
                                 },
                                 residuals: {
                                     current: utils.parseUnits('500', 18),
@@ -2366,7 +2366,7 @@ module.exports = (glob) => {
                             order: {
                                 amount: utils.parseUnits('1000', 18),
                                 hashes: {
-                                    party: firstTrade.buyer.order.hashes.party
+                                    wallet: firstTrade.buyer.order.hashes.wallet
                                 },
                                 residuals: {
                                     current: utils.parseUnits('300', 18),
@@ -2395,7 +2395,7 @@ module.exports = (glob) => {
                             order: {
                                 amount: utils.parseUnits('1000', 18),
                                 hashes: {
-                                    party: firstTrade.seller.order.hashes.party
+                                    wallet: firstTrade.seller.order.hashes.wallet
                                 },
                                 residuals: {
                                     current: utils.parseUnits('500', 18),
@@ -2451,7 +2451,7 @@ module.exports = (glob) => {
                             order: {
                                 amount: utils.parseUnits('1000', 18),
                                 hashes: {
-                                    party: firstTrade.buyer.order.hashes.party
+                                    wallet: firstTrade.buyer.order.hashes.wallet
                                 },
                                 residuals: {
                                     current: utils.parseUnits('300', 18),
@@ -2480,7 +2480,7 @@ module.exports = (glob) => {
                             order: {
                                 amount: utils.parseUnits('1000', 18),
                                 hashes: {
-                                    party: firstTrade.seller.order.hashes.party
+                                    wallet: firstTrade.seller.order.hashes.wallet
                                 },
                                 residuals: {
                                     current: utils.parseUnits('500', 18),

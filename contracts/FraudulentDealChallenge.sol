@@ -314,9 +314,9 @@ contract FraudulentDealChallenge {
         require(firstTradePartyRole == lastTradePartyRole);
 
         if (Types.TradePartyRole.Buyer == firstTradePartyRole)
-            require(firstTrade.buyer.order.hashes.party == lastTrade.buyer.order.hashes.party);
+            require(firstTrade.buyer.order.hashes.wallet == lastTrade.buyer.order.hashes.wallet);
         else // Types.TradePartyRole.Seller == firstTradePartyRole
-            require(firstTrade.seller.order.hashes.party == lastTrade.seller.order.hashes.party);
+            require(firstTrade.seller.order.hashes.wallet == lastTrade.seller.order.hashes.wallet);
 
         require(isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
@@ -418,9 +418,9 @@ contract FraudulentDealChallenge {
     }
 
     function isGenuinePaymentSeals(Types.Payment payment) private view returns (bool) {
-        return (Types.hashPaymentAsParty(payment) == payment.seals.party.hash)
+        return (Types.hashPaymentAsWallet(payment) == payment.seals.wallet.hash)
         && (Types.hashPaymentAsExchange(payment) == payment.seals.exchange.hash)
-        && (Types.isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address))
+        && (Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address))
         && (Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
     }
 
@@ -757,15 +757,15 @@ contract FraudulentDealChallenge {
         require(firstPayment.currency == lastPayment.currency);
 
         require(isPaymentParty(firstPayment, wallet));
-        require(Types.hashPaymentAsParty(firstPayment) == firstPayment.seals.party.hash);
+        require(Types.hashPaymentAsWallet(firstPayment) == firstPayment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(firstPayment) == firstPayment.seals.exchange.hash);
-        require(Types.isGenuineSignature(firstPayment.seals.party.hash, firstPayment.seals.party.signature, firstPayment.sender._address));
+        require(Types.isGenuineSignature(firstPayment.seals.wallet.hash, firstPayment.seals.wallet.signature, firstPayment.sender._address));
         require(Types.isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
 
         require(isPaymentParty(lastPayment, wallet));
-        require(Types.hashPaymentAsParty(lastPayment) == lastPayment.seals.party.hash);
+        require(Types.hashPaymentAsWallet(lastPayment) == lastPayment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(lastPayment) == lastPayment.seals.exchange.hash);
-        require(Types.isGenuineSignature(lastPayment.seals.party.hash, lastPayment.seals.party.signature, lastPayment.sender._address));
+        require(Types.isGenuineSignature(lastPayment.seals.wallet.hash, lastPayment.seals.wallet.signature, lastPayment.sender._address));
         require(Types.isGenuineSignature(lastPayment.seals.exchange.hash, lastPayment.seals.exchange.signature, owner));
 
         _;
@@ -780,9 +780,9 @@ contract FraudulentDealChallenge {
         require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
 
         require(isPaymentParty(payment, wallet));
-        require(Types.hashPaymentAsParty(payment) == payment.seals.party.hash);
+        require(Types.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
-        require(Types.isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address));
+        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address));
         require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
 
         _;

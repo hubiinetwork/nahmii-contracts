@@ -145,9 +145,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not signed by party', () => {
+            describe('if not signed by wallet', () => {
                 beforeEach(() => {
-                    order1.seals.party.hash = order1.seals.exchange.hash;
+                    order1.seals.wallet.hash = order1.seals.exchange.hash;
                 });
 
                 it('should revert', async () => {
@@ -157,7 +157,7 @@ module.exports = (glob) => {
 
             describe('if not signed by exchange', () => {
                 beforeEach(() => {
-                    order1.seals.exchange.hash = order1.seals.party.hash;
+                    order1.seals.exchange.hash = order1.seals.wallet.hash;
                 });
 
                 it('should revert', async () => {
@@ -196,7 +196,7 @@ module.exports = (glob) => {
                                 _address: order._address,
                                 order: {
                                     hashes: {
-                                        party: order.seals.party.hash,
+                                        wallet: order.seals.wallet.hash,
                                         exchange: order.seals.exchange.hash
                                     }
                                 }
@@ -227,7 +227,7 @@ module.exports = (glob) => {
                                 _address: order._address,
                                 order: {
                                     hashes: {
-                                        party: order.seals.party.hash,
+                                        wallet: order.seals.wallet.hash,
                                         exchange: order.seals.exchange.hash
                                     }
                                 }
@@ -426,11 +426,11 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payment is not signed by party', () => {
+            describe('if payment is not signed by wallet', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner);
                     const sign = mocks.createWeb3Signer(glob.user_b);
-                    payment.seals.party.signature = await sign(payment.seals.party.hash);
+                    payment.seals.wallet.signature = await sign(payment.seals.wallet.hash);
                 });
 
                 it('should revert', async () => {
@@ -641,10 +641,10 @@ module.exports = (glob) => {
                 };
             });
 
-            describe('if not signed by party', () => {
+            describe('if not signed by wallet', () => {
                 beforeEach(async () => {
                     order = await mocks.mockOrder(glob.owner);
-                    order.seals.party.signature = order.seals.exchange.signature;
+                    order.seals.wallet.signature = order.seals.exchange.signature;
                 });
 
                 it('should revert', async () => {
@@ -655,7 +655,7 @@ module.exports = (glob) => {
             describe('if not signed by exchange', () => {
                 beforeEach(async () => {
                     order = await mocks.mockOrder(glob.owner);
-                    order.seals.exchange.signature = order.seals.party.signature;
+                    order.seals.exchange.signature = order.seals.wallet.signature;
                 });
 
                 it('should revert', async () => {

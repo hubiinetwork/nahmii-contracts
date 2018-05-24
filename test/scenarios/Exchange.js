@@ -18,7 +18,7 @@ const Wallet = ethers.Wallet;
 let provider;
 
 module.exports = (glob) => {
-    describe.only('Exchange', () => {
+    describe('Exchange', () => {
         let web3Exchange, ethersExchange;
         let web3Configuration, ethersConfiguration;
         let web3RevenueFund, ethersRevenueFund;

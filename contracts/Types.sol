@@ -53,14 +53,14 @@ library Types {
         int256 conjugate;
     }
 
-    struct PartyExchangeHashes {
-        bytes32 party;
+    struct WalletExchangeHashes {
+        bytes32 wallet;
         bytes32 exchange;
     }
 
     struct TradeOrder {
         int256 amount;
-        PartyExchangeHashes hashes;
+        WalletExchangeHashes hashes;
         CurrentPreviousInt256 residuals;
     }
 
@@ -75,8 +75,8 @@ library Types {
         Signature signature;
     }
 
-    struct PartyExchangeSeals {
-        Seal party;
+    struct WalletExchangeSeals {
+        Seal wallet;
         Seal exchange;
     }
 
@@ -133,7 +133,7 @@ library Types {
 
         int256 singleFee;
 
-        PartyExchangeSeals seals;
+        WalletExchangeSeals seals;
         uint256 blockNumber;
     }
 
@@ -152,7 +152,7 @@ library Types {
         uint256 nonce;
         address _address;
         OrderPlacement placement;
-        PartyExchangeSeals seals;
+        WalletExchangeSeals seals;
         uint256 blockNumber;
     }
 
@@ -172,7 +172,7 @@ library Types {
     }
 
     // TODO Implement fully
-    function hashPaymentAsParty(Payment payment) internal pure returns (bytes32) {
+    function hashPaymentAsWallet(Payment payment) internal pure returns (bytes32) {
         return keccak256(bytes32(payment.nonce));
     }
 
@@ -182,7 +182,7 @@ library Types {
     }
 
     // TODO Implement fully
-    function hashOrderAsParty(Order order) internal pure returns (bytes32) {
+    function hashOrderAsWallet(Order order) internal pure returns (bytes32) {
         return keccak256(bytes32(order.nonce));
     }
 

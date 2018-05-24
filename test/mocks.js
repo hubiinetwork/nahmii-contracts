@@ -37,13 +37,13 @@ exports.mockOrder = async (exchange, params) => {
 
     const exchangeSigner = exports.createWeb3Signer(exchange);
 
-    const partySigner = (
+    const walletSigner = (
         order._address === wallet.address ?
             exports.createEthutilSigner(wallet) :
             exports.createWeb3Signer(order._address)
     );
 
-    return await exports.augmentOrderSeals(order, exchangeSigner, partySigner);
+    return await exports.augmentOrderSeals(order, exchangeSigner, walletSigner);
 };
 
 exports.mockTrade = async (exchange, params) => {
@@ -64,7 +64,7 @@ exports.mockTrade = async (exchange, params) => {
             order: {
                 amount: utils.parseUnits('1000', 18),
                 hashes: {
-                    party: Wallet.createRandom().address,
+                    wallet: Wallet.createRandom().address,
                     exchange: Wallet.createRandom().address
                 },
                 residuals: {
@@ -95,7 +95,7 @@ exports.mockTrade = async (exchange, params) => {
             order: {
                 amount: utils.parseUnits('1000', 18),
                 hashes: {
-                    party: Wallet.createRandom().address,
+                    wallet: Wallet.createRandom().address,
                     exchange: Wallet.createRandom().address
                 },
                 residuals: {
@@ -177,13 +177,13 @@ exports.mockPayment = async (exchange, params) => {
 
     const exchangeSigner = exports.createWeb3Signer(exchange);
 
-    const partySigner = (
+    const walletSigner = (
         payment.sender._address === senderWallet.address ?
             exports.createEthutilSigner(senderWallet) :
             exports.createWeb3Signer(payment.sender._address)
     );
 
-    return await exports.augmentPaymentSeals(payment, exchangeSigner, partySigner);
+    return await exports.augmentPaymentSeals(payment, exchangeSigner, walletSigner);
 };
 
 exports.mergeDeep = (target, sender) => {
@@ -222,12 +222,12 @@ exports.createWeb3Signer = (address) => {
     };
 };
 
-exports.augmentOrderSeals = async (order, exchangeSign, partySign) => {
-    const partyHash = exports.hashOrderAsParty(order);
+exports.augmentOrderSeals = async (order, exchangeSign, walletSign) => {
+    const walletHash = exports.hashOrderAsWallet(order);
     order.seals = {
-        party: {
-            hash: partyHash,
-            signature: await partySign(partyHash)
+        wallet: {
+            hash: walletHash,
+            signature: await walletSign(walletHash)
         },
     };
     const exchangeHash = exports.hashOrderAsExchange(order);
@@ -247,17 +247,17 @@ exports.augmentTradeSeal = async (trade, exchangeSign) => {
     return trade;
 };
 
-exports.augmentPaymentSeals = async (payment, exchangeSign, partySign) => {
-    const partyHash = exports.hashPaymentAsParty(payment);
+exports.augmentPaymentSeals = async (payment, exchangeSign, walletSign) => {
+    const walletHash = exports.hashPaymentAsWallet(payment);
     payment.seals = {
-        party: {
-            hash: partyHash,
-            signature: await partySign(partyHash)
+        wallet: {
+            hash: walletHash,
+            signature: await walletSign(walletHash)
         }
     };
-    // TODO Replace party hasher with exchange hasher
+    // TODO Replace wallet hasher with exchange hasher
     const exchangeHash = exports.hashPaymentAsExchange(payment);
-    // const exchangeHash = exports.hashPaymentAsParty(payment);
+    // const exchangeHash = exports.hashPaymentAsWallet(payment);
     payment.seals.exchange = {
         hash: exchangeHash,
         signature: await exchangeSign(exchangeHash)
@@ -265,7 +265,7 @@ exports.augmentPaymentSeals = async (payment, exchangeSign, partySign) => {
     return payment;
 };
 
-exports.hashOrderAsParty = (order) => {
+exports.hashOrderAsWallet = (order) => {
     return exports.hashString(
         order.nonce.toNumber()
     );
@@ -275,7 +275,7 @@ exports.hashOrderAsExchange = (order) => {
     return exports.hashTyped(
         {value: order.placement.residuals.current.toHexString(), type: 'hex'},
         {value: order.placement.residuals.previous.toHexString(), type: 'hex'},
-        {value: exports.stdToRpcSig(order.seals.party.signature), type: 'string'}
+        {value: exports.stdToRpcSig(order.seals.wallet.signature), type: 'string'}
     );
 };
 
@@ -285,7 +285,7 @@ exports.hashTrade = (trade) => {
     );
 };
 
-exports.hashPaymentAsParty = (payment) => {
+exports.hashPaymentAsWallet = (payment) => {
     return exports.hashString(
         payment.nonce.toNumber()
     );
@@ -296,10 +296,10 @@ exports.hashPaymentAsExchange = (payment) => {
         payment.nonce.toNumber()
     );
     // return exports.hashTyped(
-    //     {value: exports.stdToRpcSig(payment.seals.party.signature), type: 'string'}
+    //     {value: exports.stdToRpcSig(payment.seals.wallet.signature), type: 'string'}
     // );
     // TODO Try alternative below
-    // return `0x${ethutil.keccak(exports.stdToRpcSig(payment.seals.party.signature).slice(2)).toString('hex')}`;
+    // return `0x${ethutil.keccak(exports.stdToRpcSig(payment.seals.wallet.signature).slice(2)).toString('hex')}`;
 };
 
 exports.hashString = (...data) => {

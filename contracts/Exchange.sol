@@ -154,7 +154,7 @@ contract Exchange {
     function settleDealAsPayment(Types.Payment payment, address wallet)
     public
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address)
+    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address)
     {
         if (msg.sender != owner)
             wallet = msg.sender;
