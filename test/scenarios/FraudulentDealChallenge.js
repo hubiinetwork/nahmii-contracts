@@ -782,7 +782,7 @@ module.exports = (glob) => {
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
                     await ethersFraudulentDealChallenge.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPayment, seizedWallet, seizedDestination, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPayment, seizedWallet, seizedRecipient, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
                         ethersFraudulentDealChallenge.isSeizedWallet(glob.user_c),
@@ -792,7 +792,7 @@ module.exports = (glob) => {
                     operationalModeExit.should.be.true;
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
                     seizedWallet.should.be.false;
-                    seizedDestination.should.be.false;
+                    seizedRecipient.should.be.false;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -805,7 +805,7 @@ module.exports = (glob) => {
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
                     await ethersFraudulentDealChallenge.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPayment, seizedWallet, seizedDestination, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPayment, seizedWallet, seizedRecipient, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
                         ethersFraudulentDealChallenge.isSeizedWallet(glob.user_c),
@@ -815,7 +815,7 @@ module.exports = (glob) => {
                     operationalModeExit.should.be.true;
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
                     seizedWallet.should.be.false;
-                    seizedDestination.should.be.false;
+                    seizedRecipient.should.be.false;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -828,7 +828,7 @@ module.exports = (glob) => {
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
                     await ethersFraudulentDealChallenge.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPayment, seizedWallet, seizedDestination, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPayment, seizedWallet, seizedRecipient, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
                         ethersFraudulentDealChallenge.isSeizedWallet(glob.user_c),
@@ -838,7 +838,7 @@ module.exports = (glob) => {
                     operationalModeExit.should.be.true;
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
                     seizedWallet.should.be.false;
-                    seizedDestination.should.be.false;
+                    seizedRecipient.should.be.false;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -851,7 +851,7 @@ module.exports = (glob) => {
 
                 it('should record fraudulent payment, toggle operational mode and emit event', async () => {
                     await ethersFraudulentDealChallenge.challengeFraudulentDealByPayment(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPayment, seizedWallet, seizedDestination, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPayment, seizedWallet, seizedRecipient, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
                         ethersFraudulentDealChallenge.isSeizedWallet(glob.user_c),
@@ -861,16 +861,16 @@ module.exports = (glob) => {
                     operationalModeExit.should.be.true;
                     fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
                     seizedWallet.should.be.false;
-                    seizedDestination.should.be.false;
+                    seizedRecipient.should.be.false;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
 
-            describe('if source address equals destination address', () => {
+            describe('if sender address equals recipient address', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
-                        source: {_address: glob.user_a},
-                        destination: {_address: glob.user_a},
+                        sender: {_address: glob.user_a},
+                        recipient: {_address: glob.user_a},
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                 });
@@ -880,7 +880,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.source._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -890,10 +890,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if source\'s current balance field differs from calculated', () => {
+            describe('if sender\'s current balance field differs from calculated', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
-                        source: {
+                        sender: {
                             balances: {
                                 current: utils.bigNumberify(0)
                             }
@@ -907,7 +907,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.source._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -917,7 +917,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if (source\'s) payment fee is greater than the nominal payment fee', () => {
+            describe('if (sender\'s) payment fee is greater than the nominal payment fee', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
                         singleFee: utils.parseUnits('2.0', 18),
@@ -930,7 +930,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.source._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -940,7 +940,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if (source\'s) payment fee is different than provided by Configuration contract', () => {
+            describe('if (sender\'s) payment fee is different than provided by Configuration contract', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
                         singleFee: utils.parseUnits('0.2', 18).mul(utils.bigNumberify(90)).div(utils.bigNumberify(100)),
@@ -953,7 +953,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.source._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -963,7 +963,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if (source\'s) payment fee is smaller than the minimum payment fee', () => {
+            describe('if (sender\'s) payment fee is smaller than the minimum payment fee', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
                         singleFee: utils.parseUnits('0.002', 18),
@@ -976,7 +976,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.source._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -986,10 +986,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if destination\'s current balance field differs from calculated', () => {
+            describe('if recipient\'s current balance field differs from calculated', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
-                        destination: {
+                        recipient: {
                             balances: {
                                 current: utils.bigNumberify(0)
                             }
@@ -1003,7 +1003,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.destination._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.recipient._address),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -1388,10 +1388,10 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 firstPayment = await mocks.mockPayment(glob.owner, {
                     nonce: utils.bigNumberify(10),
-                    source: {
+                    sender: {
                         _address: glob.user_a
                     },
-                    destination: {
+                    recipient: {
                         _address: glob.user_b
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
@@ -1400,18 +1400,18 @@ module.exports = (glob) => {
                 lastPayment = await mocks.mockPayment(glob.owner, {
                     nonce: utils.bigNumberify(20),
                     amount: utils.parseUnits('50', 18),
-                    source: {
+                    sender: {
                         _address: glob.user_b,
-                        nonce: firstPayment.destination.nonce.add(utils.bigNumberify(2)),
+                        nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                         balances: {
                             current: utils.parseUnits('19649.9', 18),
                             previous: utils.parseUnits('19700', 18)
                         },
                         netFee: utils.parseUnits('0.1', 18)
                     },
-                    destination: {
+                    recipient: {
                         _address: glob.user_a,
-                        nonce: firstPayment.source.nonce.add(utils.bigNumberify(1)),
+                        nonce: firstPayment.sender.nonce.add(utils.bigNumberify(1)),
                         balances: {
                             current: utils.parseUnits('9449.8', 18),
                             previous: utils.parseUnits('9399.8', 18)
@@ -1434,18 +1434,18 @@ module.exports = (glob) => {
                     lastPayment = await mocks.mockPayment(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
-                        source: {
+                        sender: {
                             _address: glob.user_b,
-                            nonce: firstPayment.destination.nonce.add(utils.bigNumberify(2)),
+                            nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19649.9', 18),
                                 previous: utils.parseUnits('19700', 18)
                             },
                             netFee: utils.parseUnits('0.1', 18)
                         },
-                        destination: {
+                        recipient: {
                             _address: glob.user_a,
-                            nonce: firstPayment.source.nonce.add(utils.bigNumberify(1)),
+                            nonce: firstPayment.sender.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9449.8', 18),
                                 previous: utils.parseUnits('9399.8', 18)
@@ -1471,18 +1471,18 @@ module.exports = (glob) => {
                     lastPayment = await mocks.mockPayment(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
-                        source: {
+                        sender: {
                             _address: glob.user_b,
-                            nonce: firstPayment.destination.nonce.add(utils.bigNumberify(2)),
+                            nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19649.9', 18),
                                 previous: utils.parseUnits('19700', 18)
                             },
                             netFee: utils.parseUnits('0.1', 18)
                         },
-                        destination: {
+                        recipient: {
                             _address: glob.user_a,
-                            nonce: firstPayment.source.nonce.add(utils.bigNumberify(2)), // <---- modified ----
+                            nonce: firstPayment.sender.nonce.add(utils.bigNumberify(2)), // <---- modified ----
                             balances: {
                                 current: utils.parseUnits('9449.8', 18),
                                 previous: utils.parseUnits('9399.8', 18)
@@ -1508,18 +1508,18 @@ module.exports = (glob) => {
                     lastPayment = await mocks.mockPayment(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
-                        source: {
+                        sender: {
                             _address: glob.user_b,
-                            nonce: firstPayment.destination.nonce.add(utils.bigNumberify(2)),
+                            nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19649.9', 18),
                                 previous: utils.parseUnits('19700', 18)
                             },
                             netFee: utils.parseUnits('0.1', 18)
                         },
-                        destination: {
+                        recipient: {
                             _address: glob.user_a,
-                            nonce: firstPayment.source.nonce.add(utils.bigNumberify(1)),
+                            nonce: firstPayment.sender.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9449.8', 18),
                                 previous: utils.parseUnits('1000', 18) // <---- modified ----
@@ -1555,18 +1555,18 @@ module.exports = (glob) => {
                     lastPayment = await mocks.mockPayment(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
-                        source: {
+                        sender: {
                             _address: glob.user_b,
-                            nonce: firstPayment.destination.nonce.add(utils.bigNumberify(2)),
+                            nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19649.9', 18),
                                 previous: utils.parseUnits('19700', 18)
                             },
                             netFee: utils.parseUnits('0.1', 18)
                         },
-                        destination: {
+                        recipient: {
                             _address: glob.user_a,
-                            nonce: firstPayment.source.nonce.add(utils.bigNumberify(1)),
+                            nonce: firstPayment.sender.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9449.8', 18),
                                 previous: utils.parseUnits('9399.8', 18)
@@ -1630,7 +1630,7 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
-                        source: {
+                        sender: {
                             _address: glob.user_b,
                             nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
                             balances: {
@@ -1639,7 +1639,7 @@ module.exports = (glob) => {
                             },
                             netFee: utils.parseUnits('0.1', 18)
                         },
-                        destination: {
+                        recipient: {
                             _address: glob.user_a,
                             nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
                             balances: {
@@ -1667,7 +1667,7 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
-                        source: {
+                        sender: {
                             _address: glob.user_b,
                             nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
                             balances: {
@@ -1676,7 +1676,7 @@ module.exports = (glob) => {
                             },
                             netFee: utils.parseUnits('0.1', 18)
                         },
-                        destination: {
+                        recipient: {
                             _address: glob.user_a,
                             nonce: trade.buyer.nonce.add(utils.bigNumberify(2)), // <---- modified ----
                             balances: {
@@ -1704,7 +1704,7 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
-                        source: {
+                        sender: {
                             _address: glob.user_b,
                             nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
                             balances: {
@@ -1713,7 +1713,7 @@ module.exports = (glob) => {
                             },
                             netFee: utils.parseUnits('0.1', 18)
                         },
-                        destination: {
+                        recipient: {
                             _address: glob.user_a,
                             nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
                             balances: {
@@ -1751,7 +1751,7 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
-                        source: {
+                        sender: {
                             _address: glob.user_b,
                             nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
                             balances: {
@@ -1760,7 +1760,7 @@ module.exports = (glob) => {
                             },
                             netFee: utils.parseUnits('0.1', 18)
                         },
-                        destination: {
+                        recipient: {
                             _address: glob.user_a,
                             nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
                             balances: {
@@ -1805,10 +1805,10 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 payment = await mocks.mockPayment(glob.owner, {
                     nonce: utils.bigNumberify(10),
-                    source: {
+                    sender: {
                         _address: glob.user_a
                     },
-                    destination: {
+                    recipient: {
                         _address: glob.user_b
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
@@ -1827,7 +1827,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         buyer: {
                             _address: glob.user_b,
-                            nonce: payment.destination.nonce.add(utils.bigNumberify(2)),
+                            nonce: payment.recipient.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
                                 amount: utils.parseUnits('50', 18),
@@ -1853,7 +1853,7 @@ module.exports = (glob) => {
                         },
                         seller: {
                             _address: glob.user_a,
-                            nonce: payment.source.nonce.add(utils.bigNumberify(1)),
+                            nonce: payment.sender.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
                                 amount: utils.parseUnits('50', 18),
@@ -1906,7 +1906,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         buyer: {
                             _address: glob.user_b,
-                            nonce: payment.destination.nonce.add(utils.bigNumberify(2)),
+                            nonce: payment.recipient.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
                                 amount: utils.parseUnits('50', 18),
@@ -1932,7 +1932,7 @@ module.exports = (glob) => {
                         },
                         seller: {
                             _address: glob.user_a,
-                            nonce: payment.source.nonce.add(utils.bigNumberify(2)), // <---- modified ----
+                            nonce: payment.sender.nonce.add(utils.bigNumberify(2)), // <---- modified ----
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
                                 amount: utils.parseUnits('50', 18),
@@ -1985,7 +1985,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         buyer: {
                             _address: glob.user_b,
-                            nonce: payment.destination.nonce.add(utils.bigNumberify(2)),
+                            nonce: payment.recipient.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
                                 amount: utils.parseUnits('50', 18),
@@ -2011,7 +2011,7 @@ module.exports = (glob) => {
                         },
                         seller: {
                             _address: glob.user_a,
-                            nonce: payment.source.nonce.add(utils.bigNumberify(1)),
+                            nonce: payment.sender.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
                                 amount: utils.parseUnits('50', 18),
@@ -2074,7 +2074,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         buyer: {
                             _address: glob.user_b,
-                            nonce: payment.destination.nonce.add(utils.bigNumberify(2)),
+                            nonce: payment.recipient.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
                                 amount: utils.parseUnits('50', 18),
@@ -2100,7 +2100,7 @@ module.exports = (glob) => {
                         },
                         seller: {
                             _address: glob.user_a,
-                            nonce: payment.source.nonce.add(utils.bigNumberify(1)),
+                            nonce: payment.sender.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
                                 amount: utils.parseUnits('50', 18),

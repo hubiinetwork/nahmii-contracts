@@ -18,7 +18,7 @@ const Wallet = ethers.Wallet;
 let provider;
 
 module.exports = (glob) => {
-    describe('Exchange', () => {
+    describe.only('Exchange', () => {
         let web3Exchange, ethersExchange;
         let web3Configuration, ethersConfiguration;
         let web3RevenueFund, ethersRevenueFund;
@@ -612,11 +612,11 @@ module.exports = (glob) => {
                         payment = await mocks.mockPayment(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.source._address, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                        await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.sender._address, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
                     });
 
                     it('should settle both payment parties', async () => {
-                        await ethersExchange.settleDealAsPayment(payment, payment.source._address, overrideOptions);
+                        await ethersExchange.settleDealAsPayment(payment, payment.sender._address, overrideOptions);
 
                         const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -636,27 +636,27 @@ module.exports = (glob) => {
                         settleDealEvents.should.have.lengthOf(1);
 
                         const transfer = await ethersClientFund.transfers(0);
-                        transfer.source.should.equal(payment.source._address);
-                        transfer.destination.should.equal(payment.destination._address);
-                        transfer.amount.eq(payment.transfers.net.sub(payment.source.netFee)).should.be.true;
+                        transfer.source.should.equal(payment.sender._address);
+                        transfer.destination.should.equal(payment.recipient._address);
+                        transfer.amount.eq(payment.transfers.net.sub(payment.sender.netFee)).should.be.true;
                         transfer.currency.should.equal(payment.currency);
 
                         const withdrawal = await ethersClientFund.withdrawals(0);
-                        withdrawal.source.should.equal(payment.source._address);
+                        withdrawal.source.should.equal(payment.sender._address);
                         withdrawal.destination.should.equal(utils.getAddress(ethersRevenueFund.address));
-                        withdrawal.amount.eq(payment.source.netFee).should.be.true;
+                        withdrawal.amount.eq(payment.sender.netFee).should.be.true;
                         withdrawal.currency.should.equal(payment.currency);
 
-                        const nSourceSettlements = await ethersExchange.walletSettlementsCount(payment.source._address);
-                        const sourceSettlement = await ethersExchange.walletSettlement(payment.source._address, nSourceSettlements - 1);
-                        sourceSettlement.nonce.eq(payment.nonce).should.be.true;
-                        sourceSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
-                        sourceSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('TwoSided'));
-                        sourceSettlement.wallets.should.have.members([payment.source._address, payment.destination._address]);
+                        const nSenderSettlements = await ethersExchange.walletSettlementsCount(payment.sender._address);
+                        const senderSettlement = await ethersExchange.walletSettlement(payment.sender._address, nSenderSettlements - 1);
+                        senderSettlement.nonce.eq(payment.nonce).should.be.true;
+                        senderSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
+                        senderSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('TwoSided'));
+                        senderSettlement.wallets.should.have.members([payment.sender._address, payment.recipient._address]);
 
-                        const nDestinationSettlements = await ethersExchange.walletSettlementsCount(payment.destination._address);
-                        const destinationSettlement = await ethersExchange.walletSettlement(payment.destination._address, nDestinationSettlements - 1);
-                        destinationSettlement.should.deep.equal(sourceSettlement);
+                        const nRecipientSettlements = await ethersExchange.walletSettlementsCount(payment.recipient._address);
+                        const recipientSettlement = await ethersExchange.walletSettlement(payment.recipient._address, nRecipientSettlements - 1);
+                        recipientSettlement.should.deep.equal(senderSettlement);
                     });
                 });
 
@@ -667,12 +667,12 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.source._address, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.sender._address, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
                             await ethersReserveFund.setMaxOutboundTransfer(payment.currency, 0, overrideOptions);
                         });
 
                         it('should settle both payment parties', async () => {
-                            await ethersExchange.settleDealAsPayment(payment, payment.source._address, overrideOptions);
+                            await ethersExchange.settleDealAsPayment(payment, payment.sender._address, overrideOptions);
 
                             const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                                 ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -692,27 +692,27 @@ module.exports = (glob) => {
                             settleDealEvents.should.have.lengthOf(1);
 
                             const transfer = await ethersClientFund.transfers(0);
-                            transfer.source.should.equal(payment.source._address);
-                            transfer.destination.should.equal(payment.destination._address);
-                            transfer.amount.eq(payment.transfers.net.sub(payment.source.netFee)).should.be.true;
+                            transfer.source.should.equal(payment.sender._address);
+                            transfer.destination.should.equal(payment.recipient._address);
+                            transfer.amount.eq(payment.transfers.net.sub(payment.sender.netFee)).should.be.true;
                             transfer.currency.should.equal(payment.currency);
 
                             const withdrawal = await ethersClientFund.withdrawals(0);
-                            withdrawal.source.should.equal(payment.source._address);
+                            withdrawal.source.should.equal(payment.sender._address);
                             withdrawal.destination.should.equal(utils.getAddress(ethersRevenueFund.address));
-                            withdrawal.amount.eq(payment.source.netFee).should.be.true;
+                            withdrawal.amount.eq(payment.sender.netFee).should.be.true;
                             withdrawal.currency.should.equal(payment.currency);
 
-                            const nSourceSettlements = await ethersExchange.walletSettlementsCount(payment.source._address);
-                            const sourceSettlement = await ethersExchange.walletSettlement(payment.source._address, nSourceSettlements - 1);
-                            sourceSettlement.nonce.eq(payment.nonce).should.be.true;
-                            sourceSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
-                            sourceSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('TwoSided'));
-                            sourceSettlement.wallets.should.have.members([payment.source._address, payment.destination._address]);
+                            const nSenderSettlements = await ethersExchange.walletSettlementsCount(payment.sender._address);
+                            const senderSettlement = await ethersExchange.walletSettlement(payment.sender._address, nSenderSettlements - 1);
+                            senderSettlement.nonce.eq(payment.nonce).should.be.true;
+                            senderSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
+                            senderSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('TwoSided'));
+                            senderSettlement.wallets.should.have.members([payment.sender._address, payment.recipient._address]);
 
-                            const nDestinationSettlements = await ethersExchange.walletSettlementsCount(payment.destination._address);
-                            const destinationSettlement = await ethersExchange.walletSettlement(payment.destination._address, nDestinationSettlements - 1);
-                            destinationSettlement.should.deep.equal(sourceSettlement);
+                            const nRecipientSettlements = await ethersExchange.walletSettlementsCount(payment.recipient._address);
+                            const recipientSettlement = await ethersExchange.walletSettlement(payment.recipient._address, nRecipientSettlements - 1);
+                            recipientSettlement.should.deep.equal(senderSettlement);
                         });
                     });
 
@@ -722,12 +722,12 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.source._address, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.sender._address, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
                             await ethersReserveFund.setMaxOutboundTransfer(payment.currency, utils.parseUnits('1000', 18), overrideOptions);
                         });
 
                         it('should settle only provided party', async () => {
-                            await ethersExchange.settleDealAsPayment(payment, payment.source._address, overrideOptions);
+                            await ethersExchange.settleDealAsPayment(payment, payment.sender._address, overrideOptions);
 
                             const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                                 ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -746,15 +746,15 @@ module.exports = (glob) => {
                             ));
                             settleDealEvents.should.have.lengthOf(1);
 
-                            const nSourceSettlements = await ethersExchange.walletSettlementsCount(payment.source._address);
-                            const sourceSettlement = await ethersExchange.walletSettlement(payment.source._address, nSourceSettlements - 1);
-                            sourceSettlement.nonce.eq(payment.nonce).should.be.true;
-                            sourceSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
-                            sourceSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('OneSided'));
-                            sourceSettlement.wallets.should.have.members([payment.source._address, '0x0000000000000000000000000000000000000000']);
+                            const nSenderSettlements = await ethersExchange.walletSettlementsCount(payment.sender._address);
+                            const senderSettlement = await ethersExchange.walletSettlement(payment.sender._address, nSenderSettlements - 1);
+                            senderSettlement.nonce.eq(payment.nonce).should.be.true;
+                            senderSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
+                            senderSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('OneSided'));
+                            senderSettlement.wallets.should.have.members([payment.sender._address, '0x0000000000000000000000000000000000000000']);
 
-                            const nDestinationSettlements = await ethersExchange.walletSettlementsCount(payment.destination._address);
-                            nDestinationSettlements.eq(utils.bigNumberify(0)).should.be.true;
+                            const nRecipientSettlements = await ethersExchange.walletSettlementsCount(payment.recipient._address);
+                            nRecipientSettlements.eq(utils.bigNumberify(0)).should.be.true;
                         });
                     });
                 });
@@ -765,12 +765,12 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.source._address, payment.nonce, mocks.challengeStatuses.indexOf('Disqualified'));
+                    ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.sender._address, payment.nonce, mocks.challengeStatuses.indexOf('Disqualified'));
                 });
 
                 it('should seize the wallet', async () => {
-                    await ethersExchange.settleDealAsPayment(payment, payment.source._address, overrideOptions);
-                    const seized = await ethersExchange.isSeizedWallet(payment.source._address);
+                    await ethersExchange.settleDealAsPayment(payment, payment.sender._address, overrideOptions);
+                    const seized = await ethersExchange.isSeizedWallet(payment.sender._address);
                     seized.should.be.true;
                 });
             });

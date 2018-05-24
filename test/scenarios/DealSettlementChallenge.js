@@ -408,8 +408,8 @@ module.exports = (glob) => {
                 });
 
                 it('should operate successfully', async () => {
-                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions);
-                    const count = await ethersDealSettlementChallengeOwner.dealSettlementChallengeFromPaymentCount(payment.source._address);
+                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
+                    const count = await ethersDealSettlementChallengeOwner.dealSettlementChallengeFromPaymentCount(payment.sender._address);
                     count.toNumber().should.equal(1);
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -422,7 +422,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions).should.be.rejected;
+                    ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -434,7 +434,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions).should.be.rejected;
+                    ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -444,18 +444,18 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDealSettlementChallengeUserA.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions).should.be.rejected;
+                    ethersDealSettlementChallengeUserA.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions).should.be.rejected;
                 });
             });
 
             describe('if called before an ongoing deal settlement challenge has expired', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner);
-                    ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions);
+                    ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
                 });
 
                 it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions).should.be.rejected;
+                    ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions).should.be.rejected;
                 });
             });
         });
@@ -495,11 +495,11 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner);
 
-                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions);
+                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
                 });
 
                 it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(payment.source._address).should.be.rejected;
+                    ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(payment.sender._address).should.be.rejected;
                 });
             });
         });
@@ -517,11 +517,11 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner);
 
-                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.source._address, overrideOptions);
+                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
                 });
 
                 it('should operate successfully', async () => {
-                    const result = await ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(payment.source._address);
+                    const result = await ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(payment.sender._address);
                     result[0].toNumber().should.equal(payment.nonce.toNumber());
                 });
             });
@@ -774,7 +774,7 @@ module.exports = (glob) => {
                     beforeEach(async () => {
                         order = await mocks.mockOrder(glob.owner, {_address: glob.user_a});
                         payment = await mocks.mockPayment(glob.owner, {
-                            source: {_address: order._address}
+                            sender: {_address: order._address}
                         });
                         await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, order._address, overrideOptions);
                     });
@@ -789,7 +789,7 @@ module.exports = (glob) => {
                         order = await mocks.mockOrder(glob.owner, {_address: glob.user_b});
                         payment = await mocks.mockPayment(glob.owner, {
                             currency: '0x0000000000000000000000000000000000000002',
-                            source: {_address: order._address}
+                            sender: {_address: order._address}
                         });
                         await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, order._address, overrideOptions);
                     });
@@ -807,7 +807,7 @@ module.exports = (glob) => {
                         });
                         payment = await mocks.mockPayment(glob.owner, {
                             currency: '0x0000000000000000000000000000000000000002',
-                            source: {
+                            sender: {
                                 _address: order._address,
                                 balances: {
                                     current: utils.bigNumberify(0)

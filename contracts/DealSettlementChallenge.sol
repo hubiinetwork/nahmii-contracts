@@ -221,7 +221,7 @@ contract DealSettlementChallenge {
     function startDealSettlementChallengeFromPayment(Types.Payment payment, address wallet)
     public
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.source._address)
+    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address)
     {
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -369,12 +369,12 @@ contract DealSettlementChallenge {
         require(0 < payment.nonce);
         require(currency == payment.currency);
 
-        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? Types.PaymentPartyRole.Source : Types.PaymentPartyRole.Destination);
+        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
-        if (Types.PaymentPartyRole.Source == paymentPartyRole)
-            return payment.source.balances.current;
-        else //Types.PaymentPartyRole.Destination == paymentPartyRole
-            return payment.destination.balances.current;
+        if (Types.PaymentPartyRole.Sender == paymentPartyRole)
+            return payment.sender.balances.current;
+        else //Types.PaymentPartyRole.Recipient == paymentPartyRole
+            return payment.recipient.balances.current;
     }
 
     function isOwner() private view returns (bool) {

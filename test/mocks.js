@@ -141,16 +141,16 @@ exports.mockTrade = async (exchange, params) => {
 };
 
 exports.mockPayment = async (exchange, params) => {
-    const sourceWallet = Wallet.createRandom();
-    const destinationWallet = Wallet.createRandom();
+    const senderWallet = Wallet.createRandom();
+    const recipientWallet = Wallet.createRandom();
 
     const payment = exports.mergeDeep({
         nonce: utils.bigNumberify(1),
         immediateSettlement: true,
         amount: utils.parseUnits('100', 18),
         currency: '0x0000000000000000000000000000000000000001',
-        source: {
-            _address: sourceWallet.address,
+        sender: {
+            _address: senderWallet.address,
             nonce: utils.bigNumberify(1),
             balances: {
                 current: utils.parseUnits('9399.8', 18),
@@ -158,8 +158,8 @@ exports.mockPayment = async (exchange, params) => {
             },
             netFee: utils.parseUnits('0.2', 18)
         },
-        destination: {
-            _address: destinationWallet.address,
+        recipient: {
+            _address: recipientWallet.address,
             nonce: utils.bigNumberify(1),
             balances: {
                 current: utils.parseUnits('19700', 18),
@@ -178,23 +178,23 @@ exports.mockPayment = async (exchange, params) => {
     const exchangeSigner = exports.createWeb3Signer(exchange);
 
     const partySigner = (
-        payment.source._address === sourceWallet.address ?
-            exports.createEthutilSigner(sourceWallet) :
-            exports.createWeb3Signer(payment.source._address)
+        payment.sender._address === senderWallet.address ?
+            exports.createEthutilSigner(senderWallet) :
+            exports.createWeb3Signer(payment.sender._address)
     );
 
     return await exports.augmentPaymentSeals(payment, exchangeSigner, partySigner);
 };
 
-exports.mergeDeep = (target, source) => {
-    if (isObject(target) && isObject(source)) {
-        Object.keys(source).forEach(key => {
-            if (isObject(source[key])) {
+exports.mergeDeep = (target, sender) => {
+    if (isObject(target) && isObject(sender)) {
+        Object.keys(sender).forEach(key => {
+            if (isObject(sender[key])) {
                 if (!target[key])
                     Object.assign(target, {[key]: {}});
-                exports.mergeDeep(target[key], source[key]);
+                exports.mergeDeep(target[key], sender[key]);
             } else {
-                Object.assign(target, {[key]: source[key]});
+                Object.assign(target, {[key]: sender[key]});
             }
         });
     }

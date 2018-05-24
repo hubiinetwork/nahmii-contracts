@@ -124,22 +124,22 @@ contract FraudulentDealChallenge {
         // Genuineness that does not related to buyer or seller
         bool genuineSeals = isGenuinePaymentSeals(payment);
 
-        // Genuineness affected by source
-        bool genuineBySource = isGenuineByPaymentSource(payment) && isGenuinePaymentFee(payment);
+        // Genuineness affected by sender
+        bool genuineBySender = isGenuineByPaymentSender(payment) && isGenuinePaymentFee(payment);
 
-        // Genuineness affected by destination
-        bool genuineByDestination = isGenuineByPaymentDestination(payment);
+        // Genuineness affected by recipient
+        bool genuineByRecipient = isGenuineByPaymentRecipient(payment);
 
-        require(!genuineSeals || !genuineBySource || !genuineByDestination);
+        require(!genuineSeals || !genuineBySender || !genuineByRecipient);
 
         configuration.setOperationalModeExit();
         fraudulentPayment = payment;
 
         address seizedWallet;
-        if (!genuineBySource)
-            seizedWallet = payment.source._address;
-        if (!genuineByDestination)
-            seizedWallet = payment.destination._address;
+        if (!genuineBySender)
+            seizedWallet = payment.sender._address;
+        if (!genuineByRecipient)
+            seizedWallet = payment.recipient._address;
         if (address(0) != seizedWallet) {
             //            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
             addToSeizedWallets(seizedWallet);
@@ -200,8 +200,8 @@ contract FraudulentDealChallenge {
     public
     challengeableBySuccessionPaymentsPair(firstPayment, lastPayment, wallet)
     {
-        Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.source._address ? Types.PaymentPartyRole.Source : Types.PaymentPartyRole.Destination);
-        Types.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.source._address ? Types.PaymentPartyRole.Source : Types.PaymentPartyRole.Destination);
+        Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+        Types.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
         require(isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
@@ -236,7 +236,7 @@ contract FraudulentDealChallenge {
     challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
-        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? Types.PaymentPartyRole.Source : Types.PaymentPartyRole.Destination);
+        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
         require(isSuccessiveTradePaymentPartyNonces(trade, tradePartyRole, payment, paymentPartyRole));
 
@@ -272,7 +272,7 @@ contract FraudulentDealChallenge {
     public
     challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
-        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? Types.PaymentPartyRole.Source : Types.PaymentPartyRole.Destination);
+        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
         require(isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
@@ -420,7 +420,7 @@ contract FraudulentDealChallenge {
     function isGenuinePaymentSeals(Types.Payment payment) private view returns (bool) {
         return (Types.hashPaymentAsParty(payment) == payment.seals.party.hash)
         && (Types.hashPaymentAsExchange(payment) == payment.seals.exchange.hash)
-        && (Types.isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.source._address))
+        && (Types.isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address))
         && (Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
     }
 
@@ -437,14 +437,14 @@ contract FraudulentDealChallenge {
         && (payment.singleFee >= payment.amount.mul(configuration.getPaymentMinimumFee(payment.blockNumber)).div(feePartsPer));
     }
 
-    function isGenuineByPaymentSource(Types.Payment payment) private pure returns (bool) {
-        return (payment.source._address != payment.destination._address)
-        && (payment.source.balances.current == payment.source.balances.previous.sub(payment.transfers.single).sub(payment.singleFee));
+    function isGenuineByPaymentSender(Types.Payment payment) private pure returns (bool) {
+        return (payment.sender._address != payment.recipient._address)
+        && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.singleFee));
     }
 
-    function isGenuineByPaymentDestination(Types.Payment payment) private pure returns (bool) {
-        return (payment.source._address != payment.destination._address)
-        && (payment.destination.balances.current == payment.destination.balances.previous.add(payment.transfers.single));
+    function isGenuineByPaymentRecipient(Types.Payment payment) private pure returns (bool) {
+        return (payment.sender._address != payment.recipient._address)
+        && (payment.recipient.balances.current == payment.recipient.balances.previous.add(payment.transfers.single));
     }
 
     function isSuccessiveTradesPartyNonces(
@@ -470,8 +470,8 @@ contract FraudulentDealChallenge {
     private
     pure returns (bool)
     {
-        uint256 firstNonce = (Types.PaymentPartyRole.Source == firstPaymentPartyRole ? firstPayment.source.nonce : firstPayment.destination.nonce);
-        uint256 lastNonce = (Types.PaymentPartyRole.Source == lastPaymentPartyRole ? lastPayment.source.nonce : lastPayment.destination.nonce);
+        uint256 firstNonce = (Types.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.nonce : firstPayment.recipient.nonce);
+        uint256 lastNonce = (Types.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.nonce : lastPayment.recipient.nonce);
         return lastNonce == firstNonce.add(1);
     }
 
@@ -485,7 +485,7 @@ contract FraudulentDealChallenge {
     pure returns (bool)
     {
         uint256 firstNonce = (Types.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
-        uint256 lastNonce = (Types.PaymentPartyRole.Source == paymentPartyRole ? payment.source.nonce : payment.destination.nonce);
+        uint256 lastNonce = (Types.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
         return lastNonce == firstNonce.add(1);
     }
 
@@ -498,7 +498,7 @@ contract FraudulentDealChallenge {
     private
     pure returns (bool)
     {
-        uint256 firstNonce = (Types.PaymentPartyRole.Source == paymentPartyRole ? payment.source.nonce : payment.destination.nonce);
+        uint256 firstNonce = (Types.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
         uint256 lastNonce = (Types.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
         return lastNonce == firstNonce.add(1);
     }
@@ -534,8 +534,8 @@ contract FraudulentDealChallenge {
     pure
     returns (bool)
     {
-        Types.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (Types.PaymentPartyRole.Source == firstPaymentPartyRole ? firstPayment.source.balances : firstPayment.destination.balances);
-        Types.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (Types.PaymentPartyRole.Source == lastPaymentPartyRole ? lastPayment.source.balances : lastPayment.destination.balances);
+        Types.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (Types.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.balances : firstPayment.recipient.balances);
+        Types.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (Types.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances : lastPayment.recipient.balances);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
@@ -554,7 +554,7 @@ contract FraudulentDealChallenge {
         Types.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (Types.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
         Types.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (Types.CurrencyRole.Intended == currencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
-        Types.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (Types.PaymentPartyRole.Source == paymentPartyRole ? payment.source.balances : payment.destination.balances);
+        Types.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (Types.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
@@ -570,7 +570,7 @@ contract FraudulentDealChallenge {
     pure
     returns (bool)
     {
-        Types.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (Types.PaymentPartyRole.Source == paymentPartyRole ? payment.source.balances : payment.destination.balances);
+        Types.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (Types.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
         Types.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (Types.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
         Types.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (Types.CurrencyRole.Intended == currencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
@@ -631,11 +631,11 @@ contract FraudulentDealChallenge {
     pure
     returns (bool)
     {
-        int256 firstNetFee = (Types.PaymentPartyRole.Source == firstPaymentPartyRole ? firstPayment.source.netFee : firstPayment.destination.netFee);
+        int256 firstNetFee = (Types.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.netFee : firstPayment.recipient.netFee);
 
-        int256 lastNetFee = (Types.PaymentPartyRole.Source == lastPaymentPartyRole ? lastPayment.source.netFee : lastPayment.destination.netFee);
+        int256 lastNetFee = (Types.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.netFee : lastPayment.recipient.netFee);
 
-        int256 lastSingleFee = (Types.PaymentPartyRole.Source == lastPaymentPartyRole ? lastPayment.singleFee : 0);
+        int256 lastSingleFee = (Types.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.singleFee : 0);
 
         return lastNetFee == firstNetFee.add(lastSingleFee);
     }
@@ -654,9 +654,9 @@ contract FraudulentDealChallenge {
         Types.IntendedConjugateInt256 memory firstIntendedConjugateNetFees = (Types.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.netFees : trade.seller.netFees);
         int256 firstNetFee = (Types.CurrencyRole.Intended == currencyRole ? firstIntendedConjugateNetFees.intended : firstIntendedConjugateNetFees.conjugate);
 
-        int256 lastNetFee = (Types.PaymentPartyRole.Source == paymentPartyRole ? payment.source.netFee : payment.destination.netFee);
+        int256 lastNetFee = (Types.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.netFee : payment.recipient.netFee);
 
-        int256 lastSingleFee = (Types.PaymentPartyRole.Source == paymentPartyRole ? payment.singleFee : 0);
+        int256 lastSingleFee = (Types.PaymentPartyRole.Sender == paymentPartyRole ? payment.singleFee : 0);
 
         return lastNetFee == firstNetFee.add(lastSingleFee);
     }
@@ -672,7 +672,7 @@ contract FraudulentDealChallenge {
     pure
     returns (bool)
     {
-        int256 firstNetFee = (Types.PaymentPartyRole.Source == paymentPartyRole ? payment.source.netFee : payment.destination.netFee);
+        int256 firstNetFee = (Types.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.netFee : payment.recipient.netFee);
 
         Types.IntendedConjugateInt256 memory firstIntendedConjugateNetFees = (Types.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.netFees : trade.seller.netFees);
         int256 lastNetFee = (Types.CurrencyRole.Intended == currencyRole ? firstIntendedConjugateNetFees.intended : firstIntendedConjugateNetFees.conjugate);
@@ -691,7 +691,7 @@ contract FraudulentDealChallenge {
     }
 
     function isPaymentParty(Types.Payment payment, address wallet) private pure returns (bool) {
-        return wallet == payment.source._address || wallet == payment.destination._address;
+        return wallet == payment.sender._address || wallet == payment.recipient._address;
     }
 
     function addToSeizedWallets(address _address) private {
@@ -759,13 +759,13 @@ contract FraudulentDealChallenge {
         require(isPaymentParty(firstPayment, wallet));
         require(Types.hashPaymentAsParty(firstPayment) == firstPayment.seals.party.hash);
         require(Types.hashPaymentAsExchange(firstPayment) == firstPayment.seals.exchange.hash);
-        require(Types.isGenuineSignature(firstPayment.seals.party.hash, firstPayment.seals.party.signature, firstPayment.source._address));
+        require(Types.isGenuineSignature(firstPayment.seals.party.hash, firstPayment.seals.party.signature, firstPayment.sender._address));
         require(Types.isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
 
         require(isPaymentParty(lastPayment, wallet));
         require(Types.hashPaymentAsParty(lastPayment) == lastPayment.seals.party.hash);
         require(Types.hashPaymentAsExchange(lastPayment) == lastPayment.seals.exchange.hash);
-        require(Types.isGenuineSignature(lastPayment.seals.party.hash, lastPayment.seals.party.signature, lastPayment.source._address));
+        require(Types.isGenuineSignature(lastPayment.seals.party.hash, lastPayment.seals.party.signature, lastPayment.sender._address));
         require(Types.isGenuineSignature(lastPayment.seals.exchange.hash, lastPayment.seals.exchange.signature, owner));
 
         _;
@@ -782,7 +782,7 @@ contract FraudulentDealChallenge {
         require(isPaymentParty(payment, wallet));
         require(Types.hashPaymentAsParty(payment) == payment.seals.party.hash);
         require(Types.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
-        require(Types.isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.source._address));
+        require(Types.isGenuineSignature(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address));
         require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
 
         _;

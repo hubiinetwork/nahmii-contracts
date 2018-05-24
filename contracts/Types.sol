@@ -16,7 +16,7 @@ library Types {
     enum Sidedness {OneSided, TwoSided}
     enum TradePartyRole {Buyer, Seller}
     enum Intention {Buy, Sell}
-    enum PaymentPartyRole {Source, Destination}
+    enum PaymentPartyRole {Sender, Recipient}
     enum ChallengePhase {Dispute, Closed}
     enum ChallengeStatus {Unknown, Qualified, Disqualified}
 
@@ -125,10 +125,10 @@ library Types {
 
         address currency;
 
-        PaymentParty source;
-        PaymentParty destination;
+        PaymentParty sender;
+        PaymentParty recipient;
 
-        // Positive transfer is always in direction from source to destination
+        // Positive transfer is always in direction from sender to recipient
         SingleNetInt256 transfers;
 
         int256 singleFee;
@@ -196,7 +196,7 @@ library Types {
     }
 
     function isPaymentParty(Types.Payment payment, address wallet) internal pure returns (bool) {
-        return wallet == payment.source._address || wallet == payment.destination._address;
+        return wallet == payment.sender._address || wallet == payment.recipient._address;
     }
 
     function isGenuineSignature(bytes32 hash, Types.Signature signature, address signer) internal pure returns (bool) {

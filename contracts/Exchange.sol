@@ -154,7 +154,7 @@ contract Exchange {
     function settleDealAsPayment(Types.Payment payment, address wallet)
     public
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.source._address)
+    signedBy(payment.seals.party.hash, payment.seals.party.signature, payment.sender._address)
     {
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -167,11 +167,11 @@ contract Exchange {
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (payment.nonce < maxKnownDealNonce)) {
 
-                Types.PaymentPartyRole paymentPartyRole = (wallet == payment.source._address ? Types.PaymentPartyRole.Source : Types.PaymentPartyRole.Destination);
+                Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
                 int256 partyInboundTransfer;
-                if ((0 < payment.transfers.net && Types.PaymentPartyRole.Source == paymentPartyRole)
-                    || (0 > payment.transfers.net && Types.PaymentPartyRole.Destination == paymentPartyRole))
+                if ((0 < payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
+                    || (0 > payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole))
                     partyInboundTransfer = payment.transfers.net.abs();
 
                 if (false == payment.immediateSettlement &&
@@ -341,19 +341,19 @@ contract Exchange {
     }
 
     function settlePaymentTransfers(Types.Payment payment) private {
-        if (0 < payment.transfers.net.sub(payment.source.netFee)) {// Transfer from source to destination
+        if (0 < payment.transfers.net.sub(payment.sender.netFee)) {// Transfer from sender to recipient
             clientFund.transferFromDepositedToSettledBalance(
-                payment.source._address,
-                payment.destination._address,
-                payment.transfers.net.sub(payment.source.netFee),
+                payment.sender._address,
+                payment.recipient._address,
+                payment.transfers.net.sub(payment.sender.netFee),
                 payment.currency
             );
 
-        } else if (0 > payment.transfers.net.add(payment.destination.netFee)) {// Transfer from destination to source
+        } else if (0 > payment.transfers.net.add(payment.recipient.netFee)) {// Transfer from recipient to sender
             clientFund.transferFromDepositedToSettledBalance(
-                payment.destination._address,
-                payment.source._address,
-                payment.transfers.net.add(payment.destination.netFee).abs(),
+                payment.recipient._address,
+                payment.sender._address,
+                payment.transfers.net.add(payment.recipient.netFee).abs(),
                 payment.currency
             );
         }
@@ -383,10 +383,10 @@ contract Exchange {
 
     function addTwoSidedSettlementFromPayment(Types.Payment payment) private {
         settlements.push(
-            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.source._address, payment.destination._address])
+            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.sender._address, payment.recipient._address])
         );
-        walletSettlementIndexMap[payment.source._address].push(settlements.length - 1);
-        walletSettlementIndexMap[payment.destination._address].push(settlements.length - 1);
+        walletSettlementIndexMap[payment.sender._address].push(settlements.length - 1);
+        walletSettlementIndexMap[payment.recipient._address].push(settlements.length - 1);
     }
 
     function settleTradeFees(Types.Trade trade) private {
@@ -436,26 +436,26 @@ contract Exchange {
     }
 
     function settlePaymentFees(Types.Payment payment) private {
-        if (0 < payment.source.netFee) {
+        if (0 < payment.sender.netFee) {
             clientFund.withdrawFromDepositedBalance(
-                payment.source._address,
+                payment.sender._address,
                 paymentsRevenueFund,
-                payment.source.netFee,
+                payment.sender.netFee,
                 payment.currency
             );
             if (address(0) != payment.currency)
-                paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.source.netFee);
+                paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.sender.netFee);
         }
 
-        if (0 < payment.destination.netFee) {
+        if (0 < payment.recipient.netFee) {
             clientFund.withdrawFromDepositedBalance(
-                payment.destination._address,
+                payment.recipient._address,
                 paymentsRevenueFund,
-                payment.destination.netFee,
+                payment.recipient.netFee,
                 payment.currency
             );
             if (address(0) != payment.currency)
-                paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.destination.netFee);
+                paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.recipient.netFee);
         }
     }
 
