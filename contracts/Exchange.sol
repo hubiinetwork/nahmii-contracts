@@ -50,8 +50,10 @@ contract Exchange {
 
     Configuration public configuration;
     ClientFund public clientFund;
-    ReserveFund public reserveFund;
-    RevenueFund public revenueFund;
+    ReserveFund public tradesReserveFund;
+    ReserveFund public paymentsReserveFund;
+    RevenueFund public tradesRevenueFund;
+    RevenueFund public paymentsRevenueFund;
     CommunityVote public communityVote;
     DealSettlementChallenge public dealSettlementChallenge;
 
@@ -66,8 +68,10 @@ contract Exchange {
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
     event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
-    event ChangeReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
-    event ChangeRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
+    event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
+    event ChangePaymentsReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
+    event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
+    event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
     event ChangeDealSettlementChallengeEvent(DealSettlementChallenge oldDealSettlementChallenge, DealSettlementChallenge newDealSettlementChallenge);
 
@@ -123,10 +127,10 @@ contract Exchange {
                     partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
 
                 if (false == trade.immediateSettlement &&
-                reserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended) && // TODO Replace arguments by ReserveFund.TransferInfo
-                reserveFund.outboundTransferSupported(trade.currencies.conjugate, partyInboundTransferConjugate)) {// TODO Replace arguments by ReserveFund.TransferInfo
+                tradesReserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended) && // TODO Replace arguments by ReserveFund.TransferInfo
+                tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, partyInboundTransferConjugate)) {// TODO Replace arguments by ReserveFund.TransferInfo
                     // TODO Uncomment and replace last 4 arguments by 2 instances of ReserveFund.TransferInfo
-                    // reserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
+                    // tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
                     addOneSidedSettlementFromTrade(trade, wallet);
                 } else {
                     settleTradeTransfers(trade);
@@ -171,9 +175,9 @@ contract Exchange {
                     partyInboundTransfer = payment.transfers.net.abs();
 
                 if (false == payment.immediateSettlement &&
-                reserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)) {// TODO Replace arguments by ReserveFund.TransferInfo
+                paymentsReserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)) {// TODO Replace arguments by ReserveFund.TransferInfo
                     // TODO Uncomment and replace last 2 arguments by 1 instance of ReserveFund.TransferInfo
-                    // reserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
+                    // paymentsReserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
                     addOneSidedSettlementFromPayment(payment, wallet);
                 } else {
                     settlePaymentTransfers(payment);
@@ -209,23 +213,43 @@ contract Exchange {
         }
     }
 
-    /// @notice Change the reserve fund contract
-    /// @param newReserveFund The (address of) ReserveFund contract instance
-    function changeReserveFund(ReserveFund newReserveFund) public onlyOwner {
-        if (newReserveFund != reserveFund) {
-            ReserveFund oldReserveFund = reserveFund;
-            reserveFund = newReserveFund;
-            emit ChangeReserveFundEvent(oldReserveFund, reserveFund);
+    /// @notice Change the trades reserve fund contract
+    /// @param newTradesReserveFund The (address of) trades ReserveFund contract instance
+    function changeTradesReserveFund(ReserveFund newTradesReserveFund) public onlyOwner {
+        if (newTradesReserveFund != tradesReserveFund) {
+            ReserveFund oldTradesReserveFund = tradesReserveFund;
+            tradesReserveFund = newTradesReserveFund;
+            emit ChangeTradesReserveFundEvent(oldTradesReserveFund, tradesReserveFund);
         }
     }
 
-    /// @notice Change the revenue fund contract
-    /// @param newRevenueFund The (address of) RevenueFund contract instance
-    function changeRevenueFund(RevenueFund newRevenueFund) public onlyOwner {
-        if (newRevenueFund != revenueFund) {
-            RevenueFund oldRevenueFund = revenueFund;
-            revenueFund = newRevenueFund;
-            emit ChangeRevenueFundEvent(oldRevenueFund, revenueFund);
+    /// @notice Change the payments reserve fund contract
+    /// @param newPaymentsReserveFund The (address of) payments ReserveFund contract instance
+    function changePaymentsReserveFund(ReserveFund newPaymentsReserveFund) public onlyOwner {
+        if (newPaymentsReserveFund != paymentsReserveFund) {
+            ReserveFund oldPaymentsReserveFund = paymentsReserveFund;
+            paymentsReserveFund = newPaymentsReserveFund;
+            emit ChangePaymentsReserveFundEvent(oldPaymentsReserveFund, paymentsReserveFund);
+        }
+    }
+
+    /// @notice Change the trades revenue fund contract
+    /// @param newTradesRevenueFund The (address of) trades RevenueFund contract instance
+    function changeTradesRevenueFund(RevenueFund newTradesRevenueFund) public onlyOwner {
+        if (newTradesRevenueFund != tradesRevenueFund) {
+            RevenueFund oldTradesRevenueFund = tradesRevenueFund;
+            tradesRevenueFund = newTradesRevenueFund;
+            emit ChangeTradesRevenueFundEvent(oldTradesRevenueFund, tradesRevenueFund);
+        }
+    }
+
+    /// @notice Change the payments revenue fund contract
+    /// @param newPaymentsRevenueFund The (address of) payments RevenueFund contract instance
+    function changePaymentsRevenueFund(RevenueFund newPaymentsRevenueFund) public onlyOwner {
+        if (newPaymentsRevenueFund != paymentsRevenueFund) {
+            RevenueFund oldPaymentsRevenueFund = paymentsRevenueFund;
+            paymentsRevenueFund = newPaymentsRevenueFund;
+            emit ChangePaymentsRevenueFundEvent(oldPaymentsRevenueFund, paymentsRevenueFund);
         }
     }
 
@@ -369,45 +393,45 @@ contract Exchange {
         if (0 < trade.buyer.netFees.intended) {
             clientFund.withdrawFromDepositedBalance(
                 trade.buyer._address,
-                revenueFund,
+                tradesRevenueFund,
                 trade.buyer.netFees.intended,
                 trade.currencies.intended
             );
             if (address(0) != trade.currencies.intended)
-                revenueFund.recordDepositTokens(ERC20(trade.currencies.intended), trade.buyer.netFees.intended);
+                tradesRevenueFund.recordDepositTokens(ERC20(trade.currencies.intended), trade.buyer.netFees.intended);
         }
 
         if (0 < trade.buyer.netFees.conjugate) {
             clientFund.withdrawFromDepositedBalance(
                 trade.buyer._address,
-                revenueFund,
+                tradesRevenueFund,
                 trade.buyer.netFees.conjugate,
                 trade.currencies.conjugate
             );
             if (address(0) != trade.currencies.conjugate)
-                revenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.buyer.netFees.conjugate);
+                tradesRevenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.buyer.netFees.conjugate);
         }
 
         if (0 < trade.seller.netFees.intended) {
             clientFund.withdrawFromDepositedBalance(
                 trade.seller._address,
-                revenueFund,
+                tradesRevenueFund,
                 trade.seller.netFees.intended,
                 trade.currencies.intended
             );
             if (address(0) != trade.currencies.intended)
-                revenueFund.recordDepositTokens(ERC20(trade.currencies.intended), trade.seller.netFees.intended);
+                tradesRevenueFund.recordDepositTokens(ERC20(trade.currencies.intended), trade.seller.netFees.intended);
         }
 
         if (0 < trade.seller.netFees.conjugate) {
             clientFund.withdrawFromDepositedBalance(
                 trade.seller._address,
-                revenueFund,
+                tradesRevenueFund,
                 trade.seller.netFees.conjugate,
                 trade.currencies.conjugate
             );
             if (address(0) != trade.currencies.conjugate)
-                revenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.seller.netFees.conjugate);
+                tradesRevenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.seller.netFees.conjugate);
         }
     }
 
@@ -415,23 +439,23 @@ contract Exchange {
         if (0 < payment.source.netFee) {
             clientFund.withdrawFromDepositedBalance(
                 payment.source._address,
-                revenueFund,
+                paymentsRevenueFund,
                 payment.source.netFee,
                 payment.currency
             );
             if (address(0) != payment.currency)
-                revenueFund.recordDepositTokens(ERC20(payment.currency), payment.source.netFee);
+                paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.source.netFee);
         }
 
         if (0 < payment.destination.netFee) {
             clientFund.withdrawFromDepositedBalance(
                 payment.destination._address,
-                revenueFund,
+                paymentsRevenueFund,
                 payment.destination.netFee,
                 payment.currency
             );
             if (address(0) != payment.currency)
-                revenueFund.recordDepositTokens(ERC20(payment.currency), payment.destination.netFee);
+                paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.destination.netFee);
         }
     }
 

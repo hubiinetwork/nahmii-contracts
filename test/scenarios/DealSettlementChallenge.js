@@ -13,7 +13,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe.only('DealSettlementChallenge', () => {
+    describe('DealSettlementChallenge', () => {
         let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
         let web3Configuration, ethersConfiguration;
         let provider;

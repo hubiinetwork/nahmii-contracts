@@ -18,7 +18,7 @@ const Wallet = ethers.Wallet;
 let provider;
 
 module.exports = (glob) => {
-    describe.only('Exchange', () => {
+    describe('Exchange', () => {
         let web3Exchange, ethersExchange;
         let web3Configuration, ethersConfiguration;
         let web3RevenueFund, ethersRevenueFund;
@@ -48,9 +48,11 @@ module.exports = (glob) => {
 
             await ethersExchange.changeConfiguration(web3Configuration.address);
             await ethersExchange.changeCommunityVote(web3CommunityVote.address);
-            await ethersExchange.changeRevenueFund(web3RevenueFund.address);
+            await ethersExchange.changeTradesRevenueFund(web3RevenueFund.address);
+            await ethersExchange.changePaymentsRevenueFund(web3RevenueFund.address);
             await ethersExchange.changeClientFund(web3ClientFund.address);
-            await ethersExchange.changeReserveFund(web3ReserveFund.address);
+            await ethersExchange.changeTradesReserveFund(web3ReserveFund.address);
+            await ethersExchange.changePaymentsReserveFund(web3ReserveFund.address);
             await ethersExchange.changeDealSettlementChallenge(web3DealSettlementChallenge.address);
         });
 
@@ -164,7 +166,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeReserveFund()', () => {
+        describe('changeTradesReserveFund()', () => {
             let address;
 
             before(() => {
@@ -172,33 +174,33 @@ module.exports = (glob) => {
             });
 
             describe('if called with owner as sender', () => {
-                let reserveFund;
+                let tradesReserveFund;
 
                 beforeEach(async () => {
-                    reserveFund = await web3Exchange.reserveFund.call();
+                    tradesReserveFund = await web3Exchange.tradesReserveFund.call();
                 });
 
                 afterEach(async () => {
-                    await web3Exchange.changeReserveFund(reserveFund);
+                    await web3Exchange.changeTradesReserveFund(tradesReserveFund);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3Exchange.changeReserveFund(address);
+                    const result = await web3Exchange.changeTradesReserveFund(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeReserveFundEvent');
-                    const reserveFund = await web3Exchange.reserveFund();
+                    result.logs[0].event.should.equal('ChangeTradesReserveFundEvent');
+                    const reserveFund = await web3Exchange.tradesReserveFund();
                     utils.getAddress(reserveFund).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Exchange.changeReserveFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3Exchange.changeTradesReserveFund(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('changeRevenueFund()', () => {
+        describe('changePaymentsReserveFund()', () => {
             let address;
 
             before(() => {
@@ -206,28 +208,96 @@ module.exports = (glob) => {
             });
 
             describe('if called with owner as sender', () => {
-                let revenueFund;
+                let paymentsReserveFund;
 
                 beforeEach(async () => {
-                    revenueFund = await web3Exchange.revenueFund.call();
+                    paymentsReserveFund = await web3Exchange.paymentsReserveFund.call();
                 });
 
                 afterEach(async () => {
-                    await web3Exchange.changeRevenueFund(revenueFund);
+                    await web3Exchange.changePaymentsReserveFund(paymentsReserveFund);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3Exchange.changeRevenueFund(address);
+                    const result = await web3Exchange.changePaymentsReserveFund(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeRevenueFundEvent');
-                    const revenueFund = await web3Exchange.revenueFund();
+                    result.logs[0].event.should.equal('ChangePaymentsReserveFundEvent');
+                    const reserveFund = await web3Exchange.paymentsReserveFund();
+                    utils.getAddress(reserveFund).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Exchange.changePaymentsReserveFund(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('changeTradesRevenueFund()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let tradesRevenueFund;
+
+                beforeEach(async () => {
+                    tradesRevenueFund = await web3Exchange.tradesRevenueFund.call();
+                });
+
+                afterEach(async () => {
+                    await web3Exchange.changeTradesRevenueFund(tradesRevenueFund);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Exchange.changeTradesRevenueFund(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeTradesRevenueFundEvent');
+                    const revenueFund = await web3Exchange.tradesRevenueFund();
                     utils.getAddress(revenueFund).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Exchange.changeRevenueFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3Exchange.changeTradesRevenueFund(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('changePaymentsRevenueFund()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let paymentsRevenueFund;
+
+                beforeEach(async () => {
+                    paymentsRevenueFund = await web3Exchange.paymentsRevenueFund.call();
+                });
+
+                afterEach(async () => {
+                    await web3Exchange.changePaymentsRevenueFund(paymentsRevenueFund);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Exchange.changePaymentsRevenueFund(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangePaymentsRevenueFundEvent');
+                    const revenueFund = await web3Exchange.paymentsRevenueFund();
+                    utils.getAddress(revenueFund).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Exchange.changePaymentsRevenueFund(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
