@@ -26,7 +26,6 @@ var UnitTestHelpers = artifacts.require("UnitTestHelpers");
 //augmented sendTransaction using promises
 Helpers.augmentWeb3(web3);
 
-
 contract('Smart contract checks', function () {
     var glob = {
         owner: web3.eth.coinbase,

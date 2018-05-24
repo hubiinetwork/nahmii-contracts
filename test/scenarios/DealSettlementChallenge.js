@@ -13,9 +13,9 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe('DealSettlementChallenge', () => {
-        let truffleDealSettlementChallenge, ethersDealSettlementChallengeOwner;
-        let truffleConfiguration, ethersConfiguration;
+    describe.only('DealSettlementChallenge', () => {
+        let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
+        let web3Configuration, ethersConfiguration;
         let provider;
         let ethersDealSettlementChallengeUserA, ethersDealSettlementChallengeUserB,
             ethersDealSettlementChallengeUserC, ethersDealSettlementChallengeUserD,
@@ -23,9 +23,9 @@ module.exports = (glob) => {
         let blockNumber0, blockNumber10, blockNumber20;
 
         before(async () => {
-            truffleDealSettlementChallenge = glob.web3DealSettlementChallenge;
+            web3DealSettlementChallenge = glob.web3DealSettlementChallenge;
             ethersDealSettlementChallengeOwner = glob.ethersIoDealSettlementChallenge;
-            truffleConfiguration = glob.web3Configuration;
+            web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
 
             ethersDealSettlementChallengeUserA = ethersDealSettlementChallengeOwner.connect(glob.signer_a);
@@ -51,7 +51,7 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await truffleDealSettlementChallenge.owner.call();
+                const owner = await web3DealSettlementChallenge.owner.call();
                 owner.should.equal(glob.owner);
             });
         });
@@ -59,21 +59,21 @@ module.exports = (glob) => {
         describe('changeOwner()', () => {
             describe('if called with (current) owner as sender', () => {
                 afterEach(async () => {
-                    await truffleDealSettlementChallenge.changeOwner(glob.owner, {from: glob.user_a});
+                    await web3DealSettlementChallenge.changeOwner(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await truffleDealSettlementChallenge.changeOwner(glob.user_a);
+                    const result = await web3DealSettlementChallenge.changeOwner(glob.user_a);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('OwnerChangedEvent');
-                    const owner = await truffleDealSettlementChallenge.owner.call();
+                    const owner = await web3DealSettlementChallenge.owner.call();
                     owner.should.equal(glob.user_a);
                 });
             });
 
             describe('if called with sender that is not (current) owner', () => {
                 it('should revert', async () => {
-                    truffleDealSettlementChallenge.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3DealSettlementChallenge.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -835,30 +835,35 @@ module.exports = (glob) => {
         });
 
         describe('changeConfiguration()', () => {
+            let address;
+
+            before(()=> {
+                address = Wallet.createRandom().address;
+            });
+
             describe('if called with owner as sender', () => {
                 let configuration;
 
                 beforeEach(async () => {
-                    configuration = await truffleDealSettlementChallenge.configuration.call();
+                    configuration = await web3DealSettlementChallenge.configuration.call();
                 });
 
                 afterEach(async () => {
-                    await truffleDealSettlementChallenge.changeConfiguration(configuration);
+                    await web3DealSettlementChallenge.changeConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const address = Wallet.createRandom().address;
-                    const result = await truffleDealSettlementChallenge.changeConfiguration(address);
+                    const result = await web3DealSettlementChallenge.changeConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeConfigurationEvent');
-                    const configuration = await truffleDealSettlementChallenge.configuration();
+                    const configuration = await web3DealSettlementChallenge.configuration();
                     utils.getAddress(configuration).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    truffleDealSettlementChallenge.changeConfiguration(Wallet.createRandom().address, {from: glob.user_a}).should.be.rejected;
+                    web3DealSettlementChallenge.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

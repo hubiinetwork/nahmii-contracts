@@ -18,7 +18,7 @@ library Types {
     enum Intention {Buy, Sell}
     enum PaymentPartyRole {Source, Destination}
     enum ChallengePhase {Dispute, Closed}
-    enum ChallengeStatus {Qualified, Disqualified}
+    enum ChallengeStatus {Unknown, Qualified, Disqualified}
 
     //
     // Structures

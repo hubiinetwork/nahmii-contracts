@@ -20,6 +20,9 @@ contract ReserveFund {
     // -----------------------------------------------------------------------------------------------------------------
     address private owner;
 
+    // TODO Remove
+    mapping(address => int256) public currencyAmountMap;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -46,6 +49,16 @@ contract ReserveFund {
             // Emit event
             emit OwnerChangedEvent(oldOwner, newOwner);
         }
+    }
+
+    // TODO Remove
+    function setMaxOutboundTransfer(address currency, int256 amount) public {
+        currencyAmountMap[currency] = amount;
+    }
+
+    // TODO Remove
+    function outboundTransferSupported(address currency, int256 amount) public view returns (bool) {
+        return currencyAmountMap[currency] >= amount;
     }
 
     //

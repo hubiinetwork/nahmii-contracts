@@ -61,6 +61,7 @@ contract RevenueFund {
     // -----------------------------------------------------------------------------------------------------------------
     event OwnerChangedEvent(address oldOwner, address newOwner);
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
+    event RecordDepositTokensEvent(address from, int256 amount, address token);
     event CloseAccrualPeriodEvent();
     event RegisterBeneficiaryEvent(address beneficiary, uint256 fraction);
     event DeregisterBeneficiaryEvent(address beneficiary);
@@ -118,6 +119,8 @@ contract RevenueFund {
             aggregateAccrualTokenListMap[token] = true;
             aggregateAccrualTokenList.push(token);
         }
+
+        emit RecordDepositTokensEvent(msg.sender, amount, token);
     }
 
     //

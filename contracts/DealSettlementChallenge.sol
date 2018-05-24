@@ -118,8 +118,7 @@ contract DealSettlementChallenge {
 
     /// @notice Cancel orders
     /// @param orders The orders to cancel
-    function cancelOrders(Types.Order[] orders)
-    public
+    function cancelOrders(Types.Order[] orders) public
     {
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i]._address);

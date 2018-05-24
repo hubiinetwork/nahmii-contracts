@@ -58,7 +58,7 @@ contract ClientFund {
     address private owner;
     mapping (address => WalletInfo) private walletInfoMap;
 
-    uint256 private serviceActivationTimeout;
+    uint256 public serviceActivationTimeout;
     mapping (address => uint256) private registeredServicesMap;
     mapping (address => mapping (address => bool)) private disabledServicesMap;
 

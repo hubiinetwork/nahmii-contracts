@@ -12,16 +12,16 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe('FraudulentDealChallenge', () => {
-        let truffleFraudulentDealChallenge, ethersFraudulentDealChallenge;
-        let truffleConfiguration, ethersConfiguration;
+    describe.only('FraudulentDealChallenge', () => {
+        let web3FraudulentDealChallenge, ethersFraudulentDealChallenge;
+        let web3Configuration, ethersConfiguration;
         let provider;
         let blockNumber0, blockNumber10, blockNumber20;
 
         before(async () => {
-            truffleFraudulentDealChallenge = glob.web3FraudulentDealChallenge;
+            web3FraudulentDealChallenge = glob.web3FraudulentDealChallenge;
             ethersFraudulentDealChallenge = glob.ethersIoFraudulentDealChallenge;
-            truffleConfiguration = glob.web3Configuration;
+            web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
 
             provider = glob.signer_owner.provider;
@@ -37,14 +37,14 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await truffleFraudulentDealChallenge.owner.call();
+                const owner = await web3FraudulentDealChallenge.owner.call();
                 owner.should.equal(glob.owner);
             });
         });
 
         describe('owner()', () => {
             it('should equal value initialized at construction time', async () => {
-                const owner = await truffleFraudulentDealChallenge.owner.call();
+                const owner = await web3FraudulentDealChallenge.owner.call();
                 owner.should.equal(glob.owner);
             });
         });
@@ -66,21 +66,21 @@ module.exports = (glob) => {
         describe('changeOwner()', () => {
             describe('if called with (current) owner as sender', () => {
                 afterEach(async () => {
-                    await truffleFraudulentDealChallenge.changeOwner(glob.owner, {from: glob.user_a});
+                    await web3FraudulentDealChallenge.changeOwner(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await truffleFraudulentDealChallenge.changeOwner(glob.user_a);
+                    const result = await web3FraudulentDealChallenge.changeOwner(glob.user_a);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('OwnerChangedEvent');
-                    const owner = await truffleFraudulentDealChallenge.owner.call();
+                    const owner = await web3FraudulentDealChallenge.owner.call();
                     owner.should.equal(glob.user_a);
                 });
             });
 
             describe('if called with sender that is not (current) owner', () => {
                 it('should revert', async () => {
-                    truffleFraudulentDealChallenge.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudulentDealChallenge.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -93,57 +93,69 @@ module.exports = (glob) => {
         });
 
         describe('changeConfiguration()', () => {
+            let address;
+
+            before(()=> {
+                address = Wallet.createRandom().address;
+            });
+
             describe('if called with owner as sender', () => {
                 let configuration;
 
                 beforeEach(async () => {
-                    configuration = await truffleFraudulentDealChallenge.configuration.call();
+                    configuration = await web3FraudulentDealChallenge.configuration.call();
                 });
 
                 afterEach(async () => {
-                    await truffleFraudulentDealChallenge.changeConfiguration(configuration);
+                    await web3FraudulentDealChallenge.changeConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await truffleFraudulentDealChallenge.changeConfiguration('0x0123456789abcdef0123456789abcdef01234567');
+                    const result = await web3FraudulentDealChallenge.changeConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeConfigurationEvent');
-                    const configuration = await truffleFraudulentDealChallenge.configuration();
-                    configuration.should.equal('0x0123456789abcdef0123456789abcdef01234567');
+                    const configuration = await web3FraudulentDealChallenge.configuration();
+                    utils.getAddress(configuration).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    truffleFraudulentDealChallenge.changeConfiguration('0x0123456789abcdef0123456789abcdef01234567', {from: glob.user_a}).should.be.rejected;
+                    web3FraudulentDealChallenge.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('changeCommunityVote()', () => {
+            let address;
+
+            before(()=> {
+                address = Wallet.createRandom().address;
+            });
+
             describe('if called with owner as sender', () => {
                 let communityVote;
 
                 beforeEach(async () => {
-                    communityVote = await truffleFraudulentDealChallenge.communityVote.call();
+                    communityVote = await web3FraudulentDealChallenge.communityVote.call();
                 });
 
                 afterEach(async () => {
-                    await truffleFraudulentDealChallenge.changeCommunityVote(communityVote);
+                    await web3FraudulentDealChallenge.changeCommunityVote(communityVote);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await truffleFraudulentDealChallenge.changeCommunityVote('0x0123456789abcdef0123456789abcdef01234567');
+                    const result = await web3FraudulentDealChallenge.changeCommunityVote(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeCommunityVoteEvent');
-                    const communityVote = await truffleFraudulentDealChallenge.communityVote();
-                    communityVote.should.equal('0x0123456789abcdef0123456789abcdef01234567');
+                    const communityVote = await web3FraudulentDealChallenge.communityVote();
+                    utils.getAddress(communityVote).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    truffleFraudulentDealChallenge.changeCommunityVote('0x0123456789abcdef0123456789abcdef01234567', {from: glob.user_a}).should.be.rejected;
+                    web3FraudulentDealChallenge.changeCommunityVote(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -2336,8 +2348,6 @@ module.exports = (glob) => {
                         },
                         blockNumber: utils.bigNumberify(blockNumber20)
                     });
-                    // lastTrade.buyer._address = firstTrade.seller._address;
-                    // lastTrade.seller._address = firstTrade.buyer._address;
                 });
 
                 it('should revert', async () => {
@@ -2423,7 +2433,6 @@ module.exports = (glob) => {
                         },
                         blockNumber: utils.bigNumberify(blockNumber20)
                     });
-                    // lastTrade.buyer.nonce = firstTrade.buyer.nonce + 2;
                 });
 
                 it('should revert', async () => {

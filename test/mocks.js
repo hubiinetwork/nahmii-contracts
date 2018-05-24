@@ -7,7 +7,10 @@ const utils = ethers.utils;
 
 exports.liquidityRoles = ['Maker', 'Taker'];
 exports.intentions = ['Buy', 'Sell'];
+exports.dealTypes = ['Trade', 'Payment'];
+exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
+exports.challengeStatuses = ['Unknown', 'Qualified', 'Disqualified'];
 
 exports.mockOrder = async (exchange, params) => {
     const wallet = Wallet.createRandom();
@@ -166,7 +169,7 @@ exports.mockPayment = async (exchange, params) => {
         },
         transfers: {
             single: utils.parseUnits('100', 18),
-            net: utils.parseUnits('100', 18)
+            net: utils.parseUnits('200', 18)
         },
         singleFee: utils.parseUnits('0.2', 18),
         blockNumber: utils.bigNumberify(0)

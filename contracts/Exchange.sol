@@ -16,6 +16,8 @@ import "./ClientFund.sol";
 import "./CommunityVote.sol";
 import "./ERC20.sol";
 import "./Types.sol";
+import "./DealSettlementChallenge.sol";
+import "./ReserveFund.sol";
 
 /**
 @title Exchange
@@ -48,8 +50,10 @@ contract Exchange {
 
     Configuration public configuration;
     ClientFund public clientFund;
+    ReserveFund public reserveFund;
     RevenueFund public revenueFund;
     CommunityVote public communityVote;
+    DealSettlementChallenge public dealSettlementChallenge;
 
     Types.Settlement[] public settlements;
     mapping(address => uint256[]) walletSettlementIndexMap;
@@ -62,8 +66,10 @@ contract Exchange {
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
     event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
+    event ChangeReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangeRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
+    event ChangeDealSettlementChallengeEvent(DealSettlementChallenge oldDealSettlementChallenge, DealSettlementChallenge newDealSettlementChallenge);
 
     //
     // Constructor
@@ -99,7 +105,8 @@ contract Exchange {
 
         require(Types.isTradeParty(trade, wallet));
 
-        if (true /*dealSettlementChallengeResult(wallet, trade) == Qualified*/) {
+        Types.ChallengeStatus status = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
+        if (Types.ChallengeStatus.Qualified == status) {
 
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < maxKnownDealNonce)) {
@@ -116,16 +123,19 @@ contract Exchange {
                     partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
 
                 if (false == trade.immediateSettlement &&
-                false/*reserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate)*/) {
+                reserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended) && // TODO Replace arguments by ReserveFund.TransferInfo
+                reserveFund.outboundTransferSupported(trade.currencies.conjugate, partyInboundTransferConjugate)) {// TODO Replace arguments by ReserveFund.TransferInfo
+                    // TODO Uncomment and replace last 4 arguments by 2 instances of ReserveFund.TransferInfo
                     // reserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
-                    addOneSidedSettlementInfoFromTrade(trade, wallet);
+                    addOneSidedSettlementFromTrade(trade, wallet);
                 } else {
                     settleTradeTransfers(trade);
                     settleTradeFees(trade);
-                    addTwoSidedSettlementInfoFromTrade(trade);
+                    addTwoSidedSettlementFromTrade(trade);
                 }
             }
-        } else if (false /*dealSettlementChallengeResult(wallet, trade) == Disqualified*/) {
+
+        } else if (Types.ChallengeStatus.Disqualified == status) {
             // TODO Consider recipient of seized funds
             //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
             addToSeizedWallets(wallet);
@@ -147,7 +157,8 @@ contract Exchange {
 
         require(Types.isPaymentParty(payment, wallet));
 
-        if (true /*dealSettlementChallengeResult(wallet, payment) == Qualified*/) {
+        Types.ChallengeStatus status = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
+        if (Types.ChallengeStatus.Qualified == status) {
 
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (payment.nonce < maxKnownDealNonce)) {
@@ -160,21 +171,113 @@ contract Exchange {
                     partyInboundTransfer = payment.transfers.net.abs();
 
                 if (false == payment.immediateSettlement &&
-                false/*reserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)*/) {
-                    // reserveFund.oneWayTransfer(wallet, payment.currencies.intended, partyInboundTransfer);
-                    addOneSidedSettlementInfoFromPayment(payment, wallet);
+                reserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)) {// TODO Replace arguments by ReserveFund.TransferInfo
+                    // TODO Uncomment and replace last 2 arguments by 1 instance of ReserveFund.TransferInfo
+                    // reserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
+                    addOneSidedSettlementFromPayment(payment, wallet);
                 } else {
                     settlePaymentTransfers(payment);
                     settlePaymentFees(payment);
-                    addTwoSidedSettlementInfoFromPayment(payment);
+                    addTwoSidedSettlementFromPayment(payment);
                 }
             }
-        } else if (false /*dealSettlementChallengeResult(wallet, payment) == Disqualified*/) {
+        } else if (Types.ChallengeStatus.Disqualified == status) {
             // TODO Consider recipient of seized funds
             //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
             addToSeizedWallets(wallet);
         }
         emit SettleDealAsPaymentEvent(payment, wallet);
+    }
+
+    /// @notice Change the configuration contract
+    /// @param newConfiguration The (address of) Configuration contract instance
+    function changeConfiguration(Configuration newConfiguration) public onlyOwner {
+        if (newConfiguration != configuration) {
+            Configuration oldConfiguration = configuration;
+            configuration = newConfiguration;
+            emit ChangeConfigurationEvent(oldConfiguration, configuration);
+        }
+    }
+
+    /// @notice Change the client fund contract
+    /// @param newClientFund The (address of) ClientFund contract instance
+    function changeClientFund(ClientFund newClientFund) public onlyOwner {
+        if (newClientFund != clientFund) {
+            ClientFund oldClientFund = clientFund;
+            clientFund = newClientFund;
+            emit ChangeClientFundEvent(oldClientFund, clientFund);
+        }
+    }
+
+    /// @notice Change the reserve fund contract
+    /// @param newReserveFund The (address of) ReserveFund contract instance
+    function changeReserveFund(ReserveFund newReserveFund) public onlyOwner {
+        if (newReserveFund != reserveFund) {
+            ReserveFund oldReserveFund = reserveFund;
+            reserveFund = newReserveFund;
+            emit ChangeReserveFundEvent(oldReserveFund, reserveFund);
+        }
+    }
+
+    /// @notice Change the revenue fund contract
+    /// @param newRevenueFund The (address of) RevenueFund contract instance
+    function changeRevenueFund(RevenueFund newRevenueFund) public onlyOwner {
+        if (newRevenueFund != revenueFund) {
+            RevenueFund oldRevenueFund = revenueFund;
+            revenueFund = newRevenueFund;
+            emit ChangeRevenueFundEvent(oldRevenueFund, revenueFund);
+        }
+    }
+
+    /// @notice Change the community vote contract
+    /// @param newCommunityVote The (address of) CommunityVote contract instance
+    function changeCommunityVote(CommunityVote newCommunityVote) public onlyOwner {
+        if (newCommunityVote != communityVote) {
+            CommunityVote oldCommunityVote = communityVote;
+            communityVote = newCommunityVote;
+            emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
+        }
+    }
+
+    /// @notice Change the deal settlement challenge contract
+    /// @param newDealSettlementChallenge The (address of) DealSettlementChallenge contract instance
+    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge) public onlyOwner {
+        if (newDealSettlementChallenge != dealSettlementChallenge) {
+            DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
+            dealSettlementChallenge = newDealSettlementChallenge;
+            emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
+        }
+    }
+
+    /// @notice Get the seized status of given wallet
+    /// @return true if wallet is seized, false otherwise
+    function isSeizedWallet(address _address) public view returns (bool) {
+        return seizedWalletsMap[_address];
+    }
+
+    /// @notice Get the number of wallets whose funds have be seized
+    /// @return Number of wallets
+    function seizedWalletsCount() public view returns (uint256) {
+        return seizedWallets.length;
+    }
+
+    /// @notice Get the count of settlements
+    function settlementsCount() public view returns (uint256) {
+        return settlements.length;
+    }
+
+    /// @notice Get the count of settlements for given wallet
+    /// @param wallet The address for which to return settlement count
+    function walletSettlementsCount(address wallet) public view returns (uint256) {
+        return walletSettlementIndexMap[wallet].length;
+    }
+
+    /// @notice Get settlement of given wallet
+    /// @param wallet The address for which to return settlement
+    /// @param index The wallet's settlement index
+    function walletSettlement(address wallet, uint256 index) public view returns (Types.Settlement) {
+        require(walletSettlementIndexMap[wallet].length > index);
+        return settlements[walletSettlementIndexMap[wallet][index]];
     }
 
     function settleTradeTransfers(Types.Trade trade) private {
@@ -186,11 +289,11 @@ contract Exchange {
                 trade.currencies.intended
             );
 
-        } else if (0 > trade.transfers.intended.net.sub(trade.seller.netFees.intended)) {// Transfer from buyer to seller
+        } else if (0 > trade.transfers.intended.net.add(trade.seller.netFees.intended)) {// Transfer from buyer to seller
             clientFund.transferFromDepositedToSettledBalance(
                 trade.buyer._address,
                 trade.seller._address,
-                trade.transfers.intended.net.mul(- 1).sub(trade.seller.netFees.intended),
+                trade.transfers.intended.net.add(trade.seller.netFees.intended).abs(),
                 trade.currencies.intended
             );
         }
@@ -203,18 +306,18 @@ contract Exchange {
                 trade.currencies.conjugate
             );
 
-        } else if (0 > trade.transfers.conjugate.net.sub(trade.buyer.netFees.conjugate)) {// Transfer from seller to buyer
+        } else if (0 > trade.transfers.conjugate.net.add(trade.buyer.netFees.conjugate)) {// Transfer from seller to buyer
             clientFund.transferFromDepositedToSettledBalance(
                 trade.seller._address,
                 trade.buyer._address,
-                trade.transfers.conjugate.net.mul(- 1).sub(trade.buyer.netFees.conjugate),
+                trade.transfers.conjugate.net.add(trade.buyer.netFees.conjugate).abs(),
                 trade.currencies.conjugate
             );
         }
     }
 
     function settlePaymentTransfers(Types.Payment payment) private {
-        if (0 < payment.transfers.net.sub(payment.source.netFee)) {// Transfer from seller to buyer
+        if (0 < payment.transfers.net.sub(payment.source.netFee)) {// Transfer from source to destination
             clientFund.transferFromDepositedToSettledBalance(
                 payment.source._address,
                 payment.destination._address,
@@ -222,24 +325,24 @@ contract Exchange {
                 payment.currency
             );
 
-        } else if (0 > payment.transfers.net.sub(payment.destination.netFee)) {// Transfer from buyer to seller
+        } else if (0 > payment.transfers.net.add(payment.destination.netFee)) {// Transfer from destination to source
             clientFund.transferFromDepositedToSettledBalance(
                 payment.destination._address,
                 payment.source._address,
-                payment.transfers.net.sub(payment.destination.netFee),
+                payment.transfers.net.add(payment.destination.netFee).abs(),
                 payment.currency
             );
         }
     }
 
-    function addOneSidedSettlementInfoFromTrade(Types.Trade trade, address wallet) private {
+    function addOneSidedSettlementFromTrade(Types.Trade trade, address wallet) private {
         settlements.push(
             Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.OneSided, [wallet, address(0)])
         );
         walletSettlementIndexMap[wallet].push(settlements.length - 1);
     }
 
-    function addTwoSidedSettlementInfoFromTrade(Types.Trade trade) private {
+    function addTwoSidedSettlementFromTrade(Types.Trade trade) private {
         settlements.push(
             Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.TwoSided, [trade.buyer._address, trade.seller._address])
         );
@@ -247,14 +350,14 @@ contract Exchange {
         walletSettlementIndexMap[trade.seller._address].push(settlements.length - 1);
     }
 
-    function addOneSidedSettlementInfoFromPayment(Types.Payment payment, address wallet) private {
+    function addOneSidedSettlementFromPayment(Types.Payment payment, address wallet) private {
         settlements.push(
             Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.OneSided, [wallet, address(0)])
         );
         walletSettlementIndexMap[wallet].push(settlements.length - 1);
     }
 
-    function addTwoSidedSettlementInfoFromPayment(Types.Payment payment) private {
+    function addTwoSidedSettlementFromPayment(Types.Payment payment) private {
         settlements.push(
             Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.source._address, payment.destination._address])
         );
@@ -340,46 +443,6 @@ contract Exchange {
         if (!seizedWalletsMap[_address]) {
             seizedWallets.push(_address);
             seizedWalletsMap[_address] = true;
-        }
-    }
-
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration) public onlyOwner {
-        if (newConfiguration != configuration) {
-            Configuration oldConfiguration = configuration;
-            configuration = newConfiguration;
-            emit ChangeConfigurationEvent(oldConfiguration, configuration);
-        }
-    }
-
-    /// @notice Change the client fund contract
-    /// @param newClientFund The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newClientFund) public onlyOwner {
-        if (newClientFund != clientFund) {
-            ClientFund oldClientFund = clientFund;
-            clientFund = newClientFund;
-            emit ChangeClientFundEvent(oldClientFund, clientFund);
-        }
-    }
-
-    /// @notice Change the revenue fund contract
-    /// @param newRevenueFund The (address of) RevenueFund contract instance
-    function changeRevenueFund(RevenueFund newRevenueFund) public onlyOwner {
-        if (newRevenueFund != revenueFund) {
-            RevenueFund oldRevenueFund = revenueFund;
-            revenueFund = newRevenueFund;
-            emit ChangeRevenueFundEvent(oldRevenueFund, revenueFund);
-        }
-    }
-
-    /// @notice Change the community vote contract
-    /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote) public onlyOwner {
-        if (newCommunityVote != communityVote) {
-            CommunityVote oldCommunityVote = communityVote;
-            communityVote = newCommunityVote;
-            emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
         }
     }
 
