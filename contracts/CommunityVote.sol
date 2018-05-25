@@ -20,6 +20,9 @@ contract CommunityVote {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     address private owner;
+    address[3] internal doubleSpenders;
+    uint256 internal highestAbsoluteDealNonce;
+    bool internal dataAvailable;
 
     //
     // Events
@@ -52,16 +55,16 @@ contract CommunityVote {
     //
     // Results functions
     // -----------------------------------------------------------------------------------------------------------------
-    function getDoubleSpenders() public pure returns (uint256) {
-        return 0;
+    function getDoubleSpenders() public view returns (address[3]) {
+        return doubleSpenders;
     }
 
-    function getHighestAbsoluteDealNonce() public pure returns (uint256) {
-        return 0;
+    function getHighestAbsoluteDealNonce() public view returns (uint256) {
+        return highestAbsoluteDealNonce;
     }
 
-    function isDataAvailable() public pure returns (bool) {
-        return true;
+    function isDataAvailable() public view returns (bool) {
+        return dataAvailable;
     }
 
     //
