@@ -42,10 +42,6 @@ contract RevenueToken is ERC20, Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     constructor() public ERC20() Ownable(msg.sender) {
         totalSupply = 0;
-
-        //balanceBlocks[msg.sender][block.number] = 0;
-        //balanceBlockNumbers[msg.sender].push(block.number);
-
         holderEnumIndex = 0;
     }
 
@@ -58,13 +54,14 @@ contract RevenueToken is ERC20, Ownable {
      * @param value The amount to be transferred.
      */
     function transfer(address _to, uint256 value) public returns (bool success) {
+        balances[msg.sender] = balances[msg.sender].sub(value);
+        balances[_to] = balances[_to].add(value);
+
         balanceBlocks[msg.sender][block.number] = balances[msg.sender].mul(block.number.sub(balanceBlockNumbers[msg.sender].length > 0 ? balanceBlockNumbers[msg.sender][balanceBlockNumbers[msg.sender].length - 1] : 0));
         balanceBlockNumbers[msg.sender].push(block.number);
-        balances[msg.sender] = balances[msg.sender].sub(value);
 
         balanceBlocks[_to][block.number] = balances[_to].mul(block.number.sub(balanceBlockNumbers[_to].length > 0 ? balanceBlockNumbers[_to][balanceBlockNumbers[_to].length - 1] : 0));
         balanceBlockNumbers[_to].push(block.number);
-        balances[_to] = balances[_to].add(value);
 
         //add _to the token holders list
         if (!holdersMap[_to]) {
@@ -191,8 +188,7 @@ contract RevenueToken is ERC20, Ownable {
      * @param _amount The amount of tokens to mint.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mint(address _to, uint256 _amount) onlyOwner public returns (bool)
-    {
+    function mint(address _to, uint256 _amount) onlyOwner public returns (bool) {
         totalSupply = totalSupply.add(_amount);
         balances[_to] = balances[_to].add(_amount);
 
@@ -212,7 +208,7 @@ contract RevenueToken is ERC20, Ownable {
 
 
     //IMPORTANT: access should be public or only owner+token_holder_revenue_funds?
-    function balanceBlocksIn(address a, uint256 from, uint256 to) public constant returns (uint256) {
+    function balanceBlocksIn(address wallet, uint256 startBlock, uint256 endBlock) public constant returns (uint256) {
         // Def:
         //  * balance block = balance * block span
         // 
@@ -260,52 +256,68 @@ contract RevenueToken is ERC20, Ownable {
         //       / ( bbn[ i ] - bbn[ i - 1 ] )
         //
         // return res
+        uint256 i;
+        uint256 low;
+        uint256 res;
 
-        if (0 == balanceBlockNumbers[a].length || 0 == to.sub(from)) {
+        require (startBlock < endBlock);
+        require (wallet != address(0));
+
+        if (balanceBlockNumbers[wallet].length == 0 || endBlock < balanceBlockNumbers[wallet][0]) {
             return 0;
         }
 
-        uint256 i = 0;
-        while (i < balanceBlockNumbers[a].length
-        && balanceBlockNumbers[a][i] <= from) {
+        i = 0;
+        while (i < balanceBlockNumbers[wallet].length && balanceBlockNumbers[wallet][i] <= startBlock) {
             i++;
         }
 
-        uint256 low = 0 == i ? from : balanceBlockNumbers[a][i - 1];
+        low = (i == 0) ? startBlock : balanceBlockNumbers[wallet][i - 1];
+        if (i < balanceBlockNumbers[wallet].length) {
+            res = balanceBlocks[wallet][i].mul(balanceBlockNumbers[wallet][i].sub(startBlock)).div(balanceBlockNumbers[wallet][i].sub(low));
+            i++;
+        } else {
+            res = balances[wallet].mul(endBlock.sub(startBlock)).div(endBlock.sub(low));
+        }
+        //res = balanceBlocks[wallet][i].mul(balanceBlockNumbers[wallet][i].sub(startBlock)).div(balanceBlockNumbers[wallet][i].sub(low));
 
-        uint256 res = balanceBlocks[a][i].mul(balanceBlockNumbers[a][i].sub(from)).div(balanceBlockNumbers[a][i].sub(low));
-        i++;
-
-        while (i < balanceBlockNumbers[a].length
-        && balanceBlockNumbers[a][i] <= to) {
-            res = res.add(balanceBlocks[a][i++]);
+        while (i < balanceBlockNumbers[wallet].length && balanceBlockNumbers[wallet][i] <= endBlock) {
+            res = res.add(balanceBlocks[wallet][i++]);
         }
 
-        if (i >= balanceBlockNumbers[a].length) {
-            res = res.add(balances[a].mul(to.sub(balanceBlockNumbers[a][i - 1])));
-        } else if (balanceBlockNumbers[a][i - 1] < to) {
-            res = res.add(balanceBlocks[a][i].mul(to.sub(balanceBlockNumbers[a][i - 1])).div(balanceBlockNumbers[a][i].sub(balanceBlockNumbers[a][i - 1])));
+        if (i >= balanceBlockNumbers[wallet].length) {
+            res = res.add(balances[wallet].mul(endBlock.sub(balanceBlockNumbers[wallet][i - 1])));
+        } else if (balanceBlockNumbers[wallet][i - 1] < endBlock) {
+            res = res.add(balanceBlocks[wallet][i].mul(endBlock.sub(balanceBlockNumbers[wallet][i - 1])).div(balanceBlockNumbers[wallet][i].sub(balanceBlockNumbers[wallet][i - 1])));
         }
 
         return res;
     }
 
+    //HOW TO USE:
+    //1. Onwer checks current blocknumber and calls startHoldersEnum
+    //2. If current blocknumber != blocknumber stored in step 1, go to step 1
+    //3. Onwer calls holdersEnum and saves returned addresses until address[index] == 0
+    //4. If address[0] == 0, go to step 2
+    //5. Done
+
+    //A cheaper alternative is to monitor all Transfer events and store them in a database.
     function startHoldersEnum() onlyOwner public view {
         holderEnumIndex = 0;
     }
 
     function holdersEnum() onlyOwner public view returns (address[]) {
-        address[] memory _holders = new address[](128);
+        address[] memory _holders = new address[](1024);
         uint256 counter = 0;
 
-        while (counter < 128 && holderEnumIndex < holders.length) {
+        while (counter < _holders.length && holderEnumIndex < holders.length) {
             if (balances[holders[holderEnumIndex]] > 0) {
                 _holders[counter] = holders[holderEnumIndex];
                 counter++;
             }
             holderEnumIndex++;
         }
-        //while (counter < 128) {
+        //while (counter < _holders.length) {
         //    _holders[counter] = address(0);
         //    counter++;
         //}
