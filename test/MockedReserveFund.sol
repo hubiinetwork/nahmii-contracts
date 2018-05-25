@@ -7,10 +7,9 @@
  */
 pragma solidity ^0.4.23;
 
-/**
-@title Mocked Reserve fund
-*/
-contract MockedReserveFund {
+//import "../contracts/ReserveFund.sol";
+
+contract MockedReserveFund /*is ReserveFund*/ {
 
     struct TransferInfo {
         address tokenAddress; // 0 for ethers.
@@ -20,28 +19,17 @@ contract MockedReserveFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public owner;
-
     mapping(address => int256) public currencyAmountMap;
-
-    //
-    // Events
-    // -----------------------------------------------------------------------------------------------------------------
-    //    event OwnerChangedEvent(address oldOwner, address newOwner);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor() public {
+    constructor(/*address owner*/) public /*ReserveFund(owner)*/ {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    //    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-    //        emit OwnerChangedEvent(address(0), newOwner);
-    //    }
-
     // TODO Update to using TransferInfo parameter
     function setMaxOutboundTransfer(address currency, int256 amount) public {
         currencyAmountMap[currency] = amount;
@@ -51,17 +39,4 @@ contract MockedReserveFund {
     function outboundTransferSupported(address currency, int256 amount) public view returns (bool) {
         return currencyAmountMap[currency] >= amount;
     }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    //    modifier notNullAddress(address _address) {
-    //        require(_address != address(0));
-    //        _;
-    //    }
-
-    //    modifier onlyOwner() {
-    //        require(msg.sender == owner);
-    //        _;
-    //    }
 }
