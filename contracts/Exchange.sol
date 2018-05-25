@@ -43,7 +43,7 @@ contract Exchange {
     // -----------------------------------------------------------------------------------------------------------------
     address public owner;
 
-    uint256 public maxKnownDealNonce;
+    uint256 public highestAbsoluteDealNonce;
 
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
@@ -54,6 +54,7 @@ contract Exchange {
     ReserveFund public paymentsReserveFund;
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
+    bool public communityVoteUpdateDisabled;
     CommunityVote public communityVote;
     DealSettlementChallenge public dealSettlementChallenge;
 
@@ -113,7 +114,7 @@ contract Exchange {
         if (Types.ChallengeStatus.Qualified == status) {
 
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (trade.nonce < maxKnownDealNonce)) {
+                || (trade.nonce < highestAbsoluteDealNonce)) {
 
                 Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
@@ -165,7 +166,7 @@ contract Exchange {
         if (Types.ChallengeStatus.Qualified == status) {
 
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (payment.nonce < maxKnownDealNonce)) {
+                || (payment.nonce < highestAbsoluteDealNonce)) {
 
                 Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
@@ -195,82 +196,112 @@ contract Exchange {
 
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration) public onlyOwner {
-        if (newConfiguration != configuration) {
-            Configuration oldConfiguration = configuration;
-            configuration = newConfiguration;
-            emit ChangeConfigurationEvent(oldConfiguration, configuration);
-        }
+    function changeConfiguration(Configuration newConfiguration)
+    public
+    onlyOwner
+    notNullAddress(newConfiguration)
+    notEqualAddresses(newConfiguration, configuration)
+    {
+        Configuration oldConfiguration = configuration;
+        configuration = newConfiguration;
+        emit ChangeConfigurationEvent(oldConfiguration, configuration);
     }
 
     /// @notice Change the client fund contract
     /// @param newClientFund The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newClientFund) public onlyOwner {
-        if (newClientFund != clientFund) {
-            ClientFund oldClientFund = clientFund;
-            clientFund = newClientFund;
-            emit ChangeClientFundEvent(oldClientFund, clientFund);
-        }
+    function changeClientFund(ClientFund newClientFund)
+    public
+    onlyOwner
+    notNullAddress(newClientFund)
+    notEqualAddresses(newClientFund, clientFund)
+    {
+        ClientFund oldClientFund = clientFund;
+        clientFund = newClientFund;
+        emit ChangeClientFundEvent(oldClientFund, clientFund);
     }
 
     /// @notice Change the trades reserve fund contract
     /// @param newTradesReserveFund The (address of) trades ReserveFund contract instance
-    function changeTradesReserveFund(ReserveFund newTradesReserveFund) public onlyOwner {
-        if (newTradesReserveFund != tradesReserveFund) {
-            ReserveFund oldTradesReserveFund = tradesReserveFund;
-            tradesReserveFund = newTradesReserveFund;
-            emit ChangeTradesReserveFundEvent(oldTradesReserveFund, tradesReserveFund);
-        }
+    function changeTradesReserveFund(ReserveFund newTradesReserveFund)
+    public
+    onlyOwner
+    notNullAddress(newTradesReserveFund)
+    notEqualAddresses(newTradesReserveFund, tradesReserveFund)
+    {
+        ReserveFund oldTradesReserveFund = tradesReserveFund;
+        tradesReserveFund = newTradesReserveFund;
+        emit ChangeTradesReserveFundEvent(oldTradesReserveFund, tradesReserveFund);
     }
 
     /// @notice Change the payments reserve fund contract
     /// @param newPaymentsReserveFund The (address of) payments ReserveFund contract instance
-    function changePaymentsReserveFund(ReserveFund newPaymentsReserveFund) public onlyOwner {
-        if (newPaymentsReserveFund != paymentsReserveFund) {
-            ReserveFund oldPaymentsReserveFund = paymentsReserveFund;
-            paymentsReserveFund = newPaymentsReserveFund;
-            emit ChangePaymentsReserveFundEvent(oldPaymentsReserveFund, paymentsReserveFund);
-        }
+    function changePaymentsReserveFund(ReserveFund newPaymentsReserveFund)
+    public
+    onlyOwner
+    notNullAddress(newPaymentsReserveFund)
+    notEqualAddresses(newPaymentsReserveFund, paymentsReserveFund)
+    {
+        ReserveFund oldPaymentsReserveFund = paymentsReserveFund;
+        paymentsReserveFund = newPaymentsReserveFund;
+        emit ChangePaymentsReserveFundEvent(oldPaymentsReserveFund, paymentsReserveFund);
     }
 
     /// @notice Change the trades revenue fund contract
     /// @param newTradesRevenueFund The (address of) trades RevenueFund contract instance
-    function changeTradesRevenueFund(RevenueFund newTradesRevenueFund) public onlyOwner {
-        if (newTradesRevenueFund != tradesRevenueFund) {
-            RevenueFund oldTradesRevenueFund = tradesRevenueFund;
-            tradesRevenueFund = newTradesRevenueFund;
-            emit ChangeTradesRevenueFundEvent(oldTradesRevenueFund, tradesRevenueFund);
-        }
+    function changeTradesRevenueFund(RevenueFund newTradesRevenueFund)
+    public
+    onlyOwner
+    notNullAddress(newTradesRevenueFund)
+    notEqualAddresses(newTradesRevenueFund, tradesRevenueFund)
+    {
+        RevenueFund oldTradesRevenueFund = tradesRevenueFund;
+        tradesRevenueFund = newTradesRevenueFund;
+        emit ChangeTradesRevenueFundEvent(oldTradesRevenueFund, tradesRevenueFund);
     }
 
     /// @notice Change the payments revenue fund contract
     /// @param newPaymentsRevenueFund The (address of) payments RevenueFund contract instance
-    function changePaymentsRevenueFund(RevenueFund newPaymentsRevenueFund) public onlyOwner {
-        if (newPaymentsRevenueFund != paymentsRevenueFund) {
-            RevenueFund oldPaymentsRevenueFund = paymentsRevenueFund;
-            paymentsRevenueFund = newPaymentsRevenueFund;
-            emit ChangePaymentsRevenueFundEvent(oldPaymentsRevenueFund, paymentsRevenueFund);
-        }
+    function changePaymentsRevenueFund(RevenueFund newPaymentsRevenueFund)
+    public
+    onlyOwner
+    notNullAddress(newPaymentsRevenueFund)
+    notEqualAddresses(newPaymentsRevenueFund, paymentsRevenueFund)
+    {
+        RevenueFund oldPaymentsRevenueFund = paymentsRevenueFund;
+        paymentsRevenueFund = newPaymentsRevenueFund;
+        emit ChangePaymentsRevenueFundEvent(oldPaymentsRevenueFund, paymentsRevenueFund);
+    }
+
+    /// @notice Disable future updates of community vote contract
+    function disableUpdateOfCommunityVote() public onlyOwner {
+        communityVoteUpdateDisabled = true;
     }
 
     /// @notice Change the community vote contract
     /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote) public onlyOwner {
-        if (newCommunityVote != communityVote) {
-            CommunityVote oldCommunityVote = communityVote;
-            communityVote = newCommunityVote;
-            emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
-        }
+    function changeCommunityVote(CommunityVote newCommunityVote)
+    public
+    onlyOwner
+    notNullAddress(newCommunityVote)
+    notEqualAddresses(newCommunityVote, communityVote)
+    {
+        require(!communityVoteUpdateDisabled);
+        CommunityVote oldCommunityVote = communityVote;
+        communityVote = newCommunityVote;
+        emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
     }
 
     /// @notice Change the deal settlement challenge contract
     /// @param newDealSettlementChallenge The (address of) DealSettlementChallenge contract instance
-    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge) public onlyOwner {
-        if (newDealSettlementChallenge != dealSettlementChallenge) {
-            DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
-            dealSettlementChallenge = newDealSettlementChallenge;
-            emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
-        }
+    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
+    public
+    onlyOwner
+    notNullAddress(newDealSettlementChallenge)
+    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallenge)
+    {
+        DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
+        dealSettlementChallenge = newDealSettlementChallenge;
+        emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
     }
 
     /// @notice Get the seized status of given wallet
@@ -302,6 +333,14 @@ contract Exchange {
     function walletSettlement(address wallet, uint256 index) public view returns (Types.Settlement) {
         require(walletSettlementIndexMap[wallet].length > index);
         return settlements[walletSettlementIndexMap[wallet][index]];
+    }
+
+    /// @notice Update the highest absolute deal nonce property from CommunityVote contract
+    function updateHighestAbsoluteDealNonce() public {
+        uint256 _highestAbsoluteDealNonce = communityVote.getHighestAbsoluteDealNonce();
+        if (_highestAbsoluteDealNonce > 0) {
+            highestAbsoluteDealNonce = _highestAbsoluteDealNonce;
+        }
     }
 
     function settleTradeTransfers(Types.Trade trade) private {
@@ -475,6 +514,11 @@ contract Exchange {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
+        _;
+    }
+
+    modifier notEqualAddresses(address address1, address address2) {
+        require(address1 != address2);
         _;
     }
 

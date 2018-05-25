@@ -3,10 +3,12 @@ const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const ethers = require('ethers');
 const mocks = require('../mocks');
+// const SafeMathInt = artifacts.require("SafeMathInt");
 const MockedClientFund = artifacts.require("MockedClientFund");
 const MockedReserveFund = artifacts.require("MockedReserveFund");
 const MockedRevenueFund = artifacts.require("MockedRevenueFund");
 const MockedDealSettlementChallenge = artifacts.require("MockedDealSettlementChallenge");
+const MockedCommunityVote = artifacts.require("MockedCommunityVote");
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -23,7 +25,7 @@ module.exports = (glob) => {
         let web3Configuration, ethersConfiguration;
         let web3RevenueFund, ethersRevenueFund;
         let web3DealSettlementChallenge, ethersDealSettlementChallenge;
-        let web3CommunityVote;
+        let web3CommunityVote, ethersCommunityVote;
         let web3ClientFund, ethersClientFund;
         let web3ReserveFund, ethersReserveFund;
         let blockNumber0, blockNumber10, blockNumber20;
@@ -35,16 +37,21 @@ module.exports = (glob) => {
             ethersExchange = glob.ethersIoExchange;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
-            web3CommunityVote = glob.web3CommunityVote;
 
-            web3RevenueFund = await MockedRevenueFund.new();
+            web3RevenueFund = await MockedRevenueFund.new(/*glob.owner*/);
             ethersRevenueFund = new ethers.Contract(web3RevenueFund.address, MockedRevenueFund.abi, glob.signer_owner);
-            web3ClientFund = await MockedClientFund.new();
+            web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
             ethersClientFund = new ethers.Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
-            web3ReserveFund = await MockedReserveFund.new();
+            web3ReserveFund = await MockedReserveFund.new(/*glob.owner*/);
             ethersReserveFund = new ethers.Contract(web3ReserveFund.address, MockedReserveFund.abi, glob.signer_owner);
-            web3DealSettlementChallenge = await MockedDealSettlementChallenge.new(glob.owner);
+            web3DealSettlementChallenge = await MockedDealSettlementChallenge.new(/*glob.owner*/);
             ethersDealSettlementChallenge = new ethers.Contract(web3DealSettlementChallenge.address, MockedDealSettlementChallenge.abi, glob.signer_owner);
+
+            // const safeMathInt = await SafeMathInt.deployed();
+            // console.log(JSON.stringify(safeMathInt, null, 2));
+            // MockedCommunityVote.link(safeMathInt);
+            web3CommunityVote = await MockedCommunityVote.new(/*glob.owner*/);
+            ethersCommunityVote = new ethers.Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
 
             await ethersExchange.changeConfiguration(web3Configuration.address);
             await ethersExchange.changeCommunityVote(web3CommunityVote.address);
@@ -302,7 +309,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeCommunityVote()', () => {
+        describe('communityVoteUpdateDisabled()', () => {
+            it('should return value initialized', async () => {
+                const result = await ethersExchange.communityVoteUpdateDisabled();
+                result.should.be.false;
+            });
+        });
+
+        describe.only('changeCommunityVote()', () => {
             let address;
 
             before(() => {
@@ -332,6 +346,31 @@ module.exports = (glob) => {
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
                     web3Exchange.changeCommunityVote(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('disableUpdateOfCommunityVote()', () => {
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Exchange.disableUpdateOfCommunityVote({from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if called with owner as sender', () => {
+                let address;
+
+                before(async () => {
+                    address = Wallet.createRandom().address;
+                });
+
+                it('should disable changing community vote', async () => {
+                    await web3Exchange.disableUpdateOfCommunityVote();
+                    web3Exchange.changeCommunityVote(address).should.be.rejected;
+                    // const result1 = await web3Exchange.changeCommunityVote(address);
+                    // result1.logs.should.be.an('array').that.is.empty;
+                    // const result2 = await web3Exchange.communityVote.call();
+                    // result2.should.equal(communityVote);
                 });
             });
         });
@@ -377,6 +416,45 @@ module.exports = (glob) => {
                     const address = Wallet.createRandom().address;
                     ethersExchange.walletSettlement(address, 0).should.be.rejected;
                 })
+            });
+        });
+
+        describe('highestAbsoluteDealNonce()', () => {
+            it('should equal value initialized', async () => {
+                const highestAbsoluteDealNonce = await ethersExchange.highestAbsoluteDealNonce();
+                highestAbsoluteDealNonce.eq(utils.bigNumberify(0)).should.be.true;
+            });
+        });
+
+        describe('updateHighestAbsoluteDealNonce()', () => {
+            describe('if community vote returns 0', () => {
+                let highestAbsoluteDealNonce;
+
+                before(async () => {
+                    highestAbsoluteDealNonce = await ethersExchange.highestAbsoluteDealNonce();
+                    await ethersCommunityVote.setHighestAbsoluteDealNonce(utils.bigNumberify(0));
+                });
+
+                it('should not update highestAbsoluteDealNonce property', async () => {
+                    await ethersExchange.updateHighestAbsoluteDealNonce();
+                    const result = await ethersExchange.highestAbsoluteDealNonce();
+                    result.eq(highestAbsoluteDealNonce).should.be.true;
+                });
+            });
+
+            describe('if community vote returns non-zero value', () => {
+                let highestAbsoluteDealNonce;
+
+                before(async () => {
+                    highestAbsoluteDealNonce = utils.bigNumberify(10);
+                    await ethersCommunityVote.setHighestAbsoluteDealNonce(highestAbsoluteDealNonce);
+                });
+
+                it('should update highestAbsoluteDealNonce property', async () => {
+                    await ethersExchange.updateHighestAbsoluteDealNonce();
+                    const result = await ethersExchange.highestAbsoluteDealNonce();
+                    result.eq(highestAbsoluteDealNonce).should.be.true;
+                });
             });
         });
 
