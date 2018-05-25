@@ -429,8 +429,10 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
         }
         require(amount > 0);
 
-        msg.sender.transfer(uint256(amount));
         walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub_nn(amount);
+
+        //execute transfer
+        msg.sender.transfer(uint256(amount));
 
         //raise event
         emit WithdrawEvent(msg.sender, amount, address(0));
@@ -444,9 +446,11 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
         }
         require(amount > 0);
 
+        walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub_nn(amount);
+
+        //execute transfer
         ERC20 erc20_token = ERC20(token);
         erc20_token.transfer(msg.sender, uint256(amount));
-        walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub_nn(amount);
 
         //raise event
         emit WithdrawEvent(msg.sender, amount, token);
