@@ -82,6 +82,50 @@ contract FraudulentDealChallenge {
         }
     }
 
+    /// @notice Change the configuration contract
+    /// @param newConfiguration The (address of) Configuration contract instance
+    function changeConfiguration(Configuration newConfiguration) public onlyOwner {
+        if (newConfiguration != configuration) {
+            Configuration oldConfiguration = configuration;
+            configuration = newConfiguration;
+            emit ChangeConfigurationEvent(oldConfiguration, configuration);
+        }
+    }
+
+    /// @notice Change the community vote contract
+    /// @param newCommunityVote The (address of) CommunityVote contract instance
+    function changeCommunityVote(CommunityVote newCommunityVote) public onlyOwner {
+        if (newCommunityVote != communityVote) {
+            CommunityVote oldCommunityVote = communityVote;
+            communityVote = newCommunityVote;
+            emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
+        }
+    }
+
+    /// @notice Get the seized status of given wallet
+    /// @return true if wallet is seized, false otherwise
+    function isSeizedWallet(address _address) public view returns (bool) {
+        return seizedWalletsMap[_address];
+    }
+
+    /// @notice Get the number of wallets whose funds have be seized
+    /// @return Number of seized wallets
+    function seizedWalletsCount() public view returns (uint256) {
+        return seizedWallets.length;
+    }
+
+    /// @notice Get the double spender status of given wallet
+    /// @return true if wallet is double spender, false otherwise
+    function isDoubleSpenderWallet(address _address) public view returns (bool) {
+        return doubleSpenderWalletsMap[_address];
+    }
+
+    /// @notice Get the number of wallets tagged as double spenders
+    /// @return Number of double spender wallets
+    function doubleSpenderWalletsCount() public view returns (uint256) {
+        return doubleSpenderWallets.length;
+    }
+
     /// @notice Submit a trade candidate in continuous Fraudulent Deal Challenge (FDC)
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param trade Fraudulent trade candidate
@@ -362,30 +406,6 @@ contract FraudulentDealChallenge {
         emit ChallengeDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, doubleSpenderWallets);
     }
 
-    /// @notice Get the seized status of given wallet
-    /// @return true if wallet is seized, false otherwise
-    function isSeizedWallet(address _address) public view returns (bool) {
-        return seizedWalletsMap[_address];
-    }
-
-    /// @notice Get the number of wallets whose funds have be seized
-    /// @return Number of seized wallets
-    function seizedWalletsCount() public view returns (uint256) {
-        return seizedWallets.length;
-    }
-
-    /// @notice Get the double spender status of given wallet
-    /// @return true if wallet is double spender, false otherwise
-    function isDoubleSpenderWallet(address _address) public view returns (bool) {
-        return doubleSpenderWalletsMap[_address];
-    }
-
-    /// @notice Get the number of wallets tagged as double spenders
-    /// @return Number of double spender wallets
-    function doubleSpenderWalletsCount() public view returns (uint256) {
-        return doubleSpenderWallets.length;
-    }
-
     function isGenuineTradeMakerFee(Types.Trade trade) private view returns (bool) {
         int256 feePartsPer = configuration.PARTS_PER();
         int256 discountTier = int256(Types.LiquidityRole.Maker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
@@ -434,12 +454,6 @@ contract FraudulentDealChallenge {
         && (Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address))
         && (Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
     }
-
-    //    function isGenuineSignature(bytes32 hash, Types.Signature signature, address signer) private pure returns (bool) {
-    //        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-    //        bytes32 prefixedHash = keccak256(prefix, hash);
-    //        return ecrecover(prefixedHash, signature.v, signature.r, signature.s) == signer;
-    //    }
 
     function isGenuinePaymentFee(Types.Payment payment) private view returns (bool) {
         int256 feePartsPer = int256(configuration.PARTS_PER());
@@ -716,26 +730,6 @@ contract FraudulentDealChallenge {
         if (!doubleSpenderWalletsMap[_address]) {
             doubleSpenderWallets.push(_address);
             doubleSpenderWalletsMap[_address] = true;
-        }
-    }
-
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration) public onlyOwner {
-        if (newConfiguration != configuration) {
-            Configuration oldConfiguration = configuration;
-            configuration = newConfiguration;
-            emit ChangeConfigurationEvent(oldConfiguration, configuration);
-        }
-    }
-
-    /// @notice Change the community vote contract
-    /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote) public onlyOwner {
-        if (newCommunityVote != communityVote) {
-            CommunityVote oldCommunityVote = communityVote;
-            communityVote = newCommunityVote;
-            emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
         }
     }
 
