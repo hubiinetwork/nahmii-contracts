@@ -103,9 +103,10 @@ contract FraudulentDealChallenge {
     }
 
     /// @notice Get the seized status of given wallet
+    /// @param wallet The wallet address for which to check seized status
     /// @return true if wallet is seized, false otherwise
-    function isSeizedWallet(address _address) public view returns (bool) {
-        return seizedWalletsMap[_address];
+    function isSeizedWallet(address wallet) public view returns (bool) {
+        return seizedWalletsMap[wallet];
     }
 
     /// @notice Get the number of wallets whose funds have be seized
@@ -115,9 +116,10 @@ contract FraudulentDealChallenge {
     }
 
     /// @notice Get the double spender status of given wallet
+    /// @param wallet The wallet address for which to check double spender status
     /// @return true if wallet is double spender, false otherwise
-    function isDoubleSpenderWallet(address _address) public view returns (bool) {
-        return doubleSpenderWalletsMap[_address];
+    function isDoubleSpenderWallet(address wallet) public view returns (bool) {
+        return doubleSpenderWalletsMap[wallet];
     }
 
     /// @notice Get the number of wallets tagged as double spenders

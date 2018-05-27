@@ -14,7 +14,7 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address[3] internal doubleSpenders;
+    mapping(address => bool) internal doubleSpenderWalletsMap;
     uint256 internal highestAbsoluteDealNonce;
     bool internal dataAvailable;
 
@@ -22,19 +22,18 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(/*address owner*/) public /*CommunityVote(owner)*/ {
+        dataAvailable = true;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setDoubleSpenders(address address0, address address1, address address2) public returns (address[3]) {
-        doubleSpenders[0] = address0;
-        doubleSpenders[1] = address1;
-        doubleSpenders[2] = address2;
+    function setDoubleSpenderWallet(address wallet, bool doubleSpender) public returns (address[3]) {
+        doubleSpenderWalletsMap[wallet] = doubleSpender;
     }
 
-    function getDoubleSpenders() public view returns (address[3]) {
-        return doubleSpenders;
+    function isDoubleSpenderWallet(address wallet) public view returns (bool) {
+        return doubleSpenderWalletsMap[wallet];
     }
 
     function setHighestAbsoluteDealNonce(uint256 _highestAbsoluteDealNonce) public returns (uint256) {
@@ -52,5 +51,4 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     function isDataAvailable() public view returns (bool) {
         return dataAvailable;
     }
-
 }

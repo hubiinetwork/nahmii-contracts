@@ -20,7 +20,7 @@ contract CommunityVote {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     address private owner;
-    address[3] internal doubleSpenders;
+    mapping(address => bool) doubleSpenderWalletsMap;
     uint256 internal highestAbsoluteDealNonce;
     bool internal dataAvailable;
 
@@ -34,6 +34,7 @@ contract CommunityVote {
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address _owner) public notNullAddress(_owner) {
         owner = _owner;
+        dataAvailable = true;
     }
 
     //
@@ -55,14 +56,21 @@ contract CommunityVote {
     //
     // Results functions
     // -----------------------------------------------------------------------------------------------------------------
-    function getDoubleSpenders() public view returns (address[3]) {
-        return doubleSpenders;
+    /// @notice Get the double spender status of given wallet
+    /// @param wallet The wallet address for which to check double spender status
+    /// @return true if wallet is double spender, false otherwise
+    function isDoubleSpenderWallet(address wallet) public view returns (bool) {
+        return doubleSpenderWalletsMap[wallet];
     }
 
+    /// @notice Get the highest absolute deal nonce to be accepted in settlements
+    /// @return the highest absolute deal nonce
     function getHighestAbsoluteDealNonce() public view returns (uint256) {
         return highestAbsoluteDealNonce;
     }
 
+    /// @notice Get the data availability status
+    /// @return true if data is available
     function isDataAvailable() public view returns (bool) {
         return dataAvailable;
     }
