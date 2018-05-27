@@ -36,6 +36,9 @@ contract FraudulentDealChallenge {
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
+    address[] public doubleSpenderWallets;
+    mapping(address => bool) public doubleSpenderWalletsMap;
+
     Configuration public configuration;
     CommunityVote public communityVote;
 
@@ -50,7 +53,7 @@ contract FraudulentDealChallenge {
     event ChallengeFraudulentDealByPaymentSucceedingTradeEvent(Types.Trade trade, Types.Payment payment, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByTradeSucceedingPaymentEvent(Types.Payment payment, Types.Trade trade, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByTradeOrderResidualsEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
-    event ChallengeDoubleSpentOrdersEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeDoubleSpentOrdersEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address[] doubleSpenderWallets);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
     event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
 
@@ -344,23 +347,19 @@ contract FraudulentDealChallenge {
     {
         bool doubleSpentBuyOrder = firstTrade.buyer.order.hashes.exchange == lastTrade.buyer.order.hashes.exchange;
         bool doubleSpentSellOrder = firstTrade.seller.order.hashes.exchange == lastTrade.seller.order.hashes.exchange;
+        bool doubledNonce = firstTrade.nonce == lastTrade.nonce;
 
-        require(doubleSpentBuyOrder || doubleSpentSellOrder);
+        require(doubleSpentBuyOrder || doubleSpentSellOrder || doubledNonce);
 
         configuration.setOperationalModeExit();
         fraudulentTrade = lastTrade;
 
-        address seizedWallet;
         if (doubleSpentBuyOrder)
-            seizedWallet = lastTrade.buyer._address;
+            addToDoubleSpenderWallets(lastTrade.buyer._address);
         if (doubleSpentSellOrder)
-            seizedWallet = lastTrade.seller._address;
-        if (address(0) != seizedWallet) {
-            //            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
-            addToSeizedWallets(seizedWallet);
-        }
+            addToDoubleSpenderWallets(lastTrade.seller._address);
 
-        emit ChallengeDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, seizedWallet);
+        emit ChallengeDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, doubleSpenderWallets);
     }
 
     /// @notice Get the seized status of given wallet
@@ -370,9 +369,21 @@ contract FraudulentDealChallenge {
     }
 
     /// @notice Get the number of wallets whose funds have be seized
-    /// @return Number of wallets
+    /// @return Number of seized wallets
     function seizedWalletsCount() public view returns (uint256) {
         return seizedWallets.length;
+    }
+
+    /// @notice Get the double spender status of given wallet
+    /// @return true if wallet is double spender, false otherwise
+    function isDoubleSpenderWallet(address _address) public view returns (bool) {
+        return doubleSpenderWalletsMap[_address];
+    }
+
+    /// @notice Get the number of wallets tagged as double spenders
+    /// @return Number of double spender wallets
+    function doubleSpenderWalletsCount() public view returns (uint256) {
+        return doubleSpenderWallets.length;
     }
 
     function isGenuineTradeMakerFee(Types.Trade trade) private view returns (bool) {
@@ -698,6 +709,13 @@ contract FraudulentDealChallenge {
         if (!seizedWalletsMap[_address]) {
             seizedWallets.push(_address);
             seizedWalletsMap[_address] = true;
+        }
+    }
+
+    function addToDoubleSpenderWallets(address _address) private {
+        if (!doubleSpenderWalletsMap[_address]) {
+            doubleSpenderWallets.push(_address);
+            doubleSpenderWalletsMap[_address] = true;
         }
     }
 

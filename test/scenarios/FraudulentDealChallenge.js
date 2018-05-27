@@ -181,6 +181,27 @@ module.exports = (glob) => {
             })
         });
 
+        describe('isDoubleSpenderWallet()', () => {
+            it('should equal value initialized', async () => {
+                const address = Wallet.createRandom().address;
+                const result = await ethersFraudulentDealChallenge.isDoubleSpenderWallet(address);
+                result.should.be.false;
+            });
+        });
+
+        describe('doubleSpenderWalletsCount()', () => {
+            it('should equal value initialized', async () => {
+                const count = await ethersFraudulentDealChallenge.doubleSpenderWalletsCount();
+                count.toNumber().should.equal(0);
+            })
+        });
+
+        describe('doubleSpenderWallets()', () => {
+            it('should equal value initialized', async () => {
+                ethersFraudulentDealChallenge.doubleSpenderWallets(0).should.be.rejected;
+            })
+        });
+
         describe('challengeFraudulentDealByTrade()', () => {
             let trade, overrideOptions, topic, filter;
 
@@ -2721,15 +2742,15 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
                     await ethersFraudulentDealChallenge.challengeDoubleSpentOrders(firstTrade, lastTrade, overrideOptions);
-                    const [operationalModeExit, fraudulentTrade, seizedWallet, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTrade, doubleSpenderWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(glob.user_a),
+                        ethersFraudulentDealChallenge.isDoubleSpenderWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
-                    seizedWallet.should.be.true;
+                    doubleSpenderWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
@@ -2813,15 +2834,15 @@ module.exports = (glob) => {
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
                     await ethersFraudulentDealChallenge.challengeDoubleSpentOrders(firstTrade, lastTrade, overrideOptions);
-                    const [operationalModeExit, fraudulentTrade, seizedWallet, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTrade, doubleSpenderWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(glob.user_a),
+                        ethersFraudulentDealChallenge.isDoubleSpenderWallet(glob.user_a),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
-                    seizedWallet.should.be.true;
+                    doubleSpenderWallet.should.be.true;
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });

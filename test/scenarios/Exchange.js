@@ -316,7 +316,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe.only('changeCommunityVote()', () => {
+        describe('changeCommunityVote()', () => {
             let address;
 
             before(() => {
