@@ -199,6 +199,12 @@ library Types {
         return wallet == payment.sender._address || wallet == payment.recipient._address;
     }
 
+    function isTradeOrder(Types.Trade trade, Types.Order order) internal pure returns (bool) {
+        return isTradeParty(trade, order._address) &&
+        (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
+        trade.seller.order.hashes.exchange == order.seals.exchange.hash);
+    }
+
     function isGenuineSignature(bytes32 hash, Types.Signature signature, address signer) internal pure returns (bool) {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(prefix, hash);

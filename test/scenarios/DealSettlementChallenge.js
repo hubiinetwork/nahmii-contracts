@@ -13,7 +13,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe('DealSettlementChallenge', () => {
+    describe.only('DealSettlementChallenge', () => {
         let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
         let web3Configuration, ethersConfiguration;
         let web3SecurityBond, ethersSecurityBond;
@@ -21,7 +21,7 @@ module.exports = (glob) => {
         let ethersDealSettlementChallengeUserA, ethersDealSettlementChallengeUserB,
             ethersDealSettlementChallengeUserC, ethersDealSettlementChallengeUserD,
             ethersDealSettlementChallengeUserE;
-        let blockNumber0, blockNumber10, blockNumber20;
+        let blockNumber0, blockNumber10, blockNumber20, blockNumber30;
 
         before(async () => {
             web3DealSettlementChallenge = glob.web3DealSettlementChallenge;
@@ -51,6 +51,7 @@ module.exports = (glob) => {
             blockNumber0 = await provider.getBlockNumber();
             blockNumber10 = blockNumber0 + 10;
             blockNumber20 = blockNumber0 + 20;
+            blockNumber30 = blockNumber0 + 30;
         });
 
         describe('constructor', () => {
@@ -92,7 +93,7 @@ module.exports = (glob) => {
         describe('changeConfiguration()', () => {
             let address;
 
-            before(()=> {
+            before(() => {
                 address = Wallet.createRandom().address;
             });
 
@@ -133,7 +134,7 @@ module.exports = (glob) => {
         describe('changeSecurityBond()', () => {
             let address;
 
-            before(()=> {
+            before(() => {
                 address = Wallet.createRandom().address;
             });
 
@@ -412,6 +413,27 @@ module.exports = (glob) => {
             });
         });
 
+        describe('candidateOrdersCount()', () => {
+            it('should return value initialized ', async () => {
+                const count = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
+                count.toNumber().should.equal(0);
+            });
+        });
+
+        describe('candidateTradesCount()', () => {
+            it('should return value initialized ', async () => {
+                const count = await ethersDealSettlementChallengeOwner.candidateTradesCount();
+                count.toNumber().should.equal(0);
+            });
+        });
+
+        describe('candidatePaymentsCount()', () => {
+            it('should return value initialized ', async () => {
+                const count = await ethersDealSettlementChallengeOwner.candidatePaymentsCount();
+                count.toNumber().should.equal(0);
+            });
+        });
+
         describe('startDealSettlementChallengeFromTrade()', () => {
             let overrideOptions, trade, topic, filter;
 
@@ -657,7 +679,7 @@ module.exports = (glob) => {
 
                 describe('if deal settlement challenge is ongoing for given wallet', () => {
                     beforeEach(async () => {
-                       await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions)
+                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions)
                     });
 
                     it('should return challenged deal nonce and Dispute', async () => {
@@ -828,7 +850,7 @@ module.exports = (glob) => {
                 describe('if order amount is beyond limits of deal balance', () => {
                     beforeEach(async () => {
                         order = await mocks.mockOrder(glob.owner, {
-                            blockNumber: utils.bigNumberify(blockNumber10)
+                            blockNumber: utils.bigNumberify(blockNumber20)
                         });
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
@@ -839,16 +861,21 @@ module.exports = (glob) => {
                                     }
                                 }
                             },
-                            blockNumber: utils.bigNumberify(blockNumber20)
+                            blockNumber: utils.bigNumberify(blockNumber10)
                         });
 
                         await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
                     });
 
-                    it('should record challenge disqualification and emit event', async () => {
+                    it('should record disqualify challenged deal and emit event', async () => {
                         await ethersDealSettlementChallengeOwner.challengeDealSettlementByOrder(order, overrideOptions);
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(topic);
+                        const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
+                        const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(trade.buyer._address);
+                        dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
+                        dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('Order'));
+                        dealSettlementChallenge.candidateIndex.eq(candidateOrdersCount.sub(1)).should.be.true;
                     });
                 });
             });
@@ -901,16 +928,203 @@ module.exports = (glob) => {
                             },
                             blockNumber: utils.bigNumberify(blockNumber20)
                         });
-                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, order._address, overrideOptions);
+                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
                     });
 
-                    it('should record challenge disqualification and emit event', async () => {
+                    it('should record disqualify challenged deal and emit event', async () => {
                         await ethersDealSettlementChallengeOwner.challengeDealSettlementByOrder(order, overrideOptions);
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(topic);
+                        const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
+                        const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(payment.sender._address);
+                        dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
+                        dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('Order'));
+                        dealSettlementChallenge.candidateIndex.eq(candidateOrdersCount.sub(1)).should.be.true;
                     });
                 });
             });
+        });
+
+        describe.only('unchallengeDealSettlementOrderByTrade()', () => {
+            let overrideOptions, topic, filter, order, trade;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+            });
+
+            beforeEach(async () => {
+                await ethersConfiguration.setDealSettlementChallengeTimeout(2);
+
+                topic = ethersDealSettlementChallengeOwner.interface.events.UnchallengeDealSettlementOrderByTradeEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe('if order is not signed by wallet', () => {
+                beforeEach(async () => {
+                    order = await mocks.mockOrder(glob.owner);
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            _address: order._address,
+                            order: {
+                                hashes: {
+                                    exchange: order.seals.exchange.hash
+                                }
+                            }
+                        }
+                    });
+                    order.seals.wallet.signature = order.seals.exchange.signature;
+                });
+
+                it('should revert', async () => {
+                    ethersDealSettlementChallengeOwner.unchallengeDealSettlementOrderByTrade(order, trade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if order is not signed by exchange', () => {
+                beforeEach(async () => {
+                    order = await mocks.mockOrder(glob.owner);
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            _address: order._address,
+                            order: {
+                                hashes: {
+                                    exchange: order.seals.exchange.hash
+                                }
+                            }
+                        }
+                    });
+                    order.seals.exchange.signature = order.seals.wallet.signature;
+                });
+
+                it('should revert', async () => {
+                    ethersDealSettlementChallengeOwner.unchallengeDealSettlementOrderByTrade(order, trade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if trade is not signed by exchange', () => {
+                beforeEach(async () => {
+                    order = await mocks.mockOrder(glob.owner);
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            _address: order._address,
+                            order: {
+                                hashes: {
+                                    exchange: order.seals.exchange.hash
+                                }
+                            }
+                        }
+                    });
+                    trade.seal.signature = order.seals.wallet.signature;
+                });
+
+                it('should revert', async () => {
+                    ethersDealSettlementChallengeOwner.unchallengeDealSettlementOrderByTrade(order, trade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if order is not one of orders filled in trade', () => {
+                beforeEach(async () => {
+                    order = await mocks.mockOrder(glob.owner);
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            _address: order._address
+                        }
+                    });
+                });
+
+                it('should revert', async () => {
+                    ethersDealSettlementChallengeOwner.unchallengeDealSettlementOrderByTrade(order, trade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if wallet of order is not trade party', () => {
+                beforeEach(async () => {
+                    order = await mocks.mockOrder(glob.owner);
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            order: {
+                                hashes: {
+                                    exchange: order.seals.exchange.hash
+                                }
+                            }
+                        }
+                    });
+                });
+
+                it('should revert', async () => {
+                    ethersDealSettlementChallengeOwner.unchallengeDealSettlementOrderByTrade(order, trade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            // TODO Complete once DealSettlementChallenge.challengeDealSettlementByTrade() has been completed
+            describe.skip('if candidate of challenged deal is not order', () => {
+                let tradeCandidate;
+
+                beforeEach(async () => {
+                    order = await mocks.mockOrder(glob.owner);
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {_address: order._address}
+                    });
+
+                    tradeCandidate = await mocks.mockTrade(glob.owner);
+
+                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
+                    await ethersDealSettlementChallengeOwner.challengeDealSettlementByTrade(tradeCandidate, overrideOptions);
+                });
+
+                it('should revert', async () => {
+                    ethersDealSettlementChallengeOwner.unchallengeDealSettlementOrderByTrade(order, trade, overrideOptions).should.be.rejected;
+                });
+            })
+
+            describe('if order is one of of orders filled in trade', () => {
+                let unchallengeTradeCandidate;
+
+                beforeEach(async () => {
+                    order = await mocks.mockOrder(glob.owner, {
+                        blockNumber: utils.bigNumberify(blockNumber20)
+                    });
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            _address: order._address,
+                            balances: {
+                                conjugate: {
+                                    current: utils.bigNumberify(0)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                    unchallengeTradeCandidate = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            _address: order._address,
+                            order: {
+                                hashes: {
+                                    exchange: order.seals.exchange.hash
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+
+                    await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
+                    await ethersDealSettlementChallengeOwner.challengeDealSettlementByOrder(order, overrideOptions);
+                });
+
+                it('should record requalify challenged deal and emit event', async () => {
+                    await ethersDealSettlementChallengeOwner.unchallengeDealSettlementOrderByTrade(order, unchallengeTradeCandidate, overrideOptions);
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                    const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
+                    const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(trade.buyer._address);
+                    dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
+                    dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
+                    dealSettlementChallenge.candidateIndex.eq(0).should.be.true;
+                });
+            })
         });
     });
 };

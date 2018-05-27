@@ -713,14 +713,6 @@ contract FraudulentDealChallenge {
         return lastNetFee == firstNetFee.add(lastSingleFee);
     }
 
-    function isTradeParty(Types.Trade trade, address wallet) private pure returns (bool) {
-        return wallet == trade.buyer._address || wallet == trade.seller._address;
-    }
-
-    function isPaymentParty(Types.Payment payment, address wallet) private pure returns (bool) {
-        return wallet == payment.sender._address || wallet == payment.recipient._address;
-    }
-
     function addToSeizedWallets(address _address) private {
         if (!seizedWalletsMap[_address]) {
             seizedWallets.push(_address);
@@ -754,12 +746,12 @@ contract FraudulentDealChallenge {
     }
 
     modifier challengeableBySuccessionTradesPair(Types.Trade firstTrade, Types.Trade lastTrade, address wallet, address currency) {
-        require(isTradeParty(firstTrade, wallet));
+        require(Types.isTradeParty(firstTrade, wallet));
         require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
         require(Types.hashTrade(firstTrade) == firstTrade.seal.hash);
         require(Types.isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
 
-        require(isTradeParty(lastTrade, wallet));
+        require(Types.isTradeParty(lastTrade, wallet));
         require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
         require(Types.hashTrade(lastTrade) == lastTrade.seal.hash);
         require(Types.isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
@@ -770,13 +762,13 @@ contract FraudulentDealChallenge {
     modifier challengeableBySuccessionPaymentsPair(Types.Payment firstPayment, Types.Payment lastPayment, address wallet) {
         require(firstPayment.currency == lastPayment.currency);
 
-        require(isPaymentParty(firstPayment, wallet));
+        require(Types.isPaymentParty(firstPayment, wallet));
         require(Types.hashPaymentAsWallet(firstPayment) == firstPayment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(firstPayment) == firstPayment.seals.exchange.hash);
         require(Types.isGenuineSignature(firstPayment.seals.wallet.hash, firstPayment.seals.wallet.signature, firstPayment.sender._address));
         require(Types.isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
 
-        require(isPaymentParty(lastPayment, wallet));
+        require(Types.isPaymentParty(lastPayment, wallet));
         require(Types.hashPaymentAsWallet(lastPayment) == lastPayment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(lastPayment) == lastPayment.seals.exchange.hash);
         require(Types.isGenuineSignature(lastPayment.seals.wallet.hash, lastPayment.seals.wallet.signature, lastPayment.sender._address));
@@ -788,12 +780,12 @@ contract FraudulentDealChallenge {
     modifier challengeableBySuccessionTradePaymentPair(Types.Trade trade, Types.Payment payment, address wallet, address currency) {
         require(currency == payment.currency);
 
-        require(isTradeParty(trade, wallet));
+        require(Types.isTradeParty(trade, wallet));
         require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
         require(Types.hashTrade(trade) == trade.seal.hash);
         require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
 
-        require(isPaymentParty(payment, wallet));
+        require(Types.isPaymentParty(payment, wallet));
         require(Types.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
         require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address));
