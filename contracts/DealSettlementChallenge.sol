@@ -8,14 +8,13 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
-import "./SafeMathInt.sol";
-//import "./SafeMathUInt.sol";
 import "./Configuration.sol";
 import "./RevenueFund.sol";
 import "./ClientFund.sol";
 import "./CommunityVote.sol";
 import "./ERC20.sol";
 import "./Types.sol";
+import "./SecurityBond.sol";
 
 /**
 @title Exchange
@@ -53,6 +52,8 @@ contract DealSettlementChallenge {
     mapping(address => Types.Trade[]) public walletDealSettlementChallengedTradesMap;
     mapping(address => Types.Payment[]) public walletDealSettlementChallengedPaymentsMap;
 
+    SecurityBond public securityBond;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -63,6 +64,7 @@ contract DealSettlementChallenge {
     event StartDealSettlementChallengeFromPaymentEvent(Types.Payment payment, address wallet);
     event ChallengeDealSettlementByOrderEvent(Types.Order order, uint256 nonce, Types.DealType dealType, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
+    event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
 
     //
     // Constructor
@@ -74,16 +76,43 @@ contract DealSettlementChallenge {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-
     /// @notice Change the owner of this contract
     /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        if (newOwner != owner) {
-            address oldOwner = owner;
-            owner = newOwner;
+    function changeOwner(address newOwner)
+    public
+    onlyOwner
+    notNullAddress(newOwner)
+    notEqualAddresses(newOwner, owner)
+    {
+        address oldOwner = owner;
+        owner = newOwner;
+        emit OwnerChangedEvent(oldOwner, newOwner);
+    }
 
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
+    /// @notice Change the configuration contract
+    /// @param newConfiguration The (address of) Configuration contract instance
+    function changeConfiguration(Configuration newConfiguration)
+    public
+    onlyOwner
+    notNullAddress(newConfiguration)
+    notEqualAddresses(newConfiguration, configuration)
+    {
+        Configuration oldConfiguration = configuration;
+        configuration = newConfiguration;
+        emit ChangeConfigurationEvent(oldConfiguration, configuration);
+    }
+
+    /// @notice Change the security bond contract
+    /// @param newSecurityBond The (address of) Configuration contract instance
+    function changeSecurityBond(SecurityBond newSecurityBond)
+    public
+    onlyOwner
+    notNullAddress(newSecurityBond)
+    notEqualAddresses(newSecurityBond, securityBond)
+    {
+        SecurityBond oldSecurityBond = securityBond;
+        securityBond = newSecurityBond;
+        emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
     }
 
     /// @notice Get count of cancelled orders for given wallet
@@ -381,21 +410,16 @@ contract DealSettlementChallenge {
         return msg.sender == owner;
     }
 
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration) public onlyOwner {
-        if (newConfiguration != configuration) {
-            Configuration oldConfiguration = configuration;
-            configuration = newConfiguration;
-            emit ChangeConfigurationEvent(oldConfiguration, configuration);
-        }
-    }
-
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
+        _;
+    }
+
+    modifier notEqualAddresses(address address1, address address2) {
+        require(address1 != address2);
         _;
     }
 
