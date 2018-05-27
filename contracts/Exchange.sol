@@ -8,7 +8,7 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
-import "./SafeMathInt.sol";
+//import "./SafeMathInt.sol";
 //import "./SafeMathUInt.sol";
 import "./Configuration.sol";
 import "./RevenueFund.sol";
@@ -89,109 +89,15 @@ contract Exchange {
 
     /// @notice Change the owner of this contract
     /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        if (newOwner != owner) {
-            address oldOwner = owner;
-            owner = newOwner;
-
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
-
-    /// @notice Settle deal that is a trade
-    /// @param trade The trade to be settled
-    /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
-    function settleDealAsTrade(Types.Trade trade, address wallet)
+    function changeOwner(address newOwner)
     public
-    signedBy(trade.seal.hash, trade.seal.signature, owner)
+    onlyOwner
+    notNullAddress(newOwner)
+    notEqualAddresses(newOwner, owner)
     {
-        if (msg.sender != owner)
-            wallet = msg.sender;
-
-        require(Types.isTradeParty(trade, wallet));
-
-        Types.ChallengeStatus status = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
-        if (Types.ChallengeStatus.Qualified == status) {
-
-            if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (trade.nonce < highestAbsoluteDealNonce)) {
-
-                Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
-
-                int256 partyInboundTransferIntended;
-                int256 partyInboundTransferConjugate;
-                if ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
-                    || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole))
-                    partyInboundTransferIntended = trade.transfers.intended.net.abs();
-                if ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
-                    || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole))
-                    partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
-
-                if (false == trade.immediateSettlement &&
-                tradesReserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended) && // TODO Replace arguments by ReserveFund.TransferInfo
-                tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, partyInboundTransferConjugate)) {// TODO Replace arguments by ReserveFund.TransferInfo
-                    // TODO Uncomment and replace last 4 arguments by 2 instances of ReserveFund.TransferInfo
-                    // tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
-                    addOneSidedSettlementFromTrade(trade, wallet);
-                } else {
-                    settleTradeTransfers(trade);
-                    settleTradeFees(trade);
-                    addTwoSidedSettlementFromTrade(trade);
-                }
-            }
-
-        } else if (Types.ChallengeStatus.Disqualified == status) {
-            // TODO Consider recipient of seized funds
-            //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
-            addToSeizedWallets(wallet);
-        }
-
-        emit SettleDealAsTradeEvent(trade, wallet);
-    }
-
-    /// @notice Settle deal that is a payment
-    /// @param payment The payment to be settled
-    /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
-    function settleDealAsPayment(Types.Payment payment, address wallet)
-    public
-    signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address)
-    {
-        if (msg.sender != owner)
-            wallet = msg.sender;
-
-        require(Types.isPaymentParty(payment, wallet));
-
-        Types.ChallengeStatus status = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
-        if (Types.ChallengeStatus.Qualified == status) {
-
-            if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (payment.nonce < highestAbsoluteDealNonce)) {
-
-                Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
-
-                int256 partyInboundTransfer;
-                if ((0 < payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
-                    || (0 > payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole))
-                    partyInboundTransfer = payment.transfers.net.abs();
-
-                if (false == payment.immediateSettlement &&
-                paymentsReserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)) {// TODO Replace arguments by ReserveFund.TransferInfo
-                    // TODO Uncomment and replace last 2 arguments by 1 instance of ReserveFund.TransferInfo
-                    // paymentsReserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
-                    addOneSidedSettlementFromPayment(payment, wallet);
-                } else {
-                    settlePaymentTransfers(payment);
-                    settlePaymentFees(payment);
-                    addTwoSidedSettlementFromPayment(payment);
-                }
-            }
-        } else if (Types.ChallengeStatus.Disqualified == status) {
-            // TODO Consider recipient of seized funds
-            //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
-            addToSeizedWallets(wallet);
-        }
-        emit SettleDealAsPaymentEvent(payment, wallet);
+        address oldOwner = owner;
+        owner = newOwner;
+        emit OwnerChangedEvent(oldOwner, newOwner);
     }
 
     /// @notice Change the configuration contract
@@ -341,6 +247,109 @@ contract Exchange {
         if (_highestAbsoluteDealNonce > 0) {
             highestAbsoluteDealNonce = _highestAbsoluteDealNonce;
         }
+    }
+
+    /// @notice Settle deal that is a trade
+    /// @param trade The trade to be settled
+    /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
+    function settleDealAsTrade(Types.Trade trade, address wallet)
+    public
+    signedBy(trade.seal.hash, trade.seal.signature, owner)
+    {
+        if (msg.sender != owner)
+            wallet = msg.sender;
+
+        require(Types.isTradeParty(trade, wallet));
+
+        Types.ChallengeStatus status = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
+        if (Types.ChallengeStatus.Qualified == status) {
+
+            if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
+                || (trade.nonce < highestAbsoluteDealNonce)) {
+
+                Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+
+                int256 partyInboundTransferIntended;
+                int256 partyInboundTransferConjugate;
+                if ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
+                    || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole))
+                    partyInboundTransferIntended = trade.transfers.intended.net.abs();
+                if ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
+                    || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole))
+                    partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
+
+                if (false == trade.immediateSettlement &&
+                tradesReserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended) && // TODO Replace arguments by ReserveFund.TransferInfo
+                tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, partyInboundTransferConjugate)) {// TODO Replace arguments by ReserveFund.TransferInfo
+                    // TODO Uncomment and replace last 4 arguments by 2 instances of ReserveFund.TransferInfo
+                    // tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
+                    addOneSidedSettlementFromTrade(trade, wallet);
+                } else {
+                    settleTradeTransfers(trade);
+                    settleTradeFees(trade);
+                    addTwoSidedSettlementFromTrade(trade);
+                }
+            }
+
+            if (trade.nonce > highestAbsoluteDealNonce)
+                highestAbsoluteDealNonce = trade.nonce;
+
+        } else if (Types.ChallengeStatus.Disqualified == status) {
+            // TODO Consider recipient of seized funds
+            //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
+            addToSeizedWallets(wallet);
+        }
+
+        emit SettleDealAsTradeEvent(trade, wallet);
+    }
+
+    /// @notice Settle deal that is a payment
+    /// @param payment The payment to be settled
+    /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
+    function settleDealAsPayment(Types.Payment payment, address wallet)
+    public
+    signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
+    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address)
+    {
+        if (msg.sender != owner)
+            wallet = msg.sender;
+
+        require(Types.isPaymentParty(payment, wallet));
+
+        Types.ChallengeStatus status = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
+        if (Types.ChallengeStatus.Qualified == status) {
+
+            if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
+                || (payment.nonce < highestAbsoluteDealNonce)) {
+
+                Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+
+                int256 partyInboundTransfer;
+                if ((0 < payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
+                    || (0 > payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole))
+                    partyInboundTransfer = payment.transfers.net.abs();
+
+                if (false == payment.immediateSettlement &&
+                paymentsReserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)) {// TODO Replace arguments by ReserveFund.TransferInfo
+                    // TODO Uncomment and replace last 2 arguments by 1 instance of ReserveFund.TransferInfo
+                    // paymentsReserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
+                    addOneSidedSettlementFromPayment(payment, wallet);
+                } else {
+                    settlePaymentTransfers(payment);
+                    settlePaymentFees(payment);
+                    addTwoSidedSettlementFromPayment(payment);
+                }
+            }
+
+            if (payment.nonce > highestAbsoluteDealNonce)
+                highestAbsoluteDealNonce = payment.nonce;
+
+        } else if (Types.ChallengeStatus.Disqualified == status) {
+            // TODO Consider recipient of seized funds
+            //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
+            addToSeizedWallets(wallet);
+        }
+        emit SettleDealAsPaymentEvent(payment, wallet);
     }
 
     function settleTradeTransfers(Types.Trade trade) private {
