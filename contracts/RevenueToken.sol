@@ -50,7 +50,7 @@ contract RevenueToken is ERC20, Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /**
      * @dev transfer token for a specified address
-     * @param to The address to transfer to.
+     * @param _to The address to transfer to.
      * @param value The amount to be transferred.
      */
     function transfer(address _to, uint256 value) public returns (bool success) {
@@ -204,94 +204,61 @@ contract RevenueToken is ERC20, Ownable {
         return true;
     }
 
-
-
-
     //IMPORTANT: access should be public or only owner+token_holder_revenue_funds?
-    function balanceBlocksIn(address wallet, uint256 startBlock, uint256 endBlock) public constant returns (uint256) {
-        // Def:
-        //  * balance block = balance * block span
-        // 
-        // Variables with example contents:
-        //  * Function arguments
-        //    - Start block number: from = 5312000
-        //    - End block number: to = 5323000
-        //
-        //  * Historical evolution of balance of address a
-        //    - Balance: b[] = [1000000000000000, 2000000000000000, 3000000000000000, 4000000000000000]
-        //
-        //  * Block numbers at which address a has had its balance updated
-        //    - Balance block numbers: bbn[] = [5310000, 5316000, 5318000, 5324000]
-        //
-        //  * Calculated balance blocks at each transfer to/from address a
-        //    - Balance blocks: bb{} = {5310000: 0, 5316000: 6000000000000000000, 5318000: 4000000000000000000, 5324000: 18000000000000000000}
-        //
-        // ---
-        // 
-        // if ( bbn.length == 0 || 0 == to - from )
-        //     return 0
-        //
-        // i = 0
-        // while ( i < bbn.length
-        //   && bbn[ i ] <= from )
-        //     i++
-        //
-        // low = i == 0 ? from : bbn[ i - 1 ]
-        //
-        // res = bb[ i ]
-        //   * ( bbn[ i ] - from )
-        //   / ( bbn[ i ] - low )
-        // i++
-        //
-        // while ( i < bbn.length
-        //   && bbn[ i ] <= to )
-        //     res += bb[ i ]
-        //     i++
-        //
-        // if ( i >= bbn.length )
-        //     res += b[b.length - 1] * ( to - bbn[ i - 1 ] )
-        // else if ( bbn[ i - 1 ] < to )
-        //     res += bb[ i ]
-        //       * ( to - bbn[ i - 1 ] )
-        //       / ( bbn[ i ] - bbn[ i - 1 ] )
-        //
-        // return res
-        uint256 i;
+    function balanceBlocksIn(address wallet, uint256 startBlock, uint256 endBlock) public view returns (uint256) {
+        uint256 idx;
+        uint256 len;
         uint256 low;
         uint256 res;
+        uint256 h;
 
         require (startBlock < endBlock);
         require (wallet != address(0));
 
-        if (balanceBlockNumbers[wallet].length == 0 || endBlock < balanceBlockNumbers[wallet][0]) {
+        len = balanceBlockNumbers[wallet].length;
+
+        if (len == 0 || endBlock < balanceBlockNumbers[wallet][0]) {
             return 0;
         }
 
-        i = 0;
-        while (i < balanceBlockNumbers[wallet].length && balanceBlockNumbers[wallet][i] <= startBlock) {
-            i++;
+        idx = 0;
+        while (idx < len && balanceBlockNumbers[wallet][idx] < startBlock) {
+            idx++;
         }
 
-        low = (i == 0) ? startBlock : balanceBlockNumbers[wallet][i - 1];
-        if (i < balanceBlockNumbers[wallet].length) {
-            res = balanceBlocks[wallet][i].mul(balanceBlockNumbers[wallet][i].sub(startBlock)).div(balanceBlockNumbers[wallet][i].sub(low));
-            i++;
-        } else {
-            res = balances[wallet].mul(endBlock.sub(startBlock)).div(endBlock.sub(low));
+        if (idx >= len) {
+            res = balanceBlocks[wallet][ balanceBlockNumbers[wallet][len - 1] ].mul( endBlock.sub(startBlock) );
         }
-        //res = balanceBlocks[wallet][i].mul(balanceBlockNumbers[wallet][i].sub(startBlock)).div(balanceBlockNumbers[wallet][i].sub(low));
+        else {
+            low = (idx == 0) ? startBlock : balanceBlockNumbers[wallet][idx - 1];
 
-        while (i < balanceBlockNumbers[wallet].length && balanceBlockNumbers[wallet][i] <= endBlock) {
-            res = res.add(balanceBlocks[wallet][i++]);
+            h = balanceBlockNumbers[wallet][idx];
+            if (h > endBlock) {
+                h = endBlock;
+            }
+
+            h = h.sub(startBlock);
+            res = (h == 0) ? 0 : beta(wallet, idx).mul( h ).div( balanceBlockNumbers[wallet][idx].sub(low) );
+            idx++;
+
+            while (idx < len && balanceBlockNumbers[wallet][idx] < endBlock) {
+                res = res.add(beta(wallet, idx));
+                idx++;
+            }
+
+            if (idx >= len) {
+                res = res.add(balanceBlocks[wallet][ balanceBlockNumbers[wallet][len - 1] ].mul( endBlock.sub(balanceBlockNumbers[wallet][len - 1]) ));
+            } else if (balanceBlockNumbers[wallet][idx - 1] < endBlock) {
+                res = res.add(beta(wallet, idx).mul( endBlock.sub(balanceBlockNumbers[wallet][idx - 1]) ).div( balanceBlockNumbers[wallet][idx].sub(balanceBlockNumbers[wallet][idx - 1]) ));
+            }
         }
-
-        if (i >= balanceBlockNumbers[wallet].length) {
-            res = res.add(balances[wallet].mul(endBlock.sub(balanceBlockNumbers[wallet][i - 1])));
-        } else if (balanceBlockNumbers[wallet][i - 1] < endBlock) {
-            res = res.add(balanceBlocks[wallet][i].mul(endBlock.sub(balanceBlockNumbers[wallet][i - 1])).div(balanceBlockNumbers[wallet][i].sub(balanceBlockNumbers[wallet][i - 1])));
-        }
-
         return res;
+    }
+
+    function beta(address wallet, uint256 idx) private view returns (uint256) {
+        if (idx == 0)
+            return 0;
+        return balanceBlocks[wallet][idx - 1].mul(balanceBlockNumbers[wallet][idx].sub(balanceBlockNumbers[wallet][idx - 1]));
     }
 
     //HOW TO USE:
@@ -302,11 +269,11 @@ contract RevenueToken is ERC20, Ownable {
     //5. Done
 
     //A cheaper alternative is to monitor all Transfer events and store them in a database.
-    function startHoldersEnum() onlyOwner public view {
+    function startHoldersEnum() onlyOwner public {
         holderEnumIndex = 0;
     }
 
-    function holdersEnum() onlyOwner public view returns (address[]) {
+    function holdersEnum() onlyOwner public returns (address[]) {
         address[] memory _holders = new address[](1024);
         uint256 counter = 0;
 
