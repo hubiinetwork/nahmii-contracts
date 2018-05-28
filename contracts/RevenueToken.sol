@@ -33,7 +33,7 @@ contract RevenueToken is ERC20, Ownable {
     uint private holderEnumIndex;
 
     mapping(address => uint256) balances;
-    mapping(address => mapping(uint256 => uint256)) balanceBlocks;
+    mapping(address => uint256[]) balanceBlocks;
     mapping(address => uint256[]) balanceBlockNumbers;
     mapping(address => mapping(address => uint256)) private allowed;
 
@@ -57,11 +57,8 @@ contract RevenueToken is ERC20, Ownable {
         balances[msg.sender] = balances[msg.sender].sub(value);
         balances[_to] = balances[_to].add(value);
 
-        balanceBlocks[msg.sender][block.number] = balances[msg.sender].mul(block.number.sub(balanceBlockNumbers[msg.sender].length > 0 ? balanceBlockNumbers[msg.sender][balanceBlockNumbers[msg.sender].length - 1] : 0));
-        balanceBlockNumbers[msg.sender].push(block.number);
-
-        balanceBlocks[_to][block.number] = balances[_to].mul(block.number.sub(balanceBlockNumbers[_to].length > 0 ? balanceBlockNumbers[_to][balanceBlockNumbers[_to].length - 1] : 0));
-        balanceBlockNumbers[_to].push(block.number);
+        //adjust balance blocks
+        addBalanceBlocks(_to);
 
         //add _to the token holders list
         if (!holdersMap[_to]) {
@@ -99,6 +96,9 @@ contract RevenueToken is ERC20, Ownable {
         balances[from] = balances[from].sub(value);
         balances[to] = balances[to].add(value);
         allowed[from][msg.sender] = allowance.sub(value);
+
+        //adjust balance blocks
+        addBalanceBlocks(to);
 
         //add to the token holders list
         if (!holdersMap[to]) {
@@ -207,7 +207,6 @@ contract RevenueToken is ERC20, Ownable {
     //IMPORTANT: access should be public or only owner+token_holder_revenue_funds?
     function balanceBlocksIn(address wallet, uint256 startBlock, uint256 endBlock) public view returns (uint256) {
         uint256 idx;
-        uint256 len;
         uint256 low;
         uint256 res;
         uint256 h;
@@ -215,50 +214,46 @@ contract RevenueToken is ERC20, Ownable {
         require (startBlock < endBlock);
         require (wallet != address(0));
 
-        len = balanceBlockNumbers[wallet].length;
+        uint256[] storage _balanceBlocks = balanceBlocks[wallet];
+        uint256[] storage _balanceBlockNumbers = balanceBlockNumbers[wallet];
 
-        if (len == 0 || endBlock < balanceBlockNumbers[wallet][0]) {
+        if (_balanceBlockNumbers.length == 0 || endBlock < _balanceBlockNumbers[0]) {
             return 0;
         }
 
         idx = 0;
-        while (idx < len && balanceBlockNumbers[wallet][idx] < startBlock) {
+        while (idx < _balanceBlockNumbers.length && _balanceBlockNumbers[idx] < startBlock) {
             idx++;
         }
 
-        if (idx >= len) {
-            res = balanceBlocks[wallet][ balanceBlockNumbers[wallet][len - 1] ].mul( endBlock.sub(startBlock) );
+        if (idx >= _balanceBlockNumbers.length) {
+            res = _balanceBlocks[_balanceBlockNumbers.length - 1].mul( endBlock.sub(startBlock) );
         }
         else {
-            low = (idx == 0) ? startBlock : balanceBlockNumbers[wallet][idx - 1];
+            low = (idx == 0) ? startBlock : _balanceBlockNumbers[idx - 1];
 
-            h = balanceBlockNumbers[wallet][idx];
+            h = _balanceBlockNumbers[idx];
             if (h > endBlock) {
                 h = endBlock;
             }
 
             h = h.sub(startBlock);
-            res = (h == 0) ? 0 : beta(wallet, idx).mul( h ).div( balanceBlockNumbers[wallet][idx].sub(low) );
+            res = (h == 0) ? 0 : beta(wallet, idx).mul( h ).div( _balanceBlockNumbers[idx].sub(low) );
             idx++;
 
-            while (idx < len && balanceBlockNumbers[wallet][idx] < endBlock) {
+            while (idx < _balanceBlockNumbers.length && _balanceBlockNumbers[idx] < endBlock) {
                 res = res.add(beta(wallet, idx));
                 idx++;
             }
 
-            if (idx >= len) {
-                res = res.add(balanceBlocks[wallet][ balanceBlockNumbers[wallet][len - 1] ].mul( endBlock.sub(balanceBlockNumbers[wallet][len - 1]) ));
-            } else if (balanceBlockNumbers[wallet][idx - 1] < endBlock) {
-                res = res.add(beta(wallet, idx).mul( endBlock.sub(balanceBlockNumbers[wallet][idx - 1]) ).div( balanceBlockNumbers[wallet][idx].sub(balanceBlockNumbers[wallet][idx - 1]) ));
+            if (idx >= _balanceBlockNumbers.length) {
+                res = res.add(_balanceBlocks[_balanceBlockNumbers.length - 1].mul( endBlock.sub(_balanceBlockNumbers[_balanceBlockNumbers.length - 1]) ));
+            } else if (_balanceBlockNumbers[idx - 1] < endBlock) {
+                res = res.add(beta(wallet, idx).mul( endBlock.sub(_balanceBlockNumbers[idx - 1]) ).div( _balanceBlockNumbers[idx].sub(_balanceBlockNumbers[idx - 1]) ));
             }
         }
-        return res;
-    }
 
-    function beta(address wallet, uint256 idx) private view returns (uint256) {
-        if (idx == 0)
-            return 0;
-        return balanceBlocks[wallet][idx - 1].mul(balanceBlockNumbers[wallet][idx].sub(balanceBlockNumbers[wallet][idx - 1]));
+        return res;
     }
 
     //HOW TO USE:
@@ -289,5 +284,26 @@ contract RevenueToken is ERC20, Ownable {
         //    counter++;
         //}
         return  _holders;
+    }
+
+    //
+    // Internal functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function addBalanceBlocks(address _to) private {
+        uint256 len;
+
+        len = balanceBlockNumbers[msg.sender].length;
+        balanceBlocks[msg.sender].push(balances[msg.sender].mul(block.number.sub(len > 0 ? balanceBlockNumbers[msg.sender][len- 1] : 0)));
+        balanceBlockNumbers[msg.sender].push(block.number);
+
+        len = balanceBlockNumbers[_to].length;
+        balanceBlocks[_to].push(balances[_to].mul(block.number.sub(len > 0 ? balanceBlockNumbers[_to][len - 1] : 0)));
+        balanceBlockNumbers[_to].push(block.number);
+    }
+
+    function beta(address wallet, uint256 idx) private view returns (uint256) {
+        if (idx == 0)
+            return 0;
+        return balanceBlocks[wallet][idx - 1].mul(balanceBlockNumbers[wallet][idx].sub(balanceBlockNumbers[wallet][idx - 1]));
     }
 }
