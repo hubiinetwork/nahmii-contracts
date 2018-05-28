@@ -13,7 +13,7 @@ library SafeMathInt {
     //Functions below accept positive and negative integers and result must not overflow.
     //
     function div(int256 a, int256 b) internal pure returns (int256) {
-        require(a != INT256_MIN || b != -1);
+        require(a != INT256_MIN || b != - 1);
         return a / b;
     }
 
@@ -68,7 +68,11 @@ library SafeMathInt {
     //Conversion and validation functions.
     //
     function abs(int256 a) public pure returns (int256) {
-        return a < 0 ? mul(a, -1) : a;
+        return a < 0 ? neg(a) : a;
+    }
+
+    function neg(int256 a) public pure returns (int256) {
+        return mul(a, - 1);
     }
 
     function toNonZeroInt256(uint256 a) public pure returns (int256) {
