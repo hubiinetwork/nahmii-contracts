@@ -61,7 +61,6 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
 
         // Block numbers at which address a has had its ether balance updated
         uint256[] etherBalanceBlockNumbers;
-        uint256 lastEtherBalanceBlockNumber;
 
         // Calculated token balance after each transfer to/from wallet
         mapping(address => int256[]) tokenBalances;
@@ -71,7 +70,6 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
 
         // Block numbers at which address a has had its ether balance updated
         mapping(address => uint256[]) tokenBalanceBlockNumbers;
-        mapping(address => uint256) lastTokenBalanceBlockNumber;
 
         // Accrual block tracking
         mapping(address => uint256[]) tokenAccrualBlockNumbers;
@@ -139,12 +137,12 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
             aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add_nn(amount);
         }
         else {
-            uint256 blockSpan = block.number.sub(walletInfoMap[wallet].lastEtherBalanceBlockNumber);
-            int256 balanceBlock = walletInfoMap[wallet].activeEtherBalance.mul_nn(SafeMathInt.toInt256(blockSpan));
+            uint256 len = walletInfoMap[wallet].etherBalanceBlockNumbers.length;
+            uint256 blockSpan = block.number.sub((len > 0) ? walletInfoMap[wallet].etherBalanceBlockNumbers[len - 1] : 0);
+            int256 balanceBlock = walletInfoMap[wallet].activeEtherBalance.mul(SafeMathInt.toInt256(blockSpan));
 
             walletInfoMap[wallet].etherBalanceBlocks.push(balanceBlock);
             walletInfoMap[wallet].etherBalanceBlockNumbers.push(block.number);
-            walletInfoMap[wallet].lastEtherBalanceBlockNumber = block.number;
 
             walletInfoMap[wallet].activeEtherBalance = walletInfoMap[wallet].activeEtherBalance.add_nn(amount);
             walletInfoMap[wallet].etherBalances.push(walletInfoMap[wallet].activeEtherBalance);
@@ -182,12 +180,12 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
             }
         }
         else {
-            uint256 blockSpan = block.number.sub(walletInfoMap[wallet].lastTokenBalanceBlockNumber[token]);
+            uint256 len = walletInfoMap[wallet].tokenBalanceBlockNumbers[token].length;
+            uint256 blockSpan = block.number.sub((len > 0) ? walletInfoMap[wallet].tokenBalanceBlockNumbers[token][len - 1] : 0);
             int256 balanceBlock = walletInfoMap[wallet].activeTokenBalance[token].mul(SafeMathInt.toInt256(blockSpan));
 
             walletInfoMap[wallet].tokenBalanceBlocks[token].push(balanceBlock);
             walletInfoMap[wallet].tokenBalanceBlockNumbers[token].push(block.number);
-            walletInfoMap[wallet].lastTokenBalanceBlockNumber[token] = block.number;
 
             walletInfoMap[wallet].activeTokenBalance[token] = walletInfoMap[wallet].activeTokenBalance[token].add_nn(amount);
             walletInfoMap[wallet].tokenBalances[token].push(walletInfoMap[wallet].activeTokenBalance[token]);
@@ -522,38 +520,61 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
     // Internal helper functions
     // -----------------------------------------------------------------------------------------------------------------
     function internalBalanceBlocksIn(address wallet, address token, uint256 startBlock, uint256 endBlock) internal view returns (int256) {
+        uint256 idx;
+        int256 res;
+        uint256 h;
+
         require (startBlock < endBlock);
         require (wallet != address(0));
 
-        int256[] storage balances = token == address(0) ? walletInfoMap[wallet].etherBalances : walletInfoMap[wallet].tokenBalances[token];
-        int256[] storage balanceBlocks = token == address(0) ? walletInfoMap[wallet].etherBalanceBlocks : walletInfoMap[wallet].tokenBalanceBlocks[token];
-        uint256[] storage balanceBlockNumbers = token == address(0) ? walletInfoMap[wallet].etherBalanceBlockNumbers : walletInfoMap[wallet].tokenBalanceBlockNumbers[token];
+        int256[] storage _balanceBlocks = (token == address(0)) ? walletInfoMap[wallet].etherBalanceBlocks : walletInfoMap[wallet].tokenBalanceBlocks[token];
+        uint256[] storage _balanceBlockNumbers = (token == address(0)) ? walletInfoMap[wallet].etherBalanceBlockNumbers : walletInfoMap[wallet].tokenBalanceBlockNumbers[token];
 
-        if (balanceBlockNumbers.length == 0 || endBlock.sub(startBlock) == 0) {
+        if (_balanceBlockNumbers.length == 0 || endBlock < _balanceBlockNumbers[0]) {
             return 0;
         }
 
-        uint i = 0;
-        while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= startBlock) {
-            i++;
+        idx = 0;
+        while (idx < _balanceBlockNumbers.length && _balanceBlockNumbers[idx] < startBlock) {
+            idx++;
         }
 
-        uint low = 0 == i ? startBlock : balanceBlockNumbers[i - 1];
-        int256 res = balanceBlocks[i].mul_nn(SafeMathInt.toInt256(balanceBlockNumbers[i].sub(startBlock))).div_nn(SafeMathInt.toInt256(balanceBlockNumbers[i].sub(low)));
-        i++;
-
-        while (i < balanceBlockNumbers.length && balanceBlockNumbers[i] <= endBlock) {
-            res = res.add_nn(balanceBlocks[i++]);
+        if (idx >= _balanceBlockNumbers.length) {
+            res = _balanceBlocks[_balanceBlockNumbers.length - 1].mul_nn( SafeMathInt.toInt256(endBlock.sub(startBlock)) );
         }
+        else {
+            h = _balanceBlockNumbers[idx];
+            if (h > endBlock) {
+                h = endBlock;
+            }
 
-        if (i >= balanceBlockNumbers.length) {
-            res = res.add_nn(balances[i - 1].mul_nn(SafeMathInt.toInt256(endBlock.sub(balanceBlockNumbers[i - 1]))));
-        } else if (balanceBlockNumbers[i - 1] < endBlock) {
-            res = res.add_nn(balanceBlocks[i].mul_nn(SafeMathInt.toInt256(endBlock.sub(balanceBlockNumbers[i - 1]))).div_nn(SafeMathInt.toInt256(balanceBlockNumbers[i].sub(balanceBlockNumbers[i - 1]))));
+            h = h.sub(startBlock);
+            res = (h == 0) ? 0 : beta(wallet, token, idx).mul_nn( SafeMathInt.toInt256(h) ).div_nn( SafeMathInt.toInt256(_balanceBlockNumbers[idx].sub( (idx == 0) ? startBlock : _balanceBlockNumbers[idx - 1] )) );
+            idx++;
+
+            while (idx < _balanceBlockNumbers.length && _balanceBlockNumbers[idx] < endBlock) {
+                res = res.add_nn(beta(wallet, token, idx));
+                idx++;
+            }
+
+            if (idx >= _balanceBlockNumbers.length) {
+                res = res.add_nn(_balanceBlocks[_balanceBlockNumbers.length - 1].mul_nn( SafeMathInt.toInt256(endBlock.sub(_balanceBlockNumbers[_balanceBlockNumbers.length - 1])) ));
+            } else if (_balanceBlockNumbers[idx - 1] < endBlock) {
+                res = res.add_nn(beta(wallet, token, idx).mul_nn( SafeMathInt.toInt256(endBlock.sub(_balanceBlockNumbers[idx - 1])) ).div_nn( SafeMathInt.toInt256(_balanceBlockNumbers[idx].sub(_balanceBlockNumbers[idx - 1])) ));
+            }
         }
 
         return res;
     }
+
+    function beta(address wallet, address token, uint256 idx) private view returns (int256) {
+        if (idx == 0)
+            return 0;
+        if (token == address(0))
+            return walletInfoMap[wallet].etherBalanceBlocks[idx - 1].mul_nn( SafeMathInt.toInt256(walletInfoMap[wallet].etherBalanceBlockNumbers[idx].sub(walletInfoMap[wallet].etherBalanceBlockNumbers[idx - 1])) );
+        return walletInfoMap[wallet].tokenBalanceBlocks[token][idx - 1].mul_nn( SafeMathInt.toInt256(walletInfoMap[wallet].tokenBalanceBlockNumbers[token][idx].sub(walletInfoMap[wallet].tokenBalanceBlockNumbers[token][idx - 1])) );
+    }
+
 
     //
     // Modifiers
