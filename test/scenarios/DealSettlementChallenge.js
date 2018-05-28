@@ -13,14 +13,16 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe.only('DealSettlementChallenge', () => {
+    describe('DealSettlementChallenge', () => {
         let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
         let web3Configuration, ethersConfiguration;
         let web3SecurityBond, ethersSecurityBond;
+        let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
         let ethersDealSettlementChallengeUserA, ethersDealSettlementChallengeUserB,
             ethersDealSettlementChallengeUserC, ethersDealSettlementChallengeUserD,
             ethersDealSettlementChallengeUserE;
+        let ethersCancelOrdersChallengeUserE, ethersCancelOrdersChallengeUserD;
         let blockNumber0, blockNumber10, blockNumber20, blockNumber30;
 
         before(async () => {
@@ -30,17 +32,23 @@ module.exports = (glob) => {
             ethersConfiguration = glob.ethersIoConfiguration;
             web3SecurityBond = glob.web3SecurityBond;
             ethersSecurityBond = glob.ethersIoSecurityBond;
+            web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
+            ethersCancelOrdersChallenge = glob.ethersIoCancelOrdersChallenge;
 
             ethersDealSettlementChallengeUserA = ethersDealSettlementChallengeOwner.connect(glob.signer_a);
             ethersDealSettlementChallengeUserB = ethersDealSettlementChallengeOwner.connect(glob.signer_b);
             ethersDealSettlementChallengeUserC = ethersDealSettlementChallengeOwner.connect(glob.signer_c);
             ethersDealSettlementChallengeUserD = ethersDealSettlementChallengeOwner.connect(glob.signer_d);
             ethersDealSettlementChallengeUserE = ethersDealSettlementChallengeOwner.connect(glob.signer_e);
+            ethersCancelOrdersChallengeUserE = ethersCancelOrdersChallenge.connect(glob.signer_e);
+            ethersCancelOrdersChallengeUserD = ethersCancelOrdersChallenge.connect(glob.signer_d);
 
             provider = glob.signer_owner.provider;
 
             await ethersDealSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
             await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
+            await ethersDealSettlementChallengeOwner.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
+            await ethersCancelOrdersChallenge.changeConfiguration(ethersConfiguration.address);
         });
 
         beforeEach(async () => {
@@ -165,234 +173,43 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getCancelledOrdersCount()', () => {
+        describe('cancelOrdersChallenge()', () => {
             it('should equal value initialized', async () => {
-                const address = Wallet.createRandom().address;
-                const count = await ethersDealSettlementChallengeOwner.getCancelledOrdersCount(address);
-                count.toNumber().should.equal(0);
+                const cancelOrdersChallenge = await ethersDealSettlementChallengeOwner.cancelOrdersChallenge();
+                cancelOrdersChallenge.should.equal(utils.getAddress(ethersCancelOrdersChallenge.address));
             });
         });
 
-        describe('getCancelledOrders()', () => {
-            it('should equal value initialized', async () => {
-                const address = Wallet.createRandom().address;
-                const orders = await ethersDealSettlementChallengeOwner.getCancelledOrders(address, 0);
-                orders.should.be.an('array').that.has.lengthOf(10);
-                orders[0][0].toNumber().should.equal(0);
-            });
-        });
-
-        describe('cancelOrders()', () => {
-            let overrideOptions, order1, order2, topic, filter;
+        describe('changeCancelOrdersChallenge()', () => {
+            let address;
 
             before(() => {
-                overrideOptions = {gasLimit: 1e6};
+                address = Wallet.createRandom().address;
             });
 
-            beforeEach(async () => {
-                order1 = await mocks.mockOrder(glob.owner, {
-                    _address: glob.user_a,
-                    blockNumber: utils.bigNumberify(blockNumber10)
-                });
-                order2 = await mocks.mockOrder(glob.owner, {
-                    nonce: utils.bigNumberify(2),
-                    _address: glob.user_a,
-                    residuals: {
-                        current: utils.parseUnits('600', 18),
-                        previous: utils.parseUnits('700', 18)
-                    },
-                    blockNumber: utils.bigNumberify(blockNumber20)
-                });
-
-                topic = ethersDealSettlementChallengeOwner.interface.events.CancelOrdersEvent.topics[0];
-                filter = {
-                    fromBlock: blockNumber0,
-                    topics: [topic]
-                };
-            });
-
-            describe('if orders are genuine', () => {
-                it('should successfully cancel order', async () => {
-                    await ethersDealSettlementChallengeUserA.cancelOrders([order1, order2], overrideOptions);
-                    const count = await ethersDealSettlementChallengeOwner.getCancelledOrdersCount(glob.user_a);
-                    count.toNumber().should.equal(2);
-                    const orders = await ethersDealSettlementChallengeOwner.getCancelledOrders(glob.user_a, 0);
-                    orders[0][0].toNumber().should.equal(order1.nonce.toNumber());
-                    orders[1][0].toNumber().should.equal(order2.nonce.toNumber());
-                });
-            });
-
-            describe('if _address differs from msg.sender', () => {
-                beforeEach(async () => {
-                    order1 = await mocks.mockOrder(glob.owner, {_address: glob.user_c});
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeUserA.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if not signed by wallet', () => {
-                beforeEach(() => {
-                    order1.seals.wallet.hash = order1.seals.exchange.hash;
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeUserA.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if not signed by exchange', () => {
-                beforeEach(() => {
-                    order1.seals.exchange.hash = order1.seals.wallet.hash;
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeUserA.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
-                });
-            });
-        });
-
-        describe('challengeCancelledOrder()', () => {
-            let overrideOptions, order, trade, topic, filter;
-
-            before(async () => {
-                overrideOptions = {gasLimit: 1e6};
-            });
-
-            beforeEach(async () => {
-                topic = ethersDealSettlementChallengeOwner.interface.events.ChallengeCancelledOrderEvent.topics[0];
-                filter = {
-                    fromBlock: blockNumber0,
-                    topics: [topic]
-                };
-            });
-
-            describe('if order cancelled', () => {
-                describe('if cancel order challenge timeout has not expired', () => {
-                    beforeEach(async () => {
-                        order = await mocks.mockOrder(glob.owner, {
-                            _address: glob.user_b,
-                            blockNumber: utils.bigNumberify(blockNumber10)
-                        });
-
-                        await ethersDealSettlementChallengeUserB.cancelOrders([order], overrideOptions);
-
-                        trade = await mocks.mockTrade(glob.owner, {
-                            buyer: {
-                                _address: order._address,
-                                order: {
-                                    hashes: {
-                                        wallet: order.seals.wallet.hash,
-                                        exchange: order.seals.exchange.hash
-                                    }
-                                }
-                            },
-                            blockNumber: utils.bigNumberify(blockNumber20)
-                        });
-                    });
-
-                    it('should successfully accept the challenge candidate trade', async () => {
-                        await ethersDealSettlementChallengeOwner.challengeCancelledOrder(trade, order._address, overrideOptions);
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(topic);
-                    });
-                });
-
-                describe('if cancel order challenge timeout has expired', () => {
-                    beforeEach(async () => {
-                        await ethersConfiguration.setCancelOrderChallengeTimeout(0);
-
-                        order = await mocks.mockOrder(glob.owner, {
-                            _address: glob.user_c
-                        });
-
-                        await ethersDealSettlementChallengeUserC.cancelOrders([order], overrideOptions);
-
-                        trade = await mocks.mockTrade(glob.owner, {
-                            buyer: {
-                                _address: order._address,
-                                order: {
-                                    hashes: {
-                                        wallet: order.seals.wallet.hash,
-                                        exchange: order.seals.exchange.hash
-                                    }
-                                }
-                            }
-                        });
-                    });
-
-                    it('should revert', async () => {
-                        ethersDealSettlementChallengeOwner.challengeCancelledOrder(trade, order._address, overrideOptions).should.be.rejected;
-                    });
-                });
-            });
-
-            describe('if order has not been cancelled', () => {
-                beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner);
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.challengeCancelledOrder(trade, trade.buyer._address, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if trade is not signed by exchange', () => {
-                beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.user_a);
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.challengeCancelledOrder(trade, trade.buyer._address, overrideOptions).should.be.rejected;
-                });
-            })
-        });
-
-        describe('cancelledOrdersChallengePhase()', () => {
-            describe('if no order has been cancelled for wallet', () => {
-                it('should return value corresponding to Closed', async () => {
-                    const address = Wallet.createRandom().address;
-                    const phase = await ethersDealSettlementChallengeOwner.cancelledOrdersChallengePhase(address);
-                    phase.should.equal(mocks.challengePhases.indexOf('Closed'));
-                });
-            });
-
-            describe('if order has been cancelled for wallet', () => {
-                let overrideOptions, order;
-
-                before(() => {
-                    overrideOptions = {gasLimit: 1e6};
-                });
+            describe('if called with owner as sender', () => {
+                let cancelOrdersChallenge;
 
                 beforeEach(async () => {
-                    order = await mocks.mockOrder(glob.owner, {
-                        _address: glob.user_d
-                    });
+                    cancelOrdersChallenge = await web3DealSettlementChallenge.cancelOrdersChallenge.call();
                 });
 
-                describe('if cancelled order challenge timeout has expired', () => {
-                    beforeEach(async () => {
-                        await ethersConfiguration.setCancelOrderChallengeTimeout(0);
-                        await ethersDealSettlementChallengeUserD.cancelOrders([order], overrideOptions);
-                    });
-
-                    it('should return value corresponding to Closed', async () => {
-                        const phase = await ethersDealSettlementChallengeOwner.cancelledOrdersChallengePhase(order._address);
-                        phase.should.equal(mocks.challengePhases.indexOf('Closed'));
-                    });
+                afterEach(async () => {
+                    await web3DealSettlementChallenge.changeCancelOrdersChallenge(cancelOrdersChallenge);
                 });
 
-                describe('if cancelled order challenge timeout has not expired', () => {
-                    beforeEach(async () => {
-                        await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-                        await ethersDealSettlementChallengeUserD.cancelOrders([order], overrideOptions);
-                    });
+                it('should set new value and emit event', async () => {
+                    const result = await web3DealSettlementChallenge.changeCancelOrdersChallenge(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeCancelOrdersChallengeEvent');
+                    const cancelOrdersChallenge = await web3DealSettlementChallenge.cancelOrdersChallenge();
+                    utils.getAddress(cancelOrdersChallenge).should.equal(address);
+                });
+            });
 
-                    it('should return value corresponding to Dispute', async () => {
-                        const phase = await ethersDealSettlementChallengeOwner.cancelledOrdersChallengePhase(order._address);
-                        phase.should.equal(mocks.challengePhases.indexOf('Dispute'));
-                    });
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3DealSettlementChallenge.changeCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -736,7 +553,7 @@ module.exports = (glob) => {
             let overrideOptions, order, topic, filter;
 
             before(async () => {
-                overrideOptions = {gasLimit: 2e6};
+                overrideOptions = {gasLimit: 3e6};
             });
 
             beforeEach(async () => {
@@ -749,7 +566,7 @@ module.exports = (glob) => {
                 };
             });
 
-            describe('if not signed by wallet', () => {
+            describe('if order is not signed by wallet', () => {
                 beforeEach(async () => {
                     order = await mocks.mockOrder(glob.owner);
                     order.seals.wallet.signature = order.seals.exchange.signature;
@@ -760,7 +577,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not signed by exchange', () => {
+            describe('if order is not signed by exchange', () => {
                 beforeEach(async () => {
                     order = await mocks.mockOrder(glob.owner);
                     order.seals.exchange.signature = order.seals.wallet.signature;
@@ -785,24 +602,16 @@ module.exports = (glob) => {
                 let trade;
 
                 beforeEach(async () => {
-                    order = await mocks.mockOrder(glob.owner);
+                    order = await mocks.mockOrder(glob.owner, {
+                        blockNumber: utils.bigNumberify(blockNumber20)
+                    });
 
                     trade = await mocks.mockTrade(glob.owner, {
-                        buyer: {_address: order._address}
+                        buyer: {_address: order._address},
+                        blockNumber: utils.bigNumberify(blockNumber10)
                     });
                     await ethersConfiguration.setDealSettlementChallengeTimeout(0);
                     await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, order._address, overrideOptions);
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.challengeDealSettlementByOrder(order, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if order has been previously cancelled', async () => {
-                beforeEach(async () => {
-                    order = await mocks.mockOrder(glob.owner, {_address: glob.user_e});
-                    await ethersDealSettlementChallengeUserE.cancelOrders([order], overrideOptions)
                 });
 
                 it('should revert', async () => {
@@ -820,10 +629,12 @@ module.exports = (glob) => {
                                 currencies: {
                                     conjugate: '0x0000000000000000000000000000000000000003'
                                 }
-                            }
+                            },
+                            blockNumber: utils.bigNumberify(blockNumber20)
                         });
                         trade = await mocks.mockTrade(glob.owner, {
-                            buyer: {_address: order._address}
+                            buyer: {_address: order._address},
+                            blockNumber: utils.bigNumberify(blockNumber10)
                         });
                         await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
                     });
@@ -835,9 +646,12 @@ module.exports = (glob) => {
 
                 describe('if order amount is within limits of deal balance', () => {
                     beforeEach(async () => {
-                        order = await mocks.mockOrder(glob.owner);
+                        order = await mocks.mockOrder(glob.owner, {
+                            blockNumber: utils.bigNumberify(blockNumber20)
+                        });
                         trade = await mocks.mockTrade(glob.owner, {
-                            buyer: {_address: order._address}
+                            buyer: {_address: order._address},
+                            blockNumber: utils.bigNumberify(blockNumber10)
                         });
                         await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
                     });
@@ -848,39 +662,77 @@ module.exports = (glob) => {
                 });
 
                 describe('if order amount is beyond limits of deal balance', () => {
-                    beforeEach(async () => {
-                        order = await mocks.mockOrder(glob.owner, {
-                            blockNumber: utils.bigNumberify(blockNumber20)
-                        });
-                        trade = await mocks.mockTrade(glob.owner, {
-                            buyer: {
-                                _address: order._address,
-                                balances: {
-                                    conjugate: {
-                                        current: utils.bigNumberify(0)
+                    describe('if order has not been previously cancelled', async () => {
+                        beforeEach(async () => {
+                            order = await mocks.mockOrder(glob.owner, {
+                                blockNumber: utils.bigNumberify(blockNumber20)
+                            });
+                            trade = await mocks.mockTrade(glob.owner, {
+                                buyer: {
+                                    _address: order._address,
+                                    balances: {
+                                        conjugate: {
+                                            current: utils.bigNumberify(0)
+                                        }
                                     }
-                                }
-                            },
-                            blockNumber: utils.bigNumberify(blockNumber10)
+                                },
+                                blockNumber: utils.bigNumberify(blockNumber10)
+                            });
+
+                            await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
                         });
 
-                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
+                        it('should record disqualify challenged deal, update challenge with challenger and emit event', async () => {
+                            await ethersDealSettlementChallengeUserA.challengeDealSettlementByOrder(order, overrideOptions);
+                            const logs = await provider.getLogs(filter);
+                            logs[logs.length - 1].topics[0].should.equal(topic);
+                            const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
+                            const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(trade.buyer._address);
+                            dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
+                            dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('Order'));
+                            dealSettlementChallenge.candidateIndex.eq(candidateOrdersCount.sub(1)).should.be.true;
+                            dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
+                        });
                     });
 
-                    it('should record disqualify challenged deal and emit event', async () => {
-                        await ethersDealSettlementChallengeOwner.challengeDealSettlementByOrder(order, overrideOptions);
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(topic);
-                        const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
-                        const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(trade.buyer._address);
-                        dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                        dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('Order'));
-                        dealSettlementChallenge.candidateIndex.eq(candidateOrdersCount.sub(1)).should.be.true;
+                    describe('if order has been previously cancelled', async () => {
+                        beforeEach(async () => {
+                            order = await mocks.mockOrder(glob.owner, {
+                                _address: glob.user_e,
+                                blockNumber: utils.bigNumberify(blockNumber20)
+                            });
+                            trade = await mocks.mockTrade(glob.owner, {
+                                buyer: {
+                                    _address: order._address,
+                                    balances: {
+                                        conjugate: {
+                                            current: utils.bigNumberify(0)
+                                        }
+                                    }
+                                },
+                                blockNumber: utils.bigNumberify(blockNumber10)
+                            });
+
+                            await ethersCancelOrdersChallengeUserE.cancelOrders([order], overrideOptions);
+                            await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromTrade(trade, trade.buyer._address, overrideOptions);
+                        });
+
+                        it('should record disqualify challenged deal, update challenge without challenger and emit event', async () => {
+                            await ethersDealSettlementChallengeUserA.challengeDealSettlementByOrder(order, overrideOptions);
+                            const logs = await provider.getLogs(filter);
+                            logs[logs.length - 1].topics[0].should.equal(topic);
+                            const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
+                            const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(trade.buyer._address);
+                            dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
+                            dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('Order'));
+                            dealSettlementChallenge.candidateIndex.eq(candidateOrdersCount.sub(1)).should.be.true;
+                            dealSettlementChallenge.challenger.should.equal('0x0000000000000000000000000000000000000000');
+                        });
                     });
                 });
             });
 
-            describe('if there is ongoing deal settlement challenge from payment', () => {
+            describe.only('if there is ongoing deal settlement challenge from payment', () => {
                 let payment;
 
                 describe('if order currency is different than payment currency', () => {
@@ -889,7 +741,7 @@ module.exports = (glob) => {
                         payment = await mocks.mockPayment(glob.owner, {
                             sender: {_address: order._address}
                         });
-                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, order._address, overrideOptions);
+                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
                     });
 
                     it('should revert', async () => {
@@ -904,7 +756,7 @@ module.exports = (glob) => {
                             currency: '0x0000000000000000000000000000000000000002',
                             sender: {_address: order._address}
                         });
-                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, order._address, overrideOptions);
+                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
                     });
 
                     it('should revert', async () => {
@@ -913,39 +765,75 @@ module.exports = (glob) => {
                 });
 
                 describe('if order amount is beyond limits of deal balance', () => {
-                    beforeEach(async () => {
-                        order = await mocks.mockOrder(glob.owner, {
-                            _address: glob.user_f,
-                            blockNumber: utils.bigNumberify(blockNumber10)
+                    describe('if order has not been previously cancelled', async () => {
+                        beforeEach(async () => {
+                            order = await mocks.mockOrder(glob.owner, {
+                                _address: glob.user_c,
+                                blockNumber: utils.bigNumberify(blockNumber10)
+                            });
+                            payment = await mocks.mockPayment(glob.owner, {
+                                currency: '0x0000000000000000000000000000000000000002',
+                                sender: {
+                                    _address: order._address,
+                                    balances: {
+                                        current: utils.bigNumberify(0)
+                                    }
+                                },
+                                blockNumber: utils.bigNumberify(blockNumber20)
+                            });
+                            await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
                         });
-                        payment = await mocks.mockPayment(glob.owner, {
-                            currency: '0x0000000000000000000000000000000000000002',
-                            sender: {
-                                _address: order._address,
-                                balances: {
-                                    current: utils.bigNumberify(0)
-                                }
-                            },
-                            blockNumber: utils.bigNumberify(blockNumber20)
+
+                        it('should disqualify challenged deal and emit event', async () => {
+                            await ethersDealSettlementChallengeUserA.challengeDealSettlementByOrder(order, overrideOptions);
+                            const logs = await provider.getLogs(filter);
+                            logs[logs.length - 1].topics[0].should.equal(topic);
+                            const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
+                            const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(payment.sender._address);
+                            dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
+                            dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('Order'));
+                            dealSettlementChallenge.candidateIndex.eq(candidateOrdersCount.sub(1)).should.be.true;
+                            dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
                         });
-                        await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
                     });
 
-                    it('should record disqualify challenged deal and emit event', async () => {
-                        await ethersDealSettlementChallengeOwner.challengeDealSettlementByOrder(order, overrideOptions);
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(topic);
-                        const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
-                        const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(payment.sender._address);
-                        dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                        dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('Order'));
-                        dealSettlementChallenge.candidateIndex.eq(candidateOrdersCount.sub(1)).should.be.true;
+                    describe('if order has been previously cancelled', async () => {
+                        beforeEach(async () => {
+                            order = await mocks.mockOrder(glob.owner, {
+                                _address: glob.user_d,
+                                blockNumber: utils.bigNumberify(blockNumber10)
+                            });
+                            payment = await mocks.mockPayment(glob.owner, {
+                                currency: '0x0000000000000000000000000000000000000002',
+                                sender: {
+                                    _address: order._address,
+                                    balances: {
+                                        current: utils.bigNumberify(0)
+                                    }
+                                },
+                                blockNumber: utils.bigNumberify(blockNumber20)
+                            });
+                            await ethersCancelOrdersChallengeUserD.cancelOrders([order], overrideOptions);
+                            await ethersDealSettlementChallengeOwner.startDealSettlementChallengeFromPayment(payment, payment.sender._address, overrideOptions);
+                        });
+
+                        it('should disqualify challenged deal and emit event', async () => {
+                            await ethersDealSettlementChallengeOwner.challengeDealSettlementByOrder(order, overrideOptions);
+                            // const logs = await provider.getLogs(filter);
+                            // logs[logs.length - 1].topics[0].should.equal(topic);
+                            // const candidateOrdersCount = await ethersDealSettlementChallengeOwner.candidateOrdersCount();
+                            // const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletDealSettlementChallengeInfoMap(payment.sender._address);
+                            // dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
+                            // dealSettlementChallenge.candidateType.should.equal(mocks.candidateTypes.indexOf('Order'));
+                            // dealSettlementChallenge.candidateIndex.eq(candidateOrdersCount.sub(1)).should.be.true;
+                            // dealSettlementChallenge.challenger.should.equal('0x0000000000000000000000000000000000000000');
+                        });
                     });
                 });
             });
         });
 
-        describe.only('unchallengeDealSettlementOrderByTrade()', () => {
+        describe('unchallengeDealSettlementOrderByTrade()', () => {
             let overrideOptions, topic, filter, order, trade;
 
             before(async () => {

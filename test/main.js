@@ -14,6 +14,7 @@ var ClientFund = artifacts.require("ClientFund");
 var CommunityVote = artifacts.require("CommunityVote");
 var Configuration = artifacts.require("Configuration");
 var Exchange = artifacts.require("Exchange");
+var CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
 var DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
 var FraudulentDealChallenge = artifacts.require("FraudulentDealChallenge");
 var ReserveFund = artifacts.require("ReserveFund");
@@ -162,6 +163,17 @@ contract('Smart contract checks', function () {
         }
     });
 
+    before("Preflight: Instantiate CancelOrdersChallenge contract", async () => {
+        try {
+            glob.web3CancelOrdersChallenge = await CancelOrdersChallenge.deployed();
+            assert.notEqual(glob.web3CancelOrdersChallenge, null);
+            glob.ethersIoCancelOrdersChallenge = new ethers.Contract(glob.web3CancelOrdersChallenge.address, CancelOrdersChallenge.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate CancelOrdersChallenge contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
     before("Preflight: Instantiate DealSettlementChallenge contract", async () => {
         try {
             glob.web3DealSettlementChallenge = await DealSettlementChallenge.deployed();
@@ -290,6 +302,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
     require('./scenarios/Exchange')(glob);
+    require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DealSettlementChallenge')(glob);
     require('./scenarios/FraudulentDealChallenge')(glob);
     require('./scenarios/ReserveFund')(glob);
