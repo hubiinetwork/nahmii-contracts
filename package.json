@@ -7,7 +7,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node run_tests.js"
+    "build": "truffle compile --all",
+    "test": "node run_tests.js",
+    "install": "npm run install:test",
+    "install:test": "truffle migrate --network testnet",
+    "install:main": "truffle migrate --network mainnet"
   },
   "author": "Hubii",
   "license": "Commercial",
