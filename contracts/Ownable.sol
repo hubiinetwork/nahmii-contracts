@@ -16,7 +16,7 @@ contract Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
+    event ChangeOwnerEvent(address oldOwner, address newOwner);
 
     //
     // Constructor
@@ -45,7 +45,7 @@ contract Ownable {
             owner = newOwner;
 
             // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
+            emit ChangeOwnerEvent(oldOwner, newOwner);
         }
     }
 

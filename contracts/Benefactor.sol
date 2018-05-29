@@ -38,7 +38,7 @@ contract Benefactor is Ownable {
         emit UnregisteredBeneficiaryEvent(beneficiary);
     }
 
-    function isValidRegisteredReceiver(address beneficiary) internal view returns (bool) {
+    function isRegisteredBeneficiary(address beneficiary) internal view returns (bool) {
         return registeredBeneficiaries[beneficiary];
     }
 }

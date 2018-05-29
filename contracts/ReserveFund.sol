@@ -363,6 +363,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
         Beneficiary beneficiary_sc;
 
         require(amount.isPositiveInt256());
+        require(isRegisteredBeneficiary(beneficiary));
 
         beneficiary_sc = Beneficiary(beneficiary);
 

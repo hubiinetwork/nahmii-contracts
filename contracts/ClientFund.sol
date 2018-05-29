@@ -328,7 +328,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
         Beneficiary beneficiary_sc;
 
         require(amount.isPositiveInt256());
-        require(isValidRegisteredReceiver(beneficiary));
+        require(isRegisteredBeneficiary(beneficiary));
 
         beneficiary_sc = Beneficiary(beneficiary);
 
