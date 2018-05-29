@@ -55,7 +55,6 @@ contract DealSettlementChallenge {
     mapping(address => Types.Trade[]) public walletDealSettlementChallengedTradesMap;
     mapping(address => Types.Payment[]) public walletDealSettlementChallengedPaymentsMap;
 
-
     Types.Order[] public candidateOrders;
     Types.Trade[] public candidateTrades;
     Types.Payment[] public candidatePayments;
@@ -284,8 +283,7 @@ contract DealSettlementChallenge {
     /// @param order The order candidate that challenges the challenged deal
     function challengeDealSettlementByOrder(Types.Order order)
     public
-    signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
-    signedBy(order.seals.wallet.hash, order.seals.wallet.signature, order._address)
+    orderSigned(order)
     {
         address wallet = order._address;
 
@@ -336,15 +334,12 @@ contract DealSettlementChallenge {
     /// @param trade The trade in which order has been filled
     function unchallengeDealSettlementOrderByTrade(Types.Order order, Types.Trade trade)
     public
-    signedBy(order.seals.exchange.hash, order.seals.exchange.signature, owner)
-    signedBy(order.seals.wallet.hash, order.seals.wallet.signature, order._address)
-    signedBy(trade.seal.hash, trade.seal.signature, owner)
+    orderSigned(order)
+    tradeSigned(trade)
+    onlyTradeParty(trade, order._address)
+    onlyTradeOrder(trade, order)
     {
-        require(Types.isTradeOrder(trade, order));
-
-        address wallet = order._address;
-
-        DealSettlementChallengeInfo storage challenge = walletDealSettlementChallengeInfoMap[wallet];
+        DealSettlementChallengeInfo storage challenge = walletDealSettlementChallengeInfoMap[order._address];
         require(challenge.candidateType == CandidateType.Order);
 
         challenge.status = Types.ChallengeStatus.Qualified;
@@ -354,7 +349,8 @@ contract DealSettlementChallenge {
 
         // TODO Stage stake obtained from configuration contract for msg.sender in security bond contract
 
-        emit UnchallengeDealSettlementOrderByTradeEvent(order, trade, wallet, challenge.nonce, challenge.dealType, msg.sender);
+        emit UnchallengeDealSettlementOrderByTradeEvent(order, trade, order._address,
+            challenge.nonce, challenge.dealType, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing trade candidate
@@ -362,42 +358,40 @@ contract DealSettlementChallenge {
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeDealSettlementByTrade(Types.Trade trade, address wallet)
     public
-    signedBy(trade.seal.hash, trade.seal.signature, owner)
+    tradeSigned(trade)
+    onlyTradeParty(trade, wallet)
     {
-        require(Types.isTradeParty(trade, wallet));
-
         DealSettlementChallengeInfo storage challenge = walletDealSettlementChallengeInfoMap[wallet];
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
         );
 
-        int256 balanceIntended = (Types.DealType.Trade == challenge.dealType ?
+        // Wallet is buyer in (candidate) trade -> consider conjugate transfer in (candidate) trade
+        // Wallet is seller in (candidate) trade -> consider intended transfer in (candidate) trade
+        Types.TradePartyRole tradePartyRole = (trade.buyer._address == wallet ?
+        Types.TradePartyRole.Buyer :
+        Types.TradePartyRole.Seller);
+
+        address currency;
+        int256 candidateTransfer;
+        (currency, candidateTransfer) = (Types.TradePartyRole.Buyer == tradePartyRole ?
+        (trade.currencies.conjugate, trade.transfers.conjugate.single.abs()) :
+        (trade.currencies.intended, trade.transfers.intended.single.abs()));
+
+        int256 challengeBalance = (Types.DealType.Trade == challenge.dealType ?
         getTradeBalance(
             walletDealSettlementChallengedTradesMap[wallet][challenge.dealIndex],
             wallet,
-            trade.currencies.intended
+            currency
         ) :
         getPaymentBalance(
             walletDealSettlementChallengedPaymentsMap[wallet][challenge.dealIndex],
             wallet,
-            trade.currencies.intended
+            currency
         ));
 
-        int256 balanceConjugate = (Types.DealType.Trade == challenge.dealType ?
-        getTradeBalance(
-            walletDealSettlementChallengedTradesMap[wallet][challenge.dealIndex],
-            wallet,
-            trade.currencies.conjugate
-        ) :
-        getPaymentBalance(
-            walletDealSettlementChallengedPaymentsMap[wallet][challenge.dealIndex],
-            wallet,
-            trade.currencies.conjugate
-        ));
-
-        require(trade.transfers.intended.single.abs() > balanceIntended ||
-        trade.transfers.conjugate.single.abs() > balanceConjugate);
+        require(candidateTransfer > challengeBalance);
 
         candidateTrades.push(trade);
 
@@ -421,8 +415,7 @@ contract DealSettlementChallenge {
     //    /// @param wallet The wallet whose deal settlement is being challenged
     //    function challengeDealSettlementByPayment(Types.Payment payment)
     //    public
-    //    signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    //    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address)
+    //    paymentSigned(payment)
     //    {
     //
     //    }
@@ -483,6 +476,11 @@ contract DealSettlementChallenge {
         _;
     }
 
+    modifier onlyTradeOrder(Types.Trade trade, Types.Order order) {
+        require(Types.isTradeOrder(trade, order));
+        _;
+    }
+
     modifier onlyPaymentParty(Types.Payment payment, address wallet) {
         require(Types.isPaymentParty(payment, wallet));
         _;
@@ -490,6 +488,43 @@ contract DealSettlementChallenge {
 
     modifier signedBy(bytes32 hash, Types.Signature signature, address signer) {
         require(Types.isGenuineSignature(hash, signature, signer));
+        _;
+    }
+
+    modifier orderSigned(Types.Order order) {
+        require(Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, owner));
+        require(Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order._address));
+        _;
+    }
+
+    modifier orderSignedByExchange(Types.Order order) {
+        require(Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, owner));
+        _;
+    }
+
+    modifier orderSignedByWallet(Types.Order order) {
+        require(Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order._address));
+        _;
+    }
+
+    modifier tradeSigned(Types.Trade trade) {
+        require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
+        _;
+    }
+
+    modifier paymentSigned(Types.Payment payment) {
+        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
+        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address));
+        _;
+    }
+
+    modifier paymentSignedByExchange(Types.Payment payment) {
+        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
+        _;
+    }
+
+    modifier paymentSignedByWallet(Types.Payment payment) {
+        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address));
         _;
     }
 }

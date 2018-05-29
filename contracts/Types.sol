@@ -14,8 +14,8 @@ library Types {
     enum CurrencyRole {Intended, Conjugate}
     enum DealType {Trade, Payment}
     enum Sidedness {OneSided, TwoSided}
-    enum TradePartyRole {Buyer, Seller}
     enum Intention {Buy, Sell}
+    enum TradePartyRole {Buyer, Seller}
     enum PaymentPartyRole {Sender, Recipient}
     enum ChallengePhase {Dispute, Closed}
     enum ChallengeStatus {Unknown, Qualified, Disqualified}
@@ -200,8 +200,7 @@ library Types {
     }
 
     function isTradeOrder(Types.Trade trade, Types.Order order) internal pure returns (bool) {
-        return isTradeParty(trade, order._address) &&
-        (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
+        return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
         trade.seller.order.hashes.exchange == order.seals.exchange.hash);
     }
 
