@@ -9,13 +9,14 @@ pragma solidity ^0.4.23;
 
 import "./SafeMathInt.sol";
 import "./SafeMathUint.sol";
+import "./Ownable.sol";
 import "./RevenueToken.sol";
 
 /**
 @title Token holder revenue fund
 @notice Fund that manages the revenue earned by revenue token holders.
 */
-contract TokenHolderRevenueFund {
+contract TokenHolderRevenueFund is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -50,7 +51,6 @@ contract TokenHolderRevenueFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
     address private revenueToken;
 
     int256 periodAccrualEtherBalance;
@@ -72,7 +72,6 @@ contract TokenHolderRevenueFund {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event RevenueTokenChangedEvent(address oldOwner, address newOwner);
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
     event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
@@ -84,26 +83,12 @@ contract TokenHolderRevenueFund {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        address oldOwner;
-
-        if (newOwner != owner) {
-            // Set new owner
-            oldOwner = owner;
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
-
     function setRevenueTokenAddress(address newAddress) public onlyOwner notNullAddress(newAddress) {
         address oldAddress;
 
@@ -389,16 +374,6 @@ contract TokenHolderRevenueFund {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
-    modifier notOwner() {
-        require(msg.sender != owner);
         _;
     }
 

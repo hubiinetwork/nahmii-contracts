@@ -8,13 +8,14 @@
 pragma solidity ^0.4.23;
 
 import "./SafeMathInt.sol";
+import "./Ownable.sol";
 import "./ERC20.sol";
 
 /**
 @title Security bond
 @notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
 */
-contract SecurityBond {
+contract SecurityBond is Ownable {
     using SafeMathInt for int256;
 
     //
@@ -57,7 +58,6 @@ contract SecurityBond {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
     mapping (address => WalletInfo) private walletInfoMap;
 
     // Active balance of ethers and tokens shared among all wallets
@@ -70,7 +70,6 @@ contract SecurityBond {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
     event StageEvent(address from, int256 amount, address token); //token==0 for ethers
     event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
@@ -80,27 +79,13 @@ contract SecurityBond {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
         withdrawalTimeout = 30 minutes;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        address oldOwner;
-
-        if (newOwner != owner) {
-            // Set new owner
-            oldOwner = owner;
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
-
     function setWithdrawalTimeout(uint256 timeoutInSeconds) public onlyOwner {
         withdrawalTimeout = timeoutInSeconds;
     }
@@ -342,16 +327,6 @@ contract SecurityBond {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
-    modifier notOwner() {
-        require(msg.sender != owner);
         _;
     }
 

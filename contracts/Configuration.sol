@@ -8,12 +8,13 @@
 pragma solidity ^0.4.21;
 
 import "./SafeMathInt.sol";
+import "./Ownable.sol";
 
 /**
 @title Configuration
 @notice An oracle for configurations such as fees, challenge timeouts and stakes
 */
-contract Configuration {
+contract Configuration is Ownable {
     using SafeMathInt for int256;
 
     //
@@ -44,7 +45,6 @@ contract Configuration {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     int256 constant public PARTS_PER = 1e18;
-    address public owner;
 
     mapping(uint256 => DiscountableFee) tradeMakerFees;
     mapping(uint256 => DiscountableFee) tradeTakerFees;
@@ -68,7 +68,6 @@ contract Configuration {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event SetPartsPerEvent(int256 partsPer);
     event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetTradeTakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
@@ -83,27 +82,12 @@ contract Configuration {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-
-    /// @notice Set new owner
-    /// @param newOwner New owner address
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        if (newOwner != owner) {
-            // Set new owner
-            address oldOwner = owner;
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
-
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
@@ -372,11 +356,6 @@ contract Configuration {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
         _;
     }
 
