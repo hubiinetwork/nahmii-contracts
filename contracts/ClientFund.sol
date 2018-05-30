@@ -8,14 +8,17 @@
 pragma solidity ^0.4.23;
 
 import "./SafeMathInt.sol";
+import "./Ownable.sol";
 import "./ERC20.sol";
+import "./Beneficiary.sol";
+import "./Benefactor.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Factored out from previous Trade smart contract.
 */
-contract ClientFund {
+contract ClientFund is Ownable, Beneficiary, Benefactor {
     using SafeMathInt for int256;
 
     //
@@ -34,8 +37,6 @@ contract ClientFund {
     }
 
     struct WalletInfo {
-        uint256 tradeNonce;
-
         DepositInfo[] deposits;
         WithdrawalInfo[] withdrawals;
 
@@ -50,12 +51,14 @@ contract ClientFund {
         // Settled balance of ethers and tokens.
         int256 settledEtherBalance;
         mapping (address => int256) settledTokenBalance;
+
+        address[] inUseTokenList;
+        mapping (address => bool) inUseTokenMap;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
     mapping (address => WalletInfo) private walletInfoMap;
 
     uint256 public serviceActivationTimeout;
@@ -65,13 +68,14 @@ contract ClientFund {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
     event TransferFromDepositedToSettledBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
     event WithdrawFromDepositedBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
     event DepositToSettledBalance(address to, int256 amount, address token); //token==0 for ethers
     event StageEvent(address from, int256 amount, address token); //token==0 for ethers
+    event StageToEvent(address from, int256 amount, address token, address beneficiary); //token==0 for ethers
     event UnstageEvent(address from, int256 amount, address token); //token==0 for ethers
+    event SeizeDepositedAndSettledBalancesEvent(address sourceWallet, address targetWallet);
     event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
     event RegisterServiceEvent(address service);
     event EnableRegisteredServiceEvent(address wallet, address service);
@@ -80,27 +84,13 @@ contract ClientFund {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() public {
         serviceActivationTimeout = 30 * 3600; //30 minutes
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        address oldOwner;
-
-        if (newOwner != owner) {
-            // Set new owner
-            oldOwner = owner;
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
-
     function setServiceActivationTimeout(uint256 timeoutInSeconds) public onlyOwner {
         serviceActivationTimeout = timeoutInSeconds;
     }
@@ -109,18 +99,26 @@ contract ClientFund {
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function () public notOwner payable {
+        storeEthers(msg.sender);
+    }
+
+    function storeEthers(address wallet) public notOwner payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet deposited balance
-        walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.add_nn(amount);
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
+        walletInfoMap[wallet].depositedEtherBalance = walletInfoMap[wallet].depositedEtherBalance.add_nn(amount);
+        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
 
         //emit event
-        emit DepositEvent(msg.sender, amount, address(0));
+        emit DepositEvent(wallet, amount, address(0));
     }
 
-    //NOTE: msg.sender must call ERC20.approve first
     function depositTokens(address token, int256 amount) notOwner public {
+        storeTokens(msg.sender, amount, token);
+    }
+
+    //NOTE: 'wallet' must call ERC20.approve first
+    function storeTokens(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -128,14 +126,20 @@ contract ClientFund {
 
         //try to execute token transfer
         erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(msg.sender, this, uint256(amount)));
+        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
 
         //add to per-wallet deposited balance
-        walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].add_nn(amount);
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, token));
+        walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].add_nn(amount);
+        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, token));
+
+        //add token to in-use list
+        if (!walletInfoMap[wallet].inUseTokenMap[token]) {
+            walletInfoMap[wallet].inUseTokenMap[token] = true;
+            walletInfoMap[wallet].inUseTokenList.push(token);
+        }
 
         //emit event
-        emit DepositEvent(msg.sender, amount, token);
+        emit DepositEvent(wallet, amount, token);
     }
 
     function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
@@ -226,9 +230,11 @@ contract ClientFund {
     }
 
     function depositEthersToSettledBalance(address destWallet) public payable notOwner {
+        int256 amount;
+
         require(isAcceptedServiceForWallet(msg.sender, destWallet));
         require(destWallet != address(0));
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet staged balance
         walletInfoMap[destWallet].settledEtherBalance = walletInfoMap[destWallet].settledEtherBalance.add_nn(amount);
@@ -248,6 +254,12 @@ contract ClientFund {
         //add to per-wallet settled balance
         walletInfoMap[destWallet].settledTokenBalance[token] = walletInfoMap[destWallet].settledTokenBalance[token].add_nn(amount);
 
+        //add token to in-use list
+        if (!walletInfoMap[destWallet].inUseTokenMap[token]) {
+            walletInfoMap[destWallet].inUseTokenMap[token] = true;
+            walletInfoMap[destWallet].inUseTokenList.push(token);
+        }
+
         //try to execute token transfer
         erc20_token = ERC20(token);
         require(erc20_token.transferFrom(msg.sender, destWallet, uint256(amount)));
@@ -257,9 +269,10 @@ contract ClientFund {
     }
 
     function stage(int256 amount, address token) public notOwner {
-        require(amount.isPositiveInt256());
         int256 amount_copy;
         int256 to_move;
+
+        require(amount.isPositiveInt256());
 
         if (token == address(0)) {
             //clamp amount to move
@@ -309,6 +322,70 @@ contract ClientFund {
         emit StageEvent(msg.sender, amount, token);
     }
 
+    function stageTo(int256 amount, address token, address beneficiary) public notOwner {
+        int256 amount_copy;
+        int256 to_move;
+        Beneficiary beneficiary_sc;
+
+        require(amount.isPositiveInt256());
+        require(isRegisteredBeneficiary(beneficiary));
+
+        beneficiary_sc = Beneficiary(beneficiary);
+
+        if (token == address(0)) {
+            //clamp amount to move
+            amount = amount.clampMax(walletInfoMap[msg.sender].depositedEtherBalance.add(walletInfoMap[msg.sender].settledEtherBalance));
+            if (amount <= 0)
+                return;
+
+            amount_copy = amount;
+
+            //move from settled balance to staged, if balance greater than zero
+            if (walletInfoMap[msg.sender].settledEtherBalance > 0) {
+                to_move = amount.clampMax(walletInfoMap[msg.sender].settledEtherBalance);
+
+                walletInfoMap[msg.sender].settledEtherBalance = walletInfoMap[msg.sender].settledEtherBalance.sub(to_move);
+                amount = amount.sub(to_move);
+            }
+
+            //move (remaining) from deposited balance
+            walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.sub_nn(amount);
+
+            //transfer funds to the beneficiary
+            beneficiary_sc.storeEthers.value(uint256(amount))(msg.sender);
+        } else {
+            ERC20 erc20_token;
+
+            //clamp amount to move
+            amount = amount.clampMax(walletInfoMap[msg.sender].depositedTokenBalance[token].add(walletInfoMap[msg.sender].settledTokenBalance[token]));
+            if (amount <= 0)
+                return;
+
+            amount_copy = amount;
+
+            //move from settled balance to staged, if balance greater than zero
+            if (walletInfoMap[msg.sender].settledTokenBalance[token] > 0) {
+                to_move = amount.clampMax(walletInfoMap[msg.sender].settledTokenBalance[token]);
+
+                walletInfoMap[msg.sender].settledTokenBalance[token] = walletInfoMap[msg.sender].settledTokenBalance[token].sub(to_move);
+                amount = amount.sub(to_move);
+            }
+
+            //move (remaining) from deposited balance to staged
+            walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].sub_nn(amount);
+
+            //first approve token transfer
+            erc20_token = ERC20(token);
+            require(erc20_token.approve(beneficiary, uint256(amount)));
+
+            //transfer funds to the beneficiary
+            beneficiary_sc.storeTokens(msg.sender, amount, token);
+        }
+
+        //emit event
+        emit StageToEvent(msg.sender, amount, token, beneficiary);
+    }
+
     function unstage(int256 amount, address token) public notOwner {
         require(amount.isPositiveInt256());
 
@@ -334,6 +411,45 @@ contract ClientFund {
 
         //emit event
         emit UnstageEvent(msg.sender, amount, token);
+    }
+
+    function seizeDepositedAndSettledBalances(address sourceWallet, address targetWallet) public onlyRegisteredService notNullAddress(sourceWallet) notNullAddress(targetWallet) {
+        int256 amount;
+        uint256 i;
+        uint256 len;
+
+        //seize ethers
+        amount = walletInfoMap[sourceWallet].depositedEtherBalance.add(walletInfoMap[sourceWallet].settledEtherBalance);
+        assert(amount >= 0);
+
+        walletInfoMap[sourceWallet].depositedEtherBalance = 0;
+        walletInfoMap[sourceWallet].settledEtherBalance = 0;
+        //add to staged balance
+        walletInfoMap[targetWallet].stagedEtherBalance = walletInfoMap[targetWallet].stagedEtherBalance.add_nn(amount);
+
+        //seize tokens
+        len = walletInfoMap[sourceWallet].inUseTokenList.length;
+        for (i = 0; i < len; i++) {
+            address token = walletInfoMap[sourceWallet].inUseTokenList[i];
+
+            amount = walletInfoMap[sourceWallet].depositedTokenBalance[token].add(walletInfoMap[sourceWallet].settledTokenBalance[token]);
+            assert(amount >= 0);
+
+            walletInfoMap[sourceWallet].depositedTokenBalance[token] = 0;
+            walletInfoMap[sourceWallet].settledTokenBalance[token] = 0;
+
+            //add to staged balance
+            walletInfoMap[targetWallet].stagedTokenBalance[token] = walletInfoMap[targetWallet].stagedTokenBalance[token].add_nn(amount);
+
+            //add token to in-use list
+            if (!walletInfoMap[targetWallet].inUseTokenMap[token]) {
+                walletInfoMap[targetWallet].inUseTokenMap[token] = true;
+                walletInfoMap[targetWallet].inUseTokenList.push(token);
+            }
+        }
+
+        //emit event
+        emit SeizeDepositedAndSettledBalancesEvent(sourceWallet, targetWallet);
     }
 
     //
@@ -457,13 +573,8 @@ contract ClientFund {
         _;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
-    modifier notOwner() {
-        require(msg.sender != owner);
+    modifier onlyRegisteredService() {
+        require(registeredServicesMap[msg.sender] != 0);
         _;
     }
 

@@ -13,6 +13,7 @@ import "./AccrualBeneficiaryInterface.sol";
 import "./ClientFund.sol";
 import "./RevenueFund.sol";
 import "./SecurityBond.sol";
+import "./TokenHolderRevenueFund.sol";
 
 /**
 @title UnitTestHelpers
@@ -75,6 +76,12 @@ contract UnitTestHelpers is AccrualBeneficiaryInterface {
         ClientFund sc = ClientFund(clientFunds);
         sc.depositTokensToSettledBalance(destWallet, token, amount);
     }
+    function callToSeizeDepositedAndSettledBalances_CLIENTFUND(address clientFunds, address sourceWallet, address destWallet) public {
+        require(clientFunds != address(0));
+        ClientFund sc = ClientFund(clientFunds);
+        sc.seizeDepositedAndSettledBalances(sourceWallet, destWallet);
+    }
+
 
     //
     // Helpers for RevenueFund SC
@@ -96,5 +103,24 @@ contract UnitTestHelpers is AccrualBeneficiaryInterface {
         require(securityBonds != address(0));
         SecurityBond sc = SecurityBond(securityBonds);
         sc.stage(amount, token, wallet);
+    }
+
+    //
+    // Helpers for TokenHolderRevenueFund SC
+    // -----------------------------------------------------------------------------------------------------------------
+    function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFunds, address token, int256 amount) public {
+        require(tokenHolderRevenueFunds != address(0));
+        TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFunds);
+        sc.depositTokens(token, amount);
+    }
+
+    function callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFunds) public {
+        require(tokenHolderRevenueFunds != address(0));
+        TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFunds);
+        sc.closeAccrualPeriod();
+    }
+
+    function balanceBlocksIn(address /*a*/, uint256 /*from*/, uint256 /*to*/) public pure returns (uint256) {
+        return 1e10;
     }
 }

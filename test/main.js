@@ -268,21 +268,22 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Distribute test tokens", async () => {
-        try {
-            await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.user_b, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.user_c, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.user_d, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_1.address, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_2.address, initialTokensForAll);
-        }
-        catch (err) {
-            assert(false, 'Cannot assign tokens for users and smart contracts. [Error: ' + err.toString() + ']');
-        }
-    });
+	before("Preflight: Distribute test tokens", async() => {
+		try {
+			await glob.web3Erc20.testMint(glob.owner, 100);
+			await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.user_b, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.user_c, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.user_d, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_1.address, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_2.address, initialTokensForAll);
+		}
+		catch (err) {
+			assert(false, 'Cannot assign tokens for users and smart contracts. [Error: ' + err.toString() + ']');
+		}
+	});
 
     //-------------------------------------------------------------------------
     // Tests start here

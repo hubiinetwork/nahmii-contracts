@@ -8,6 +8,7 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
+import "./Ownable.sol";
 import "./Configuration.sol";
 import "./RevenueFund.sol";
 import "./ClientFund.sol";
@@ -21,7 +22,7 @@ import "./ReserveFund.sol";
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract Exchange {
+contract Exchange is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -39,8 +40,6 @@ contract Exchange {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public owner;
-
     uint256 public highestAbsoluteDealNonce;
 
     address[] public seizedWallets;
@@ -62,7 +61,6 @@ contract Exchange {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
@@ -77,27 +75,12 @@ contract Exchange {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-
-    /// @notice Change the owner of this contract
-    /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner)
-    public
-    onlyOwner
-    notNullAddress(newOwner)
-    notEqualAddresses(newOwner, owner)
-    {
-        address oldOwner = owner;
-        owner = newOwner;
-        emit OwnerChangedEvent(oldOwner, newOwner);
-    }
-
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
     function changeConfiguration(Configuration newConfiguration)
@@ -206,6 +189,38 @@ contract Exchange {
         DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
         dealSettlementChallenge = newDealSettlementChallenge;
         emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
+    }
+
+    /// @notice Submit two trade candidates in continuous Double Spent Order Challenge (DSOC)
+    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
+    /// @param firstTrade Reference trade
+    /// @param lastTrade Fraudulent trade candidate
+    function challengeDoubleSpentOrders(
+        Trade firstTrade,
+        Trade lastTrade
+    )
+    public
+    challengeableByDoubleSpentOrderTradesPair(firstTrade, lastTrade)
+    {
+        bool doubleSpentBuyOrder = firstTrade.buyer.order.hashes.exchange == lastTrade.buyer.order.hashes.exchange;
+        bool doubleSpentSellOrder = firstTrade.seller.order.hashes.exchange == lastTrade.seller.order.hashes.exchange;
+
+        require(doubleSpentBuyOrder || doubleSpentSellOrder);
+
+        operationalMode = OperationalMode.Exit;
+        fraudulentTrade = lastTrade;
+
+        address seizedWallet;
+        if (doubleSpentBuyOrder)
+            seizedWallet = lastTrade.buyer._address;
+        if (doubleSpentSellOrder)
+            seizedWallet = lastTrade.seller._address;
+        if (address(0) != seizedWallet) {
+            //            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
+            addToSeizedWallets(seizedWallet);
+        }
+
+        emit ChallengeDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, seizedWallet);
     }
 
     /// @notice Get the seized status of given wallet

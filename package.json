@@ -7,7 +7,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "truffle compile --all",
+    "test": "node run_tests.js",
+    "install": "npm run install:test",
+    "install:test": "truffle migrate --network testnet",
+    "install:main": "truffle migrate --network mainnet"
   },
   "author": "Hubii",
   "license": "Commercial",
@@ -15,6 +19,7 @@
     "async": "^2.6.0",
     "augmented-keccak256": "git+https://github.com/CoinFabrik/augmented-keccak256.git",
     "ethers": "^3.0.7",
+    "ganache-cli": "^6.1.0",
     "truffle": "^4.1.8"
   },
   "devDependencies": {

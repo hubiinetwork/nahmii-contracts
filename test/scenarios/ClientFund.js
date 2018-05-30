@@ -611,6 +611,53 @@ module.exports = function (glob) {
 			}
 		});
 
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST FAIL [stageTo]: User D now wants to stage 0.2 ETH to ReserveFunds (without being registered as beneficiary)", async() => {
+			try {
+				let result = await glob.web3ClientFund.stageTo(web3.toWei(0.2, 'ether'), 0, glob.web3ReserveFund.address, { from: glob.user_d });
+				assert(false, 'This test must fail.');
+			}
+			catch (err) {
+				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST FAIL [stageTo]: User D now wants to stage 3 tokens to ReserveFunds (without being registered as beneficiary)", async() => {
+			try {
+				let result = await glob.web3ClientFund.stageTo(3, glob.web3Erc20.address, glob.web3ReserveFund.address, { from: glob.user_d });
+				assert(false, 'This test must fail.');
+			}
+			catch (err) {
+				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST FAIL [registerBeneficiary]: Called from a non-onwer", async() => {
+			try {
+				let result = await glob.web3ClientFund.registerBeneficiary(glob.web3ReserveFund.address, { from: glob.user_d });
+				assert(false, 'This test must fail.');
+			}
+			catch (err) {
+				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
+		//------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST SUCCEED [registerBeneficiary]: Register ReserveFunds as a beneficiary of ClientFunds", async() => {
+			try {
+				let result = await glob.web3ClientFund.registerBeneficiary(glob.web3ReserveFund.address);
+			}
+			catch (err) {
+				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+			}
+		});
+
 		//------------------------------------------------------------------------
 
 		it(testCounter.next() + ": MUST SUCCEED [withdrawEthers]: User D wants to withdraw 0.1 ETH", async() => {
@@ -740,6 +787,56 @@ module.exports = function (glob) {
 			}
 			catch (err) {
 				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST FAIL [seizeDepositedAndSettledBalances]: Call from a non-registered service", async() => {
+			try {
+				await glob.web3ClientFund.seizeDepositedAndSettledBalances(glob.user_a, glob.user_b, { from: glob.user_a });
+				assert(false, 'This test must fail.');
+			}
+			catch (err) {
+				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST SUCCEED [seizeDepositedAndSettledBalances]: Seize User A funds into User B account", async() => {
+			try {
+				let oldDepositedEthersBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
+				let oldSettledEthersBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, 0);
+				let oldStagedEthersBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, 0);
+
+				let oldDepositedTokensBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address);
+				let oldSettledTokensBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, glob.web3Erc20.address);
+				let oldStagedTokensBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address);
+
+				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToSeizeDepositedAndSettledBalances_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_b);
+
+				let newDepositedEthersBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
+				let newSettledEthersBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, 0);
+				let newStagedEthersBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, 0);
+
+				let newDepositedTokensBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address);
+				let newSettledTokensBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, glob.web3Erc20.address);
+				let newStagedTokensBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address);
+
+				assert.equal(newDepositedEthersBalance_UserA, web3.toWei(0, 'ether'), 'Wrong deposited balance [Diff ' + web3.fromWei(newDepositedEthersBalance_UserA, 'ether') + ' ethers].');
+				assert.equal(newSettledEthersBalance_UserA, web3.toWei(0, 'ether'), 'Wrong settled balance [Diff ' + web3.fromWei(newSettledEthersBalance_UserA, 'ether') + ' ethers].');
+				assert.equal(newDepositedTokensBalance_UserA, 0, 'Wrong deposited balance [Diff ' + newDepositedTokensBalance_UserA.toString() + ' tokens].');
+				assert.equal(newSettledTokensBalance_UserA, 0, 'Wrong settled balance [Diff ' + newDepositedTokensBalance_UserA.toString() + ' tokens].');
+
+				assert.equal(oldStagedEthersBalance_UserB.add(oldDepositedEthersBalance_UserA).add(oldSettledEthersBalance_UserA), newStagedEthersBalance_UserB.toString(),
+				             'Wrong staged balance [Diff ' + web3.fromWei(newStagedEthersBalance_UserB.sub(oldStagedEthersBalance_UserB.add(oldDepositedEthersBalance_UserA).add(oldSettledEthersBalance_UserA)), 'ether') + ' ethers].');
+
+				assert.equal(oldStagedTokensBalance_UserB.add(oldDepositedTokensBalance_UserA).add(oldSettledTokensBalance_UserA), newStagedTokensBalance_UserB.toString(),
+				             'Wrong staged balance [Diff ' + newStagedTokensBalance_UserB.sub(oldStagedTokensBalance_UserB.add(oldDepositedTokensBalance_UserA).add(oldSettledTokensBalance_UserA).toString()) + ' tokens].');
+			}
+			catch (err) {
+				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
 			}
 		});
 	});

@@ -9,7 +9,7 @@ module.exports = function (glob) {
 				let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
 				let oldAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
 
-				await glob.web3UnitTestHelpers_MISC_1.send_money(glob.web3RevenueFund.address, web3.toWei(1.2, 'ether'));
+				await glob.web3UnitTestHelpers_MISC_1.send_money(glob.web3RevenueFund.address, web3.toWei(1.2, 'ether'), { gasLimit: glob.gasLimit });
 
 				let newPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
 				let newAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
@@ -29,7 +29,7 @@ module.exports = function (glob) {
 				let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
 				let oldAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
 
-				await glob.web3UnitTestHelpers_MISC_2.send_money(glob.web3RevenueFund.address, web3.toWei(0.6, 'ether'));
+				await glob.web3UnitTestHelpers_MISC_2.send_money(glob.web3RevenueFund.address, web3.toWei(0.6, 'ether'), { gasLimit: glob.gasLimit });
 
 				let newPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
 				let newAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);

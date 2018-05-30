@@ -8,49 +8,27 @@
 pragma solidity ^0.4.23;
 
 import "./SafeMathInt.sol";
+import "./Ownable.sol";
 import "./ERC20.sol";
 
 /**
 @title Community vote
 @notice An oracle for relevant decisions made by the community.
 */
-contract CommunityVote {
+contract CommunityVote is Ownable {
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private owner;
     mapping(address => bool) doubleSpenderWalletsMap;
-    uint256 internal highestAbsoluteDealNonce;
-    bool internal dataAvailable;
-
-    //
-    // Events
-    // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
+    uint256 highestAbsoluteDealNonce;
+    bool dataAvailable;
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) public Ownable(_owner) {
         dataAvailable = true;
-    }
-
-    //
-    // Functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        address oldOwner;
-
-        if (newOwner != owner) {
-            // Set new owner
-            oldOwner = owner;
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
     }
 
     //
@@ -80,11 +58,6 @@ contract CommunityVote {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
         _;
     }
 }
