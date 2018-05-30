@@ -195,8 +195,24 @@ library Types {
         return wallet == trade.buyer._address || wallet == trade.seller._address;
     }
 
+    function isTradeBuyer(Types.Trade trade, address wallet) internal pure returns (bool) {
+        return wallet == trade.buyer._address;
+    }
+
+    function isTradeSeller(Types.Trade trade, address wallet) internal pure returns (bool) {
+        return wallet == trade.seller._address;
+    }
+
     function isPaymentParty(Types.Payment payment, address wallet) internal pure returns (bool) {
         return wallet == payment.sender._address || wallet == payment.recipient._address;
+    }
+
+    function isPaymentSender(Types.Payment payment, address wallet) internal pure returns (bool) {
+        return wallet == payment.sender._address;
+    }
+
+    function isPaymentRecipient(Types.Payment payment, address wallet) internal pure returns (bool) {
+        return wallet == payment.recipient._address;
     }
 
     function isTradeOrder(Types.Trade trade, Types.Order order) internal pure returns (bool) {
