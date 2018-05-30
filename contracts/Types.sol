@@ -81,7 +81,7 @@ library Types {
     }
 
     struct TradeParty {
-        address _address;
+        address wallet;
         uint256 nonce;
         uint256 rollingVolume;
         LiquidityRole liquidityRole;
@@ -112,7 +112,7 @@ library Types {
     }
 
     struct PaymentParty {
-        address _address;
+        address wallet;
         uint256 nonce;
         CurrentPreviousInt256 balances;
         int256 netFee;
@@ -150,7 +150,7 @@ library Types {
 
     struct Order {
         uint256 nonce;
-        address _address;
+        address wallet;
         OrderPlacement placement;
         WalletExchangeSeals seals;
         uint256 blockNumber;
@@ -192,27 +192,27 @@ library Types {
     }
 
     function isTradeParty(Types.Trade trade, address wallet) internal pure returns (bool) {
-        return wallet == trade.buyer._address || wallet == trade.seller._address;
+        return wallet == trade.buyer.wallet || wallet == trade.seller.wallet;
     }
 
     function isTradeBuyer(Types.Trade trade, address wallet) internal pure returns (bool) {
-        return wallet == trade.buyer._address;
+        return wallet == trade.buyer.wallet;
     }
 
     function isTradeSeller(Types.Trade trade, address wallet) internal pure returns (bool) {
-        return wallet == trade.seller._address;
+        return wallet == trade.seller.wallet;
     }
 
     function isPaymentParty(Types.Payment payment, address wallet) internal pure returns (bool) {
-        return wallet == payment.sender._address || wallet == payment.recipient._address;
+        return wallet == payment.sender.wallet || wallet == payment.recipient.wallet;
     }
 
     function isPaymentSender(Types.Payment payment, address wallet) internal pure returns (bool) {
-        return wallet == payment.sender._address;
+        return wallet == payment.sender.wallet;
     }
 
     function isPaymentRecipient(Types.Payment payment, address wallet) internal pure returns (bool) {
-        return wallet == payment.recipient._address;
+        return wallet == payment.recipient.wallet;
     }
 
     function isTradeOrder(Types.Trade trade, Types.Order order) internal pure returns (bool) {

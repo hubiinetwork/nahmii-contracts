@@ -12,7 +12,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe.only('CancelOrdersChallenge', () => {
+    describe('CancelOrdersChallenge', () => {
         let web3CancelOrdersChallenge, ethersCancelOrdersChallengeOwner;
         let web3Configuration, ethersConfiguration;
         let provider;
@@ -127,12 +127,12 @@ module.exports = (glob) => {
 
             beforeEach(async () => {
                 order1 = await mocks.mockOrder(glob.owner, {
-                    _address: glob.user_a,
+                    wallet: glob.user_a,
                     blockNumber: utils.bigNumberify(blockNumber10)
                 });
                 order2 = await mocks.mockOrder(glob.owner, {
                     nonce: utils.bigNumberify(2),
-                    _address: glob.user_a,
+                    wallet: glob.user_a,
                     residuals: {
                         current: utils.parseUnits('600', 18),
                         previous: utils.parseUnits('700', 18)
@@ -158,9 +158,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if _address differs from msg.sender', () => {
+            describe('if wallet differs from msg.sender', () => {
                 beforeEach(async () => {
-                    order1 = await mocks.mockOrder(glob.owner, {_address: glob.user_c});
+                    order1 = await mocks.mockOrder(glob.owner, {wallet: glob.user_c});
                 });
 
                 it('should revert', async () => {
@@ -208,7 +208,7 @@ module.exports = (glob) => {
                 describe('if cancel order challenge timeout has not expired', () => {
                     beforeEach(async () => {
                         order = await mocks.mockOrder(glob.owner, {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             blockNumber: utils.bigNumberify(blockNumber10)
                         });
 
@@ -216,7 +216,7 @@ module.exports = (glob) => {
 
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
-                                _address: order._address,
+                                wallet: order.wallet,
                                 order: {
                                     hashes: {
                                         wallet: order.seals.wallet.hash,
@@ -229,7 +229,7 @@ module.exports = (glob) => {
                     });
 
                     it('should successfully accept the challenge candidate trade', async () => {
-                        await ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, order._address, overrideOptions);
+                        await ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, order.wallet, overrideOptions);
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(topic);
                     });
@@ -240,14 +240,14 @@ module.exports = (glob) => {
                         await ethersConfiguration.setCancelOrderChallengeTimeout(0);
 
                         order = await mocks.mockOrder(glob.owner, {
-                            _address: glob.user_c
+                            wallet: glob.user_c
                         });
 
                         await ethersCancelOrdersChallengeUserC.cancelOrders([order], overrideOptions);
 
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
-                                _address: order._address,
+                                wallet: order.wallet,
                                 order: {
                                     hashes: {
                                         wallet: order.seals.wallet.hash,
@@ -259,7 +259,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, order._address, overrideOptions).should.be.rejected;
+                        ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, order.wallet, overrideOptions).should.be.rejected;
                     });
                 });
             });
@@ -270,7 +270,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, trade.buyer._address, overrideOptions).should.be.rejected;
+                    ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -280,7 +280,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, trade.buyer._address, overrideOptions).should.be.rejected;
+                    ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             })
         });
@@ -303,7 +303,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     order = await mocks.mockOrder(glob.owner, {
-                        _address: glob.user_d
+                        wallet: glob.user_d
                     });
                 });
 
@@ -314,7 +314,7 @@ module.exports = (glob) => {
                     });
 
                     it('should return value corresponding to Closed', async () => {
-                        const phase = await ethersCancelOrdersChallengeOwner.challengePhase(order._address);
+                        const phase = await ethersCancelOrdersChallengeOwner.challengePhase(order.wallet);
                         phase.should.equal(mocks.challengePhases.indexOf('Closed'));
                     });
                 });
@@ -326,7 +326,7 @@ module.exports = (glob) => {
                     });
 
                     it('should return value corresponding to Dispute', async () => {
-                        const phase = await ethersCancelOrdersChallengeOwner.challengePhase(order._address);
+                        const phase = await ethersCancelOrdersChallengeOwner.challengePhase(order.wallet);
                         phase.should.equal(mocks.challengePhases.indexOf('Dispute'));
                     });
                 });

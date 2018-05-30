@@ -189,7 +189,7 @@ contract DealSettlementChallenge is Ownable {
     function startChallengeFromPayment(Types.Payment payment, address wallet)
     public
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address)
+    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet)
     {
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -273,7 +273,7 @@ contract DealSettlementChallenge is Ownable {
     public
     orderSigned(order)
     {
-        address wallet = order._address;
+        address wallet = order.wallet;
 
         ChallengeInfo storage challenge = walletChallengeInfoMap[wallet];
         require(
@@ -324,10 +324,10 @@ contract DealSettlementChallenge is Ownable {
     public
     orderSigned(order)
     tradeSigned(trade)
-    onlyTradeParty(trade, order._address)
+    onlyTradeParty(trade, order.wallet)
     onlyTradeOrder(trade, order)
     {
-        ChallengeInfo storage challenge = walletChallengeInfoMap[order._address];
+        ChallengeInfo storage challenge = walletChallengeInfoMap[order.wallet];
         require(challenge.challengeCandidateType == ChallengeCandidateType.Order);
 
         challenge.status = Types.ChallengeStatus.Qualified;
@@ -337,7 +337,7 @@ contract DealSettlementChallenge is Ownable {
 
         // TODO Stage stake obtained from configuration contract for msg.sender in security bond contract
 
-        emit UnchallengeOrderCandidateByTradeEvent(order, trade, order._address,
+        emit UnchallengeOrderCandidateByTradeEvent(order, trade, order.wallet,
             challenge.nonce, challenge.dealType, msg.sender);
     }
 
@@ -357,7 +357,7 @@ contract DealSettlementChallenge is Ownable {
 
         // Wallet is buyer in (candidate) trade -> consider single conjugate transfer in (candidate) trade
         // Wallet is seller in (candidate) trade -> consider single intended transfer in (candidate) trade
-        Types.TradePartyRole tradePartyRole = (trade.buyer._address == wallet ?
+        Types.TradePartyRole tradePartyRole = (trade.buyer.wallet == wallet ?
         Types.TradePartyRole.Buyer :
         Types.TradePartyRole.Seller);
 
@@ -383,7 +383,7 @@ contract DealSettlementChallenge is Ownable {
 
         challengeCandidateTrades.push(trade);
 
-        bytes32 orderExchangeHash = (trade.buyer._address == wallet ?
+        bytes32 orderExchangeHash = (trade.buyer.wallet == wallet ?
         trade.buyer.order.hashes.exchange :
         trade.seller.order.hashes.exchange);
 
@@ -440,7 +440,7 @@ contract DealSettlementChallenge is Ownable {
         require(0 < trade.nonce);
         require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
 
-        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         Types.CurrencyRole tradeCurrencyRole = (currency == trade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
         if (Types.TradePartyRole.Buyer == tradePartyRole)
             if (Types.CurrencyRole.Intended == tradeCurrencyRole)
@@ -458,7 +458,7 @@ contract DealSettlementChallenge is Ownable {
         require(0 < payment.nonce);
         require(currency == payment.currency);
 
-        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
         if (Types.PaymentPartyRole.Sender == paymentPartyRole)
             return payment.sender.balances.current;
         else //Types.PaymentPartyRole.Recipient == paymentPartyRole
@@ -510,7 +510,7 @@ contract DealSettlementChallenge is Ownable {
 
     modifier orderSigned(Types.Order order) {
         require(Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, owner));
-        require(Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order._address));
+        require(Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet));
         _;
     }
 
@@ -520,7 +520,7 @@ contract DealSettlementChallenge is Ownable {
     }
 
     modifier orderSignedByWallet(Types.Order order) {
-        require(Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order._address));
+        require(Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet));
         _;
     }
 
@@ -531,7 +531,7 @@ contract DealSettlementChallenge is Ownable {
 
     modifier paymentSigned(Types.Payment payment) {
         require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
-        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address));
+        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
         _;
     }
 
@@ -541,7 +541,7 @@ contract DealSettlementChallenge is Ownable {
     }
 
     modifier paymentSignedByWallet(Types.Payment payment) {
-        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address));
+        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
         _;
     }
 }

@@ -108,8 +108,8 @@ contract CancelOrdersChallenge is Ownable {
     function cancelOrders(Types.Order[] orders) public
     {
         for (uint256 i = 0; i < orders.length; i++) {
-            require(msg.sender == orders[i]._address);
-            require(Types.isGenuineSignature(orders[i].seals.wallet.hash, orders[i].seals.wallet.signature, orders[i]._address));
+            require(msg.sender == orders[i].wallet);
+            require(Types.isGenuineSignature(orders[i].seals.wallet.hash, orders[i].seals.wallet.signature, orders[i].wallet));
             require(Types.isGenuineSignature(orders[i].seals.exchange.hash, orders[i].seals.exchange.signature, owner));
         }
 
@@ -134,7 +134,7 @@ contract CancelOrdersChallenge is Ownable {
         require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
 
         bytes32 orderExchangeHash = (
-        wallet == trade.buyer._address ?
+        wallet == trade.buyer.wallet ?
         trade.buyer.order.hashes.exchange :
         trade.seller.order.hashes.exchange
         );

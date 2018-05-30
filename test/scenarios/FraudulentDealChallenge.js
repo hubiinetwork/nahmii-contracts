@@ -12,7 +12,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe('FraudulentDealChallenge', () => {
+    describe.only('FraudulentDealChallenge', () => {
         let web3FraudulentDealChallenge, ethersFraudulentDealChallenge;
         let web3Configuration, ethersConfiguration;
         let web3CommunityVote, ethersCommunityVote;
@@ -240,8 +240,8 @@ module.exports = (glob) => {
             describe('if buyer address equals seller address', () => {
                 beforeEach(async () => {
                     trade = await mocks.mockTrade(glob.owner, {
-                        buyer: {_address: glob.user_a},
-                        seller: {_address: glob.user_a},
+                        buyer: {wallet: glob.user_a},
+                        seller: {wallet: glob.user_a},
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                 });
@@ -251,7 +251,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedBuyer, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.buyer._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.buyer.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -264,7 +264,7 @@ module.exports = (glob) => {
             describe('if buyer address equals owner address', () => {
                 beforeEach(async () => {
                     trade = await mocks.mockTrade(glob.owner, {
-                        buyer: {_address: glob.owner},
+                        buyer: {wallet: glob.owner},
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                 });
@@ -518,7 +518,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -547,7 +547,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -576,7 +576,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -605,7 +605,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -634,7 +634,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -663,7 +663,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -688,7 +688,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -713,7 +713,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -738,7 +738,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTrade, seizedSeller, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(trade.seller.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -872,8 +872,8 @@ module.exports = (glob) => {
             describe('if sender address equals recipient address', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
-                        sender: {_address: glob.user_a},
-                        recipient: {_address: glob.user_a},
+                        sender: {wallet: glob.user_a},
+                        recipient: {wallet: glob.user_a},
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                 });
@@ -883,7 +883,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -910,7 +910,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -933,7 +933,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -956,7 +956,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -979,7 +979,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.sender.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -1006,7 +1006,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPayment, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentPayment(),
-                        ethersFraudulentDealChallenge.isSeizedWallet(payment.recipient._address),
+                        ethersFraudulentDealChallenge.isSeizedWallet(payment.recipient.wallet),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -1029,10 +1029,10 @@ module.exports = (glob) => {
                 firstTrade = await mocks.mockTrade(glob.owner, {
                     nonce: utils.bigNumberify(10),
                     buyer: {
-                        _address: glob.user_a
+                        wallet: glob.user_a
                     },
                     seller: {
-                        _address: glob.user_b
+                        wallet: glob.user_b
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
                 });
@@ -1049,7 +1049,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -1075,7 +1075,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -1128,7 +1128,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -1154,7 +1154,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(2)), // <---- modified ----
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -1207,7 +1207,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -1233,7 +1233,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -1296,7 +1296,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -1322,7 +1322,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -1392,10 +1392,10 @@ module.exports = (glob) => {
                 firstPayment = await mocks.mockPayment(glob.owner, {
                     nonce: utils.bigNumberify(10),
                     sender: {
-                        _address: glob.user_a
+                        wallet: glob.user_a
                     },
                     recipient: {
-                        _address: glob.user_b
+                        wallet: glob.user_b
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
                 });
@@ -1404,7 +1404,7 @@ module.exports = (glob) => {
                     nonce: utils.bigNumberify(20),
                     amount: utils.parseUnits('50', 18),
                     sender: {
-                        _address: glob.user_b,
+                        wallet: glob.user_b,
                         nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                         balances: {
                             current: utils.parseUnits('19649.9', 18),
@@ -1413,7 +1413,7 @@ module.exports = (glob) => {
                         netFee: utils.parseUnits('0.1', 18)
                     },
                     recipient: {
-                        _address: glob.user_a,
+                        wallet: glob.user_a,
                         nonce: firstPayment.sender.nonce.add(utils.bigNumberify(1)),
                         balances: {
                             current: utils.parseUnits('9449.8', 18),
@@ -1438,7 +1438,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
                         sender: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19649.9', 18),
@@ -1447,7 +1447,7 @@ module.exports = (glob) => {
                             netFee: utils.parseUnits('0.1', 18)
                         },
                         recipient: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstPayment.sender.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9449.8', 18),
@@ -1475,7 +1475,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
                         sender: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19649.9', 18),
@@ -1484,7 +1484,7 @@ module.exports = (glob) => {
                             netFee: utils.parseUnits('0.1', 18)
                         },
                         recipient: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstPayment.sender.nonce.add(utils.bigNumberify(2)), // <---- modified ----
                             balances: {
                                 current: utils.parseUnits('9449.8', 18),
@@ -1512,7 +1512,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
                         sender: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19649.9', 18),
@@ -1521,7 +1521,7 @@ module.exports = (glob) => {
                             netFee: utils.parseUnits('0.1', 18)
                         },
                         recipient: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstPayment.sender.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9449.8', 18),
@@ -1559,7 +1559,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
                         sender: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstPayment.recipient.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19649.9', 18),
@@ -1568,7 +1568,7 @@ module.exports = (glob) => {
                             netFee: utils.parseUnits('0.1', 18)
                         },
                         recipient: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstPayment.sender.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9449.8', 18),
@@ -1613,10 +1613,10 @@ module.exports = (glob) => {
                 trade = await mocks.mockTrade(glob.owner, {
                     nonce: utils.bigNumberify(10),
                     buyer: {
-                        _address: glob.user_a
+                        wallet: glob.user_a
                     },
                     seller: {
-                        _address: glob.user_b
+                        wallet: glob.user_b
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
                 });
@@ -1634,7 +1634,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
                         sender: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19449.9', 18),
@@ -1643,7 +1643,7 @@ module.exports = (glob) => {
                             netFee: utils.parseUnits('0.1', 18)
                         },
                         recipient: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9649.8', 18),
@@ -1671,7 +1671,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
                         sender: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19449.9', 18),
@@ -1680,7 +1680,7 @@ module.exports = (glob) => {
                             netFee: utils.parseUnits('0.1', 18)
                         },
                         recipient: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: trade.buyer.nonce.add(utils.bigNumberify(2)), // <---- modified ----
                             balances: {
                                 current: utils.parseUnits('9649.8', 18),
@@ -1708,7 +1708,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
                         sender: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19449.9', 18),
@@ -1717,7 +1717,7 @@ module.exports = (glob) => {
                             netFee: utils.parseUnits('0.1', 18)
                         },
                         recipient: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9649.8', 18),
@@ -1755,7 +1755,7 @@ module.exports = (glob) => {
                         nonce: utils.bigNumberify(20),
                         amount: utils.parseUnits('50', 18),
                         sender: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
                             balances: {
                                 current: utils.parseUnits('19449.9', 18),
@@ -1764,7 +1764,7 @@ module.exports = (glob) => {
                             netFee: utils.parseUnits('0.1', 18)
                         },
                         recipient: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
                             balances: {
                                 current: utils.parseUnits('9649.8', 18),
@@ -1809,10 +1809,10 @@ module.exports = (glob) => {
                 payment = await mocks.mockPayment(glob.owner, {
                     nonce: utils.bigNumberify(10),
                     sender: {
-                        _address: glob.user_a
+                        wallet: glob.user_a
                     },
                     recipient: {
-                        _address: glob.user_b
+                        wallet: glob.user_b
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
                 });
@@ -1829,7 +1829,7 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: payment.recipient.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -1855,7 +1855,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: payment.sender.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -1908,7 +1908,7 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: payment.recipient.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -1934,7 +1934,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: payment.sender.nonce.add(utils.bigNumberify(2)), // <---- modified ----
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -1987,7 +1987,7 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: payment.recipient.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -2013,7 +2013,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: payment.sender.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2076,7 +2076,7 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: payment.recipient.nonce.add(utils.bigNumberify(2)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -2102,7 +2102,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: payment.sender.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2173,10 +2173,10 @@ module.exports = (glob) => {
                 firstTrade = await mocks.mockTrade(glob.owner, {
                     nonce: utils.bigNumberify(10),
                     buyer: {
-                        _address: glob.user_a
+                        wallet: glob.user_a
                     },
                     seller: {
-                        _address: glob.user_b
+                        wallet: glob.user_b
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
                 });
@@ -2193,7 +2193,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2222,7 +2222,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -2278,7 +2278,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: firstTrade.seller._address, // <---- modified ----
+                            wallet: firstTrade.seller.wallet, // <---- modified ----
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2307,7 +2307,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: firstTrade.buyer._address, // <---- modified ----
+                            wallet: firstTrade.buyer.wallet, // <---- modified ----
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -2363,7 +2363,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(2)), // <---- modified ----
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2392,7 +2392,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -2448,7 +2448,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2477,7 +2477,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -2524,7 +2524,7 @@ module.exports = (glob) => {
                 });
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
-                    await ethersFraudulentDealChallenge.challengeByTradeOrderResiduals(firstTrade, lastTrade, lastTrade.buyer._address, currency, overrideOptions);
+                    await ethersFraudulentDealChallenge.challengeByTradeOrderResiduals(firstTrade, lastTrade, lastTrade.buyer.wallet, currency, overrideOptions);
                     const [operationalModeExit, fraudulentTrade, seizedWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
@@ -2551,10 +2551,10 @@ module.exports = (glob) => {
                 firstTrade = await mocks.mockTrade(glob.owner, {
                     nonce: utils.bigNumberify(10),
                     buyer: {
-                        _address: glob.user_a
+                        wallet: glob.user_a
                     },
                     seller: {
-                        _address: glob.user_b
+                        wallet: glob.user_b
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
                 });
@@ -2571,7 +2571,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2597,7 +2597,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -2650,7 +2650,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2679,7 +2679,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {
@@ -2742,7 +2742,7 @@ module.exports = (glob) => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         nonce: utils.bigNumberify(20),
                         buyer: {
-                            _address: glob.user_a,
+                            wallet: glob.user_a,
                             nonce: firstTrade.buyer.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
                             order: {
@@ -2768,7 +2768,7 @@ module.exports = (glob) => {
                             }
                         },
                         seller: {
-                            _address: glob.user_b,
+                            wallet: glob.user_b,
                             nonce: firstTrade.seller.nonce.add(utils.bigNumberify(1)),
                             liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
                             order: {

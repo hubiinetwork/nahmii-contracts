@@ -18,7 +18,7 @@ exports.mockOrder = async (exchange, params) => {
 
     const order = exports.mergeDeep({
         nonce: utils.bigNumberify(1),
-        _address: wallet.address,
+        wallet: wallet.address,
         placement: {
             intention: exports.intentions.indexOf('Buy'),
             immediateSettlement: true,
@@ -39,9 +39,9 @@ exports.mockOrder = async (exchange, params) => {
     const exchangeSigner = exports.createWeb3Signer(exchange);
 
     const walletSigner = (
-        order._address === wallet.address ?
+        order.wallet === wallet.address ?
             exports.createEthutilSigner(wallet) :
-            exports.createWeb3Signer(order._address)
+            exports.createWeb3Signer(order.wallet)
     );
 
     return await exports.augmentOrderSeals(order, exchangeSigner, walletSigner);
@@ -58,7 +58,7 @@ exports.mockTrade = async (exchange, params) => {
             conjugate: '0x0000000000000000000000000000000000000002'
         },
         buyer: {
-            _address: Wallet.createRandom().address,
+            wallet: Wallet.createRandom().address,
             nonce: utils.bigNumberify(1),
             rollingVolume: utils.bigNumberify(0),
             liquidityRole: exports.liquidityRoles.indexOf('Maker'),
@@ -89,7 +89,7 @@ exports.mockTrade = async (exchange, params) => {
             }
         },
         seller: {
-            _address: Wallet.createRandom().address,
+            wallet: Wallet.createRandom().address,
             nonce: utils.bigNumberify(1),
             rollingVolume: utils.bigNumberify(0),
             liquidityRole: exports.liquidityRoles.indexOf('Taker'),
@@ -151,7 +151,7 @@ exports.mockPayment = async (exchange, params) => {
         amount: utils.parseUnits('100', 18),
         currency: '0x0000000000000000000000000000000000000001',
         sender: {
-            _address: senderWallet.address,
+            wallet: senderWallet.address,
             nonce: utils.bigNumberify(1),
             balances: {
                 current: utils.parseUnits('9399.8', 18),
@@ -160,7 +160,7 @@ exports.mockPayment = async (exchange, params) => {
             netFee: utils.parseUnits('0.2', 18)
         },
         recipient: {
-            _address: recipientWallet.address,
+            wallet: recipientWallet.address,
             nonce: utils.bigNumberify(1),
             balances: {
                 current: utils.parseUnits('19700', 18),
@@ -179,9 +179,9 @@ exports.mockPayment = async (exchange, params) => {
     const exchangeSigner = exports.createWeb3Signer(exchange);
 
     const walletSigner = (
-        payment.sender._address === senderWallet.address ?
+        payment.sender.wallet === senderWallet.address ?
             exports.createEthutilSigner(senderWallet) :
-            exports.createWeb3Signer(payment.sender._address)
+            exports.createWeb3Signer(payment.sender.wallet)
     );
 
     return await exports.augmentPaymentSeals(payment, exchangeSigner, walletSigner);

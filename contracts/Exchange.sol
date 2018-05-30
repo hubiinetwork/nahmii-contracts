@@ -239,7 +239,7 @@ contract Exchange is Ownable {
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < highestAbsoluteDealNonce)) {
 
-                Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+                Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
                 int256 partyInboundTransferIntended;
                 int256 partyInboundTransferConjugate;
@@ -281,7 +281,7 @@ contract Exchange is Ownable {
     function settleDealAsPayment(Types.Payment payment, address wallet)
     public
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address)
+    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet)
     {
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -294,7 +294,7 @@ contract Exchange is Ownable {
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (payment.nonce < highestAbsoluteDealNonce)) {
 
-                Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+                Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
                 int256 partyInboundTransfer;
                 if ((0 < payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
@@ -327,16 +327,16 @@ contract Exchange is Ownable {
     function settleTradeTransfers(Types.Trade trade) private {
         if (0 < trade.transfers.intended.net.sub(trade.buyer.netFees.intended)) {// Transfer from seller to buyer
             clientFund.transferFromDepositedToSettledBalance(
-                trade.seller._address,
-                trade.buyer._address,
+                trade.seller.wallet,
+                trade.buyer.wallet,
                 trade.transfers.intended.net.sub(trade.buyer.netFees.intended),
                 trade.currencies.intended
             );
 
         } else if (0 > trade.transfers.intended.net.add(trade.seller.netFees.intended)) {// Transfer from buyer to seller
             clientFund.transferFromDepositedToSettledBalance(
-                trade.buyer._address,
-                trade.seller._address,
+                trade.buyer.wallet,
+                trade.seller.wallet,
                 trade.transfers.intended.net.add(trade.seller.netFees.intended).abs(),
                 trade.currencies.intended
             );
@@ -344,16 +344,16 @@ contract Exchange is Ownable {
 
         if (0 < trade.transfers.conjugate.net.sub(trade.seller.netFees.conjugate)) {// Transfer from buyer to seller
             clientFund.transferFromDepositedToSettledBalance(
-                trade.buyer._address,
-                trade.seller._address,
+                trade.buyer.wallet,
+                trade.seller.wallet,
                 trade.transfers.conjugate.net.sub(trade.seller.netFees.conjugate),
                 trade.currencies.conjugate
             );
 
         } else if (0 > trade.transfers.conjugate.net.add(trade.buyer.netFees.conjugate)) {// Transfer from seller to buyer
             clientFund.transferFromDepositedToSettledBalance(
-                trade.seller._address,
-                trade.buyer._address,
+                trade.seller.wallet,
+                trade.buyer.wallet,
                 trade.transfers.conjugate.net.add(trade.buyer.netFees.conjugate).abs(),
                 trade.currencies.conjugate
             );
@@ -363,16 +363,16 @@ contract Exchange is Ownable {
     function settlePaymentTransfers(Types.Payment payment) private {
         if (0 < payment.transfers.net.sub(payment.sender.netFee)) {// Transfer from sender to recipient
             clientFund.transferFromDepositedToSettledBalance(
-                payment.sender._address,
-                payment.recipient._address,
+                payment.sender.wallet,
+                payment.recipient.wallet,
                 payment.transfers.net.sub(payment.sender.netFee),
                 payment.currency
             );
 
         } else if (0 > payment.transfers.net.add(payment.recipient.netFee)) {// Transfer from recipient to sender
             clientFund.transferFromDepositedToSettledBalance(
-                payment.recipient._address,
-                payment.sender._address,
+                payment.recipient.wallet,
+                payment.sender.wallet,
                 payment.transfers.net.add(payment.recipient.netFee).abs(),
                 payment.currency
             );
@@ -388,10 +388,10 @@ contract Exchange is Ownable {
 
     function addTwoSidedSettlementFromTrade(Types.Trade trade) private {
         settlements.push(
-            Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.TwoSided, [trade.buyer._address, trade.seller._address])
+            Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.TwoSided, [trade.buyer.wallet, trade.seller.wallet])
         );
-        walletSettlementIndexMap[trade.buyer._address].push(settlements.length - 1);
-        walletSettlementIndexMap[trade.seller._address].push(settlements.length - 1);
+        walletSettlementIndexMap[trade.buyer.wallet].push(settlements.length - 1);
+        walletSettlementIndexMap[trade.seller.wallet].push(settlements.length - 1);
     }
 
     function addOneSidedSettlementFromPayment(Types.Payment payment, address wallet) private {
@@ -403,16 +403,16 @@ contract Exchange is Ownable {
 
     function addTwoSidedSettlementFromPayment(Types.Payment payment) private {
         settlements.push(
-            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.sender._address, payment.recipient._address])
+            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.sender.wallet, payment.recipient.wallet])
         );
-        walletSettlementIndexMap[payment.sender._address].push(settlements.length - 1);
-        walletSettlementIndexMap[payment.recipient._address].push(settlements.length - 1);
+        walletSettlementIndexMap[payment.sender.wallet].push(settlements.length - 1);
+        walletSettlementIndexMap[payment.recipient.wallet].push(settlements.length - 1);
     }
 
     function settleTradeFees(Types.Trade trade) private {
         if (0 < trade.buyer.netFees.intended) {
             clientFund.withdrawFromDepositedBalance(
-                trade.buyer._address,
+                trade.buyer.wallet,
                 tradesRevenueFund,
                 trade.buyer.netFees.intended,
                 trade.currencies.intended
@@ -423,7 +423,7 @@ contract Exchange is Ownable {
 
         if (0 < trade.buyer.netFees.conjugate) {
             clientFund.withdrawFromDepositedBalance(
-                trade.buyer._address,
+                trade.buyer.wallet,
                 tradesRevenueFund,
                 trade.buyer.netFees.conjugate,
                 trade.currencies.conjugate
@@ -434,7 +434,7 @@ contract Exchange is Ownable {
 
         if (0 < trade.seller.netFees.intended) {
             clientFund.withdrawFromDepositedBalance(
-                trade.seller._address,
+                trade.seller.wallet,
                 tradesRevenueFund,
                 trade.seller.netFees.intended,
                 trade.currencies.intended
@@ -445,7 +445,7 @@ contract Exchange is Ownable {
 
         if (0 < trade.seller.netFees.conjugate) {
             clientFund.withdrawFromDepositedBalance(
-                trade.seller._address,
+                trade.seller.wallet,
                 tradesRevenueFund,
                 trade.seller.netFees.conjugate,
                 trade.currencies.conjugate
@@ -458,7 +458,7 @@ contract Exchange is Ownable {
     function settlePaymentFees(Types.Payment payment) private {
         if (0 < payment.sender.netFee) {
             clientFund.withdrawFromDepositedBalance(
-                payment.sender._address,
+                payment.sender.wallet,
                 paymentsRevenueFund,
                 payment.sender.netFee,
                 payment.currency
@@ -469,7 +469,7 @@ contract Exchange is Ownable {
 
         if (0 < payment.recipient.netFee) {
             clientFund.withdrawFromDepositedBalance(
-                payment.recipient._address,
+                payment.recipient.wallet,
                 paymentsRevenueFund,
                 payment.recipient.netFee,
                 payment.currency

@@ -144,9 +144,9 @@ contract FraudulentDealChallenge is Ownable {
 
         address seizedWallet;
         if (!genuineByBuyer)
-            seizedWallet = trade.buyer._address;
+            seizedWallet = trade.buyer.wallet;
         if (!genuineBySeller)
-            seizedWallet = trade.seller._address;
+            seizedWallet = trade.seller.wallet;
         if (address(0) != seizedWallet) {
             //            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
             addToSeizedWallets(seizedWallet);
@@ -175,9 +175,9 @@ contract FraudulentDealChallenge is Ownable {
 
         address seizedWallet;
         if (!genuineBySender)
-            seizedWallet = payment.sender._address;
+            seizedWallet = payment.sender.wallet;
         if (!genuineByRecipient)
-            seizedWallet = payment.recipient._address;
+            seizedWallet = payment.recipient.wallet;
         if (address(0) != seizedWallet) {
             //            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
             addToSeizedWallets(seizedWallet);
@@ -202,8 +202,8 @@ contract FraudulentDealChallenge is Ownable {
     public
     challengeableBySuccessionTradesPair(firstTrade, lastTrade, wallet, currency)
     {
-        Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
-        Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
         require(isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
@@ -238,8 +238,8 @@ contract FraudulentDealChallenge is Ownable {
     public
     challengeableBySuccessionPaymentsPair(firstPayment, lastPayment, wallet)
     {
-        Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
-        Types.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+        Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+        Types.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
         require(isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
@@ -273,8 +273,8 @@ contract FraudulentDealChallenge is Ownable {
     public
     challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
-        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
-        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
         require(isSuccessiveTradePaymentPartyNonces(trade, tradePartyRole, payment, paymentPartyRole));
 
@@ -310,8 +310,8 @@ contract FraudulentDealChallenge is Ownable {
     public
     challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
-        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender._address ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
-        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
         require(isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
 
@@ -347,8 +347,8 @@ contract FraudulentDealChallenge is Ownable {
     public
     challengeableByOrderResidualsTradesPair(firstTrade, lastTrade, wallet, currency)
     {
-        Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
-        Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer._address ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         require(firstTradePartyRole == lastTradePartyRole);
 
         if (Types.TradePartyRole.Buyer == firstTradePartyRole)
@@ -390,9 +390,9 @@ contract FraudulentDealChallenge is Ownable {
         fraudulentTrade = lastTrade;
 
         if (doubleSpentBuyOrder)
-            addToDoubleSpenderWallets(lastTrade.buyer._address);
+            addToDoubleSpenderWallets(lastTrade.buyer.wallet);
         if (doubleSpentSellOrder)
-            addToDoubleSpenderWallets(lastTrade.seller._address);
+            addToDoubleSpenderWallets(lastTrade.seller.wallet);
 
         emit ChallengeDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, doubleSpenderWallets);
     }
@@ -415,8 +415,8 @@ contract FraudulentDealChallenge is Ownable {
     }
 
     function isGenuineByTradeBuyer(Types.Trade trade) private view returns (bool) {
-        return (trade.buyer._address != trade.seller._address)
-        && (trade.buyer._address != owner)
+        return (trade.buyer.wallet != trade.seller.wallet)
+        && (trade.buyer.wallet != owner)
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.singleFees.intended))
         && (trade.buyer.balances.conjugate.current == trade.buyer.balances.conjugate.previous.sub(trade.transfers.conjugate.single))
         && (trade.buyer.order.amount >= trade.buyer.order.residuals.current)
@@ -425,8 +425,8 @@ contract FraudulentDealChallenge is Ownable {
     }
 
     function isGenuineByTradeSeller(Types.Trade trade) private view returns (bool) {
-        return (trade.buyer._address != trade.seller._address)
-        && (trade.seller._address != owner)
+        return (trade.buyer.wallet != trade.seller.wallet)
+        && (trade.seller.wallet != owner)
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))
         && (trade.seller.balances.conjugate.current == trade.seller.balances.conjugate.previous.add(trade.transfers.conjugate.single).sub(trade.singleFees.conjugate))
         && (trade.seller.order.amount >= trade.seller.order.residuals.current)
@@ -442,7 +442,7 @@ contract FraudulentDealChallenge is Ownable {
     function isGenuinePaymentSeals(Types.Payment payment) private view returns (bool) {
         return (Types.hashPaymentAsWallet(payment) == payment.seals.wallet.hash)
         && (Types.hashPaymentAsExchange(payment) == payment.seals.exchange.hash)
-        && (Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address))
+        && (Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet))
         && (Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
     }
 
@@ -454,12 +454,12 @@ contract FraudulentDealChallenge is Ownable {
     }
 
     function isGenuineByPaymentSender(Types.Payment payment) private pure returns (bool) {
-        return (payment.sender._address != payment.recipient._address)
+        return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.singleFee));
     }
 
     function isGenuineByPaymentRecipient(Types.Payment payment) private pure returns (bool) {
-        return (payment.sender._address != payment.recipient._address)
+        return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.recipient.balances.current == payment.recipient.balances.previous.add(payment.transfers.single));
     }
 
@@ -754,13 +754,13 @@ contract FraudulentDealChallenge is Ownable {
         require(Types.isPaymentParty(firstPayment, wallet));
         require(Types.hashPaymentAsWallet(firstPayment) == firstPayment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(firstPayment) == firstPayment.seals.exchange.hash);
-        require(Types.isGenuineSignature(firstPayment.seals.wallet.hash, firstPayment.seals.wallet.signature, firstPayment.sender._address));
+        require(Types.isGenuineSignature(firstPayment.seals.wallet.hash, firstPayment.seals.wallet.signature, firstPayment.sender.wallet));
         require(Types.isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
 
         require(Types.isPaymentParty(lastPayment, wallet));
         require(Types.hashPaymentAsWallet(lastPayment) == lastPayment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(lastPayment) == lastPayment.seals.exchange.hash);
-        require(Types.isGenuineSignature(lastPayment.seals.wallet.hash, lastPayment.seals.wallet.signature, lastPayment.sender._address));
+        require(Types.isGenuineSignature(lastPayment.seals.wallet.hash, lastPayment.seals.wallet.signature, lastPayment.sender.wallet));
         require(Types.isGenuineSignature(lastPayment.seals.exchange.hash, lastPayment.seals.exchange.signature, owner));
 
         _;
@@ -777,7 +777,7 @@ contract FraudulentDealChallenge is Ownable {
         require(Types.isPaymentParty(payment, wallet));
         require(Types.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
         require(Types.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
-        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address));
+        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
         require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
 
         _;
