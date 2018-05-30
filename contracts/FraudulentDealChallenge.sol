@@ -155,6 +155,11 @@ contract FraudulentDealChallenge is Ownable {
         emit ChallengeByTradeEvent(trade, msg.sender, seizedWallet);
     }
 
+//    // TODO Remove
+//    function getHashes(Types.Payment payment) public pure returns (bytes32, bytes32) {
+//        return (Types.hashPaymentAsWallet(payment), Types.hashPaymentAsExchange(payment));
+//    }
+//
     /// @notice Submit a payment candidate in continuous Fraudulent Deal Challenge (FDC)
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param payment Fraudulent payment candidate

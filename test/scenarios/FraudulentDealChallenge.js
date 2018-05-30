@@ -12,7 +12,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe.only('FraudulentDealChallenge', () => {
+    describe('FraudulentDealChallenge', () => {
         let web3FraudulentDealChallenge, ethersFraudulentDealChallenge;
         let web3Configuration, ethersConfiguration;
         let web3CommunityVote, ethersCommunityVote;
@@ -826,6 +826,11 @@ module.exports = (glob) => {
             describe('if wallet hash differs from calculated', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+
+                    // TODO Remove
+                    // console.log([payment.seals.wallet.hash, payment.seals.exchange.hash]);
+                    // console.log(await ethersFraudulentDealChallenge.getHashes(payment));
+
                     payment.seals.wallet.hash = utils.id('some non-existent hash');
                 });
 
