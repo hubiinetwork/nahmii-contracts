@@ -150,7 +150,7 @@ contract CancelOrdersChallenge is Ownable {
 
     /// @notice Get current phase of a wallets cancelled order challenge
     /// @param wallet The address of wallet for which the cancelled order challenge phase is returned
-    function cancelledOrdersChallengePhase(address wallet) public view returns (Types.ChallengePhase) {
+    function challengePhase(address wallet) public view returns (Types.ChallengePhase) {
         if (0 == walletOrderCancelledListMap[wallet].length)
             return Types.ChallengePhase.Closed;
         if (block.timestamp < walletOrderCancelledTimeoutMap[wallet])

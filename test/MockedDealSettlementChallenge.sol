@@ -16,7 +16,7 @@ contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
-    struct DealSettlementChallengeInfo {
+    struct ChallengeInfo {
         uint256 nonce;
         Types.DealType dealType;
         uint256 timeout;

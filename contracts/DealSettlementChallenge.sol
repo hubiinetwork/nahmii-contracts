@@ -31,15 +31,15 @@ contract DealSettlementChallenge is Ownable {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    enum CandidateType {None, Order, Trade, Payment}
+    enum ChallengeCandidateType {None, Order, Trade, Payment}
 
-    struct DealSettlementChallengeInfo {
+    struct ChallengeInfo {
         uint256 nonce;
         Types.DealType dealType;
         uint256 timeout;
         Types.ChallengeStatus status;
         uint256 dealIndex;
-        CandidateType candidateType;
+        ChallengeCandidateType challengeCandidateType;
         uint256 candidateIndex;
         address challenger;
     }
@@ -51,14 +51,14 @@ contract DealSettlementChallenge is Ownable {
     SecurityBond public securityBond;
     CancelOrdersChallenge public cancelOrdersChallenge;
 
-    mapping(address => DealSettlementChallengeInfo) public walletDealSettlementChallengeInfoMap;
+    mapping(address => ChallengeInfo) public walletChallengeInfoMap;
 
-    mapping(address => Types.Trade[]) public walletDealSettlementChallengedTradesMap;
-    mapping(address => Types.Payment[]) public walletDealSettlementChallengedPaymentsMap;
+    mapping(address => Types.Trade[]) public walletChallengedTradesMap;
+    mapping(address => Types.Payment[]) public walletChallengedPaymentsMap;
 
-    Types.Order[] public candidateOrders;
-    Types.Trade[] public candidateTrades;
-    Types.Payment[] public candidatePayments;
+    Types.Order[] public challengeCandidateOrders;
+    Types.Trade[] public challengeCandidateTrades;
+    Types.Payment[] public challengeCandidatePayments;
 
     //
     // Events
@@ -66,12 +66,12 @@ contract DealSettlementChallenge is Ownable {
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
     event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
-    event StartDealSettlementChallengeFromTradeEvent(Types.Trade trade, address wallet);
-    event StartDealSettlementChallengeFromPaymentEvent(Types.Payment payment, address wallet);
-    event ChallengeDealSettlementByOrderEvent(Types.Order order, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
-    event ChallengeDealSettlementByTradeEvent(Types.Trade trade, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
-    event ChallengeDealSettlementByPaymentEvent(Types.Payment payment, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
-    event UnchallengeDealSettlementOrderByTradeEvent(Types.Order order, Types.Trade trade, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
+    event StartChallengeFromTradeEvent(Types.Trade trade, address wallet);
+    event StartChallengeFromPaymentEvent(Types.Payment payment, address wallet);
+    event ChallengeByOrderEvent(Types.Order order, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
+    event ChallengeByTradeEvent(Types.Trade trade, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
+    event ChallengeByPaymentEvent(Types.Payment payment, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
+    event UnchallengeOrderCandidateByTradeEvent(Types.Order order, Types.Trade trade, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
 
     //
     // Constructor
@@ -123,35 +123,35 @@ contract DealSettlementChallenge is Ownable {
 
     /// @notice Get the number of current and past deal settlement challenges from trade for given wallet
     /// @param wallet The wallet for which to return count
-    function dealSettlementChallengeFromTradeCount(address wallet) public view returns (uint256) {
-        return walletDealSettlementChallengedTradesMap[wallet].length;
+    function walletChallengedTradesCount(address wallet) public view returns (uint256) {
+        return walletChallengedTradesMap[wallet].length;
     }
 
     /// @notice Get the number of current and past deal settlement challenges from payment for given wallet
     /// @param wallet The wallet for which to return count
-    function dealSettlementChallengeFromPaymentCount(address wallet) public view returns (uint256) {
-        return walletDealSettlementChallengedPaymentsMap[wallet].length;
+    function walletChallengedPaymentsCount(address wallet) public view returns (uint256) {
+        return walletChallengedPaymentsMap[wallet].length;
     }
 
     /// @notice Return the number of (challenge) candidate orders
-    function candidateOrdersCount() public view returns (uint256) {
-        return candidateOrders.length;
+    function challengeCandidateOrdersCount() public view returns (uint256) {
+        return challengeCandidateOrders.length;
     }
 
     /// @notice Return the number of (challenge) candidate trades
-    function candidateTradesCount() public view returns (uint256) {
-        return candidateTrades.length;
+    function challengeCandidateTradesCount() public view returns (uint256) {
+        return challengeCandidateTrades.length;
     }
 
     /// @notice Return the number of (challenge) candidate payments
-    function candidatePaymentsCount() public view returns (uint256) {
-        return candidatePayments.length;
+    function challengeCandidatePaymentsCount() public view returns (uint256) {
+        return challengeCandidatePayments.length;
     }
 
     /// @notice Start deal settlement challenge on deal of trade type
     /// @param trade The challenged deal
     /// @param wallet The relevant deal party
-    function startDealSettlementChallengeFromTrade(Types.Trade trade, address wallet)
+    function startChallengeFromTrade(Types.Trade trade, address wallet)
     public
     signedBy(trade.seal.hash, trade.seal.signature, owner)
     {
@@ -162,31 +162,31 @@ contract DealSettlementChallenge is Ownable {
         require(isOwner() || Types.isTradeParty(trade, wallet));
 
         require(
-            0 == walletDealSettlementChallengeInfoMap[wallet].nonce ||
-            block.timestamp >= walletDealSettlementChallengeInfoMap[wallet].timeout
+            0 == walletChallengeInfoMap[wallet].nonce ||
+            block.timestamp >= walletChallengeInfoMap[wallet].timeout
         );
 
-        walletDealSettlementChallengedTradesMap[wallet].push(trade);
+        walletChallengedTradesMap[wallet].push(trade);
 
-        DealSettlementChallengeInfo memory challenge = DealSettlementChallengeInfo(
+        ChallengeInfo memory challenge = ChallengeInfo(
             trade.nonce,
             Types.DealType.Trade,
             block.timestamp + configuration.dealSettlementChallengeTimeout(),
             Types.ChallengeStatus.Qualified,
-            walletDealSettlementChallengedTradesMap[wallet].length - 1,
-            CandidateType.None,
+            walletChallengedTradesMap[wallet].length - 1,
+            ChallengeCandidateType.None,
             0,
             address(0)
         );
-        walletDealSettlementChallengeInfoMap[wallet] = challenge;
+        walletChallengeInfoMap[wallet] = challenge;
 
-        emit StartDealSettlementChallengeFromTradeEvent(trade, wallet);
+        emit StartChallengeFromTradeEvent(trade, wallet);
     }
 
     /// @notice Start deal settlement challenge on deal of payment type
     /// @param payment The challenged deal
     /// @param wallet The relevant deal party
-    function startDealSettlementChallengeFromPayment(Types.Payment payment, address wallet)
+    function startChallengeFromPayment(Types.Payment payment, address wallet)
     public
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
     signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender._address)
@@ -198,47 +198,47 @@ contract DealSettlementChallenge is Ownable {
         require(isOwner() || Types.isPaymentParty(payment, wallet));
 
         require(
-            0 == walletDealSettlementChallengeInfoMap[wallet].nonce ||
-            block.timestamp >= walletDealSettlementChallengeInfoMap[wallet].timeout
+            0 == walletChallengeInfoMap[wallet].nonce ||
+            block.timestamp >= walletChallengeInfoMap[wallet].timeout
         );
 
-        walletDealSettlementChallengedPaymentsMap[wallet].push(payment);
+        walletChallengedPaymentsMap[wallet].push(payment);
 
-        DealSettlementChallengeInfo memory challenge = DealSettlementChallengeInfo(
+        ChallengeInfo memory challenge = ChallengeInfo(
             payment.nonce,
             Types.DealType.Payment,
             block.timestamp + configuration.dealSettlementChallengeTimeout(),
             Types.ChallengeStatus.Qualified,
-            walletDealSettlementChallengedPaymentsMap[wallet].length - 1,
-            CandidateType.None,
+            walletChallengedPaymentsMap[wallet].length - 1,
+            ChallengeCandidateType.None,
             0,
             address(0)
         );
-        walletDealSettlementChallengeInfoMap[wallet] = challenge;
+        walletChallengeInfoMap[wallet] = challenge;
 
-        emit StartDealSettlementChallengeFromPaymentEvent(payment, wallet);
+        emit StartChallengeFromPaymentEvent(payment, wallet);
     }
 
     /// @notice Get challenged deal that is a trade
     /// @param wallet The wallet whose challenged deal will be searched for
     function getChallengedDealAsTrade(address wallet) public view returns (Types.Trade) {
         require(
-            0 < walletDealSettlementChallengeInfoMap[wallet].nonce
-            && Types.DealType.Trade == walletDealSettlementChallengeInfoMap[wallet].dealType
+            0 < walletChallengeInfoMap[wallet].nonce
+            && Types.DealType.Trade == walletChallengeInfoMap[wallet].dealType
         );
-        uint256 dealIndex = walletDealSettlementChallengeInfoMap[wallet].dealIndex;
-        return walletDealSettlementChallengedTradesMap[wallet][dealIndex];
+        uint256 dealIndex = walletChallengeInfoMap[wallet].dealIndex;
+        return walletChallengedTradesMap[wallet][dealIndex];
     }
 
     /// @notice Get challenged deal that is a payment
     /// @param wallet The wallet whose challenged deal will be searched for
     function getChallengedDealAsPayment(address wallet) public view returns (Types.Payment) {
         require(
-            0 < walletDealSettlementChallengeInfoMap[wallet].nonce
-            && Types.DealType.Payment == walletDealSettlementChallengeInfoMap[wallet].dealType
+            0 < walletChallengeInfoMap[wallet].nonce
+            && Types.DealType.Payment == walletChallengeInfoMap[wallet].dealType
         );
-        uint256 dealIndex = walletDealSettlementChallengeInfoMap[wallet].dealIndex;
-        return walletDealSettlementChallengedPaymentsMap[wallet][dealIndex];
+        uint256 dealIndex = walletChallengeInfoMap[wallet].dealIndex;
+        return walletChallengedPaymentsMap[wallet][dealIndex];
     }
 
     /// @notice Get deal settlement challenge phase of given wallet
@@ -246,12 +246,12 @@ contract DealSettlementChallenge is Ownable {
     function dealSettlementChallengePhase(address wallet) public view returns (uint, Types.ChallengePhase) {
         if (msg.sender != owner)
             wallet = msg.sender;
-        if (0 == walletDealSettlementChallengeInfoMap[wallet].nonce)
+        if (0 == walletChallengeInfoMap[wallet].nonce)
             return (0, Types.ChallengePhase.Closed);
-        else if (block.timestamp < walletDealSettlementChallengeInfoMap[wallet].timeout)
-            return (walletDealSettlementChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Dispute);
+        else if (block.timestamp < walletChallengeInfoMap[wallet].timeout)
+            return (walletChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Dispute);
         else
-            return (walletDealSettlementChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Closed);
+            return (walletChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Closed);
     }
 
     /// @notice Get deal settlement challenge phase of given wallet
@@ -260,22 +260,22 @@ contract DealSettlementChallenge is Ownable {
     function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeStatus) {
         if (msg.sender != owner)
             wallet = msg.sender;
-        if ((0 == walletDealSettlementChallengeInfoMap[wallet].nonce) ||
-            (nonce != walletDealSettlementChallengeInfoMap[wallet].nonce))
+        if ((0 == walletChallengeInfoMap[wallet].nonce) ||
+            (nonce != walletChallengeInfoMap[wallet].nonce))
             return Types.ChallengeStatus.Unknown;
         else
-            return walletDealSettlementChallengeInfoMap[wallet].status;
+            return walletChallengeInfoMap[wallet].status;
     }
 
     /// @notice Challenge the deal settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged deal
-    function challengeDealSettlementByOrder(Types.Order order)
+    function challengeByOrder(Types.Order order)
     public
     orderSigned(order)
     {
         address wallet = order._address;
 
-        DealSettlementChallengeInfo storage challenge = walletDealSettlementChallengeInfoMap[wallet];
+        ChallengeInfo storage challenge = walletChallengeInfoMap[wallet];
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -293,63 +293,63 @@ contract DealSettlementChallenge is Ownable {
 
         int256 balance = (Types.DealType.Trade == challenge.dealType ?
         getTradeBalance(
-            walletDealSettlementChallengedTradesMap[wallet][challenge.dealIndex],
+            walletChallengedTradesMap[wallet][challenge.dealIndex],
             wallet,
             orderCurrency
         ) :
         getPaymentBalance(
-            walletDealSettlementChallengedPaymentsMap[wallet][challenge.dealIndex],
+            walletChallengedPaymentsMap[wallet][challenge.dealIndex],
             wallet,
             orderCurrency
         ));
 
         require(orderAmount > balance);
 
-        candidateOrders.push(order);
+        challengeCandidateOrders.push(order);
 
         challenge.status = Types.ChallengeStatus.Disqualified;
-        challenge.candidateType = CandidateType.Order;
-        challenge.candidateIndex = candidateOrders.length - 1;
+        challenge.challengeCandidateType = ChallengeCandidateType.Order;
+        challenge.candidateIndex = challengeCandidateOrders.length - 1;
 
         bool orderCancelled = cancelOrdersChallenge.isOrderCancelled(wallet, order.seals.exchange.hash);
         challenge.challenger = orderCancelled ? address(0) : msg.sender;
 
-        emit ChallengeDealSettlementByOrderEvent(order, wallet, challenge.nonce, challenge.dealType, msg.sender);
+        emit ChallengeByOrderEvent(order, wallet, challenge.nonce, challenge.dealType, msg.sender);
     }
 
     /// @notice Unchallenge deal settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged deal
     /// @param trade The trade in which order has been filled
-    function unchallengeDealSettlementOrderByTrade(Types.Order order, Types.Trade trade)
+    function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade)
     public
     orderSigned(order)
     tradeSigned(trade)
     onlyTradeParty(trade, order._address)
     onlyTradeOrder(trade, order)
     {
-        DealSettlementChallengeInfo storage challenge = walletDealSettlementChallengeInfoMap[order._address];
-        require(challenge.candidateType == CandidateType.Order);
+        ChallengeInfo storage challenge = walletChallengeInfoMap[order._address];
+        require(challenge.challengeCandidateType == ChallengeCandidateType.Order);
 
         challenge.status = Types.ChallengeStatus.Qualified;
-        challenge.candidateType = CandidateType.None;
+        challenge.challengeCandidateType = ChallengeCandidateType.None;
         challenge.candidateIndex = 0;
         challenge.challenger = address(0);
 
         // TODO Stage stake obtained from configuration contract for msg.sender in security bond contract
 
-        emit UnchallengeDealSettlementOrderByTradeEvent(order, trade, order._address,
+        emit UnchallengeOrderCandidateByTradeEvent(order, trade, order._address,
             challenge.nonce, challenge.dealType, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing trade candidate
     /// @param trade The trade candidate that challenges the challenged deal
     /// @param wallet The wallet whose deal settlement is being challenged
-    function challengeDealSettlementByTrade(Types.Trade trade, address wallet)
+    function challengeByTrade(Types.Trade trade, address wallet)
     public
     tradeSigned(trade)
     onlyTradeParty(trade, wallet)
     {
-        DealSettlementChallengeInfo storage challenge = walletDealSettlementChallengeInfoMap[wallet];
+        ChallengeInfo storage challenge = walletChallengeInfoMap[wallet];
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -369,19 +369,19 @@ contract DealSettlementChallenge is Ownable {
 
         int256 challengeBalance = (Types.DealType.Trade == challenge.dealType ?
         getTradeBalance(
-            walletDealSettlementChallengedTradesMap[wallet][challenge.dealIndex],
+            walletChallengedTradesMap[wallet][challenge.dealIndex],
             wallet,
             currency
         ) :
         getPaymentBalance(
-            walletDealSettlementChallengedPaymentsMap[wallet][challenge.dealIndex],
+            walletChallengedPaymentsMap[wallet][challenge.dealIndex],
             wallet,
             currency
         ));
 
         require(candidateTransfer > challengeBalance);
 
-        candidateTrades.push(trade);
+        challengeCandidateTrades.push(trade);
 
         bytes32 orderExchangeHash = (trade.buyer._address == wallet ?
         trade.buyer.order.hashes.exchange :
@@ -389,22 +389,22 @@ contract DealSettlementChallenge is Ownable {
 
         bool orderCancelled = cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash);
         challenge.status = Types.ChallengeStatus.Disqualified;
-        challenge.candidateType = CandidateType.Trade;
-        challenge.candidateIndex = candidateTrades.length - 1;
+        challenge.challengeCandidateType = ChallengeCandidateType.Trade;
+        challenge.candidateIndex = challengeCandidateTrades.length - 1;
         challenge.challenger = orderCancelled ? address(0) : msg.sender;
 
-        emit ChallengeDealSettlementByTradeEvent(trade, wallet, challenge.nonce, challenge.dealType, msg.sender);
+        emit ChallengeByTradeEvent(trade, wallet, challenge.nonce, challenge.dealType, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing payment candidate
     /// @param payment The payment candidate that challenges the challenged deal
     /// @param wallet The wallet whose deal settlement is being challenged
-    function challengeDealSettlementByPayment(Types.Payment payment, address wallet)
+    function challengeByPayment(Types.Payment payment, address wallet)
     public
     paymentSigned(payment)
     onlyPaymentSender(payment, wallet) // Wallet is recipient in (candidate) payment -> nothing to consider
     {
-        DealSettlementChallengeInfo storage challenge = walletDealSettlementChallengeInfoMap[wallet];
+        ChallengeInfo storage challenge = walletChallengeInfoMap[wallet];
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -414,26 +414,26 @@ contract DealSettlementChallenge is Ownable {
 
         int256 challengeBalance = (Types.DealType.Trade == challenge.dealType ?
         getTradeBalance(
-            walletDealSettlementChallengedTradesMap[wallet][challenge.dealIndex],
+            walletChallengedTradesMap[wallet][challenge.dealIndex],
             wallet,
             payment.currency
         ) :
         getPaymentBalance(
-            walletDealSettlementChallengedPaymentsMap[wallet][challenge.dealIndex],
+            walletChallengedPaymentsMap[wallet][challenge.dealIndex],
             wallet,
             payment.currency
         ));
 
         require(candidateTransfer > challengeBalance);
 
-        candidatePayments.push(payment);
+        challengeCandidatePayments.push(payment);
 
         challenge.status = Types.ChallengeStatus.Disqualified;
-        challenge.candidateType = CandidateType.Payment;
-        challenge.candidateIndex = candidatePayments.length - 1;
+        challenge.challengeCandidateType = ChallengeCandidateType.Payment;
+        challenge.candidateIndex = challengeCandidatePayments.length - 1;
         challenge.challenger = msg.sender;
 
-        emit ChallengeDealSettlementByPaymentEvent(payment, wallet, challenge.nonce, challenge.dealType, msg.sender);
+        emit ChallengeByPaymentEvent(payment, wallet, challenge.nonce, challenge.dealType, msg.sender);
     }
 
     function getTradeBalance(Types.Trade trade, address wallet, address currency) private pure returns (int256) {

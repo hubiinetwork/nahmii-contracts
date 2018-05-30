@@ -29,17 +29,6 @@ contract Exchange is Ownable {
     using SafeMathUint for uint256;
 
     //
-    // Enums
-    // -----------------------------------------------------------------------------------------------------------------
-    struct DealSettlementChallengeInfo {
-        uint256 nonce;
-        Types.DealType dealType;
-        uint256 timeout;
-        Types.ChallengeStatus status;
-        uint256 dealIndex;
-    }
-
-    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     uint256 public highestAbsoluteDealNonce;

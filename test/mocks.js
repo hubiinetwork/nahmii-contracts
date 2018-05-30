@@ -11,7 +11,7 @@ exports.dealTypes = ['Trade', 'Payment'];
 exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
 exports.challengeStatuses = ['Unknown', 'Qualified', 'Disqualified'];
-exports.candidateTypes = ['None', 'Order', 'Trade', 'Payment'];
+exports.challengeCandidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
 exports.mockOrder = async (exchange, params) => {
     const wallet = Wallet.createRandom();

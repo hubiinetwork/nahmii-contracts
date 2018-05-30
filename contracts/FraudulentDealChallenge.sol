@@ -44,13 +44,13 @@ contract FraudulentDealChallenge is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeFraudulentDealByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
-    event ChallengeFraudulentDealByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
-    event ChallengeFraudulentDealBySuccessiveTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
-    event ChallengeFraudulentDealBySuccessivePaymentsEvent(Types.Payment firstPayment, Types.Payment lastPayment, address challenger, address seizedWallet);
-    event ChallengeFraudulentDealByPaymentSucceedingTradeEvent(Types.Trade trade, Types.Payment payment, address challenger, address seizedWallet);
-    event ChallengeFraudulentDealByTradeSucceedingPaymentEvent(Types.Payment payment, Types.Trade trade, address challenger, address seizedWallet);
-    event ChallengeFraudulentDealByTradeOrderResidualsEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
+    event ChallengeBySuccessiveTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeBySuccessivePaymentsEvent(Types.Payment firstPayment, Types.Payment lastPayment, address challenger, address seizedWallet);
+    event ChallengeByPaymentSucceedingTradeEvent(Types.Trade trade, Types.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByTradeSucceedingPaymentEvent(Types.Payment payment, Types.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeOrderResidualsEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
     event ChallengeDoubleSpentOrdersEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address[] doubleSpenderWallets);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
     event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
@@ -120,7 +120,7 @@ contract FraudulentDealChallenge is Ownable {
     /// @notice Submit a trade candidate in continuous Fraudulent Deal Challenge (FDC)
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param trade Fraudulent trade candidate
-    function challengeFraudulentDealByTrade(Types.Trade trade) public {
+    function challengeByTrade(Types.Trade trade) public {
         // Gauge the genuineness of maker and taker fees. Depending on whether maker is buyer or seller
         // this result is baked into genuineness by buyer and seller below.
         bool genuineMakerFee = isGenuineTradeMakerFee(trade);
@@ -152,13 +152,13 @@ contract FraudulentDealChallenge is Ownable {
             addToSeizedWallets(seizedWallet);
         }
 
-        emit ChallengeFraudulentDealByTradeEvent(trade, msg.sender, seizedWallet);
+        emit ChallengeByTradeEvent(trade, msg.sender, seizedWallet);
     }
 
     /// @notice Submit a payment candidate in continuous Fraudulent Deal Challenge (FDC)
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param payment Fraudulent payment candidate
-    function challengeFraudulentDealByPayment(Types.Payment payment) public {
+    function challengeByPayment(Types.Payment payment) public {
         // Genuineness that does not related to buyer or seller
         bool genuineSeals = isGenuinePaymentSeals(payment);
 
@@ -183,7 +183,7 @@ contract FraudulentDealChallenge is Ownable {
             addToSeizedWallets(seizedWallet);
         }
 
-        emit ChallengeFraudulentDealByPaymentEvent(payment, msg.sender, seizedWallet);
+        emit ChallengeByPaymentEvent(payment, msg.sender, seizedWallet);
     }
 
     /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC)
@@ -193,7 +193,7 @@ contract FraudulentDealChallenge is Ownable {
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
     /// @param currency Address of concerned currency (0 if ETH)
-    function challengeFraudulentDealBySuccessiveTrades(
+    function challengeBySuccessiveTrades(
         Types.Trade firstTrade,
         Types.Trade lastTrade,
         address wallet,
@@ -221,7 +221,7 @@ contract FraudulentDealChallenge is Ownable {
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
 
-        emit ChallengeFraudulentDealBySuccessiveTradesEvent(firstTrade, lastTrade, msg.sender, wallet);
+        emit ChallengeBySuccessiveTradesEvent(firstTrade, lastTrade, msg.sender, wallet);
     }
 
     /// @notice Submit two payment candidates in continuous Fraudulent Deal Challenge (FDC)
@@ -230,7 +230,7 @@ contract FraudulentDealChallenge is Ownable {
     /// @param firstPayment Reference payment
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
-    function challengeFraudulentDealBySuccessivePayments(
+    function challengeBySuccessivePayments(
         Types.Payment firstPayment,
         Types.Payment lastPayment,
         address wallet
@@ -254,7 +254,7 @@ contract FraudulentDealChallenge is Ownable {
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
 
-        emit ChallengeFraudulentDealBySuccessivePaymentsEvent(firstPayment, lastPayment, msg.sender, wallet);
+        emit ChallengeBySuccessivePaymentsEvent(firstPayment, lastPayment, msg.sender, wallet);
     }
 
     /// @notice Submit trade and subsequent payment candidates in continuous Fraudulent Deal Challenge (FDC)
@@ -264,7 +264,7 @@ contract FraudulentDealChallenge is Ownable {
     /// @param payment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
     /// @param currency Address of concerned currency of trade (0 if ETH)
-    function challengeFraudulentDealByPaymentSucceedingTrade(
+    function challengeByPaymentSucceedingTrade(
         Types.Trade trade,
         Types.Payment payment,
         address wallet,
@@ -291,7 +291,7 @@ contract FraudulentDealChallenge is Ownable {
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
 
-        emit ChallengeFraudulentDealByPaymentSucceedingTradeEvent(trade, payment, msg.sender, wallet);
+        emit ChallengeByPaymentSucceedingTradeEvent(trade, payment, msg.sender, wallet);
     }
 
     /// @notice Submit payment and subsequent trade candidates in continuous Fraudulent Deal Challenge (FDC)
@@ -301,7 +301,7 @@ contract FraudulentDealChallenge is Ownable {
     /// @param trade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
     /// @param currency Address of concerned currency of trade (0 if ETH)
-    function challengeFraudulentDealByTradeSucceedingPayment(
+    function challengeByTradeSucceedingPayment(
         Types.Payment payment,
         Types.Trade trade,
         address wallet,
@@ -328,7 +328,7 @@ contract FraudulentDealChallenge is Ownable {
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
 
-        emit ChallengeFraudulentDealByTradeSucceedingPaymentEvent(payment, trade, msg.sender, wallet);
+        emit ChallengeByTradeSucceedingPaymentEvent(payment, trade, msg.sender, wallet);
     }
 
     /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
@@ -338,7 +338,7 @@ contract FraudulentDealChallenge is Ownable {
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
     /// @param currency Address of concerned currency (0 if ETH)
-    function challengeFraudulentDealByTradeOrderResiduals(
+    function challengeByTradeOrderResiduals(
         Types.Trade firstTrade,
         Types.Trade lastTrade,
         address wallet,
@@ -366,7 +366,7 @@ contract FraudulentDealChallenge is Ownable {
         //            clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
 
-        emit ChallengeFraudulentDealByTradeOrderResidualsEvent(firstTrade, lastTrade, msg.sender, wallet);
+        emit ChallengeByTradeOrderResidualsEvent(firstTrade, lastTrade, msg.sender, wallet);
     }
 
     /// @notice Submit two trade candidates in continuous Double Spent Order Challenge (DSOC)

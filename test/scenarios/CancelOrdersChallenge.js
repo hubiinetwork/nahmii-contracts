@@ -2,7 +2,6 @@ const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const ethers = require('ethers');
-const CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
 const mocks = require('../mocks');
 
 chai.use(sinonChai);
@@ -13,7 +12,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe('CancelOrdersChallenge', () => {
+    describe.only('CancelOrdersChallenge', () => {
         let web3CancelOrdersChallenge, ethersCancelOrdersChallengeOwner;
         let web3Configuration, ethersConfiguration;
         let provider;
@@ -286,11 +285,11 @@ module.exports = (glob) => {
             })
         });
 
-        describe('cancelledOrdersChallengePhase()', () => {
+        describe('challengePhase()', () => {
             describe('if no order has been cancelled for wallet', () => {
                 it('should return value corresponding to Closed', async () => {
                     const address = Wallet.createRandom().address;
-                    const phase = await ethersCancelOrdersChallengeOwner.cancelledOrdersChallengePhase(address);
+                    const phase = await ethersCancelOrdersChallengeOwner.challengePhase(address);
                     phase.should.equal(mocks.challengePhases.indexOf('Closed'));
                 });
             });
@@ -315,7 +314,7 @@ module.exports = (glob) => {
                     });
 
                     it('should return value corresponding to Closed', async () => {
-                        const phase = await ethersCancelOrdersChallengeOwner.cancelledOrdersChallengePhase(order._address);
+                        const phase = await ethersCancelOrdersChallengeOwner.challengePhase(order._address);
                         phase.should.equal(mocks.challengePhases.indexOf('Closed'));
                     });
                 });
@@ -327,7 +326,7 @@ module.exports = (glob) => {
                     });
 
                     it('should return value corresponding to Dispute', async () => {
-                        const phase = await ethersCancelOrdersChallengeOwner.cancelledOrdersChallengePhase(order._address);
+                        const phase = await ethersCancelOrdersChallengeOwner.challengePhase(order._address);
                         phase.should.equal(mocks.challengePhases.indexOf('Dispute'));
                     });
                 });
