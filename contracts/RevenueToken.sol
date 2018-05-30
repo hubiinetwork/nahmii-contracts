@@ -49,7 +49,7 @@ contract RevenueToken is ERC20, Ownable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /**
-     * @dev transfer token for a specified address
+     * @notice transfer token for a specified address
      * @param _to The address to transfer to.
      * @param value The amount to be transferred.
      */
@@ -72,7 +72,7 @@ contract RevenueToken is ERC20, Ownable {
     }
 
     /**
-     * @dev Gets the balance of the specified address.
+     * @notice Gets the balance of the specified address.
      * @param account The address whose balance is to be queried.
      * @return An uint256 representing the amount owned by the passed address.
      */
@@ -81,7 +81,7 @@ contract RevenueToken is ERC20, Ownable {
     }
 
     /**
-     * @dev Transfer tokens from one address to another
+     * @notice Transfer tokens from one address to another
      * @param from address The address which you want to send tokens from
      * @param to address The address which you want to transfer to
      * @param value uint256 the amout of tokens to be transfered
@@ -112,7 +112,7 @@ contract RevenueToken is ERC20, Ownable {
     }
 
     /**
-     * @dev Aprove the passed address to spend the specified amount of tokens on behalf of msg.sender.
+     * @notice Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
      * @param spender The address which will spend the funds.
      * @param value The amount of tokens to be spent.
      */
@@ -131,17 +131,17 @@ contract RevenueToken is ERC20, Ownable {
     }
 
     /**
-     * @dev Function to check the amount of tokens than an owner allowed to a spender.
+     * @notice Function to check the amount of tokens than an owner allowed to a spender.
      * @param account address The address which owns the funds.
      * @param spender address The address which will spend the funds.
      * @return A uint256 specifing the amount of tokens still avaible for the spender.
      */
-    function allowance(address account, address spender) public view returns (uint256 remaining) {
+    function allowance(address account, address spender) public view returns (uint256) {
         return allowed[account][spender];
     }
 
     /**
-     * @dev Increase the amount of tokens that an owner allowed to a spender.
+     * @notice Increase the amount of tokens that an owner allowed to a spender.
      *
      * approve should be called when allowed[_spender] == 0. To increment
      * allowed value is better to use this function to avoid 2 calls (and wait until
@@ -152,14 +152,14 @@ contract RevenueToken is ERC20, Ownable {
      */
     function increaseApproval(address _spender, uint _addedValue) public returns (bool) {
         allowed[msg.sender][_spender] = (allowed[msg.sender][_spender].add(_addedValue));
-        
+
         //raise event
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
     /**
-     * @dev Decrease the amount of tokens that an owner allowed to a spender.
+     * @notice Decrease the amount of tokens that an owner allowed to a spender.
      *
      * approve should be called when allowed[_spender] == 0. To decrement
      * allowed value is better to use this function to avoid 2 calls (and wait until
@@ -183,7 +183,7 @@ contract RevenueToken is ERC20, Ownable {
     }
 
     /**
-     * @dev Function to mint tokens
+     * @notice Function to mint tokens
      * @param _to The address that will receive the minted tokens.
      * @param _amount The amount of tokens to mint.
      * @return A boolean that indicates if the operation was successful.
@@ -204,7 +204,14 @@ contract RevenueToken is ERC20, Ownable {
         return true;
     }
 
-    //IMPORTANT: access should be public or only owner+token_holder_revenue_funds?
+    /**
+    * @notice Calculate the amount of balance blocks, i.e. the area under the curve (AUC) of balance as function of block number
+    * @dev The AUC is used as weight for the share of revenue that a token holder may claim
+    * @param wallet The wallet address for which calculation is done
+    * @param startBlock The start block number considered
+    * @param endBlock The end block number considered
+    * @return The calculated AUC
+    */
     function balanceBlocksIn(address wallet, uint256 startBlock, uint256 endBlock) public view returns (uint256) {
         uint256 idx;
         uint256 low;
@@ -257,9 +264,9 @@ contract RevenueToken is ERC20, Ownable {
     }
 
     //HOW TO USE:
-    //1. Onwer checks current blocknumber and calls startHoldersEnum
-    //2. If current blocknumber != blocknumber stored in step 1, go to step 1
-    //3. Onwer calls holdersEnum and saves returned addresses until address[index] == 0
+    //1. Owner checks current block number and calls startHoldersEnum
+    //2. If current block number != block number stored in step 1, go to step 1
+    //3. Owner calls holdersEnum and saves returned addresses until address[index] == 0
     //4. If address[0] == 0, go to step 2
     //5. Done
 
