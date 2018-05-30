@@ -26,11 +26,11 @@ module.exports = function (deployer, network, accounts) {
 	var addresses = {};
 
 	deployer.deploy(SafeMathIntLib).then(() => {
-		addresses.SafeMathInt = SafeMathIntLib.addresses;
+		addresses.SafeMathInt = SafeMathIntLib.address;
 	});
 
 	deployer.deploy(SafeMathUintLib).then(() => {
-		addresses.SafeMathUint = SafeMathUintLib.addresses;
+		addresses.SafeMathUint = SafeMathUintLib.address;
 	});
 
 	deployer.link(SafeMathUintLib, Exchange);
