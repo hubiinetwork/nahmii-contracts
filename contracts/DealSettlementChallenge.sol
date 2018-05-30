@@ -367,8 +367,8 @@ contract DealSettlementChallenge {
             && block.timestamp < challenge.timeout
         );
 
-        // Wallet is buyer in (candidate) trade -> consider conjugate transfer in (candidate) trade
-        // Wallet is seller in (candidate) trade -> consider intended transfer in (candidate) trade
+        // Wallet is buyer in (candidate) trade -> consider single conjugate transfer in (candidate) trade
+        // Wallet is seller in (candidate) trade -> consider single intended transfer in (candidate) trade
         Types.TradePartyRole tradePartyRole = (trade.buyer._address == wallet ?
         Types.TradePartyRole.Buyer :
         Types.TradePartyRole.Seller);
@@ -395,30 +395,58 @@ contract DealSettlementChallenge {
 
         candidateTrades.push(trade);
 
-        challenge.status = Types.ChallengeStatus.Disqualified;
-        challenge.candidateType = CandidateType.Trade;
-        challenge.candidateIndex = candidateTrades.length - 1;
-        challenge.challenger = msg.sender;
-
         bytes32 orderExchangeHash = (trade.buyer._address == wallet ?
         trade.buyer.order.hashes.exchange :
         trade.seller.order.hashes.exchange);
 
         bool orderCancelled = cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash);
+        challenge.status = Types.ChallengeStatus.Disqualified;
+        challenge.candidateType = CandidateType.Trade;
+        challenge.candidateIndex = candidateTrades.length - 1;
         challenge.challenger = orderCancelled ? address(0) : msg.sender;
 
         emit ChallengeDealSettlementByTradeEvent(trade, wallet, challenge.nonce, challenge.dealType, msg.sender);
     }
 
-    //    /// @notice Challenge the deal settlement by providing payment candidate
-    //    /// @param payment The payment candidate that challenges the challenged deal
-    //    /// @param wallet The wallet whose deal settlement is being challenged
-    //    function challengeDealSettlementByPayment(Types.Payment payment)
-    //    public
-    //    paymentSigned(payment)
-    //    {
-    //
-    //    }
+    /// @notice Challenge the deal settlement by providing payment candidate
+    /// @param payment The payment candidate that challenges the challenged deal
+    /// @param wallet The wallet whose deal settlement is being challenged
+    function challengeDealSettlementByPayment(Types.Payment payment, address wallet)
+    public
+    paymentSigned(payment)
+    onlyPaymentSender(payment, wallet) // Wallet is recipient in (candidate) payment -> nothing to consider
+    {
+        DealSettlementChallengeInfo storage challenge = walletDealSettlementChallengeInfoMap[wallet];
+        require(
+            0 < challenge.nonce
+            && block.timestamp < challenge.timeout
+        );
+
+        int256 candidateTransfer = payment.transfers.single.abs();
+
+        int256 challengeBalance = (Types.DealType.Trade == challenge.dealType ?
+        getTradeBalance(
+            walletDealSettlementChallengedTradesMap[wallet][challenge.dealIndex],
+            wallet,
+            payment.currency
+        ) :
+        getPaymentBalance(
+            walletDealSettlementChallengedPaymentsMap[wallet][challenge.dealIndex],
+            wallet,
+            payment.currency
+        ));
+
+        require(candidateTransfer > challengeBalance);
+
+        candidatePayments.push(payment);
+
+        challenge.status = Types.ChallengeStatus.Disqualified;
+        challenge.candidateType = CandidateType.Payment;
+        challenge.candidateIndex = candidatePayments.length - 1;
+        challenge.challenger = msg.sender;
+
+        emit ChallengeDealSettlementByPaymentEvent(payment, wallet, challenge.nonce, challenge.dealType, msg.sender);
+    }
 
     function getTradeBalance(Types.Trade trade, address wallet, address currency) private pure returns (int256) {
         require(0 < trade.nonce);
@@ -483,6 +511,16 @@ contract DealSettlementChallenge {
 
     modifier onlyPaymentParty(Types.Payment payment, address wallet) {
         require(Types.isPaymentParty(payment, wallet));
+        _;
+    }
+
+    modifier onlyPaymentSender(Types.Payment payment, address wallet) {
+        require(Types.isPaymentSender(payment, wallet));
+        _;
+    }
+
+    modifier onlyPaymentRecipient(Types.Payment payment, address wallet) {
+        require(Types.isPaymentRecipient(payment, wallet));
         _;
     }
 

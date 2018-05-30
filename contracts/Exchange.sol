@@ -8,8 +8,6 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
-//import "./SafeMathInt.sol";
-//import "./SafeMathUInt.sol";
 import "./Configuration.sol";
 import "./RevenueFund.sol";
 import "./ClientFund.sol";
