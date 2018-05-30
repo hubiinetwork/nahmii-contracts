@@ -267,22 +267,6 @@ contract RevenueFund is Ownable {
     }
 
     //
-    // Functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        address oldOwner;
-
-        if (newOwner != owner) {
-            // Set new owner
-            oldOwner = owner;
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
-
-    //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
