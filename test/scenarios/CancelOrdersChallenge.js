@@ -53,28 +53,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeOwner()', () => {
-            describe('if called with (current) owner as sender', () => {
-                afterEach(async () => {
-                    await web3CancelOrdersChallenge.changeOwner(glob.owner, {from: glob.user_a});
-                });
-
-                it('should set new value and emit event', async () => {
-                    const result = await web3CancelOrdersChallenge.changeOwner(glob.user_a);
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('OwnerChangedEvent');
-                    const owner = await web3CancelOrdersChallenge.owner.call();
-                    owner.should.equal(glob.user_a);
-                });
-            });
-
-            describe('if called with sender that is not (current) owner', () => {
-                it('should revert', async () => {
-                    web3CancelOrdersChallenge.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-        });
-
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
                 const configuration = await ethersCancelOrdersChallengeOwner.configuration();

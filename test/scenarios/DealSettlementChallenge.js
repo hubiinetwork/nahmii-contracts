@@ -13,7 +13,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe.only('DealSettlementChallenge', () => {
+    describe('DealSettlementChallenge', () => {
         let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
         let web3Configuration, ethersConfiguration;
         let web3SecurityBond, ethersSecurityBond;
@@ -61,28 +61,6 @@ module.exports = (glob) => {
             it('should initialize fields', async () => {
                 const owner = await web3DealSettlementChallenge.owner.call();
                 owner.should.equal(glob.owner);
-            });
-        });
-
-        describe('changeOwner()', () => {
-            describe('if called with (current) owner as sender', () => {
-                afterEach(async () => {
-                    await web3DealSettlementChallenge.changeOwner(glob.owner, {from: glob.user_a});
-                });
-
-                it('should set new value and emit event', async () => {
-                    const result = await web3DealSettlementChallenge.changeOwner(glob.user_a);
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('OwnerChangedEvent');
-                    const owner = await web3DealSettlementChallenge.owner.call();
-                    owner.should.equal(glob.user_a);
-                });
-            });
-
-            describe('if called with sender that is not (current) owner', () => {
-                it('should revert', async () => {
-                    web3DealSettlementChallenge.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
-                });
             });
         });
 

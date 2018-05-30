@@ -7,7 +7,7 @@
  */
 pragma solidity ^0.4.23;
 
-import "./SafeMathInt.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./ERC20.sol";
 import "./Beneficiary.sol";

@@ -8,6 +8,9 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
+import "./Ownable.sol";
 import "./Configuration.sol";
 import "./RevenueFund.sol";
 import "./ClientFund.sol";
@@ -21,7 +24,7 @@ import "./CancelOrdersChallenge.sol";
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract DealSettlementChallenge {
+contract DealSettlementChallenge is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -44,8 +47,6 @@ contract DealSettlementChallenge {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public owner;
-
     Configuration public configuration;
     SecurityBond public securityBond;
     CancelOrdersChallenge public cancelOrdersChallenge;
@@ -62,7 +63,6 @@ contract DealSettlementChallenge {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
     event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
@@ -76,26 +76,12 @@ contract DealSettlementChallenge {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the owner of this contract
-    /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner)
-    public
-    onlyOwner
-    notNullAddress(newOwner)
-    notEqualAddresses(newOwner, owner)
-    {
-        address oldOwner = owner;
-        owner = newOwner;
-        emit OwnerChangedEvent(oldOwner, newOwner);
-    }
-
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
     function changeConfiguration(Configuration newConfiguration)
@@ -172,6 +158,7 @@ contract DealSettlementChallenge {
         if (msg.sender != owner)
             wallet = msg.sender;
 
+        // TODO Create modifier onlyOwnerOrTradeParty
         require(isOwner() || Types.isTradeParty(trade, wallet));
 
         require(
@@ -207,6 +194,7 @@ contract DealSettlementChallenge {
         if (msg.sender != owner)
             wallet = msg.sender;
 
+        // TODO Create modifier onlyOwnerOrPaymentParty
         require(isOwner() || Types.isPaymentParty(payment, wallet));
 
         require(
@@ -477,10 +465,6 @@ contract DealSettlementChallenge {
             return payment.recipient.balances.current;
     }
 
-    function isOwner() private view returns (bool) {
-        return msg.sender == owner;
-    }
-
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
@@ -491,11 +475,6 @@ contract DealSettlementChallenge {
 
     modifier notEqualAddresses(address address1, address address2) {
         require(address1 != address2);
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(isOwner());
         _;
     }
 

@@ -15,6 +15,7 @@ module.exports = (glob) => {
     describe('FraudulentDealChallenge', () => {
         let web3FraudulentDealChallenge, ethersFraudulentDealChallenge;
         let web3Configuration, ethersConfiguration;
+        let web3CommunityVote, ethersCommunityVote;
         let provider;
         let blockNumber0, blockNumber10, blockNumber20;
 
@@ -23,10 +24,13 @@ module.exports = (glob) => {
             ethersFraudulentDealChallenge = glob.ethersIoFraudulentDealChallenge;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
+            web3CommunityVote = glob.web3CommunityVote;
+            ethersCommunityVote = glob.ethersIoCommunityVote;
 
             provider = glob.signer_owner.provider;
 
             await ethersFraudulentDealChallenge.changeConfiguration(ethersConfiguration.address);
+            await ethersFraudulentDealChallenge.changeCommunityVote(ethersCommunityVote.address);
         });
 
         beforeEach(async () => {
@@ -37,13 +41,6 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3FraudulentDealChallenge.owner.call();
-                owner.should.equal(glob.owner);
-            });
-        });
-
-        describe('owner()', () => {
-            it('should equal value initialized at construction time', async () => {
                 const owner = await web3FraudulentDealChallenge.owner.call();
                 owner.should.equal(glob.owner);
             });
@@ -60,28 +57,6 @@ module.exports = (glob) => {
             it('should equal value initialized', async () => {
                 const fraudulentPayment = await ethersFraudulentDealChallenge.fraudulentPayment();
                 fraudulentPayment[0].toNumber().should.equal(0); // Nonce
-            });
-        });
-
-        describe('changeOwner()', () => {
-            describe('if called with (current) owner as sender', () => {
-                afterEach(async () => {
-                    await web3FraudulentDealChallenge.changeOwner(glob.owner, {from: glob.user_a});
-                });
-
-                it('should set new value and emit event', async () => {
-                    const result = await web3FraudulentDealChallenge.changeOwner(glob.user_a);
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('OwnerChangedEvent');
-                    const owner = await web3FraudulentDealChallenge.owner.call();
-                    owner.should.equal(glob.user_a);
-                });
-            });
-
-            describe('if called with sender that is not (current) owner', () => {
-                it('should revert', async () => {
-                    web3FraudulentDealChallenge.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
-                });
             });
         });
 
@@ -123,6 +98,13 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     web3FraudulentDealChallenge.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
+            });
+        });
+
+        describe('communityVote()', () => {
+            it('should equal value initialized', async () => {
+                const communityVote = await ethersFraudulentDealChallenge.communityVote();
+                communityVote.should.equal(utils.getAddress(ethersCommunityVote.address));
             });
         });
 

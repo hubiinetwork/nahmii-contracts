@@ -8,6 +8,9 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
+import "./Ownable.sol";
 import "./Configuration.sol";
 import "./RevenueFund.sol";
 import "./ClientFund.sol";
@@ -20,15 +23,13 @@ import "./SecurityBond.sol";
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract CancelOrdersChallenge {
+contract CancelOrdersChallenge is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public owner;
-
     Configuration public configuration;
 
     mapping(address => mapping(bytes32 => bool)) public walletOrderExchangeHashCancelledMap;
@@ -39,7 +40,6 @@ contract CancelOrdersChallenge {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
     event CancelOrdersEvent(Types.Order[] orders, address wallet);
     event ChallengeCancelledOrderEvent(Types.Order order, Types.Trade trade, address wallet);
@@ -47,26 +47,12 @@ contract CancelOrdersChallenge {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the owner of this contract
-    /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner)
-    public
-    onlyOwner
-    notNullAddress(newOwner)
-    notEqualAddresses(newOwner, owner)
-    {
-        address oldOwner = owner;
-        owner = newOwner;
-        emit OwnerChangedEvent(oldOwner, newOwner);
-    }
-
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
     function changeConfiguration(Configuration newConfiguration)
@@ -117,7 +103,7 @@ contract CancelOrdersChallenge {
         return returnOrders;
     }
 
-    /// @notice Cancel orders
+    /// @notice Cancel orders of msg.sender
     /// @param orders The orders to cancel
     function cancelOrders(Types.Order[] orders) public
     {
@@ -173,10 +159,6 @@ contract CancelOrdersChallenge {
             return Types.ChallengePhase.Closed;
     }
 
-    function isOwner() private view returns (bool) {
-        return msg.sender == owner;
-    }
-
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
@@ -187,21 +169,6 @@ contract CancelOrdersChallenge {
 
     modifier notEqualAddresses(address address1, address address2) {
         require(address1 != address2);
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(isOwner());
-        _;
-    }
-
-    modifier onlyTradeParty(Types.Trade trade, address wallet) {
-        require(Types.isTradeParty(trade, wallet));
-        _;
-    }
-
-    modifier onlyPaymentParty(Types.Payment payment, address wallet) {
-        require(Types.isPaymentParty(payment, wallet));
         _;
     }
 

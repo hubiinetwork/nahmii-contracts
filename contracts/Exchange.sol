@@ -8,15 +8,17 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
-import "./Configuration.sol";
-import "./RevenueFund.sol";
-import "./ClientFund.sol";
-import "./CommunityVote.sol";
-import "./ERC20.sol";
 import "./Types.sol";
-import "./DealSettlementChallenge.sol";
+import "./ERC20.sol";
+import "./Configuration.sol";
+import "./CommunityVote.sol";
+import "./ClientFund.sol";
 import "./ReserveFund.sol";
+import "./RevenueFund.sol";
+import "./DealSettlementChallenge.sol";
 
 /**
 @title Exchange
@@ -189,38 +191,6 @@ contract Exchange is Ownable {
         DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
         dealSettlementChallenge = newDealSettlementChallenge;
         emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
-    }
-
-    /// @notice Submit two trade candidates in continuous Double Spent Order Challenge (DSOC)
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
-    /// @param firstTrade Reference trade
-    /// @param lastTrade Fraudulent trade candidate
-    function challengeDoubleSpentOrders(
-        Trade firstTrade,
-        Trade lastTrade
-    )
-    public
-    challengeableByDoubleSpentOrderTradesPair(firstTrade, lastTrade)
-    {
-        bool doubleSpentBuyOrder = firstTrade.buyer.order.hashes.exchange == lastTrade.buyer.order.hashes.exchange;
-        bool doubleSpentSellOrder = firstTrade.seller.order.hashes.exchange == lastTrade.seller.order.hashes.exchange;
-
-        require(doubleSpentBuyOrder || doubleSpentSellOrder);
-
-        operationalMode = OperationalMode.Exit;
-        fraudulentTrade = lastTrade;
-
-        address seizedWallet;
-        if (doubleSpentBuyOrder)
-            seizedWallet = lastTrade.buyer._address;
-        if (doubleSpentSellOrder)
-            seizedWallet = lastTrade.seller._address;
-        if (address(0) != seizedWallet) {
-            //            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
-            addToSeizedWallets(seizedWallet);
-        }
-
-        emit ChallengeDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, seizedWallet);
     }
 
     /// @notice Get the seized status of given wallet
@@ -518,10 +488,6 @@ contract Exchange is Ownable {
             if (address(0) != payment.currency)
                 paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.recipient.netFee);
         }
-    }
-
-    function isOwner() private view returns (bool) {
-        return msg.sender == owner;
     }
 
     function addToSeizedWallets(address _address) private {

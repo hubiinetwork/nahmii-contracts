@@ -7,7 +7,7 @@
  */
 pragma solidity ^0.4.21;
 
-import "./SafeMathInt.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 
 /**

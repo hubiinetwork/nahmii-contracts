@@ -49,15 +49,19 @@ contract Ownable {
         }
     }
 
+    function isOwner() internal view returns (bool) {
+        return msg.sender == owner;
+    }
+
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(isOwner());
         _;
     }
 
     modifier notOwner() {
-        require(msg.sender != owner);
+        require(!isOwner());
         _;
     }
 }

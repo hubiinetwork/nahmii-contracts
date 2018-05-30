@@ -8,8 +8,9 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
-import "./SafeMathInt.sol";
-//import "./SafeMathUInt.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
+import "./Ownable.sol";
 import "./Configuration.sol";
 import "./RevenueFund.sol";
 import "./ClientFund.sol";
@@ -21,15 +22,13 @@ import "./Types.sol";
 @title FraudulentDealChallenge
 @notice Host of fraud detection logics
 */
-contract FraudulentDealChallenge {
+contract FraudulentDealChallenge is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public owner;
-
     Types.Trade public fraudulentTrade;
     Types.Payment public fraudulentPayment;
 
@@ -45,7 +44,6 @@ contract FraudulentDealChallenge {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event OwnerChangedEvent(address oldOwner, address newOwner);
     event ChallengeFraudulentDealByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
     event ChallengeFraudulentDealByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
     event ChallengeFraudulentDealBySuccessiveTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
@@ -60,46 +58,37 @@ contract FraudulentDealChallenge {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public notNullAddress(_owner) {
-        owner = _owner;
+    constructor(address _owner) Ownable(_owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
 
-    /// @notice Change the owner of this contract
-    /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner) public onlyOwner notNullAddress(newOwner) {
-        if (newOwner != owner) {
-            address oldOwner = owner;
-
-            // Set new owner
-            owner = newOwner;
-
-            // Emit event
-            emit OwnerChangedEvent(oldOwner, newOwner);
-        }
-    }
-
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration) public onlyOwner {
-        if (newConfiguration != configuration) {
-            Configuration oldConfiguration = configuration;
-            configuration = newConfiguration;
-            emit ChangeConfigurationEvent(oldConfiguration, configuration);
-        }
+    function changeConfiguration(Configuration newConfiguration)
+    public
+    onlyOwner
+    notNullAddress(newConfiguration)
+    notEqualAddresses(newConfiguration, configuration)
+    {
+        Configuration oldConfiguration = configuration;
+        configuration = newConfiguration;
+        emit ChangeConfigurationEvent(oldConfiguration, configuration);
     }
 
     /// @notice Change the community vote contract
     /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote) public onlyOwner {
-        if (newCommunityVote != communityVote) {
-            CommunityVote oldCommunityVote = communityVote;
-            communityVote = newCommunityVote;
-            emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
-        }
+    function changeCommunityVote(CommunityVote newCommunityVote)
+    public
+    onlyOwner
+    notNullAddress(newCommunityVote)
+    notEqualAddresses(newCommunityVote, communityVote)
+    {
+        CommunityVote oldCommunityVote = communityVote;
+        communityVote = newCommunityVote;
+        emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
     }
 
     /// @notice Get the seized status of given wallet
@@ -735,8 +724,8 @@ contract FraudulentDealChallenge {
         _;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
+    modifier notEqualAddresses(address address1, address address2) {
+        require(address1 != address2);
         _;
     }
 

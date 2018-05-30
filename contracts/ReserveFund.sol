@@ -8,8 +8,8 @@
 pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
-import './SafeMathInt.sol';
-import './SafeMathUInt.sol';
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import './ERC20.sol';
 import "./Beneficiary.sol";
