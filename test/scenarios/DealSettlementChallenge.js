@@ -495,10 +495,11 @@ module.exports = (glob) => {
 
         describe('dealSettlementChallengeStatus()', () => {
             describe('if no deal settlement challenge has been started for given wallet', () => {
-                it('should return Unknown', async () => {
+                it('should return (Unknown, address(0))', async () => {
                     const address = Wallet.createRandom().address;
                     const result = await ethersDealSettlementChallengeOwner.dealSettlementChallengeStatus(address, 0);
-                    result.should.equal(mocks.challengeStatuses.indexOf('Unknown'));
+                    result[0].should.equal(mocks.challengeResults.indexOf('Unknown'));
+                    result[1].should.equal('0x0000000000000000000000000000000000000000');
                 });
             });
 
@@ -514,9 +515,10 @@ module.exports = (glob) => {
                     await ethersDealSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions)
                 });
 
-                it('should return challenged deal challenge status', async () => {
+                it('should return challenged deal challenge result', async () => {
                     const result = await ethersDealSettlementChallengeOwner.dealSettlementChallengeStatus(trade.buyer.wallet, trade.nonce);
-                    result.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
+                    result[0].should.equal(mocks.challengeResults.indexOf('Qualified'));
+                    result[1].should.equal('0x0000000000000000000000000000000000000000');
                 });
             });
         });
@@ -659,8 +661,8 @@ module.exports = (glob) => {
                             logs[logs.length - 1].topics[0].should.equal(topic);
                             const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidateOrdersCount();
                             const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(trade.buyer.wallet);
-                            dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                            dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
+                            dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                            dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
                             dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                             dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
                         });
@@ -694,8 +696,8 @@ module.exports = (glob) => {
                             logs[logs.length - 1].topics[0].should.equal(topic);
                             const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidateOrdersCount();
                             const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(trade.buyer.wallet);
-                            dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                            dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
+                            dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                            dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
                             dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                             dealSettlementChallenge.challenger.should.equal('0x0000000000000000000000000000000000000000');
                         });
@@ -761,8 +763,8 @@ module.exports = (glob) => {
                             logs[logs.length - 1].topics[0].should.equal(topic);
                             const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidateOrdersCount();
                             const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(payment.sender.wallet);
-                            dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                            dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
+                            dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                            dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
                             dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                             dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_b));
                         });
@@ -794,8 +796,8 @@ module.exports = (glob) => {
                             logs[logs.length - 1].topics[0].should.equal(topic);
                             const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidateOrdersCount();
                             const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(payment.sender.wallet);
-                            dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                            dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
+                            dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                            dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
                             dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                             dealSettlementChallenge.challenger.should.equal('0x0000000000000000000000000000000000000000');
                         });
@@ -955,8 +957,8 @@ module.exports = (glob) => {
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
                     const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(trade.buyer.wallet);
-                    dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
-                    dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('None'));
+                    dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Qualified'));
+                    dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('None'));
                     dealSettlementChallenge.candidateIndex.eq(0).should.be.true;
                     dealSettlementChallenge.challenger.should.equal('0x0000000000000000000000000000000000000000');
                 });
@@ -1085,8 +1087,8 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidateTradesCount();
                         const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(candidateTrade.buyer.wallet);
-                        dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                        dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
+                        dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
                         dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
                     });
@@ -1152,8 +1154,8 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidateTradesCount();
                         const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(candidateTrade.buyer.wallet);
-                        dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                        dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
+                        dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
                         dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
                     });
@@ -1287,8 +1289,8 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidatePaymentsCount();
                         const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(candidatePayment.sender.wallet);
-                        dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                        dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
+                        dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
                         dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
                     });
@@ -1353,8 +1355,8 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidatePaymentsCount();
                         const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeInfoMap(candidatePayment.sender.wallet);
-                        dealSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
-                        dealSettlementChallenge.challengeCandidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
+                        dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
                         dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
                     });

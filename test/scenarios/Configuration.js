@@ -50,7 +50,7 @@ module.exports = (glob) => {
                 it('should successfully set new owner and emit event', async () => {
                     const result = await truffleInstance.changeOwner(glob.user_a);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('OwnerChangedEvent');
+                    result.logs[0].event.should.equal('ChangeOwnerEvent');
                     const owner = await truffleInstance.owner.call();
                     owner.should.equal(glob.user_a);
                 });

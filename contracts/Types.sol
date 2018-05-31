@@ -18,7 +18,7 @@ library Types {
     enum TradePartyRole {Buyer, Seller}
     enum PaymentPartyRole {Sender, Recipient}
     enum ChallengePhase {Dispute, Closed}
-    enum ChallengeStatus {Unknown, Qualified, Disqualified}
+    enum ChallengeResult {Unknown, Qualified, Disqualified}
 
     //
     // Structures

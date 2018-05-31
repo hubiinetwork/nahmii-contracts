@@ -8,26 +8,15 @@
 pragma solidity ^0.4.23;
 
 import "../contracts/Types.sol";
-//import "../contracts/DealSettlementChallenge.sol";
+import "../contracts/DealSettlementChallenge.sol";
 pragma experimental ABIEncoderV2;
 
 contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
 
     //
-    // Enums
-    // -----------------------------------------------------------------------------------------------------------------
-    struct ChallengeInfo {
-        uint256 nonce;
-        Types.DealType dealType;
-        uint256 timeout;
-        Types.ChallengeStatus status;
-        uint256 dealIndex;
-    }
-
-    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => mapping(uint256 => Types.ChallengeStatus)) walletNonceChallengeStatusMap;
+    mapping(address => DealSettlementChallenge.ChallengeInfo) walletChallengeInfoMap;
 
     //
     // Functions
@@ -35,11 +24,13 @@ contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
     constructor(/*address owner*/) public /*DealSettlementChallenge(owner)*/{
     }
 
-    function setDealSettlementChallengeStatus(address wallet, uint256 nonce, Types.ChallengeStatus status) public {
-        walletNonceChallengeStatusMap[wallet][nonce] = status;
+    function setDealSettlementChallengeStatus(address wallet, uint256 nonce, Types.ChallengeResult result, address challenger) public {
+        walletChallengeInfoMap[wallet].nonce = nonce;
+        walletChallengeInfoMap[wallet].result = result;
+        walletChallengeInfoMap[wallet].challenger = challenger;
     }
 
-    function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeStatus) {
-        return walletNonceChallengeStatusMap[wallet][nonce];
+    function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
+        return (walletChallengeInfoMap[wallet].result, walletChallengeInfoMap[wallet].challenger);
     }
 }

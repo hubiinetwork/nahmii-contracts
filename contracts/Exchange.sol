@@ -233,8 +233,11 @@ contract Exchange is Ownable {
 
         require(Types.isTradeParty(trade, wallet));
 
-        Types.ChallengeStatus status = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
-        if (Types.ChallengeStatus.Qualified == status) {
+        Types.ChallengeResult result;
+        address challenger;
+        (result, challenger)= dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
+
+        if (Types.ChallengeResult.Qualified == result) {
 
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < highestAbsoluteDealNonce)) {
@@ -266,9 +269,8 @@ contract Exchange is Ownable {
             if (trade.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = trade.nonce;
 
-        } else if (Types.ChallengeStatus.Disqualified == status) {
-            // TODO Consider recipient of seized funds
-            //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
+        } else if (Types.ChallengeResult.Disqualified == result) {
+            clientFund.seizeDepositedAndSettledBalances(wallet, challenger);
             addToSeizedWallets(wallet);
         }
 
@@ -288,8 +290,11 @@ contract Exchange is Ownable {
 
         require(Types.isPaymentParty(payment, wallet));
 
-        Types.ChallengeStatus status = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
-        if (Types.ChallengeStatus.Qualified == status) {
+        Types.ChallengeResult result;
+        address challenger;
+        (result, challenger)= dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
+
+        if (Types.ChallengeResult.Qualified == result) {
 
             if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (payment.nonce < highestAbsoluteDealNonce)) {
@@ -316,9 +321,8 @@ contract Exchange is Ownable {
             if (payment.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = payment.nonce;
 
-        } else if (Types.ChallengeStatus.Disqualified == status) {
-            // TODO Consider recipient of seized funds
-            //            clientFund.seizeDepositedAndSettledBalances(wallet, owner);
+        } else if (Types.ChallengeResult.Disqualified == result) {
+            clientFund.seizeDepositedAndSettledBalances(wallet, challenger);
             addToSeizedWallets(wallet);
         }
         emit SettleDealAsPaymentEvent(payment, wallet);

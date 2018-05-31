@@ -37,9 +37,9 @@ contract DealSettlementChallenge is Ownable {
         uint256 nonce;
         Types.DealType dealType;
         uint256 timeout;
-        Types.ChallengeStatus status;
+        Types.ChallengeResult result;
         uint256 dealIndex;
-        ChallengeCandidateType challengeCandidateType;
+        ChallengeCandidateType candidateType;
         uint256 candidateIndex;
         address challenger;
     }
@@ -172,7 +172,7 @@ contract DealSettlementChallenge is Ownable {
             trade.nonce,
             Types.DealType.Trade,
             block.timestamp + configuration.dealSettlementChallengeTimeout(),
-            Types.ChallengeStatus.Qualified,
+            Types.ChallengeResult.Qualified,
             walletChallengedTradesMap[wallet].length - 1,
             ChallengeCandidateType.None,
             0,
@@ -208,7 +208,7 @@ contract DealSettlementChallenge is Ownable {
             payment.nonce,
             Types.DealType.Payment,
             block.timestamp + configuration.dealSettlementChallengeTimeout(),
-            Types.ChallengeStatus.Qualified,
+            Types.ChallengeResult.Qualified,
             walletChallengedPaymentsMap[wallet].length - 1,
             ChallengeCandidateType.None,
             0,
@@ -254,17 +254,17 @@ contract DealSettlementChallenge is Ownable {
             return (walletChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Closed);
     }
 
-    /// @notice Get deal settlement challenge phase of given wallet
-    /// @param wallet The wallet whose challenge phase will be returned
+    /// @notice Get deal settlement challenge result and challenger (wallet) of given (challenge) wallet
+    /// @param wallet The wallet whose challenge status will be returned
     /// @param nonce The nonce of the challenged deal
-    function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeStatus) {
+    function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
         if (msg.sender != owner)
             wallet = msg.sender;
         if ((0 == walletChallengeInfoMap[wallet].nonce) ||
             (nonce != walletChallengeInfoMap[wallet].nonce))
-            return Types.ChallengeStatus.Unknown;
+            return (Types.ChallengeResult.Unknown, address(0));
         else
-            return walletChallengeInfoMap[wallet].status;
+            return (walletChallengeInfoMap[wallet].result, walletChallengeInfoMap[wallet].challenger);
     }
 
     /// @notice Challenge the deal settlement by providing order candidate
@@ -307,8 +307,8 @@ contract DealSettlementChallenge is Ownable {
 
         challengeCandidateOrders.push(order);
 
-        challenge.status = Types.ChallengeStatus.Disqualified;
-        challenge.challengeCandidateType = ChallengeCandidateType.Order;
+        challenge.result = Types.ChallengeResult.Disqualified;
+        challenge.candidateType = ChallengeCandidateType.Order;
         challenge.candidateIndex = challengeCandidateOrders.length - 1;
 
         bool orderCancelled = cancelOrdersChallenge.isOrderCancelled(wallet, order.seals.exchange.hash);
@@ -328,10 +328,10 @@ contract DealSettlementChallenge is Ownable {
     onlyTradeOrder(trade, order)
     {
         ChallengeInfo storage challenge = walletChallengeInfoMap[order.wallet];
-        require(challenge.challengeCandidateType == ChallengeCandidateType.Order);
+        require(challenge.candidateType == ChallengeCandidateType.Order);
 
-        challenge.status = Types.ChallengeStatus.Qualified;
-        challenge.challengeCandidateType = ChallengeCandidateType.None;
+        challenge.result = Types.ChallengeResult.Qualified;
+        challenge.candidateType = ChallengeCandidateType.None;
         challenge.candidateIndex = 0;
         challenge.challenger = address(0);
 
@@ -388,8 +388,8 @@ contract DealSettlementChallenge is Ownable {
         trade.seller.order.hashes.exchange);
 
         bool orderCancelled = cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash);
-        challenge.status = Types.ChallengeStatus.Disqualified;
-        challenge.challengeCandidateType = ChallengeCandidateType.Trade;
+        challenge.result = Types.ChallengeResult.Disqualified;
+        challenge.candidateType = ChallengeCandidateType.Trade;
         challenge.candidateIndex = challengeCandidateTrades.length - 1;
         challenge.challenger = orderCancelled ? address(0) : msg.sender;
 
@@ -428,8 +428,8 @@ contract DealSettlementChallenge is Ownable {
 
         challengeCandidatePayments.push(payment);
 
-        challenge.status = Types.ChallengeStatus.Disqualified;
-        challenge.challengeCandidateType = ChallengeCandidateType.Payment;
+        challenge.result = Types.ChallengeResult.Disqualified;
+        challenge.candidateType = ChallengeCandidateType.Payment;
         challenge.candidateIndex = challengeCandidatePayments.length - 1;
         challenge.challenger = msg.sender;
 

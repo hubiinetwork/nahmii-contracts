@@ -3,7 +3,6 @@ const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const ethers = require('ethers');
 const mocks = require('../mocks');
-// const SafeMathInt = artifacts.require("SafeMathInt");
 const MockedClientFund = artifacts.require("MockedClientFund");
 const MockedReserveFund = artifacts.require("MockedReserveFund");
 const MockedRevenueFund = artifacts.require("MockedRevenueFund");
@@ -46,10 +45,6 @@ module.exports = (glob) => {
             ethersReserveFund = new ethers.Contract(web3ReserveFund.address, MockedReserveFund.abi, glob.signer_owner);
             web3DealSettlementChallenge = await MockedDealSettlementChallenge.new(/*glob.owner*/);
             ethersDealSettlementChallenge = new ethers.Contract(web3DealSettlementChallenge.address, MockedDealSettlementChallenge.abi, glob.signer_owner);
-
-            // const safeMathInt = await SafeMathInt.deployed();
-            // console.log(JSON.stringify(safeMathInt, null, 2));
-            // MockedCommunityVote.link(safeMathInt);
             web3CommunityVote = await MockedCommunityVote.new(/*glob.owner*/);
             ethersCommunityVote = new ethers.Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
 
@@ -85,7 +80,7 @@ module.exports = (glob) => {
                 it('should set new value and emit event', async () => {
                     const result = await web3Exchange.changeOwner(glob.user_a);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('OwnerChangedEvent');
+                    result.logs[0].event.should.equal('ChangeOwnerEvent');
                     const owner = await web3Exchange.owner.call();
                     owner.should.equal(glob.user_a);
                 });
@@ -367,10 +362,6 @@ module.exports = (glob) => {
                 it('should disable changing community vote', async () => {
                     await web3Exchange.disableUpdateOfCommunityVote();
                     web3Exchange.changeCommunityVote(address).should.be.rejected;
-                    // const result1 = await web3Exchange.changeCommunityVote(address);
-                    // result1.logs.should.be.an('array').that.is.empty;
-                    // const result2 = await web3Exchange.communityVote.call();
-                    // result2.should.equal(communityVote);
                 });
             });
         });
@@ -474,13 +465,57 @@ module.exports = (glob) => {
                 await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
             });
 
-            describe('if deal settlement challenge status is Qualified', () => {
+            describe('if trade is not signed by exchange', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.user_a);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if wallet is not trade party', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    const address = Wallet.createRandom().address;
+                    ethersExchange.settleDealAsTrade(trade, address, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if wallet is flagged as double spender', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner);
+                    await ethersCommunityVote.setDoubleSpenderWallet(trade.buyer.wallet, true);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if deal settlement challenge result is Qualified', () => {
+                let challenger;
+
+                before(() => {
+                    challenger = Wallet.createRandom().address;
+                });
+
                 describe('if immediateSettlement is true', () => {
                     beforeEach(async () => {
                         trade = await mocks.mockTrade(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(trade.buyer.wallet, trade.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                        await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                            trade.buyer.wallet,
+                            trade.nonce,
+                            mocks.challengeResults.indexOf('Qualified'),
+                            challenger,
+                            overrideOptions
+                        );
                     });
 
                     it('should settle both trade parties', async () => {
@@ -547,7 +582,13 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(trade.buyer.wallet, trade.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                                trade.buyer.wallet,
+                                trade.nonce,
+                                mocks.challengeResults.indexOf('Qualified'),
+                                challenger,
+                                overrideOptions
+                            );
                             await ethersReserveFund.setMaxOutboundTransfer(trade.currencies.intended, 0, overrideOptions);
                             await ethersReserveFund.setMaxOutboundTransfer(trade.currencies.conjugate, 0, overrideOptions);
                         });
@@ -615,7 +656,13 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(trade.buyer.wallet, trade.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                                trade.buyer.wallet,
+                                trade.nonce,
+                                mocks.challengeResults.indexOf('Qualified'),
+                                challenger,
+                                overrideOptions
+                            );
                             await ethersReserveFund.setMaxOutboundTransfer(trade.currencies.intended, utils.parseUnits('1000', 18), overrideOptions);
                             await ethersReserveFund.setMaxOutboundTransfer(trade.currencies.conjugate, utils.parseUnits('1', 18), overrideOptions);
                         });
@@ -654,18 +701,33 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if deal settlement challenge status is Disqualified', () => {
+            describe('if deal settlement challenge result is Disqualified', () => {
+                let challenger;
+
+                before(() => {
+                    challenger = Wallet.createRandom().address;
+                });
+
                 beforeEach(async () => {
                     trade = await mocks.mockTrade(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    ethersDealSettlementChallenge.setDealSettlementChallengeStatus(trade.buyer.wallet, trade.nonce, mocks.challengeStatuses.indexOf('Disqualified'));
+                    await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                        trade.buyer.wallet,
+                        trade.nonce,
+                        mocks.challengeResults.indexOf('Disqualified'),
+                        challenger,
+                        overrideOptions
+                    );
                 });
 
                 it('should seize the wallet', async () => {
                     await ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions);
                     const seized = await ethersExchange.isSeizedWallet(trade.buyer.wallet);
                     seized.should.be.true;
+                    const seizure = await ethersClientFund.seizures(0);
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(challenger));
                 });
             });
         });
@@ -684,13 +746,68 @@ module.exports = (glob) => {
                 await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
             });
 
-            describe('if deal settlement challenge status is Qualified', () => {
+            describe('if payment is not signed by exchange', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.user_a);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment is not signed by wallet', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner);
+                    payment.seals.wallet.signature = payment.seals.exchange.signature;
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if wallet is not payment party', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    const address = Wallet.createRandom().address;
+                    ethersExchange.settleDealAsPayment(payment, address, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if wallet is flagged as double spender', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner);
+                    await ethersCommunityVote.setDoubleSpenderWallet(payment.sender.wallet, true);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if deal settlement challenge result is Qualified', () => {
+                let challenger;
+
+                before(() => {
+                    challenger = Wallet.createRandom().address;
+                });
+
                 describe('if immediateSettlement is true', () => {
                     beforeEach(async () => {
                         payment = await mocks.mockPayment(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.sender.wallet, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                        await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                            payment.sender.wallet,
+                            payment.nonce,
+                            mocks.challengeResults.indexOf('Qualified'),
+                            challenger,
+                            overrideOptions
+                        );
                     });
 
                     it('should settle both payment parties', async () => {
@@ -745,7 +862,13 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.sender.wallet, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                                payment.sender.wallet,
+                                payment.nonce,
+                                mocks.challengeResults.indexOf('Qualified'),
+                                challenger,
+                                overrideOptions
+                            );
                             await ethersReserveFund.setMaxOutboundTransfer(payment.currency, 0, overrideOptions);
                         });
 
@@ -800,7 +923,13 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.sender.wallet, payment.nonce, mocks.challengeStatuses.indexOf('Qualified'), overrideOptions);
+                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                                payment.sender.wallet,
+                                payment.nonce,
+                                mocks.challengeResults.indexOf('Qualified'),
+                                challenger,
+                                overrideOptions
+                            );
                             await ethersReserveFund.setMaxOutboundTransfer(payment.currency, utils.parseUnits('1000', 18), overrideOptions);
                         });
 
@@ -838,18 +967,33 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if deal settlement challenge status is Disqualified', () => {
+            describe('if deal settlement challenge result is Disqualified', () => {
+                let challenger;
+
+                before(() => {
+                    challenger = Wallet.createRandom().address;
+                });
+
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    ethersDealSettlementChallenge.setDealSettlementChallengeStatus(payment.sender.wallet, payment.nonce, mocks.challengeStatuses.indexOf('Disqualified'));
+                    await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                        payment.sender.wallet,
+                        payment.nonce,
+                        mocks.challengeResults.indexOf('Disqualified'),
+                        challenger,
+                        overrideOptions
+                    );
                 });
 
                 it('should seize the wallet', async () => {
                     await ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions);
                     const seized = await ethersExchange.isSeizedWallet(payment.sender.wallet);
                     seized.should.be.true;
+                    const seizure = await ethersClientFund.seizures(0);
+                    seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
+                    seizure.destination.should.equal(utils.getAddress(challenger));
                 });
             });
         });
