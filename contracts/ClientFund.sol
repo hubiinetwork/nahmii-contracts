@@ -85,7 +85,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() public {
-        serviceActivationTimeout = 30 * 3600; //30 minutes
+        serviceActivationTimeout = 60 * 60 * 24 * 7; // 1 week
     }
 
     //
