@@ -19,7 +19,7 @@ const Wallet = ethers.Wallet;
 let provider;
 
 module.exports = (glob) => {
-    describe('Exchange', () => {
+    describe.only('Exchange', () => {
         let web3Exchange, ethersExchange;
         let web3Configuration, ethersConfiguration;
         let web3RevenueFund, ethersRevenueFund;
@@ -589,8 +589,14 @@ module.exports = (glob) => {
                                 challenger,
                                 overrideOptions
                             );
-                            await ethersReserveFund.setMaxOutboundTransfer(trade.currencies.intended, 0, overrideOptions);
-                            await ethersReserveFund.setMaxOutboundTransfer(trade.currencies.conjugate, 0, overrideOptions);
+                            await ethersReserveFund.setMaxOutboundTransfer(
+                                mocks.mockTransferInfo(trade.currencies.intended, 0),
+                                overrideOptions
+                            );
+                            await ethersReserveFund.setMaxOutboundTransfer(
+                                mocks.mockTransferInfo(trade.currencies.conjugate, 0),
+                                overrideOptions
+                            );
                         });
 
                         it('should settle both trade parties', async () => {
@@ -663,8 +669,14 @@ module.exports = (glob) => {
                                 challenger,
                                 overrideOptions
                             );
-                            await ethersReserveFund.setMaxOutboundTransfer(trade.currencies.intended, utils.parseUnits('1000', 18), overrideOptions);
-                            await ethersReserveFund.setMaxOutboundTransfer(trade.currencies.conjugate, utils.parseUnits('1', 18), overrideOptions);
+                            await ethersReserveFund.setMaxOutboundTransfer(
+                                mocks.mockTransferInfo(trade.currencies.intended, utils.parseUnits('1000', 18)),
+                                overrideOptions
+                            );
+                            await ethersReserveFund.setMaxOutboundTransfer(
+                                mocks.mockTransferInfo(trade.currencies.conjugate, utils.parseUnits('1', 18)),
+                                overrideOptions
+                            );
                         });
 
                         it('should settle only provided party', async () => {
@@ -869,7 +881,10 @@ module.exports = (glob) => {
                                 challenger,
                                 overrideOptions
                             );
-                            await ethersReserveFund.setMaxOutboundTransfer(payment.currency, 0, overrideOptions);
+                            await ethersReserveFund.setMaxOutboundTransfer(
+                                mocks.mockTransferInfo(payment.currency, 0),
+                                overrideOptions
+                            );
                         });
 
                         it('should settle both payment parties', async () => {
@@ -930,7 +945,10 @@ module.exports = (glob) => {
                                 challenger,
                                 overrideOptions
                             );
-                            await ethersReserveFund.setMaxOutboundTransfer(payment.currency, utils.parseUnits('1000', 18), overrideOptions);
+                            await ethersReserveFund.setMaxOutboundTransfer(
+                                mocks.mockTransferInfo(payment.currency, utils.parseUnits('1000', 18)),
+                                overrideOptions
+                            );
                         });
 
                         it('should settle only provided party', async () => {

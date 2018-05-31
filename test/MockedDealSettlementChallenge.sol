@@ -31,6 +31,10 @@ contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
     }
 
     function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
-        return (walletChallengeInfoMap[wallet].result, walletChallengeInfoMap[wallet].challenger);
+        if ((0 == walletChallengeInfoMap[wallet].nonce) ||
+            (nonce != walletChallengeInfoMap[wallet].nonce))
+            return (Types.ChallengeResult.Unknown, address(0));
+        else
+            return (walletChallengeInfoMap[wallet].result, walletChallengeInfoMap[wallet].challenger);
     }
 }

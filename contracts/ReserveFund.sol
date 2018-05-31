@@ -80,6 +80,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
     }
 
     struct TransferInfo {
+        // TODO Rename to currency
         address tokenAddress; // 0 for ethers.
         int256 amount;
     }
@@ -102,9 +103,6 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
     uint256[] accrualBlockNumbers;
 
     mapping (address => bool) registeredServices;
-
-    // TODO Remove
-    mapping(address => int256) public currencyAmountMap;
 
     //
     // Events
@@ -577,17 +575,6 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
         if (token == address(0))
             return walletInfoMap[wallet].etherBalanceBlocks[idx - 1].mul_nn( SafeMathInt.toInt256(walletInfoMap[wallet].etherBalanceBlockNumbers[idx].sub(walletInfoMap[wallet].etherBalanceBlockNumbers[idx - 1])) );
         return walletInfoMap[wallet].tokenBalanceBlocks[token][idx - 1].mul_nn( SafeMathInt.toInt256(walletInfoMap[wallet].tokenBalanceBlockNumbers[token][idx].sub(walletInfoMap[wallet].tokenBalanceBlockNumbers[token][idx - 1])) );
-    }
-
-
-    // TODO Remove
-    function setMaxOutboundTransfer(address currency, int256 amount) public {
-        currencyAmountMap[currency] = amount;
-    }
-
-    // TODO Remove
-    function outboundTransferSupported(address currency, int256 amount) public view returns (bool) {
-        return currencyAmountMap[currency] >= amount;
     }
 
     //

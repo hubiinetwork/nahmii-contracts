@@ -7,14 +7,10 @@
  */
 pragma solidity ^0.4.24;
 
-//import "../contracts/ReserveFund.sol";
+import "../contracts/ReserveFund.sol";
+pragma experimental ABIEncoderV2;
 
 contract MockedReserveFund /*is ReserveFund*/ {
-
-    struct TransferInfo {
-        address tokenAddress; // 0 for ethers.
-        int256 amount;
-    }
 
     //
     // Variables
@@ -30,13 +26,11 @@ contract MockedReserveFund /*is ReserveFund*/ {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Update to using TransferInfo parameter
-    function setMaxOutboundTransfer(address currency, int256 amount) public {
-        currencyAmountMap[currency] = amount;
+    function setMaxOutboundTransfer(ReserveFund.TransferInfo outboundTx) public {
+        currencyAmountMap[outboundTx.tokenAddress] = outboundTx.amount;
     }
 
-    // TODO Update to using TransferInfo parameter
-    function outboundTransferSupported(address currency, int256 amount) public view returns (bool) {
-        return currencyAmountMap[currency] >= amount;
+    function outboundTransferSupported(ReserveFund.TransferInfo outboundTx) public view returns (bool) {
+        return currencyAmountMap[outboundTx.tokenAddress] >= outboundTx.amount;
     }
 }

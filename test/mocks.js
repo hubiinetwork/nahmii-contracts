@@ -187,6 +187,13 @@ exports.mockPayment = async (exchange, params) => {
     return await exports.augmentPaymentSeals(payment, exchangeSigner, walletSigner);
 };
 
+exports.mockTransferInfo = (currency, amount) => {
+    return {
+        tokenAddress: currency,
+        amount
+    }
+};
+
 exports.mergeDeep = (target, sender) => {
     if (isObject(target) && isObject(sender)) {
         Object.keys(sender).forEach(key => {

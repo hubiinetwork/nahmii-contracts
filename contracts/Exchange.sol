@@ -253,8 +253,8 @@ contract Exchange is Ownable {
                     partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
 
                 if (false == trade.immediateSettlement &&
-                tradesReserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended) && // TODO Replace arguments by ReserveFund.TransferInfo
-                tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, partyInboundTransferConjugate)) {// TODO Replace arguments by ReserveFund.TransferInfo
+                tradesReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(trade.currencies.intended, partyInboundTransferIntended)) &&
+                tradesReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(trade.currencies.conjugate, partyInboundTransferConjugate))) {
                     // TODO Uncomment and replace last 4 arguments by 2 instances of ReserveFund.TransferInfo
                     // tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
                     addOneSidedSettlementFromTrade(trade, wallet);
@@ -305,7 +305,7 @@ contract Exchange is Ownable {
                     partyInboundTransfer = payment.transfers.net.abs();
 
                 if (false == payment.immediateSettlement &&
-                paymentsReserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)) {// TODO Replace arguments by ReserveFund.TransferInfo
+                paymentsReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(payment.currency, partyInboundTransfer))) {
                     // TODO Uncomment and replace last 2 arguments by 1 instance of ReserveFund.TransferInfo
                     // paymentsReserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
                     addOneSidedSettlementFromPayment(payment, wallet);
