@@ -27,10 +27,10 @@ contract MockedReserveFund /*is ReserveFund*/ {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function setMaxOutboundTransfer(ReserveFund.TransferInfo outboundTx) public {
-        currencyAmountMap[outboundTx.tokenAddress] = outboundTx.amount;
+        currencyAmountMap[outboundTx.currency] = outboundTx.amount;
     }
 
     function outboundTransferSupported(ReserveFund.TransferInfo outboundTx) public view returns (bool) {
-        return currencyAmountMap[outboundTx.tokenAddress] >= outboundTx.amount;
+        return currencyAmountMap[outboundTx.currency] >= outboundTx.amount;
     }
 }

@@ -188,10 +188,7 @@ exports.mockPayment = async (exchange, params) => {
 };
 
 exports.mockTransferInfo = (currency, amount) => {
-    return {
-        tokenAddress: currency,
-        amount
-    }
+    return {currency, amount};
 };
 
 exports.mergeDeep = (target, sender) => {
