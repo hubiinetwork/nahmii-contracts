@@ -52,12 +52,4 @@ contract CommunityVote is Ownable {
     function isDataAvailable() public view returns (bool) {
         return dataAvailable;
     }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
 }
