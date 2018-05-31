@@ -37,6 +37,8 @@ module.exports = (glob) => {
             await ethersFraudulentDealChallenge.changeConfiguration(ethersConfiguration.address);
             await ethersFraudulentDealChallenge.changeCommunityVote(ethersCommunityVote.address);
             await ethersFraudulentDealChallenge.changeClientFund(ethersClientFund.address);
+
+            await ethersConfiguration.registerService(ethersFraudulentDealChallenge.address, 0 /*Action.OperationalMode*/);
         });
 
         beforeEach(async () => {

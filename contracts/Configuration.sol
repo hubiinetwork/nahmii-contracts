@@ -21,6 +21,7 @@ contract Configuration is Ownable {
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
     enum OperationalMode {Normal, Exit}
+    enum Action {OperationalMode}
 
     //
     // Custom types
@@ -51,6 +52,8 @@ contract Configuration is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     OperationalMode public operationalMode = OperationalMode.Normal;
 
+    mapping(address => mapping(uint8 => bool)) public registeredServiceActionMap;
+
     int256 constant public PARTS_PER = 1e18;
 
     mapping(uint256 => DiscountableFee) tradeMakerFees;
@@ -75,6 +78,8 @@ contract Configuration is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event RegisterServiceEvent(address service, Action action);
+    event DeregisterServiceEvent(address service, Action action);
     event SetOperationalModeExitEvent();
     event SetPartsPerEvent(int256 partsPer);
     event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
@@ -96,6 +101,22 @@ contract Configuration is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Register a contract as a service that may carry out an action
+    /// @param service The address of service contract
+    /// @param action The action that the service may carry out
+    function registerService(address service, Action action) public onlyOwner {
+        registeredServiceActionMap[service][uint8(action)] = true;
+        emit RegisterServiceEvent(service, action);
+    }
+
+    /// @notice Deregister a contract from the set of services that may carry out an action
+    /// @param service The address of service contract
+    /// @param action The action that the service may carry out
+    function deregisterService(address service, Action action) public onlyOwner {
+        registeredServiceActionMap[service][uint8(action)] = false;
+        emit DeregisterServiceEvent(service, action);
+    }
+
     /// @notice Return true if operational mode is Normal
     function isOperationalModeNormal() public view returns (bool) {
         return OperationalMode.Normal == operationalMode;
@@ -108,10 +129,8 @@ contract Configuration is Ownable {
 
     /// @notice Set operational mode to Exit
     /// @dev Once operational mode is set to Exit it may not be set back to Normal
-    // TODO Need to limit who can set operational mode
-    function setOperationalModeExit() public /*onlyOwner*/ {
+    function setOperationalModeExit() public onlyOwnerOrServiceAction(Action.OperationalMode) {
         operationalMode = OperationalMode.Exit;
-
         emit SetOperationalModeExitEvent();
     }
 
@@ -388,6 +407,11 @@ contract Configuration is Ownable {
 
     modifier onlyLaterBlockNumber(uint256 blockNumber) {
         require(blockNumber > block.number);
+        _;
+    }
+
+    modifier onlyOwnerOrServiceAction(Action action) {
+        require(msg.sender == owner || registeredServiceActionMap[msg.sender][uint8(action)]);
         _;
     }
 }

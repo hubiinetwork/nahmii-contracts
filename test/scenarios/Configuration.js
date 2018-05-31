@@ -1,12 +1,16 @@
 const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
+const ethers = require('ethers');
 
 chai.use(chaiAsPromised);
 chai.should();
 
+const utils = ethers.utils;
+const Wallet = ethers.Wallet;
+
 module.exports = (glob) => {
     describe('Configuration', () => {
-        let truffleInstance, provider, blockNumberAhead, blockNumberBehind;
+        let web3Configuration, provider, blockNumberAhead, blockNumberBehind;
         const feeUpdates = {
             tradeMakerFee: 0,
             tradeTakerFee: 0,
@@ -17,7 +21,7 @@ module.exports = (glob) => {
         };
 
         before(async () => {
-            truffleInstance = glob.web3Configuration;
+            web3Configuration = glob.web3Configuration;
             provider = glob.signer_owner.provider;
         });
 
@@ -29,57 +33,84 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await truffleInstance.owner.call();
+                const owner = await web3Configuration.owner.call();
                 owner.should.equal(glob.owner);
             });
         });
 
-        describe('owner()', () => {
-            it('should equal value initialized at construction time', async () => {
-                const owner = await truffleInstance.owner.call();
-                owner.should.equal(glob.owner);
+        describe('registeredServiceActionMap', () => {
+            it('should equal value initialized', async () => {
+                const address = Wallet.createRandom().address;
+                const registered = await web3Configuration.registeredServiceActionMap.call(address, 0);
+                registered.should.be.false;
             });
         });
 
-        describe('changeOwner()', () => {
-            describe('if called with current owner as sender', () => {
-                after(async () => {
-                    await truffleInstance.changeOwner(glob.owner, {from: glob.user_a});
-                });
+        describe('registerService()', () => {
+            let address;
 
-                it('should successfully set new owner and emit event', async () => {
-                    const result = await truffleInstance.changeOwner(glob.user_a);
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                it('should register service and emit event', async () => {
+                    const result = await web3Configuration.registerService(address, 0 /*Action.OperationalMode*/);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOwnerEvent');
-                    const owner = await truffleInstance.owner.call();
-                    owner.should.equal(glob.user_a);
+                    result.logs[0].event.should.equal('RegisterServiceEvent');
+                    const registered = await web3Configuration.registeredServiceActionMap.call(address, 0);
+                    registered.should.be.true;
                 });
             });
 
-            describe('if called with sender that is not current owner', () => {
-                it('should fail to set new owner', async () => {
-                    truffleInstance.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Configuration.registerService(address, 0 /*Action.OperationalMode*/, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('deregisterService()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                it('should deregister service and emit event', async () => {
+                    const result = await web3Configuration.deregisterService(address, 0 /*Action.OperationalMode*/);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('DeregisterServiceEvent');
+                    const registered = await web3Configuration.registeredServiceActionMap.call(address, 0);
+                    registered.should.be.false;
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Configuration.deregisterService(address, 0 /*Action.OperationalMode*/, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('operationalMode()', () => {
             it('should equal value initialized', async () => {
-                const operationalMode = await truffleInstance.operationalMode.call();
+                const operationalMode = await web3Configuration.operationalMode.call();
                 operationalMode.toNumber().should.equal(0);
             });
         });
 
         describe('isOperationalModeNormal()', () => {
             it('should equal value initialized', async () => {
-                const operationalModeNormal = await truffleInstance.isOperationalModeNormal.call();
+                const operationalModeNormal = await web3Configuration.isOperationalModeNormal.call();
                 operationalModeNormal.should.be.true;
             });
         });
 
         describe('isOperationalModeExit()', () => {
             it('should equal value initialized', async () => {
-                const operationalModeExit = await truffleInstance.isOperationalModeExit.call();
+                const operationalModeExit = await web3Configuration.isOperationalModeExit.call();
                 operationalModeExit.should.be.false;
             });
         });
@@ -87,42 +118,54 @@ module.exports = (glob) => {
         describe('setOperationalModeExit()', () => {
             describe('if called with owner as sender', () => {
                 it('should set exit operational mode', async () => {
-                    await truffleInstance.setOperationalModeExit();
-                    const operationalModeExit = await truffleInstance.isOperationalModeExit.call();
+                    await web3Configuration.setOperationalModeExit();
+                    const operationalModeExit = await web3Configuration.isOperationalModeExit.call();
                     operationalModeExit.should.be.true;
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with registered service as sender', () => {
+                before(async () => {
+                    await web3Configuration.registerService(glob.user_a, 0 /*Action.OperationalMode*/);
+                });
+
+                it('should set exit operational mode', async () => {
+                    await web3Configuration.setOperationalModeExit({from: glob.user_a});
+                    const operationalModeExit = await web3Configuration.isOperationalModeExit.call();
+                    operationalModeExit.should.be.true;
+                });
+            });
+
+            describe('if called with sender that is not owner or registered service', () => {
                 it('should revert', async () => {
-                    truffleInstance.setOperationalModeExit({from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setOperationalModeExit({from: glob.user_b}).should.be.rejected;
                 });
             });
         });
 
         describe('PARTS_PER()', () => {
             it('should get the value initialized at construction time', async () => {
-                const partsPer = await truffleInstance.PARTS_PER.call();
+                const partsPer = await web3Configuration.PARTS_PER.call();
                 partsPer.toNumber().should.equal(1e18);
             });
         });
 
         describe('getTradeMakerFee()', () => {
             beforeEach(async () => {
-                await truffleInstance.setTradeMakerFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
+                await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
                 feeUpdates.tradeMakerFee++;
             });
 
             describe('if called with non-existent discount key', () => {
                 it('should get the nominal value', async () => {
-                    const value = await truffleInstance.getTradeMakerFee.call(blockNumberAhead, 0);
+                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 0);
                     value.toNumber().should.equal(1e15);
                 });
             });
 
             describe('if called with existent discount key', () => {
                 it('should get the discounted value', async () => {
-                    const value = await truffleInstance.getTradeMakerFee.call(blockNumberAhead, 1);
+                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 1);
                     value.toNumber().should.equal(9e14);
                 });
             });
@@ -131,58 +174,58 @@ module.exports = (glob) => {
         describe('setTradeMakerFee()', () => {
             describe('if provided with correct parameters and called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
+                    const result = await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
                     feeUpdates.tradeMakerFee++;
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeMakerFeeEvent');
-                    const value = await truffleInstance.getTradeMakerFee.call(blockNumberAhead, 0);
+                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 0);
                     value.toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeMakerFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setTradeMakerFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                    web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
                 });
             });
         });
 
         describe('getTradeMakerFeesCount()', () => {
             it('should return the number of block number dependent fee configurations', async () => {
-                const value = await truffleInstance.getTradeMakerFeesCount.call();
+                const value = await web3Configuration.getTradeMakerFeesCount.call();
                 value.toNumber().should.equal(feeUpdates.tradeMakerFee);
             });
         });
 
         describe('getTradeTakerFee()', () => {
             before(async () => {
-                await truffleInstance.setTradeTakerFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
+                await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
                 feeUpdates.tradeTakerFee++;
             });
 
             describe('if called with non-existent discount key', () => {
                 it('should get the nominal value', async () => {
-                    const value = await truffleInstance.getTradeTakerFee.call(blockNumberAhead, 0);
+                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 0);
                     value.toNumber().should.equal(1e15);
                 });
             });
 
             describe('if called with existent discount key', () => {
                 it('should get the discounted value', async () => {
-                    const value = await truffleInstance.getTradeTakerFee.call(blockNumberAhead, 1);
+                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 1);
                     value.toNumber().should.equal(9e14);
                 });
             });
@@ -191,58 +234,58 @@ module.exports = (glob) => {
         describe('setTradeTakerFee()', () => {
             describe('if provided with correct parameters and called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
+                    const result = await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
                     feeUpdates.tradeTakerFee++;
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeTakerFeeEvent');
-                    const value = await truffleInstance.getTradeTakerFee.call(blockNumberAhead, 0);
+                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 0);
                     value.toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeTakerFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setTradeTakerFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                    web3Configuration.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
                 });
             });
         });
 
         describe('getTradeTakerFeesCount()', () => {
             it('should return the number of block number dependent fee configurations', async () => {
-                const value = await truffleInstance.getTradeTakerFeesCount.call();
+                const value = await web3Configuration.getTradeTakerFeesCount.call();
                 value.toNumber().should.equal(feeUpdates.tradeTakerFee);
             });
         });
 
         describe('getPaymentFee()', () => {
             before(async () => {
-                await truffleInstance.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
+                await web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
                 feeUpdates.paymentFee++;
             });
 
             describe('if called with non-existent discount key', () => {
                 it('should get the nominal value', async () => {
-                    const value = await truffleInstance.getPaymentFee.call(blockNumberAhead, 0);
+                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 0);
                     value.toNumber().should.equal(1e15);
                 });
             });
 
             describe('if called with existent discount key', () => {
                 it('should get the discounted value', async () => {
-                    const value = await truffleInstance.getPaymentFee.call(blockNumberAhead, 1);
+                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 1);
                     value.toNumber().should.equal(9e14);
                 });
             });
@@ -251,50 +294,50 @@ module.exports = (glob) => {
         describe('setPaymentFee()', () => {
             describe('if provided with correct parameters and called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setPaymentFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
+                    const result = await web3Configuration.setPaymentFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
                     feeUpdates.paymentFee++;
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetPaymentFeeEvent');
-                    const value = await truffleInstance.getPaymentFee.call(blockNumberAhead, 0);
+                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 0);
                     value.toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setPaymentFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setPaymentFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                    web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
                 });
             });
         });
 
         describe('getPaymentFeesCount()', () => {
             it('should return the number of block number dependent fee configurations', async () => {
-                const value = await truffleInstance.getPaymentFeesCount.call();
+                const value = await web3Configuration.getPaymentFeesCount.call();
                 value.toNumber().should.equal(feeUpdates.paymentFee);
             });
         });
 
         describe('getTradeMakerMinimumFee()', () => {
             before(async () => {
-                await truffleInstance.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
+                await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
                 feeUpdates.tradeMakerMinimumFee++;
             });
 
             it('should get the nominal value', async () => {
-                const value = await truffleInstance.getTradeMakerMinimumFee.call(blockNumberAhead);
+                const value = await web3Configuration.getTradeMakerMinimumFee.call(blockNumberAhead);
                 value.toNumber().should.equal(1e14);
             });
         });
@@ -302,44 +345,44 @@ module.exports = (glob) => {
         describe('setTradeMakerMinimumFee()', () => {
             describe('if called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setTradeMakerMinimumFee(blockNumberAhead, 1e18);
+                    const result = await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.tradeMakerMinimumFee++;
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeMakerMinimumFeeEvent');
-                    const value = await truffleInstance.getTradeMakerMinimumFee.call(blockNumberAhead);
+                    const value = await web3Configuration.getTradeMakerMinimumFee.call(blockNumberAhead);
                     value.toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeMakerMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeMakerMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    web3Configuration.setTradeMakerMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
                 });
             });
         });
 
         describe('getTradeMakerMinimumFeesCount()', () => {
             it('should return the number of block number dependent fee configurations', async () => {
-                const value = await truffleInstance.getTradeMakerMinimumFeesCount.call();
+                const value = await web3Configuration.getTradeMakerMinimumFeesCount.call();
                 value.toNumber().should.equal(feeUpdates.tradeMakerMinimumFee);
             });
         });
 
         describe('getTradeTakerMinimumFee()', () => {
             before(async () => {
-                await truffleInstance.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
+                await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
                 feeUpdates.tradeTakerMinimumFee++;
             });
 
             it('should get the nominal value', async () => {
-                const value = await truffleInstance.getTradeTakerMinimumFee.call(blockNumberAhead);
+                const value = await web3Configuration.getTradeTakerMinimumFee.call(blockNumberAhead);
                 value.toNumber().should.equal(1e14);
             });
         });
@@ -347,45 +390,45 @@ module.exports = (glob) => {
         describe('setTradeTakerMinimumFee()', () => {
             describe('if called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setTradeTakerMinimumFee(blockNumberAhead, 1e18);
+                    const result = await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.tradeTakerMinimumFee++;
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeTakerMinimumFeeEvent');
-                    const value = await truffleInstance.getTradeTakerMinimumFee.call(blockNumberAhead);
+                    const value = await web3Configuration.getTradeTakerMinimumFee.call(blockNumberAhead);
                     value.toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeTakerMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setTradeTakerMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    web3Configuration.setTradeTakerMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
                 });
             });
         });
 
         describe('getTradeTakerMinimumFeesCount()', () => {
             it('should return the number of block number dependent fee configurations', async () => {
-                const value = await truffleInstance.getTradeTakerMinimumFeesCount.call();
+                const value = await web3Configuration.getTradeTakerMinimumFeesCount.call();
                 value.toNumber().should.equal(feeUpdates.tradeTakerMinimumFee);
             });
         });
 
         describe('getPaymentMinimumFee()', () => {
             before(async () => {
-                await truffleInstance.setPaymentMinimumFee(blockNumberAhead, 1e14);
+                await web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e14);
                 feeUpdates.paymentMininumFee++;
 
             });
 
             it('should get the nominal value', async () => {
-                const value = await truffleInstance.getPaymentMinimumFee.call(blockNumberAhead);
+                const value = await web3Configuration.getPaymentMinimumFee.call(blockNumberAhead);
                 value.toNumber().should.equal(1e14);
             });
         });
@@ -393,39 +436,39 @@ module.exports = (glob) => {
         describe('setPaymentMinimumFee()', () => {
             describe('if called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setPaymentMinimumFee(blockNumberAhead, 1e18);
+                    const result = await web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.paymentMininumFee++;
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetPaymentMinimumFeeEvent');
-                    const value = await truffleInstance.getPaymentMinimumFee.call(blockNumberAhead);
+                    const value = await web3Configuration.getPaymentMinimumFee.call(blockNumberAhead);
                     value.toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setPaymentMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setPaymentMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    web3Configuration.setPaymentMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
                 });
             });
         });
 
         describe('getPaymentMinimumFeesCount()', () => {
             it('should return the number of block number dependent fee configurations', async () => {
-                const value = await truffleInstance.getPaymentMinimumFeesCount.call();
+                const value = await web3Configuration.getPaymentMinimumFeesCount.call();
                 value.toNumber().should.equal(feeUpdates.paymentMininumFee);
             });
         });
 
         describe('cancelOrderChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await truffleInstance.cancelOrderChallengeTimeout.call();
+                const value = await web3Configuration.cancelOrderChallengeTimeout.call();
                 value.toNumber().should.equal(0);
             });
         });
@@ -435,32 +478,32 @@ module.exports = (glob) => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await truffleInstance.cancelOrderChallengeTimeout.call();
+                    initialValue = await web3Configuration.cancelOrderChallengeTimeout.call();
                 });
 
                 after(async () => {
-                    await truffleInstance.setCancelOrderChallengeTimeout(initialValue);
+                    await web3Configuration.setCancelOrderChallengeTimeout(initialValue);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setCancelOrderChallengeTimeout(100);
+                    const result = await web3Configuration.setCancelOrderChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCancelOrderChallengeTimeout');
-                    const value = await truffleInstance.cancelOrderChallengeTimeout.call();
+                    const value = await web3Configuration.cancelOrderChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setCancelOrderChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setCancelOrderChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('dealSettlementChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await truffleInstance.dealSettlementChallengeTimeout.call();
+                const value = await web3Configuration.dealSettlementChallengeTimeout.call();
                 value.toNumber().should.equal(0);
             });
         });
@@ -470,32 +513,32 @@ module.exports = (glob) => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await truffleInstance.dealSettlementChallengeTimeout.call();
+                    initialValue = await web3Configuration.dealSettlementChallengeTimeout.call();
                 });
 
                 after(async () => {
-                    await truffleInstance.setDealSettlementChallengeTimeout(initialValue);
+                    await web3Configuration.setDealSettlementChallengeTimeout(initialValue);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setDealSettlementChallengeTimeout(100);
+                    const result = await web3Configuration.setDealSettlementChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetDealSettlementChallengeTimeout');
-                    const value = await truffleInstance.dealSettlementChallengeTimeout.call();
+                    const value = await web3Configuration.dealSettlementChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setDealSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setDealSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('getUnchallengeDealSettlementOrderByTradeStake()', () => {
             it('should equal values initialized at construction time', async () => {
-                const values = await truffleInstance.unchallengeDealSettlementOrderByTradeStake.call();
+                const values = await web3Configuration.unchallengeDealSettlementOrderByTradeStake.call();
                 values.should.be.an('array').and.have.lengthOf(2);
                 values[0].should.equal('0x0000000000000000000000000000000000000000');
                 values[1].toNumber().should.equal(0);
@@ -507,18 +550,18 @@ module.exports = (glob) => {
                 let initialValues;
 
                 before(async () => {
-                    initialValues = await truffleInstance.unchallengeDealSettlementOrderByTradeStake.call();
+                    initialValues = await web3Configuration.unchallengeDealSettlementOrderByTradeStake.call();
                 });
 
                 after(async () => {
-                    await truffleInstance.setUnchallengeDealSettlementOrderByTradeStake(initialValues[0], initialValues[1]);
+                    await web3Configuration.setUnchallengeDealSettlementOrderByTradeStake(initialValues[0], initialValues[1]);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await truffleInstance.setUnchallengeDealSettlementOrderByTradeStake('0x0000000000000000000000000000000000000001', 1e18);
+                    const result = await web3Configuration.setUnchallengeDealSettlementOrderByTradeStake('0x0000000000000000000000000000000000000001', 1e18);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetUnchallengeDealSettlementOrderByTradeStakeEvent');
-                    const values = await truffleInstance.unchallengeDealSettlementOrderByTradeStake.call();
+                    const values = await web3Configuration.unchallengeDealSettlementOrderByTradeStake.call();
                     values[0].should.equal('0x0000000000000000000000000000000000000001');
                     values[1].toNumber().should.equal(1e18);
                 });
@@ -526,7 +569,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    truffleInstance.setUnchallengeDealSettlementOrderByTradeStake('0x0000000000000000000000000000000000000001', 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setUnchallengeDealSettlementOrderByTradeStake('0x0000000000000000000000000000000000000001', 1e18, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
