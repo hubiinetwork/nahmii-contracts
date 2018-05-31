@@ -232,6 +232,7 @@ contract Exchange is Ownable {
             wallet = msg.sender;
 
         require(Types.isTradeParty(trade, wallet));
+        require(!communityVote.isDoubleSpenderWallet(wallet));
 
         (Types.ChallengeResult result, address challenger) = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
 
@@ -287,6 +288,7 @@ contract Exchange is Ownable {
             wallet = msg.sender;
 
         require(Types.isPaymentParty(payment, wallet));
+        require(!communityVote.isDoubleSpenderWallet(wallet));
 
         (Types.ChallengeResult result, address challenger) = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
 
