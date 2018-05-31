@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 /**
  * @title     Types
@@ -167,27 +167,27 @@ library Types {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function hashTrade(Trade trade) internal pure returns (bytes32) {
-        return keccak256(trade.nonce);
+        return keccak256(abi.encodePacked(trade.nonce));
         //        return keccak256(packTradeData(trade));
     }
 
     function hashPaymentAsWallet(Payment payment) internal pure returns (bytes32) {
-        return keccak256(payment.nonce);
+        return keccak256(abi.encodePacked(payment.nonce));
         //        return keccak256(packPaymentDataAsWallet(payment));
     }
 
     function hashPaymentAsExchange(Payment payment) internal pure returns (bytes32) {
-        return keccak256(payment.nonce);
+        return keccak256(abi.encodePacked(payment.nonce));
         //        return keccak256(packPaymentDataAsExchange(payment));
     }
 
     function hashOrderAsWallet(Order order) internal pure returns (bytes32) {
-        return keccak256(order.nonce);
+        return keccak256(abi.encodePacked(order.nonce));
         //        return keccak256(packOrderDataAsWallet(order));
     }
 
     function hashOrderAsExchange(Order order) internal pure returns (bytes32) {
-        return keccak256(order.nonce);
+        return keccak256(abi.encodePacked(order.nonce));
         //        return keccak256(packOrderDataAsExchange(order));
     }
 
@@ -419,7 +419,7 @@ library Types {
 
     function isGenuineSignature(bytes32 hash, Types.Signature signature, address signer) internal pure returns (bool) {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 prefixedHash = keccak256(prefix, hash);
+        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
         return ecrecover(prefixedHash, signature.v, signature.r, signature.s) == signer;
     }
 }

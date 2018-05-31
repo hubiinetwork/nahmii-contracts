@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "../contracts/Types.sol";
 import "../contracts/DealSettlementChallenge.sol";

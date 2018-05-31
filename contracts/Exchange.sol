@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
@@ -233,9 +233,7 @@ contract Exchange is Ownable {
 
         require(Types.isTradeParty(trade, wallet));
 
-        Types.ChallengeResult result;
-        address challenger;
-        (result, challenger)= dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
+        (Types.ChallengeResult result, address challenger) = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
 
         if (Types.ChallengeResult.Qualified == result) {
 
@@ -290,9 +288,7 @@ contract Exchange is Ownable {
 
         require(Types.isPaymentParty(payment, wallet));
 
-        Types.ChallengeResult result;
-        address challenger;
-        (result, challenger)= dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
+        (Types.ChallengeResult result, address challenger) = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
 
         if (Types.ChallengeResult.Qualified == result) {
 

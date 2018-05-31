@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
