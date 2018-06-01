@@ -6,9 +6,9 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import "../contracts/ReserveFund.sol";
-pragma experimental ABIEncoderV2;
 
 contract MockedReserveFund /*is ReserveFund*/ {
 

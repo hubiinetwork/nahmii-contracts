@@ -1,6 +1,6 @@
 const ethers = require('ethers');
 const ethutil = require('ethereumjs-util');
-const keccak256 = require("augmented-keccak256");
+const cryptography = require('omphalos-commons').util.cryptography;
 
 const Wallet = ethers.Wallet;
 const utils = ethers.utils;
@@ -65,8 +65,8 @@ exports.mockTrade = async (exchange, params) => {
             order: {
                 amount: utils.parseUnits('1000', 18),
                 hashes: {
-                    wallet: Wallet.createRandom().address,
-                    exchange: Wallet.createRandom().address
+                    wallet: cryptography.hash(Wallet.createRandom().address),
+                    exchange: cryptography.hash(Wallet.createRandom().address)
                 },
                 residuals: {
                     current: utils.parseUnits('400', 18),
@@ -96,8 +96,8 @@ exports.mockTrade = async (exchange, params) => {
             order: {
                 amount: utils.parseUnits('1000', 18),
                 hashes: {
-                    wallet: Wallet.createRandom().address,
-                    exchange: Wallet.createRandom().address
+                    wallet: cryptography.hash(Wallet.createRandom().address),
+                    exchange: cryptography.hash(Wallet.createRandom().address)
                 },
                 residuals: {
                     current: utils.parseUnits('600', 18),
@@ -210,10 +210,8 @@ exports.mergeDeep = (target, sender) => {
 exports.createEthutilSigner = (wallet) => {
     return async (hash) => {
         const prefixedHash = new Buffer(
-            exports.hashTyped(
-                {value: '\x19Ethereum Signed Message:\n32', type: 'string'},
-                {value: hash.toString('hex'), types: 'hex'}
-            ).slice(2), 'hex'
+            cryptography.hash('\x19Ethereum Signed Message:\n32', hash.toString('hex')).slice(2),
+            'hex'
         );
         const sig = ethutil.ecsign(prefixedHash, new Buffer(wallet.privateKey.slice(2), 'hex'));
         return exports.ethutilToStdSig(sig)
@@ -260,9 +258,7 @@ exports.augmentPaymentSeals = async (payment, exchangeSign, walletSign) => {
             signature: await walletSign(walletHash)
         }
     };
-    // TODO Replace wallet hasher with exchange hasher
     const exchangeHash = exports.hashPaymentAsExchange(payment);
-    // const exchangeHash = exports.hashPaymentAsWallet(payment);
     payment.seals.exchange = {
         hash: exchangeHash,
         signature: await exchangeSign(exchangeHash)
@@ -271,52 +267,122 @@ exports.augmentPaymentSeals = async (payment, exchangeSign, walletSign) => {
 };
 
 exports.hashOrderAsWallet = (order) => {
-    return exports.hashString(
-        order.nonce.toNumber()
+    const globalHash = cryptography.hash(
+        order.nonce,
+        order.wallet
     );
+    const placementHash = cryptography.hash(
+        {type: 'uint8', value: order.placement.intention},
+        order.placement.amount,
+        order.placement.currencies.intended,
+        order.placement.currencies.conjugate,
+        order.placement.rate
+    );
+    return cryptography.hash(globalHash, placementHash);
 };
 
 exports.hashOrderAsExchange = (order) => {
-    return exports.hashTyped(
-        {value: order.placement.residuals.current.toHexString(), type: 'hex'},
-        {value: order.placement.residuals.previous.toHexString(), type: 'hex'},
-        {value: exports.stdToRpcSig(order.seals.wallet.signature), type: 'string'}
+    const walletSignatureHash = cryptography.hash(
+        {type: 'uint8', value: order.seals.wallet.signature.v},
+        order.seals.wallet.signature.r,
+        order.seals.wallet.signature.s
     );
+    const placementResidualsHash = cryptography.hash(
+        order.placement.residuals.current,
+        order.placement.residuals.previous
+    );
+    return cryptography.hash(walletSignatureHash, placementResidualsHash);
 };
 
 exports.hashTrade = (trade) => {
-    return exports.hashString(
-        trade.nonce.toNumber()
+    const globalHash = cryptography.hash(
+        trade.nonce,
+        trade.amount,
+        trade.currencies.intended,
+        trade.currencies.conjugate,
+        trade.rate
     );
+    const buyerHash = cryptography.hash(
+        trade.buyer.nonce,
+        trade.buyer.wallet,
+        trade.buyer.order.hashes.wallet,
+        trade.buyer.order.hashes.exchange,
+        trade.buyer.order.amount,
+        trade.buyer.order.residuals.current,
+        trade.buyer.order.residuals.previous,
+        trade.buyer.balances.intended.current,
+        trade.buyer.balances.intended.previous,
+        trade.buyer.balances.conjugate.current,
+        trade.buyer.balances.conjugate.previous,
+        trade.buyer.netFees.intended,
+        trade.buyer.netFees.conjugate
+    );
+    const sellerHash = cryptography.hash(
+        trade.seller.nonce,
+        trade.seller.wallet,
+        trade.seller.order.hashes.wallet,
+        trade.seller.order.hashes.exchange,
+        trade.seller.order.amount,
+        trade.seller.order.residuals.current,
+        trade.seller.order.residuals.previous,
+        trade.seller.balances.intended.current,
+        trade.seller.balances.intended.previous,
+        trade.seller.balances.conjugate.current,
+        trade.seller.balances.conjugate.previous,
+        trade.seller.netFees.intended,
+        trade.seller.netFees.conjugate
+    );
+    const transfersHash = cryptography.hash(
+        trade.transfers.intended.single,
+        trade.transfers.intended.net,
+        trade.transfers.conjugate.single,
+        trade.transfers.conjugate.net
+    );
+    const singleFeesHash = cryptography.hash(
+        trade.singleFees.intended,
+        trade.singleFees.conjugate
+    );
+    return cryptography.hash(globalHash, buyerHash, sellerHash, transfersHash, singleFeesHash);
 };
 
 exports.hashPaymentAsWallet = (payment) => {
-    return exports.hashString(
-        payment.nonce.toNumber()
+    const amountHash = cryptography.hash(
+        payment.amount
     );
+    const senderHash = cryptography.hash(
+        payment.sender.nonce,
+        payment.sender.wallet,
+        payment.sender.balances.current,
+        payment.sender.balances.previous,
+        payment.sender.netFee
+    );
+    const recipientHash = cryptography.hash(
+        payment.recipient.nonce,
+        payment.recipient.wallet,
+        payment.recipient.balances.current,
+        payment.recipient.balances.previous,
+        payment.recipient.netFee
+    );
+    const transfersHash = cryptography.hash(
+        payment.transfers.single,
+        payment.transfers.net
+    );
+    const singleFeeHash = cryptography.hash(
+        payment.singleFee
+    );
+    return cryptography.hash(amountHash, senderHash, recipientHash, transfersHash, singleFeeHash);
 };
 
 exports.hashPaymentAsExchange = (payment) => {
-    return exports.hashString(
-        payment.nonce.toNumber()
+    const walletSignatureHash = cryptography.hash(
+        {type: 'uint8', value: payment.seals.wallet.signature.v},
+        payment.seals.wallet.signature.r,
+        payment.seals.wallet.signature.s
     );
-    // return exports.hashTyped(
-    //     {value: exports.stdToRpcSig(payment.seals.wallet.signature), type: 'string'}
-    // );
-    // TODO Try alternative below
-    // return `0x${ethutil.keccak(exports.stdToRpcSig(payment.seals.wallet.signature).slice(2)).toString('hex')}`;
-};
-
-exports.hashString = (...data) => {
-    const hasher = keccak256.create();
-    data.forEach((d) => hasher.update(d));
-    return `0x${hasher.digest()}`;
-};
-
-exports.hashTyped = (...data) => {
-    const hasher = keccak256.create();
-    data.forEach((d) => hasher.update(d.value, d.type));
-    return `0x${hasher.digest()}`;
+    const nonceHash = cryptography.hash(
+        payment.nonce
+    );
+    return cryptography.hash(walletSignatureHash, nonceHash);
 };
 
 exports.ethutilToStdSig = (sig) => {

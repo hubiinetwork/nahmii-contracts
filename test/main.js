@@ -12,6 +12,8 @@ var w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 
 var ClientFund = artifacts.require("ClientFund");
 var CommunityVote = artifacts.require("CommunityVote");
+var Hasher = artifacts.require("Hasher");
+var FraudulentDealValidator = artifacts.require("FraudulentDealValidator");
 var Configuration = artifacts.require("Configuration");
 var Exchange = artifacts.require("Exchange");
 var CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
@@ -127,6 +129,28 @@ contract('Smart contract checks', function () {
         }
         catch (err) {
             assert(false, 'Failed to instantiate ClientFund contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate Hasher contract", async () => {
+        try {
+            glob.web3Hasher = await Hasher.deployed();
+            assert.notEqual(glob.web3Hasher, null);
+            glob.ethersIoHasher = new ethers.Contract(glob.web3Hasher.address, Hasher.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate Hasher contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudulentDealValidator contract", async () => {
+        try {
+            glob.web3FraudulentDealValidator = await FraudulentDealValidator.deployed();
+            assert.notEqual(glob.web3FraudulentDealValidator, null);
+            glob.ethersIoFraudulentDealValidator = new ethers.Contract(glob.web3FraudulentDealValidator.address, FraudulentDealValidator.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudulentDealValidator contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -300,6 +324,8 @@ contract('Smart contract checks', function () {
     //-------------------------------------------------------------------------
 
     require('./scenarios/ClientFund')(glob);
+    require('./scenarios/Hasher')(glob);
+    // require('./scenarios/FraudulentDealValidator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
     require('./scenarios/Exchange')(glob);

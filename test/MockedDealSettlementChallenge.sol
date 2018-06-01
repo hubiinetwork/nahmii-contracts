@@ -6,10 +6,10 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import "../contracts/Types.sol";
 import "../contracts/DealSettlementChallenge.sol";
-pragma experimental ABIEncoderV2;
 
 contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
 

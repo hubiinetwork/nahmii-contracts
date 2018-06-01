@@ -4,6 +4,7 @@ const chaiAsPromised = require("chai-as-promised");
 const ethers = require('ethers');
 const mocks = require('../mocks');
 const MockedClientFund = artifacts.require("MockedClientFund");
+const cryptography = require('omphalos-commons').util.cryptography;
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -18,25 +19,36 @@ module.exports = (glob) => {
         let web3Configuration, ethersConfiguration;
         let web3CommunityVote, ethersCommunityVote;
         let web3ClientFund, ethersClientFund;
+        let web3Hasher, ethersHasher;
+        let web3FraudulentDealValidator, ethersFraudulentDealValidator;
         let provider;
         let blockNumber0, blockNumber10, blockNumber20;
 
         before(async () => {
+            provider = glob.signer_owner.provider;
+
             web3FraudulentDealChallenge = glob.web3FraudulentDealChallenge;
             ethersFraudulentDealChallenge = glob.ethersIoFraudulentDealChallenge;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
             web3CommunityVote = glob.web3CommunityVote;
             ethersCommunityVote = glob.ethersIoCommunityVote;
+            web3Hasher = glob.web3Hasher;
+            ethersHasher = glob.ethersIoHasher;
+            web3FraudulentDealValidator = glob.web3FraudulentDealValidator;
+            ethersFraudulentDealValidator = glob.ethersIoFraudulentDealValidator;
 
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
             ethersClientFund = new ethers.Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
 
-            provider = glob.signer_owner.provider;
+            await ethersFraudulentDealValidator.changeConfiguration(ethersConfiguration.address);
+            await ethersFraudulentDealValidator.changeHasher(ethersHasher.address);
 
             await ethersFraudulentDealChallenge.changeConfiguration(ethersConfiguration.address);
             await ethersFraudulentDealChallenge.changeCommunityVote(ethersCommunityVote.address);
             await ethersFraudulentDealChallenge.changeClientFund(ethersClientFund.address);
+            await ethersFraudulentDealChallenge.changeHasher(ethersHasher.address);
+            await ethersFraudulentDealChallenge.changeFraudulentDealValidator(ethersFraudulentDealValidator.address);
 
             await ethersConfiguration.registerService(ethersFraudulentDealChallenge.address, 0 /*Action.OperationalMode*/);
         });
@@ -105,6 +117,88 @@ module.exports = (glob) => {
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
                     web3FraudulentDealChallenge.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('hasher()', () => {
+            it('should equal value initialized', async () => {
+                const hasher = await ethersFraudulentDealChallenge.hasher();
+                hasher.should.equal(utils.getAddress(ethersHasher.address));
+            });
+        });
+
+        describe('changeHasher()', () => {
+            let address;
+
+            before(()=> {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let hasher;
+
+                beforeEach(async () => {
+                    hasher = await web3FraudulentDealChallenge.hasher.call();
+                });
+
+                afterEach(async () => {
+                    await web3FraudulentDealChallenge.changeHasher(hasher);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3FraudulentDealChallenge.changeHasher(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeHasherEvent');
+                    const hasher = await web3FraudulentDealChallenge.hasher();
+                    utils.getAddress(hasher).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3FraudulentDealChallenge.changeHasher(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('fraudulentDealValidator()', () => {
+            it('should equal value initialized', async () => {
+                const fraudulentDealValidator = await ethersFraudulentDealChallenge.fraudulentDealValidator();
+                fraudulentDealValidator.should.equal(utils.getAddress(ethersFraudulentDealValidator.address));
+            });
+        });
+
+        describe('changeFraudulentDealValidator()', () => {
+            let address;
+
+            before(()=> {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let fraudulentDealValidator;
+
+                beforeEach(async () => {
+                    fraudulentDealValidator = await web3FraudulentDealChallenge.fraudulentDealValidator.call();
+                });
+
+                afterEach(async () => {
+                    await web3FraudulentDealChallenge.changeFraudulentDealValidator(fraudulentDealValidator);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3FraudulentDealChallenge.changeFraudulentDealValidator(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeFraudulentDealValidatorEvent');
+                    const fraudulentDealValidator = await web3FraudulentDealChallenge.fraudulentDealValidator();
+                    utils.getAddress(fraudulentDealValidator).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3FraudulentDealChallenge.changeFraudulentDealValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -895,11 +989,6 @@ module.exports = (glob) => {
             describe('if wallet hash differs from calculated', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-
-                    // TODO Remove
-                    // console.log([payment.seals.wallet.hash, payment.seals.exchange.hash]);
-                    // console.log(await ethersFraudulentDealChallenge.getHashes(payment));
-
                     payment.seals.wallet.hash = utils.id('some non-existent hash');
                 });
 
@@ -2667,7 +2756,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeDoubleSpentOrders()', () => {
+        describe('challengeByDoubleSpentOrders()', () => {
             let overrideOptions, firstTrade, lastTrade, currency, topic, filter;
 
             before(async () => {
@@ -2769,7 +2858,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersFraudulentDealChallenge.challengeDoubleSpentOrders(firstTrade, lastTrade, overrideOptions).should.be.rejected;
+                    ethersFraudulentDealChallenge.challengeByDoubleSpentOrders(firstTrade, lastTrade, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -2851,7 +2940,7 @@ module.exports = (glob) => {
                 });
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
-                    await ethersFraudulentDealChallenge.challengeDoubleSpentOrders(firstTrade, lastTrade, overrideOptions);
+                    await ethersFraudulentDealChallenge.challengeByDoubleSpentOrders(firstTrade, lastTrade, overrideOptions);
                     const [operationalModeExit, fraudulentTrade, doubleSpenderWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),
@@ -2943,7 +3032,7 @@ module.exports = (glob) => {
                 });
 
                 it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
-                    await ethersFraudulentDealChallenge.challengeDoubleSpentOrders(firstTrade, lastTrade, overrideOptions);
+                    await ethersFraudulentDealChallenge.challengeByDoubleSpentOrders(firstTrade, lastTrade, overrideOptions);
                     const [operationalModeExit, fraudulentTrade, doubleSpenderWallet, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudulentDealChallenge.fraudulentTrade(),

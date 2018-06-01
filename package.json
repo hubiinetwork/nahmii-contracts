@@ -20,6 +20,7 @@
     "augmented-keccak256": "git+https://github.com/CoinFabrik/augmented-keccak256.git",
     "ethers": "^3.0.7",
     "ganache-cli": "^6.1.0",
+    "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "truffle": "^4.1.11"
   },
   "devDependencies": {
