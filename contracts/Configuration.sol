@@ -6,6 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
@@ -73,7 +74,7 @@ contract Configuration is Ownable {
     uint256 public cancelOrderChallengeTimeout;
     uint256 public dealSettlementChallengeTimeout;
 
-    Lot public unchallengeDealSettlementOrderByTradeStake;
+    Lot public unchallengeOrderCandidateByTradeStake;
 
     //
     // Events
@@ -343,12 +344,19 @@ contract Configuration is Ownable {
         emit SetDealSettlementChallengeTimeout(timeout);
     }
 
-    /// @notice Set currency and amount that will be gained when someone successfully unchallenges deal settlement order by trade
+    /// @notice Set currency and amount that will be gained when someone successfully unchallenges
+    /// (deal settlement) order candidate by trade
     /// @param currency Address of currency gained (0 represents ETH)
     /// @param amount Amount gained
-    function setUnchallengeDealSettlementOrderByTradeStake(address currency, int256 amount) public onlyOwner {
-        unchallengeDealSettlementOrderByTradeStake = Lot({currency : currency, amount : amount});
+    function setUnchallengeOrderCandidateByTradeStake(address currency, int256 amount) public onlyOwner {
+        unchallengeOrderCandidateByTradeStake = Lot({currency : currency, amount : amount});
         emit SetUnchallengeDealSettlementOrderByTradeStakeEvent(currency, amount);
+    }
+
+    /// @notice Get the lot (currency and amount) that will be gained when someone successfully
+    /// unchallenges (deal settlement) order candidate by trade
+    function getUnchallengeOrderCandidateByTradeStake() public view returns (Lot) {
+        return unchallengeOrderCandidateByTradeStake;
     }
 
     function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,

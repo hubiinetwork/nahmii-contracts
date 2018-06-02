@@ -3,6 +3,7 @@ const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const ethers = require('ethers');
 const mocks = require('../mocks');
+const MockedSecurityBond = artifacts.require("MockedSecurityBond");
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -27,10 +28,11 @@ module.exports = (glob) => {
             ethersDealSettlementChallengeOwner = glob.ethersIoDealSettlementChallenge;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
-            web3SecurityBond = glob.web3SecurityBond;
-            ethersSecurityBond = glob.ethersIoSecurityBond;
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
             ethersCancelOrdersChallengeOwner = glob.ethersIoCancelOrdersChallenge;
+
+            web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
+            ethersSecurityBond = new ethers.Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
             ethersDealSettlementChallengeUserA = ethersDealSettlementChallengeOwner.connect(glob.signer_a);
             ethersDealSettlementChallengeUserB = ethersDealSettlementChallengeOwner.connect(glob.signer_b);
@@ -38,6 +40,8 @@ module.exports = (glob) => {
             ethersCancelOrdersChallengeUserE = ethersCancelOrdersChallengeOwner.connect(glob.signer_e);
 
             provider = glob.signer_owner.provider;
+
+            await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(address(0), 1000);
 
             await ethersDealSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
             await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
@@ -815,6 +819,7 @@ module.exports = (glob) => {
 
             beforeEach(async () => {
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
+                await ethersSecurityBond.reset(overrideOptions);
 
                 topic = ethersDealSettlementChallengeOwner.interface.events.UnchallengeOrderCandidateByTradeEvent.topics[0];
                 filter = {
@@ -952,7 +957,7 @@ module.exports = (glob) => {
                     await ethersDealSettlementChallengeOwner.challengeByOrder(order, overrideOptions);
                 });
 
-                it('should requalify challenged deal and emit event', async () => {
+                it('should requalify challenged deal, stage in SecurityBond and emit event', async () => {
                     await ethersDealSettlementChallengeOwner.unchallengeOrderCandidateByTrade(order, unchallengeTradeCandidate, overrideOptions);
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -961,6 +966,10 @@ module.exports = (glob) => {
                     dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('None'));
                     dealSettlementChallenge.candidateIndex.eq(0).should.be.true;
                     dealSettlementChallenge.challenger.should.equal('0x0000000000000000000000000000000000000000');
+                    const stage = await ethersSecurityBond.stages(0);
+                    stage.wallet.should.equal(glob.owner);
+                    stage.currency.should.equal(mocks.address0);
+                    stage.amount.eq(1000).should.be.true;
                 });
             })
         });

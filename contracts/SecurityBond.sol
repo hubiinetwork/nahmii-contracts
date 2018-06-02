@@ -6,6 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import "./SafeMathInt.sol";
 import "./Ownable.sol";

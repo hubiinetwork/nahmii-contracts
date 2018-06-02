@@ -13,6 +13,8 @@ exports.challengePhases = ['Dispute', 'Closed'];
 exports.challengeResults = ['Unknown', 'Qualified', 'Disqualified'];
 exports.challengeCandidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
+exports.address0 = '0x0000000000000000000000000000000000000000';
+
 exports.mockOrder = async (exchange, params) => {
     const wallet = Wallet.createRandom();
 

@@ -538,30 +538,30 @@ module.exports = (glob) => {
 
         describe('getUnchallengeDealSettlementOrderByTradeStake()', () => {
             it('should equal values initialized at construction time', async () => {
-                const values = await web3Configuration.unchallengeDealSettlementOrderByTradeStake.call();
+                const values = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
                 values.should.be.an('array').and.have.lengthOf(2);
                 values[0].should.equal('0x0000000000000000000000000000000000000000');
                 values[1].toNumber().should.equal(0);
             });
         });
 
-        describe('setUnchallengeDealSettlementOrderByTradeStake()', () => {
+        describe('setUnchallengeOrderCandidateByTradeStake()', () => {
             describe('if called with sender that is owner', () => {
                 let initialValues;
 
                 before(async () => {
-                    initialValues = await web3Configuration.unchallengeDealSettlementOrderByTradeStake.call();
+                    initialValues = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
                 });
 
                 after(async () => {
-                    await web3Configuration.setUnchallengeDealSettlementOrderByTradeStake(initialValues[0], initialValues[1]);
+                    await web3Configuration.setUnchallengeOrderCandidateByTradeStake(initialValues[0], initialValues[1]);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setUnchallengeDealSettlementOrderByTradeStake('0x0000000000000000000000000000000000000001', 1e18);
+                    const result = await web3Configuration.setUnchallengeOrderCandidateByTradeStake('0x0000000000000000000000000000000000000001', 1e18);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetUnchallengeDealSettlementOrderByTradeStakeEvent');
-                    const values = await web3Configuration.unchallengeDealSettlementOrderByTradeStake.call();
+                    const values = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
                     values[0].should.equal('0x0000000000000000000000000000000000000001');
                     values[1].toNumber().should.equal(1e18);
                 });
@@ -569,7 +569,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setUnchallengeDealSettlementOrderByTradeStake('0x0000000000000000000000000000000000000001', 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setUnchallengeOrderCandidateByTradeStake('0x0000000000000000000000000000000000000001', 1e18, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

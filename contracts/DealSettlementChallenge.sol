@@ -335,7 +335,8 @@ contract DealSettlementChallenge is Ownable {
         challenge.candidateIndex = 0;
         challenge.challenger = address(0);
 
-        // TODO Stage stake obtained from configuration contract for msg.sender in security bond contract
+        Configuration.Lot memory stake = configuration.getUnchallengeOrderCandidateByTradeStake();
+        securityBond.stage(stake.amount, stake.currency, msg.sender);
 
         emit UnchallengeOrderCandidateByTradeEvent(order, trade, order.wallet,
             challenge.nonce, challenge.dealType, msg.sender);
