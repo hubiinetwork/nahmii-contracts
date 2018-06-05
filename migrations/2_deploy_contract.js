@@ -41,7 +41,6 @@ module.exports = function (deployer, network, accounts) {
     deployer.deploy(SafeMathUintLib);
     deployer.link(SafeMathUintLib, Exchange);
     deployer.link(SafeMathUintLib, CancelOrdersChallenge);
-    deployer.link(SafeMathUintLib, DealSettlementChallenge);
     deployer.link(SafeMathUintLib, FraudulentDealChallenge);
     deployer.link(SafeMathUintLib, RevenueFund);
     deployer.deploy(Types);
