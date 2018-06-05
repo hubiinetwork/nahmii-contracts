@@ -8,12 +8,59 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import "./AbstractFraudulentDealValidator.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Types.sol";
-import "./Configuration.sol";
-import "./AbstractHasher.sol";
+import "./Ownable.sol";
+import {AbstractConfiguration} from "./Configuration.sol";
+import {AbstractHasher} from "./Hasher.sol";
+
+contract AbstractFraudulentDealValidator {
+
+    function isGenuineTradeMakerFee(Types.Trade trade) public view returns (bool);
+
+    function isGenuineTradeTakerFee(Types.Trade trade) public view returns (bool);
+
+    function isGenuineByTradeBuyer(Types.Trade trade, address owner) public view returns (bool);
+
+    function isGenuineByTradeSeller(Types.Trade trade, address owner) public view returns (bool);
+
+    function isGenuineTradeSeal(Types.Trade trade, address owner) public view returns (bool);
+
+    function isGenuinePaymentSeals(Types.Payment payment, address owner) public view returns (bool);
+
+    function isGenuinePaymentFee(Types.Payment payment) public view returns (bool);
+
+    function isGenuineByPaymentSender(Types.Payment payment) public pure returns (bool);
+
+    function isGenuineByPaymentRecipient(Types.Payment payment) public pure returns (bool);
+
+    function isSuccessiveTradesPartyNonces(Types.Trade firstTrade, Types.TradePartyRole firstTradePartyRole, Types.Trade lastTrade, Types.TradePartyRole lastTradePartyRole) public pure returns (bool);
+
+    function isSuccessivePaymentsPartyNonces(Types.Payment firstPayment, Types.PaymentPartyRole firstPaymentPartyRole, Types.Payment lastPayment, Types.PaymentPartyRole lastPaymentPartyRole) public pure returns (bool);
+
+    function isSuccessiveTradePaymentPartyNonces(Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.Payment payment, Types.PaymentPartyRole paymentPartyRole) public pure returns (bool);
+
+    function isSuccessivePaymentTradePartyNonces(Types.Payment payment, Types.PaymentPartyRole paymentPartyRole, Types.Trade trade, Types.TradePartyRole tradePartyRole) public pure returns (bool);
+
+    function isGenuineSuccessiveTradesBalances(Types.Trade firstTrade, Types.TradePartyRole firstTradePartyRole, Types.CurrencyRole firstCurrencyRole, Types.Trade lastTrade, Types.TradePartyRole lastTradePartyRole, Types.CurrencyRole lastCurrencyRole) public pure returns (bool);
+
+    function isGenuineSuccessivePaymentsBalances(Types.Payment firstPayment, Types.PaymentPartyRole firstPaymentPartyRole, Types.Payment lastPayment, Types.PaymentPartyRole lastPaymentPartyRole) public pure returns (bool);
+
+    function isGenuineSuccessiveTradePaymentBalances(Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole, Types.Payment payment, Types.PaymentPartyRole paymentPartyRole) public pure returns (bool);
+
+    function isGenuineSuccessivePaymentTradeBalances(Types.Payment payment, Types.PaymentPartyRole paymentPartyRole, Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole) public pure returns (bool);
+
+    function isGenuineSuccessiveTradesNetFees(Types.Trade firstTrade, Types.TradePartyRole firstTradePartyRole, Types.CurrencyRole firstCurrencyRole, Types.Trade lastTrade, Types.TradePartyRole lastTradePartyRole, Types.CurrencyRole lastCurrencyRole) public pure returns (bool);
+
+    function isGenuineSuccessiveTradeOrderResiduals(Types.Trade firstTrade, Types.Trade lastTrade, Types.TradePartyRole tradePartyRole) public pure returns (bool);
+
+    function isGenuineSuccessivePaymentsNetFees(Types.Payment firstPayment, Types.PaymentPartyRole firstPaymentPartyRole, Types.Payment lastPayment, Types.PaymentPartyRole lastPaymentPartyRole) public pure returns (bool);
+
+    function isGenuineSuccessiveTradePaymentNetFees(Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole, Types.Payment payment, Types.PaymentPartyRole paymentPartyRole) public pure returns (bool);
+
+    function isGenuineSuccessivePaymentTradeNetFees(Types.Payment payment, Types.PaymentPartyRole paymentPartyRole, Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole) public pure returns (bool);
+}
 
 contract FraudulentDealValidator is Ownable, AbstractFraudulentDealValidator {
     using SafeMathInt for int256;
@@ -22,13 +69,13 @@ contract FraudulentDealValidator is Ownable, AbstractFraudulentDealValidator {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Configuration public configuration;
+    AbstractConfiguration public configuration;
     AbstractHasher public hasher;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
+    event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
     event ChangeHasherEvent(AbstractHasher oldHasher, AbstractHasher newHasher);
 
     //
@@ -42,13 +89,13 @@ contract FraudulentDealValidator is Ownable, AbstractFraudulentDealValidator {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
+    function changeConfiguration(AbstractConfiguration newConfiguration)
     public
     onlyOwner
     notNullAddress(newConfiguration)
     notEqualAddresses(newConfiguration, configuration)
     {
-        Configuration oldConfiguration = configuration;
+        AbstractConfiguration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
     }
@@ -67,7 +114,7 @@ contract FraudulentDealValidator is Ownable, AbstractFraudulentDealValidator {
     }
 
     function isGenuineTradeMakerFee(Types.Trade trade) public view returns (bool) {
-        int256 feePartsPer = configuration.PARTS_PER();
+        int256 feePartsPer = configuration.getPartsPer();
         int256 discountTier = int256(Types.LiquidityRole.Maker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
         return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
         && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
@@ -75,7 +122,7 @@ contract FraudulentDealValidator is Ownable, AbstractFraudulentDealValidator {
     }
 
     function isGenuineTradeTakerFee(Types.Trade trade) public view returns (bool) {
-        int256 feePartsPer = configuration.PARTS_PER();
+        int256 feePartsPer = configuration.getPartsPer();
         int256 amountConjugate = trade.amount.div(trade.rate);
         int256 discountTier = int256(Types.LiquidityRole.Taker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
         return (trade.singleFees.conjugate <= amountConjugate.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
@@ -116,7 +163,7 @@ contract FraudulentDealValidator is Ownable, AbstractFraudulentDealValidator {
     }
 
     function isGenuinePaymentFee(Types.Payment payment) public view returns (bool) {
-        int256 feePartsPer = int256(configuration.PARTS_PER());
+        int256 feePartsPer = int256(configuration.getPartsPer());
         return (payment.singleFee <= payment.amount.mul(configuration.getPaymentFee(payment.blockNumber, 0)).div(feePartsPer))
         && (payment.singleFee == payment.amount.mul(configuration.getPaymentFee(payment.blockNumber, payment.amount)).div(feePartsPer))
         && (payment.singleFee >= payment.amount.mul(configuration.getPaymentMinimumFee(payment.blockNumber)).div(feePartsPer));

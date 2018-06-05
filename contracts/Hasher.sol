@@ -9,7 +9,18 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "./Types.sol";
-import "./AbstractHasher.sol";
+
+contract AbstractHasher {
+    function hashOrderAsWallet(Types.Order order) public pure returns (bytes32);
+
+    function hashOrderAsExchange(Types.Order order) public pure returns (bytes32);
+
+    function hashTrade(Types.Trade trade) public pure returns (bytes32);
+
+    function hashPaymentAsWallet(Types.Payment payment) public pure returns (bytes32);
+
+    function hashPaymentAsExchange(Types.Payment payment) public pure returns (bytes32);
+}
 
 contract Hasher is AbstractHasher {
 
