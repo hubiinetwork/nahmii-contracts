@@ -11,14 +11,13 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
-import "./Configuration.sol";
-import "./RevenueFund.sol";
+import {AbstractConfiguration} from "./Configuration.sol";
 import "./ClientFund.sol";
-import "./CommunityVote.sol";
-import "./ERC20.sol";
 import "./Types.sol";
-import "./AbstractHasher.sol";
-import "./AbstractFraudulentDealValidator.sol";
+import {AbstractHasher} from "./Hasher.sol";
+import {AbstractFraudulentDealValidator} from "./FraudulentDealValidator.sol";
+// TODO Enable
+//import {AbstractSecurityBond} from "./SecurityBond.sol";
 
 /**
 @title FraudulentDealChallenge
@@ -40,18 +39,20 @@ contract FraudulentDealChallenge is Ownable {
     address[] public doubleSpenderWallets;
     mapping(address => bool) public doubleSpenderWalletsMap;
 
-    Configuration public configuration;
-    CommunityVote public communityVote;
+    AbstractConfiguration public configuration;
     ClientFund public clientFund;
+    // TODO Enable
+    //    AbstractSecurityBond public securityBond;
     AbstractHasher public hasher;
     AbstractFraudulentDealValidator public fraudulentDealValidator;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
-    event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
+    event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
     event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
+    // TODO Enable
+    //    event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
     event ChangeHasherEvent(AbstractHasher oldHasher, AbstractHasher newHasher);
     event ChangeFraudulentDealValidatorEvent(AbstractFraudulentDealValidator oldFraudulentDealValidator, AbstractFraudulentDealValidator newFraudulentDealValidator);
     event ChallengeByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
@@ -66,7 +67,7 @@ contract FraudulentDealChallenge is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -74,28 +75,15 @@ contract FraudulentDealChallenge is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
+    function changeConfiguration(AbstractConfiguration newConfiguration)
     public
     onlyOwner
     notNullAddress(newConfiguration)
     notEqualAddresses(newConfiguration, configuration)
     {
-        Configuration oldConfiguration = configuration;
+        AbstractConfiguration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
-    }
-
-    /// @notice Change the community vote contract
-    /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote)
-    public
-    onlyOwner
-    notNullAddress(newCommunityVote)
-    notEqualAddresses(newCommunityVote, communityVote)
-    {
-        CommunityVote oldCommunityVote = communityVote;
-        communityVote = newCommunityVote;
-        emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
     }
 
     /// @notice Change the client fund contract
@@ -110,6 +98,20 @@ contract FraudulentDealChallenge is Ownable {
         clientFund = newClientFund;
         emit ChangeClientFundEvent(oldClientFund, clientFund);
     }
+
+    // TODO Enable
+    /// @notice Change the security bond contract
+    /// @param newSecurityBond The (address of) AbstractSecurityBond contract instance
+    //    function changeSecurityBond(AbstractSecurityBond newSecurityBond)
+    //    public
+    //    onlyOwner
+    //    notNullAddress(newSecurityBond)
+    //    notEqualAddresses(newSecurityBond, securityBond)
+    //    {
+    //        AbstractSecurityBond oldSecurityBond = securityBond;
+    //        securityBond = newSecurityBond;
+    //        emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
+    //    }
 
     /// @notice Change the hasher contract
     /// @param newHasher The (address of) AbstractHasher contract instance
@@ -167,13 +169,13 @@ contract FraudulentDealChallenge is Ownable {
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param trade Fraudulent trade candidate
     function challengeByTrade(Types.Trade trade) public {
+        require(hasher.hashTrade(trade) == trade.seal.hash);
+        require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
+
         // Gauge the genuineness of maker and taker fees. Depending on whether maker is buyer or seller
         // this result is baked into genuineness by buyer and seller below.
         bool genuineMakerFee = fraudulentDealValidator.isGenuineTradeMakerFee(trade);
         bool genuineTakerFee = fraudulentDealValidator.isGenuineTradeTakerFee(trade);
-
-        // Genuineness that does not related to buyer or seller
-        bool genuineSeal = fraudulentDealValidator.isGenuineTradeSeal(trade, owner);
 
         // Genuineness affected by buyer
         bool genuineByBuyer = fraudulentDealValidator.isGenuineByTradeBuyer(trade, owner)
@@ -183,7 +185,7 @@ contract FraudulentDealChallenge is Ownable {
         bool genuineBySeller = fraudulentDealValidator.isGenuineByTradeSeller(trade, owner)
         && (Types.LiquidityRole.Maker == trade.seller.liquidityRole ? genuineMakerFee : genuineTakerFee);
 
-        require(!genuineSeal || !genuineByBuyer || !genuineBySeller);
+        require(!genuineByBuyer || !genuineBySeller);
 
         configuration.setOperationalModeExit();
         fraudulentTrade = trade;
@@ -205,8 +207,12 @@ contract FraudulentDealChallenge is Ownable {
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param payment Fraudulent payment candidate
     function challengeByPayment(Types.Payment payment) public {
-        // Genuineness that does not related to buyer or seller
-        bool genuineSeals = fraudulentDealValidator.isGenuinePaymentSeals(payment, owner);
+        require(hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
+        require(hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
+        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
+
+        // Genuineness affected by wallet not having signed the payment
+        bool genuineWalletSignature = Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
 
         // Genuineness affected by sender
         bool genuineBySender = fraudulentDealValidator.isGenuineByPaymentSender(payment) &&
@@ -215,19 +221,25 @@ contract FraudulentDealChallenge is Ownable {
         // Genuineness affected by recipient
         bool genuineByRecipient = fraudulentDealValidator.isGenuineByPaymentRecipient(payment);
 
-        require(!genuineSeals || !genuineBySender || !genuineByRecipient);
+        require(!genuineWalletSignature || !genuineBySender || !genuineByRecipient);
 
         configuration.setOperationalModeExit();
         fraudulentPayment = payment;
 
-        address seizedWallet;
-        if (!genuineBySender)
-            seizedWallet = payment.sender.wallet;
-        if (!genuineByRecipient)
-            seizedWallet = payment.recipient.wallet;
-        if (address(0) != seizedWallet) {
-            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
-            addToSeizedWallets(seizedWallet);
+        if (!genuineWalletSignature) {
+            (address stakeCurrency, int256 stakeAmount) = configuration.getFalseWalletSignatureStake();
+            // TODO Enable
+            //            securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+        } else {
+            address seizedWallet;
+            if (!genuineBySender)
+                seizedWallet = payment.sender.wallet;
+            if (!genuineByRecipient)
+                seizedWallet = payment.recipient.wallet;
+            if (address(0) != seizedWallet) {
+                clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
+                addToSeizedWallets(seizedWallet);
+            }
         }
 
         emit ChallengeByPaymentEvent(payment, msg.sender, seizedWallet);
