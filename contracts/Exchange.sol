@@ -13,7 +13,7 @@ import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./Types.sol";
 import "./ERC20.sol";
-import "./Configuration.sol";
+import {AbstractConfiguration} from "./Configuration.sol";
 import "./CommunityVote.sol";
 import "./ClientFund.sol";
 import "./ReserveFund.sol";
@@ -36,7 +36,7 @@ contract Exchange is Ownable {
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
-    Configuration public configuration;
+    AbstractConfiguration public configuration;
     ClientFund public clientFund;
     ReserveFund public tradesReserveFund;
     ReserveFund public paymentsReserveFund;
@@ -54,7 +54,7 @@ contract Exchange is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
+    event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
     event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
     event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangePaymentsReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
@@ -74,13 +74,13 @@ contract Exchange is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
+    function changeConfiguration(AbstractConfiguration newConfiguration)
     public
     onlyOwner
     notNullAddress(newConfiguration)
     notEqualAddresses(newConfiguration, configuration)
     {
-        Configuration oldConfiguration = configuration;
+        AbstractConfiguration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
     }
