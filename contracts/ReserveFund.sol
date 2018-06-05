@@ -5,11 +5,11 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import './SafeMathInt.sol';
-import './SafeMathUInt.sol';
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import './ERC20.sol';
 import "./Beneficiary.sol";
@@ -28,7 +28,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct DepositHistory {
-        address tokenAddress;
+        address currency;
         uint listIndex;
     }
 
@@ -80,7 +80,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
     }
 
     struct TransferInfo {
-        address tokenAddress; // 0 for ethers.
+        address currency; // 0 for ethers.
         int256 amount;
     }
 
@@ -207,15 +207,15 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
 
         DepositHistory storage dh = walletInfoMap[wallet].depositsHistory[index];
         //NOTE: Code duplication in order to keep compiler happy and avoid warnings
-        if (dh.tokenAddress == address(0)) {
+        if (dh.currency == address(0)) {
             DepositInfo[] storage di = walletInfoMap[wallet].depositsEther;
             amount = di[dh.listIndex].amount;
             token = address(0);
             blockNumber = di[dh.listIndex].block;
         } else {
-            DepositInfo[] storage diT = walletInfoMap[wallet].depositsToken[dh.tokenAddress];
+            DepositInfo[] storage diT = walletInfoMap[wallet].depositsToken[dh.currency];
             amount = diT[dh.listIndex].amount;
-            token = dh.tokenAddress;
+            token = dh.currency;
             blockNumber = diT[dh.listIndex].block;
         }
      }
@@ -236,7 +236,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
 
         // Register this block
         accrualBlockNumbers.push(block.number);
-        
+
         // Clear accruals
         periodAccrualEtherBalance = 0;
         for (uint256 i = 0; i < accrualPeriodTokenList.length; i++) {
@@ -290,7 +290,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
         int256 balance =  token == address(0) ? aggregatedEtherBalance : aggregatedTokenBalance[token];
         int256 fraction = bb.mul_nn(1e18).mul_nn(token == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token]).div_nn(balance.mul_nn(blockspan).mul_nn(1e18));
         int256 amount =   fraction.mul_nn(token == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token]).div_nn(1e18);
-        
+
         /* Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c */
 
         if (token == address(0)) {
@@ -304,14 +304,14 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
             }
         } else {
             aggregatedTokenBalance[token] = aggregatedTokenBalance[token].sub_nn(amount);
-            
+
             if (compoundAccrual) {
                 walletInfoMap[msg.sender].activeTokenBalance[token] = walletInfoMap[msg.sender].activeTokenBalance[token].add_nn(amount);
             }
             else {
-                walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount);		
+                walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount);
             }
-        
+
         }
 
         /* Store upperbound as the last claimed accrual block number for currency */
@@ -456,7 +456,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
     }
 
     function outboundTransferSupported(TransferInfo outboundTx) public view onlyOwner returns (bool) {
-        return (outboundTx.tokenAddress == address(0) ? outboundTx.amount <= aggregatedEtherBalance : outboundTx.amount <= aggregatedTokenBalance[outboundTx.tokenAddress]);
+        return (outboundTx.currency == address(0) ? outboundTx.amount <= aggregatedEtherBalance : outboundTx.amount <= aggregatedTokenBalance[outboundTx.currency]);
     }
 
     function twoWayTransfer(address wallet, TransferInfo inboundTx, TransferInfo outboundTx) public onlyOwner {
@@ -467,28 +467,28 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
 
         // Perform outbound (SC to W) transfers
 
-        if (outboundTx.tokenAddress == address(0)) {
+        if (outboundTx.currency == address(0)) {
             require (outboundTx.amount <= aggregatedEtherBalance);
             walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(outboundTx.amount);
             aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(outboundTx.amount);
 
         } else {
-            require (outboundTx.amount <= aggregatedTokenBalance[outboundTx.tokenAddress]);
-            walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[outboundTx.tokenAddress].add_nn(outboundTx.amount);
-            aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub_nn(outboundTx.amount);
+            require (outboundTx.amount <= aggregatedTokenBalance[outboundTx.currency]);
+            walletInfoMap[wallet].stagedTokenBalance[outboundTx.currency] = walletInfoMap[wallet].stagedTokenBalance[outboundTx.currency].add_nn(outboundTx.amount);
+            aggregatedTokenBalance[outboundTx.currency] = aggregatedTokenBalance[outboundTx.currency].sub_nn(outboundTx.amount);
         }
 
         // Perform inbound (w to SC) transfers
 
-        if (inboundTx.tokenAddress == address(0)) {
+        if (inboundTx.currency == address(0)) {
             require(walletInfoMap[wallet].stagedEtherBalance >= inboundTx.amount);
             walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.sub_nn(inboundTx.amount);
             aggregatedEtherBalance = aggregatedEtherBalance.add_nn(inboundTx.amount);
 
         } else {
-            require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] >= inboundTx.amount);
-            walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress] = walletInfoMap[wallet].stagedTokenBalance[inboundTx.tokenAddress].sub_nn(inboundTx.amount);
-            aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add_nn(inboundTx.amount);
+            require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.currency] >= inboundTx.amount);
+            walletInfoMap[wallet].stagedTokenBalance[inboundTx.currency] = walletInfoMap[wallet].stagedTokenBalance[inboundTx.currency].sub_nn(inboundTx.amount);
+            aggregatedTokenBalance[inboundTx.currency] = aggregatedTokenBalance[inboundTx.currency].add_nn(inboundTx.amount);
         }
 
         //raise event
@@ -575,7 +575,6 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
             return walletInfoMap[wallet].etherBalanceBlocks[idx - 1].mul_nn( SafeMathInt.toInt256(walletInfoMap[wallet].etherBalanceBlockNumbers[idx].sub(walletInfoMap[wallet].etherBalanceBlockNumbers[idx - 1])) );
         return walletInfoMap[wallet].tokenBalanceBlocks[token][idx - 1].mul_nn( SafeMathInt.toInt256(walletInfoMap[wallet].tokenBalanceBlockNumbers[token][idx].sub(walletInfoMap[wallet].tokenBalanceBlockNumbers[token][idx - 1])) );
     }
-
 
     //
     // Modifiers

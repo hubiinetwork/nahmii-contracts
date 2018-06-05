@@ -6,30 +6,31 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
-import "./Ownable.sol";
+import "../contracts/ReserveFund.sol";
 
-contract Migrations is Ownable {
+contract MockedReserveFund /*is ReserveFund*/ {
+
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint public last_completed_migration;
+    mapping(address => int256) public currencyAmountMap;
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor() public Ownable(msg.sender)  {
+    constructor(/*address owner*/) public /*ReserveFund(owner)*/ {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setCompleted(uint completed) public onlyOwner {
-        last_completed_migration = completed;
+    function setMaxOutboundTransfer(ReserveFund.TransferInfo outboundTx) public {
+        currencyAmountMap[outboundTx.currency] = outboundTx.amount;
     }
 
-    function upgrade(address newAddress) public onlyOwner {
-        Migrations upgraded = Migrations(newAddress);
-        upgraded.setCompleted(last_completed_migration);
+    function outboundTransferSupported(ReserveFund.TransferInfo outboundTx) public view returns (bool) {
+        return currencyAmountMap[outboundTx.currency] >= outboundTx.amount;
     }
 }

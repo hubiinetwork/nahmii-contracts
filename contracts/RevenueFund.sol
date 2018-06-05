@@ -5,10 +5,10 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
-import "./SafeMathInt.sol";
-import "./SafeMathUint.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./ERC20.sol";
 import "./AccrualBeneficiaryInterface.sol";
@@ -53,13 +53,18 @@ contract RevenueFund is Ownable {
     mapping (address => Beneficiary) registeredBeneficiariesMap;
     uint256 registeredBeneficiariesFulfilledPercent;
 
+    mapping (address => bool) registeredServicesMap;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
+    event RecordDepositTokensEvent(address from, int256 amount, address token);
     event CloseAccrualPeriodEvent();
     event RegisterBeneficiaryEvent(address beneficiary, uint256 fraction);
     event DeregisterBeneficiaryEvent(address beneficiary);
+    event RegisterServiceEvent(address service);
+    event DeregisterServiceEvent(address service);
 
     //
     // Constructor
@@ -84,14 +89,20 @@ contract RevenueFund is Ownable {
 
     //NOTE: msg.sender must call ERC20.approve first
     function depositTokens(address token, int256 amount) notOwner public {
-        ERC20 erc20_token;
+        ERC20 erc20_token = ERC20(token);
 
-        require(token != address(0));
-        require(amount.isNonZeroPositiveInt256());
+        //record deposit
+        recordDepositTokens(erc20_token, amount);
 
         //try to execute token transfer
-        erc20_token = ERC20(token);
         require(erc20_token.transferFrom(msg.sender, this, uint256(amount)));
+
+        //emit event
+        emit DepositEvent(msg.sender, amount, token);
+    }
+
+    function recordDepositTokens(ERC20 token, int256 amount) public onlyOwnerOrService notNullAddress(token) {
+        require(amount.isNonZeroPositiveInt256());
 
         //add to balances
         periodAccrualTokenBalance[token] = periodAccrualTokenBalance[token].add_nn(amount);
@@ -106,8 +117,7 @@ contract RevenueFund is Ownable {
             aggregateAccrualTokenList.push(token);
         }
 
-        //emit event
-        emit DepositEvent(msg.sender, amount, token);
+        emit RecordDepositTokensEvent(msg.sender, amount, token);
     }
 
     //
@@ -230,10 +240,42 @@ contract RevenueFund is Ownable {
     }
 
     //
+    // Service functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function registerService(address service) public onlyOwner notNullAddress(service) notMySelfAddress(service) {
+        require(service != owner);
+
+        //ensure service is not already registered
+        require(registeredServicesMap[service] == false);
+
+        //register
+        registeredServicesMap[service] = true;
+
+        //emit event
+        emit RegisterServiceEvent(service);
+    }
+
+    function deregisterService(address service) public onlyOwner notNullAddress(service) {
+        //ensure service is registered
+        require(registeredServicesMap[service] != false);
+
+        //remove service
+        registeredServicesMap[service] = false;
+
+        //emit event
+        emit DeregisterServiceEvent(service);
+    }
+
+    //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
+        _;
+    }
+
+    modifier onlyOwnerOrService() {
+        require(msg.sender == owner || registeredServicesMap[msg.sender]);
         _;
     }
 

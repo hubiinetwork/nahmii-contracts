@@ -643,7 +643,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST SUCCEED [outboundTransferSupported]: Can we send TX 0.001 ETH to User C? Return TRUE", function (done) {
 			const outboundTx = {
-				tokenAddress: '0x0000000000000000000000000000000000000000',
+				currency: '0x0000000000000000000000000000000000000000',
 				amount: ethers.utils.bigNumberify('1000000000000000')
 			};
 
@@ -659,7 +659,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST SUCCEED [outboundTransferSupported]:  Can we send 400 ETH to User C? Return FALSE  ", function (done) {
 			const outboundTx = {
-				tokenAddress: '0x0000000000000000000000000000000000000000',
+				currency: '0x0000000000000000000000000000000000000000',
 				amount: ethers.utils.bigNumberify('400000000000000000000')
 			};
 
@@ -684,11 +684,11 @@ module.exports = function (glob) {
 				// aggregatedEtherBalance += inbound.Amount;
 
 				const inboundTx = {
-					tokenAddress: '0x0000000000000000000000000000000000000000',
+					currency: '0x0000000000000000000000000000000000000000',
 					amount: ethers.utils.bigNumberify('1000000000000000000')
 				}; // 1ETH in Wei
 				const outboundTx = {
-					tokenAddress: glob.web3Erc20.address,
+					currency: glob.web3Erc20.address,
 					amount: ethers.utils.bigNumberify('1')
 				};
 
@@ -727,11 +727,11 @@ module.exports = function (glob) {
 		it(testCounter.next() + ": MUST FAIL [twoWayTransfer]: Cannot be called by non-owner ", function (done) {
 
 			const inboundTx = {
-				tokenAddress: '0x0000000000000000000000000000000000000000',
+				currency: '0x0000000000000000000000000000000000000000',
 				amount: ethers.utils.bigNumberify('1000000000000000000')
 			}; // 1ETH in Wei
 			const outboundTx = {
-				tokenAddress: glob.web3Erc20.address,
+				currency: glob.web3Erc20.address,
 				amount: ethers.utils.bigNumberify('1')
 			};
 			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
@@ -746,8 +746,8 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [twoWayTransfer]: Cannot be called with inbound amount of zero ", function (done) {
 
-			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: 0 };
-			const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: '1' };
+			const inboundTx = { currency: '0x0000000000000000000000000000000000000000', amount: 0 };
+			const outboundTx = { currency: glob.web3Erc20.address, amount: '1' };
 			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
 			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
 				.then((result) => {
@@ -760,8 +760,8 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [twoWayTransfer]: Cannot be called with outbound amount of zero ", function (done) {
 
-			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('1000000000000000000') };
-			const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: 0 };
+			const inboundTx = { currency: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('1000000000000000000') };
+			const outboundTx = { currency: glob.web3Erc20.address, amount: 0 };
 			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
 			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
 				.then((result) => {
@@ -774,8 +774,8 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [twoWayTransfer]: Not enough aggregate balance for Outbound TX ", function (done) {
 
-			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('1000000000000000000') };
-			const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: 9999 };
+			const inboundTx = { currency: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('1000000000000000000') };
+			const outboundTx = { currency: glob.web3Erc20.address, amount: 9999 };
 			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
 			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
 				.then((result) => {
@@ -788,8 +788,8 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [twoWayTransfer]: Not enough wallet staged balance for Inbound TX ", function (done) {
 
-			const inboundTx = { tokenAddress: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('40000000000000000000000') };
-			const outboundTx = { tokenAddress: glob.web3Erc20.address, amount: 1 };
+			const inboundTx = { currency: '0x0000000000000000000000000000000000000000', amount: ethers.utils.bigNumberify('40000000000000000000000') };
+			const outboundTx = { currency: glob.web3Erc20.address, amount: 1 };
 			var ctx = glob.ethersIoReserveFund.connect(glob.signer_a);
 			ctx.twoWayTransfer(glob.user_c, inboundTx, outboundTx, { gasLimit: 600000 })
 				.then((result) => {

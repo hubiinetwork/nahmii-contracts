@@ -5,17 +5,47 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./ERC20.sol";
 
+contract AbstractSecurityBond {
+
+    function setWithdrawalTimeout(uint256 timeoutInSeconds) public;
+
+    function() public payable;
+
+    function depositTokens(address token, int256 amount) public;
+
+    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token);
+
+    function activeBalance(address token) public view returns (int256);
+
+    function stagedBalance(address wallet, address token) public view returns (int256);
+
+    function stage(int256 amount, address token, address wallet) public;
+
+    function withdrawEthers(int256 amount) public;
+
+    function withdrawTokens(int256 amount, address token) public;
+
+    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token);
+
+    function withdrawalCount(address wallet) public view returns (uint256);
+
+    function registerService(address service) public;
+
+    function deregisterService(address service) public;
+}
+
 /**
 @title Security bond
 @notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
 */
-contract SecurityBond is Ownable {
+contract SecurityBond is Ownable, AbstractSecurityBond {
     using SafeMathInt for int256;
 
     //
