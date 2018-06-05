@@ -228,6 +228,14 @@ contract Exchange is Ownable {
     public
     signedBy(trade.seal.hash, trade.seal.signature, owner)
     {
+        require(communityVote != address(0), "CommunityVote is missing");
+        require(dealSettlementChallenge != address(0), "DealSettlementChallenge is missing");
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
+        if (!trade.immediateSettlement)
+            require(trade != address(0), "ReserveFund for trades is missing");
+
         if (msg.sender != owner)
             wallet = msg.sender;
 
@@ -252,7 +260,7 @@ contract Exchange is Ownable {
                     || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole))
                     partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
 
-                if (false == trade.immediateSettlement &&
+                if (!trade.immediateSettlement &&
                 tradesReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(trade.currencies.intended, partyInboundTransferIntended)) &&
                 tradesReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(trade.currencies.conjugate, partyInboundTransferConjugate))) {
                     // TODO Uncomment and replace last 4 arguments by 2 instances of ReserveFund.TransferInfo
@@ -263,9 +271,8 @@ contract Exchange is Ownable {
                     settleTradeFees(trade);
                     addTwoSidedSettlementFromTrade(trade);
                 }
-            }
 
-            if (trade.nonce > highestAbsoluteDealNonce)
+            } else if (trade.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = trade.nonce;
 
         } else if (Types.ChallengeResult.Disqualified == result) {
@@ -284,6 +291,14 @@ contract Exchange is Ownable {
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
     signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet)
     {
+        require(communityVote != address(0), "CommunityVote is missing");
+        require(dealSettlementChallenge != address(0), "DealSettlementChallenge is missing");
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
+        if (!payment.immediateSettlement)
+            require(paymentsReserveFund != address(0), "ReserveFund for payments is missing");
+
         if (msg.sender != owner)
             wallet = msg.sender;
 
@@ -304,7 +319,7 @@ contract Exchange is Ownable {
                     || (0 > payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole))
                     partyInboundTransfer = payment.transfers.net.abs();
 
-                if (false == payment.immediateSettlement &&
+                if (!payment.immediateSettlement &&
                 paymentsReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(payment.currency, partyInboundTransfer))) {
                     // TODO Uncomment and replace last 2 arguments by 1 instance of ReserveFund.TransferInfo
                     // paymentsReserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
@@ -314,15 +329,15 @@ contract Exchange is Ownable {
                     settlePaymentFees(payment);
                     addTwoSidedSettlementFromPayment(payment);
                 }
-            }
 
-            if (payment.nonce > highestAbsoluteDealNonce)
+            } else if (payment.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = payment.nonce;
 
         } else if (Types.ChallengeResult.Disqualified == result) {
             clientFund.seizeDepositedAndSettledBalances(wallet, challenger);
             addToSeizedWallets(wallet);
         }
+
         emit SettleDealAsPaymentEvent(payment, wallet);
     }
 

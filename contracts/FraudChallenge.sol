@@ -16,7 +16,7 @@ import "./ClientFund.sol";
 import "./Types.sol";
 import {AbstractHasher} from "./Hasher.sol";
 import {AbstractFraudValidator} from "./FraudValidator.sol";
-// TODO Enable
+// TODO Enable when deployment out-of-gas is solved
 //import {AbstractSecurityBond} from "./SecurityBond.sol";
 
 /**
@@ -41,7 +41,7 @@ contract FraudChallenge is Ownable {
 
     AbstractConfiguration public configuration;
     ClientFund public clientFund;
-    // TODO Enable
+    // TODO Enable when deployment out-of-gas is solved
     //    AbstractSecurityBond public securityBond;
     AbstractHasher public hasher;
     AbstractFraudValidator public fraudulentDealValidator;
@@ -51,7 +51,7 @@ contract FraudChallenge is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
     event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
-    // TODO Enable
+    // TODO Enable when deployment out-of-gas is solved
     //    event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
     event ChangeHasherEvent(AbstractHasher oldHasher, AbstractHasher newHasher);
     event ChangeFraudValidatorEvent(AbstractFraudValidator oldFraudValidator, AbstractFraudValidator newFraudValidator);
@@ -99,7 +99,7 @@ contract FraudChallenge is Ownable {
         emit ChangeClientFundEvent(oldClientFund, clientFund);
     }
 
-    // TODO Enable
+    // TODO Enable when deployment out-of-gas is solved
     /// @notice Change the security bond contract
     /// @param newSecurityBond The (address of) AbstractSecurityBond contract instance
     //    function changeSecurityBond(AbstractSecurityBond newSecurityBond)
@@ -168,7 +168,11 @@ contract FraudChallenge is Ownable {
     /// @notice Submit a trade candidate in continuous Fraudulent Deal Challenge (FDC)
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param trade Fraudulent trade candidate
-    function challengeByTrade(Types.Trade trade) public {
+    function challengeByTrade(Types.Trade trade)
+    public
+        // TODO Enable when deployment out-of-gas is solved
+        /*allContractsInitialized*/
+    {
         require(hasher.hashTrade(trade) == trade.seal.hash);
         require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
 
@@ -206,7 +210,11 @@ contract FraudChallenge is Ownable {
     /// @notice Submit a payment candidate in continuous Fraudulent Deal Challenge (FDC)
     /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param payment Fraudulent payment candidate
-    function challengeByPayment(Types.Payment payment) public {
+    function challengeByPayment(Types.Payment payment)
+    public
+        // TODO Enable when deployment out-of-gas is solved
+        /*allContractsInitialized*/
+    {
         require(hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
         require(hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
         require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
@@ -228,7 +236,7 @@ contract FraudChallenge is Ownable {
 
         if (!genuineWalletSignature) {
             (address stakeCurrency, int256 stakeAmount) = configuration.getFalseWalletSignatureStake();
-            // TODO Enable
+            // TODO Enable when deployment out-of-gas is solved
             //            securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
         } else {
             address seizedWallet;
@@ -259,6 +267,8 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
+        // TODO Enable when deployment out-of-gas is solved
+        //    allContractsInitialized
     challengeableBySuccessionTradesPair(firstTrade, lastTrade, wallet, currency)
     {
         Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
@@ -295,6 +305,8 @@ contract FraudChallenge is Ownable {
         address wallet
     )
     public
+        // TODO Enable when deployment out-of-gas is solved
+        //    allContractsInitialized
     challengeableBySuccessionPaymentsPair(firstPayment, lastPayment, wallet)
     {
         Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
@@ -330,6 +342,8 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
+        // TODO Enable when deployment out-of-gas is solved
+        //    allContractsInitialized
     challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
@@ -367,6 +381,8 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
+        // TODO Enable when deployment out-of-gas is solved
+        //    allContractsInitialized
     challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
         Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
@@ -404,6 +420,8 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
+        // TODO Enable when deployment out-of-gas is solved
+        //    allContractsInitialized
     challengeableByOrderResidualsTradesPair(firstTrade, lastTrade, wallet, currency)
     {
         Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
@@ -438,6 +456,8 @@ contract FraudChallenge is Ownable {
         Types.Trade lastTrade
     )
     public
+        // TODO Enable when deployment out-of-gas is solved
+        //    hasherConfigurationContractsInitialized
     challengeableByDoubleSpentOrderTradesPair(firstTrade, lastTrade)
     {
         bool doubleSpentBuyOrder = firstTrade.buyer.order.hashes.exchange == lastTrade.buyer.order.hashes.exchange;
@@ -474,6 +494,21 @@ contract FraudChallenge is Ownable {
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO Enable when deployment out-of-gas is solved
+    //    modifier allContractsInitialized() {
+    //        require(hasher != address(0), "Hasher is missing");
+    //        require(validator != address(0), "Validator is missing");
+    //        require(configuration != address(0), "Configuration is missing");
+    //        require(clientFund != address(0), "ClientFund is missing");
+    //        _;
+    //    }
+    //
+    //    modifier hasherConfigurationContractsInitialized() {
+    //        require(hasher != address(0), "Hasher is missing");
+    //        require(configuration != address(0), "Configuration is missing");
+    //        _;
+    //    }
+
     modifier notNullAddress(address _address) {
         require(_address != address(0));
         _;

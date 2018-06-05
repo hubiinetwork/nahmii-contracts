@@ -46,7 +46,7 @@ module.exports = (glob) => {
 
             await ethersFraudChallenge.changeConfiguration(ethersConfiguration.address);
             await ethersFraudChallenge.changeClientFund(ethersClientFund.address);
-            // TODO Enable when security bond is enabled in FraudChallenge
+            // TODO Enable when deployment out-of-gas is solved
             // await ethersFraudChallenge.changeSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallenge.changeHasher(ethersHasher.address);
             await ethersFraudChallenge.changeFraudValidator(ethersFraudValidator.address);
@@ -163,7 +163,7 @@ module.exports = (glob) => {
             });
         });
 
-        // TODO Unskip when security bond is enabled in FraudChallenge
+        // TODO Enable when deployment out-of-gas is solved
         describe.skip('securityBond()', () => {
             it('should equal value initialized', async () => {
                 const securityBond = await ethersFraudChallenge.securityBond();
@@ -171,7 +171,7 @@ module.exports = (glob) => {
             });
         });
 
-        // TODO Unskip when security bond is enabled in FraudChallenge
+        // TODO Enable when deployment out-of-gas is solved
         describe.skip('changeSecurityBond()', () => {
             let address;
 
