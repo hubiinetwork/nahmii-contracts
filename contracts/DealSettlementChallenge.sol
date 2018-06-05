@@ -9,16 +9,11 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
-import "./Configuration.sol";
-import "./RevenueFund.sol";
-import "./ClientFund.sol";
-import "./CommunityVote.sol";
-import "./ERC20.sol";
 import "./Types.sol";
-import "./SecurityBond.sol";
-import "./CancelOrdersChallenge.sol";
+import {AbstractConfiguration} from "./Configuration.sol";
+import {AbstractSecurityBond} from "./SecurityBond.sol";
+import {AbstractCancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 
 /**
 @title Exchange
@@ -26,14 +21,13 @@ import "./CancelOrdersChallenge.sol";
 */
 contract DealSettlementChallenge is Ownable {
     using SafeMathInt for int256;
-    using SafeMathUint for uint256;
 
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
     enum ChallengeCandidateType {None, Order, Trade, Payment}
 
-    struct ChallengeInfo {
+    struct Challenge {
         uint256 nonce;
         Types.DealType dealType;
         uint256 timeout;
@@ -47,11 +41,11 @@ contract DealSettlementChallenge is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Configuration public configuration;
-    SecurityBond public securityBond;
-    CancelOrdersChallenge public cancelOrdersChallenge;
+    AbstractConfiguration public configuration;
+    AbstractSecurityBond public securityBond;
+    AbstractCancelOrdersChallenge public cancelOrdersChallenge;
 
-    mapping(address => ChallengeInfo) public walletChallengeInfoMap;
+    mapping(address => Challenge) public walletChallengeMap;
 
     mapping(address => Types.Trade[]) public walletChallengedTradesMap;
     mapping(address => Types.Payment[]) public walletChallengedPaymentsMap;
@@ -63,9 +57,9 @@ contract DealSettlementChallenge is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
-    event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
-    event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
+    event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
+    event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
+    event ChangeCancelOrdersChallengeEvent(AbstractCancelOrdersChallenge oldCancelOrdersChallenge, AbstractCancelOrdersChallenge newCancelOrdersChallenge);
     event StartChallengeFromTradeEvent(Types.Trade trade, address wallet);
     event StartChallengeFromPaymentEvent(Types.Payment payment, address wallet);
     event ChallengeByOrderEvent(Types.Order order, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
@@ -84,39 +78,39 @@ contract DealSettlementChallenge is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
+    function changeConfiguration(AbstractConfiguration newConfiguration)
     public
     onlyOwner
     notNullAddress(newConfiguration)
     notEqualAddresses(newConfiguration, configuration)
     {
-        Configuration oldConfiguration = configuration;
+        AbstractConfiguration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
     }
 
     /// @notice Change the security bond contract
     /// @param newSecurityBond The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newSecurityBond)
+    function changeSecurityBond(AbstractSecurityBond newSecurityBond)
     public
     onlyOwner
     notNullAddress(newSecurityBond)
     notEqualAddresses(newSecurityBond, securityBond)
     {
-        SecurityBond oldSecurityBond = securityBond;
+        AbstractSecurityBond oldSecurityBond = securityBond;
         securityBond = newSecurityBond;
         emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
     }
 
     /// @notice Change the cance orders challenge contract
     /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
-    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
+    function changeCancelOrdersChallenge(AbstractCancelOrdersChallenge newCancelOrdersChallenge)
     public
     onlyOwner
     notNullAddress(newCancelOrdersChallenge)
     notEqualAddresses(newCancelOrdersChallenge, cancelOrdersChallenge)
     {
-        CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
+        AbstractCancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
         cancelOrdersChallenge = newCancelOrdersChallenge;
         emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
     }
@@ -162,23 +156,23 @@ contract DealSettlementChallenge is Ownable {
         require(isOwner() || Types.isTradeParty(trade, wallet));
 
         require(
-            0 == walletChallengeInfoMap[wallet].nonce ||
-            block.timestamp >= walletChallengeInfoMap[wallet].timeout
+            0 == walletChallengeMap[wallet].nonce ||
+            block.timestamp >= walletChallengeMap[wallet].timeout
         );
 
         walletChallengedTradesMap[wallet].push(trade);
 
-        ChallengeInfo memory challenge = ChallengeInfo(
+        Challenge memory challenge = Challenge(
             trade.nonce,
             Types.DealType.Trade,
-            block.timestamp + configuration.dealSettlementChallengeTimeout(),
+            block.timestamp + configuration.getDealSettlementChallengeTimeout(),
             Types.ChallengeResult.Qualified,
             walletChallengedTradesMap[wallet].length - 1,
             ChallengeCandidateType.None,
             0,
             address(0)
         );
-        walletChallengeInfoMap[wallet] = challenge;
+        walletChallengeMap[wallet] = challenge;
 
         emit StartChallengeFromTradeEvent(trade, wallet);
     }
@@ -198,60 +192,60 @@ contract DealSettlementChallenge is Ownable {
         require(isOwner() || Types.isPaymentParty(payment, wallet));
 
         require(
-            0 == walletChallengeInfoMap[wallet].nonce ||
-            block.timestamp >= walletChallengeInfoMap[wallet].timeout
+            0 == walletChallengeMap[wallet].nonce ||
+            block.timestamp >= walletChallengeMap[wallet].timeout
         );
 
         walletChallengedPaymentsMap[wallet].push(payment);
 
-        ChallengeInfo memory challenge = ChallengeInfo(
+        Challenge memory challenge = Challenge(
             payment.nonce,
             Types.DealType.Payment,
-            block.timestamp + configuration.dealSettlementChallengeTimeout(),
+            block.timestamp + configuration.getDealSettlementChallengeTimeout(),
             Types.ChallengeResult.Qualified,
             walletChallengedPaymentsMap[wallet].length - 1,
             ChallengeCandidateType.None,
             0,
             address(0)
         );
-        walletChallengeInfoMap[wallet] = challenge;
+        walletChallengeMap[wallet] = challenge;
 
         emit StartChallengeFromPaymentEvent(payment, wallet);
     }
 
     /// @notice Get challenged deal that is a trade
     /// @param wallet The wallet whose challenged deal will be searched for
-    function getChallengedDealAsTrade(address wallet) public view returns (Types.Trade) {
-        require(
-            0 < walletChallengeInfoMap[wallet].nonce
-            && Types.DealType.Trade == walletChallengeInfoMap[wallet].dealType
-        );
-        uint256 dealIndex = walletChallengeInfoMap[wallet].dealIndex;
-        return walletChallengedTradesMap[wallet][dealIndex];
-    }
+//    function getChallengedDealAsTrade(address wallet) public view returns (Types.Trade) {
+//        require(
+//            0 < walletChallengeMap[wallet].nonce
+//            && Types.DealType.Trade == walletChallengeMap[wallet].dealType
+//        );
+//        uint256 dealIndex = walletChallengeMap[wallet].dealIndex;
+//        return walletChallengedTradesMap[wallet][dealIndex];
+//    }
 
     /// @notice Get challenged deal that is a payment
     /// @param wallet The wallet whose challenged deal will be searched for
-    function getChallengedDealAsPayment(address wallet) public view returns (Types.Payment) {
-        require(
-            0 < walletChallengeInfoMap[wallet].nonce
-            && Types.DealType.Payment == walletChallengeInfoMap[wallet].dealType
-        );
-        uint256 dealIndex = walletChallengeInfoMap[wallet].dealIndex;
-        return walletChallengedPaymentsMap[wallet][dealIndex];
-    }
+//    function getChallengedDealAsPayment(address wallet) public view returns (Types.Payment) {
+//        require(
+//            0 < walletChallengeMap[wallet].nonce
+//            && Types.DealType.Payment == walletChallengeMap[wallet].dealType
+//        );
+//        uint256 dealIndex = walletChallengeMap[wallet].dealIndex;
+//        return walletChallengedPaymentsMap[wallet][dealIndex];
+//    }
 
     /// @notice Get deal settlement challenge phase of given wallet
     /// @param wallet The wallet whose challenge phase will be returned
     function dealSettlementChallengePhase(address wallet) public view returns (uint, Types.ChallengePhase) {
         if (msg.sender != owner)
             wallet = msg.sender;
-        if (0 == walletChallengeInfoMap[wallet].nonce)
+        if (0 == walletChallengeMap[wallet].nonce)
             return (0, Types.ChallengePhase.Closed);
-        else if (block.timestamp < walletChallengeInfoMap[wallet].timeout)
-            return (walletChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Dispute);
+        else if (block.timestamp < walletChallengeMap[wallet].timeout)
+            return (walletChallengeMap[wallet].nonce, Types.ChallengePhase.Dispute);
         else
-            return (walletChallengeInfoMap[wallet].nonce, Types.ChallengePhase.Closed);
+            return (walletChallengeMap[wallet].nonce, Types.ChallengePhase.Closed);
     }
 
     /// @notice Get deal settlement challenge result and challenger (wallet) of given (challenge) wallet
@@ -260,11 +254,11 @@ contract DealSettlementChallenge is Ownable {
     function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
         if (msg.sender != owner)
             wallet = msg.sender;
-        if ((0 == walletChallengeInfoMap[wallet].nonce) ||
-            (nonce != walletChallengeInfoMap[wallet].nonce))
+        if ((0 == walletChallengeMap[wallet].nonce) ||
+            (nonce != walletChallengeMap[wallet].nonce))
             return (Types.ChallengeResult.Unknown, address(0));
         else
-            return (walletChallengeInfoMap[wallet].result, walletChallengeInfoMap[wallet].challenger);
+            return (walletChallengeMap[wallet].result, walletChallengeMap[wallet].challenger);
     }
 
     /// @notice Challenge the deal settlement by providing order candidate
@@ -275,7 +269,7 @@ contract DealSettlementChallenge is Ownable {
     {
         address wallet = order.wallet;
 
-        ChallengeInfo storage challenge = walletChallengeInfoMap[wallet];
+        Challenge storage challenge = walletChallengeMap[wallet];
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -327,7 +321,7 @@ contract DealSettlementChallenge is Ownable {
     onlyTradeParty(trade, order.wallet)
     onlyTradeOrder(trade, order)
     {
-        ChallengeInfo storage challenge = walletChallengeInfoMap[order.wallet];
+        Challenge storage challenge = walletChallengeMap[order.wallet];
         require(challenge.candidateType == ChallengeCandidateType.Order);
 
         challenge.result = Types.ChallengeResult.Qualified;
@@ -335,8 +329,8 @@ contract DealSettlementChallenge is Ownable {
         challenge.candidateIndex = 0;
         challenge.challenger = address(0);
 
-        Configuration.Lot memory stake = configuration.getUnchallengeOrderCandidateByTradeStake();
-        securityBond.stage(stake.amount, stake.currency, msg.sender);
+        (address stakeCurrency, int256 stakeAmount) = configuration.getUnchallengeOrderCandidateByTradeStake();
+        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
 
         emit UnchallengeOrderCandidateByTradeEvent(order, trade, order.wallet,
             challenge.nonce, challenge.dealType, msg.sender);
@@ -350,7 +344,7 @@ contract DealSettlementChallenge is Ownable {
     tradeSigned(trade)
     onlyTradeParty(trade, wallet)
     {
-        ChallengeInfo storage challenge = walletChallengeInfoMap[wallet];
+        Challenge storage challenge = walletChallengeMap[wallet];
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -405,7 +399,7 @@ contract DealSettlementChallenge is Ownable {
     paymentSigned(payment)
     onlyPaymentSender(payment, wallet) // Wallet is recipient in (candidate) payment -> nothing to consider
     {
-        ChallengeInfo storage challenge = walletChallengeInfoMap[wallet];
+        Challenge storage challenge = walletChallengeMap[wallet];
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -489,20 +483,20 @@ contract DealSettlementChallenge is Ownable {
         _;
     }
 
-    modifier onlyPaymentParty(Types.Payment payment, address wallet) {
-        require(Types.isPaymentParty(payment, wallet));
-        _;
-    }
+//    modifier onlyPaymentParty(Types.Payment payment, address wallet) {
+//        require(Types.isPaymentParty(payment, wallet));
+//        _;
+//    }
 
     modifier onlyPaymentSender(Types.Payment payment, address wallet) {
         require(Types.isPaymentSender(payment, wallet));
         _;
     }
 
-    modifier onlyPaymentRecipient(Types.Payment payment, address wallet) {
-        require(Types.isPaymentRecipient(payment, wallet));
-        _;
-    }
+//    modifier onlyPaymentRecipient(Types.Payment payment, address wallet) {
+//        require(Types.isPaymentRecipient(payment, wallet));
+//        _;
+//    }
 
     modifier signedBy(bytes32 hash, Types.Signature signature, address signer) {
         require(Types.isGenuineSignature(hash, signature, signer));

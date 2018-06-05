@@ -361,93 +361,93 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getChallengedDealAsTrade()', () => {
-            let overrideOptions;
+        // describe('getChallengedDealAsTrade()', () => {
+        //     let overrideOptions;
+        //
+        //     before(async () => {
+        //         overrideOptions = {gasLimit: 2e6};
+        //     });
+        //
+        //     describe('if called with address whose deal settlement challenge was started on trade', () => {
+        //         let trade;
+        //
+        //         beforeEach(async () => {
+        //             trade = await mocks.mockTrade(glob.owner);
+        //
+        //             await ethersDealSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+        //         });
+        //
+        //         it('should operate successfully', async () => {
+        //             const result = await ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(trade.buyer.wallet);
+        //             result[0].toNumber().should.equal(trade.nonce.toNumber());
+        //         });
+        //     });
+        //
+        //     describe('if called with address for which no deal settlement challenge has ever been started', () => {
+        //         it('should revert', async () => {
+        //             const address = Wallet.createRandom().address;
+        //             ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(address).should.be.rejected;
+        //         });
+        //     });
+        //
+        //     describe('if called with address whose deal settlement challenge was started on payment', () => {
+        //         let payment;
+        //
+        //         beforeEach(async () => {
+        //             payment = await mocks.mockPayment(glob.owner);
+        //
+        //             await ethersDealSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
+        //         });
+        //
+        //         it('should revert', async () => {
+        //             ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(payment.sender.wallet).should.be.rejected;
+        //         });
+        //     });
+        // });
 
-            before(async () => {
-                overrideOptions = {gasLimit: 2e6};
-            });
-
-            describe('if called with address whose deal settlement challenge was started on trade', () => {
-                let trade;
-
-                beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner);
-
-                    await ethersDealSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
-                });
-
-                it('should operate successfully', async () => {
-                    const result = await ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(trade.buyer.wallet);
-                    result[0].toNumber().should.equal(trade.nonce.toNumber());
-                });
-            });
-
-            describe('if called with address for which no deal settlement challenge has ever been started', () => {
-                it('should revert', async () => {
-                    const address = Wallet.createRandom().address;
-                    ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(address).should.be.rejected;
-                });
-            });
-
-            describe('if called with address whose deal settlement challenge was started on payment', () => {
-                let payment;
-
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner);
-
-                    await ethersDealSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(payment.sender.wallet).should.be.rejected;
-                });
-            });
-        });
-
-        describe('getChallengedDealAsPayment()', () => {
-            let overrideOptions;
-
-            before(async () => {
-                overrideOptions = {gasLimit: 2e6};
-            });
-
-            describe('if called with address whose deal settlement challenge was started on payment', () => {
-                let payment;
-
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner);
-
-                    await ethersDealSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
-                });
-
-                it('should operate successfully', async () => {
-                    const result = await ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(payment.sender.wallet);
-                    result[0].toNumber().should.equal(payment.nonce.toNumber());
-                });
-            });
-
-            describe('if called with address for which no deal settlement challenge has ever been started', () => {
-                it('should revert', async () => {
-                    const address = Wallet.createRandom().address;
-                    ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(address).should.be.rejected;
-                });
-            });
-
-            describe('if called with address whose deal settlement challenge was started on trade', () => {
-                let trade;
-
-                beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner);
-
-                    await ethersDealSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(trade.buyer.wallet).should.be.rejected;
-                });
-            });
-        });
+        // describe('getChallengedDealAsPayment()', () => {
+        //     let overrideOptions;
+        //
+        //     before(async () => {
+        //         overrideOptions = {gasLimit: 2e6};
+        //     });
+        //
+        //     describe('if called with address whose deal settlement challenge was started on payment', () => {
+        //         let payment;
+        //
+        //         beforeEach(async () => {
+        //             payment = await mocks.mockPayment(glob.owner);
+        //
+        //             await ethersDealSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
+        //         });
+        //
+        //         it('should operate successfully', async () => {
+        //             const result = await ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(payment.sender.wallet);
+        //             result[0].toNumber().should.equal(payment.nonce.toNumber());
+        //         });
+        //     });
+        //
+        //     describe('if called with address for which no deal settlement challenge has ever been started', () => {
+        //         it('should revert', async () => {
+        //             const address = Wallet.createRandom().address;
+        //             ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(address).should.be.rejected;
+        //         });
+        //     });
+        //
+        //     describe('if called with address whose deal settlement challenge was started on trade', () => {
+        //         let trade;
+        //
+        //         beforeEach(async () => {
+        //             trade = await mocks.mockTrade(glob.owner);
+        //
+        //             await ethersDealSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+        //         });
+        //
+        //         it('should revert', async () => {
+        //             ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(trade.buyer.wallet).should.be.rejected;
+        //         });
+        //     });
+        // });
 
         describe('dealSettlementChallengePhase()', () => {
             describe('if no deal settlement challenge has been started for given wallet', () => {
@@ -921,7 +921,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     ethersDealSettlementChallengeOwner.unchallengeOrderCandidateByTrade(order, trade, overrideOptions).should.be.rejected;
                 });
-            })
+            });
 
             describe('if order is one of of orders filled in trade', () => {
                 let unchallengeTradeCandidate;
