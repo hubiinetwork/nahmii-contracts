@@ -16,7 +16,7 @@ contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => DealSettlementChallenge.ChallengeInfo) walletChallengeInfoMap;
+    mapping(address => DealSettlementChallenge.Challenge) walletChallengeMap;
 
     //
     // Functions
@@ -25,16 +25,16 @@ contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
     }
 
     function setDealSettlementChallengeStatus(address wallet, uint256 nonce, Types.ChallengeResult result, address challenger) public {
-        walletChallengeInfoMap[wallet].nonce = nonce;
-        walletChallengeInfoMap[wallet].result = result;
-        walletChallengeInfoMap[wallet].challenger = challenger;
+        walletChallengeMap[wallet].nonce = nonce;
+        walletChallengeMap[wallet].result = result;
+        walletChallengeMap[wallet].challenger = challenger;
     }
 
     function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
-        if ((0 == walletChallengeInfoMap[wallet].nonce) ||
-            (nonce != walletChallengeInfoMap[wallet].nonce))
+        if ((0 == walletChallengeMap[wallet].nonce) ||
+            (nonce != walletChallengeMap[wallet].nonce))
             return (Types.ChallengeResult.Unknown, address(0));
         else
-            return (walletChallengeInfoMap[wallet].result, walletChallengeInfoMap[wallet].challenger);
+            return (walletChallengeMap[wallet].result, walletChallengeMap[wallet].challenger);
     }
 }

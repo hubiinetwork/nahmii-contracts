@@ -28,7 +28,7 @@ contract MockedSecurityBond /*is SecurityBond*/ {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Stage[] stages;
+    Stage[] public stages;
 
     //
     // Events

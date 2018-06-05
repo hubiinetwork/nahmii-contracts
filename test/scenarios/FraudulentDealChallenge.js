@@ -14,8 +14,8 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe.only('FraudulentDealChallenge', () => {
-        let web3FraudulentDealChallenge, ethersFraudulentDealChallenge;
+    describe('FraudChallenge', () => {
+        let web3FraudChallenge, ethersFraudChallenge;
         let web3Configuration, ethersConfiguration;
         let web3CommunityVote, ethersCommunityVote;
         let web3ClientFund, ethersClientFund;
