@@ -11,18 +11,86 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 
+contract AbstractConfiguration {
+
+    function isRegisteredService(address service, string action) public returns (bool);
+
+    function registerService(address service, string action) public;
+
+    function deregisterService(address service, string action) public;
+
+    function setOperationalModeExit() public;
+
+    function isOperationalModeNormal() public view returns (bool);
+
+    function isOperationalModeExit() public view returns (bool);
+
+    function getPartsPer() public view returns (int256);
+
+    function getTradeMakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
+
+    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
+
+    function getTradeMakerFeesCount() public view returns (uint256);
+
+    function getTradeTakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
+
+    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
+
+    function getTradeTakerFeesCount() public view returns (uint256);
+
+    function getPaymentFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
+
+    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
+
+    function getPaymentFeesCount() public view returns (uint256);
+
+    function getTradeMakerMinimumFee(uint256 blockNumber) public view returns (int256);
+
+    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal) public;
+
+    function getTradeMakerMinimumFeesCount() public view returns (uint256);
+
+    function getTradeTakerMinimumFee(uint256 blockNumber) public view returns (int256);
+
+    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal) public;
+
+    function getTradeTakerMinimumFeesCount() public view returns (uint256);
+
+    function getPaymentMinimumFee(uint256 blockNumber) public view returns (int256);
+
+    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal) public;
+
+    function getPaymentMinimumFeesCount() public view returns (uint256);
+
+    function setCancelOrderChallengeTimeout(uint256 timeout) public;
+
+    function getCancelOrderChallengeTimeout() public view returns (uint256);
+
+    function setDealSettlementChallengeTimeout(uint256 timeout) public;
+
+    function getDealSettlementChallengeTimeout() public view returns (uint256);
+
+    function setUnchallengeOrderCandidateByTradeStake(address currency, int256 amount) public;
+
+    function getUnchallengeOrderCandidateByTradeStake() public view returns (address, int256);
+
+    function setFalseWalletSignatureStake(address currency, int256 amount) public;
+
+    function getFalseWalletSignatureStake() public view returns (address, int256);
+}
+
 /**
 @title Configuration
 @notice An oracle for configurations such as fees, challenge timeouts and stakes
 */
-contract Configuration is Ownable {
+contract Configuration is Ownable, AbstractConfiguration {
     using SafeMathInt for int256;
 
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
     enum OperationalMode {Normal, Exit}
-    enum Action {OperationalMode}
 
     //
     // Custom types
@@ -53,7 +121,7 @@ contract Configuration is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     OperationalMode public operationalMode = OperationalMode.Normal;
 
-    mapping(address => mapping(uint8 => bool)) public registeredServiceActionMap;
+    mapping(address => mapping(bytes32 => bool)) public registeredServiceActionMap;
 
     int256 constant public PARTS_PER = 1e18;
 
@@ -75,12 +143,13 @@ contract Configuration is Ownable {
     uint256 public dealSettlementChallengeTimeout;
 
     Lot public unchallengeOrderCandidateByTradeStake;
+    Lot public falseWalletSignatureStake;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisterServiceEvent(address service, Action action);
-    event DeregisterServiceEvent(address service, Action action);
+    event RegisterServiceEvent(address service, string action);
+    event DeregisterServiceEvent(address service, string action);
     event SetOperationalModeExitEvent();
     event SetPartsPerEvent(int256 partsPer);
     event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
@@ -92,30 +161,45 @@ contract Configuration is Ownable {
     event SetCancelOrderChallengeTimeout(uint256 timeout);
     event SetDealSettlementChallengeTimeout(uint256 timeout);
     event SetUnchallengeDealSettlementOrderByTradeStakeEvent(address currency, int256 amount);
+    event SetFalseWalletSignatureStakeEvent(address currency, int256 amount);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Returns the service status of an address and an action
+    /// @param service The address of contract
+    /// @param action The action in question
+    function isRegisteredService(address service, string action) public returns (bool) {
+        return registeredServiceActionMap[service][keccak256(abi.encode(action))];
+    }
+
     /// @notice Register a contract as a service that may carry out an action
     /// @param service The address of service contract
     /// @param action The action that the service may carry out
-    function registerService(address service, Action action) public onlyOwner {
-        registeredServiceActionMap[service][uint8(action)] = true;
+    function registerService(address service, string action) public onlyOwner {
+        registeredServiceActionMap[service][keccak256(abi.encode(action))] = true;
         emit RegisterServiceEvent(service, action);
     }
 
     /// @notice Deregister a contract from the set of services that may carry out an action
     /// @param service The address of service contract
     /// @param action The action that the service may carry out
-    function deregisterService(address service, Action action) public onlyOwner {
-        registeredServiceActionMap[service][uint8(action)] = false;
+    function deregisterService(address service, string action) public onlyOwner {
+        registeredServiceActionMap[service][keccak256(abi.encode(action))] = false;
         emit DeregisterServiceEvent(service, action);
+    }
+
+    /// @notice Set operational mode to Exit
+    /// @dev Once operational mode is set to Exit it may not be set back to Normal
+    function setOperationalModeExit() public onlyOwnerOrServiceAction('OperationalMode') {
+        operationalMode = OperationalMode.Exit;
+        emit SetOperationalModeExitEvent();
     }
 
     /// @notice Return true if operational mode is Normal
@@ -128,11 +212,8 @@ contract Configuration is Ownable {
         return OperationalMode.Exit == operationalMode;
     }
 
-    /// @notice Set operational mode to Exit
-    /// @dev Once operational mode is set to Exit it may not be set back to Normal
-    function setOperationalModeExit() public onlyOwnerOrServiceAction(Action.OperationalMode) {
-        operationalMode = OperationalMode.Exit;
-        emit SetOperationalModeExitEvent();
+    function getPartsPer() public view returns (int256) {
+        return PARTS_PER;
     }
 
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value
@@ -337,11 +418,19 @@ contract Configuration is Ownable {
         emit SetCancelOrderChallengeTimeout(timeout);
     }
 
+    function getCancelOrderChallengeTimeout() public view returns (uint256) {
+        return cancelOrderChallengeTimeout;
+    }
+
     /// @notice Set timeout of deal challenge
     /// @param timeout Timeout duration
     function setDealSettlementChallengeTimeout(uint256 timeout) public onlyOwner {
         dealSettlementChallengeTimeout = timeout;
         emit SetDealSettlementChallengeTimeout(timeout);
+    }
+
+    function getDealSettlementChallengeTimeout() public view returns (uint256) {
+        return dealSettlementChallengeTimeout;
     }
 
     /// @notice Set currency and amount that will be gained when someone successfully unchallenges
@@ -353,10 +442,25 @@ contract Configuration is Ownable {
         emit SetUnchallengeDealSettlementOrderByTradeStakeEvent(currency, amount);
     }
 
-    /// @notice Get the lot (currency and amount) that will be gained when someone successfully
+    /// @notice Get the currency and amount that will be gained when someone successfully
     /// unchallenges (deal settlement) order candidate by trade
-    function getUnchallengeOrderCandidateByTradeStake() public view returns (Lot) {
-        return unchallengeOrderCandidateByTradeStake;
+    function getUnchallengeOrderCandidateByTradeStake() public view returns (address, int256) {
+        return (unchallengeOrderCandidateByTradeStake.currency, unchallengeOrderCandidateByTradeStake.amount);
+    }
+
+    /// @notice Set currency and amount that will be gained when someone successfully challenges
+    /// false wallet signature on order or payment
+    /// @param currency Address of currency gained (0 represents ETH)
+    /// @param amount Amount gained
+    function setFalseWalletSignatureStake(address currency, int256 amount) public onlyOwner {
+        falseWalletSignatureStake = Lot({currency: currency, amount: amount});
+        emit SetFalseWalletSignatureStakeEvent(currency, amount);
+    }
+
+    /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
+    /// false wallet signature on order or payment
+    function getFalseWalletSignatureStake() public view returns (address, int256) {
+        return (falseWalletSignatureStake.currency, falseWalletSignatureStake.amount);
     }
 
     function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,
@@ -418,8 +522,8 @@ contract Configuration is Ownable {
         _;
     }
 
-    modifier onlyOwnerOrServiceAction(Action action) {
-        require(msg.sender == owner || registeredServiceActionMap[msg.sender][uint8(action)]);
+    modifier onlyOwnerOrServiceAction(string action) {
+        require(msg.sender == owner || registeredServiceActionMap[msg.sender][keccak256(abi.encode(action))]);
         _;
     }
 }

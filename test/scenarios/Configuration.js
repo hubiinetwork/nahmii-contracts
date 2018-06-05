@@ -38,10 +38,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('registeredServiceActionMap', () => {
+        describe('isRegisteredService', () => {
             it('should equal value initialized', async () => {
                 const address = Wallet.createRandom().address;
-                const registered = await web3Configuration.registeredServiceActionMap.call(address, 0);
+                const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
                 registered.should.be.false;
             });
         });
@@ -55,17 +55,17 @@ module.exports = (glob) => {
 
             describe('if called with owner as sender', () => {
                 it('should register service and emit event', async () => {
-                    const result = await web3Configuration.registerService(address, 0 /*Action.OperationalMode*/);
+                    const result = await web3Configuration.registerService(address, 'some_action');
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('RegisterServiceEvent');
-                    const registered = await web3Configuration.registeredServiceActionMap.call(address, 0);
+                    const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
                     registered.should.be.true;
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Configuration.registerService(address, 0 /*Action.OperationalMode*/, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.registerService(address, 'some_action', {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -79,17 +79,17 @@ module.exports = (glob) => {
 
             describe('if called with owner as sender', () => {
                 it('should deregister service and emit event', async () => {
-                    const result = await web3Configuration.deregisterService(address, 0 /*Action.OperationalMode*/);
+                    const result = await web3Configuration.deregisterService(address, 'some_action');
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('DeregisterServiceEvent');
-                    const registered = await web3Configuration.registeredServiceActionMap.call(address, 0);
+                    const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
                     registered.should.be.false;
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Configuration.deregisterService(address, 0 /*Action.OperationalMode*/, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.deregisterService(address, 'some_action', {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -126,7 +126,7 @@ module.exports = (glob) => {
 
             describe('if called with registered service as sender', () => {
                 before(async () => {
-                    await web3Configuration.registerService(glob.user_a, 0 /*Action.OperationalMode*/);
+                    await web3Configuration.registerService(glob.user_a, 'OperationalMode');
                 });
 
                 it('should set exit operational mode', async () => {
@@ -143,7 +143,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('PARTS_PER()', () => {
+        describe('getPartsPer()', () => {
             it('should get the value initialized at construction time', async () => {
                 const partsPer = await web3Configuration.PARTS_PER.call();
                 partsPer.toNumber().should.equal(1e18);
@@ -466,9 +466,9 @@ module.exports = (glob) => {
             });
         });
 
-        describe('cancelOrderChallengeTimeout()', () => {
+        describe('getCancelOrderChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.cancelOrderChallengeTimeout.call();
+                const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
                 value.toNumber().should.equal(0);
             });
         });
@@ -478,7 +478,7 @@ module.exports = (glob) => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await web3Configuration.cancelOrderChallengeTimeout.call();
+                    initialValue = await web3Configuration.getCancelOrderChallengeTimeout.call();
                 });
 
                 after(async () => {
@@ -489,7 +489,7 @@ module.exports = (glob) => {
                     const result = await web3Configuration.setCancelOrderChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCancelOrderChallengeTimeout');
-                    const value = await web3Configuration.cancelOrderChallengeTimeout.call();
+                    const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });
@@ -501,7 +501,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('dealSettlementChallengeTimeout()', () => {
+        describe('getDealSettlementChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
                 const value = await web3Configuration.dealSettlementChallengeTimeout.call();
                 value.toNumber().should.equal(0);
@@ -536,9 +536,9 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getUnchallengeDealSettlementOrderByTradeStake()', () => {
+        describe('getUnchallengeOrderCandidateByTradeStake()', () => {
             it('should equal values initialized at construction time', async () => {
-                const values = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
+                const values = await web3Configuration.getUnchallengeOrderCandidateByTradeStake.call();
                 values.should.be.an('array').and.have.lengthOf(2);
                 values[0].should.equal('0x0000000000000000000000000000000000000000');
                 values[1].toNumber().should.equal(0);
@@ -570,6 +570,44 @@ module.exports = (glob) => {
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
                     web3Configuration.setUnchallengeOrderCandidateByTradeStake('0x0000000000000000000000000000000000000001', 1e18, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('getFalseWalletSignatureStake()', () => {
+            it('should equal values initialized at construction time', async () => {
+                const values = await web3Configuration.getFalseWalletSignatureStake.call();
+                values.should.be.an('array').and.have.lengthOf(2);
+                values[0].should.equal('0x0000000000000000000000000000000000000000');
+                values[1].toNumber().should.equal(0);
+            });
+        });
+
+        describe('setFalseWalletSignatureStake()', () => {
+            describe('if called with sender that is owner', () => {
+                let initialValues;
+
+                before(async () => {
+                    initialValues = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
+                });
+
+                after(async () => {
+                    await web3Configuration.setFalseWalletSignatureStake(initialValues[0], initialValues[1]);
+                });
+
+                it('should successfully set new values and emit event', async () => {
+                    const result = await web3Configuration.setFalseWalletSignatureStake('0x0000000000000000000000000000000000000001', 1e18);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetFalseWalletSignatureStakeEvent');
+                    const values = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
+                    values[0].should.equal('0x0000000000000000000000000000000000000001');
+                    values[1].toNumber().should.equal(1e18);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should fail to set new values', async () => {
+                    web3Configuration.setFalseWalletSignatureStake('0x0000000000000000000000000000000000000001', 1e18, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

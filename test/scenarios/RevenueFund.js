@@ -140,7 +140,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST SUCCEED [registerBeneficiary]: Register UnitTestHelpers_MISC_1 as 60% beneficiary", async() => {
 			try {
-				let fraction = await glob.web3RevenueFund.PARTS_PER();
+				let fraction = await glob.web3RevenueFund.getPartsPer();
 				fraction = fraction.mul(0.6);
 				await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction);
 			}
@@ -153,7 +153,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [registerBeneficiary]: Cannot be called from non-owner", async() => {
 			try {
-				let fraction = await glob.web3RevenueFund.PARTS_PER();
+				let fraction = await glob.web3RevenueFund.getPartsPer();
 				fraction = fraction.mul(0.6);
 				await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction, { from: glob.user_a });
 				assert(false, 'This test must fail.');
@@ -167,7 +167,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [registerBeneficiary]: Cannot register UnitTestHelpers_MISC_1 twice", async() => {
 			try {
-				let fraction = await glob.web3RevenueFund.PARTS_PER();
+				let fraction = await glob.web3RevenueFund.getPartsPer();
 				fraction = fraction.mul(0.4);
 				await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction);
 				assert(false, 'This test must fail.');
@@ -181,7 +181,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST FAIL [registerBeneficiary]: Trying to register UnitTestHelpers_MISC_2 as 50% beneficiary", async() => {
 			try {
-				let fraction = await glob.web3RevenueFund.PARTS_PER();
+				let fraction = await glob.web3RevenueFund.getPartsPer();
 				fraction = fraction.mul(0.5);
 				await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_2.address, fraction);
 				assert(false, 'This test must fail.');
@@ -207,7 +207,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST SUCCEED [registerBeneficiary]: Register UnitTestHelpers_MISC_2 as 40% beneficiary", async() => {
 			try {
-				let fraction = await glob.web3RevenueFund.PARTS_PER();
+				let fraction = await glob.web3RevenueFund.getPartsPer();
 				fraction = fraction.mul(0.4);
 
 				await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_2.address, fraction);
