@@ -10,19 +10,19 @@ pragma solidity ^0.4.23;
 import "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./ERC20.sol";
-import "./Service.sol";
+import "./Servable.sol";
 
 /**
 @title Security bond
 @notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
 */
-contract SecurityBond is Ownable, ServiceRecipient {
+contract SecurityBond is Ownable, Servable {
     using SafeMathInt for int256;
 
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public stagingService = "staging";
+    string constant public stageServiceAction = "stage";
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ contract SecurityBond is Ownable, ServiceRecipient {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) ServiceRecipient() public {
+    constructor(address _owner) Ownable(_owner) Servable() public {
         withdrawalTimeout = 30 minutes;
     }
 
@@ -153,7 +153,7 @@ contract SecurityBond is Ownable, ServiceRecipient {
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) onlyOwnerOrServiceProvider(stagingService) {
+    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) onlyOwnerOrServiceAction(stageServiceAction) {
         uint256 start_time;
 
         require(amount.isPositiveInt256());

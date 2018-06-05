@@ -11,20 +11,20 @@ import "./SafeMathInt.sol";
 import "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./RevenueToken.sol";
-import "./Service.sol";
+import "./Servable.sol";
 
 /**
 @title Token holder revenue fund
 @notice Fund that manages the revenue earned by revenue token holders.
 */
-contract TokenHolderRevenueFund is Ownable, ServiceRecipient {
+contract TokenHolderRevenueFund is Ownable, Servable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public closeAccrualService = "close_accrual";
+    string constant public closeAccrualPeriodServiceAction = "close_accrual_period";
 
     //
     // Structures
@@ -85,7 +85,7 @@ contract TokenHolderRevenueFund is Ownable, ServiceRecipient {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) ServiceRecipient() public {
+    constructor(address _owner) Ownable(_owner) Servable() public {
     }
 
     //
@@ -185,7 +185,7 @@ contract TokenHolderRevenueFund is Ownable, ServiceRecipient {
     //
     // Accrual functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyOwnerOrServiceProvider(closeAccrualService) {
+    function closeAccrualPeriod() public onlyOwnerOrServiceAction(closeAccrualPeriodServiceAction) {
         uint256 i;
 
         //register this block

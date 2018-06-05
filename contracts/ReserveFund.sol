@@ -14,7 +14,7 @@ import "./Ownable.sol";
 import './ERC20.sol';
 import "./Beneficiary.sol";
 import "./Benefactor.sol";
-import "./Service.sol";
+import "./Servable.sol";
 import "./ClientFund.sol";
 
 /**
@@ -22,14 +22,14 @@ import "./ClientFund.sol";
 @notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
  There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
 */
-contract ReserveFund is Ownable, Beneficiary, Benefactor, ServiceRecipient {
+contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public closeAccrualService = "close_accrual";
+    string constant public closeAccrualPeriodServiceAction = "close_accrual_period";
 
     //
     // Structures
@@ -125,7 +125,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, ServiceRecipient {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() ServiceRecipient() public {
+    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() Servable() public {
     }
 
     function changeClientFund(address newClientFund) public onlyOwner  {
@@ -254,7 +254,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, ServiceRecipient {
         return token == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token];
     }
 
-    function closeAccrualPeriod() public onlyOwnerOrServiceProvider(closeAccrualService) {
+    function closeAccrualPeriod() public onlyOwnerOrServiceAction(closeAccrualPeriodServiceAction) {
 
         // Register this block
         accrualBlockNumbers.push(block.number);

@@ -13,20 +13,20 @@ import "./ERC20.sol";
 import "./Beneficiary.sol";
 import "./Benefactor.sol";
 import "./ReserveFund.sol";
-import "./Service.sol";
+import "./Servable.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Factored out from previous Trade smart contract.
 */
-contract ClientFund is Ownable, Beneficiary, Benefactor, ServiceRecipient {
+contract ClientFund is Ownable, Beneficiary, Benefactor, Servable {
     using SafeMathInt for int256;
 
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public twoWayTransferService = "two_way_transfer";
+    string constant public twoWayTransferServiceAction = "two_way_transfer";
 
     //
     // Structures
@@ -91,7 +91,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, ServiceRecipient {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() ServiceRecipient() public {
+    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() Servable() public {
         serviceActivationTimeout = 30 * 3600; //30 minutes
     }
 
@@ -462,7 +462,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, ServiceRecipient {
     //
     // Reserve funds functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reserveFundGetFromDeposited(address wallet, int256 amount, address token) public onlyOwnerOrServiceProvider(twoWayTransferService) {
+    function reserveFundGetFromDeposited(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(twoWayTransferServiceAction) {
         ReserveFund sc_reservefund;
         ERC20 erc20_token;
 
@@ -483,7 +483,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, ServiceRecipient {
         }
     }
 
-    function reserveFundAddToStaged(address wallet, int256 amount, address token) public onlyOwnerOrServiceProvider(twoWayTransferService) {
+    function reserveFundAddToStaged(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(twoWayTransferServiceAction) {
         require(wallet != address(0));
         require(amount.isPositiveInt256());
 
