@@ -13,12 +13,12 @@ var w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 var ClientFund = artifacts.require("ClientFund");
 var CommunityVote = artifacts.require("CommunityVote");
 var Hasher = artifacts.require("Hasher");
-var FraudulentDealValidator = artifacts.require("FraudulentDealValidator");
+var FraudValidator = artifacts.require("FraudValidator");
 var Configuration = artifacts.require("Configuration");
 var Exchange = artifacts.require("Exchange");
 var CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
 var DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
-var FraudulentDealChallenge = artifacts.require("FraudulentDealChallenge");
+var FraudChallenge = artifacts.require("FraudChallenge");
 var ReserveFund = artifacts.require("ReserveFund");
 var RevenueFund = artifacts.require("RevenueFund");
 var SecurityBond = artifacts.require("SecurityBond");
@@ -143,14 +143,14 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudulentDealValidator contract", async () => {
+    before("Preflight: Instantiate FraudValidator contract", async () => {
         try {
-            glob.web3FraudulentDealValidator = await FraudulentDealValidator.deployed();
-            assert.notEqual(glob.web3FraudulentDealValidator, null);
-            glob.ethersIoFraudulentDealValidator = new ethers.Contract(glob.web3FraudulentDealValidator.address, FraudulentDealValidator.abi, glob.signer_owner);
+            glob.web3FraudValidator = await FraudValidator.deployed();
+            assert.notEqual(glob.web3FraudValidator, null);
+            glob.ethersIoFraudValidator = new ethers.Contract(glob.web3FraudValidator.address, FraudValidator.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate FraudulentDealValidator contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate FraudValidator contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -209,14 +209,14 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudulentDealChallenge contract", async () => {
+    before("Preflight: Instantiate FraudChallenge contract", async () => {
         try {
-            glob.web3FraudulentDealChallenge = await FraudulentDealChallenge.deployed();
-            assert.notEqual(glob.web3FraudulentDealChallenge, null);
-            glob.ethersIoFraudulentDealChallenge = new ethers.Contract(glob.web3FraudulentDealChallenge.address, FraudulentDealChallenge.abi, glob.signer_owner);
+            glob.web3FraudChallenge = await FraudChallenge.deployed();
+            assert.notEqual(glob.web3FraudChallenge, null);
+            glob.ethersIoFraudChallenge = new ethers.Contract(glob.web3FraudChallenge.address, FraudChallenge.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate FraudulentDealChallenge contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate FraudChallenge contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -325,13 +325,13 @@ contract('Smart contract checks', function () {
 
     require('./scenarios/ClientFund')(glob);
     require('./scenarios/Hasher')(glob);
-    // require('./scenarios/FraudulentDealValidator')(glob);
+    // require('./scenarios/FraudValidator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
     require('./scenarios/Exchange')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DealSettlementChallenge')(glob);
-    require('./scenarios/FraudulentDealChallenge')(glob);
+    require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);

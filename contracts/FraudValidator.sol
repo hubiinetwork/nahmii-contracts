@@ -15,7 +15,7 @@ import "./Ownable.sol";
 import {AbstractConfiguration} from "./Configuration.sol";
 import {AbstractHasher} from "./Hasher.sol";
 
-contract AbstractFraudulentDealValidator {
+contract AbstractFraudValidator {
 
     function isGenuineTradeMakerFee(Types.Trade trade) public view returns (bool);
 
@@ -62,7 +62,7 @@ contract AbstractFraudulentDealValidator {
     function isGenuineSuccessivePaymentTradeNetFees(Types.Payment payment, Types.PaymentPartyRole paymentPartyRole, Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole) public pure returns (bool);
 }
 
-contract FraudulentDealValidator is Ownable, AbstractFraudulentDealValidator {
+contract FraudValidator is Ownable, AbstractFraudValidator {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

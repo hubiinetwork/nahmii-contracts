@@ -15,15 +15,15 @@ import {AbstractConfiguration} from "./Configuration.sol";
 import "./ClientFund.sol";
 import "./Types.sol";
 import {AbstractHasher} from "./Hasher.sol";
-import {AbstractFraudulentDealValidator} from "./FraudulentDealValidator.sol";
+import {AbstractFraudValidator} from "./FraudValidator.sol";
 // TODO Enable
 //import {AbstractSecurityBond} from "./SecurityBond.sol";
 
 /**
-@title FraudulentDealChallenge
+@title FraudChallenge
 @notice Host of fraud detection logics
 */
-contract FraudulentDealChallenge is Ownable {
+contract FraudChallenge is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -44,7 +44,7 @@ contract FraudulentDealChallenge is Ownable {
     // TODO Enable
     //    AbstractSecurityBond public securityBond;
     AbstractHasher public hasher;
-    AbstractFraudulentDealValidator public fraudulentDealValidator;
+    AbstractFraudValidator public fraudulentDealValidator;
 
     //
     // Events
@@ -54,7 +54,7 @@ contract FraudulentDealChallenge is Ownable {
     // TODO Enable
     //    event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
     event ChangeHasherEvent(AbstractHasher oldHasher, AbstractHasher newHasher);
-    event ChangeFraudulentDealValidatorEvent(AbstractFraudulentDealValidator oldFraudulentDealValidator, AbstractFraudulentDealValidator newFraudulentDealValidator);
+    event ChangeFraudValidatorEvent(AbstractFraudValidator oldFraudValidator, AbstractFraudValidator newFraudValidator);
     event ChallengeByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
     event ChallengeByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
     event ChallengeBySuccessiveTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
@@ -127,16 +127,16 @@ contract FraudulentDealChallenge is Ownable {
     }
 
     /// @notice Change the fraudulent deal validator contract
-    /// @param newFraudulentDealValidator The (address of) AbstractFraudulentDealValidator contract instance
-    function changeFraudulentDealValidator(AbstractFraudulentDealValidator newFraudulentDealValidator)
+    /// @param newFraudValidator The (address of) AbstractFraudValidator contract instance
+    function changeFraudValidator(AbstractFraudValidator newFraudValidator)
     public
     onlyOwner
-    notNullAddress(newFraudulentDealValidator)
-    notEqualAddresses(newFraudulentDealValidator, fraudulentDealValidator)
+    notNullAddress(newFraudValidator)
+    notEqualAddresses(newFraudValidator, fraudulentDealValidator)
     {
-        AbstractFraudulentDealValidator oldFraudulentDealValidator = fraudulentDealValidator;
-        fraudulentDealValidator = newFraudulentDealValidator;
-        emit ChangeFraudulentDealValidatorEvent(oldFraudulentDealValidator, fraudulentDealValidator);
+        AbstractFraudValidator oldFraudValidator = fraudulentDealValidator;
+        fraudulentDealValidator = newFraudValidator;
+        emit ChangeFraudValidatorEvent(oldFraudValidator, fraudulentDealValidator);
     }
 
     /// @notice Get the seized status of given wallet
