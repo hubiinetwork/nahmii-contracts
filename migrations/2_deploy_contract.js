@@ -14,7 +14,7 @@ var Exchange = artifacts.require("./Exchange.sol");
 var CancelOrdersChallenge = artifacts.require("./CancelOrdersChallenge.sol");
 var DealSettlementChallenge = artifacts.require("./DealSettlementChallenge.sol");
 var Hasher = artifacts.require('./Hasher.sol');
-var FraudValidator = artifacts.require('./FraudValidator.sol');
+var Validator = artifacts.require('./Validator.sol');
 var FraudChallenge = artifacts.require("./FraudChallenge.sol");
 var ReserveFund = artifacts.require("./ReserveFund.sol");
 var RevenueFund = artifacts.require("./RevenueFund.sol");
@@ -95,8 +95,8 @@ module.exports = function (deployer, network, accounts) {
 		addresses.Hasher = Hasher.address;
 	});
 
-	deployer.deploy(FraudValidator, ownerAccount).then(() => {
-		addresses.FraudValidator = FraudValidator.address;
+	deployer.deploy(Validator, ownerAccount).then(() => {
+		addresses.Validator = Validator.address;
 	});
 
 	deployer.deploy(FraudChallenge, ownerAccount).then(() => {

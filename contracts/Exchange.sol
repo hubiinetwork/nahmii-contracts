@@ -234,7 +234,7 @@ contract Exchange is Ownable {
         require(clientFund != address(0), "ClientFund is missing");
 
         if (!trade.immediateSettlement)
-            require(trade != address(0), "ReserveFund for trades is missing");
+            require(tradesReserveFund != address(0), "ReserveFund for trades is missing");
 
         if (msg.sender != owner)
             wallet = msg.sender;

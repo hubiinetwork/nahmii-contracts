@@ -15,7 +15,7 @@ import {AbstractConfiguration} from "./Configuration.sol";
 import "./ClientFund.sol";
 import "./Types.sol";
 import {AbstractHasher} from "./Hasher.sol";
-import {AbstractFraudValidator} from "./FraudValidator.sol";
+import {AbstractValidator} from "./Validator.sol";
 // TODO Enable when deployment out-of-gas is solved
 //import {AbstractSecurityBond} from "./SecurityBond.sol";
 
@@ -44,7 +44,7 @@ contract FraudChallenge is Ownable {
     // TODO Enable when deployment out-of-gas is solved
     //    AbstractSecurityBond public securityBond;
     AbstractHasher public hasher;
-    AbstractFraudValidator public fraudulentDealValidator;
+    AbstractValidator public validator;
 
     //
     // Events
@@ -54,7 +54,7 @@ contract FraudChallenge is Ownable {
     // TODO Enable when deployment out-of-gas is solved
     //    event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
     event ChangeHasherEvent(AbstractHasher oldHasher, AbstractHasher newHasher);
-    event ChangeFraudValidatorEvent(AbstractFraudValidator oldFraudValidator, AbstractFraudValidator newFraudValidator);
+    event ChangeValidatorEvent(AbstractValidator oldValidator, AbstractValidator newValidator);
     event ChallengeByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
     event ChallengeByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
     event ChallengeBySuccessiveTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
@@ -127,16 +127,16 @@ contract FraudChallenge is Ownable {
     }
 
     /// @notice Change the fraudulent deal validator contract
-    /// @param newFraudValidator The (address of) AbstractFraudValidator contract instance
-    function changeFraudValidator(AbstractFraudValidator newFraudValidator)
+    /// @param newValidator The (address of) AbstractValidator contract instance
+    function changeValidator(AbstractValidator newValidator)
     public
     onlyOwner
-    notNullAddress(newFraudValidator)
-    notEqualAddresses(newFraudValidator, fraudulentDealValidator)
+    notNullAddress(newValidator)
+    notEqualAddresses(newValidator, validator)
     {
-        AbstractFraudValidator oldFraudValidator = fraudulentDealValidator;
-        fraudulentDealValidator = newFraudValidator;
-        emit ChangeFraudValidatorEvent(oldFraudValidator, fraudulentDealValidator);
+        AbstractValidator oldValidator = validator;
+        validator = newValidator;
+        emit ChangeValidatorEvent(oldValidator, validator);
     }
 
     /// @notice Get the seized status of given wallet
@@ -178,15 +178,15 @@ contract FraudChallenge is Ownable {
 
         // Gauge the genuineness of maker and taker fees. Depending on whether maker is buyer or seller
         // this result is baked into genuineness by buyer and seller below.
-        bool genuineMakerFee = fraudulentDealValidator.isGenuineTradeMakerFee(trade);
-        bool genuineTakerFee = fraudulentDealValidator.isGenuineTradeTakerFee(trade);
+        bool genuineMakerFee = validator.isGenuineTradeMakerFee(trade);
+        bool genuineTakerFee = validator.isGenuineTradeTakerFee(trade);
 
         // Genuineness affected by buyer
-        bool genuineByBuyer = fraudulentDealValidator.isGenuineByTradeBuyer(trade, owner)
+        bool genuineByBuyer = validator.isGenuineByTradeBuyer(trade, owner)
         && (Types.LiquidityRole.Maker == trade.buyer.liquidityRole ? genuineMakerFee : genuineTakerFee);
 
         // Genuineness affected by seller
-        bool genuineBySeller = fraudulentDealValidator.isGenuineByTradeSeller(trade, owner)
+        bool genuineBySeller = validator.isGenuineByTradeSeller(trade, owner)
         && (Types.LiquidityRole.Maker == trade.seller.liquidityRole ? genuineMakerFee : genuineTakerFee);
 
         require(!genuineByBuyer || !genuineBySeller);
@@ -223,11 +223,11 @@ contract FraudChallenge is Ownable {
         bool genuineWalletSignature = Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
 
         // Genuineness affected by sender
-        bool genuineBySender = fraudulentDealValidator.isGenuineByPaymentSender(payment) &&
-        fraudulentDealValidator.isGenuinePaymentFee(payment);
+        bool genuineBySender = validator.isGenuineByPaymentSender(payment) &&
+        validator.isGenuinePaymentFee(payment);
 
         // Genuineness affected by recipient
-        bool genuineByRecipient = fraudulentDealValidator.isGenuineByPaymentRecipient(payment);
+        bool genuineByRecipient = validator.isGenuineByPaymentRecipient(payment);
 
         require(!genuineWalletSignature || !genuineBySender || !genuineByRecipient);
 
@@ -274,14 +274,14 @@ contract FraudChallenge is Ownable {
         Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
-        require(fraudulentDealValidator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
+        require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
         Types.CurrencyRole firstCurrencyRole = (currency == firstTrade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
         Types.CurrencyRole lastCurrencyRole = (currency == lastTrade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
 
         require(
-            !fraudulentDealValidator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole) ||
-        !fraudulentDealValidator.isGenuineSuccessiveTradesNetFees(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole)
+            !validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole) ||
+        !validator.isGenuineSuccessiveTradesNetFees(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole)
         );
 
         configuration.setOperationalModeExit();
@@ -312,11 +312,11 @@ contract FraudChallenge is Ownable {
         Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
         Types.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
-        require(fraudulentDealValidator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
+        require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
         require(
-            !fraudulentDealValidator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole) ||
-        !fraudulentDealValidator.isGenuineSuccessivePaymentsNetFees(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)
+            !validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole) ||
+        !validator.isGenuineSuccessivePaymentsNetFees(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)
         );
 
         configuration.setOperationalModeExit();
@@ -349,13 +349,13 @@ contract FraudChallenge is Ownable {
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
-        require(fraudulentDealValidator.isSuccessiveTradePaymentPartyNonces(trade, tradePartyRole, payment, paymentPartyRole));
+        require(validator.isSuccessiveTradePaymentPartyNonces(trade, tradePartyRole, payment, paymentPartyRole));
 
         Types.CurrencyRole currencyRole = (currency == trade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
 
         require(
-            !fraudulentDealValidator.isGenuineSuccessiveTradePaymentBalances(trade, tradePartyRole, currencyRole, payment, paymentPartyRole) ||
-        !fraudulentDealValidator.isGenuineSuccessiveTradePaymentNetFees(trade, tradePartyRole, currencyRole, payment, paymentPartyRole)
+            !validator.isGenuineSuccessiveTradePaymentBalances(trade, tradePartyRole, currencyRole, payment, paymentPartyRole) ||
+        !validator.isGenuineSuccessiveTradePaymentNetFees(trade, tradePartyRole, currencyRole, payment, paymentPartyRole)
         );
 
         configuration.setOperationalModeExit();
@@ -388,13 +388,13 @@ contract FraudChallenge is Ownable {
         Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
-        require(fraudulentDealValidator.isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
+        require(validator.isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
 
         Types.CurrencyRole currencyRole = (currency == trade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
 
         require(
-            !fraudulentDealValidator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, currencyRole) ||
-        !fraudulentDealValidator.isGenuineSuccessivePaymentTradeNetFees(payment, paymentPartyRole, trade, tradePartyRole, currencyRole)
+            !validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, currencyRole) ||
+        !validator.isGenuineSuccessivePaymentTradeNetFees(payment, paymentPartyRole, trade, tradePartyRole, currencyRole)
         );
 
         configuration.setOperationalModeExit();
@@ -433,9 +433,9 @@ contract FraudChallenge is Ownable {
         else // Types.TradePartyRole.Seller == firstTradePartyRole
             require(firstTrade.seller.order.hashes.wallet == lastTrade.seller.order.hashes.wallet);
 
-        require(fraudulentDealValidator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
+        require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
-        require(!fraudulentDealValidator.isGenuineSuccessiveTradeOrderResiduals(firstTrade, lastTrade, firstTradePartyRole));
+        require(!validator.isGenuineSuccessiveTradeOrderResiduals(firstTrade, lastTrade, firstTradePartyRole));
 
         configuration.setOperationalModeExit();
         fraudulentTrade = lastTrade;
