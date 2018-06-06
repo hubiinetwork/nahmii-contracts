@@ -7,48 +7,47 @@
  */
 pragma solidity ^0.4.24;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
-import "./Ownable.sol";
-import "./ERC20.sol";
+//import "../contracts/CommunityVote.sol";
 
-/**
-@title Community vote
-@notice An oracle for relevant decisions made by the community.
-*/
-contract CommunityVote is Ownable {
+contract MockedCommunityVote /* is CommunityVote*/ {
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => bool) doubleSpenderWalletsMap;
-    uint256 highestAbsoluteDealNonce;
-    bool dataAvailable;
+    mapping(address => bool) internal doubleSpenderWalletsMap;
+    uint256 internal highestAbsoluteDealNonce;
+    bool internal dataAvailable;
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public Ownable(_owner) {
+    constructor(/*address owner*/) public /*CommunityVote(owner)*/ {
         dataAvailable = true;
     }
 
     //
-    // Results functions
+    // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Get the double spender status of given wallet
-    /// @param wallet The wallet address for which to check double spender status
-    /// @return true if wallet is double spender, false otherwise
+    function setDoubleSpenderWallet(address wallet, bool doubleSpender) public returns (address[3]) {
+        doubleSpenderWalletsMap[wallet] = doubleSpender;
+    }
+
     function isDoubleSpenderWallet(address wallet) public view returns (bool) {
         return doubleSpenderWalletsMap[wallet];
     }
 
-    /// @notice Get the highest absolute deal nonce to be accepted in settlements
-    /// @return the highest absolute deal nonce
+    function setHighestAbsoluteDealNonce(uint256 _highestAbsoluteDealNonce) public returns (uint256) {
+        return highestAbsoluteDealNonce = _highestAbsoluteDealNonce;
+    }
+
     function getHighestAbsoluteDealNonce() public view returns (uint256) {
         return highestAbsoluteDealNonce;
     }
 
-    /// @notice Get the data availability status
-    /// @return true if data is available
+    function setDataAvailable(bool _dataAvailable) public returns (bool) {
+        return dataAvailable = _dataAvailable;
+    }
+
     function isDataAvailable() public view returns (bool) {
         return dataAvailable;
     }

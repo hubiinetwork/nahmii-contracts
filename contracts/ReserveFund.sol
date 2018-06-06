@@ -5,11 +5,11 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import './SafeMathInt.sol';
-import './SafeMathUInt.sol';
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import './ERC20.sol';
 import "./Beneficiary.sol";
@@ -35,7 +35,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct DepositHistory {
-        address tokenAddress;
+        address currency;
         uint listIndex;
     }
 
@@ -87,7 +87,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
     }
 
     struct TransferInfo {
-        address tokenAddress; // 0 for ethers.
+        address currency; // 0 for ethers.
         int256 amount;
     }
 
@@ -229,15 +229,15 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
 
         DepositHistory storage dh = walletInfoMap[wallet].depositsHistory[index];
         //NOTE: Code duplication in order to keep compiler happy and avoid warnings
-        if (dh.tokenAddress == address(0)) {
+        if (dh.currency == address(0)) {
             DepositInfo[] storage di = walletInfoMap[wallet].depositsEther;
             amount = di[dh.listIndex].amount;
             token = address(0);
             blockNumber = di[dh.listIndex].block;
         } else {
-            DepositInfo[] storage diT = walletInfoMap[wallet].depositsToken[dh.tokenAddress];
+            DepositInfo[] storage diT = walletInfoMap[wallet].depositsToken[dh.currency];
             amount = diT[dh.listIndex].amount;
-            token = dh.tokenAddress;
+            token = dh.currency;
             blockNumber = diT[dh.listIndex].block;
         }
      }
@@ -258,7 +258,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
 
         // Register this block
         accrualBlockNumbers.push(block.number);
-        
+
         // Clear accruals
         periodAccrualEtherBalance = 0;
         for (uint256 i = 0; i < accrualPeriodTokenList.length; i++) {
@@ -312,7 +312,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
         int256 balance =  token == address(0) ? aggregatedEtherBalance : aggregatedTokenBalance[token];
         int256 fraction = bb.mul_nn(1e18).mul_nn(token == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token]).div_nn(balance.mul_nn(blockspan).mul_nn(1e18));
         int256 amount =   fraction.mul_nn(token == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token]).div_nn(1e18);
-        
+
         /* Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c */
 
         if (token == address(0)) {
@@ -326,14 +326,14 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
             }
         } else {
             aggregatedTokenBalance[token] = aggregatedTokenBalance[token].sub_nn(amount);
-            
+
             if (compoundAccrual) {
                 walletInfoMap[msg.sender].activeTokenBalance[token] = walletInfoMap[msg.sender].activeTokenBalance[token].add_nn(amount);
             }
             else {
-                walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount);		
+                walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount);
             }
-        
+
         }
 
         /* Store upperbound as the last claimed accrual block number for currency */
@@ -478,7 +478,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
     }
 
     function outboundTransferSupported(TransferInfo outboundTx) public view onlyOwner returns (bool) {
-        return (outboundTx.tokenAddress == address(0) ? outboundTx.amount <= aggregatedEtherBalance : outboundTx.amount <= aggregatedTokenBalance[outboundTx.tokenAddress]);
+        return (outboundTx.currency == address(0) ? outboundTx.amount <= aggregatedEtherBalance : outboundTx.amount <= aggregatedTokenBalance[outboundTx.currency]);
     }
 
     function twoWayTransfer(address wallet, TransferInfo inboundTx, TransferInfo outboundTx) public onlyOwner {

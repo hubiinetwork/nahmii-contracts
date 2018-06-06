@@ -5,9 +5,9 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
-import "./SafeMathInt.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./ERC20.sol";
 import "./Beneficiary.sol";
@@ -68,7 +68,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     mapping (address => WalletInfo) private walletInfoMap;
 
-    uint256 private serviceActivationTimeout;
+    uint256 public serviceActivationTimeout;
     mapping (address => uint256) private registeredServicesMap;
     mapping (address => mapping (address => bool)) private disabledServicesMap;
 
@@ -92,7 +92,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() Servable() public {
-        serviceActivationTimeout = 30 * 3600; //30 minutes
+        serviceActivationTimeout = 60 * 60 * 24 * 7; // 1 week
     }
 
     //

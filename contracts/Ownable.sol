@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 contract Ownable {
     //
@@ -49,15 +49,19 @@ contract Ownable {
         }
     }
 
+    function isOwner() internal view returns (bool) {
+        return msg.sender == owner;
+    }
+
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(isOwner());
         _;
     }
 
     modifier notOwner() {
-        require(msg.sender != owner);
+        require(!isOwner());
         _;
     }
 }

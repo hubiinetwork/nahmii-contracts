@@ -6,10 +6,16 @@
 
 var SafeMathIntLib = artifacts.require('./SafeMathInt.sol');
 var SafeMathUintLib = artifacts.require('./SafeMathUint.sol');
+var Types = artifacts.require('./Types.sol');
 var ClientFund = artifacts.require("./ClientFund.sol");
 var CommunityVote = artifacts.require("./CommunityVote.sol");
 var Configuration = artifacts.require("./Configuration.sol");
 var Exchange = artifacts.require("./Exchange.sol");
+var CancelOrdersChallenge = artifacts.require("./CancelOrdersChallenge.sol");
+var DealSettlementChallenge = artifacts.require("./DealSettlementChallenge.sol");
+var Hasher = artifacts.require('./Hasher.sol');
+var FraudValidator = artifacts.require('./FraudValidator.sol');
+var FraudChallenge = artifacts.require("./FraudChallenge.sol");
 var ReserveFund = artifacts.require("./ReserveFund.sol");
 var RevenueFund = artifacts.require("./RevenueFund.sol");
 var SecurityBond = artifacts.require("./SecurityBond.sol");
@@ -33,20 +39,35 @@ module.exports = function (deployer, network, accounts) {
 		addresses.SafeMathUint = SafeMathUintLib.address;
 	});
 
-	deployer.link(SafeMathUintLib, Exchange);
-	deployer.link(SafeMathUintLib, RevenueFund);
-	deployer.link(SafeMathUintLib, ReserveFund);
-	deployer.link(SafeMathUintLib, TokenHolderRevenueFund);
-	deployer.link(SafeMathIntLib, ClientFund);
+    deployer.deploy(Types).then(() => {
+        addresses.Types = Types.address;
+    });
+
+    deployer.link(SafeMathIntLib, ClientFund);
 	deployer.link(SafeMathIntLib, CommunityVote);
 	deployer.link(SafeMathIntLib, Configuration);
 	deployer.link(SafeMathIntLib, Exchange);
+    deployer.link(SafeMathIntLib, CancelOrdersChallenge);
+    deployer.link(SafeMathIntLib, DealSettlementChallenge);
+    deployer.link(SafeMathIntLib, FraudChallenge);
 	deployer.link(SafeMathIntLib, ReserveFund);
 	deployer.link(SafeMathIntLib, RevenueFund);
 	deployer.link(SafeMathIntLib, SecurityBond);
 	deployer.link(SafeMathIntLib, TokenHolderRevenueFund);
-	
-	deployer.deploy(ClientFund, ownerAccount).then(() => {
+
+    deployer.link(SafeMathUintLib, Exchange);
+    deployer.link(SafeMathUintLib, CancelOrdersChallenge);
+    deployer.link(SafeMathUintLib, FraudChallenge);
+    deployer.link(SafeMathUintLib, RevenueFund);
+    deployer.link(SafeMathUintLib, ReserveFund);
+    deployer.link(SafeMathUintLib, TokenHolderRevenueFund);
+
+    deployer.link(Types, Exchange);
+    deployer.link(Types, CancelOrdersChallenge);
+    deployer.link(Types, DealSettlementChallenge);
+    deployer.link(Types, FraudChallenge);
+
+    deployer.deploy(ClientFund, ownerAccount).then(() => {
 		addresses.ClientFund = ClientFund.address;
 	});
 
@@ -60,6 +81,26 @@ module.exports = function (deployer, network, accounts) {
 
 	deployer.deploy(Exchange, ownerAccount).then(() => {
 		addresses.Exchange = Exchange.address;
+	});
+
+	deployer.deploy(CancelOrdersChallenge, ownerAccount).then(() => {
+		addresses.CancelOrdersChallenge = CancelOrdersChallenge.address;
+	});
+
+	deployer.deploy(DealSettlementChallenge, ownerAccount).then(() => {
+		addresses.DealSettlementChallenge = Exchange.DealSettlementChallenge;
+	});
+
+	deployer.deploy(Hasher, ownerAccount).then(() => {
+		addresses.Hasher = Hasher.address;
+	});
+
+	deployer.deploy(FraudValidator, ownerAccount).then(() => {
+		addresses.FraudValidator = FraudValidator.address;
+	});
+
+	deployer.deploy(FraudChallenge, ownerAccount).then(() => {
+		addresses.FraudChallenge = FraudChallenge.address;
 	});
 
 	deployer.deploy(ReserveFund, ownerAccount).then(() => {
@@ -112,7 +153,7 @@ function saveAddresses(deployer, addresses)
 			}
 
 			json.networks[deployer.network_id] = addresses;
-	
+
 			//update timestamp
 			json.updatedAt = new Date().toISOString();
 
