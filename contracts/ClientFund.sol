@@ -42,28 +42,28 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
 
         // Deposited balance of ethers and tokens.
         int256 depositedEtherBalance;
-        mapping (address => int256) depositedTokenBalance;
+        mapping(address => int256) depositedTokenBalance;
 
         // Staged balance of ethers and tokens.
         int256 stagedEtherBalance;
-        mapping (address => int256) stagedTokenBalance;
+        mapping(address => int256) stagedTokenBalance;
 
         // Settled balance of ethers and tokens.
         int256 settledEtherBalance;
-        mapping (address => int256) settledTokenBalance;
+        mapping(address => int256) settledTokenBalance;
 
         address[] inUseTokenList;
-        mapping (address => bool) inUseTokenMap;
+        mapping(address => bool) inUseTokenMap;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping (address => WalletInfo) private walletInfoMap;
+    mapping(address => WalletInfo) private walletInfoMap;
 
     uint256 public serviceActivationTimeout;
-    mapping (address => uint256) private registeredServicesMap;
-    mapping (address => mapping (address => bool)) private disabledServicesMap;
+    mapping(address => uint256) private registeredServicesMap;
+    mapping(address => mapping(address => bool)) private disabledServicesMap;
 
     //
     // Events
@@ -85,7 +85,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() public {
-        serviceActivationTimeout = 60 * 60 * 24 * 7; // 1 week
+        // 1 week default service activation timeout
+        serviceActivationTimeout = 60 * 60 * 24 * 7;
     }
 
     //
@@ -98,11 +99,11 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
     //
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
-    function () public notOwner payable {
-        storeEthers(msg.sender);
+    function() public payable {
+        receiveEthers(msg.sender);
     }
 
-    function storeEthers(address wallet) public notOwner payable {
+    function receiveEthers(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet deposited balance
@@ -113,12 +114,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
         emit DepositEvent(wallet, amount, address(0));
     }
 
-    function depositTokens(address token, int256 amount) notOwner public {
-        storeTokens(msg.sender, amount, token);
+    function depositTokens(address token, int256 amount) public {
+        receiveTokens(msg.sender, amount, token);
     }
 
     //NOTE: 'wallet' must call ERC20.approve first
-    function storeTokens(address wallet, int256 amount, address token) public {
+    function receiveTokens(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -352,7 +353,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
             walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.sub_nn(amount);
 
             //transfer funds to the beneficiary
-            beneficiary_sc.storeEthers.value(uint256(amount))(msg.sender);
+            beneficiary_sc.receiveEthers.value(uint256(amount))(msg.sender);
         } else {
             ERC20 erc20_token;
 
@@ -379,7 +380,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
             require(erc20_token.approve(beneficiary, uint256(amount)));
 
             //transfer funds to the beneficiary
-            beneficiary_sc.storeTokens(msg.sender, amount, token);
+            beneficiary_sc.receiveTokens(msg.sender, amount, token);
         }
 
         //emit event

@@ -13,32 +13,52 @@ contract Benefactor is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping (address => bool) private registeredBeneficiaries;
+    address[] internal beneficiaries;
+    mapping(address => bool) internal beneficiaryRegisteredMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisteredBeneficiaryEvent(address beneficiary);
-    event UnregisteredBeneficiaryEvent(address beneficiary);
+    event RegisterBeneficiaryEvent(address beneficiary);
+    event DeregisterBeneficiaryEvent(address beneficiary);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerBeneficiary(address beneficiary) public onlyOwner {
-        registeredBeneficiaries[beneficiary] = true;
+    function registerBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+        if (beneficiaryRegisteredMap[beneficiary])
+            return false;
+
+        beneficiaries.push(beneficiary);
+        beneficiaryRegisteredMap[beneficiary] = true;
 
         //raise event
-        emit RegisteredBeneficiaryEvent(beneficiary);
+        emit RegisterBeneficiaryEvent(beneficiary);
+
+        return true;
     }
 
-    function unregisterBeneficiary(address beneficiary) public onlyOwner {
-        registeredBeneficiaries[beneficiary] = false;
+    function deregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+        if (!beneficiaryRegisteredMap[beneficiary])
+            return false;
+
+        beneficiaryRegisteredMap[beneficiary] = false;
 
         //raise event
-        emit UnregisteredBeneficiaryEvent(beneficiary);
+        emit DeregisterBeneficiaryEvent(beneficiary);
+
+        return true;
     }
 
     function isRegisteredBeneficiary(address beneficiary) internal view returns (bool) {
-        return registeredBeneficiaries[beneficiary];
+        return beneficiaryRegisteredMap[beneficiary];
+    }
+
+    //
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
+    modifier notNullAddress(address _address) {
+        require(_address != address(0));
+        _;
     }
 }

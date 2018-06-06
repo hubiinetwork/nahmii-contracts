@@ -9,7 +9,7 @@ pragma solidity ^0.4.24;
 
 import "./SafeMathUint.sol";
 import "./ERC20.sol";
-import "./AccrualBeneficiaryInterface.sol";
+import "./AccrualBeneficiary.sol";
 import "./ClientFund.sol";
 import "./RevenueFund.sol";
 import "./SecurityBond.sol";
@@ -19,12 +19,14 @@ import "./TokenHolderRevenueFund.sol";
 @title UnitTestHelpers
 @notice A dummy SC where several functions are added to assist in unit testing.
 */
-contract UnitTestHelpers is AccrualBeneficiaryInterface {
+contract UnitTestHelpers is AccrualBeneficiary {
     using SafeMathUint for uint256;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event ReceiveEthersWasCalled();
+    event ReceiveTokensWasCalled();
     event CloseAccrualPeriodWasCalled();
 
     //
@@ -33,7 +35,7 @@ contract UnitTestHelpers is AccrualBeneficiaryInterface {
     constructor() public {
     }
 
-    function () public payable {
+    function() public payable {
     }
 
     function send_money(address target, uint256 amount) public {
@@ -76,12 +78,12 @@ contract UnitTestHelpers is AccrualBeneficiaryInterface {
         ClientFund sc = ClientFund(clientFunds);
         sc.depositTokensToSettledBalance(destWallet, token, amount);
     }
+
     function callToSeizeDepositedAndSettledBalances_CLIENTFUND(address clientFunds, address sourceWallet, address destWallet) public {
         require(clientFunds != address(0));
         ClientFund sc = ClientFund(clientFunds);
         sc.seizeDepositedAndSettledBalances(sourceWallet, destWallet);
     }
-
 
     //
     // Helpers for RevenueFund SC
@@ -90,6 +92,14 @@ contract UnitTestHelpers is AccrualBeneficiaryInterface {
         require(revenueFunds != address(0));
         RevenueFund sc = RevenueFund(revenueFunds);
         sc.depositTokens(token, amount);
+    }
+
+    function receiveEthers(address wallet) public payable {
+        emit ReceiveEthersWasCalled();
+    }
+
+    function receiveTokens(address wallet, int256 amount, address token) public {
+        emit ReceiveTokensWasCalled();
     }
 
     function closeAccrualPeriod() public {

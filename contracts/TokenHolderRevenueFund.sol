@@ -7,16 +7,17 @@
  */
 pragma solidity ^0.4.24;
 
-import "./SafeMathInt.sol";
-import "./SafeMathUint.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./RevenueToken.sol";
+import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 
 /**
 @title Token holder revenue fund
 @notice Fund that manages the revenue earned by revenue token holders.
 */
-contract TokenHolderRevenueFund is Ownable {
+contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -41,7 +42,7 @@ contract TokenHolderRevenueFund is Ownable {
 
         // Staged balance of ethers and tokens.
         int256 stagedEtherBalance;
-        mapping (address => int256) stagedTokenBalance;
+        mapping(address => int256) stagedTokenBalance;
 
         // Claim accrual tracking
         uint256[] etherClaimAccrualBlockNumbers;
@@ -54,20 +55,20 @@ contract TokenHolderRevenueFund is Ownable {
     address private revenueToken;
 
     int256 periodAccrualEtherBalance;
-    mapping (address => int256) periodAccrualTokenBalance;
+    mapping(address => int256) periodAccrualTokenBalance;
     address[] periodAccrualTokenList;
-    mapping (address => bool) periodAccrualTokenListMap;
+    mapping(address => bool) periodAccrualTokenListMap;
 
     int256 aggregateAccrualEtherBalance;
-    mapping (address => int256) aggregateAccrualTokenBalance;
+    mapping(address => int256) aggregateAccrualTokenBalance;
     address[] aggregateAccrualTokenList;
-    mapping (address => bool) aggregateAccrualTokenListMap;
+    mapping(address => bool) aggregateAccrualTokenListMap;
 
-    mapping (address => WalletInfo) private walletInfoMap;
+    mapping(address => WalletInfo) private walletInfoMap;
 
     uint256[] accrualBlockNumbers;
 
-    mapping (address => bool) private registeredServicesMap;
+    mapping(address => bool) private registeredServicesMap;
 
     //
     // Events
@@ -83,7 +84,7 @@ contract TokenHolderRevenueFund is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -105,7 +106,11 @@ contract TokenHolderRevenueFund is Ownable {
     //
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
-    function () public notOwner payable {
+    function() public payable {
+        receiveEthers(msg.sender);
+    }
+
+    function receiveEthers(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to balances
@@ -114,14 +119,18 @@ contract TokenHolderRevenueFund is Ownable {
         aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add_nn(amount);
 
         //add deposit info
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
+        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
 
         //emit event
-        emit DepositEvent(msg.sender, amount, address(0));
+        emit DepositEvent(wallet, amount, address(0));
+    }
+
+    function depositTokens(address token, int256 amount) public {
+        receiveTokens(msg.sender, amount, token);
     }
 
     //NOTE: msg.sender must call ERC20.approve first
-    function depositTokens(address token, int256 amount) notOwner public {
+    function receiveTokens(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -129,7 +138,7 @@ contract TokenHolderRevenueFund is Ownable {
 
         //try to execute token transfer
         erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(msg.sender, this, uint256(amount)));
+        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
 
         //add to balances
         periodAccrualTokenBalance[token] = periodAccrualTokenBalance[token].add_nn(amount);
@@ -145,10 +154,10 @@ contract TokenHolderRevenueFund is Ownable {
         }
 
         //add deposit info
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, token));
+        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, token));
 
         //emit event
-        emit DepositEvent(msg.sender, amount, token);
+        emit DepositEvent(wallet, amount, token);
     }
 
     function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
@@ -199,14 +208,6 @@ contract TokenHolderRevenueFund is Ownable {
         emit CloseAccrualPeriodEvent();
     }
 
-    /*
-    int256[6] public claim_values;
-
-    function getClaimValues() public view returns (int256[6]) {
-        return claim_values;
-    }
-    */
-
     function claimAccrual(address token) public {
         RevenueToken revenue_token;
         int256 balance;
@@ -232,7 +233,8 @@ contract TokenHolderRevenueFund is Ownable {
         if (token == address(0)) {
             len = walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers.length;
             if (len == 0) {
-                bn_low = 0; // no block numbers for claimed accruals yet
+                bn_low = 0;
+                // no block numbers for claimed accruals yet
             }
             else {
                 bn_low = walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers[len - 1];
@@ -241,30 +243,23 @@ contract TokenHolderRevenueFund is Ownable {
         else {
             len = walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[token].length;
             if (len == 0) {
-                bn_low = 0; // no block numbers for claimed accruals yet
+                bn_low = 0;
+                // no block numbers for claimed accruals yet
             }
             else {
                 bn_low = walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[token][len - 1];
             }
         }
 
-        require (bn_low != bn_up); // avoid division by 0
+        require(bn_low != bn_up);
+        // avoid division by 0
 
         bb = int256(revenue_token.balanceBlocksIn(msg.sender, bn_low, bn_up));
 
-        fraction = bb.mul_nn(1e18).mul_nn(balance).div_nn( balance.mul_nn( int256(bn_up.sub(bn_low)) ).mul_nn(1e18) );
+        fraction = bb.mul_nn(1e18).mul_nn(balance).div_nn(balance.mul_nn(int256(bn_up.sub(bn_low))).mul_nn(1e18));
         amount = fraction.mul_nn(balance).div_nn(1e18);
         if (amount <= 0)
             return;
-
-        /*
-        claim_values[0] = int256(bn_low);
-        claim_values[1] = int256(bn_up);
-        claim_values[2] = balance;
-        claim_values[3] = bb;
-        claim_values[4] = amount;
-        claim_values[5] = fraction;
-        */
 
         // Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c
         if (token == address(0)) {
@@ -275,7 +270,7 @@ contract TokenHolderRevenueFund is Ownable {
             walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount);
         }
 
-        // Store upperbound as the last claimed accrual block number for currency
+        // Store upper bound as the last claimed accrual block number for currency
         if (token == address(0)) {
             walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers.push(bn_up);
         }
