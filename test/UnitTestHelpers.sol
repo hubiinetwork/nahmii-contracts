@@ -7,13 +7,13 @@
  */
 pragma solidity ^0.4.24;
 
-import "./SafeMathUint.sol";
-import "./ERC20.sol";
-import "./AccrualBeneficiary.sol";
-import "./ClientFund.sol";
-import "./RevenueFund.sol";
-import "./SecurityBond.sol";
-import "./TokenHolderRevenueFund.sol";
+import "../contracts/SafeMathUint.sol";
+import "../contracts/ERC20.sol";
+import "../contracts/AccrualBeneficiary.sol";
+import "../contracts/ClientFund.sol";
+import "../contracts/RevenueFund.sol";
+import "../contracts/SecurityBond.sol";
+import "../contracts/TokenHolderRevenueFund.sol";
 
 /**
 @title UnitTestHelpers
