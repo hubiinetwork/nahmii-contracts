@@ -12,14 +12,21 @@ import "./Ownable.sol";
 import "./ERC20.sol";
 import "./Beneficiary.sol";
 import "./Benefactor.sol";
+import "./ReserveFund.sol";
+import "./Servable.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Factored out from previous Trade smart contract.
 */
-contract ClientFund is Ownable, Beneficiary, Benefactor {
+contract ClientFund is Ownable, Beneficiary, Benefactor, Servable {
     using SafeMathInt for int256;
+
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public twoWayTransferServiceAction = "two_way_transfer";
 
     //
     // Structures
@@ -84,7 +91,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() public {
+    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() Servable() public {
         serviceActivationTimeout = 60 * 60 * 24 * 7; // 1 week
     }
 
@@ -450,6 +457,41 @@ contract ClientFund is Ownable, Beneficiary, Benefactor {
 
         //emit event
         emit SeizeDepositedAndSettledBalancesEvent(sourceWallet, targetWallet);
+    }
+
+    //
+    // Reserve funds functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function reserveFundGetFromDeposited(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(twoWayTransferServiceAction) {
+        ReserveFund sc_reservefund;
+        ERC20 erc20_token;
+
+        require(wallet != address(0));
+        require(amount.isPositiveInt256());
+
+        sc_reservefund = ReserveFund(msg.sender);
+
+        if (token == address(0)) {
+            walletInfoMap[wallet].depositedEtherBalance = walletInfoMap[wallet].depositedEtherBalance.sub_nn(amount);
+
+            msg.sender.transfer(uint256(amount));
+        } else {
+            walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].sub_nn(amount);
+
+            erc20_token = ERC20(token);
+            erc20_token.transfer(msg.sender, uint256(amount));
+        }
+    }
+
+    function reserveFundAddToStaged(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(twoWayTransferServiceAction) {
+        require(wallet != address(0));
+        require(amount.isPositiveInt256());
+
+        if (token == address(0)) {
+            walletInfoMap[wallet].settledEtherBalance = walletInfoMap[wallet].settledEtherBalance.add(amount);
+        } else {
+            walletInfoMap[wallet].settledTokenBalance[token] = walletInfoMap[wallet].settledTokenBalance[token].add(amount);
+        }
     }
 
     //

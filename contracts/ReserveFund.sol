@@ -14,15 +14,22 @@ import "./Ownable.sol";
 import './ERC20.sol';
 import "./Beneficiary.sol";
 import "./Benefactor.sol";
+import "./Servable.sol";
+import "./ClientFund.sol";
 
 /**
 @title Reserve fund
 @notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
  There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
 */
-contract ReserveFund is Ownable, Beneficiary, Benefactor {
+contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
+
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public closeAccrualPeriodServiceAction = "close_accrual_period";
 
     //
     // Structures
@@ -101,7 +108,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
 
     uint256[] accrualBlockNumbers;
 
-    mapping (address => bool) registeredServices;
+    address private clientFund;
 
     //
     // Events
@@ -113,13 +120,28 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
     event TwoWayTransferEvent(address wallet, TransferInfo inboundTx, TransferInfo outboundTx);
     event ClaimAccrualEvent(address token); //token==0 for ethers
     event CloseAccrualPeriodEvent();
-    event RegisterServiceEvent(address serviceAddress);
-    event DeregisterServiceEvent(address serviceAddress);
+    event ChangeClientFundEvent(address oldClientFund, address newClientFund);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() public {
+    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() Servable() public {
+    }
+
+    function changeClientFund(address newClientFund) public onlyOwner  {
+        address oldClientFund;
+
+        require(newClientFund != address(0));
+        require(newClientFund != address(this));
+
+        if (newClientFund != clientFund) {
+            // Set new address
+            oldClientFund = clientFund;
+            clientFund = newClientFund;
+
+            // Emit event
+            emit ChangeClientFundEvent(oldClientFund, newClientFund);
+        }
     }
 
     //
@@ -232,7 +254,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
         return token == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token];
     }
 
-    function closeAccrualPeriod() public onlyOwnerOrService {
+    function closeAccrualPeriod() public onlyOwnerOrServiceAction(closeAccrualPeriodServiceAction) {
 
         // Register this block
         accrualBlockNumbers.push(block.number);
@@ -460,54 +482,48 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
     }
 
     function twoWayTransfer(address wallet, TransferInfo inboundTx, TransferInfo outboundTx) public onlyOwner {
+        ClientFund sc_clientfund;
+        ERC20 erc20_token;
+
         //require (msg.sender == exchangeSmartContract);
-        require (inboundTx.amount > 0);
-        require (outboundTx.amount > 0);
-        require (wallet != address(0));
+        require(clientFund != address(0));
+        require(inboundTx.amount.isPositiveInt256());
+        require(outboundTx.amount.isPositiveInt256());
+        require(wallet != address(0));
+
+        sc_clientfund = ClientFund(clientFund);
 
         // Perform outbound (SC to W) transfers
-
-        if (outboundTx.currency == address(0)) {
-            require (outboundTx.amount <= aggregatedEtherBalance);
-            walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(outboundTx.amount);
+        if (outboundTx.tokenAddress == address(0)) {
             aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(outboundTx.amount);
 
+            clientFund.transfer(uint256(outboundTx.amount));
+            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.tokenAddress);
+
+            walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(outboundTx.amount);
         } else {
-            require (outboundTx.amount <= aggregatedTokenBalance[outboundTx.currency]);
-            walletInfoMap[wallet].stagedTokenBalance[outboundTx.currency] = walletInfoMap[wallet].stagedTokenBalance[outboundTx.currency].add_nn(outboundTx.amount);
-            aggregatedTokenBalance[outboundTx.currency] = aggregatedTokenBalance[outboundTx.currency].sub_nn(outboundTx.amount);
+            erc20_token = ERC20(outboundTx.tokenAddress);
+
+            erc20_token.transfer(clientFund, uint256(outboundTx.amount));
+            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.tokenAddress);
+
+            aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub_nn(outboundTx.amount);
         }
 
         // Perform inbound (w to SC) transfers
+        if (inboundTx.tokenAddress == address(0)) {
+            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.tokenAddress);
 
-        if (inboundTx.currency == address(0)) {
-            require(walletInfoMap[wallet].stagedEtherBalance >= inboundTx.amount);
-            walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.sub_nn(inboundTx.amount);
             aggregatedEtherBalance = aggregatedEtherBalance.add_nn(inboundTx.amount);
-
         } else {
-            require(walletInfoMap[wallet].stagedTokenBalance[inboundTx.currency] >= inboundTx.amount);
-            walletInfoMap[wallet].stagedTokenBalance[inboundTx.currency] = walletInfoMap[wallet].stagedTokenBalance[inboundTx.currency].sub_nn(inboundTx.amount);
-            aggregatedTokenBalance[inboundTx.currency] = aggregatedTokenBalance[inboundTx.currency].add_nn(inboundTx.amount);
+            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.tokenAddress);
+
+            aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add_nn(inboundTx.amount);
         }
 
         //raise event
         //
         emit TwoWayTransferEvent(wallet, inboundTx, outboundTx);
-    }
-
-    function registerService(address serviceAddress) public onlyOwner {
-        require(registeredServices[serviceAddress] == false);
-        registeredServices[serviceAddress] = true;
-
-        emit RegisterServiceEvent(serviceAddress);
-    }
-
-    function deregisterService(address serviceAddress) public onlyOwner {
-        require(registeredServices[serviceAddress] == true);
-        registeredServices[serviceAddress] = false;
-
-        emit DeregisterServiceEvent(serviceAddress);
     }
 
     //
@@ -574,18 +590,5 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor {
         if (token == address(0))
             return walletInfoMap[wallet].etherBalanceBlocks[idx - 1].mul_nn( SafeMathInt.toInt256(walletInfoMap[wallet].etherBalanceBlockNumbers[idx].sub(walletInfoMap[wallet].etherBalanceBlockNumbers[idx - 1])) );
         return walletInfoMap[wallet].tokenBalanceBlocks[token][idx - 1].mul_nn( SafeMathInt.toInt256(walletInfoMap[wallet].tokenBalanceBlockNumbers[token][idx].sub(walletInfoMap[wallet].tokenBalanceBlockNumbers[token][idx - 1])) );
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwnerOrService {
-        require(msg.sender == owner || registeredServices[msg.sender] == true);
-        _;
     }
 }
