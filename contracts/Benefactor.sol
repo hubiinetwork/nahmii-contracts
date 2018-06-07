@@ -50,7 +50,7 @@ contract Benefactor is Ownable {
         return true;
     }
 
-    function isRegisteredBeneficiary(address beneficiary) internal view returns (bool) {
+    function isRegisteredBeneficiary(address beneficiary) public view returns (bool) {
         return beneficiaryRegisteredMap[beneficiary];
     }
 
