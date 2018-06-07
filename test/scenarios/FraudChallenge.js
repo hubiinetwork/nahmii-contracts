@@ -20,7 +20,7 @@ module.exports = (glob) => {
         let web3ClientFund, ethersClientFund;
         let web3SecurityBond, ethersSecurityBond;
         let web3Hasher, ethersHasher;
-        let web3FraudValidator, ethersFraudValidator;
+        let web3Validator, ethersValidator;
         let provider;
         let blockNumber0, blockNumber10, blockNumber20;
 
@@ -33,23 +33,23 @@ module.exports = (glob) => {
             ethersConfiguration = glob.ethersIoConfiguration;
             web3Hasher = glob.web3Hasher;
             ethersHasher = glob.ethersIoHasher;
-            web3FraudValidator = glob.web3FraudValidator;
-            ethersFraudValidator = glob.ethersIoFraudValidator;
+            web3Validator = glob.web3Validator;
+            ethersValidator = glob.ethersIoValidator;
 
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
             ethersClientFund = new ethers.Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new ethers.Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
-            await ethersFraudValidator.changeConfiguration(ethersConfiguration.address);
-            await ethersFraudValidator.changeHasher(ethersHasher.address);
+            await ethersValidator.changeConfiguration(ethersConfiguration.address);
+            await ethersValidator.changeHasher(ethersHasher.address);
 
             await ethersFraudChallenge.changeConfiguration(ethersConfiguration.address);
             await ethersFraudChallenge.changeClientFund(ethersClientFund.address);
-            // TODO Enable when security bond is enabled in FraudChallenge
+            // TODO Enable when deployment out-of-gas is solved
             // await ethersFraudChallenge.changeSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallenge.changeHasher(ethersHasher.address);
-            await ethersFraudChallenge.changeFraudValidator(ethersFraudValidator.address);
+            await ethersFraudChallenge.changeValidator(ethersValidator.address);
 
             await ethersConfiguration.registerService(ethersFraudChallenge.address, 'OperationalMode');
         });
@@ -163,7 +163,7 @@ module.exports = (glob) => {
             });
         });
 
-        // TODO Unskip when security bond is enabled in FraudChallenge
+        // TODO Enable when deployment out-of-gas is solved
         describe.skip('securityBond()', () => {
             it('should equal value initialized', async () => {
                 const securityBond = await ethersFraudChallenge.securityBond();
@@ -171,7 +171,7 @@ module.exports = (glob) => {
             });
         });
 
-        // TODO Unskip when security bond is enabled in FraudChallenge
+        // TODO Enable when deployment out-of-gas is solved
         describe.skip('changeSecurityBond()', () => {
             let address;
 
@@ -247,14 +247,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('fraudulentDealValidator()', () => {
+        describe('validator()', () => {
             it('should equal value initialized', async () => {
-                const fraudulentDealValidator = await ethersFraudChallenge.fraudulentDealValidator();
-                fraudulentDealValidator.should.equal(utils.getAddress(ethersFraudValidator.address));
+                const validator = await ethersFraudChallenge.validator();
+                validator.should.equal(utils.getAddress(ethersValidator.address));
             });
         });
 
-        describe('changeFraudValidator()', () => {
+        describe('changeValidator()', () => {
             let address;
 
             before(()=> {
@@ -262,28 +262,28 @@ module.exports = (glob) => {
             });
 
             describe('if called with owner as sender', () => {
-                let fraudulentDealValidator;
+                let validator;
 
                 beforeEach(async () => {
-                    fraudulentDealValidator = await web3FraudChallenge.fraudulentDealValidator.call();
+                    validator = await web3FraudChallenge.validator.call();
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallenge.changeFraudValidator(fraudulentDealValidator);
+                    await web3FraudChallenge.changeValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallenge.changeFraudValidator(address);
+                    const result = await web3FraudChallenge.changeValidator(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeFraudValidatorEvent');
-                    const fraudulentDealValidator = await web3FraudChallenge.fraudulentDealValidator();
-                    utils.getAddress(fraudulentDealValidator).should.equal(address);
+                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    const validator = await web3FraudChallenge.validator();
+                    utils.getAddress(validator).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3FraudChallenge.changeFraudValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallenge.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

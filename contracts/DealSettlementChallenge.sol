@@ -149,6 +149,8 @@ contract DealSettlementChallenge is Ownable {
     public
     signedBy(trade.seal.hash, trade.seal.signature, owner)
     {
+        require(configuration != address(0), "Configuration is missing");
+
         if (msg.sender != owner)
             wallet = msg.sender;
 
@@ -185,6 +187,8 @@ contract DealSettlementChallenge is Ownable {
     signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
     signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet)
     {
+        require(configuration != address(0), "Configuration is missing");
+
         if (msg.sender != owner)
             wallet = msg.sender;
 
@@ -215,25 +219,25 @@ contract DealSettlementChallenge is Ownable {
 
     /// @notice Get challenged deal that is a trade
     /// @param wallet The wallet whose challenged deal will be searched for
-//    function getChallengedDealAsTrade(address wallet) public view returns (Types.Trade) {
-//        require(
-//            0 < walletChallengeMap[wallet].nonce
-//            && Types.DealType.Trade == walletChallengeMap[wallet].dealType
-//        );
-//        uint256 dealIndex = walletChallengeMap[wallet].dealIndex;
-//        return walletChallengedTradesMap[wallet][dealIndex];
-//    }
+    //    function getChallengedDealAsTrade(address wallet) public view returns (Types.Trade) {
+    //        require(
+    //            0 < walletChallengeMap[wallet].nonce
+    //            && Types.DealType.Trade == walletChallengeMap[wallet].dealType
+    //        );
+    //        uint256 dealIndex = walletChallengeMap[wallet].dealIndex;
+    //        return walletChallengedTradesMap[wallet][dealIndex];
+    //    }
 
     /// @notice Get challenged deal that is a payment
     /// @param wallet The wallet whose challenged deal will be searched for
-//    function getChallengedDealAsPayment(address wallet) public view returns (Types.Payment) {
-//        require(
-//            0 < walletChallengeMap[wallet].nonce
-//            && Types.DealType.Payment == walletChallengeMap[wallet].dealType
-//        );
-//        uint256 dealIndex = walletChallengeMap[wallet].dealIndex;
-//        return walletChallengedPaymentsMap[wallet][dealIndex];
-//    }
+    //    function getChallengedDealAsPayment(address wallet) public view returns (Types.Payment) {
+    //        require(
+    //            0 < walletChallengeMap[wallet].nonce
+    //            && Types.DealType.Payment == walletChallengeMap[wallet].dealType
+    //        );
+    //        uint256 dealIndex = walletChallengeMap[wallet].dealIndex;
+    //        return walletChallengedPaymentsMap[wallet][dealIndex];
+    //    }
 
     /// @notice Get deal settlement challenge phase of given wallet
     /// @param wallet The wallet whose challenge phase will be returned
@@ -267,6 +271,8 @@ contract DealSettlementChallenge is Ownable {
     public
     orderSigned(order)
     {
+        require(cancelOrdersChallenge != address(0), "CancelOrdersChallenge is missing");
+
         address wallet = order.wallet;
 
         Challenge storage challenge = walletChallengeMap[wallet];
@@ -321,6 +327,9 @@ contract DealSettlementChallenge is Ownable {
     onlyTradeParty(trade, order.wallet)
     onlyTradeOrder(trade, order)
     {
+        require(configuration != address(0), "Configuration is missing");
+        require(securityBond != address(0), "SecurityBond is missing");
+
         Challenge storage challenge = walletChallengeMap[order.wallet];
         require(challenge.candidateType == ChallengeCandidateType.Order);
 
@@ -344,6 +353,8 @@ contract DealSettlementChallenge is Ownable {
     tradeSigned(trade)
     onlyTradeParty(trade, wallet)
     {
+        require(cancelOrdersChallenge != address(0), "CancelOrdersChallenge is missing");
+
         Challenge storage challenge = walletChallengeMap[wallet];
         require(
             0 < challenge.nonce
@@ -483,20 +494,20 @@ contract DealSettlementChallenge is Ownable {
         _;
     }
 
-//    modifier onlyPaymentParty(Types.Payment payment, address wallet) {
-//        require(Types.isPaymentParty(payment, wallet));
-//        _;
-//    }
+    //    modifier onlyPaymentParty(Types.Payment payment, address wallet) {
+    //        require(Types.isPaymentParty(payment, wallet));
+    //        _;
+    //    }
 
     modifier onlyPaymentSender(Types.Payment payment, address wallet) {
         require(Types.isPaymentSender(payment, wallet));
         _;
     }
 
-//    modifier onlyPaymentRecipient(Types.Payment payment, address wallet) {
-//        require(Types.isPaymentRecipient(payment, wallet));
-//        _;
-//    }
+    //    modifier onlyPaymentRecipient(Types.Payment payment, address wallet) {
+    //        require(Types.isPaymentRecipient(payment, wallet));
+    //        _;
+    //    }
 
     modifier signedBy(bytes32 hash, Types.Signature signature, address signer) {
         require(Types.isGenuineSignature(hash, signature, signer));
