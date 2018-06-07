@@ -182,6 +182,9 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor {
                         to_transfer = remaining;
 
                     if (to_transfer > 0) {
+                        ERC20 tokenContract = ERC20(token);
+                        tokenContract.approve(beneficiaryAddress, to_transfer);
+
                         beneficiary = AccrualBeneficiary(beneficiaryAddress);
                         beneficiary.receiveTokens(address(0), int256(to_transfer), token);
 

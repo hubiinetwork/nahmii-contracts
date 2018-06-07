@@ -99,6 +99,8 @@ contract UnitTestHelpers is AccrualBeneficiary {
     }
 
     function receiveTokens(address wallet, int256 amount, address token) public {
+        ERC20 tok = ERC20(token);
+        tok.transferFrom(msg.sender, this, uint256(amount));
         emit ReceiveTokensWasCalled(wallet, amount, token);
     }
 
