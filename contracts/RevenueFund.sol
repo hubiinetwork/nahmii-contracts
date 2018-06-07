@@ -45,8 +45,6 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor {
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
     event RecordDepositTokensEvent(address from, int256 amount, address token);
     event CloseAccrualPeriodEvent();
-    event RegisterBeneficiaryEvent(address beneficiary, uint256 fraction);
-    event DeregisterBeneficiaryEvent(address beneficiary);
     event RegisterServiceEvent(address service);
     event DeregisterServiceEvent(address service);
 
@@ -84,16 +82,21 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor {
         ERC20 erc20_token = ERC20(token);
 
         //record deposit
-        recordDepositTokens(erc20_token, amount);
+        recordDepositTokensPrivate(erc20_token, amount);
 
         //try to execute token transfer
-        require(erc20_token.transferFrom(msg.sender, this, uint256(amount)));
+        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
 
         //emit event
-        emit DepositEvent(msg.sender, amount, token);
+        emit DepositEvent(wallet, amount, token);
     }
 
     function recordDepositTokens(ERC20 token, int256 amount) public onlyOwnerOrService notNullAddress(token) {
+        recordDepositTokensPrivate(token, amount);
+        emit RecordDepositTokensEvent(msg.sender, amount, token);
+    }
+
+    function recordDepositTokensPrivate(ERC20 token, int256 amount) private notNullAddress(token) {
         require(amount.isNonZeroPositiveInt256());
 
         //add to balances
@@ -108,8 +111,6 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor {
             aggregateAccrualTokenListMap[token] = true;
             aggregateAccrualTokenList.push(token);
         }
-
-        emit RecordDepositTokensEvent(msg.sender, amount, token);
     }
 
     //

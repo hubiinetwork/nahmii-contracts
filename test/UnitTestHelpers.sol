@@ -25,8 +25,8 @@ contract UnitTestHelpers is AccrualBeneficiary {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEthersWasCalled();
-    event ReceiveTokensWasCalled();
+    event ReceiveEthersWasCalled(address wallet);
+    event ReceiveTokensWasCalled(address wallet, int256 amount, address token);
     event CloseAccrualPeriodWasCalled();
 
     //
@@ -55,51 +55,51 @@ contract UnitTestHelpers is AccrualBeneficiary {
     //
     // Helper for ClientFunds SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToTransferFromDepositedToSettledBalance_CLIENTFUND(address clientFunds, address sourceWallet, address destWallet, int256 amount, address token) public {
-        require(clientFunds != address(0));
-        ClientFund sc = ClientFund(clientFunds);
+    function callToTransferFromDepositedToSettledBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
+        require(clientFund != address(0));
+        ClientFund sc = ClientFund(clientFund);
         sc.transferFromDepositedToSettledBalance(sourceWallet, destWallet, amount, token);
     }
 
-    function callToWithdrawFromDepositedBalance_CLIENTFUND(address clientFunds, address sourceWallet, address destWallet, int256 amount, address token) public {
-        require(clientFunds != address(0));
-        ClientFund sc = ClientFund(clientFunds);
+    function callToWithdrawFromDepositedBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
+        require(clientFund != address(0));
+        ClientFund sc = ClientFund(clientFund);
         sc.withdrawFromDepositedBalance(sourceWallet, destWallet, amount, token);
     }
 
-    function callToDepositEthersToSettledBalance_CLIENTFUND(address clientFunds, address destWallet) public payable {
-        require(clientFunds != address(0));
-        ClientFund sc = ClientFund(clientFunds);
+    function callToDepositEthersToSettledBalance_CLIENTFUND(address clientFund, address destWallet) public payable {
+        require(clientFund != address(0));
+        ClientFund sc = ClientFund(clientFund);
         sc.depositEthersToSettledBalance.value(msg.value)(destWallet);
     }
 
-    function callToDepositTokensToSettledBalance_CLIENTFUND(address clientFunds, address destWallet, address token, int256 amount) public {
-        require(clientFunds != address(0));
-        ClientFund sc = ClientFund(clientFunds);
+    function callToDepositTokensToSettledBalance_CLIENTFUND(address clientFund, address destWallet, address token, int256 amount) public {
+        require(clientFund != address(0));
+        ClientFund sc = ClientFund(clientFund);
         sc.depositTokensToSettledBalance(destWallet, token, amount);
     }
 
-    function callToSeizeDepositedAndSettledBalances_CLIENTFUND(address clientFunds, address sourceWallet, address destWallet) public {
-        require(clientFunds != address(0));
-        ClientFund sc = ClientFund(clientFunds);
+    function callToSeizeDepositedAndSettledBalances_CLIENTFUND(address clientFund, address sourceWallet, address destWallet) public {
+        require(clientFund != address(0));
+        ClientFund sc = ClientFund(clientFund);
         sc.seizeDepositedAndSettledBalances(sourceWallet, destWallet);
     }
 
     //
     // Helpers for RevenueFund SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToDepositTokens_REVENUEFUND(address revenueFunds, address token, int256 amount) public {
-        require(revenueFunds != address(0));
-        RevenueFund sc = RevenueFund(revenueFunds);
+    function callToDepositTokens_REVENUEFUND(address revenueFund, address token, int256 amount) public {
+        require(revenueFund != address(0));
+        RevenueFund sc = RevenueFund(revenueFund);
         sc.depositTokens(token, amount);
     }
 
     function receiveEthers(address wallet) public payable {
-        emit ReceiveEthersWasCalled();
+        emit ReceiveEthersWasCalled(wallet);
     }
 
     function receiveTokens(address wallet, int256 amount, address token) public {
-        emit ReceiveTokensWasCalled();
+        emit ReceiveTokensWasCalled(wallet, amount, token);
     }
 
     function closeAccrualPeriod() public {
@@ -109,24 +109,24 @@ contract UnitTestHelpers is AccrualBeneficiary {
     //
     // Helpers for SecurityBond SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToStage_SECURITYBOND(address securityBonds, int256 amount, address token, address wallet) public {
-        require(securityBonds != address(0));
-        SecurityBond sc = SecurityBond(securityBonds);
+    function callToStage_SECURITYBOND(address securityBond, int256 amount, address token, address wallet) public {
+        require(securityBond != address(0));
+        SecurityBond sc = SecurityBond(securityBond);
         sc.stage(amount, token, wallet);
     }
 
     //
     // Helpers for TokenHolderRevenueFund SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFunds, address token, int256 amount) public {
-        require(tokenHolderRevenueFunds != address(0));
-        TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFunds);
+    function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund, address token, int256 amount) public {
+        require(tokenHolderRevenueFund != address(0));
+        TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFund);
         sc.depositTokens(token, amount);
     }
 
-    function callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFunds) public {
-        require(tokenHolderRevenueFunds != address(0));
-        TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFunds);
+    function callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund) public {
+        require(tokenHolderRevenueFund != address(0));
+        TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFund);
         sc.closeAccrualPeriod();
     }
 
