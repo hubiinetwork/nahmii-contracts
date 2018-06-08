@@ -116,6 +116,8 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
     /// @param orders The orders to cancel
     function cancelOrders(Types.Order[] orders) public
     {
+        require(configuration != address(0), "Configuration is missing");
+
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i].wallet);
             require(Types.isGenuineSignature(orders[i].seals.wallet.hash, orders[i].seals.wallet.signature, orders[i].wallet));

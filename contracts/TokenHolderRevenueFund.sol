@@ -12,14 +12,20 @@ import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./RevenueToken.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
+import "./Servable.sol";
 
 /**
 @title Token holder revenue fund
 @notice Fund that manages the revenue earned by revenue token holders.
 */
-contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary {
+contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
+
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public closeAccrualPeriodServiceAction = "close_accrual_period";
 
     //
     // Structures
@@ -68,23 +74,19 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary {
 
     uint256[] accrualBlockNumbers;
 
-    mapping(address => bool) private registeredServicesMap;
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event RevenueTokenChangedEvent(address oldOwner, address newOwner);
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
     event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
-    event RegisterServiceEvent(address service);
-    event DeregisterServiceEvent(address service);
     event CloseAccrualPeriodEvent();
     event ClaimAccrualEvent(address from, address token);  //token==0 for ethers
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner) Ownable(owner) Servable() public {
     }
 
     //
@@ -192,7 +194,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary {
     //
     // Accrual functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyOwnerOrService {
+    function closeAccrualPeriod() public onlyOwnerOrServiceAction(closeAccrualPeriodServiceAction) {
         uint256 i;
 
         //register this block
@@ -338,33 +340,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary {
     }
 
     //
-    // Service functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyOwner notNullAddress(service) notMySelfAddress(service) {
-        require(service != owner);
-
-        //ensure service is not already registered
-        require(registeredServicesMap[service] == false);
-
-        //register
-        registeredServicesMap[service] = true;
-
-        //emit event
-        emit RegisterServiceEvent(service);
-    }
-
-    function deregisterService(address service) public onlyOwner notNullAddress(service) {
-        //ensure service is registered
-        require(registeredServicesMap[service] != false);
-
-        //remove service
-        registeredServicesMap[service] = false;
-
-        //emit event
-        emit DeregisterServiceEvent(service);
-    }
-
-    //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
@@ -374,11 +349,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary {
 
     modifier notMySelfAddress(address _address) {
         require(_address != address(this));
-        _;
-    }
-
-    modifier onlyOwnerOrService {
-        require(msg.sender == owner || registeredServicesMap[msg.sender] == true);
         _;
     }
 }
