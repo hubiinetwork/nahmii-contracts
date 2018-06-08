@@ -36,17 +36,13 @@ contract AbstractSecurityBond {
     function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token);
 
     function withdrawalCount(address wallet) public view returns (uint256);
-
-    function registerService(address service) public;
-
-    function deregisterService(address service) public;
 }
 
 /**
 @title Security bond
 @notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
 */
-contract SecurityBond is Ownable, Servable, AbstractSecurityBond {
+contract SecurityBond is Ownable, Servable {
     using SafeMathInt for int256;
 
     //
