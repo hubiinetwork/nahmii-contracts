@@ -82,6 +82,10 @@ contract AbstractConfiguration {
     function setDuplicateDealNonceStake(address currency, int256 amount) public;
 
     function getDuplicateDealNonceStake() public view returns (address, int256);
+
+    function setDoubleSpentOrderStake(address currency, int256 amount) public;
+
+    function getDoubleSpentOrderStake() public view returns (address, int256);
 }
 
 /**
@@ -149,6 +153,7 @@ contract Configuration is Ownable, AbstractConfiguration {
     Lot public unchallengeOrderCandidateByTradeStake;
     Lot public falseWalletSignatureStake;
     Lot public duplicateDealNonceStake;
+    Lot public doubleSpentOrderStake;
 
     //
     // Events
@@ -168,6 +173,7 @@ contract Configuration is Ownable, AbstractConfiguration {
     event SetUnchallengeDealSettlementOrderByTradeStakeEvent(address currency, int256 amount);
     event SetFalseWalletSignatureStakeEvent(address currency, int256 amount);
     event SetDuplicateDealNonceStakeEvent(address currency, int256 amount);
+    event SetDoubleSpentOrderStakeEvent(address currency, int256 amount);
 
     //
     // Constructor
@@ -485,6 +491,21 @@ contract Configuration is Ownable, AbstractConfiguration {
     /// duplicate deal nonce
     function getDuplicateDealNonceStake() public view returns (address, int256) {
         return (duplicateDealNonceStake.currency, duplicateDealNonceStake.amount);
+    }
+
+    /// @notice Set currency and amount that will be gained when someone successfully challenges
+    /// double spent order
+    /// @param currency Address of currency gained (0 represents ETH)
+    /// @param amount Amount gained
+    function setDoubleSpentOrderStake(address currency, int256 amount) public onlyOwner {
+        doubleSpentOrderStake = Lot({currency : currency, amount : amount});
+        emit SetDoubleSpentOrderStakeEvent(currency, amount);
+    }
+
+    /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
+    /// double spent order
+    function getDoubleSpentOrderStake() public view returns (address, int256) {
+        return (doubleSpentOrderStake.currency, doubleSpentOrderStake.amount);
     }
 
     function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,

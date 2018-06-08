@@ -16,8 +16,7 @@ import "./ClientFund.sol";
 import "./Types.sol";
 import {AbstractHasher} from "./Hasher.sol";
 import {AbstractValidator} from "./Validator.sol";
-// TODO Enable when deployment out-of-gas is solved
-//import {AbstractSecurityBond} from "./SecurityBond.sol";
+import {AbstractSecurityBond} from "./SecurityBond.sol";
 
 /**
 @title FraudChallenge
@@ -41,8 +40,7 @@ contract FraudChallenge is Ownable {
 
     AbstractConfiguration public configuration;
     ClientFund public clientFund;
-    // TODO Enable when deployment out-of-gas is solved
-    //    AbstractSecurityBond public securityBond;
+    AbstractSecurityBond public securityBond;
     AbstractHasher public hasher;
     AbstractValidator public validator;
 
@@ -51,8 +49,7 @@ contract FraudChallenge is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
     event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
-    // TODO Enable when deployment out-of-gas is solved
-    //    event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
+    event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
     event ChangeHasherEvent(AbstractHasher oldHasher, AbstractHasher newHasher);
     event ChangeValidatorEvent(AbstractValidator oldValidator, AbstractValidator newValidator);
     event ChallengeByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
@@ -99,19 +96,18 @@ contract FraudChallenge is Ownable {
         emit ChangeClientFundEvent(oldClientFund, clientFund);
     }
 
-    // TODO Enable when deployment out-of-gas is solved
     /// @notice Change the security bond contract
     /// @param newSecurityBond The (address of) AbstractSecurityBond contract instance
-    //    function changeSecurityBond(AbstractSecurityBond newSecurityBond)
-    //    public
-    //    onlyOwner
-    //    notNullAddress(newSecurityBond)
-    //    notEqualAddresses(newSecurityBond, securityBond)
-    //    {
-    //        AbstractSecurityBond oldSecurityBond = securityBond;
-    //        securityBond = newSecurityBond;
-    //        emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
-    //    }
+    function changeSecurityBond(AbstractSecurityBond newSecurityBond)
+    public
+    onlyOwner
+    notNullAddress(newSecurityBond)
+    notEqualAddresses(newSecurityBond, securityBond)
+    {
+        AbstractSecurityBond oldSecurityBond = securityBond;
+        securityBond = newSecurityBond;
+        emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
+    }
 
     /// @notice Change the hasher contract
     /// @param newHasher The (address of) AbstractHasher contract instance
@@ -170,8 +166,7 @@ contract FraudChallenge is Ownable {
     /// @param trade Fraudulent trade candidate
     function challengeByTrade(Types.Trade trade)
     public
-        // TODO Enable when deployment out-of-gas is solved
-        /*allContractsInitialized*/
+    allContractsInitialized
     {
         require(hasher.hashTrade(trade) == trade.seal.hash);
         require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
@@ -212,8 +207,7 @@ contract FraudChallenge is Ownable {
     /// @param payment Fraudulent payment candidate
     function challengeByPayment(Types.Payment payment)
     public
-        // TODO Enable when deployment out-of-gas is solved
-        /*allContractsInitialized*/
+    allContractsInitialized
     {
         require(hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
         require(hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
@@ -267,8 +261,7 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
-        // TODO Enable when deployment out-of-gas is solved
-        //    allContractsInitialized
+    allContractsInitialized
     challengeableBySuccessionTradesPair(firstTrade, lastTrade, wallet, currency)
     {
         Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
@@ -305,8 +298,7 @@ contract FraudChallenge is Ownable {
         address wallet
     )
     public
-        // TODO Enable when deployment out-of-gas is solved
-        //    allContractsInitialized
+    allContractsInitialized
     challengeableBySuccessionPaymentsPair(firstPayment, lastPayment, wallet)
     {
         Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
@@ -342,8 +334,7 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
-        // TODO Enable when deployment out-of-gas is solved
-        //    allContractsInitialized
+    allContractsInitialized
     challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
@@ -381,8 +372,7 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
-        // TODO Enable when deployment out-of-gas is solved
-        //    allContractsInitialized
+    allContractsInitialized
     challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
     {
         Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
@@ -420,8 +410,7 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
-        // TODO Enable when deployment out-of-gas is solved
-        //    allContractsInitialized
+    allContractsInitialized
     challengeableByOrderResidualsTradesPair(firstTrade, lastTrade, wallet, currency)
     {
         Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
@@ -456,8 +445,7 @@ contract FraudChallenge is Ownable {
         Types.Trade lastTrade
     )
     public
-        // TODO Enable when deployment out-of-gas is solved
-        //    hasherConfigurationContractsInitialized
+    hasherConfigurationContractsInitialized
     challengeableByDoubleSpentOrderTradesPair(firstTrade, lastTrade)
     {
         bool doubleSpentBuyOrder = firstTrade.buyer.order.hashes.exchange == lastTrade.buyer.order.hashes.exchange;
@@ -467,12 +455,16 @@ contract FraudChallenge is Ownable {
         require(doubleSpentBuyOrder || doubleSpentSellOrder || doubledNonce);
 
         configuration.setOperationalModeExit();
+        // TODO Allow 2 fraudulent trades
         fraudulentTrade = lastTrade;
 
+        (address stakeCurrency, int256 stakeAmount) = configuration.getDoubleSpentOrderStake();
+        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+
         if (doubleSpentBuyOrder)
-            addToDoubleSpenderWallets(lastTrade.buyer.wallet);
+            addToDoubleSpenderWallets(firstTrade.buyer.wallet, lastTrade.buyer.wallet);
         if (doubleSpentSellOrder)
-            addToDoubleSpenderWallets(lastTrade.seller.wallet);
+            addToDoubleSpenderWallets(firstTrade.seller.wallet, lastTrade.seller.wallet);
 
         emit ChallengeByDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, doubleSpenderWallets);
     }
@@ -484,30 +476,34 @@ contract FraudChallenge is Ownable {
         }
     }
 
-    function addToDoubleSpenderWallets(address _address) private {
-        if (!doubleSpenderWalletsMap[_address]) {
-            doubleSpenderWallets.push(_address);
-            doubleSpenderWalletsMap[_address] = true;
+    function addToDoubleSpenderWallets(address firstAddress, address lastAddress) private {
+        if (!doubleSpenderWalletsMap[firstAddress]) {
+            doubleSpenderWallets.push(firstAddress);
+            doubleSpenderWalletsMap[firstAddress] = true;
+        }
+
+        if (!doubleSpenderWalletsMap[lastAddress]) {
+            doubleSpenderWallets.push(lastAddress);
+            doubleSpenderWalletsMap[lastAddress] = true;
         }
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Enable when deployment out-of-gas is solved
-    //    modifier allContractsInitialized() {
-    //        require(hasher != address(0), "Hasher is missing");
-    //        require(validator != address(0), "Validator is missing");
-    //        require(configuration != address(0), "Configuration is missing");
-    //        require(clientFund != address(0), "ClientFund is missing");
-    //        _;
-    //    }
-    //
-    //    modifier hasherConfigurationContractsInitialized() {
-    //        require(hasher != address(0), "Hasher is missing");
-    //        require(configuration != address(0), "Configuration is missing");
-    //        _;
-    //    }
+    modifier allContractsInitialized() {
+        require(hasher != address(0), "Hasher is missing");
+        require(validator != address(0), "Validator is missing");
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+        _;
+    }
+
+    modifier hasherConfigurationContractsInitialized() {
+        require(hasher != address(0), "Hasher is missing");
+        require(configuration != address(0), "Configuration is missing");
+        _;
+    }
 
     modifier notNullAddress(address _address) {
         require(_address != address(0));
