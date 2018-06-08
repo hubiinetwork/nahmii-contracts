@@ -10,7 +10,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe.only('Configuration', () => {
+    describe('Configuration', () => {
         let web3Configuration, provider, blockNumberAhead, blockNumberBehind;
         const feeUpdates = {
             tradeMakerFee: 0,
@@ -625,7 +625,7 @@ module.exports = (glob) => {
         describe('getCancelOrderChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
                 const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
-                value.toNumber().should.equal(0);
+                value.toNumber().should.equal(60 * 60 * 3);
             });
         });
 
@@ -660,7 +660,7 @@ module.exports = (glob) => {
         describe('getDealSettlementChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
                 const value = await web3Configuration.dealSettlementChallengeTimeout.call();
-                value.toNumber().should.equal(0);
+                value.toNumber().should.equal(60 * 60 * 5);
             });
         });
 

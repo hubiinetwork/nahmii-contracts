@@ -185,6 +185,8 @@ contract Configuration is Ownable, AbstractConfiguration {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) Ownable(owner) public {
+        cancelOrderChallengeTimeout = 3 hours;
+        dealSettlementChallengeTimeout = 5 hours;
     }
 
     //
