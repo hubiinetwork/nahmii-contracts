@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 import "./SafeMathUint.sol";
 import "./ERC20.sol";
 import "./AccrualBeneficiaryInterface.sol";
-import "./ClientFund.sol";
+import {ClientFund} from "./ClientFund.sol";
 import "./RevenueFund.sol";
 import "./SecurityBond.sol";
 import "./TokenHolderRevenueFund.sol";

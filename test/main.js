@@ -13,7 +13,7 @@ var w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 var ClientFund = artifacts.require("ClientFund");
 var CommunityVote = artifacts.require("CommunityVote");
 var Hasher = artifacts.require("Hasher");
-var FraudValidator = artifacts.require("FraudValidator");
+var Validator = artifacts.require("Validator");
 var Configuration = artifacts.require("Configuration");
 var Exchange = artifacts.require("Exchange");
 var CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
@@ -143,14 +143,14 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudValidator contract", async () => {
+    before("Preflight: Instantiate Validator contract", async () => {
         try {
-            glob.web3FraudValidator = await FraudValidator.deployed();
-            assert.notEqual(glob.web3FraudValidator, null);
-            glob.ethersIoFraudValidator = new ethers.Contract(glob.web3FraudValidator.address, FraudValidator.abi, glob.signer_owner);
+            glob.web3Validator = await Validator.deployed();
+            assert.notEqual(glob.web3Validator, null);
+            glob.ethersIoValidator = new ethers.Contract(glob.web3Validator.address, Validator.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate FraudValidator contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate Validator contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -325,7 +325,7 @@ contract('Smart contract checks', function () {
 
     require('./scenarios/ClientFund')(glob);
     require('./scenarios/Hasher')(glob);
-    // require('./scenarios/FraudValidator')(glob);
+    // require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
     require('./scenarios/Exchange')(glob);

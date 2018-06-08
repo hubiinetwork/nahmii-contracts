@@ -11,6 +11,7 @@ pragma experimental ABIEncoderV2;
 import "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./ERC20.sol";
+import "./Servable.sol";
 
 contract AbstractSecurityBond {
 
@@ -45,9 +46,13 @@ contract AbstractSecurityBond {
 @title Security bond
 @notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
 */
-contract SecurityBond is Ownable, AbstractSecurityBond {
+contract SecurityBond is Ownable, Servable, AbstractSecurityBond {
     using SafeMathInt for int256;
 
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public stageServiceAction = "stage";
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -95,7 +100,6 @@ contract SecurityBond is Ownable, AbstractSecurityBond {
     mapping (address => int256) activeTokenBalance;
 
     uint256 private withdrawalTimeout;
-    mapping (address => bool) private registeredServicesMap;
 
     //
     // Events
@@ -103,13 +107,11 @@ contract SecurityBond is Ownable, AbstractSecurityBond {
     event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
     event StageEvent(address from, int256 amount, address token); //token==0 for ethers
     event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
-    event RegisterServiceEvent(address service);
-    event DeregisterServiceEvent(address service);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address _owner) Ownable(_owner) Servable() public {
         withdrawalTimeout = 30 minutes;
     }
 
@@ -181,10 +183,9 @@ contract SecurityBond is Ownable, AbstractSecurityBond {
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) {
+    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) onlyOwnerOrServiceAction(stageServiceAction) {
         uint256 start_time;
 
-        require(msg.sender == owner || registeredServicesMap[msg.sender]);
         require(amount.isPositiveInt256());
 
         if (token == address(0)) {
@@ -326,42 +327,10 @@ contract SecurityBond is Ownable, AbstractSecurityBond {
     }
 
     //
-    // Service functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyOwner notNullAddress(service) notMySelfAddress(service) {
-        require(service != owner);
-
-        //ensure service is not already registered
-        require(registeredServicesMap[service] == false);
-
-        //register
-        registeredServicesMap[service] = true;
-
-        //emit event
-        emit RegisterServiceEvent(service);
-    }
-
-    function deregisterService(address service) public onlyOwner notNullAddress(service) {
-        //ensure service is registered
-        require(registeredServicesMap[service] != false);
-
-        //remove service
-        registeredServicesMap[service] = false;
-
-        //emit event
-        emit DeregisterServiceEvent(service);
-    }
-
-    //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier notMySelfAddress(address _address) {
-        require(_address != address(this));
         _;
     }
 }
