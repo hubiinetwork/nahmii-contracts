@@ -10,7 +10,7 @@ const utils = ethers.utils;
 const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
-    describe.only('Configuration', () => {
+    describe('Configuration', () => {
         let web3Configuration, provider, blockNumberAhead, blockNumberBehind;
         const feeUpdates = {
             tradeMakerFee: 0,

@@ -16,10 +16,10 @@ const Wallet = ethers.Wallet;
 module.exports = (glob) => {
     describe('FraudChallenge', () => {
         let web3FraudChallenge, ethersFraudChallenge;
+        let web3Hasher, ethersHasher;
         let web3Configuration, ethersConfiguration;
         let web3ClientFund, ethersClientFund;
         let web3SecurityBond, ethersSecurityBond;
-        let web3Hasher, ethersHasher;
         let web3Validator, ethersValidator;
         let provider;
         let blockNumber0, blockNumber10, blockNumber20;
@@ -46,8 +46,7 @@ module.exports = (glob) => {
 
             await ethersFraudChallenge.changeConfiguration(ethersConfiguration.address);
             await ethersFraudChallenge.changeClientFund(ethersClientFund.address);
-            // TODO Enable when deployment out-of-gas is solved
-            // await ethersFraudChallenge.changeSecurityBond(ethersSecurityBond.address);
+            await ethersFraudChallenge.changeSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallenge.changeHasher(ethersHasher.address);
             await ethersFraudChallenge.changeValidator(ethersValidator.address);
 
