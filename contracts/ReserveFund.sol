@@ -494,31 +494,31 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
         sc_clientfund = ClientFund(clientFund);
 
         // Perform outbound (SC to W) transfers
-        if (outboundTx.tokenAddress == address(0)) {
+        if (outboundTx.currency == address(0)) {
             aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(outboundTx.amount);
 
             clientFund.transfer(uint256(outboundTx.amount));
-            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.tokenAddress);
+            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.currency);
 
             walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(outboundTx.amount);
         } else {
-            erc20_token = ERC20(outboundTx.tokenAddress);
+            erc20_token = ERC20(outboundTx.currency);
 
             erc20_token.transfer(clientFund, uint256(outboundTx.amount));
-            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.tokenAddress);
+            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.currency);
 
-            aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub_nn(outboundTx.amount);
+            aggregatedTokenBalance[outboundTx.currency] = aggregatedTokenBalance[outboundTx.currency].sub_nn(outboundTx.amount);
         }
 
         // Perform inbound (w to SC) transfers
-        if (inboundTx.tokenAddress == address(0)) {
-            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.tokenAddress);
+        if (inboundTx.currency == address(0)) {
+            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.currency);
 
             aggregatedEtherBalance = aggregatedEtherBalance.add_nn(inboundTx.amount);
         } else {
-            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.tokenAddress);
+            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.currency);
 
-            aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add_nn(inboundTx.amount);
+            aggregatedTokenBalance[inboundTx.currency] = aggregatedTokenBalance[inboundTx.currency].add_nn(inboundTx.amount);
         }
 
         //raise event
