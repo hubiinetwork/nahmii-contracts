@@ -7,7 +7,9 @@
  */
 pragma solidity ^0.4.24;
 
-contract AccrualBeneficiaryInterface {
+import {Beneficiary} from "./Beneficiary.sol";
+
+contract AccrualBeneficiary is Beneficiary {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------

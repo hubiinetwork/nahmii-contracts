@@ -8,8 +8,8 @@
 pragma solidity ^0.4.24;
 
 contract Beneficiary {
-    function storeEthers(address wallet) public payable;
+    function receiveEthers(address wallet) public payable;
 
     //NOTE: 'wallet' must call ERC20.approve first
-    function storeTokens(address wallet, int256 amount, address token) public;
+    function receiveTokens(address wallet, int256 amount, address token) public;
 }

@@ -8,7 +8,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import "../contracts/SecurityBond.sol";
+//import "../contracts/SecurityBond.sol";
 
 /**
 @title Security bond
