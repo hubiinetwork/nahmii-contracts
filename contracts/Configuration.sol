@@ -78,6 +78,10 @@ contract AbstractConfiguration {
     function setFalseWalletSignatureStake(address currency, int256 amount) public;
 
     function getFalseWalletSignatureStake() public view returns (address, int256);
+
+    function setDuplicateDealNonceStake(address currency, int256 amount) public;
+
+    function getDuplicateDealNonceStake() public view returns (address, int256);
 }
 
 /**
@@ -144,6 +148,7 @@ contract Configuration is Ownable, AbstractConfiguration {
 
     Lot public unchallengeOrderCandidateByTradeStake;
     Lot public falseWalletSignatureStake;
+    Lot public duplicateDealNonceStake;
 
     //
     // Events
@@ -162,6 +167,7 @@ contract Configuration is Ownable, AbstractConfiguration {
     event SetDealSettlementChallengeTimeout(uint256 timeout);
     event SetUnchallengeDealSettlementOrderByTradeStakeEvent(address currency, int256 amount);
     event SetFalseWalletSignatureStakeEvent(address currency, int256 amount);
+    event SetDuplicateDealNonceStakeEvent(address currency, int256 amount);
 
     //
     // Constructor
@@ -212,6 +218,7 @@ contract Configuration is Ownable, AbstractConfiguration {
         return OperationalMode.Exit == operationalMode;
     }
 
+    /// @notice Return the parts per constant
     function getPartsPer() public view returns (int256) {
         return PARTS_PER;
     }
@@ -418,6 +425,7 @@ contract Configuration is Ownable, AbstractConfiguration {
         emit SetCancelOrderChallengeTimeout(timeout);
     }
 
+    /// @notice Get timeout of cancel order challenge
     function getCancelOrderChallengeTimeout() public view returns (uint256) {
         return cancelOrderChallengeTimeout;
     }
@@ -429,6 +437,7 @@ contract Configuration is Ownable, AbstractConfiguration {
         emit SetDealSettlementChallengeTimeout(timeout);
     }
 
+    /// @notice Get timeout of deal challenge
     function getDealSettlementChallengeTimeout() public view returns (uint256) {
         return dealSettlementChallengeTimeout;
     }
@@ -453,7 +462,7 @@ contract Configuration is Ownable, AbstractConfiguration {
     /// @param currency Address of currency gained (0 represents ETH)
     /// @param amount Amount gained
     function setFalseWalletSignatureStake(address currency, int256 amount) public onlyOwner {
-        falseWalletSignatureStake = Lot({currency: currency, amount: amount});
+        falseWalletSignatureStake = Lot({currency : currency, amount : amount});
         emit SetFalseWalletSignatureStakeEvent(currency, amount);
     }
 
@@ -461,6 +470,21 @@ contract Configuration is Ownable, AbstractConfiguration {
     /// false wallet signature on order or payment
     function getFalseWalletSignatureStake() public view returns (address, int256) {
         return (falseWalletSignatureStake.currency, falseWalletSignatureStake.amount);
+    }
+
+    /// @notice Set currency and amount that will be gained when someone successfully challenges
+    /// duplicate deal nonce
+    /// @param currency Address of currency gained (0 represents ETH)
+    /// @param amount Amount gained
+    function setDuplicateDealNonceStake(address currency, int256 amount) public onlyOwner {
+        duplicateDealNonceStake = Lot({currency : currency, amount : amount});
+        emit SetDuplicateDealNonceStakeEvent(currency, amount);
+    }
+
+    /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
+    /// duplicate deal nonce
+    function getDuplicateDealNonceStake() public view returns (address, int256) {
+        return (duplicateDealNonceStake.currency, duplicateDealNonceStake.amount);
     }
 
     function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,
