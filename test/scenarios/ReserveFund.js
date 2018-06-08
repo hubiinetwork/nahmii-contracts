@@ -852,7 +852,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it(testCounter.next() + ": MUST FAIL [deregisterService]: Deregister a non-existent or already unregistered service  ", function (done) {
+		it(testCounter.next() + ": MUST FAIL [deregisterService]: Deregister a non-existent or already deregistered service  ", function (done) {
 			glob.web3ReserveFund.deregisterService(MOCK_SERVICE_ADDRESS)
 				.then(() => {
 					done(new Error('This test must fail'));

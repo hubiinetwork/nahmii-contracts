@@ -12,8 +12,9 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import './ERC20.sol';
-import "./Beneficiary.sol";
-import "./Benefactor.sol";
+import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
+import {Beneficiary} from "./Beneficiary.sol";
+import {Benefactor} from "./Benefactor.sol";
 import "./Servable.sol";
 import "./ClientFund.sol";
 
@@ -22,7 +23,7 @@ import "./ClientFund.sol";
 @notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
  There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
 */
-contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
+contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -125,7 +126,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() Servable() public {
+    constructor(address owner) Ownable(owner) AccrualBeneficiary() Benefactor() Servable() public {
     }
 
     function changeClientFund(address newClientFund) public onlyOwner  {
@@ -148,13 +149,13 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function () public payable {
-        storeEthers(msg.sender);
+        receiveEthers(msg.sender);
     }
 
-    function storeEthers(address wallet) public payable {
+    function receiveEthers(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
-        if (wallet == owner) {
+        if (owner == wallet || address(0) == wallet) {
             periodAccrualEtherBalance = periodAccrualEtherBalance.add_nn(amount);
             aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add_nn(amount);
         }
@@ -180,11 +181,11 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
     }
 
     function depositTokens(address token, int256 amount) public {
-        storeTokens(msg.sender, amount, token);
+        receiveTokens(msg.sender, amount, token);
     }
 
     //NOTE: 'wallet' must call ERC20.approve first
-    function storeTokens(address wallet, int256 amount, address token) public {
+    function receiveTokens(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -398,7 +399,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
             walletInfoMap[msg.sender].activeEtherBalance = walletInfoMap[msg.sender].activeEtherBalance.sub_nn(amount);
 
             //transfer funds to the beneficiary
-            beneficiary_sc.storeEthers.value(uint256(amount))(msg.sender);
+            beneficiary_sc.receiveEthers.value(uint256(amount))(msg.sender);
         } else {
             ERC20 erc20_token;
 
@@ -414,7 +415,7 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
             require(erc20_token.approve(beneficiary, uint256(amount)));
 
             //transfer funds to the beneficiary
-            beneficiary_sc.storeTokens(msg.sender, amount, token);
+            beneficiary_sc.receiveTokens(msg.sender, amount, token);
         }
 
         //emit event
@@ -494,31 +495,31 @@ contract ReserveFund is Ownable, Beneficiary, Benefactor, Servable {
         sc_clientfund = ClientFund(clientFund);
 
         // Perform outbound (SC to W) transfers
-        if (outboundTx.tokenAddress == address(0)) {
+        if (outboundTx.currency == address(0)) {
             aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(outboundTx.amount);
 
             clientFund.transfer(uint256(outboundTx.amount));
-            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.tokenAddress);
+            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.currency);
 
             walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(outboundTx.amount);
         } else {
-            erc20_token = ERC20(outboundTx.tokenAddress);
+            erc20_token = ERC20(outboundTx.currency);
 
             erc20_token.transfer(clientFund, uint256(outboundTx.amount));
-            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.tokenAddress);
+            sc_clientfund.reserveFundAddToStaged(wallet, outboundTx.amount, outboundTx.currency);
 
-            aggregatedTokenBalance[outboundTx.tokenAddress] = aggregatedTokenBalance[outboundTx.tokenAddress].sub_nn(outboundTx.amount);
+            aggregatedTokenBalance[outboundTx.currency] = aggregatedTokenBalance[outboundTx.currency].sub_nn(outboundTx.amount);
         }
 
         // Perform inbound (w to SC) transfers
-        if (inboundTx.tokenAddress == address(0)) {
-            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.tokenAddress);
+        if (inboundTx.currency == address(0)) {
+            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.currency);
 
             aggregatedEtherBalance = aggregatedEtherBalance.add_nn(inboundTx.amount);
         } else {
-            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.tokenAddress);
+            sc_clientfund.reserveFundGetFromDeposited(wallet, inboundTx.amount, inboundTx.currency);
 
-            aggregatedTokenBalance[inboundTx.tokenAddress] = aggregatedTokenBalance[inboundTx.tokenAddress].add_nn(inboundTx.amount);
+            aggregatedTokenBalance[inboundTx.currency] = aggregatedTokenBalance[inboundTx.currency].add_nn(inboundTx.amount);
         }
 
         //raise event
