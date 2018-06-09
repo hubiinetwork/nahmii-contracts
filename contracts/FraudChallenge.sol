@@ -29,8 +29,8 @@ contract FraudChallenge is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Types.Trade public fraudulentTrade;
-    Types.Payment public fraudulentPayment;
+    Types.Trade[] public fraudulentTrades;
+    Types.Payment[] public fraudulentPayments;
 
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
@@ -60,6 +60,9 @@ contract FraudChallenge is Ownable {
     event ChallengeByTradeSucceedingPaymentEvent(Types.Payment payment, Types.Trade trade, address challenger, address seizedWallet);
     event ChallengeByTradeOrderResidualsEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
     event ChallengeByDoubleSpentOrdersEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address[] doubleSpenderWallets);
+    event ChallengeByDuplicateDealNonceOfTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger);
+    event ChallengeByDuplicateDealNonceOfPaymentsEvent(Types.Payment firstTrade, Types.Payment lastTrade, address challenger);
+    event ChallengeByDuplicateDealNonceOfTradeAndPaymentEvent(Types.Trade trade, Types.Payment payment, address challenger);
 
     //
     // Constructor
@@ -162,7 +165,6 @@ contract FraudChallenge is Ownable {
     }
 
     /// @notice Submit a trade candidate in continuous Fraudulent Deal Challenge (FDC)
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param trade Fraudulent trade candidate
     function challengeByTrade(Types.Trade trade)
     public
@@ -187,7 +189,7 @@ contract FraudChallenge is Ownable {
         require(!genuineByBuyer || !genuineBySeller);
 
         configuration.setOperationalModeExit();
-        fraudulentTrade = trade;
+        fraudulentTrades.push(trade);
 
         address seizedWallet;
         if (!genuineByBuyer)
@@ -203,7 +205,6 @@ contract FraudChallenge is Ownable {
     }
 
     /// @notice Submit a payment candidate in continuous Fraudulent Deal Challenge (FDC)
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param payment Fraudulent payment candidate
     function challengeByPayment(Types.Payment payment)
     public
@@ -226,12 +227,11 @@ contract FraudChallenge is Ownable {
         require(!genuineWalletSignature || !genuineBySender || !genuineByRecipient);
 
         configuration.setOperationalModeExit();
-        fraudulentPayment = payment;
+        fraudulentPayments.push(payment);
 
         if (!genuineWalletSignature) {
             (address stakeCurrency, int256 stakeAmount) = configuration.getFalseWalletSignatureStake();
-            // TODO Enable when deployment out-of-gas is solved
-            //            securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+            securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
         } else {
             address seizedWallet;
             if (!genuineBySender)
@@ -249,7 +249,6 @@ contract FraudChallenge is Ownable {
 
     /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC)
     /// to be tested for succession differences
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
@@ -278,7 +277,7 @@ contract FraudChallenge is Ownable {
         );
 
         configuration.setOperationalModeExit();
-        fraudulentTrade = lastTrade;
+        fraudulentTrades.push(lastTrade);
 
         clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
@@ -288,7 +287,6 @@ contract FraudChallenge is Ownable {
 
     /// @notice Submit two payment candidates in continuous Fraudulent Deal Challenge (FDC)
     /// to be tested for succession differences
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param firstPayment Reference payment
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
@@ -312,7 +310,7 @@ contract FraudChallenge is Ownable {
         );
 
         configuration.setOperationalModeExit();
-        fraudulentPayment = lastPayment;
+        fraudulentPayments.push(lastPayment);
 
         clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
@@ -322,7 +320,6 @@ contract FraudChallenge is Ownable {
 
     /// @notice Submit trade and subsequent payment candidates in continuous Fraudulent Deal Challenge (FDC)
     /// to be tested for succession differences
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param trade Reference trade
     /// @param payment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
@@ -350,7 +347,7 @@ contract FraudChallenge is Ownable {
         );
 
         configuration.setOperationalModeExit();
-        fraudulentPayment = payment;
+        fraudulentPayments.push(payment);
 
         clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
@@ -360,7 +357,6 @@ contract FraudChallenge is Ownable {
 
     /// @notice Submit payment and subsequent trade candidates in continuous Fraudulent Deal Challenge (FDC)
     /// to be tested for succession differences
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param payment Reference payment
     /// @param trade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
@@ -388,7 +384,7 @@ contract FraudChallenge is Ownable {
         );
 
         configuration.setOperationalModeExit();
-        fraudulentTrade = trade;
+        fraudulentTrades.push(trade);
 
         clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
@@ -398,7 +394,6 @@ contract FraudChallenge is Ownable {
 
     /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
     /// trade order residual differences
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
@@ -427,7 +422,7 @@ contract FraudChallenge is Ownable {
         require(!validator.isGenuineSuccessiveTradeOrderResiduals(firstTrade, lastTrade, firstTradePartyRole));
 
         configuration.setOperationalModeExit();
-        fraudulentTrade = lastTrade;
+        fraudulentTrades.push(lastTrade);
 
         clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
         addToSeizedWallets(wallet);
@@ -437,36 +432,123 @@ contract FraudChallenge is Ownable {
 
     /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
     /// trade order double spenditure
-    /// @dev The seizure of client funds remains to be enabled once implemented in ClientFund contract
-    /// @param firstTrade Reference trade
-    /// @param lastTrade Fraudulent trade candidate
+    /// @param trade1 First trade with double spent order
+    /// @param trade2 Last trade with double spent order
     function challengeByDoubleSpentOrders(
-        Types.Trade firstTrade,
-        Types.Trade lastTrade
+        Types.Trade trade1,
+        Types.Trade trade2
     )
     public
     hasherConfigurationContractsInitialized
-    challengeableByDoubleSpentOrderTradesPair(firstTrade, lastTrade)
+    onlyGenuineSealOfTrade(trade1)
+    onlyGenuineSealOfTrade(trade2)
     {
-        bool doubleSpentBuyOrder = firstTrade.buyer.order.hashes.exchange == lastTrade.buyer.order.hashes.exchange;
-        bool doubleSpentSellOrder = firstTrade.seller.order.hashes.exchange == lastTrade.seller.order.hashes.exchange;
-        bool doubledNonce = firstTrade.nonce == lastTrade.nonce;
+        bool doubleSpentBuyOrder = trade1.buyer.order.hashes.exchange == trade2.buyer.order.hashes.exchange;
+        bool doubleSpentSellOrder = trade1.seller.order.hashes.exchange == trade2.seller.order.hashes.exchange;
 
-        require(doubleSpentBuyOrder || doubleSpentSellOrder || doubledNonce);
+        require(doubleSpentBuyOrder || doubleSpentSellOrder);
 
         configuration.setOperationalModeExit();
-        // TODO Allow 2 fraudulent trades
-        fraudulentTrade = lastTrade;
+        fraudulentTrades.push(trade1);
+        fraudulentTrades.push(trade2);
 
         (address stakeCurrency, int256 stakeAmount) = configuration.getDoubleSpentOrderStake();
         securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
 
         if (doubleSpentBuyOrder)
-            addToDoubleSpenderWallets(firstTrade.buyer.wallet, lastTrade.buyer.wallet);
+            addToDoubleSpenderWallets(trade1.buyer.wallet, trade2.buyer.wallet);
         if (doubleSpentSellOrder)
-            addToDoubleSpenderWallets(firstTrade.seller.wallet, lastTrade.seller.wallet);
+            addToDoubleSpenderWallets(trade1.seller.wallet, trade2.seller.wallet);
 
-        emit ChallengeByDoubleSpentOrdersEvent(firstTrade, lastTrade, msg.sender, doubleSpenderWallets);
+        emit ChallengeByDoubleSpentOrdersEvent(trade1, trade2, msg.sender, doubleSpenderWallets);
+    }
+
+    /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
+    /// duplicate deal nonce
+    /// @param trade1 First trade with duplicate deal nonce
+    /// @param trade2 Second trade with duplicate deal nonce
+    function challengeByDuplicateDealNonceOfTrades(
+        Types.Trade trade1,
+        Types.Trade trade2
+    )
+    public
+    hasherConfigurationContractsInitialized
+    onlyGenuineSealOfTrade(trade1)
+    onlyGenuineSealOfTrade(trade2)
+    {
+        require(trade1.seal.hash != trade2.seal.hash);
+        require(trade1.nonce == trade2.nonce);
+
+        configuration.setOperationalModeExit();
+        fraudulentTrades.push(trade1);
+        fraudulentTrades.push(trade2);
+
+        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDealNonceStake();
+        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+
+        emit ChallengeByDuplicateDealNonceOfTradesEvent(trade1, trade2, msg.sender);
+    }
+
+    /// @notice Submit two payment candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
+    /// duplicate deal nonce
+    /// @param payment1 First payment with duplicate deal nonce
+    /// @param payment2 Second payment with duplicate deal nonce
+    function challengeByDuplicateDealNonceOfPayments(
+        Types.Payment payment1,
+        Types.Payment payment2
+    )
+    public
+    hasherConfigurationContractsInitialized
+    onlyGenuineSealsOfPayment(payment1)
+    onlyGenuineSealsOfPayment(payment2)
+    {
+        require(payment1.seals.wallet.hash != payment2.seals.wallet.hash);
+        require(payment1.nonce == payment2.nonce);
+
+        configuration.setOperationalModeExit();
+        fraudulentPayments.push(payment1);
+        fraudulentPayments.push(payment2);
+
+        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDealNonceStake();
+        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+
+        emit ChallengeByDuplicateDealNonceOfPaymentsEvent(payment1, payment2, msg.sender);
+    }
+
+
+    /// @notice Submit one trade candidate and one payment candidate in continuous Fraudulent Deal
+    /// Challenge (FDC) to be tested for duplicate deal nonce
+    /// @param trade Trade with duplicate deal nonce
+    /// @param payment Payment with duplicate deal nonce
+    function challengeByDuplicateDealNonceOfTradeAndPayment(
+        Types.Trade trade,
+        Types.Payment payment
+    )
+    public
+    hasherConfigurationContractsInitialized
+    onlyGenuineSealOfTrade(trade)
+    onlyGenuineSealsOfPayment(payment)
+    {
+        require(trade.nonce == payment.nonce);
+
+        configuration.setOperationalModeExit();
+        fraudulentTrades.push(trade);
+        fraudulentPayments.push(payment);
+
+        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDealNonceStake();
+        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+
+        emit ChallengeByDuplicateDealNonceOfTradeAndPaymentEvent(trade, payment, msg.sender);
+    }
+
+    /// @notice Get the number of fraudulent trades
+    function getFraudulentTradesCount() public view returns (uint256) {
+        return fraudulentTrades.length;
+    }
+
+    /// @notice Get the number of fraudulent payments
+    function getFraudulentPaymentsCount() public view returns (uint256) {
+        return fraudulentPayments.length;
     }
 
     function addToSeizedWallets(address _address) private {
@@ -570,23 +652,31 @@ contract FraudChallenge is Ownable {
     }
 
     modifier challengeableByOrderResidualsTradesPair(Types.Trade firstTrade, Types.Trade lastTrade, address wallet, address currency) {
-        require(currency == firstTrade.currencies.intended);
         require(hasher.hashTrade(firstTrade) == firstTrade.seal.hash);
         require(Types.isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
+        require(currency == firstTrade.currencies.intended);
+        require(firstTrade.buyer.wallet == wallet || firstTrade.seller.wallet == wallet);
 
-        require(currency == lastTrade.currencies.intended);
         require(hasher.hashTrade(lastTrade) == lastTrade.seal.hash);
         require(Types.isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
+        require(currency == lastTrade.currencies.intended);
+        require(lastTrade.buyer.wallet == wallet || lastTrade.seller.wallet == wallet);
 
         _;
     }
 
-    modifier challengeableByDoubleSpentOrderTradesPair(Types.Trade firstTrade, Types.Trade lastTrade) {
-        require(hasher.hashTrade(firstTrade) == firstTrade.seal.hash);
-        require(Types.isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
+    modifier onlyGenuineSealOfTrade(Types.Trade trade) {
+        require(hasher.hashTrade(trade) == trade.seal.hash);
+        require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
 
-        require(hasher.hashTrade(lastTrade) == lastTrade.seal.hash);
-        require(Types.isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
+        _;
+    }
+
+    modifier onlyGenuineSealsOfPayment(Types.Payment payment) {
+        require(hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
+        require(hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
+        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
+        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
 
         _;
     }
