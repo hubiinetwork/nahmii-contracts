@@ -775,7 +775,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setFalseWalletSignatureStake('0x0000000000000000000000000000000000000001', 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setFalseWalletSignatureStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -784,12 +784,18 @@ module.exports = (glob) => {
             it('should equal values initialized at construction time', async () => {
                 const values = await web3Configuration.getDuplicateDealNonceStake.call();
                 values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal('0x0000000000000000000000000000000000000000');
+                values[0].should.equal(address0);
                 values[1].toNumber().should.equal(0);
             });
         });
 
         describe('setDuplicateDealNonceStake()', () => {
+            let currency;
+
+            before(() => {
+                currency = Wallet.createRandom().address;
+            });
+
             describe('if called with sender that is owner', () => {
                 let initialValues;
 
@@ -802,18 +808,18 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDuplicateDealNonceStake('0x0000000000000000000000000000000000000001', 1e18);
+                    const result = await web3Configuration.setDuplicateDealNonceStake(currency, 1e18);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetDuplicateDealNonceStakeEvent');
                     const values = await web3Configuration.duplicateDealNonceStake.call();
-                    values[0].should.equal('0x0000000000000000000000000000000000000001');
+                    utils.getAddress(values[0]).should.equal(currency);
                     values[1].toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setFalseWalletSignatureStake('0x0000000000000000000000000000000000000001', 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setDuplicateDealNonceStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -822,12 +828,18 @@ module.exports = (glob) => {
             it('should equal values initialized at construction time', async () => {
                 const values = await web3Configuration.getDoubleSpentOrderStake.call();
                 values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal('0x0000000000000000000000000000000000000000');
+                values[0].should.equal(address0);
                 values[1].toNumber().should.equal(0);
             });
         });
 
         describe('setDoubleSpentOrderStake()', () => {
+            let currency;
+
+            before(() => {
+                currency = Wallet.createRandom().address;
+            });
+
             describe('if called with sender that is owner', () => {
                 let initialValues;
 
@@ -840,18 +852,18 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDoubleSpentOrderStake('0x0000000000000000000000000000000000000001', 1e18);
+                    const result = await web3Configuration.setDoubleSpentOrderStake(currency, 1e18);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('S    etDoubleSpentOrderStakeEvent');
+                    result.logs[0].event.should.equal('SetDoubleSpentOrderStakeEvent');
                     const values = await web3Configuration.doubleSpentOrderStake.call();
-                    values[0].should.equal('0x0000000000000000000000000000000000000001');
+                    utils.getAddress(values[0]).should.equal(currency);
                     values[1].toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setFalseWalletSignatureStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setDoubleSpentOrderStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
