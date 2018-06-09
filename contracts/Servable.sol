@@ -28,7 +28,7 @@ contract Servable is Ownable {
         require(service != address(0));
         require(service != address(this));
 
-        registeredServiceActions[service][keccak256(action)] = true;
+        registeredServiceActions[service][keccak256(abi.encodePacked(action))] = true;
 
         //raise event
         emit RegisterServiceActionEvent(service, action);
@@ -38,14 +38,14 @@ contract Servable is Ownable {
         require(service != address(0));
         require(service != address(this));
 
-        registeredServiceActions[service][keccak256(action)] = false;
+        registeredServiceActions[service][keccak256(abi.encodePacked(action))] = false;
 
         //raise event
         emit DeregisterServiceActionEvent(service, action);
     }
 
     function isRegisteredServiceAction(address service, string action) internal view returns (bool) {
-        return registeredServiceActions[service][keccak256(action)];
+        return registeredServiceActions[service][keccak256(abi.encodePacked(action))];
     }
 
     //
