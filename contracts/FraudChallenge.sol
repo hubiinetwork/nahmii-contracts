@@ -29,6 +29,7 @@ contract FraudChallenge is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
+    Types.Order[] public fraudulentOrders;
     Types.Trade[] public fraudulentTrades;
     Types.Payment[] public fraudulentPayments;
 
@@ -52,6 +53,7 @@ contract FraudChallenge is Ownable {
     event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
     event ChangeHasherEvent(AbstractHasher oldHasher, AbstractHasher newHasher);
     event ChangeValidatorEvent(AbstractValidator oldValidator, AbstractValidator newValidator);
+    event ChallengeByOrderEvent(Types.Order order, address challenger);
     event ChallengeByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
     event ChallengeByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
     event ChallengeBySuccessiveTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
@@ -164,7 +166,30 @@ contract FraudChallenge is Ownable {
         return doubleSpenderWallets.length;
     }
 
-    /// @notice Submit a trade candidate in continuous Fraudulent Deal Challenge (FDC)
+    /// @notice Submit an order candidate in continuous Fraud Challenge (FC)
+    /// @param order Fraudulent order candidate
+    function challengeByOrder(Types.Order order)
+    public
+    allContractsInitialized
+    {
+        require(hasher.hashOrderAsWallet(order) == order.seals.wallet.hash);
+        require(hasher.hashOrderAsExchange(order) == order.seals.exchange.hash);
+        require(Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, owner));
+
+        // Genuineness affected by wallet not having signed the payment
+        bool genuineWalletSignature = Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
+        require(!genuineWalletSignature);
+
+        configuration.setOperationalModeExit();
+        fraudulentOrders.push(order);
+
+        (address stakeCurrency, int256 stakeAmount) = configuration.getFalseWalletSignatureStake();
+        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+
+        emit ChallengeByOrderEvent(order, msg.sender);
+    }
+
+    /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
     function challengeByTrade(Types.Trade trade)
     public
@@ -204,7 +229,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeByTradeEvent(trade, msg.sender, seizedWallet);
     }
 
-    /// @notice Submit a payment candidate in continuous Fraudulent Deal Challenge (FDC)
+    /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
     function challengeByPayment(Types.Payment payment)
     public
@@ -247,7 +272,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeByPaymentEvent(payment, msg.sender, seizedWallet);
     }
 
-    /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// @notice Submit two trade candidates in continuous Fraud Challenge (FC)
     /// to be tested for succession differences
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
@@ -285,7 +310,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeBySuccessiveTradesEvent(firstTrade, lastTrade, msg.sender, wallet);
     }
 
-    /// @notice Submit two payment candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// @notice Submit two payment candidates in continuous Fraud Challenge (FC)
     /// to be tested for succession differences
     /// @param firstPayment Reference payment
     /// @param lastPayment Fraudulent payment candidate
@@ -318,7 +343,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeBySuccessivePaymentsEvent(firstPayment, lastPayment, msg.sender, wallet);
     }
 
-    /// @notice Submit trade and subsequent payment candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// @notice Submit trade and subsequent payment candidates in continuous Fraud Challenge (FC)
     /// to be tested for succession differences
     /// @param trade Reference trade
     /// @param payment Fraudulent payment candidate
@@ -355,7 +380,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeByPaymentSucceedingTradeEvent(trade, payment, msg.sender, wallet);
     }
 
-    /// @notice Submit payment and subsequent trade candidates in continuous Fraudulent Deal Challenge (FDC)
+    /// @notice Submit payment and subsequent trade candidates in continuous Fraud Challenge (FC)
     /// to be tested for succession differences
     /// @param payment Reference payment
     /// @param trade Fraudulent trade candidate
@@ -392,7 +417,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeByTradeSucceedingPaymentEvent(payment, trade, msg.sender, wallet);
     }
 
-    /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
+    /// @notice Submit two trade candidates in continuous Fraud Challenge (FC) to be tested for
     /// trade order residual differences
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
@@ -430,7 +455,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeByTradeOrderResidualsEvent(firstTrade, lastTrade, msg.sender, wallet);
     }
 
-    /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
+    /// @notice Submit two trade candidates in continuous Fraud Challenge (FC) to be tested for
     /// trade order double spenditure
     /// @param trade1 First trade with double spent order
     /// @param trade2 Last trade with double spent order
@@ -463,7 +488,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeByDoubleSpentOrdersEvent(trade1, trade2, msg.sender, doubleSpenderWallets);
     }
 
-    /// @notice Submit two trade candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
+    /// @notice Submit two trade candidates in continuous Fraud Challenge (FC) to be tested for
     /// duplicate deal nonce
     /// @param trade1 First trade with duplicate deal nonce
     /// @param trade2 Second trade with duplicate deal nonce
@@ -489,7 +514,7 @@ contract FraudChallenge is Ownable {
         emit ChallengeByDuplicateDealNonceOfTradesEvent(trade1, trade2, msg.sender);
     }
 
-    /// @notice Submit two payment candidates in continuous Fraudulent Deal Challenge (FDC) to be tested for
+    /// @notice Submit two payment candidates in continuous Fraud Challenge (FC) to be tested for
     /// duplicate deal nonce
     /// @param payment1 First payment with duplicate deal nonce
     /// @param payment2 Second payment with duplicate deal nonce
@@ -516,8 +541,8 @@ contract FraudChallenge is Ownable {
     }
 
 
-    /// @notice Submit one trade candidate and one payment candidate in continuous Fraudulent Deal
-    /// Challenge (FDC) to be tested for duplicate deal nonce
+    /// @notice Submit one trade candidate and one payment candidate in continuous Fraud
+    /// Challenge (FC) to be tested for duplicate deal nonce
     /// @param trade Trade with duplicate deal nonce
     /// @param payment Payment with duplicate deal nonce
     function challengeByDuplicateDealNonceOfTradeAndPayment(
@@ -539,6 +564,11 @@ contract FraudChallenge is Ownable {
         securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
 
         emit ChallengeByDuplicateDealNonceOfTradeAndPaymentEvent(trade, payment, msg.sender);
+    }
+
+    /// @notice Get the number of fraudulent orders
+    function getFraudulentOrdersCount() public view returns (uint256) {
+        return fraudulentOrders.length;
     }
 
     /// @notice Get the number of fraudulent trades
