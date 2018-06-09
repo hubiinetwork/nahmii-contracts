@@ -164,9 +164,9 @@ contract Validator is Ownable, AbstractValidator {
 
     function isGenuinePaymentFee(Types.Payment payment) public view returns (bool) {
         int256 feePartsPer = int256(configuration.getPartsPer());
-        return (payment.singleFee <= payment.amount.mul(configuration.getPaymentFee(payment.blockNumber, 0)).div(feePartsPer))
-        && (payment.singleFee == payment.amount.mul(configuration.getPaymentFee(payment.blockNumber, payment.amount)).div(feePartsPer))
-        && (payment.singleFee >= payment.amount.mul(configuration.getPaymentMinimumFee(payment.blockNumber)).div(feePartsPer));
+        return (payment.singleFee <= payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency, payment.blockNumber, 0)).div(feePartsPer))
+        && (payment.singleFee == payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency, payment.blockNumber, payment.amount)).div(feePartsPer))
+        && (payment.singleFee >= payment.amount.mul(configuration.getCurrencyPaymentMinimumFee(payment.currency, payment.blockNumber)).div(feePartsPer));
     }
 
     function isGenuineByPaymentSender(Types.Payment payment) public pure returns (bool) {
