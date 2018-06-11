@@ -1,16 +1,13 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const ethers = require('ethers');
+const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const MockedSecurityBond = artifacts.require("MockedSecurityBond");
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
-
-const utils = ethers.utils;
-const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
     describe('DealSettlementChallenge', () => {
@@ -38,7 +35,7 @@ module.exports = (glob) => {
             ethersCancelOrdersChallengeOwner = glob.ethersIoCancelOrdersChallenge;
 
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
-            ethersSecurityBond = new ethers.Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
+            ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
             ethersDealSettlementChallengeUserA = ethersDealSettlementChallengeOwner.connect(glob.signer_a);
             ethersDealSettlementChallengeUserB = ethersDealSettlementChallengeOwner.connect(glob.signer_b);

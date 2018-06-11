@@ -1,13 +1,10 @@
 const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
-const ethers = require('ethers');
+const {Wallet, utils} = require('ethers');
 const address0 = require('../mocks').address0;
 
 chai.use(chaiAsPromised);
 chai.should();
-
-const utils = ethers.utils;
-const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
     describe('Configuration', () => {

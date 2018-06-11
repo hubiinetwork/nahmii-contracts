@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const ethers = require('ethers');
+const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const MockedClientFund = artifacts.require("MockedClientFund");
 const MockedSecurityBond = artifacts.require("MockedSecurityBond");
@@ -9,9 +9,6 @@ const MockedSecurityBond = artifacts.require("MockedSecurityBond");
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
-
-const utils = ethers.utils;
-const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
     describe('FraudChallenge', () => {
@@ -37,9 +34,9 @@ module.exports = (glob) => {
             ethersValidator = glob.ethersIoValidator;
 
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
-            ethersClientFund = new ethers.Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
+            ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
-            ethersSecurityBond = new ethers.Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
+            ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
             await ethersValidator.changeConfiguration(ethersConfiguration.address);
             await ethersValidator.changeHasher(ethersHasher.address);

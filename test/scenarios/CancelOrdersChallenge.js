@@ -1,15 +1,12 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const ethers = require('ethers');
+const {Wallet, utils} = require('ethers');
 const mocks = require('../mocks');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
-
-const utils = ethers.utils;
-const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
     describe('CancelOrdersChallenge', () => {
