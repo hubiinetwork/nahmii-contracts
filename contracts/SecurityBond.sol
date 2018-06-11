@@ -36,10 +36,6 @@ contract AbstractSecurityBond {
     function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token);
 
     function withdrawalCount(address wallet) public view returns (uint256);
-
-    function registerService(address service) public;
-
-    function deregisterService(address service) public;
 }
 
 /**
