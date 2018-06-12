@@ -22,7 +22,7 @@ contract RevenueToken is ERC20, Ownable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event Mint(address indexed to, uint256 amount);
-    event ChangedTokenInformation(string name, string symbol, uint8 decimals);
+    event ChangedTokenInformation(string name, string symbol);
 
     //
     // Variables
@@ -40,7 +40,7 @@ contract RevenueToken is ERC20, Ownable {
 
     string public name = "Striim";
     string public symbol = "STRM";
-    uint8 public decimals = 15;
+    uint8 public constant decimals = 15;
 
     //
     // Constructor
@@ -53,17 +53,15 @@ contract RevenueToken is ERC20, Ownable {
     //
     // Token settings
     // -----------------------------------------------------------------------------------------------------------------
-    function setTokenInformation(string newName, string newSymbol, uint8 newDecimals) public onlyOwner {
+    function setTokenInformation(string newName, string newSymbol) public onlyOwner {
         require(bytes(newName).length > 0);
         require(bytes(newSymbol).length > 0 && bytes(newSymbol).length < 5);
-        require(newDecimals < 24);
 
         name = newName;
         symbol = newSymbol;
-        decimals = newDecimals;
 
         //emit event
-        emit ChangedTokenInformation(newName, newSymbol, newDecimals);
+        emit ChangedTokenInformation(newName, newSymbol);
     }
     //
     // Functions
