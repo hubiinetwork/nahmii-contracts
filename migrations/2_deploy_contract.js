@@ -47,14 +47,6 @@ module.exports = function (deployer, network, accounts) {
         addresses.SafeMathInt = SafeMathIntLib.address;
     });
 
-    deployer.deploy(SafeMathUintLib).then(() => {
-        addresses.SafeMathUint = SafeMathUintLib.address;
-    });
-
-    deployer.deploy(Types).then(() => {
-        addresses.Types = Types.address;
-    });
-
     deployer.link(SafeMathIntLib, ClientFund);
     deployer.link(SafeMathIntLib, CommunityVote);
     deployer.link(SafeMathIntLib, Configuration);
@@ -66,11 +58,19 @@ module.exports = function (deployer, network, accounts) {
     deployer.link(SafeMathIntLib, SecurityBond);
     deployer.link(SafeMathIntLib, TokenHolderRevenueFund);
 
+    deployer.deploy(SafeMathUintLib).then(() => {
+        addresses.SafeMathUint = SafeMathUintLib.address;
+    });
+
     deployer.link(SafeMathUintLib, Exchange);
     deployer.link(SafeMathUintLib, CancelOrdersChallenge);
     deployer.link(SafeMathUintLib, RevenueFund);
     deployer.link(SafeMathUintLib, ReserveFund);
     deployer.link(SafeMathUintLib, TokenHolderRevenueFund);
+
+    deployer.deploy(Types).then(() => {
+        addresses.Types = Types.address;
+    });
 
     deployer.link(Types, Exchange);
     deployer.link(Types, CancelOrdersChallenge);
