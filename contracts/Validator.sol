@@ -21,13 +21,23 @@ contract AbstractValidator {
 
     function isGenuineTradeTakerFee(Types.Trade trade) public view returns (bool);
 
-    function isGenuineByTradeBuyer(Types.Trade trade, address owner) public view returns (bool);
+    function isGenuineByTradeBuyer(Types.Trade trade, address exchange) public view returns (bool);
 
-    function isGenuineByTradeSeller(Types.Trade trade, address owner) public view returns (bool);
+    function isGenuineByTradeSeller(Types.Trade trade, address exchange) public view returns (bool);
 
-    function isGenuineTradeSeal(Types.Trade trade, address owner) public view returns (bool);
+    function isGenuineOrderWalletSeal(Types.Order order) public view returns (bool);
 
-    function isGenuinePaymentSeals(Types.Payment payment, address owner) public view returns (bool);
+    function isGenuineOrderExchangeSeal(Types.Order order, address exchange) public view returns (bool);
+
+    function isGenuineOrderSeals(Types.Order order, address exchange) public view returns (bool);
+
+    function isGenuineTradeSeal(Types.Trade trade, address exchange) public view returns (bool);
+
+    function isGenuinePaymentWalletSeal(Types.Payment payment) public view returns (bool);
+
+    function isGenuinePaymentExchangeSeal(Types.Payment payment, address exchange) public view returns (bool);
+
+    function isGenuinePaymentSeals(Types.Payment payment, address exchange) public view returns (bool);
 
     function isGenuinePaymentFee(Types.Payment payment) public view returns (bool);
 
@@ -81,7 +91,7 @@ contract Validator is Ownable, AbstractValidator {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -150,16 +160,37 @@ contract Validator is Ownable, AbstractValidator {
         && (trade.seller.order.residuals.previous >= trade.seller.order.residuals.current);
     }
 
+    function isGenuineOrderWalletSeal(Types.Order order) public view returns (bool) {
+        return (hasher.hashOrderAsWallet(order) == order.seals.wallet.hash)
+        && (Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet));
+    }
+
+    function isGenuineOrderExchangeSeal(Types.Order order, address exchange) public view returns (bool) {
+        return (hasher.hashOrderAsExchange(order) == order.seals.exchange.hash)
+        && (Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, exchange));
+    }
+
+    function isGenuineOrderSeals(Types.Order order, address exchange) public view returns (bool) {
+        return isGenuineOrderWalletSeal(order) && isGenuineOrderExchangeSeal(order, exchange);
+    }
+
     function isGenuineTradeSeal(Types.Trade trade, address exchange) public view returns (bool) {
         return (hasher.hashTrade(trade) == trade.seal.hash)
         && (Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, exchange));
     }
 
-    function isGenuinePaymentSeals(Types.Payment payment, address exchange) public view returns (bool) {
+    function isGenuinePaymentWalletSeal(Types.Payment payment) public view returns (bool) {
         return (hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash)
-        && (hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash)
-        && (Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet))
+        && (Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
+    }
+
+    function isGenuinePaymentExchangeSeal(Types.Payment payment, address exchange) public view returns (bool) {
+        return (hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash)
         && (Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, exchange));
+    }
+
+    function isGenuinePaymentSeals(Types.Payment payment, address exchange) public view returns (bool) {
+        return isGenuinePaymentWalletSeal(payment) && isGenuinePaymentExchangeSeal(payment, exchange);
     }
 
     function isGenuinePaymentFee(Types.Payment payment) public view returns (bool) {

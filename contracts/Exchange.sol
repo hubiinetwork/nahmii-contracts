@@ -14,11 +14,12 @@ import "./Ownable.sol";
 import "./Types.sol";
 import "./ERC20.sol";
 import {AbstractConfiguration} from "./Configuration.sol";
-import "./CommunityVote.sol";
+import {AbstractValidator} from "./Validator.sol";
+import "./DealSettlementChallenge.sol";
 import "./ClientFund.sol";
 import "./ReserveFund.sol";
 import "./RevenueFund.sol";
-import "./DealSettlementChallenge.sol";
+import "./CommunityVote.sol";
 
 /**
 @title Exchange
@@ -37,14 +38,16 @@ contract Exchange is Ownable {
     mapping(address => bool) public seizedWalletsMap;
 
     AbstractConfiguration public configuration;
+    AbstractValidator public validator;
+    DealSettlementChallenge public dealSettlementChallenge;
     ClientFund public clientFund;
     ReserveFund public tradesReserveFund;
     ReserveFund public paymentsReserveFund;
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
-    bool public communityVoteUpdateDisabled;
     CommunityVote public communityVote;
-    DealSettlementChallenge public dealSettlementChallenge;
+
+    bool public communityVoteUpdateDisabled;
 
     Types.Settlement[] public settlements;
     mapping(address => uint256[]) walletSettlementIndexMap;
@@ -55,18 +58,19 @@ contract Exchange is Ownable {
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
+    event ChangeValidatorEvent(AbstractValidator oldValidator, AbstractValidator newValidator);
+    event ChangeDealSettlementChallengeEvent(DealSettlementChallenge oldDealSettlementChallenge, DealSettlementChallenge newDealSettlementChallenge);
     event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
     event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangePaymentsReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
-    event ChangeDealSettlementChallengeEvent(DealSettlementChallenge oldDealSettlementChallenge, DealSettlementChallenge newDealSettlementChallenge);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -83,6 +87,32 @@ contract Exchange is Ownable {
         AbstractConfiguration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
+    }
+
+    /// @notice Change the validator contract
+    /// @param newValidator The (address of) Validator contract instance
+    function changeValidator(AbstractValidator newValidator)
+    public
+    onlyOwner
+    notNullAddress(newValidator)
+    notEqualAddresses(newValidator, validator)
+    {
+        AbstractValidator oldValidator = validator;
+        validator = newValidator;
+        emit ChangeValidatorEvent(oldValidator, validator);
+    }
+
+    /// @notice Change the deal settlement challenge contract
+    /// @param newDealSettlementChallenge The (address of) DealSettlementChallenge contract instance
+    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
+    public
+    onlyOwner
+    notNullAddress(newDealSettlementChallenge)
+    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallenge)
+    {
+        DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
+        dealSettlementChallenge = newDealSettlementChallenge;
+        emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
     }
 
     /// @notice Change the client fund contract
@@ -169,19 +199,6 @@ contract Exchange is Ownable {
         emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
     }
 
-    /// @notice Change the deal settlement challenge contract
-    /// @param newDealSettlementChallenge The (address of) DealSettlementChallenge contract instance
-    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
-    public
-    onlyOwner
-    notNullAddress(newDealSettlementChallenge)
-    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallenge)
-    {
-        DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
-        dealSettlementChallenge = newDealSettlementChallenge;
-        emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
-    }
-
     /// @notice Get the seized status of given wallet
     /// @return true if wallet is seized, false otherwise
     function isSeizedWallet(address _address) public view returns (bool) {
@@ -226,7 +243,8 @@ contract Exchange is Ownable {
     /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
     function settleDealAsTrade(Types.Trade trade, address wallet)
     public
-    signedBy(trade.seal.hash, trade.seal.signature, owner)
+    validatorInitialized
+    onlySealedTrade(trade)
     {
         require(communityVote != address(0), "CommunityVote is missing");
         require(dealSettlementChallenge != address(0), "DealSettlementChallenge is missing");
@@ -288,8 +306,8 @@ contract Exchange is Ownable {
     /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
     function settleDealAsPayment(Types.Payment payment, address wallet)
     public
-    signedBy(payment.seals.exchange.hash, payment.seals.exchange.signature, owner)
-    signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet)
+    validatorInitialized
+    onlySealedPayment(payment)
     {
         require(communityVote != address(0), "CommunityVote is missing");
         require(dealSettlementChallenge != address(0), "DealSettlementChallenge is missing");
@@ -521,18 +539,18 @@ contract Exchange is Ownable {
         _;
     }
 
-    modifier onlyTradeParty(Types.Trade trade, address wallet) {
-        require(Types.isTradeParty(trade, wallet));
+    modifier validatorInitialized() {
+        require(validator != address(0), "Validator is missing");
         _;
     }
 
-    modifier onlyPaymentParty(Types.Payment payment, address wallet) {
-        require(Types.isPaymentParty(payment, wallet));
+    modifier onlySealedTrade(Types.Trade trade) {
+        require(validator.isGenuineTradeSeal(trade, owner));
         _;
     }
 
-    modifier signedBy(bytes32 hash, Types.Signature signature, address signer) {
-        require(Types.isGenuineSignature(hash, signature, signer));
+    modifier onlySealedPayment(Types.Payment payment) {
+        require(validator.isGenuinePaymentSeals(payment, owner));
         _;
     }
 }

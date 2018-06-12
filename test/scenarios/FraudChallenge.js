@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const ethers = require('ethers');
+const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const MockedClientFund = artifacts.require("MockedClientFund");
 const MockedSecurityBond = artifacts.require("MockedSecurityBond");
@@ -10,16 +10,13 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
 
-const utils = ethers.utils;
-const Wallet = ethers.Wallet;
-
 module.exports = (glob) => {
     describe('FraudChallenge', () => {
         let web3FraudChallenge, ethersFraudChallenge;
+        let web3Hasher, ethersHasher;
         let web3Configuration, ethersConfiguration;
         let web3ClientFund, ethersClientFund;
         let web3SecurityBond, ethersSecurityBond;
-        let web3Hasher, ethersHasher;
         let web3Validator, ethersValidator;
         let provider;
         let blockNumber0, blockNumber10, blockNumber20;
@@ -37,17 +34,16 @@ module.exports = (glob) => {
             ethersValidator = glob.ethersIoValidator;
 
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
-            ethersClientFund = new ethers.Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
+            ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
-            ethersSecurityBond = new ethers.Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
+            ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
             await ethersValidator.changeConfiguration(ethersConfiguration.address);
             await ethersValidator.changeHasher(ethersHasher.address);
 
             await ethersFraudChallenge.changeConfiguration(ethersConfiguration.address);
             await ethersFraudChallenge.changeClientFund(ethersClientFund.address);
-            // TODO Enable when deployment out-of-gas is solved
-            // await ethersFraudChallenge.changeSecurityBond(ethersSecurityBond.address);
+            await ethersFraudChallenge.changeSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallenge.changeHasher(ethersHasher.address);
             await ethersFraudChallenge.changeValidator(ethersValidator.address);
 

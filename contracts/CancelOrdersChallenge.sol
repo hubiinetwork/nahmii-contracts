@@ -13,6 +13,7 @@ import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./Types.sol";
 import {AbstractConfiguration} from "./Configuration.sol";
+import {AbstractValidator} from "./Validator.sol";
 
 contract AbstractCancelOrdersChallenge {
     function getCancelledOrdersCount(address wallet) public view returns (uint256);
@@ -40,6 +41,7 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     AbstractConfiguration public configuration;
+    AbstractValidator public validator;
 
     mapping(address => mapping(bytes32 => bool)) public walletOrderExchangeHashCancelledMap;
     mapping(address => Types.Order[]) public walletOrderCancelledListMap;
@@ -50,6 +52,7 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
+    event ChangeValidatorEvent(AbstractValidator oldValidator, AbstractValidator newValidator);
     event CancelOrdersEvent(Types.Order[] orders, address wallet);
     event ChallengeCancelledOrderEvent(Types.Order order, Types.Trade trade, address wallet);
 
@@ -73,6 +76,19 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
         AbstractConfiguration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
+    }
+
+    /// @notice Change the validator contract
+    /// @param newValidator The (address of) Validator contract instance
+    function changeValidator(AbstractValidator newValidator)
+    public
+    onlyOwner
+    notNullAddress(newValidator)
+    notEqualAddresses(newValidator, validator)
+    {
+        AbstractValidator oldValidator = validator;
+        validator = newValidator;
+        emit ChangeValidatorEvent(oldValidator, validator);
     }
 
     /// @notice Get count of cancelled orders for given wallet
@@ -120,8 +136,7 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
 
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i].wallet);
-            require(Types.isGenuineSignature(orders[i].seals.wallet.hash, orders[i].seals.wallet.signature, orders[i].wallet));
-            require(Types.isGenuineSignature(orders[i].seals.exchange.hash, orders[i].seals.exchange.signature, owner));
+            require(validator.isGenuineOrderSeals(orders[i], owner));
         }
 
         for (uint256 j = 0; j < orders.length; j++) {
@@ -140,8 +155,8 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
     /// @param wallet The concerned wallet
     function challengeCancelledOrder(Types.Trade trade, address wallet)
     public
-    signedBy(trade.seal.hash, trade.seal.signature, owner)
     {
+        require(validator.isGenuineTradeSeal(trade, owner));
         require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
 
         bytes32 orderExchangeHash = (
@@ -180,11 +195,6 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
 
     modifier notEqualAddresses(address address1, address address2) {
         require(address1 != address2);
-        _;
-    }
-
-    modifier signedBy(bytes32 hash, Types.Signature signature, address signer) {
-        require(Types.isGenuineSignature(hash, signature, signer));
         _;
     }
 }

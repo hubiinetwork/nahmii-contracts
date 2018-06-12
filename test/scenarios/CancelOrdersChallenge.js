@@ -1,15 +1,12 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const ethers = require('ethers');
+const {Wallet, utils} = require('ethers');
 const mocks = require('../mocks');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
-
-const utils = ethers.utils;
-const Wallet = ethers.Wallet;
 
 module.exports = (glob) => {
     describe('CancelOrdersChallenge', () => {
@@ -89,6 +86,47 @@ module.exports = (glob) => {
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
                     web3CancelOrdersChallenge.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('validator()', () => {
+            it('should equal value initialized', async () => {
+                const validator = await ethersCancelOrdersChallengeOwner.validator();
+                validator.should.equal(utils.getAddress(ethersValidator.address));
+            });
+        });
+
+        describe('changeValidator()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let validator;
+
+                beforeEach(async () => {
+                    validator = await web3CancelOrdersChallenge.validator.call();
+                });
+
+                afterEach(async () => {
+                    await web3CancelOrdersChallenge.changeValidator(validator);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3CancelOrdersChallenge.changeValidator(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    const validator = await web3CancelOrdersChallenge.validator();
+                    utils.getAddress(validator).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3CancelOrdersChallenge.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

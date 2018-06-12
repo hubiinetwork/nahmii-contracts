@@ -170,11 +170,14 @@ contract FraudChallenge is Ownable {
     /// @param order Fraudulent order candidate
     function challengeByOrder(Types.Order order)
     public
-    allContractsInitialized
+    validatorInitialized
+    onlyExchangeSealedOrder(order)
     {
+        require(hasher != address(0), "Hasher is missing");
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
         require(hasher.hashOrderAsWallet(order) == order.seals.wallet.hash);
-        require(hasher.hashOrderAsExchange(order) == order.seals.exchange.hash);
-        require(Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, owner));
 
         // Genuineness affected by wallet not having signed the payment
         bool genuineWalletSignature = Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
@@ -193,10 +196,11 @@ contract FraudChallenge is Ownable {
     /// @param trade Fraudulent trade candidate
     function challengeByTrade(Types.Trade trade)
     public
-    allContractsInitialized
+    validatorInitialized
+    onlySealedTrade(trade)
     {
-        require(hasher.hashTrade(trade) == trade.seal.hash);
-        require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
 
         // Gauge the genuineness of maker and taker fees. Depending on whether maker is buyer or seller
         // this result is baked into genuineness by buyer and seller below.
@@ -233,11 +237,14 @@ contract FraudChallenge is Ownable {
     /// @param payment Fraudulent payment candidate
     function challengeByPayment(Types.Payment payment)
     public
-    allContractsInitialized
+    validatorInitialized
+    onlyExchangeSealedPayment(payment)
     {
+        require(hasher != address(0), "Hasher is missing");
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
         require(hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
-        require(hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
-        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
 
         // Genuineness affected by wallet not having signed the payment
         bool genuineWalletSignature = Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
@@ -285,9 +292,18 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
-    allContractsInitialized
-    challengeableBySuccessionTradesPair(firstTrade, lastTrade, wallet, currency)
+    validatorInitialized
+    onlySealedTrade(firstTrade)
+    onlySealedTrade(lastTrade)
     {
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
+        require(Types.isTradeParty(firstTrade, wallet));
+        require(Types.isTradeParty(lastTrade, wallet));
+        require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
+        require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
+
         Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
@@ -321,9 +337,17 @@ contract FraudChallenge is Ownable {
         address wallet
     )
     public
-    allContractsInitialized
-    challengeableBySuccessionPaymentsPair(firstPayment, lastPayment, wallet)
+    validatorInitialized
+    onlySealedPayment(firstPayment)
+    onlySealedPayment(lastPayment)
     {
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
+        require(Types.isPaymentParty(firstPayment, wallet));
+        require(Types.isPaymentParty(lastPayment, wallet));
+        require(firstPayment.currency == lastPayment.currency);
+
         Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
         Types.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
@@ -356,9 +380,18 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
-    allContractsInitialized
-    challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
+    validatorInitialized
+    onlySealedTrade(trade)
+    onlySealedPayment(payment)
     {
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
+        require(Types.isTradeParty(trade, wallet));
+        require(Types.isPaymentParty(payment, wallet));
+        require(currency == payment.currency);
+        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
@@ -393,9 +426,18 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
-    allContractsInitialized
-    challengeableBySuccessionTradePaymentPair(trade, payment, wallet, currency)
+    validatorInitialized
+    onlySealedPayment(payment)
+    onlySealedTrade(trade)
     {
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
+        require(Types.isTradeParty(trade, wallet));
+        require(Types.isPaymentParty(payment, wallet));
+        require(currency == payment.currency);
+        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+
         Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
@@ -430,9 +472,18 @@ contract FraudChallenge is Ownable {
         address currency
     )
     public
-    allContractsInitialized
-    challengeableByOrderResidualsTradesPair(firstTrade, lastTrade, wallet, currency)
+    validatorInitialized
+    onlySealedTrade(firstTrade)
+    onlySealedTrade(lastTrade)
     {
+        require(configuration != address(0), "Configuration is missing");
+        require(clientFund != address(0), "ClientFund is missing");
+
+        require(Types.isTradeParty(firstTrade, wallet));
+        require(Types.isTradeParty(lastTrade, wallet));
+        require(currency == firstTrade.currencies.intended);
+        require(currency == lastTrade.currencies.intended);
+
         Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         require(firstTradePartyRole == lastTradePartyRole);
@@ -464,10 +515,12 @@ contract FraudChallenge is Ownable {
         Types.Trade trade2
     )
     public
-    hasherConfigurationContractsInitialized
-    onlyGenuineSealOfTrade(trade1)
-    onlyGenuineSealOfTrade(trade2)
+    validatorInitialized
+    onlySealedTrade(trade1)
+    onlySealedTrade(trade2)
     {
+        require(configuration != address(0), "Configuration is missing");
+
         bool doubleSpentBuyOrder = trade1.buyer.order.hashes.exchange == trade2.buyer.order.hashes.exchange;
         bool doubleSpentSellOrder = trade1.seller.order.hashes.exchange == trade2.seller.order.hashes.exchange;
 
@@ -497,10 +550,12 @@ contract FraudChallenge is Ownable {
         Types.Trade trade2
     )
     public
-    hasherConfigurationContractsInitialized
-    onlyGenuineSealOfTrade(trade1)
-    onlyGenuineSealOfTrade(trade2)
+    validatorInitialized
+    onlySealedTrade(trade1)
+    onlySealedTrade(trade2)
     {
+        require(configuration != address(0), "Configuration is missing");
+
         require(trade1.seal.hash != trade2.seal.hash);
         require(trade1.nonce == trade2.nonce);
 
@@ -523,10 +578,12 @@ contract FraudChallenge is Ownable {
         Types.Payment payment2
     )
     public
-    hasherConfigurationContractsInitialized
-    onlyGenuineSealsOfPayment(payment1)
-    onlyGenuineSealsOfPayment(payment2)
+    validatorInitialized
+    onlySealedPayment(payment1)
+    onlySealedPayment(payment2)
     {
+        require(configuration != address(0), "Configuration is missing");
+
         require(payment1.seals.wallet.hash != payment2.seals.wallet.hash);
         require(payment1.nonce == payment2.nonce);
 
@@ -550,10 +607,12 @@ contract FraudChallenge is Ownable {
         Types.Payment payment
     )
     public
-    hasherConfigurationContractsInitialized
-    onlyGenuineSealOfTrade(trade)
-    onlyGenuineSealsOfPayment(payment)
+    validatorInitialized
+    onlySealedTrade(trade)
+    onlySealedPayment(payment)
     {
+        require(configuration != address(0), "Configuration is missing");
+
         require(trade.nonce == payment.nonce);
 
         configuration.setOperationalModeExit();
@@ -603,20 +662,6 @@ contract FraudChallenge is Ownable {
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier allContractsInitialized() {
-        require(hasher != address(0), "Hasher is missing");
-        require(validator != address(0), "Validator is missing");
-        require(configuration != address(0), "Configuration is missing");
-        require(clientFund != address(0), "ClientFund is missing");
-        _;
-    }
-
-    modifier hasherConfigurationContractsInitialized() {
-        require(hasher != address(0), "Hasher is missing");
-        require(configuration != address(0), "Configuration is missing");
-        _;
-    }
-
     modifier notNullAddress(address _address) {
         require(_address != address(0));
         _;
@@ -627,87 +672,28 @@ contract FraudChallenge is Ownable {
         _;
     }
 
-    modifier signedBy(bytes32 hash, Types.Signature signature, address signer) {
-        require(Types.isGenuineSignature(hash, signature, signer));
+    modifier validatorInitialized() {
+        require(validator != address(0), "Validator is missing");
         _;
     }
 
-    modifier challengeableBySuccessionTradesPair(Types.Trade firstTrade, Types.Trade lastTrade, address wallet, address currency) {
-        require(Types.isTradeParty(firstTrade, wallet));
-        require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
-        require(hasher.hashTrade(firstTrade) == firstTrade.seal.hash);
-        require(Types.isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
-
-        require(Types.isTradeParty(lastTrade, wallet));
-        require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
-        require(hasher.hashTrade(lastTrade) == lastTrade.seal.hash);
-        require(Types.isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
-
+    modifier onlyExchangeSealedOrder(Types.Order order) {
+        require(validator.isGenuineOrderExchangeSeal(order, owner), "Order is not sealed by exchange");
         _;
     }
 
-    modifier challengeableBySuccessionPaymentsPair(Types.Payment firstPayment, Types.Payment lastPayment, address wallet) {
-        require(firstPayment.currency == lastPayment.currency);
-
-        require(Types.isPaymentParty(firstPayment, wallet));
-        require(hasher.hashPaymentAsWallet(firstPayment) == firstPayment.seals.wallet.hash);
-        require(hasher.hashPaymentAsExchange(firstPayment) == firstPayment.seals.exchange.hash);
-        require(Types.isGenuineSignature(firstPayment.seals.wallet.hash, firstPayment.seals.wallet.signature, firstPayment.sender.wallet));
-        require(Types.isGenuineSignature(firstPayment.seals.exchange.hash, firstPayment.seals.exchange.signature, owner));
-
-        require(Types.isPaymentParty(lastPayment, wallet));
-        require(hasher.hashPaymentAsWallet(lastPayment) == lastPayment.seals.wallet.hash);
-        require(hasher.hashPaymentAsExchange(lastPayment) == lastPayment.seals.exchange.hash);
-        require(Types.isGenuineSignature(lastPayment.seals.wallet.hash, lastPayment.seals.wallet.signature, lastPayment.sender.wallet));
-        require(Types.isGenuineSignature(lastPayment.seals.exchange.hash, lastPayment.seals.exchange.signature, owner));
-
+    modifier onlySealedTrade(Types.Trade trade) {
+        require(validator.isGenuineTradeSeal(trade, owner), "Trade is not sealed");
         _;
     }
 
-    modifier challengeableBySuccessionTradePaymentPair(Types.Trade trade, Types.Payment payment, address wallet, address currency) {
-        require(currency == payment.currency);
-
-        require(Types.isTradeParty(trade, wallet));
-        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
-        require(hasher.hashTrade(trade) == trade.seal.hash);
-        require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
-
-        require(Types.isPaymentParty(payment, wallet));
-        require(hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
-        require(hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
-        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
-        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
-
+    modifier onlyExchangeSealedPayment(Types.Payment payment) {
+        require(validator.isGenuinePaymentExchangeSeal(payment, owner), "Payment is not sealed by exchange");
         _;
     }
 
-    modifier challengeableByOrderResidualsTradesPair(Types.Trade firstTrade, Types.Trade lastTrade, address wallet, address currency) {
-        require(hasher.hashTrade(firstTrade) == firstTrade.seal.hash);
-        require(Types.isGenuineSignature(firstTrade.seal.hash, firstTrade.seal.signature, owner));
-        require(currency == firstTrade.currencies.intended);
-        require(firstTrade.buyer.wallet == wallet || firstTrade.seller.wallet == wallet);
-
-        require(hasher.hashTrade(lastTrade) == lastTrade.seal.hash);
-        require(Types.isGenuineSignature(lastTrade.seal.hash, lastTrade.seal.signature, owner));
-        require(currency == lastTrade.currencies.intended);
-        require(lastTrade.buyer.wallet == wallet || lastTrade.seller.wallet == wallet);
-
-        _;
-    }
-
-    modifier onlyGenuineSealOfTrade(Types.Trade trade) {
-        require(hasher.hashTrade(trade) == trade.seal.hash);
-        require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
-
-        _;
-    }
-
-    modifier onlyGenuineSealsOfPayment(Types.Payment payment) {
-        require(hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
-        require(hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash);
-        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
-        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
-
+    modifier onlySealedPayment(Types.Payment payment) {
+        require(validator.isGenuinePaymentSeals(payment, owner), "Payment is not sealed");
         _;
     }
 }

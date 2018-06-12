@@ -1,9 +1,6 @@
-const ethers = require('ethers');
+const {Wallet, utils} = require('ethers');
 const ethutil = require('ethereumjs-util');
 const cryptography = require('omphalos-commons').util.cryptography;
-
-const Wallet = ethers.Wallet;
-const utils = ethers.utils;
 
 exports.liquidityRoles = ['Maker', 'Taker'];
 exports.intentions = ['Buy', 'Sell'];
