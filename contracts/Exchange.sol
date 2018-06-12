@@ -18,8 +18,7 @@ import "./CommunityVote.sol";
 import "./ClientFund.sol";
 import "./ReserveFund.sol";
 import "./RevenueFund.sol";
-import "./DealSettlementChallengeA.sol";
-import "./DealSettlementChallengeB.sol";
+import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
 
 /**
 @title Exchange
@@ -45,8 +44,7 @@ contract Exchange is Ownable {
     RevenueFund public paymentsRevenueFund;
     bool public communityVoteUpdateDisabled;
     CommunityVote public communityVote;
-    DealSettlementChallengeA public dealSettlementChallengeA;
-    DealSettlementChallengeB public dealSettlementChallengeB;
+    DealSettlementChallenge public dealSettlementChallenge;
 
     Types.Settlement[] public settlements;
     mapping(address => uint256[]) walletSettlementIndexMap;
@@ -63,8 +61,7 @@ contract Exchange is Ownable {
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
-    event ChangeDealSettlementChallengeAEvent(DealSettlementChallengeA oldDealSettlementChallenge, DealSettlementChallengeA newDealSettlementChallenge);
-    event ChangeDealSettlementChallengeBEvent(DealSettlementChallengeB oldDealSettlementChallenge, DealSettlementChallengeB newDealSettlementChallenge);
+    event ChangeDealSettlementChallengeEvent(DealSettlementChallenge oldDealSettlementChallenge, DealSettlementChallenge newDealSettlementChallenge);
 
     //
     // Constructor
@@ -174,28 +171,15 @@ contract Exchange is Ownable {
 
     /// @notice Change the deal settlement challenge contract
     /// @param newDealSettlementChallenge The (address of) DealSettlementChallengeA contract instance
-    function changeDealSettlementChallengeA(DealSettlementChallengeA newDealSettlementChallenge)
+    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
     public
     onlyOwner
     notNullAddress(newDealSettlementChallenge)
-    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallengeA)
+    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallenge)
     {
-        DealSettlementChallengeA oldDealSettlementChallenge = dealSettlementChallengeA;
-        dealSettlementChallengeA = newDealSettlementChallenge;
-        emit ChangeDealSettlementChallengeAEvent(oldDealSettlementChallenge, newDealSettlementChallenge);
-    }
-
-    /// @notice Change the deal settlement challenge contract
-    /// @param newDealSettlementChallenge The (address of) DealSettlementChallengeB contract instance
-    function changeDealSettlementChallengeB(DealSettlementChallengeB newDealSettlementChallenge)
-    public
-    onlyOwner
-    notNullAddress(newDealSettlementChallenge)
-    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallengeA)
-    {
-        DealSettlementChallengeB oldDealSettlementChallenge = dealSettlementChallengeB;
-        dealSettlementChallengeB = newDealSettlementChallenge;
-        emit ChangeDealSettlementChallengeBEvent(oldDealSettlementChallenge, newDealSettlementChallenge);
+        DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
+        dealSettlementChallenge = newDealSettlementChallenge;
+        emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, newDealSettlementChallenge);
     }
 
     /// @notice Get the seized status of given wallet
@@ -245,7 +229,7 @@ contract Exchange is Ownable {
     signedBy(trade.seal.hash, trade.seal.signature, owner)
     {
         require(communityVote != address(0), "CommunityVote is missing");
-        require(dealSettlementChallengeA != address(0), "DealSettlementChallengeA is missing");
+        require(dealSettlementChallenge != address(0), "DealSettlementChallenge is missing");
         require(configuration != address(0), "Configuration is missing");
         require(clientFund != address(0), "ClientFund is missing");
 
@@ -258,7 +242,7 @@ contract Exchange is Ownable {
         require(Types.isTradeParty(trade, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        (Types.ChallengeResult result, address challenger) = dealSettlementChallengeA.dealSettlementChallengeStatus(wallet, trade.nonce);
+        (Types.ChallengeResult result, address challenger) = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
 
         if (Types.ChallengeResult.Qualified == result) {
 
@@ -308,7 +292,7 @@ contract Exchange is Ownable {
     signedBy(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet)
     {
         require(communityVote != address(0), "CommunityVote is missing");
-        require(dealSettlementChallengeA != address(0), "DealSettlementChallengeA is missing");
+        require(dealSettlementChallenge != address(0), "DealSettlementChallenge is missing");
         require(configuration != address(0), "Configuration is missing");
         require(clientFund != address(0), "ClientFund is missing");
 
@@ -321,7 +305,7 @@ contract Exchange is Ownable {
         require(Types.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        (Types.ChallengeResult result, address challenger) = dealSettlementChallengeA.dealSettlementChallengeStatus(wallet, payment.nonce);
+        (Types.ChallengeResult result, address challenger) = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
 
         if (Types.ChallengeResult.Qualified == result) {
 

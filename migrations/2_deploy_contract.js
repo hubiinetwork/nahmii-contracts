@@ -12,8 +12,8 @@ var CommunityVote = artifacts.require("./CommunityVote.sol");
 var Configuration = artifacts.require("./Configuration.sol");
 var Exchange = artifacts.require("./Exchange.sol");
 var CancelOrdersChallenge = artifacts.require("./CancelOrdersChallenge.sol");
-var DealSettlementChallengeA = artifacts.require("./DealSettlementChallengeA.sol");
-var DealSettlementChallengeB = artifacts.require("./DealSettlementChallengeB.sol");
+var DealSettlementChallenge = artifacts.require("./DealSettlementChallenge.sol");
+var DealSettlementChallengePartialChallenge = artifacts.require("./DealSettlementChallengePartialChallenge.sol");
 var Hasher = artifacts.require('./Hasher.sol');
 var Validator = artifacts.require('./Validator.sol');
 var FraudChallenge = artifacts.require("./FraudChallenge.sol");
@@ -49,8 +49,8 @@ module.exports = function (deployer, network, accounts) {
 	deployer.link(SafeMathIntLib, Configuration);
 	deployer.link(SafeMathIntLib, Exchange);
     deployer.link(SafeMathIntLib, CancelOrdersChallenge);
-	deployer.link(SafeMathIntLib, DealSettlementChallengeA);
-	deployer.link(SafeMathIntLib, DealSettlementChallengeB);
+	deployer.link(SafeMathIntLib, DealSettlementChallenge);
+	deployer.link(SafeMathIntLib, DealSettlementChallengePartialChallenge);
     deployer.link(SafeMathIntLib, FraudChallenge);
 	deployer.link(SafeMathIntLib, ReserveFund);
 	deployer.link(SafeMathIntLib, RevenueFund);
@@ -66,8 +66,8 @@ module.exports = function (deployer, network, accounts) {
 
     deployer.link(Types, Exchange);
     deployer.link(Types, CancelOrdersChallenge);
-	deployer.link(Types, DealSettlementChallengeA);
-	deployer.link(Types, DealSettlementChallengeB);
+	deployer.link(Types, DealSettlementChallenge);
+	deployer.link(Types, DealSettlementChallengePartialChallenge);
     deployer.link(Types, FraudChallenge);
 
 	deployer.deploy(ClientFund, ownerAccount).then(() => {
@@ -90,11 +90,11 @@ module.exports = function (deployer, network, accounts) {
 		addresses.CancelOrdersChallenge = CancelOrdersChallenge.address;
 	});
 
-	deployer.deploy(DealSettlementChallengeA, ownerAccount).then(() => {
-		addresses.DealSettlementChallengeA = DealSettlementChallengeA.address;
+	deployer.deploy(DealSettlementChallenge, ownerAccount).then(() => {
+		addresses.DealSettlementChallenge = DealSettlementChallenge.address;
 
-		deployer.deploy(DealSettlementChallengeB, ownerAccount, DealSettlementChallengeA.address).then(() => {
-			addresses.DealSettlementChallengeB = DealSettlementChallengeB.address;
+		deployer.deploy(DealSettlementChallengePartialChallenge, ownerAccount, DealSettlementChallenge.address).then(() => {
+			addresses.DealSettlementChallengePartialChallenge = DealSettlementChallengePartialChallenge.address;
 		});
 	});
 
