@@ -13,8 +13,8 @@ import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./Types.sol";
 import "./ERC20.sol";
-import {AbstractConfiguration} from "./Configuration.sol";
-import {AbstractValidator} from "./Validator.sol";
+import {Configuration} from "./Configuration.sol";
+import {Validator} from "./Validator.sol";
 import "./DealSettlementChallenge.sol";
 import "./ClientFund.sol";
 import "./ReserveFund.sol";
@@ -37,8 +37,8 @@ contract Exchange is Ownable {
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
-    AbstractConfiguration public configuration;
-    AbstractValidator public validator;
+    Configuration public configuration;
+    Validator public validator;
     DealSettlementChallenge public dealSettlementChallenge;
     ClientFund public clientFund;
     ReserveFund public tradesReserveFund;
@@ -57,8 +57,8 @@ contract Exchange is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
-    event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
-    event ChangeValidatorEvent(AbstractValidator oldValidator, AbstractValidator newValidator);
+    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
+    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
     event ChangeDealSettlementChallengeEvent(DealSettlementChallenge oldDealSettlementChallenge, DealSettlementChallenge newDealSettlementChallenge);
     event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
     event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
@@ -78,26 +78,26 @@ contract Exchange is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(AbstractConfiguration newConfiguration)
+    function changeConfiguration(Configuration newConfiguration)
     public
     onlyOwner
     notNullAddress(newConfiguration)
     notEqualAddresses(newConfiguration, configuration)
     {
-        AbstractConfiguration oldConfiguration = configuration;
+        Configuration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
     }
 
     /// @notice Change the validator contract
     /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(AbstractValidator newValidator)
+    function changeValidator(Validator newValidator)
     public
     onlyOwner
     notNullAddress(newValidator)
     notEqualAddresses(newValidator, validator)
     {
-        AbstractValidator oldValidator = validator;
+        Validator oldValidator = validator;
         validator = newValidator;
         emit ChangeValidatorEvent(oldValidator, validator);
     }
