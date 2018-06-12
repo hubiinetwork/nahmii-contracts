@@ -8,7 +8,7 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifyable} from "./Modifyable.sol";
+import {Modifiable} from "./Modifiable.sol";
 
 interface Configuration {
     function setOperationalModeExit() external;
@@ -20,7 +20,7 @@ interface Configuration {
     function getDoubleSpentOrderStake() external view returns (address, int256);
 }
 
-contract Configurable is Ownable, Modifyable {
+contract Configurable is Ownable, Modifiable {
 
     //
     // Variables

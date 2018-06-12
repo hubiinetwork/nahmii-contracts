@@ -8,10 +8,10 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifyable} from "./Modifyable.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 
-contract FraudChallengable is Ownable, Modifyable {
+contract FraudChallengable is Ownable, Modifiable {
 
     //
     // Variables

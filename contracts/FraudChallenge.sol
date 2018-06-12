@@ -9,11 +9,11 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifyable} from "./Modifyable.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {Servable} from "./Servable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallenge is Ownable, Modifyable, Servable {
+contract FraudChallenge is Ownable, Modifiable, Servable {
 
     //
     // Variables

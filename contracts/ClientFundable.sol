@@ -9,14 +9,14 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifyable} from "./Modifyable.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {Types} from "./Types.sol";
 
 interface ClientFund {
     function seizeDepositedAndSettledBalances(address sourceWallet, address targetWallet) external;
 }
 
-contract ClientFundable is Ownable, Modifyable {
+contract ClientFundable is Ownable, Modifiable {
 
     //
     // Variables

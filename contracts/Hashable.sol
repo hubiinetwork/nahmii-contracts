@@ -9,7 +9,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifyable} from "./Modifyable.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {Types} from "./Types.sol";
 
 interface Hasher {
@@ -18,7 +18,7 @@ interface Hasher {
     function hashPaymentAsWallet(Types.Payment payment) external pure returns (bytes32);
 }
 
-contract Hashable is Ownable, Modifyable {
+contract Hashable is Ownable, Modifiable {
 
     //
     // Variables

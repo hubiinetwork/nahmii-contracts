@@ -9,7 +9,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifyable} from "./Modifyable.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {Types} from "./Types.sol";
 
 interface Validator {
@@ -62,7 +62,7 @@ interface Validator {
     function isGenuinePaymentFee(Types.Payment payment) external view returns (bool);
 }
 
-contract Validatable is Ownable, Modifyable {
+contract Validatable is Ownable, Modifiable {
 
     //
     // Variables
