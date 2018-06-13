@@ -10,11 +10,8 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
+import {ClientFund} from "./ClientFund.sol";
 import {Types} from "./Types.sol";
-
-interface ClientFund {
-    function seizeDepositedAndSettledBalances(address sourceWallet, address targetWallet) external;
-}
 
 contract ClientFundable is Ownable, Modifiable {
 

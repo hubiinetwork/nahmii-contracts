@@ -9,10 +9,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
-
-interface SecurityBond {
-    function stage(int256 amount, address token, address wallet) external;
-}
+import {SecurityBond} from "./SecurityBond.sol";
 
 contract SecurityBondable is Ownable, Modifiable {
 

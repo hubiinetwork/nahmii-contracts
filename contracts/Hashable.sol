@@ -10,13 +10,8 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
+import {Hasher} from "./Hasher.sol";
 import {Types} from "./Types.sol";
-
-interface Hasher {
-    function hashOrderAsWallet(Types.Order order) external pure returns (bytes32);
-
-    function hashPaymentAsWallet(Types.Payment payment) external pure returns (bytes32);
-}
 
 contract Hashable is Ownable, Modifiable {
 

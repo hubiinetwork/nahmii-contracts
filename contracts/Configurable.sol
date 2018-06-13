@@ -9,16 +9,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
-
-interface Configuration {
-    function setOperationalModeExit() external;
-
-    function getFalseWalletSignatureStake() external view returns (address, int256);
-
-    function getDuplicateDealNonceStake() external view returns (address, int256);
-
-    function getDoubleSpentOrderStake() external view returns (address, int256);
-}
+import {Configuration} from "./Configuration.sol";
 
 contract Configurable is Ownable, Modifiable {
 
