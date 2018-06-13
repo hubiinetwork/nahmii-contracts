@@ -60,7 +60,7 @@ contract Validator is Ownable, Configurable, Hashable {
         }
     }
 
-    function isGenuineByTradeBuyer(Types.Trade trade, address exchange) public pure returns (bool) {
+    function isGenuineTradeBuyer(Types.Trade trade, address exchange) public pure returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (trade.buyer.wallet != exchange)
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.singleFees.intended))
@@ -70,7 +70,7 @@ contract Validator is Ownable, Configurable, Hashable {
         && (trade.buyer.order.residuals.previous >= trade.buyer.order.residuals.current);
     }
 
-    function isGenuineByTradeSeller(Types.Trade trade, address exchange) public pure returns (bool) {
+    function isGenuineTradeSeller(Types.Trade trade, address exchange) public pure returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (trade.seller.wallet != exchange)
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))

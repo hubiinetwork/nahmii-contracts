@@ -120,7 +120,7 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
     }
 
     /// @notice Get the number of fraudulent orders
-    function getFraudulentOrdersCount() public view returns (uint256) {
+    function fraudulentOrdersCount() public view returns (uint256) {
         return fraudulentOrders.length;
     }
 
@@ -136,7 +136,7 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
     }
 
     /// @notice Get the number of fraudulent trades
-    function getFraudulentTradesCount() public view returns (uint256) {
+    function fraudulentTradesCount() public view returns (uint256) {
         return fraudulentTrades.length;
     }
 
@@ -152,7 +152,7 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
     }
 
     /// @notice Get the number of fraudulent payments
-    function getFraudulentPaymentsCount() public view returns (uint256) {
+    function fraudulentPaymentsCount() public view returns (uint256) {
         return fraudulentPayments.length;
     }
 }

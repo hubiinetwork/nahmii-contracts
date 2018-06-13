@@ -4,33 +4,34 @@
  * Copyright (C) 2017-2018 Hubii
  */
 
-var async = require('async');
-var ethers = require('ethers');
-var keccak256 = require("augmented-keccak256");
-var Helpers = require('./helpers');
-var w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
+const async = require('async');
+const ethers = require('ethers');
+const keccak256 = require("augmented-keccak256");
+const Helpers = require('./helpers');
+const w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 
-var ClientFund = artifacts.require("ClientFund");
-var CommunityVote = artifacts.require("CommunityVote");
-var Hasher = artifacts.require("Hasher");
-var Validator = artifacts.require("Validator");
-var Configuration = artifacts.require("Configuration");
-var Exchange = artifacts.require("Exchange");
-var CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
-var DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
-// var FraudChallenge = artifacts.require("FraudChallenge");
-var ReserveFund = artifacts.require("ReserveFund");
-var RevenueFund = artifacts.require("RevenueFund");
-var SecurityBond = artifacts.require("SecurityBond");
-var TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
-var ERC20Token = artifacts.require("StandardTokenEx");
-var UnitTestHelpers = artifacts.require("UnitTestHelpers");
+const ClientFund = artifacts.require("ClientFund");
+const CommunityVote = artifacts.require("CommunityVote");
+const Hasher = artifacts.require("Hasher");
+const Validator = artifacts.require("Validator");
+const Configuration = artifacts.require("Configuration");
+const Exchange = artifacts.require("Exchange");
+const CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
+const DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
+const FraudChallenge = artifacts.require("FraudChallenge");
+const FraudChallengeByTrade = artifacts.require("FraudChallengeByTrade");
+const ReserveFund = artifacts.require("ReserveFund");
+const RevenueFund = artifacts.require("RevenueFund");
+const SecurityBond = artifacts.require("SecurityBond");
+const TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
+const ERC20Token = artifacts.require("StandardTokenEx");
+const UnitTestHelpers = artifacts.require("UnitTestHelpers");
 
 //augmented sendTransaction using promises
 Helpers.augmentWeb3(web3);
 
 contract('Smart contract checks', function () {
-    var glob = {
+    const glob = {
         owner: web3.eth.coinbase,
         user_a: web3.eth.accounts[1],
         user_b: web3.eth.accounts[2],
@@ -220,16 +221,27 @@ contract('Smart contract checks', function () {
         }
     });
 
-    // before("Preflight: Instantiate FraudChallenge contract", async () => {
-    //     try {
-    //         glob.web3FraudChallenge = await FraudChallenge.deployed();
-    //         assert.notEqual(glob.web3FraudChallenge, null);
-    //         glob.ethersIoFraudChallenge = new ethers.Contract(glob.web3FraudChallenge.address, FraudChallenge.abi, glob.signer_owner);
-    //     }
-    //     catch (err) {
-    //         assert(false, 'Failed to instantiate FraudChallenge contract address. [Error: ' + err.toString() + ']');
-    //     }
-    // });
+    before("Preflight: Instantiate FraudChallenge contract", async () => {
+        try {
+            glob.web3FraudChallenge = await FraudChallenge.deployed();
+            assert.notEqual(glob.web3FraudChallenge, null);
+            glob.ethersIoFraudChallenge = new ethers.Contract(glob.web3FraudChallenge.address, FraudChallenge.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallenge contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByTrade contract", async () => {
+        try {
+            glob.web3FraudChallengeByTrade = await FraudChallengeByTrade.deployed();
+            assert.notEqual(glob.web3FraudChallengeByTrade, null);
+            glob.ethersIoFraudChallengeByTrade = new ethers.Contract(glob.web3FraudChallengeByTrade.address, FraudChallengeByTrade.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByTrade contract address. [Error: ' + err.toString() + ']');
+        }
+    });
 
     before("Preflight: Instantiate ReserveFund contract", async () => {
         try {
@@ -342,7 +354,9 @@ contract('Smart contract checks', function () {
     require('./scenarios/Exchange')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DealSettlementChallenge')(glob);
+    // TODO Enable FraudChallenge test
     // require('./scenarios/FraudChallenge')(glob);
+    require('./scenarios/FraudChallengeByTrade')(glob);
     require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);

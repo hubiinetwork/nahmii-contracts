@@ -326,6 +326,632 @@ module.exports = (glob) => {
             })
         });
 
+        // TODO Implement
+        describe.skip('challengeByOrder()', () => {
+            let trade, overrideOptions, topic, filter;
+
+            before(async () => {
+                overrideOptions = {gasLimit: 2e6};
+            });
+
+            beforeEach(async () => {
+                await ethersClientFund.reset(overrideOptions);
+
+                await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.001', 18), [], [], overrideOptions);
+                await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
+                await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
+                await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
+                await ethersConfiguration.setFalseWalletSignatureStake(mocks.address0, utils.parseUnits('100', 18));
+
+                topic = ethersFraudChallenge.interface.events.ChallengeByTradeEvent.topics[0];
+                filter = {
+                    fromBlock: blockNumber0,
+                    topics: [topic]
+                };
+            });
+
+            describe('if trade is genuine', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                });
+
+                it('should revert', async () => {
+                    return ethersFraudChallenge.challengeByTrade(trade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if (exchange) hash differs from calculated', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    trade.seal.hash = utils.id('some non-existent hash');
+                });
+
+                it('should revert', async () => {
+                    ethersFraudChallenge.challengeByTrade(trade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if not signed (by exchange)', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    const sign = mocks.createWeb3Signer(glob.user_a);
+                    trade.seal.signature = await sign(trade.seal.hash);
+                });
+
+                it('should revert', async () => {
+                    ethersFraudChallenge.challengeByTrade(trade, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if buyer address equals seller address', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {wallet: glob.user_a},
+                        seller: {wallet: glob.user_a},
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if buyer address equals owner address', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {wallet: glob.owner},
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if buyer\'s current intended balance field differs from calculated', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            balances: {
+                                intended: {
+                                    current: utils.bigNumberify(0)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if buyer\'s current conjugate balance field differs from calculated', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            balances: {
+                                conjugate: {
+                                    current: utils.bigNumberify(0)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if buyer\'s order\'s amount is smaller than its current residual', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            order: {
+                                residuals: {
+                                    current: utils.parseUnits('4000', 18)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if buyer\'s order\'s amount is smaller than its previous residual', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            order: {
+                                residuals: {
+                                    previous: utils.parseUnits('5000', 18)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if buyer\'s order\'s previous residual is smaller than its current residual', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            order: {
+                                residuals: {
+                                    previous: utils.parseUnits('300', 18)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (buyer\'s) maker fee is greater than the nominal maker fee', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        singleFees: {
+                            intended: utils.parseUnits('1.0', 18)
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (buyer\'s) maker fee is different than provided by Configuration contract', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        singleFees: {
+                            intended: utils.parseUnits('0.1', 18).mul(utils.bigNumberify(90)).div(utils.bigNumberify(100))
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (buyer\'s) maker fee is smaller than the minimum maker fee', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        singleFees: {
+                            intended: utils.parseUnits('0.001', 18)
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedBuyer.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if seller address equals owner address', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        seller: {
+                            address: glob.owner
+                        }
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if seller\'s current intended balance field differs from calculated', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        seller: {
+                            balances: {
+                                intended: {
+                                    current: utils.bigNumberify(0)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if seller\'s current conjugate balance field differs from calculated', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        seller: {
+                            balances: {
+                                conjugate: {
+                                    current: utils.bigNumberify(0)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if seller\'s order\'s amount is smaller than its current residual', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        seller: {
+                            order: {
+                                residuals: {
+                                    current: utils.parseUnits('6000', 18)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if seller\'s order\'s amount is smaller than its previous residual', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        seller: {
+                            order: {
+                                residuals: {
+                                    previous: utils.parseUnits('7000', 18)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if seller\'s order\'s previous residual is smaller than its current residual', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        seller: {
+                            order: {
+                                residuals: {
+                                    previous: utils.parseUnits('500', 18)
+                                }
+                            }
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (seller\'s) taker fee is greater than the nominal taker fee', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        singleFees: {
+                            conjugate: utils.parseUnits('0.002', 18)
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (seller\'s) taker fee is different than provided by Configuration contract', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        singleFees: {
+                            conjugate: utils.parseUnits('0.0002', 18).mul(utils.bigNumberify(90)).div(utils.bigNumberify(100))
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if (seller\'s) taker fee is smaller than the minimum taker fee', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        singleFees: {
+                            conjugate: utils.parseUnits('0.000002', 18)
+                        },
+                        blockNumber: utils.bigNumberify(blockNumber10)
+                    });
+                });
+
+                it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
+                    await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
+                    const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+                        ethersConfiguration.isOperationalModeExit(),
+                        ethersFraudChallenge.fraudulentTrade(),
+                        ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
+                        ethersClientFund.seizures(0),
+                        provider.getLogs(filter)
+                    ]);
+                    operationalModeExit.should.be.true;
+                    fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
+                    seizedSeller.should.be.true;
+                    seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+        });
+
         describe('challengeByTrade()', () => {
             let trade, overrideOptions, topic, filter;
 

@@ -11,13 +11,11 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Hashable} from "./Hashable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Hashable, SecurityBondable, Validatable, ClientFundable {
+contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
 
     //
     // Events
@@ -50,22 +48,22 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Hash
         bool genuineTakerFee = validator.isGenuineTradeTakerFee(trade);
 
         // Genuineness affected by buyer
-        bool genuineByBuyer = validator.isGenuineByTradeBuyer(trade, owner)
+        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade, owner)
         && (Types.LiquidityRole.Maker == trade.buyer.liquidityRole ? genuineMakerFee : genuineTakerFee);
 
         // Genuineness affected by seller
-        bool genuineBySeller = validator.isGenuineByTradeSeller(trade, owner)
+        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade, owner)
         && (Types.LiquidityRole.Maker == trade.seller.liquidityRole ? genuineMakerFee : genuineTakerFee);
 
-        require(!genuineByBuyer || !genuineBySeller);
+        require(!genuineBuyerAndFee || !genuineSellerAndFee);
 
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTrade(trade);
 
         address seizedWallet;
-        if (!genuineByBuyer)
+        if (!genuineBuyerAndFee)
             seizedWallet = trade.buyer.wallet;
-        if (!genuineBySeller)
+        if (!genuineSellerAndFee)
             seizedWallet = trade.seller.wallet;
         if (address(0) != seizedWallet) {
             clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
