@@ -36,7 +36,7 @@ contract Validator is Ownable, Configurable, Hashable {
             return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
-        } else { // Types.LiquidityRole.Maker == trade.seller.liquidityRole
+        } else {// Types.LiquidityRole.Maker == trade.seller.liquidityRole
             discountTier = int256(trade.seller.rollingVolume);
             return (trade.singleFees.conjugate <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
             && (trade.singleFees.conjugate == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
@@ -52,7 +52,7 @@ contract Validator is Ownable, Configurable, Hashable {
             return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
-        }   else { // Types.LiquidityRole.Taker == trade.seller.liquidityRole
+        } else {// Types.LiquidityRole.Taker == trade.seller.liquidityRole
             discountTier = int256(trade.seller.rollingVolume);
             return (trade.singleFees.conjugate <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
             && (trade.singleFees.conjugate == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
@@ -80,33 +80,53 @@ contract Validator is Ownable, Configurable, Hashable {
         && (trade.seller.order.residuals.previous >= trade.seller.order.residuals.current);
     }
 
+    function isGenuineOrderWalletHash(Types.Order order) public view returns (bool) {
+        return hasher.hashOrderAsWallet(order) == order.seals.wallet.hash;
+    }
+
+    function isGenuineOrderExchangeHash(Types.Order order) public view returns (bool) {
+        return hasher.hashOrderAsExchange(order) == order.seals.exchange.hash;
+    }
+
     function isGenuineOrderWalletSeal(Types.Order order) public view returns (bool) {
-        return (hasher.hashOrderAsWallet(order) == order.seals.wallet.hash)
-        && (Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet));
+        return isGenuineOrderWalletHash(order)
+        && Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
     }
 
     function isGenuineOrderExchangeSeal(Types.Order order, address exchange) public view returns (bool) {
-        return (hasher.hashOrderAsExchange(order) == order.seals.exchange.hash)
-        && (Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, exchange));
+        return isGenuineOrderExchangeHash(order)
+        && Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, exchange);
     }
 
     function isGenuineOrderSeals(Types.Order order, address exchange) public view returns (bool) {
         return isGenuineOrderWalletSeal(order) && isGenuineOrderExchangeSeal(order, exchange);
     }
 
+    function isGenuineTradeHash(Types.Trade trade) public view returns (bool) {
+        return hasher.hashTrade(trade) == trade.seal.hash;
+    }
+
     function isGenuineTradeSeal(Types.Trade trade, address exchange) public view returns (bool) {
-        return (hasher.hashTrade(trade) == trade.seal.hash)
-        && (Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, exchange));
+        return isGenuineTradeHash(trade)
+        && Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, exchange);
+    }
+
+    function isGenuinePaymentWalletHash(Types.Payment payment) public view returns (bool) {
+        return hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash;
+    }
+
+    function isGenuinePaymentExchangeHash(Types.Payment payment) public view returns (bool) {
+        return hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash;
     }
 
     function isGenuinePaymentWalletSeal(Types.Payment payment) public view returns (bool) {
-        return (hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash)
-        && (Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
+        return isGenuinePaymentWalletHash(payment)
+        && Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
     }
 
     function isGenuinePaymentExchangeSeal(Types.Payment payment, address exchange) public view returns (bool) {
-        return (hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash)
-        && (Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, exchange));
+        return isGenuinePaymentExchangeHash(payment)
+        && Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, exchange);
     }
 
     function isGenuinePaymentSeals(Types.Payment payment, address exchange) public view returns (bool) {
@@ -120,12 +140,12 @@ contract Validator is Ownable, Configurable, Hashable {
         && (payment.singleFee >= payment.amount.mul(configuration.getCurrencyPaymentMinimumFee(payment.currency, payment.blockNumber)).div(feePartsPer));
     }
 
-    function isGenuineByPaymentSender(Types.Payment payment) public pure returns (bool) {
+    function isGenuinePaymentSender(Types.Payment payment) public pure returns (bool) {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.singleFee));
     }
 
-    function isGenuineByPaymentRecipient(Types.Payment payment) public pure returns (bool) {
+    function isGenuinePaymentRecipient(Types.Payment payment) public pure returns (bool) {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.recipient.balances.current == payment.recipient.balances.previous.add(payment.transfers.single));
     }

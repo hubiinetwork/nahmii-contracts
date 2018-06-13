@@ -48,6 +48,10 @@ contract MockedSecurityBond /*is SecurityBond*/ {
         stages.length = 0;
     }
 
+    function stagesCount() public view returns (uint256) {
+        return stages.length;
+    }
+
     function stage(int256 amount, address token, address wallet) public {
         stages.push(Stage(wallet, token, amount));
         emit StageEvent(msg.sender, amount, token);

@@ -46,19 +46,19 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Ha
         require(clientFund != address(0));
         require(securityBond != address(0));
 
-        require(hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash);
+        require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
         bool genuineWalletSignature = Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
 
         // Genuineness affected by sender
-        bool genuineBySender = validator.isGenuineByPaymentSender(payment) &&
+        bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&
         validator.isGenuinePaymentFee(payment);
 
         // Genuineness affected by recipient
-        bool genuineByRecipient = validator.isGenuineByPaymentRecipient(payment);
+        bool genuineRecipient = validator.isGenuinePaymentRecipient(payment);
 
-        require(!genuineWalletSignature || !genuineBySender || !genuineByRecipient);
+        require(!genuineWalletSignature || !genuineSenderAndFee || !genuineRecipient);
 
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentPayment(payment);
@@ -68,9 +68,9 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Ha
             securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
         } else {
             address seizedWallet;
-            if (!genuineBySender)
+            if (!genuineSenderAndFee)
                 seizedWallet = payment.sender.wallet;
-            if (!genuineByRecipient)
+            if (!genuineRecipient)
                 seizedWallet = payment.recipient.wallet;
             if (address(0) != seizedWallet) {
                 clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
