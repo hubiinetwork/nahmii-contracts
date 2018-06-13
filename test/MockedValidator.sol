@@ -21,6 +21,10 @@ contract MockedValidator is Ownable /*is Validator*/ {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
+    bool orderWalletHash;
+    bool orderWalletSeal;
+    bool orderExchangeSeal;
+    bool orderSeals;
     bool tradeMakerFee;
     bool tradeTakerFee;
     bool tradeBuyer;
@@ -49,6 +53,10 @@ contract MockedValidator is Ownable /*is Validator*/ {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function reset() public {
+        orderWalletHash = true;
+        orderWalletSeal = true;
+        orderExchangeSeal = true;
+        orderSeals = true;
         tradeMakerFee = true;
         tradeTakerFee = true;
         tradeBuyer = true;
@@ -61,6 +69,48 @@ contract MockedValidator is Ownable /*is Validator*/ {
         paymentWalletSeal = true;
         paymentExchangeSeal = true;
         paymentSeals = true;
+    }
+
+    function setGenuineOrderWalletHash(bool genuine) public {
+        orderWalletHash = genuine;
+    }
+
+    function isGenuineOrderWalletHash(Types.Order order) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(order.nonce == order.nonce);
+        return orderWalletHash;
+    }
+
+    function setGenuineOrderWalletSeal(bool genuine) public {
+        orderWalletSeal = genuine;
+    }
+
+    function isGenuineOrderWalletSeal(Types.Order order) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(order.nonce == order.nonce);
+        return orderWalletSeal;
+    }
+
+    function setGenuineOrderExchangeSeal(bool genuine) public {
+        orderExchangeSeal = genuine;
+    }
+
+    function isGenuineOrderExchangeSeal(Types.Order order, address exchange) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(order.nonce == order.nonce);
+        require(exchange == exchange);
+        return orderExchangeSeal;
+    }
+
+    function setGenuineOrderSeals(bool genuine) public {
+        orderSeals = genuine;
+    }
+
+    function isGenuineOrderSeals(Types.Order order, address exchange) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(order.nonce == order.nonce);
+        require(exchange == exchange);
+        return orderSeals;
     }
 
     function setGenuineTradeMakerFee(bool genuine) public {

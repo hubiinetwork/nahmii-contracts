@@ -19,6 +19,7 @@ const Exchange = artifacts.require("Exchange");
 const CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
 const DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
 const FraudChallenge = artifacts.require("FraudChallenge");
+const FraudChallengeByOrder = artifacts.require("FraudChallengeByOrder");
 const FraudChallengeByTrade = artifacts.require("FraudChallengeByTrade");
 const FraudChallengeByPayment = artifacts.require("FraudChallengeByPayment");
 const ReserveFund = artifacts.require("ReserveFund");
@@ -233,6 +234,17 @@ contract('Smart contract checks', function () {
         }
     });
 
+    before("Preflight: Instantiate FraudChallengeByOrder contract", async () => {
+        try {
+            glob.web3FraudChallengeByOrder = await FraudChallengeByOrder.deployed();
+            assert.notEqual(glob.web3FraudChallengeByOrder, null);
+            glob.ethersIoFraudChallengeByOrder = new ethers.Contract(glob.web3FraudChallengeByOrder.address, FraudChallengeByOrder.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByOrder contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
     before("Preflight: Instantiate FraudChallengeByTrade contract", async () => {
         try {
             glob.web3FraudChallengeByTrade = await FraudChallengeByTrade.deployed();
@@ -368,6 +380,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/DealSettlementChallenge')(glob);
     // TODO Enable FraudChallenge test
     // require('./scenarios/FraudChallenge')(glob);
+    require('./scenarios/FraudChallengeByOrder')(glob);
     require('./scenarios/FraudChallengeByTrade')(glob);
     require('./scenarios/FraudChallengeByPayment')(glob);
     require('./scenarios/ReserveFund')(glob);

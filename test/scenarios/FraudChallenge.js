@@ -159,16 +159,14 @@ module.exports = (glob) => {
             });
         });
 
-        // TODO Enable when deployment out-of-gas is solved
-        describe.skip('securityBond()', () => {
+        describe('securityBond()', () => {
             it('should equal value initialized', async () => {
                 const securityBond = await ethersFraudChallenge.securityBond();
                 securityBond.should.equal(utils.getAddress(ethersSecurityBond.address));
             });
         });
 
-        // TODO Enable when deployment out-of-gas is solved
-        describe.skip('changeSecurityBond()', () => {
+        describe('changeSecurityBond()', () => {
             let address;
 
             before(()=> {

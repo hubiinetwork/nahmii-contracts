@@ -11,13 +11,12 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Hashable} from "./Hashable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Hashable, SecurityBondable, Validatable, ClientFundable {
+contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable, ClientFundable {
 
     //
     // Events
@@ -40,11 +39,10 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Ha
     validatorInitialized
     onlyExchangeSealedPayment(payment)
     {
-        require(hasher != address(0));
-        require(configuration != address(0));
         require(fraudChallenge != address(0));
-        require(clientFund != address(0));
+        require(configuration != address(0));
         require(securityBond != address(0));
+        require(clientFund != address(0));
 
         require(validator.isGenuinePaymentWalletHash(payment));
 

@@ -16,10 +16,9 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe.only('FraudChallengeByPayment', () => {
+    describe('FraudChallengeByPayment', () => {
         let web3FraudChallengeByPayment, ethersFraudChallengeByPayment;
         let web3FraudChallenge, ethersFraudChallenge;
-        let web3Hasher, ethersHasher;
         let web3Configuration, ethersConfiguration;
         let web3ClientFund, ethersClientFund;
         let web3SecurityBond, ethersSecurityBond;
@@ -31,8 +30,6 @@ module.exports = (glob) => {
 
             web3FraudChallengeByPayment = glob.web3FraudChallengeByPayment;
             ethersFraudChallengeByPayment = glob.ethersIoFraudChallengeByPayment;
-            web3Hasher = glob.web3Hasher;
-            ethersHasher = glob.ethersIoHasher;
 
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
@@ -47,7 +44,6 @@ module.exports = (glob) => {
 
             await ethersFraudChallengeByPayment.changeFraudChallenge(ethersFraudChallenge.address);
             await ethersFraudChallengeByPayment.changeConfiguration(ethersConfiguration.address);
-            await ethersFraudChallengeByPayment.changeHasher(ethersHasher.address);
             await ethersFraudChallengeByPayment.changeValidator(ethersValidator.address);
             await ethersFraudChallengeByPayment.changeSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallengeByPayment.changeClientFund(ethersClientFund.address);
@@ -179,47 +175,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('hasher()', () => {
-            it('should equal value initialized', async () => {
-                const hasher = await ethersFraudChallengeByPayment.hasher();
-                hasher.should.equal(utils.getAddress(ethersHasher.address));
-            });
-        });
-
-        describe('changeHasher()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called with owner as sender', () => {
-                let hasher;
-
-                beforeEach(async () => {
-                    hasher = await web3FraudChallengeByPayment.hasher.call();
-                });
-
-                afterEach(async () => {
-                    await web3FraudChallengeByPayment.changeHasher(hasher);
-                });
-
-                it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByPayment.changeHasher(address);
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeHasherEvent');
-                    const hasher = await web3FraudChallengeByPayment.hasher();
-                    utils.getAddress(hasher).should.equal(address);
-                });
-            });
-
-            describe('if called with sender that is not owner', () => {
-                it('should revert', async () => {
-                    web3FraudChallengeByPayment.changeHasher(address, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-        });
-
         describe('validator()', () => {
             it('should equal value initialized', async () => {
                 const validator = await ethersFraudChallengeByPayment.validator();
@@ -344,7 +299,7 @@ module.exports = (glob) => {
         });
 
         describe('challengeByPayment()', () => {
-            let payment, overrideOptions, topic, filter;
+            let payment, overrideOptions, filter;
 
             before(async () => {
                 overrideOptions = {gasLimit: 2e6};

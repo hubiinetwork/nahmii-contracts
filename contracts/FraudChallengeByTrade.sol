@@ -38,8 +38,8 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Vali
     validatorInitialized
     onlySealedTrade(trade)
     {
-        require(configuration != address(0));
         require(fraudChallenge != address(0));
+        require(configuration != address(0));
         require(clientFund != address(0));
 
         // Gauge the genuineness of maker and taker fees. Depending on whether maker is buyer or seller

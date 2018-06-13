@@ -11,12 +11,11 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Hashable} from "./Hashable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Hashable, SecurityBondable, Validatable {
+contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //
     // Events
@@ -39,12 +38,11 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Hash
     validatorInitialized
     onlyExchangeSealedOrder(order)
     {
-        require(hasher != address(0));
-        require(configuration != address(0));
         require(fraudChallenge != address(0));
+        require(configuration != address(0));
         require(securityBond != address(0));
 
-        require(hasher.hashOrderAsWallet(order) == order.seals.wallet.hash);
+        require(validator.isGenuineOrderWalletHash(order));
 
         // Genuineness affected by wallet not having signed the payment
         bool genuineWalletSignature = Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
