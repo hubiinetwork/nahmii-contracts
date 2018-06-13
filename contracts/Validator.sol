@@ -10,26 +10,14 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import "./Types.sol";
-import "./Ownable.sol";
-import {Hasher} from "./Hasher.sol";
-import {Configuration} from "./Configuration.sol";
+import {Types} from "./Types.sol";
+import {Ownable} from "./Ownable.sol";
+import {Configurable} from "./Configurable.sol";
+import {Hashable} from "./Hashable.sol";
 
-contract Validator is Ownable {
+contract Validator is Ownable, Configurable, Hashable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
-
-    //
-    // Variables
-    // -----------------------------------------------------------------------------------------------------------------
-    Configuration public configuration;
-    Hasher public hasher;
-
-    //
-    // Events
-    // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
-    event ChangeHasherEvent(Hasher oldHasher, Hasher newHasher);
 
     //
     // Constructor
@@ -40,47 +28,36 @@ contract Validator is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
-    public
-    onlyOwner
-    notNullAddress(newConfiguration)
-    notEqualAddresses(newConfiguration, configuration)
-    {
-        Configuration oldConfiguration = configuration;
-        configuration = newConfiguration;
-        emit ChangeConfigurationEvent(oldConfiguration, configuration);
-    }
-
-    /// @notice Change the hasher contract
-    /// @param newHasher The (address of) Hasher contract instance
-    function changeHasher(Hasher newHasher)
-    public
-    onlyOwner
-    notNullAddress(newHasher)
-    notEqualAddresses(newHasher, hasher)
-    {
-        Hasher oldHasher = hasher;
-        hasher = newHasher;
-        emit ChangeHasherEvent(oldHasher, hasher);
-    }
-
     function isGenuineTradeMakerFee(Types.Trade trade) public view returns (bool) {
         int256 feePartsPer = configuration.getPartsPer();
-        int256 discountTier = int256(Types.LiquidityRole.Maker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
-        return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-        && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-        && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+        int256 discountTier;
+        if (Types.LiquidityRole.Maker == trade.buyer.liquidityRole) {
+            discountTier = int256(trade.buyer.rollingVolume);
+            return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+        } else { // Types.LiquidityRole.Maker == trade.seller.liquidityRole
+            discountTier = int256(trade.seller.rollingVolume);
+            return (trade.singleFees.conjugate <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            && (trade.singleFees.conjugate == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            && (trade.singleFees.conjugate >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(trade.rate.mul(feePartsPer)));
+        }
     }
 
     function isGenuineTradeTakerFee(Types.Trade trade) public view returns (bool) {
         int256 feePartsPer = configuration.getPartsPer();
-        int256 amountConjugate = trade.amount.div(trade.rate);
-        int256 discountTier = int256(Types.LiquidityRole.Taker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
-        return (trade.singleFees.conjugate <= amountConjugate.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-        && (trade.singleFees.conjugate == amountConjugate.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-        && (trade.singleFees.conjugate >= amountConjugate.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+        int256 discountTier;
+        if (Types.LiquidityRole.Taker == trade.buyer.liquidityRole) {
+            discountTier = int256(trade.buyer.rollingVolume);
+            return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+        }   else { // Types.LiquidityRole.Taker == trade.seller.liquidityRole
+            discountTier = int256(trade.seller.rollingVolume);
+            return (trade.singleFees.conjugate <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            && (trade.singleFees.conjugate == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            && (trade.singleFees.conjugate >= trade.amount.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(trade.rate.mul(feePartsPer)));
+        }
     }
 
     function isGenuineByTradeBuyer(Types.Trade trade, address exchange) public pure returns (bool) {
