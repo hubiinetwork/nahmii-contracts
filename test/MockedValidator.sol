@@ -29,7 +29,7 @@ contract MockedValidator is Ownable /*is Validator*/ {
     bool tradeTakerFee;
     bool tradeBuyer;
     bool tradeSeller;
-    bool tradeSeal;
+    bool[] tradeSeals;
     bool paymentFee;
     bool paymentSender;
     bool paymentRecipient;
@@ -37,6 +37,11 @@ contract MockedValidator is Ownable /*is Validator*/ {
     bool paymentWalletSeal;
     bool paymentExchangeSeal;
     bool paymentSeals;
+    bool successiveTradesPartyNonces;
+    bool successiveTradesBalances;
+    bool successiveTradesNetFees;
+
+    uint256 tradeSealsIndex;
 
     //
     // Events
@@ -61,7 +66,8 @@ contract MockedValidator is Ownable /*is Validator*/ {
         tradeTakerFee = true;
         tradeBuyer = true;
         tradeSeller = true;
-        tradeSeal = true;
+        tradeSeals.length = 0;
+        tradeSeals.push(true);
         paymentFee = true;
         paymentSender = true;
         paymentRecipient = true;
@@ -69,6 +75,11 @@ contract MockedValidator is Ownable /*is Validator*/ {
         paymentWalletSeal = true;
         paymentExchangeSeal = true;
         paymentSeals = true;
+        successiveTradesPartyNonces = true;
+        successiveTradesBalances = true;
+        successiveTradesNetFees = true;
+
+        tradeSealsIndex = 1;
     }
 
     function setGenuineOrderWalletHash(bool genuine) public {
@@ -156,14 +167,19 @@ contract MockedValidator is Ownable /*is Validator*/ {
     }
 
     function setGenuineTradeSeal(bool genuine) public {
-        tradeSeal = genuine;
+        tradeSeals.push(genuine);
     }
 
-    function isGenuineTradeSeal(Types.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeSeal(Types.Trade trade, address exchange) public returns (bool) {
         // To silence unused function parameter compiler warnings
         require(trade.nonce == trade.nonce);
         require(exchange == exchange);
-        return tradeSeal;
+        if (tradeSeals.length == 1)
+            return tradeSeals[0];
+        else {
+            require(tradeSealsIndex < tradeSeals.length);
+            return tradeSeals[tradeSealsIndex++];
+        }
     }
 
     function setGenuinePaymentFee(bool genuine) public {
@@ -236,5 +252,79 @@ contract MockedValidator is Ownable /*is Validator*/ {
         require(payment.nonce == payment.nonce);
         require(exchange == exchange);
         return paymentSeals;
+    }
+
+    function setSuccessiveTradesPartyNonces(bool genuine) public {
+        successiveTradesPartyNonces = genuine;
+    }
+
+    function isSuccessiveTradesPartyNonces(
+        Types.Trade firstTrade,
+        Types.TradePartyRole firstTradePartyRole,
+        Types.Trade lastTrade,
+        Types.TradePartyRole lastTradePartyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(firstTrade.nonce == firstTrade.nonce);
+        require(firstTradePartyRole == firstTradePartyRole);
+        require(lastTrade.nonce == lastTrade.nonce);
+        require(lastTradePartyRole == lastTradePartyRole);
+        return successiveTradesPartyNonces;
+    }
+
+    function setGenuineSuccessiveTradesBalances(bool genuine) public {
+        successiveTradesBalances = genuine;
+    }
+
+    function isGenuineSuccessiveTradesBalances(
+        Types.Trade firstTrade,
+        Types.TradePartyRole firstTradePartyRole,
+        Types.CurrencyRole firstCurrencyRole,
+        Types.Trade lastTrade,
+        Types.TradePartyRole lastTradePartyRole,
+        Types.CurrencyRole lastCurrencyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(firstTrade.nonce == firstTrade.nonce);
+        require(firstTradePartyRole == firstTradePartyRole);
+        require(firstCurrencyRole == firstCurrencyRole);
+        require(lastTrade.nonce == lastTrade.nonce);
+        require(lastTradePartyRole == lastTradePartyRole);
+        require(lastCurrencyRole == lastCurrencyRole);
+        return successiveTradesBalances;
+    }
+
+    function setGenuineSuccessiveTradesNetFees(bool genuine) public {
+        successiveTradesNetFees = genuine;
+    }
+
+    function isGenuineSuccessiveTradesNetFees(
+        Types.Trade firstTrade,
+        Types.TradePartyRole firstTradePartyRole,
+        Types.CurrencyRole firstCurrencyRole,
+        Types.Trade lastTrade,
+        Types.TradePartyRole lastTradePartyRole,
+        Types.CurrencyRole lastCurrencyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(firstTrade.nonce == firstTrade.nonce);
+        require(firstTradePartyRole == firstTradePartyRole);
+        require(firstCurrencyRole == firstCurrencyRole);
+        require(lastTrade.nonce == lastTrade.nonce);
+        require(lastTradePartyRole == lastTradePartyRole);
+        require(lastCurrencyRole == lastCurrencyRole);
+        return successiveTradesNetFees;
     }
 }

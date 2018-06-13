@@ -11,13 +11,11 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Hashable} from "./Hashable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Configurable, Hashable, SecurityBondable, Validatable, ClientFundable {
+contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
 
     //
     // Events

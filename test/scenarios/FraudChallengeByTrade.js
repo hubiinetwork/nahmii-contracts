@@ -257,7 +257,7 @@ module.exports = (glob) => {
         });
 
         describe('challengeByTrade()', () => {
-            let trade, overrideOptions, topic, filter;
+            let trade, overrideOptions, filter;
 
             before(async () => {
                 overrideOptions = {gasLimit: 2e6};
