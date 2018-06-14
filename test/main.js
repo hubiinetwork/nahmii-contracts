@@ -25,6 +25,7 @@ const FraudChallengeByPayment = artifacts.require("FraudChallengeByPayment");
 const FraudChallengeBySuccessiveTrades = artifacts.require("FraudChallengeBySuccessiveTrades");
 const FraudChallengeBySuccessivePayments = artifacts.require("FraudChallengeBySuccessivePayments");
 const FraudChallengeByPaymentSucceedingTrade = artifacts.require("FraudChallengeByPaymentSucceedingTrade");
+const FraudChallengeByTradeSucceedingPayment = artifacts.require("FraudChallengeByTradeSucceedingPayment");
 const ReserveFund = artifacts.require("ReserveFund");
 const RevenueFund = artifacts.require("RevenueFund");
 const SecurityBond = artifacts.require("SecurityBond");
@@ -303,6 +304,17 @@ contract('Smart contract checks', function () {
         }
     });
 
+    before("Preflight: Instantiate FraudChallengeByTradeSucceedingPayment contract", async () => {
+        try {
+            glob.web3FraudChallengeByTradeSucceedingPayment = await FraudChallengeByTradeSucceedingPayment.deployed();
+            assert.notEqual(glob.web3FraudChallengeByTradeSucceedingPayment, null);
+            glob.ethersIoFraudChallengeByTradeSucceedingPayment = new ethers.Contract(glob.web3FraudChallengeByTradeSucceedingPayment.address, FraudChallengeByTradeSucceedingPayment.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByTradeSucceedingPayment contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
     before("Preflight: Instantiate ReserveFund contract", async () => {
         try {
             glob.web3ReserveFund = await ReserveFund.deployed();
@@ -422,6 +434,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeBySuccessiveTrades')(glob);
     require('./scenarios/FraudChallengeBySuccessivePayments')(glob);
     require('./scenarios/FraudChallengeByPaymentSucceedingTrade')(glob);
+    require('./scenarios/FraudChallengeByTradeSucceedingPayment')(glob);
     require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);

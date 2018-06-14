@@ -395,7 +395,7 @@ module.exports = (glob) => {
                     await ethersValidator.setGenuineSuccessiveTradePaymentBalances(false);
                 });
 
-                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
                     await ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     );
@@ -422,7 +422,7 @@ module.exports = (glob) => {
                     await ethersValidator.setGenuineSuccessiveTradePaymentNetFees(false);
                 });
 
-                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
                     await ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     );
@@ -444,210 +444,6 @@ module.exports = (glob) => {
                 });
             });
         });
-
-        // describe('challengeByPaymentSucceedingTrade()', () => {
-        //     let overrideOptions, currency, trade, payment, topic, filter;
-        //
-        //     before(async () => {
-        //         overrideOptions = {gasLimit: 2e6};
-        //         currency = '0x0000000000000000000000000000000000000001';
-        //     });
-        //
-        //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
-        //
-        //         trade = await mocks.mockTrade(glob.owner, {
-        //             nonce: utils.bigNumberify(10),
-        //             buyer: {
-        //                 wallet: glob.user_a
-        //             },
-        //             seller: {
-        //                 wallet: glob.user_b
-        //             },
-        //             blockNumber: utils.bigNumberify(blockNumber10)
-        //         });
-        //
-        //         topic = ethersFraudChallenge.interface.events.ChallengeByPaymentSucceedingTradeEvent.topics[0];
-        //         filter = {
-        //             fromBlock: await provider.getBlockNumber(),
-        //             topics: [topic]
-        //         };
-        //     });
-        //
-        //     describe('if trade and payment are genuine', () => {
-        //         beforeEach(async () => {
-        //             payment = await mocks.mockPayment(glob.owner, {
-        //                 nonce: utils.bigNumberify(20),
-        //                 amount: utils.parseUnits('50', 18),
-        //                 sender: {
-        //                     wallet: glob.user_b,
-        //                     nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
-        //                     balances: {
-        //                         current: utils.parseUnits('19449.9', 18),
-        //                         previous: utils.parseUnits('19500', 18)
-        //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
-        //                 },
-        //                 recipient: {
-        //                     wallet: glob.user_a,
-        //                     nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
-        //                     balances: {
-        //                         current: utils.parseUnits('9649.8', 18),
-        //                         previous: utils.parseUnits('9599.8', 18)
-        //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
-        //                 },
-        //                 transfers: {
-        //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
-        //                 },
-        //                 singleFee: utils.parseUnits('0.1', 18),
-        //                 blockNumber: utils.bigNumberify(blockNumber10)
-        //             });
-        //         });
-        //
-        //         it('should revert', async () => {
-        //             ethersFraudChallenge.challengeByPaymentSucceedingTrade(trade, payment, glob.user_a, currency, overrideOptions).should.be.rejected;
-        //         });
-        //     });
-        //
-        //     describe('if payment party\'s nonce in payment is not incremented by 1 relative to trade', () => {
-        //         beforeEach(async () => {
-        //             payment = await mocks.mockPayment(glob.owner, {
-        //                 nonce: utils.bigNumberify(20),
-        //                 amount: utils.parseUnits('50', 18),
-        //                 sender: {
-        //                     wallet: glob.user_b,
-        //                     nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
-        //                     balances: {
-        //                         current: utils.parseUnits('19449.9', 18),
-        //                         previous: utils.parseUnits('19500', 18)
-        //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
-        //                 },
-        //                 recipient: {
-        //                     wallet: glob.user_a,
-        //                     nonce: trade.buyer.nonce.add(utils.bigNumberify(2)), // <---- modified ----
-        //                     balances: {
-        //                         current: utils.parseUnits('9649.8', 18),
-        //                         previous: utils.parseUnits('9599.8', 18)
-        //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
-        //                 },
-        //                 transfers: {
-        //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
-        //                 },
-        //                 singleFee: utils.parseUnits('0.1', 18),
-        //                 blockNumber: utils.bigNumberify(blockNumber10)
-        //             });
-        //         });
-        //
-        //         it('should revert', async () => {
-        //             ethersFraudChallenge.challengeByPaymentSucceedingTrade(trade, payment, glob.user_a, currency, overrideOptions).should.be.rejected;
-        //         });
-        //     });
-        //
-        //     describe('if payment party\'s previous balance in payment is not equal to current balance in trade', () => {
-        //         beforeEach(async () => {
-        //             payment = await mocks.mockPayment(glob.owner, {
-        //                 nonce: utils.bigNumberify(20),
-        //                 amount: utils.parseUnits('50', 18),
-        //                 sender: {
-        //                     wallet: glob.user_b,
-        //                     nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
-        //                     balances: {
-        //                         current: utils.parseUnits('19449.9', 18),
-        //                         previous: utils.parseUnits('19500', 18)
-        //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
-        //                 },
-        //                 recipient: {
-        //                     wallet: glob.user_a,
-        //                     nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
-        //                     balances: {
-        //                         current: utils.parseUnits('9649.8', 18),
-        //                         previous: utils.parseUnits('1000', 18) // <---- modified ----
-        //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
-        //                 },
-        //                 transfers: {
-        //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
-        //                 },
-        //                 singleFee: utils.parseUnits('0.1', 18),
-        //                 blockNumber: utils.bigNumberify(blockNumber10)
-        //             });
-        //         });
-        //
-        //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
-        //             await ethersFraudChallenge.challengeByPaymentSucceedingTrade(trade, payment, payment.recipient.wallet, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentPayment, seizedWallet, seizure, logs] = await Promise.all([
-        //                 ethersConfiguration.isOperationalModeExit(),
-        //                 ethersFraudChallenge.fraudulentPayment(),
-        //                 ethersFraudChallenge.isSeizedWallet(payment.recipient.wallet),
-        //                 ethersClientFund.seizures(0),
-        //                 provider.getLogs(filter)
-        //             ]);
-        //             operationalModeExit.should.be.true;
-        //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-        //             seizedWallet.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
-        //             logs[logs.length - 1].topics[0].should.equal(topic);
-        //         });
-        //     });
-        //
-        //     describe('if payment party\'s net fee in payment is not incremented by single fee in payment relative to net fee in trade', () => {
-        //         beforeEach(async () => {
-        //             payment = await mocks.mockPayment(glob.owner, {
-        //                 nonce: utils.bigNumberify(20),
-        //                 amount: utils.parseUnits('50', 18),
-        //                 sender: {
-        //                     wallet: glob.user_b,
-        //                     nonce: trade.seller.nonce.add(utils.bigNumberify(2)),
-        //                     balances: {
-        //                         current: utils.parseUnits('19449.9', 18),
-        //                         previous: utils.parseUnits('19500', 18)
-        //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
-        //                 },
-        //                 recipient: {
-        //                     wallet: glob.user_a,
-        //                     nonce: trade.buyer.nonce.add(utils.bigNumberify(1)),
-        //                     balances: {
-        //                         current: utils.parseUnits('9649.8', 18),
-        //                         previous: utils.parseUnits('9599.8', 18)
-        //                     },
-        //                     netFee: utils.parseUnits('0.4', 18) // <---- modified ----
-        //                 },
-        //                 transfers: {
-        //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
-        //                 },
-        //                 singleFee: utils.parseUnits('0.1', 18),
-        //                 blockNumber: utils.bigNumberify(blockNumber10)
-        //             });
-        //         });
-        //
-        //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
-        //             await ethersFraudChallenge.challengeByPaymentSucceedingTrade(trade, payment, payment.recipient.wallet, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentPayment, seizedWallet, seizure, logs] = await Promise.all([
-        //                 ethersConfiguration.isOperationalModeExit(),
-        //                 ethersFraudChallenge.fraudulentPayment(),
-        //                 ethersFraudChallenge.isSeizedWallet(payment.recipient.wallet),
-        //                 ethersClientFund.seizures(0),
-        //                 provider.getLogs(filter)
-        //             ]);
-        //             operationalModeExit.should.be.true;
-        //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-        //             seizedWallet.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
-        //             logs[logs.length - 1].topics[0].should.equal(topic);
-        //         });
-        //     });
-        // });
     });
 };
 
