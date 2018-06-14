@@ -11,13 +11,11 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Hashable} from "./Hashable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, Configurable, Hashable, SecurityBondable, Validatable, ClientFundable {
+contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
 
     //
     // Events
@@ -56,8 +54,8 @@ contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, C
 
         require(Types.isTradeParty(trade, wallet));
         require(Types.isPaymentParty(payment, wallet));
-        require(currency == payment.currency);
         require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+        require(currency == payment.currency);
 
         Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
         Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
@@ -79,5 +77,4 @@ contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, C
 
         emit ChallengeByPaymentSucceedingTradeEvent(trade, payment, msg.sender, wallet);
     }
-
 }

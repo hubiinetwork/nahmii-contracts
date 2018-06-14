@@ -414,8 +414,8 @@ module.exports = (glob) => {
                     operationalModeExit.should.be.true;
                     fraudulentTradesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
-                    seizedWallet.should.equal(utils.getAddress(lastTrade.buyer.wallet));
-                    seizure.source.should.equal(utils.getAddress(lastTrade.buyer.wallet));
+                    seizedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
+                    seizure.source.should.equal(utils.getAddress(firstTrade.buyer.wallet));
                     seizure.destination.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
@@ -441,8 +441,8 @@ module.exports = (glob) => {
                     operationalModeExit.should.be.true;
                     fraudulentTradesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
-                    seizedWallet.should.equal(utils.getAddress(lastTrade.buyer.wallet));
-                    seizure.source.should.equal(utils.getAddress(lastTrade.buyer.wallet));
+                    seizedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
+                    seizure.source.should.equal(utils.getAddress(firstTrade.buyer.wallet));
                     seizure.destination.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });

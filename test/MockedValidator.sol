@@ -43,6 +43,9 @@ contract MockedValidator is Ownable /*is Validator*/ {
     bool successivePaymentsPartyNonces;
     bool successivePaymentsBalances;
     bool successivePaymentsNetFees;
+    bool successiveTradePaymentPartyNonces;
+    bool successiveTradePaymentBalances;
+    bool successiveTradePaymentNetFees;
 
     uint256 tradeSealsIndex;
     uint256 paymentSealsIndex;
@@ -86,6 +89,9 @@ contract MockedValidator is Ownable /*is Validator*/ {
         successivePaymentsPartyNonces = true;
         successivePaymentsBalances = true;
         successivePaymentsNetFees = true;
+        successiveTradePaymentPartyNonces = true;
+        successiveTradePaymentBalances = true;
+        successiveTradePaymentNetFees = true;
 
         tradeSealsIndex = 1;
         paymentSealsIndex = 1;
@@ -406,5 +412,75 @@ contract MockedValidator is Ownable /*is Validator*/ {
         require(lastPayment.nonce == lastPayment.nonce);
         require(lastPaymentPartyRole == lastPaymentPartyRole);
         return successivePaymentsNetFees;
+    }
+
+    function setSuccessiveTradePaymentPartyNonces(bool genuine) public {
+        successiveTradePaymentPartyNonces = genuine;
+    }
+
+    function isSuccessiveTradePaymentPartyNonces(
+        Types.Trade trade,
+        Types.TradePartyRole tradePartyRole,
+        Types.Payment payment,
+        Types.PaymentPartyRole paymentPartyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(trade.nonce == trade.nonce);
+        require(tradePartyRole == tradePartyRole);
+        require(payment.nonce == payment.nonce);
+        require(paymentPartyRole == paymentPartyRole);
+        return successiveTradePaymentPartyNonces;
+    }
+
+    function setGenuineSuccessiveTradePaymentBalances(bool genuine) public {
+        successiveTradePaymentBalances = genuine;
+    }
+
+    function isGenuineSuccessiveTradePaymentBalances(
+        Types.Trade trade,
+        Types.TradePartyRole tradePartyRole,
+        Types.CurrencyRole tradeCurrencyRole,
+        Types.Payment payment,
+        Types.PaymentPartyRole paymentPartyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(trade.nonce == trade.nonce);
+        require(tradePartyRole == tradePartyRole);
+        require(tradeCurrencyRole == tradeCurrencyRole);
+        require(payment.nonce == payment.nonce);
+        require(paymentPartyRole == paymentPartyRole);
+        return successiveTradePaymentBalances;
+    }
+
+    function setGenuineSuccessiveTradePaymentNetFees(bool genuine) public {
+        successiveTradePaymentNetFees = genuine;
+    }
+
+    function isGenuineSuccessiveTradePaymentNetFees(
+        Types.Trade trade,
+        Types.TradePartyRole tradePartyRole,
+        Types.CurrencyRole tradeCurrencyRole,
+        Types.Payment payment,
+        Types.PaymentPartyRole paymentPartyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(trade.nonce == trade.nonce);
+        require(tradePartyRole == tradePartyRole);
+        require(tradeCurrencyRole == tradeCurrencyRole);
+        require(payment.nonce == payment.nonce);
+        require(paymentPartyRole == paymentPartyRole);
+        return successiveTradePaymentNetFees;
     }
 }
