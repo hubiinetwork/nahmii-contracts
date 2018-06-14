@@ -27,6 +27,8 @@ const FraudChallengeBySuccessivePayments = artifacts.require("FraudChallengeBySu
 const FraudChallengeByPaymentSucceedingTrade = artifacts.require("FraudChallengeByPaymentSucceedingTrade");
 const FraudChallengeByTradeSucceedingPayment = artifacts.require("FraudChallengeByTradeSucceedingPayment");
 const FraudChallengeByTradeOrderResiduals = artifacts.require("FraudChallengeByTradeOrderResiduals");
+const FraudChallengeByDoubleSpentOrders = artifacts.require("FraudChallengeByDoubleSpentOrders");
+const FraudChallengeByDuplicateDealNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDealNonceOfTrades");
 const ReserveFund = artifacts.require("ReserveFund");
 const RevenueFund = artifacts.require("RevenueFund");
 const SecurityBond = artifacts.require("SecurityBond");
@@ -327,6 +329,17 @@ contract('Smart contract checks', function () {
         }
     });
 
+    before("Preflight: Instantiate FraudChallengeByDoubleSpentOrders contract", async () => {
+        try {
+            glob.web3FraudChallengeByDoubleSpentOrders = await FraudChallengeByDoubleSpentOrders.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDoubleSpentOrders, null);
+            glob.ethersIoFraudChallengeByDoubleSpentOrders = new ethers.Contract(glob.web3FraudChallengeByDoubleSpentOrders.address, FraudChallengeByDoubleSpentOrders.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByDoubleSpentOrders contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
     before("Preflight: Instantiate ReserveFund contract", async () => {
         try {
             glob.web3ReserveFund = await ReserveFund.deployed();
@@ -448,6 +461,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByPaymentSucceedingTrade')(glob);
     require('./scenarios/FraudChallengeByTradeSucceedingPayment')(glob);
     require('./scenarios/FraudChallengeByTradeOrderResiduals')(glob);
+    require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
     require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);

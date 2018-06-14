@@ -358,7 +358,7 @@ module.exports = (glob) => {
                     payment.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment.seals.exchange.hash);
                 });
 
-                it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent payment and stage in security bond', async () => {
                     await ethersFraudChallengeByPayment.challengeByPayment(payment, overrideOptions);
                     const [operationalModeExit, fraudulentPaymentsCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),

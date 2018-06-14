@@ -39,6 +39,7 @@ contract MockedFraudChallenge is FraudChallenge {
         fraudulentTrades.length = 0;
         fraudulentPayments.length = 0;
         seizedWallets.length = 0;
+        doubleSpenderWallets.length = 0;
     }
 
     function addFraudulentOrder(Types.Order order) public {
@@ -59,5 +60,10 @@ contract MockedFraudChallenge is FraudChallenge {
     function addSeizedWallet(address wallet) public {
         seizedWallets.push(wallet);
         emit AddSeizedWalletEvent(wallet);
+    }
+
+    function addDoubleSpenderWallet(address wallet) public {
+        doubleSpenderWallets.push(wallet);
+        emit AddDoubleSpenderWalletEvent(wallet);
     }
 }
