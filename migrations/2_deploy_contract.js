@@ -25,112 +25,149 @@ var TokenHolderRevenueFund = artifacts.require("./TokenHolderRevenueFund.sol");
 var fs = require('fs');
 var path = require('path');
 
+var helpers = require('./helpers.js');
+
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = function (deployer, network, accounts) {
-	var ownerAccount = accounts[0];
-	var actions = [];
+	var ownerAccount;
 	var addresses = {};
 
-	deployer.deploy(SafeMathIntLib).then(() => {
+	if (helpers.isTestNetwork(network)) {
+		ownerAccount = accounts[0];
+	}
+	else {
+		ownerAccount = helpers.getOwnerAccountFromArgs();
+		ownerAccountPassword = helpers.getPasswordFromArgs();
+		helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 600); //10 minutes
+	}
+
+	deployer.deploy(SafeMathIntLib, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.SafeMathInt = SafeMathIntLib.address;
 	});
 
-	deployer.deploy(SafeMathUintLib).then(() => {
+	deployer.deploy(SafeMathUintLib, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.SafeMathUint = SafeMathUintLib.address;
 	});
 
-    deployer.deploy(Types).then(() => {
-        addresses.Types = Types.address;
-    });
+	deployer.deploy(Types, {
+		from : ownerAccount
+	}).then(() => {
+		addresses.Types = Types.address;
+	});
 
-    deployer.link(SafeMathIntLib, ClientFund);
-	deployer.link(SafeMathIntLib, CommunityVote);
-	deployer.link(SafeMathIntLib, Configuration);
-	deployer.link(SafeMathIntLib, Exchange);
-    deployer.link(SafeMathIntLib, CancelOrdersChallenge);
-	deployer.link(SafeMathIntLib, DealSettlementChallenge);
-	deployer.link(SafeMathIntLib, DealSettlementChallengePartialChallenge);
-    deployer.link(SafeMathIntLib, FraudChallenge);
-	deployer.link(SafeMathIntLib, ReserveFund);
-	deployer.link(SafeMathIntLib, RevenueFund);
-	deployer.link(SafeMathIntLib, SecurityBond);
-	deployer.link(SafeMathIntLib, TokenHolderRevenueFund);
+	deployer.link(SafeMathIntLib, [
+		ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallengePartialChallenge,
+		FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
+	]);
 
-    deployer.link(SafeMathUintLib, Exchange);
-    deployer.link(SafeMathUintLib, CancelOrdersChallenge);
-    deployer.link(SafeMathUintLib, FraudChallenge);
-    deployer.link(SafeMathUintLib, RevenueFund);
-    deployer.link(SafeMathUintLib, ReserveFund);
-    deployer.link(SafeMathUintLib, TokenHolderRevenueFund);
+	deployer.link(SafeMathUintLib, [
+		Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
+	]);
 
-    deployer.link(Types, Exchange);
-    deployer.link(Types, CancelOrdersChallenge);
-	deployer.link(Types, DealSettlementChallenge);
-	deployer.link(Types, DealSettlementChallengePartialChallenge);
-    deployer.link(Types, FraudChallenge);
+	deployer.link(Types, [
+		Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallengePartialChallenge, FraudChallenge
+	]);
 
-	deployer.deploy(ClientFund, ownerAccount).then(() => {
+	deployer.deploy(ClientFund, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.ClientFund = ClientFund.address;
 	});
 
-	deployer.deploy(CommunityVote, ownerAccount).then(() => {
+	deployer.deploy(CommunityVote, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.CommunityVote = CommunityVote.address;
 	});
 
-	deployer.deploy(Configuration, ownerAccount).then(() => {
+	deployer.deploy(Configuration, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.Configuration = Configuration.address;
 	});
 
-	deployer.deploy(Exchange, ownerAccount).then(() => {
+	deployer.deploy(Exchange, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.Exchange = Exchange.address;
 	});
 
-	deployer.deploy(CancelOrdersChallenge, ownerAccount).then(() => {
+	deployer.deploy(CancelOrdersChallenge, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.CancelOrdersChallenge = CancelOrdersChallenge.address;
 	});
 
-	deployer.deploy(DealSettlementChallenge, ownerAccount).then(() => {
+	deployer.deploy(DealSettlementChallenge, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.DealSettlementChallenge = DealSettlementChallenge.address;
 
-		deployer.deploy(DealSettlementChallengePartialChallenge, ownerAccount, DealSettlementChallenge.address).then(() => {
+		deployer.deploy(DealSettlementChallengePartialChallenge, ownerAccount, DealSettlementChallenge.address, {
+			from : ownerAccount
+		}).then(() => {
 			addresses.DealSettlementChallengePartialChallenge = DealSettlementChallengePartialChallenge.address;
 		});
 	});
 
-	deployer.deploy(Hasher, ownerAccount).then(() => {
+	deployer.deploy(Hasher, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.Hasher = Hasher.address;
 	});
 
-	deployer.deploy(Validator, ownerAccount).then(() => {
+	deployer.deploy(Validator, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.Validator = Validator.address;
 	});
 /*
-	deployer.deploy(FraudChallenge, ownerAccount).then(() => {
+	deployer.deploy(FraudChallenge, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.FraudChallenge = FraudChallenge.address;
 	});
 */
-	deployer.deploy(ReserveFund, ownerAccount).then(() => {
+	deployer.deploy(ReserveFund, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.ReserveFund1 = ReserveFund.address;
 	});
 
-	deployer.deploy(ReserveFund, ownerAccount, { overwrite: true }).then(() => {
+	deployer.deploy(ReserveFund, ownerAccount, {
+		from : ownerAccount,
+		overwrite : true
+	}).then(() => {
 		addresses.ReserveFund2 = ReserveFund.address;
 	});
 
-	deployer.deploy(RevenueFund, ownerAccount).then(() => {
+	deployer.deploy(RevenueFund, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.RevenueFund1 = RevenueFund.address;
 	});
 
-	deployer.deploy(RevenueFund, ownerAccount, { overwrite: true }).then(() => {
+	deployer.deploy(RevenueFund, ownerAccount, {
+		from : ownerAccount,
+		overwrite : true
+	}).then(() => {
 		addresses.RevenueFund2 = RevenueFund.address;
 	});
 
-	deployer.deploy(SecurityBond, ownerAccount).then(() => {
+	deployer.deploy(SecurityBond, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.SecurityBond = SecurityBond.address;
 	});
 
-	deployer.deploy(TokenHolderRevenueFund, ownerAccount).then(() => {
+	deployer.deploy(TokenHolderRevenueFund, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
 		addresses.TokenHolderRevenueFund = TokenHolderRevenueFund.address;
 
 		saveAddresses(deployer, addresses);
@@ -140,10 +177,11 @@ module.exports = function (deployer, network, accounts) {
 function saveAddresses(deployer, addresses)
 {
 	return new Promise((resolve, reject) => {
-		var filename = deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json';
+		var build_path = deployer.basePath + path.sep + '..' + path.sep + 'build';
+		var address_filename = build_path + path.sep + 'addresses.json';
 
 		//No need to handle the error. If the file doesn't exist then we'll start afresh with a new object.
-		fs.readFile(filename, { encoding: 'utf8' }, function(err, json) {
+		fs.readFile(address_filename, { encoding: 'utf8' }, function(err, json) {
 			if (!err) {
 				try {
 					json = JSON.parse(json);
@@ -168,11 +206,18 @@ function saveAddresses(deployer, addresses)
 			json = JSON.stringify(json, null, 2);
 
 			//write json file (by this time the build folder should exists)
-			fs.writeFile(filename, json, 'utf8', function (err) {
-				if (!err)
-					resolve();
-				else
+			fs.mkdir(build_path, function (err) {
+				if ((!err) || (err && err.code == 'EEXIST')) {
+					fs.writeFile(address_filename, json, 'utf8', function (err) {
+						if (!err)
+							resolve();
+						else
+							reject(err);
+					});
+				}
+				else {
 					reject(err);
+				}
 			});
 		});
 	});
