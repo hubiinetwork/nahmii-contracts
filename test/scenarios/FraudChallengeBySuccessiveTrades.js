@@ -252,7 +252,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe.only('challengeBySuccessiveTrades()', () => {
+        describe('challengeBySuccessiveTrades()', () => {
             let firstTrade, lastTrade, overrideOptions, filter;
 
             before(async () => {
@@ -314,7 +314,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if wallet is not trade party in first trade', () => {
+            describe('if wallet is not party in first trade', () => {
                 beforeEach(async () => {
                     firstTrade = await mocks.mockTrade(glob.owner, {
                         blockNumber: utils.bigNumberify(blockNumber10)
@@ -328,7 +328,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if wallet is not trade party in last trade', () => {
+            describe('if wallet is not party in last trade', () => {
                 beforeEach(async () => {
                     lastTrade = await mocks.mockTrade(glob.owner, {
                         blockNumber: utils.bigNumberify(blockNumber20)

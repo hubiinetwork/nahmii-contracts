@@ -36,12 +36,16 @@ contract MockedValidator is Ownable /*is Validator*/ {
     bool paymentWalletHash;
     bool paymentWalletSeal;
     bool paymentExchangeSeal;
-    bool paymentSeals;
+    bool[] paymentSeals;
     bool successiveTradesPartyNonces;
     bool successiveTradesBalances;
     bool successiveTradesNetFees;
+    bool successivePaymentsPartyNonces;
+    bool successivePaymentsBalances;
+    bool successivePaymentsNetFees;
 
     uint256 tradeSealsIndex;
+    uint256 paymentSealsIndex;
 
     //
     // Events
@@ -74,12 +78,17 @@ contract MockedValidator is Ownable /*is Validator*/ {
         paymentWalletHash = true;
         paymentWalletSeal = true;
         paymentExchangeSeal = true;
-        paymentSeals = true;
+        paymentSeals.length = 0;
+        paymentSeals.push(true);
         successiveTradesPartyNonces = true;
         successiveTradesBalances = true;
         successiveTradesNetFees = true;
+        successivePaymentsPartyNonces = true;
+        successivePaymentsBalances = true;
+        successivePaymentsNetFees = true;
 
         tradeSealsIndex = 1;
+        paymentSealsIndex = 1;
     }
 
     function setGenuineOrderWalletHash(bool genuine) public {
@@ -244,14 +253,19 @@ contract MockedValidator is Ownable /*is Validator*/ {
     }
 
     function setGenuinePaymentSeals(bool genuine) public {
-        paymentSeals = genuine;
+        paymentSeals.push(genuine);
     }
 
-    function isGenuinePaymentSeals(Types.Payment payment, address exchange) public view returns (bool) {
-        // To silence unused function parameter compiler warning
+    function isGenuinePaymentSeals(Types.Payment payment, address exchange) public returns (bool) {
+        // To silence unused function parameter compiler warnings
         require(payment.nonce == payment.nonce);
         require(exchange == exchange);
-        return paymentSeals;
+        if (paymentSeals.length == 1)
+            return paymentSeals[0];
+        else {
+            require(paymentSealsIndex < paymentSeals.length);
+            return paymentSeals[paymentSealsIndex++];
+        }
     }
 
     function setSuccessiveTradesPartyNonces(bool genuine) public {
@@ -326,5 +340,71 @@ contract MockedValidator is Ownable /*is Validator*/ {
         require(lastTradePartyRole == lastTradePartyRole);
         require(lastCurrencyRole == lastCurrencyRole);
         return successiveTradesNetFees;
+    }
+
+    function setSuccessivePaymentsPartyNonces(bool genuine) public {
+        successivePaymentsPartyNonces = genuine;
+    }
+
+    function isSuccessivePaymentsPartyNonces(
+        Types.Payment firstPayment,
+        Types.PaymentPartyRole firstPaymentPartyRole,
+        Types.Payment lastPayment,
+        Types.PaymentPartyRole lastPaymentPartyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(firstPayment.nonce == firstPayment.nonce);
+        require(firstPaymentPartyRole == firstPaymentPartyRole);
+        require(lastPayment.nonce == lastPayment.nonce);
+        require(lastPaymentPartyRole == lastPaymentPartyRole);
+        return successivePaymentsPartyNonces;
+    }
+
+    function setGenuineSuccessivePaymentsBalances(bool genuine) public {
+        successivePaymentsBalances = genuine;
+    }
+
+    function isGenuineSuccessivePaymentsBalances(
+        Types.Payment firstPayment,
+        Types.PaymentPartyRole firstPaymentPartyRole,
+        Types.Payment lastPayment,
+        Types.PaymentPartyRole lastPaymentPartyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(firstPayment.nonce == firstPayment.nonce);
+        require(firstPaymentPartyRole == firstPaymentPartyRole);
+        require(lastPayment.nonce == lastPayment.nonce);
+        require(lastPaymentPartyRole == lastPaymentPartyRole);
+        return successivePaymentsBalances;
+    }
+
+    function setGenuineSuccessivePaymentsNetFees(bool genuine) public {
+        successivePaymentsNetFees = genuine;
+    }
+
+    function isGenuineSuccessivePaymentsNetFees(
+        Types.Payment firstPayment,
+        Types.PaymentPartyRole firstPaymentPartyRole,
+        Types.Payment lastPayment,
+        Types.PaymentPartyRole lastPaymentPartyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(firstPayment.nonce == firstPayment.nonce);
+        require(firstPaymentPartyRole == firstPaymentPartyRole);
+        require(lastPayment.nonce == lastPayment.nonce);
+        require(lastPaymentPartyRole == lastPaymentPartyRole);
+        return successivePaymentsNetFees;
     }
 }
