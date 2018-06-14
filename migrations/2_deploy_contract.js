@@ -22,7 +22,7 @@ const FraudChallengeBySuccessiveTrades = artifacts.require("./FraudChallengeBySu
 const FraudChallengeBySuccessivePayments = artifacts.require("./FraudChallengeBySuccessivePayments.sol");
 const FraudChallengeByPaymentSucceedingTrade = artifacts.require("./FraudChallengeByPaymentSucceedingTrade.sol");
 const FraudChallengeByTradeSucceedingPayment = artifacts.require("./FraudChallengeByTradeSucceedingPayment.sol");
-const FraudChallengeByTradeOrderResidual = artifacts.require("./FraudChallengeByTradeOrderResidual.sol");
+const FraudChallengeByTradeOrderResiduals = artifacts.require("./FraudChallengeByTradeOrderResiduals.sol");
 const FraudChallengeByDoubleSpentOrders = artifacts.require("./FraudChallengeByDoubleSpentOrders.sol");
 const FraudChallengeByDuplicateDealNonceOfTrades = artifacts.require("./FraudChallengeByDuplicateDealNonceOfTrades.sol");
 const FraudChallengeByDuplicateDealNonceOfPayments = artifacts.require("./FraudChallengeByDuplicateDealNonceOfPayments.sol");
@@ -82,7 +82,7 @@ module.exports = function (deployer, network, accounts) {
     deployer.link(Types, FraudChallengeBySuccessivePayments);
     deployer.link(Types, FraudChallengeByPaymentSucceedingTrade);
     deployer.link(Types, FraudChallengeByTradeSucceedingPayment);
-    deployer.link(Types, FraudChallengeByTradeOrderResidual);
+    deployer.link(Types, FraudChallengeByTradeOrderResiduals);
     deployer.link(Types, FraudChallengeByDoubleSpentOrders);
     deployer.link(Types, FraudChallengeByDuplicateDealNonceOfTrades);
     deployer.link(Types, FraudChallengeByDuplicateDealNonceOfPayments);
@@ -149,8 +149,8 @@ module.exports = function (deployer, network, accounts) {
         addresses.FraudChallengeByTradeSucceedingPayment = FraudChallengeByTradeSucceedingPayment.address;
     });
 
-    deployer.deploy(FraudChallengeByTradeOrderResidual, ownerAccount).then(() => {
-        addresses.FraudChallengeByTradeOrderResidual = FraudChallengeByTradeOrderResidual.address;
+    deployer.deploy(FraudChallengeByTradeOrderResiduals, ownerAccount).then(() => {
+        addresses.FraudChallengeByTradeOrderResiduals = FraudChallengeByTradeOrderResiduals.address;
     });
 
     deployer.deploy(FraudChallengeByDoubleSpentOrders, ownerAccount).then(() => {

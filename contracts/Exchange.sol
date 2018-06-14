@@ -246,13 +246,13 @@ contract Exchange is Ownable {
     validatorInitialized
     onlySealedTrade(trade)
     {
-        require(communityVote != address(0), "CommunityVote is missing");
-        require(dealSettlementChallenge != address(0), "DealSettlementChallenge is missing");
-        require(configuration != address(0), "Configuration is missing");
-        require(clientFund != address(0), "ClientFund is missing");
+        require(communityVote != address(0));
+        require(dealSettlementChallenge != address(0));
+        require(configuration != address(0));
+        require(clientFund != address(0));
 
         if (!trade.immediateSettlement)
-            require(tradesReserveFund != address(0), "ReserveFund for trades is missing");
+            require(tradesReserveFund != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -309,13 +309,13 @@ contract Exchange is Ownable {
     validatorInitialized
     onlySealedPayment(payment)
     {
-        require(communityVote != address(0), "CommunityVote is missing");
-        require(dealSettlementChallenge != address(0), "DealSettlementChallenge is missing");
-        require(configuration != address(0), "Configuration is missing");
-        require(clientFund != address(0), "ClientFund is missing");
+        require(communityVote != address(0));
+        require(dealSettlementChallenge != address(0));
+        require(configuration != address(0));
+        require(clientFund != address(0));
 
         if (!payment.immediateSettlement)
-            require(paymentsReserveFund != address(0), "ReserveFund for payments is missing");
+            require(paymentsReserveFund != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -540,7 +540,7 @@ contract Exchange is Ownable {
     }
 
     modifier validatorInitialized() {
-        require(validator != address(0), "Validator is missing");
+        require(validator != address(0));
         _;
     }
 

@@ -166,7 +166,7 @@ contract DealSettlementChallenge is Ownable {
     validatorInitialized
     onlySealedTrade(trade)
     {
-        require(configuration != address(0), "Configuration is missing");
+        require(configuration != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -203,7 +203,7 @@ contract DealSettlementChallenge is Ownable {
     validatorInitialized
     onlySealedPayment(payment)
     {
-        require(configuration != address(0), "Configuration is missing");
+        require(configuration != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -265,7 +265,7 @@ contract DealSettlementChallenge is Ownable {
     validatorInitialized
     onlySealedOrder(order)
     {
-        require(cancelOrdersChallenge != address(0), "CancelOrdersChallenge is missing");
+        require(cancelOrdersChallenge != address(0));
 
         address wallet = order.wallet;
 
@@ -320,8 +320,8 @@ contract DealSettlementChallenge is Ownable {
     onlySealedOrder(order)
     onlySealedTrade(trade)
     {
-        require(configuration != address(0), "Configuration is missing");
-        require(securityBond != address(0), "SecurityBond is missing");
+        require(configuration != address(0));
+        require(securityBond != address(0));
 
         require(Types.isTradeParty(trade, order.wallet));
         require(Types.isTradeOrder(trade, order));
@@ -349,7 +349,7 @@ contract DealSettlementChallenge is Ownable {
     validatorInitialized
     onlySealedTrade(trade)
     {
-        require(cancelOrdersChallenge != address(0), "CancelOrdersChallenge is missing");
+        require(cancelOrdersChallenge != address(0));
 
         require(Types.isTradeParty(trade, wallet));
 
@@ -485,7 +485,7 @@ contract DealSettlementChallenge is Ownable {
     }
 
    modifier validatorInitialized() {
-        require(validator != address(0), "Validator is missing");
+        require(validator != address(0));
         _;
     }
 

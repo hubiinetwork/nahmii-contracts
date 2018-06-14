@@ -49,6 +49,7 @@ contract MockedValidator is Ownable /*is Validator*/ {
     bool successivePaymentTradePartyNonces;
     bool successivePaymentTradeBalances;
     bool successivePaymentTradeNetFees;
+    bool successiveTradeOrderResiduals;
 
     uint256 tradeSealsIndex;
     uint256 paymentSealsIndex;
@@ -98,6 +99,7 @@ contract MockedValidator is Ownable /*is Validator*/ {
         successivePaymentTradePartyNonces = true;
         successivePaymentTradeBalances = true;
         successivePaymentTradeNetFees = true;
+        successiveTradeOrderResiduals = true;
 
         tradeSealsIndex = 1;
         paymentSealsIndex = 1;
@@ -558,5 +560,25 @@ contract MockedValidator is Ownable /*is Validator*/ {
         require(tradePartyRole == tradePartyRole);
         require(tradeCurrencyRole == tradeCurrencyRole);
         return successivePaymentTradeNetFees;
+    }
+
+    function setGenuineSuccessiveTradeOrderResiduals(bool genuine) public {
+        successiveTradeOrderResiduals = genuine;
+    }
+
+    function isGenuineSuccessiveTradeOrderResiduals(
+        Types.Trade firstTrade,
+        Types.Trade lastTrade,
+        Types.TradePartyRole tradePartyRole
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(firstTrade.nonce == firstTrade.nonce);
+        require(lastTrade.nonce == lastTrade.nonce);
+        require(tradePartyRole == tradePartyRole);
+        return successiveTradeOrderResiduals;
     }
 }
