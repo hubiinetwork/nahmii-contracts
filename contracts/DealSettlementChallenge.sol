@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./Types.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable, Validator} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
@@ -22,7 +23,7 @@ import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract DealSettlementChallenge is Ownable, Configurable, Validatable, SecurityBondable  {
+contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatable, SecurityBondable {
     using SafeMathInt for int256;
 
     //
@@ -225,7 +226,7 @@ contract DealSettlementChallenge is Ownable, Configurable, Validatable, Security
     // Functions implemented in DealSettlementChallengePartialChallenge
     // -----------------------------------------------------------------------------------------------------------------
 
-        /// @notice Challenge the deal settlement by providing order candidate
+    /// @notice Challenge the deal settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged deal
     function challengeByOrder(Types.Order order) public {
         DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).challengeByOrder(order, msg.sender);
@@ -294,7 +295,7 @@ contract DealSettlementChallenge is Ownable, Configurable, Validatable, Security
     function getChallengeCandidatePaymentsLength() public view onlyDealSettlementChallengeImplementers returns (uint256) {
         return challengeCandidatePayments.length;
     }
-    
+
     function getValidator() public view onlyDealSettlementChallengeImplementers validatorInitialized returns (Validator) {
         return validator;
     }
@@ -302,33 +303,8 @@ contract DealSettlementChallenge is Ownable, Configurable, Validatable, Security
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
     modifier onlyDealSettlementChallengeImplementers() {
         require(msg.sender == dealSettlementChallengePartialChallenge);
-        _;
-    }
-
-    modifier notEqualAddresses(address address1, address address2) {
-        require(address1 != address2);
-        _;
-    }
-
-    modifier validatorInitialized() {
-        require(validator != address(0));
-        _;
-    }
-
-    modifier onlySealedTrade(Types.Trade trade) {
-        require(validator.isGenuineTradeSeal(trade, owner), "Trade is not sealed");
-        _;
-    }
-
-    modifier onlySealedPayment(Types.Payment payment) {
-        require(validator.isGenuinePaymentSeals(payment, owner), "Payment is not sealed");
         _;
     }
 }
