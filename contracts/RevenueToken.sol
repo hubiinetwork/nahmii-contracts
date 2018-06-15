@@ -1,11 +1,12 @@
-pragma solidity ^0.4.24;
-
-/**
- * Originally from https://github.com/OpenZeppelin/zeppelin-solidity
- * Modified by https://www.coinfabrik.com/
+/*
+ * Hubii Striim
  *
- * This version is being used for Truffle Unit Testing. Please do not remove.
+ * Compliant with the Hubii Striim specification v0.12.
+ *
+ * Copyright (C) 2017-2018 Hubii AS
  */
+
+pragma solidity ^0.4.24;
 
 import './ERC20.sol';
 import './SafeMathUint.sol';

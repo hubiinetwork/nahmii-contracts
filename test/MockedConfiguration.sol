@@ -1,10 +1,11 @@
-/*!
- * Hubii - Omphalos
+/*
+ * Hubii Striim
  *
- * Compliant with the Omphalos specification v0.12.
+ * Compliant with the Hubii Striim specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
+
 pragma solidity ^0.4.24;
 
 import "../contracts/Configuration.sol";

@@ -1,5 +1,5 @@
 /*!
- * Hubii - Omphalos
+ * Hubii Striim
  *
  * Copyright (C) 2017-2018 Hubii AS
  */

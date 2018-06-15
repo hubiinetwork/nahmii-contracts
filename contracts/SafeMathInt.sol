@@ -1,9 +1,16 @@
+/*
+ * Hubii Striim
+ *
+ * Compliant with the Hubii Striim specification v0.12.
+ *
+ * Copyright (C) 2017-2018 Hubii AS based on Open-Zeppelin's SafeMath library
+ */
+
 pragma solidity ^0.4.24;
 
 /**
  * @title     SafeMathInt
  * @dev       Math operations with safety checks that throw on error
- * Copyright  (C) 2017-2018 Hubii AS based on Open-Zeppelin's SafeMath library
  */
 library SafeMathInt {
     int256 constant INT256_MIN = int256((uint256(1) << 255));
