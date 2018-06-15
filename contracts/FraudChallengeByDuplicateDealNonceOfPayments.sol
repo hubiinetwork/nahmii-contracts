@@ -22,7 +22,7 @@ contract FraudChallengeByDuplicateDealNonceOfPayments is Ownable, FraudChallenga
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDealNonceOfPaymentsEvent(Types.Payment firstTrade, Types.Payment lastTrade, address challenger);
+    event ChallengeByDuplicateDealNonceOfPaymentsEvent(Types.Payment payment1, Types.Payment payment2, address challenger);
 
     //
     // Constructor

@@ -29,6 +29,7 @@ const FraudChallengeByTradeSucceedingPayment = artifacts.require("FraudChallenge
 const FraudChallengeByTradeOrderResiduals = artifacts.require("FraudChallengeByTradeOrderResiduals");
 const FraudChallengeByDoubleSpentOrders = artifacts.require("FraudChallengeByDoubleSpentOrders");
 const FraudChallengeByDuplicateDealNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDealNonceOfTrades");
+const FraudChallengeByDuplicateDealNonceOfPayments = artifacts.require("FraudChallengeByDuplicateDealNonceOfPayments");
 const ReserveFund = artifacts.require("ReserveFund");
 const RevenueFund = artifacts.require("RevenueFund");
 const SecurityBond = artifacts.require("SecurityBond");
@@ -351,6 +352,17 @@ contract('Smart contract checks', function () {
         }
     });
 
+    before("Preflight: Instantiate FraudChallengeByDuplicateDealNonceOfPayments contract", async () => {
+        try {
+            glob.web3FraudChallengeByDuplicateDealNonceOfPayments = await FraudChallengeByDuplicateDealNonceOfPayments.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDuplicateDealNonceOfPayments, null);
+            glob.ethersIoFraudChallengeByDuplicateDealNonceOfPayments = new ethers.Contract(glob.web3FraudChallengeByDuplicateDealNonceOfPayments.address, FraudChallengeByDuplicateDealNonceOfPayments.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDealNonceOfPayments contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
     before("Preflight: Instantiate ReserveFund contract", async () => {
         try {
             glob.web3ReserveFund = await ReserveFund.deployed();
@@ -474,6 +486,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByTradeOrderResiduals')(glob);
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
     require('./scenarios/FraudChallengeByDuplicateDealNonceOfTrades')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDealNonceOfPayments')(glob);
     require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
