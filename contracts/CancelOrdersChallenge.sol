@@ -12,36 +12,22 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./Types.sol";
-import {AbstractConfiguration} from "./Configuration.sol";
-import {AbstractValidator} from "./Validator.sol";
-
-contract AbstractCancelOrdersChallenge {
-    function getCancelledOrdersCount(address wallet) public view returns (uint256);
-
-    function isOrderCancelled(address wallet, bytes32 orderHash) public view returns (bool);
-
-    function getCancelledOrders(address wallet, uint256 startIndex) public view returns (Types.Order[10]);
-
-    function cancelOrders(Types.Order[] orders) public;
-
-    function challengeCancelledOrder(Types.Trade trade, address wallet) public;
-
-    function challengePhase(address wallet) public view returns (Types.ChallengePhase);
-}
+import {Configuration} from "./Configuration.sol";
+import {Validator} from "./Validator.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
+contract CancelOrdersChallenge is Ownable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    AbstractConfiguration public configuration;
-    AbstractValidator public validator;
+    Configuration public configuration;
+    Validator public validator;
 
     mapping(address => mapping(bytes32 => bool)) public walletOrderExchangeHashCancelledMap;
     mapping(address => Types.Order[]) public walletOrderCancelledListMap;
@@ -51,8 +37,8 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
-    event ChangeValidatorEvent(AbstractValidator oldValidator, AbstractValidator newValidator);
+    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
+    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
     event CancelOrdersEvent(Types.Order[] orders, address wallet);
     event ChallengeCancelledOrderEvent(Types.Order order, Types.Trade trade, address wallet);
 
@@ -67,26 +53,26 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(AbstractConfiguration newConfiguration)
+    function changeConfiguration(Configuration newConfiguration)
     public
     onlyOwner
     notNullAddress(newConfiguration)
     notEqualAddresses(newConfiguration, configuration)
     {
-        AbstractConfiguration oldConfiguration = configuration;
+        Configuration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
     }
 
     /// @notice Change the validator contract
     /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(AbstractValidator newValidator)
+    function changeValidator(Validator newValidator)
     public
     onlyOwner
     notNullAddress(newValidator)
     notEqualAddresses(newValidator, validator)
     {
-        AbstractValidator oldValidator = validator;
+        Validator oldValidator = validator;
         validator = newValidator;
         emit ChangeValidatorEvent(oldValidator, validator);
     }
@@ -132,7 +118,7 @@ contract CancelOrdersChallenge is Ownable, AbstractCancelOrdersChallenge {
     /// @param orders The orders to cancel
     function cancelOrders(Types.Order[] orders) public
     {
-        require(configuration != address(0), "Configuration is missing");
+        require(configuration != address(0));
 
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i].wallet);

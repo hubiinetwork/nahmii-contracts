@@ -10,83 +10,14 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import "./Types.sol";
-import "./Ownable.sol";
-import {AbstractConfiguration} from "./Configuration.sol";
-import {AbstractHasher} from "./Hasher.sol";
+import {Types} from "./Types.sol";
+import {Ownable} from "./Ownable.sol";
+import {Configurable} from "./Configurable.sol";
+import {Hashable} from "./Hashable.sol";
 
-contract AbstractValidator {
-
-    function isGenuineTradeMakerFee(Types.Trade trade) public view returns (bool);
-
-    function isGenuineTradeTakerFee(Types.Trade trade) public view returns (bool);
-
-    function isGenuineByTradeBuyer(Types.Trade trade, address exchange) public view returns (bool);
-
-    function isGenuineByTradeSeller(Types.Trade trade, address exchange) public view returns (bool);
-
-    function isGenuineOrderWalletSeal(Types.Order order) public view returns (bool);
-
-    function isGenuineOrderExchangeSeal(Types.Order order, address exchange) public view returns (bool);
-
-    function isGenuineOrderSeals(Types.Order order, address exchange) public view returns (bool);
-
-    function isGenuineTradeSeal(Types.Trade trade, address exchange) public view returns (bool);
-
-    function isGenuinePaymentWalletSeal(Types.Payment payment) public view returns (bool);
-
-    function isGenuinePaymentExchangeSeal(Types.Payment payment, address exchange) public view returns (bool);
-
-    function isGenuinePaymentSeals(Types.Payment payment, address exchange) public view returns (bool);
-
-    function isGenuinePaymentFee(Types.Payment payment) public view returns (bool);
-
-    function isGenuineByPaymentSender(Types.Payment payment) public pure returns (bool);
-
-    function isGenuineByPaymentRecipient(Types.Payment payment) public pure returns (bool);
-
-    function isSuccessiveTradesPartyNonces(Types.Trade firstTrade, Types.TradePartyRole firstTradePartyRole, Types.Trade lastTrade, Types.TradePartyRole lastTradePartyRole) public pure returns (bool);
-
-    function isSuccessivePaymentsPartyNonces(Types.Payment firstPayment, Types.PaymentPartyRole firstPaymentPartyRole, Types.Payment lastPayment, Types.PaymentPartyRole lastPaymentPartyRole) public pure returns (bool);
-
-    function isSuccessiveTradePaymentPartyNonces(Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.Payment payment, Types.PaymentPartyRole paymentPartyRole) public pure returns (bool);
-
-    function isSuccessivePaymentTradePartyNonces(Types.Payment payment, Types.PaymentPartyRole paymentPartyRole, Types.Trade trade, Types.TradePartyRole tradePartyRole) public pure returns (bool);
-
-    function isGenuineSuccessiveTradesBalances(Types.Trade firstTrade, Types.TradePartyRole firstTradePartyRole, Types.CurrencyRole firstCurrencyRole, Types.Trade lastTrade, Types.TradePartyRole lastTradePartyRole, Types.CurrencyRole lastCurrencyRole) public pure returns (bool);
-
-    function isGenuineSuccessivePaymentsBalances(Types.Payment firstPayment, Types.PaymentPartyRole firstPaymentPartyRole, Types.Payment lastPayment, Types.PaymentPartyRole lastPaymentPartyRole) public pure returns (bool);
-
-    function isGenuineSuccessiveTradePaymentBalances(Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole, Types.Payment payment, Types.PaymentPartyRole paymentPartyRole) public pure returns (bool);
-
-    function isGenuineSuccessivePaymentTradeBalances(Types.Payment payment, Types.PaymentPartyRole paymentPartyRole, Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole) public pure returns (bool);
-
-    function isGenuineSuccessiveTradesNetFees(Types.Trade firstTrade, Types.TradePartyRole firstTradePartyRole, Types.CurrencyRole firstCurrencyRole, Types.Trade lastTrade, Types.TradePartyRole lastTradePartyRole, Types.CurrencyRole lastCurrencyRole) public pure returns (bool);
-
-    function isGenuineSuccessiveTradeOrderResiduals(Types.Trade firstTrade, Types.Trade lastTrade, Types.TradePartyRole tradePartyRole) public pure returns (bool);
-
-    function isGenuineSuccessivePaymentsNetFees(Types.Payment firstPayment, Types.PaymentPartyRole firstPaymentPartyRole, Types.Payment lastPayment, Types.PaymentPartyRole lastPaymentPartyRole) public pure returns (bool);
-
-    function isGenuineSuccessiveTradePaymentNetFees(Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole, Types.Payment payment, Types.PaymentPartyRole paymentPartyRole) public pure returns (bool);
-
-    function isGenuineSuccessivePaymentTradeNetFees(Types.Payment payment, Types.PaymentPartyRole paymentPartyRole, Types.Trade trade, Types.TradePartyRole tradePartyRole, Types.CurrencyRole currencyRole) public pure returns (bool);
-}
-
-contract Validator is Ownable, AbstractValidator {
+contract Validator is Ownable, Configurable, Hashable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
-
-    //
-    // Variables
-    // -----------------------------------------------------------------------------------------------------------------
-    AbstractConfiguration public configuration;
-    AbstractHasher public hasher;
-
-    //
-    // Events
-    // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
-    event ChangeHasherEvent(AbstractHasher oldHasher, AbstractHasher newHasher);
 
     //
     // Constructor
@@ -97,50 +28,39 @@ contract Validator is Ownable, AbstractValidator {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(AbstractConfiguration newConfiguration)
-    public
-    onlyOwner
-    notNullAddress(newConfiguration)
-    notEqualAddresses(newConfiguration, configuration)
-    {
-        AbstractConfiguration oldConfiguration = configuration;
-        configuration = newConfiguration;
-        emit ChangeConfigurationEvent(oldConfiguration, configuration);
-    }
-
-    /// @notice Change the hasher contract
-    /// @param newHasher The (address of) AbstractHasher contract instance
-    function changeHasher(AbstractHasher newHasher)
-    public
-    onlyOwner
-    notNullAddress(newHasher)
-    notEqualAddresses(newHasher, hasher)
-    {
-        AbstractHasher oldHasher = hasher;
-        hasher = newHasher;
-        emit ChangeHasherEvent(oldHasher, hasher);
-    }
-
     function isGenuineTradeMakerFee(Types.Trade trade) public view returns (bool) {
         int256 feePartsPer = configuration.getPartsPer();
-        int256 discountTier = int256(Types.LiquidityRole.Maker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
-        return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-        && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-        && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+        int256 discountTier;
+        if (Types.LiquidityRole.Maker == trade.buyer.liquidityRole) {
+            discountTier = int256(trade.buyer.rollingVolume);
+            return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+        } else {// Types.LiquidityRole.Maker == trade.seller.liquidityRole
+            discountTier = int256(trade.seller.rollingVolume);
+            return (trade.singleFees.conjugate <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            && (trade.singleFees.conjugate == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            && (trade.singleFees.conjugate >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(trade.rate.mul(feePartsPer)));
+        }
     }
 
     function isGenuineTradeTakerFee(Types.Trade trade) public view returns (bool) {
         int256 feePartsPer = configuration.getPartsPer();
-        int256 amountConjugate = trade.amount.div(trade.rate);
-        int256 discountTier = int256(Types.LiquidityRole.Taker == trade.buyer.liquidityRole ? trade.buyer.rollingVolume : trade.seller.rollingVolume);
-        return (trade.singleFees.conjugate <= amountConjugate.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-        && (trade.singleFees.conjugate == amountConjugate.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-        && (trade.singleFees.conjugate >= amountConjugate.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+        int256 discountTier;
+        if (Types.LiquidityRole.Taker == trade.buyer.liquidityRole) {
+            discountTier = int256(trade.buyer.rollingVolume);
+            return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+        } else {// Types.LiquidityRole.Taker == trade.seller.liquidityRole
+            discountTier = int256(trade.seller.rollingVolume);
+            return (trade.singleFees.conjugate <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            && (trade.singleFees.conjugate == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            && (trade.singleFees.conjugate >= trade.amount.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(trade.rate.mul(feePartsPer)));
+        }
     }
 
-    function isGenuineByTradeBuyer(Types.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeBuyer(Types.Trade trade, address exchange) public pure returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (trade.buyer.wallet != exchange)
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.singleFees.intended))
@@ -150,7 +70,7 @@ contract Validator is Ownable, AbstractValidator {
         && (trade.buyer.order.residuals.previous >= trade.buyer.order.residuals.current);
     }
 
-    function isGenuineByTradeSeller(Types.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeSeller(Types.Trade trade, address exchange) public pure returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (trade.seller.wallet != exchange)
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))
@@ -160,33 +80,53 @@ contract Validator is Ownable, AbstractValidator {
         && (trade.seller.order.residuals.previous >= trade.seller.order.residuals.current);
     }
 
+    function isGenuineOrderWalletHash(Types.Order order) public view returns (bool) {
+        return hasher.hashOrderAsWallet(order) == order.seals.wallet.hash;
+    }
+
+    function isGenuineOrderExchangeHash(Types.Order order) public view returns (bool) {
+        return hasher.hashOrderAsExchange(order) == order.seals.exchange.hash;
+    }
+
     function isGenuineOrderWalletSeal(Types.Order order) public view returns (bool) {
-        return (hasher.hashOrderAsWallet(order) == order.seals.wallet.hash)
-        && (Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet));
+        return isGenuineOrderWalletHash(order)
+        && Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
     }
 
     function isGenuineOrderExchangeSeal(Types.Order order, address exchange) public view returns (bool) {
-        return (hasher.hashOrderAsExchange(order) == order.seals.exchange.hash)
-        && (Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, exchange));
+        return isGenuineOrderExchangeHash(order)
+        && Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, exchange);
     }
 
     function isGenuineOrderSeals(Types.Order order, address exchange) public view returns (bool) {
         return isGenuineOrderWalletSeal(order) && isGenuineOrderExchangeSeal(order, exchange);
     }
 
+    function isGenuineTradeHash(Types.Trade trade) public view returns (bool) {
+        return hasher.hashTrade(trade) == trade.seal.hash;
+    }
+
     function isGenuineTradeSeal(Types.Trade trade, address exchange) public view returns (bool) {
-        return (hasher.hashTrade(trade) == trade.seal.hash)
-        && (Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, exchange));
+        return isGenuineTradeHash(trade)
+        && Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, exchange);
+    }
+
+    function isGenuinePaymentWalletHash(Types.Payment payment) public view returns (bool) {
+        return hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash;
+    }
+
+    function isGenuinePaymentExchangeHash(Types.Payment payment) public view returns (bool) {
+        return hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash;
     }
 
     function isGenuinePaymentWalletSeal(Types.Payment payment) public view returns (bool) {
-        return (hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash)
-        && (Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
+        return isGenuinePaymentWalletHash(payment)
+        && Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
     }
 
     function isGenuinePaymentExchangeSeal(Types.Payment payment, address exchange) public view returns (bool) {
-        return (hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash)
-        && (Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, exchange));
+        return isGenuinePaymentExchangeHash(payment)
+        && Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, exchange);
     }
 
     function isGenuinePaymentSeals(Types.Payment payment, address exchange) public view returns (bool) {
@@ -200,12 +140,12 @@ contract Validator is Ownable, AbstractValidator {
         && (payment.singleFee >= payment.amount.mul(configuration.getCurrencyPaymentMinimumFee(payment.currency, payment.blockNumber)).div(feePartsPer));
     }
 
-    function isGenuineByPaymentSender(Types.Payment payment) public pure returns (bool) {
+    function isGenuinePaymentSender(Types.Payment payment) public pure returns (bool) {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.singleFee));
     }
 
-    function isGenuineByPaymentRecipient(Types.Payment payment) public pure returns (bool) {
+    function isGenuinePaymentRecipient(Types.Payment payment) public pure returns (bool) {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.recipient.balances.current == payment.recipient.balances.previous.add(payment.transfers.single));
     }

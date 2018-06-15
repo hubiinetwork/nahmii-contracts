@@ -11,10 +11,10 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./Types.sol";
-import {AbstractConfiguration} from "./Configuration.sol";
-import {AbstractValidator} from "./Validator.sol";
-import {AbstractSecurityBond} from "./SecurityBond.sol";
-import {AbstractCancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
+import {Configuration} from "./Configuration.sol";
+import {Validator} from "./Validator.sol";
+import {SecurityBond} from "./SecurityBond.sol";
+import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 
 /**
 @title Exchange
@@ -42,10 +42,10 @@ contract DealSettlementChallenge is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    AbstractConfiguration public configuration;
-    AbstractValidator public validator;
-    AbstractSecurityBond public securityBond;
-    AbstractCancelOrdersChallenge public cancelOrdersChallenge;
+    Configuration public configuration;
+    Validator public validator;
+    SecurityBond public securityBond;
+    CancelOrdersChallenge public cancelOrdersChallenge;
 
     mapping(address => Challenge) public walletChallengeMap;
 
@@ -59,10 +59,10 @@ contract DealSettlementChallenge is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(AbstractConfiguration oldConfiguration, AbstractConfiguration newConfiguration);
-    event ChangeValidatorEvent(AbstractValidator oldValidator, AbstractValidator newValidator);
-    event ChangeSecurityBondEvent(AbstractSecurityBond oldSecurityBond, AbstractSecurityBond newSecurityBond);
-    event ChangeCancelOrdersChallengeEvent(AbstractCancelOrdersChallenge oldCancelOrdersChallenge, AbstractCancelOrdersChallenge newCancelOrdersChallenge);
+    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
+    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
+    event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
+    event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
     event StartChallengeFromTradeEvent(Types.Trade trade, address wallet);
     event StartChallengeFromPaymentEvent(Types.Payment payment, address wallet);
     event ChallengeByOrderEvent(Types.Order order, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
@@ -81,52 +81,52 @@ contract DealSettlementChallenge is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(AbstractConfiguration newConfiguration)
+    function changeConfiguration(Configuration newConfiguration)
     public
     onlyOwner
     notNullAddress(newConfiguration)
     notEqualAddresses(newConfiguration, configuration)
     {
-        AbstractConfiguration oldConfiguration = configuration;
+        Configuration oldConfiguration = configuration;
         configuration = newConfiguration;
         emit ChangeConfigurationEvent(oldConfiguration, configuration);
     }
 
     /// @notice Change the validator contract
     /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(AbstractValidator newValidator)
+    function changeValidator(Validator newValidator)
     public
     onlyOwner
     notNullAddress(newValidator)
     notEqualAddresses(newValidator, validator)
     {
-        AbstractValidator oldValidator = validator;
+        Validator oldValidator = validator;
         validator = newValidator;
         emit ChangeValidatorEvent(oldValidator, validator);
     }
 
     /// @notice Change the security bond contract
     /// @param newSecurityBond The (address of) SecurityBond contract instance
-    function changeSecurityBond(AbstractSecurityBond newSecurityBond)
+    function changeSecurityBond(SecurityBond newSecurityBond)
     public
     onlyOwner
     notNullAddress(newSecurityBond)
     notEqualAddresses(newSecurityBond, securityBond)
     {
-        AbstractSecurityBond oldSecurityBond = securityBond;
+        SecurityBond oldSecurityBond = securityBond;
         securityBond = newSecurityBond;
         emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
     }
 
     /// @notice Change the cance orders challenge contract
     /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
-    function changeCancelOrdersChallenge(AbstractCancelOrdersChallenge newCancelOrdersChallenge)
+    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
     public
     onlyOwner
     notNullAddress(newCancelOrdersChallenge)
     notEqualAddresses(newCancelOrdersChallenge, cancelOrdersChallenge)
     {
-        AbstractCancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
+        CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
         cancelOrdersChallenge = newCancelOrdersChallenge;
         emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
     }
@@ -166,7 +166,7 @@ contract DealSettlementChallenge is Ownable {
     validatorInitialized
     onlySealedTrade(trade)
     {
-        require(configuration != address(0), "Configuration is missing");
+        require(configuration != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -203,7 +203,7 @@ contract DealSettlementChallenge is Ownable {
     validatorInitialized
     onlySealedPayment(payment)
     {
-        require(configuration != address(0), "Configuration is missing");
+        require(configuration != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -265,7 +265,7 @@ contract DealSettlementChallenge is Ownable {
     validatorInitialized
     onlySealedOrder(order)
     {
-        require(cancelOrdersChallenge != address(0), "CancelOrdersChallenge is missing");
+        require(cancelOrdersChallenge != address(0));
 
         address wallet = order.wallet;
 
@@ -320,8 +320,8 @@ contract DealSettlementChallenge is Ownable {
     onlySealedOrder(order)
     onlySealedTrade(trade)
     {
-        require(configuration != address(0), "Configuration is missing");
-        require(securityBond != address(0), "SecurityBond is missing");
+        require(configuration != address(0));
+        require(securityBond != address(0));
 
         require(Types.isTradeParty(trade, order.wallet));
         require(Types.isTradeOrder(trade, order));
@@ -349,7 +349,7 @@ contract DealSettlementChallenge is Ownable {
     validatorInitialized
     onlySealedTrade(trade)
     {
-        require(cancelOrdersChallenge != address(0), "CancelOrdersChallenge is missing");
+        require(cancelOrdersChallenge != address(0));
 
         require(Types.isTradeParty(trade, wallet));
 
@@ -485,7 +485,7 @@ contract DealSettlementChallenge is Ownable {
     }
 
    modifier validatorInitialized() {
-        require(validator != address(0), "Validator is missing");
+        require(validator != address(0));
         _;
     }
 

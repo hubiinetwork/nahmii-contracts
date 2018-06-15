@@ -11,100 +11,11 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 
-contract AbstractConfiguration {
-
-    function isRegisteredService(address service, string action) public returns (bool);
-
-    function registerService(address service, string action) public;
-
-    function deregisterService(address service, string action) public;
-
-    function setOperationalModeExit() public;
-
-    function isOperationalModeNormal() public view returns (bool);
-
-    function isOperationalModeExit() public view returns (bool);
-
-    function getPartsPer() public view returns (int256);
-
-    function getTradeMakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
-
-    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
-
-    function getTradeMakerFeesCount() public view returns (uint256);
-
-    function getTradeTakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
-
-    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
-
-    function getTradeTakerFeesCount() public view returns (uint256);
-
-    function getPaymentFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
-
-    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
-
-    function getPaymentFeesCount() public view returns (uint256);
-
-    function getCurrencyPaymentFee(address currency, uint256 blockNumber, int256 discountTier) public view returns (int256);
-
-    function setCurrencyPaymentFee(address currency, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
-
-    function getCurrencyPaymentFeesCount(address currency) public view returns (uint256);
-
-    function getTradeMakerMinimumFee(uint256 blockNumber) public view returns (int256);
-
-    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal) public;
-
-    function getTradeMakerMinimumFeesCount() public view returns (uint256);
-
-    function getTradeTakerMinimumFee(uint256 blockNumber) public view returns (int256);
-
-    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal) public;
-
-    function getTradeTakerMinimumFeesCount() public view returns (uint256);
-
-    function getPaymentMinimumFee(uint256 blockNumber) public view returns (int256);
-
-    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal) public;
-
-    function getPaymentMinimumFeesCount() public view returns (uint256);
-
-    function getCurrencyPaymentMinimumFee(address currency, uint256 blockNumber) public view returns (int256);
-
-    function setCurrencyPaymentMinimumFee(address currency, uint256 blockNumber, int256 nominal) public;
-
-    function getCurrencyPaymentMinimumFeesCount(address currency) public view returns (uint256);
-
-    function setCancelOrderChallengeTimeout(uint256 timeout) public;
-
-    function getCancelOrderChallengeTimeout() public view returns (uint256);
-
-    function setDealSettlementChallengeTimeout(uint256 timeout) public;
-
-    function getDealSettlementChallengeTimeout() public view returns (uint256);
-
-    function setUnchallengeOrderCandidateByTradeStake(address currency, int256 amount) public;
-
-    function getUnchallengeOrderCandidateByTradeStake() public view returns (address, int256);
-
-    function setFalseWalletSignatureStake(address currency, int256 amount) public;
-
-    function getFalseWalletSignatureStake() public view returns (address, int256);
-
-    function setDuplicateDealNonceStake(address currency, int256 amount) public;
-
-    function getDuplicateDealNonceStake() public view returns (address, int256);
-
-    function setDoubleSpentOrderStake(address currency, int256 amount) public;
-
-    function getDoubleSpentOrderStake() public view returns (address, int256);
-}
-
 /**
 @title Configuration
 @notice An oracle for configurations such as fees, challenge timeouts and stakes
 */
-contract Configuration is Ownable, AbstractConfiguration {
+contract Configuration is Ownable {
     using SafeMathInt for int256;
 
     //
@@ -207,7 +118,7 @@ contract Configuration is Ownable, AbstractConfiguration {
     /// @notice Returns the service status of an address and an action
     /// @param service The address of contract
     /// @param action The action in question
-    function isRegisteredService(address service, string action) public returns (bool) {
+    function isRegisteredService(address service, string action) public view returns (bool) {
         return registeredServiceActionMap[service][keccak256(abi.encode(action))];
     }
 
@@ -245,7 +156,7 @@ contract Configuration is Ownable, AbstractConfiguration {
     }
 
     /// @notice Return the parts per constant
-    function getPartsPer() public view returns (int256) {
+    function getPartsPer() public pure returns (int256) {
         return PARTS_PER;
     }
 

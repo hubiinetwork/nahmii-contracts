@@ -4,33 +4,45 @@
  * Copyright (C) 2017-2018 Hubii
  */
 
-var async = require('async');
-var ethers = require('ethers');
-var keccak256 = require("augmented-keccak256");
-var Helpers = require('./helpers');
-var w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
+const async = require('async');
+const ethers = require('ethers');
+const keccak256 = require("augmented-keccak256");
+const Helpers = require('./helpers');
+const w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 
-var ClientFund = artifacts.require("ClientFund");
-var CommunityVote = artifacts.require("CommunityVote");
-var Hasher = artifacts.require("Hasher");
-var Validator = artifacts.require("Validator");
-var Configuration = artifacts.require("Configuration");
-var Exchange = artifacts.require("Exchange");
-var CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
-var DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
-// var FraudChallenge = artifacts.require("FraudChallenge");
-var ReserveFund = artifacts.require("ReserveFund");
-var RevenueFund = artifacts.require("RevenueFund");
-var SecurityBond = artifacts.require("SecurityBond");
-var TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
-var ERC20Token = artifacts.require("StandardTokenEx");
-var UnitTestHelpers = artifacts.require("UnitTestHelpers");
+const ClientFund = artifacts.require("ClientFund");
+const CommunityVote = artifacts.require("CommunityVote");
+const Hasher = artifacts.require("Hasher");
+const Validator = artifacts.require("Validator");
+const Configuration = artifacts.require("Configuration");
+const Exchange = artifacts.require("Exchange");
+const CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
+const DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
+const FraudChallenge = artifacts.require("FraudChallenge");
+const FraudChallengeByOrder = artifacts.require("FraudChallengeByOrder");
+const FraudChallengeByTrade = artifacts.require("FraudChallengeByTrade");
+const FraudChallengeByPayment = artifacts.require("FraudChallengeByPayment");
+const FraudChallengeBySuccessiveTrades = artifacts.require("FraudChallengeBySuccessiveTrades");
+const FraudChallengeBySuccessivePayments = artifacts.require("FraudChallengeBySuccessivePayments");
+const FraudChallengeByPaymentSucceedingTrade = artifacts.require("FraudChallengeByPaymentSucceedingTrade");
+const FraudChallengeByTradeSucceedingPayment = artifacts.require("FraudChallengeByTradeSucceedingPayment");
+const FraudChallengeByTradeOrderResiduals = artifacts.require("FraudChallengeByTradeOrderResiduals");
+const FraudChallengeByDoubleSpentOrders = artifacts.require("FraudChallengeByDoubleSpentOrders");
+const FraudChallengeByDuplicateDealNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDealNonceOfTrades");
+const FraudChallengeByDuplicateDealNonceOfPayments = artifacts.require("FraudChallengeByDuplicateDealNonceOfPayments");
+const FraudChallengeByDuplicateDealNonceOfTradeAndPayment = artifacts.require("FraudChallengeByDuplicateDealNonceOfTradeAndPayment");
+const ReserveFund = artifacts.require("ReserveFund");
+const RevenueFund = artifacts.require("RevenueFund");
+const SecurityBond = artifacts.require("SecurityBond");
+const TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
+const ERC20Token = artifacts.require("StandardTokenEx");
+const UnitTestHelpers = artifacts.require("UnitTestHelpers");
 
 //augmented sendTransaction using promises
 Helpers.augmentWeb3(web3);
 
 contract('Smart contract checks', function () {
-    var glob = {
+    const glob = {
         owner: web3.eth.coinbase,
         user_a: web3.eth.accounts[1],
         user_b: web3.eth.accounts[2],
@@ -154,6 +166,17 @@ contract('Smart contract checks', function () {
         }
     });
 
+    before("Preflight: Instantiate Validator contract", async () => {
+        try {
+            glob.web3Validator = await Validator.deployed();
+            assert.notEqual(glob.web3Validator, null);
+            glob.ethersIoValidator = new ethers.Contract(glob.web3Validator.address, Validator.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate Validator contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
     before("Preflight: Instantiate CommunityVote contract", async () => {
         try {
             glob.web3CommunityVote = await CommunityVote.deployed();
@@ -209,16 +232,148 @@ contract('Smart contract checks', function () {
         }
     });
 
-    // before("Preflight: Instantiate FraudChallenge contract", async () => {
-    //     try {
-    //         glob.web3FraudChallenge = await FraudChallenge.deployed();
-    //         assert.notEqual(glob.web3FraudChallenge, null);
-    //         glob.ethersIoFraudChallenge = new ethers.Contract(glob.web3FraudChallenge.address, FraudChallenge.abi, glob.signer_owner);
-    //     }
-    //     catch (err) {
-    //         assert(false, 'Failed to instantiate FraudChallenge contract address. [Error: ' + err.toString() + ']');
-    //     }
-    // });
+    before("Preflight: Instantiate FraudChallenge contract", async () => {
+        try {
+            glob.web3FraudChallenge = await FraudChallenge.deployed();
+            assert.notEqual(glob.web3FraudChallenge, null);
+            glob.ethersIoFraudChallenge = new ethers.Contract(glob.web3FraudChallenge.address, FraudChallenge.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallenge contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByOrder contract", async () => {
+        try {
+            glob.web3FraudChallengeByOrder = await FraudChallengeByOrder.deployed();
+            assert.notEqual(glob.web3FraudChallengeByOrder, null);
+            glob.ethersIoFraudChallengeByOrder = new ethers.Contract(glob.web3FraudChallengeByOrder.address, FraudChallengeByOrder.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByOrder contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByTrade contract", async () => {
+        try {
+            glob.web3FraudChallengeByTrade = await FraudChallengeByTrade.deployed();
+            assert.notEqual(glob.web3FraudChallengeByTrade, null);
+            glob.ethersIoFraudChallengeByTrade = new ethers.Contract(glob.web3FraudChallengeByTrade.address, FraudChallengeByTrade.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByTrade contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByPayment contract", async () => {
+        try {
+            glob.web3FraudChallengeByPayment = await FraudChallengeByPayment.deployed();
+            assert.notEqual(glob.web3FraudChallengeByPayment, null);
+            glob.ethersIoFraudChallengeByPayment = new ethers.Contract(glob.web3FraudChallengeByPayment.address, FraudChallengeByPayment.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByPayment contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeBySuccessiveTrades contract", async () => {
+        try {
+            glob.web3FraudChallengeBySuccessiveTrades = await FraudChallengeBySuccessiveTrades.deployed();
+            assert.notEqual(glob.web3FraudChallengeBySuccessiveTrades, null);
+            glob.ethersIoFraudChallengeBySuccessiveTrades = new ethers.Contract(glob.web3FraudChallengeBySuccessiveTrades.address, FraudChallengeBySuccessiveTrades.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeBySuccessiveTrades contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeBySuccessivePayments contract", async () => {
+        try {
+            glob.web3FraudChallengeBySuccessivePayments = await FraudChallengeBySuccessivePayments.deployed();
+            assert.notEqual(glob.web3FraudChallengeBySuccessivePayments, null);
+            glob.ethersIoFraudChallengeBySuccessivePayments = new ethers.Contract(glob.web3FraudChallengeBySuccessivePayments.address, FraudChallengeBySuccessivePayments.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeBySuccessivePayments contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByPaymentSucceedingTrade contract", async () => {
+        try {
+            glob.web3FraudChallengeByPaymentSucceedingTrade = await FraudChallengeByPaymentSucceedingTrade.deployed();
+            assert.notEqual(glob.web3FraudChallengeByPaymentSucceedingTrade, null);
+            glob.ethersIoFraudChallengeByPaymentSucceedingTrade = new ethers.Contract(glob.web3FraudChallengeByPaymentSucceedingTrade.address, FraudChallengeByPaymentSucceedingTrade.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByPaymentSucceedingTrade contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByTradeSucceedingPayment contract", async () => {
+        try {
+            glob.web3FraudChallengeByTradeSucceedingPayment = await FraudChallengeByTradeSucceedingPayment.deployed();
+            assert.notEqual(glob.web3FraudChallengeByTradeSucceedingPayment, null);
+            glob.ethersIoFraudChallengeByTradeSucceedingPayment = new ethers.Contract(glob.web3FraudChallengeByTradeSucceedingPayment.address, FraudChallengeByTradeSucceedingPayment.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByTradeSucceedingPayment contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByTradeOrderResiduals contract", async () => {
+        try {
+            glob.web3FraudChallengeByTradeOrderResiduals = await FraudChallengeByTradeOrderResiduals.deployed();
+            assert.notEqual(glob.web3FraudChallengeByTradeOrderResiduals, null);
+            glob.ethersIoFraudChallengeByTradeOrderResiduals = new ethers.Contract(glob.web3FraudChallengeByTradeOrderResiduals.address, FraudChallengeByTradeOrderResiduals.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByTradeOrderResiduals contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByDoubleSpentOrders contract", async () => {
+        try {
+            glob.web3FraudChallengeByDoubleSpentOrders = await FraudChallengeByDoubleSpentOrders.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDoubleSpentOrders, null);
+            glob.ethersIoFraudChallengeByDoubleSpentOrders = new ethers.Contract(glob.web3FraudChallengeByDoubleSpentOrders.address, FraudChallengeByDoubleSpentOrders.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByDoubleSpentOrders contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByDuplicateDealNonceOfTrades contract", async () => {
+        try {
+            glob.web3FraudChallengeByDuplicateDealNonceOfTrades = await FraudChallengeByDuplicateDealNonceOfTrades.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDuplicateDealNonceOfTrades, null);
+            glob.ethersIoFraudChallengeByDuplicateDealNonceOfTrades = new ethers.Contract(glob.web3FraudChallengeByDuplicateDealNonceOfTrades.address, FraudChallengeByDuplicateDealNonceOfTrades.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDealNonceOfTrades contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByDuplicateDealNonceOfPayments contract", async () => {
+        try {
+            glob.web3FraudChallengeByDuplicateDealNonceOfPayments = await FraudChallengeByDuplicateDealNonceOfPayments.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDuplicateDealNonceOfPayments, null);
+            glob.ethersIoFraudChallengeByDuplicateDealNonceOfPayments = new ethers.Contract(glob.web3FraudChallengeByDuplicateDealNonceOfPayments.address, FraudChallengeByDuplicateDealNonceOfPayments.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDealNonceOfPayments contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate FraudChallengeByDuplicateDealNonceOfTradeAndPayment contract", async () => {
+        try {
+            glob.web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment = await FraudChallengeByDuplicateDealNonceOfTradeAndPayment.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment, null);
+            glob.ethersIoFraudChallengeByDuplicateDealNonceOfTradeAndPayment = new ethers.Contract(glob.web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.address, FraudChallengeByDuplicateDealNonceOfTradeAndPayment.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDealNonceOfTradeAndPayment contract address. [Error: ' + err.toString() + ']');
+        }
+    });
 
     before("Preflight: Instantiate ReserveFund contract", async () => {
         try {
@@ -325,13 +480,25 @@ contract('Smart contract checks', function () {
 
     require('./scenarios/ClientFund')(glob);
     require('./scenarios/Hasher')(glob);
-    // require('./scenarios/Validator')(glob);
+    require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
     require('./scenarios/Exchange')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DealSettlementChallenge')(glob);
-    // require('./scenarios/FraudChallenge')(glob);
+    require('./scenarios/FraudChallenge')(glob);
+    require('./scenarios/FraudChallengeByOrder')(glob);
+    require('./scenarios/FraudChallengeByTrade')(glob);
+    require('./scenarios/FraudChallengeByPayment')(glob);
+    require('./scenarios/FraudChallengeBySuccessiveTrades')(glob);
+    require('./scenarios/FraudChallengeBySuccessivePayments')(glob);
+    require('./scenarios/FraudChallengeByPaymentSucceedingTrade')(glob);
+    require('./scenarios/FraudChallengeByTradeSucceedingPayment')(glob);
+    require('./scenarios/FraudChallengeByTradeOrderResiduals')(glob);
+    require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTrades')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDealNonceOfPayments')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTradeAndPayment')(glob);
     require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
