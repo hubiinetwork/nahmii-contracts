@@ -16,8 +16,8 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe('FraudChallengeByDuplicateDealNonceOfTrades', () => {
-        let web3FraudChallengeByDuplicateDealNonceOfTrades, ethersFraudChallengeByDuplicateDealNonceOfTrades;
+    describe('FraudChallengeByDuplicateDealNonceOfTradeAndPayment', () => {
+        let web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment, ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3Configuration, ethersConfiguration;
         let web3SecurityBond, ethersSecurityBond;
@@ -27,8 +27,8 @@ module.exports = (glob) => {
         before(async () => {
             provider = glob.signer_owner.provider;
 
-            web3FraudChallengeByDuplicateDealNonceOfTrades = glob.web3FraudChallengeByDuplicateDealNonceOfTrades;
-            ethersFraudChallengeByDuplicateDealNonceOfTrades = glob.ethersIoFraudChallengeByDuplicateDealNonceOfTrades;
+            web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment = glob.web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment;
+            ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment = glob.ethersIoFraudChallengeByDuplicateDealNonceOfTradeAndPayment;
 
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
@@ -39,12 +39,12 @@ module.exports = (glob) => {
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
-            await ethersFraudChallengeByDuplicateDealNonceOfTrades.changeFraudChallenge(ethersFraudChallenge.address);
-            await ethersFraudChallengeByDuplicateDealNonceOfTrades.changeConfiguration(ethersConfiguration.address);
-            await ethersFraudChallengeByDuplicateDealNonceOfTrades.changeValidator(ethersValidator.address);
-            await ethersFraudChallengeByDuplicateDealNonceOfTrades.changeSecurityBond(ethersSecurityBond.address);
+            await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeFraudChallenge(ethersFraudChallenge.address);
+            await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeConfiguration(ethersConfiguration.address);
+            await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeValidator(ethersValidator.address);
+            await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeSecurityBond(ethersSecurityBond.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDealNonceOfTrades.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.address, 'OperationalMode');
         });
 
         beforeEach(async () => {
@@ -55,14 +55,14 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3FraudChallengeByDuplicateDealNonceOfTrades.owner.call();
+                const owner = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.owner.call();
                 owner.should.equal(glob.owner);
             });
         });
 
         describe('owner()', () => {
             it('should equal value initialized', async () => {
-                const owner = await ethersFraudChallengeByDuplicateDealNonceOfTrades.owner();
+                const owner = await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.owner();
                 owner.should.equal(utils.getAddress(glob.owner));
             });
         });
@@ -70,28 +70,28 @@ module.exports = (glob) => {
         describe('changeOwner()', () => {
             describe('if called with (current) owner as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDealNonceOfTrades.changeOwner(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeOwner(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDealNonceOfTrades.changeOwner(glob.user_a);
+                    const result = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeOwner(glob.user_a);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeOwnerEvent');
-                    const owner = await web3FraudChallengeByDuplicateDealNonceOfTrades.owner.call();
+                    const owner = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.owner.call();
                     owner.should.equal(glob.user_a);
                 });
             });
 
             describe('if called with sender that is not (current) owner', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDealNonceOfTrades.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('fraudChallenge()', () => {
             it('should equal value initialized', async () => {
-                const fraudChallenge = await ethersFraudChallengeByDuplicateDealNonceOfTrades.fraudChallenge();
+                const fraudChallenge = await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.fraudChallenge();
                 fraudChallenge.should.equal(utils.getAddress(ethersFraudChallenge.address));
             });
         });
@@ -107,32 +107,32 @@ module.exports = (glob) => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
-                    fraudChallenge = await web3FraudChallengeByDuplicateDealNonceOfTrades.fraudChallenge.call();
+                    fraudChallenge = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.fraudChallenge.call();
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDealNonceOfTrades.changeFraudChallenge(fraudChallenge);
+                    await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeFraudChallenge(fraudChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDealNonceOfTrades.changeFraudChallenge(address);
+                    const result = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeFraudChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeFraudChallengeEvent');
-                    const fraudChallenge = await web3FraudChallengeByDuplicateDealNonceOfTrades.fraudChallenge();
+                    const fraudChallenge = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.fraudChallenge();
                     utils.getAddress(fraudChallenge).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDealNonceOfTrades.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
-                const configuration = await ethersFraudChallengeByDuplicateDealNonceOfTrades.configuration();
+                const configuration = await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.configuration();
                 configuration.should.equal(utils.getAddress(ethersConfiguration.address));
             });
         });
@@ -148,32 +148,32 @@ module.exports = (glob) => {
                 let configuration;
 
                 beforeEach(async () => {
-                    configuration = await web3FraudChallengeByDuplicateDealNonceOfTrades.configuration.call();
+                    configuration = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.configuration.call();
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDealNonceOfTrades.changeConfiguration(configuration);
+                    await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDealNonceOfTrades.changeConfiguration(address);
+                    const result = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeConfigurationEvent');
-                    const configuration = await web3FraudChallengeByDuplicateDealNonceOfTrades.configuration();
+                    const configuration = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.configuration();
                     utils.getAddress(configuration).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDealNonceOfTrades.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('validator()', () => {
             it('should equal value initialized', async () => {
-                const validator = await ethersFraudChallengeByDuplicateDealNonceOfTrades.validator();
+                const validator = await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.validator();
                 validator.should.equal(utils.getAddress(ethersValidator.address));
             });
         });
@@ -189,32 +189,32 @@ module.exports = (glob) => {
                 let validator;
 
                 beforeEach(async () => {
-                    validator = await web3FraudChallengeByDuplicateDealNonceOfTrades.validator.call();
+                    validator = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.validator.call();
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDealNonceOfTrades.changeValidator(validator);
+                    await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDealNonceOfTrades.changeValidator(address);
+                    const result = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeValidator(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeValidatorEvent');
-                    const validator = await web3FraudChallengeByDuplicateDealNonceOfTrades.validator();
+                    const validator = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.validator();
                     utils.getAddress(validator).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDealNonceOfTrades.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('securityBond()', () => {
             it('should equal value initialized', async () => {
-                const securityBond = await ethersFraudChallengeByDuplicateDealNonceOfTrades.securityBond();
+                const securityBond = await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.securityBond();
                 securityBond.should.equal(utils.getAddress(ethersSecurityBond.address));
             });
         });
@@ -230,31 +230,31 @@ module.exports = (glob) => {
                 let securityBond;
 
                 beforeEach(async () => {
-                    securityBond = await web3FraudChallengeByDuplicateDealNonceOfTrades.securityBond.call();
+                    securityBond = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.securityBond.call();
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDealNonceOfTrades.changeSecurityBond(securityBond);
+                    await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeSecurityBond(securityBond);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDealNonceOfTrades.changeSecurityBond(address);
+                    const result = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeSecurityBond(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeSecurityBondEvent');
-                    const securityBond = await web3FraudChallengeByDuplicateDealNonceOfTrades.securityBond();
+                    const securityBond = await web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.securityBond();
                     utils.getAddress(securityBond).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDealNonceOfTrades.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('challengeByDuplicateDealNonceOfTrades()', () => {
-            let trade1, trade2, overrideOptions, filter;
+        describe('challengeByDuplicateDealNonceOfTradeAndPayment()', () => {
+            let trade, payment, overrideOptions, filter;
 
             before(async () => {
                 overrideOptions = {gasLimit: 3e6};
@@ -267,7 +267,7 @@ module.exports = (glob) => {
                 await ethersValidator.reset(overrideOptions);
                 await ethersSecurityBond.reset(overrideOptions);
 
-                trade1 = await mocks.mockTrade(glob.owner, {
+                trade = await mocks.mockTrade(glob.owner, {
                     nonce: utils.bigNumberify(1),
                     buyer: {
                         wallet: glob.user_a
@@ -277,73 +277,58 @@ module.exports = (glob) => {
                     },
                     blockNumber: utils.bigNumberify(blockNumber10)
                 });
-                trade2 = await mocks.mockTrade(glob.owner, {
+                payment = await mocks.mockPayment(glob.owner, {
                     nonce: utils.bigNumberify(2),
-                    buyer: {
+                    sender: {
                         wallet: glob.user_c
                     },
-                    seller: {
+                    recipient: {
                         wallet: glob.user_d
                     },
                     blockNumber: utils.bigNumberify(blockNumber20)
                 });
 
                 filter = await fromBlockTopicsFilter(
-                    ...ethersFraudChallengeByDuplicateDealNonceOfTrades.interface.events.ChallengeByDuplicateDealNonceOfTradesEvent.topics
+                    ...ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.interface.events.ChallengeByDuplicateDealNonceOfTradeAndPaymentEvent.topics
                 );
             });
 
-            describe('if trades are genuine', () => {
+            describe('if trade and payment are genuine', () => {
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfTrades.challengeByDuplicateDealNonceOfTrades(
-                        trade1, trade2, overrideOptions
+                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challengeByDuplicateDealNonceOfTradeAndPayment(
+                        trade, payment, overrideOptions
                     ).should.be.rejected;
                 });
             });
 
-            describe('if first trade is not sealed', () => {
+            describe('if trade is not sealed', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineTradeSeal(false);
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfTrades.challengeByDuplicateDealNonceOfTrades(
-                        trade1, trade2, overrideOptions
+                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challengeByDuplicateDealNonceOfTradeAndPayment(
+                        trade, payment, overrideOptions
                     ).should.be.rejected;
                 });
             });
 
-            describe('if last trade is not sealed', () => {
+            describe('if payment is not sealed', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineTradeSeal(true);
                     await ethersValidator.setGenuineTradeSeal(false);
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfTrades.challengeByDuplicateDealNonceOfTrades(
-                        trade1, trade2, overrideOptions
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if hashes are equal', () => {
-                beforeEach(async () => {
-                    trade1.seal.hash = cryptography.hash('some trade');
-                    trade1.seal.signature = await mocks.createWeb3Signer(glob.owner)(trade1.seal.hash);
-                    trade2.seal.hash = cryptography.hash('some trade');
-                    trade2.seal.signature = await mocks.createWeb3Signer(glob.owner)(trade2.seal.hash);
-                });
-
-                it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfTrades.challengeByDuplicateDealNonceOfTrades(
-                        trade1, trade2, overrideOptions
+                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challengeByDuplicateDealNonceOfTradeAndPayment(
+                        trade, payment, overrideOptions
                     ).should.be.rejected;
                 });
             });
 
             describe('if nonces are equal', () => {
                 beforeEach(async () => {
-                    trade1 = await mocks.mockTrade(glob.owner, {
+                    trade = await mocks.mockTrade(glob.owner, {
                         buyer: {
                             wallet: glob.user_a
                         },
@@ -352,11 +337,11 @@ module.exports = (glob) => {
                         },
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
-                    trade2 = await mocks.mockTrade(glob.owner, {
-                        buyer: {
+                    payment = await mocks.mockPayment(glob.owner, {
+                        sender: {
                             wallet: glob.user_c
                         },
-                        seller: {
+                        recipient: {
                             wallet: glob.user_d
                         },
                         blockNumber: utils.bigNumberify(blockNumber20)
@@ -364,18 +349,20 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent trades and stage in security bond', async () => {
-                    await ethersFraudChallengeByDuplicateDealNonceOfTrades.challengeByDuplicateDealNonceOfTrades(
-                        trade1, trade2, overrideOptions
+                    await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challengeByDuplicateDealNonceOfTradeAndPayment(
+                        trade, payment, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradesCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradesCount, fraudulentPaymentsCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradesCount(),
+                        ethersFraudChallenge.fraudulentPaymentsCount(),
                         ethersSecurityBond.stagesCount(),
                         ethersSecurityBond.stages(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentTradesCount.eq(2).should.be.true;
+                    fraudulentTradesCount.eq(1).should.be.true;
+                    fraudulentPaymentsCount.eq(1).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
                     stage.currency.should.equal(mocks.address0);
