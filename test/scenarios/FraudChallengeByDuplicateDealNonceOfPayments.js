@@ -253,7 +253,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeByDuplicateDealNonceOfPayments()', () => {
+        describe('challenge()', () => {
             let payment1, payment2, overrideOptions, filter;
 
             before(async () => {
@@ -295,7 +295,7 @@ module.exports = (glob) => {
 
             describe('if payments are genuine', () => {
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfPayments.challengeByDuplicateDealNonceOfPayments(
+                    return ethersFraudChallengeByDuplicateDealNonceOfPayments.challenge(
                         payment1, payment2, overrideOptions
                     ).should.be.rejected;
                 });
@@ -307,7 +307,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfPayments.challengeByDuplicateDealNonceOfPayments(
+                    return ethersFraudChallengeByDuplicateDealNonceOfPayments.challenge(
                         payment1, payment2, overrideOptions
                     ).should.be.rejected;
                 });
@@ -320,7 +320,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfPayments.challengeByDuplicateDealNonceOfPayments(
+                    return ethersFraudChallengeByDuplicateDealNonceOfPayments.challenge(
                         payment1, payment2, overrideOptions
                     ).should.be.rejected;
                 });
@@ -339,7 +339,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfPayments.challengeByDuplicateDealNonceOfPayments(
+                    return ethersFraudChallengeByDuplicateDealNonceOfPayments.challenge(
                         payment1, payment2, overrideOptions
                     ).should.be.rejected;
                 });
@@ -368,7 +368,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payments and stage in security bond', async () => {
-                    await ethersFraudChallengeByDuplicateDealNonceOfPayments.challengeByDuplicateDealNonceOfPayments(
+                    await ethersFraudChallengeByDuplicateDealNonceOfPayments.challenge(
                         payment1, payment2, overrideOptions
                     );
                     const [operationalModeExit, fraudulentPaymentsCount, stagesCount, stage, logs] = await Promise.all([

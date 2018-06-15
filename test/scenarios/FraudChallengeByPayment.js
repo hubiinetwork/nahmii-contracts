@@ -298,7 +298,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeByPayment()', () => {
+        describe('challenge()', () => {
             let payment, overrideOptions, filter;
 
             before(async () => {
@@ -324,7 +324,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPayment.challengeByPayment(payment, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByPayment.challenge(payment, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -335,7 +335,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPayment.challengeByPayment(payment, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByPayment.challenge(payment, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -346,7 +346,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPayment.challengeByPayment(payment, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByPayment.challenge(payment, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -359,7 +359,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payment and stage in security bond', async () => {
-                    await ethersFraudChallengeByPayment.challengeByPayment(payment, overrideOptions);
+                    await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
                     const [operationalModeExit, fraudulentPaymentsCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentsCount(),
@@ -384,7 +384,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
-                    await ethersFraudChallengeByPayment.challengeByPayment(payment, overrideOptions);
+                    await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
                     const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentsCount(),
@@ -410,7 +410,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
-                    await ethersFraudChallengeByPayment.challengeByPayment(payment, overrideOptions);
+                    await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
                     const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentsCount(),
@@ -436,7 +436,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payment and seize seller\'s funds', async () => {
-                    await ethersFraudChallengeByPayment.challengeByPayment(payment, overrideOptions);
+                    await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
                     const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentsCount(),

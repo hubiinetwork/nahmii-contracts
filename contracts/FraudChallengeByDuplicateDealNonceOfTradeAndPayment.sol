@@ -35,7 +35,7 @@ contract FraudChallengeByDuplicateDealNonceOfTradeAndPayment is Ownable, FraudCh
     /// Challenge (FC) to be tested for duplicate deal nonce
     /// @param trade Trade with duplicate deal nonce
     /// @param payment Payment with duplicate deal nonce
-    function challengeByDuplicateDealNonceOfTradeAndPayment(
+    function challenge(
         Types.Trade trade,
         Types.Payment payment
     )

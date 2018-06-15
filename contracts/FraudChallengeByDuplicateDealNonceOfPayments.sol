@@ -37,7 +37,7 @@ contract FraudChallengeByDuplicateDealNonceOfPayments is Ownable, FraudChallenga
     /// duplicate deal nonce
     /// @param payment1 First payment with duplicate deal nonce
     /// @param payment2 Second payment with duplicate deal nonce
-    function challengeByDuplicateDealNonceOfPayments(
+    function challenge(
         Types.Payment payment1,
         Types.Payment payment2
     )

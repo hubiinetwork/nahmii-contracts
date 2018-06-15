@@ -35,7 +35,7 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Config
     /// trade order double spenditure
     /// @param trade1 First trade with double spent order
     /// @param trade2 Last trade with double spent order
-    function challengeByDoubleSpentOrders(
+    function challenge(
         Types.Trade trade1,
         Types.Trade trade2
     )

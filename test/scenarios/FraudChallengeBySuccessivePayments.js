@@ -252,7 +252,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeBySuccessivePayments()', () => {
+        describe('challenge()', () => {
             let firstPayment, lastPayment, overrideOptions, filter;
 
             before(async () => {
@@ -283,7 +283,7 @@ module.exports = (glob) => {
 
             describe('if payments are genuine', () => {
                 it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    return ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     ).should.be.rejected;
                 });
@@ -295,7 +295,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    return ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     ).should.be.rejected;
                 });
@@ -308,7 +308,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    return ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     ).should.be.rejected;
                 });
@@ -320,7 +320,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    return ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     ).should.be.rejected;
                 });
@@ -334,7 +334,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    return ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, lastPayment.sender.wallet, overrideOptions
                     ).should.be.rejected;
                 });
@@ -348,7 +348,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    return ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     ).should.be.rejected;
                 });
@@ -365,7 +365,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    return ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     ).should.be.rejected;
                 });
@@ -377,7 +377,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payment and seize sender\'s funds', async () => {
-                    await ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    await ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     );
                     const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
@@ -404,7 +404,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payment and seize sender\'s funds', async () => {
-                    await ethersFraudChallengeBySuccessivePayments.challengeBySuccessivePayments(
+                    await ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     );
                     const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([

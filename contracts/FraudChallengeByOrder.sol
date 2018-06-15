@@ -33,7 +33,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Vali
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit an order candidate in continuous Fraud Challenge (FC)
     /// @param order Fraudulent order candidate
-    function challengeByOrder(Types.Order order)
+    function challenge(Types.Order order)
     public
     validatorInitialized
     onlyExchangeSealedOrder(order)

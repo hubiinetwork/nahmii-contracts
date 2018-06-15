@@ -37,7 +37,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Configu
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
     /// @param currency Address of concerned currency (0 if ETH)
-    function challengeBySuccessiveTrades(
+    function challenge(
         Types.Trade firstTrade,
         Types.Trade lastTrade,
         address wallet,

@@ -253,7 +253,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeByDuplicateDealNonceOfTradeAndPayment()', () => {
+        describe('challenge()', () => {
             let trade, payment, overrideOptions, filter;
 
             before(async () => {
@@ -295,7 +295,7 @@ module.exports = (glob) => {
 
             describe('if trade and payment are genuine', () => {
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challengeByDuplicateDealNonceOfTradeAndPayment(
+                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challenge(
                         trade, payment, overrideOptions
                     ).should.be.rejected;
                 });
@@ -307,7 +307,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challengeByDuplicateDealNonceOfTradeAndPayment(
+                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challenge(
                         trade, payment, overrideOptions
                     ).should.be.rejected;
                 });
@@ -320,7 +320,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challengeByDuplicateDealNonceOfTradeAndPayment(
+                    return ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challenge(
                         trade, payment, overrideOptions
                     ).should.be.rejected;
                 });
@@ -349,7 +349,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent trades and stage in security bond', async () => {
-                    await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challengeByDuplicateDealNonceOfTradeAndPayment(
+                    await ethersFraudChallengeByDuplicateDealNonceOfTradeAndPayment.challenge(
                         trade, payment, overrideOptions
                     );
                     const [operationalModeExit, fraudulentTradesCount, fraudulentPaymentsCount, stagesCount, stage, logs] = await Promise.all([

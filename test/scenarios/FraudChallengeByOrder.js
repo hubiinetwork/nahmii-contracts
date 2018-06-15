@@ -252,7 +252,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeByOrder()', () => {
+        describe('challenge()', () => {
             let order, overrideOptions, filter;
 
             before(async () => {
@@ -277,7 +277,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByOrder.challengeByOrder(order, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -288,7 +288,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByOrder.challengeByOrder(order, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -299,7 +299,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByOrder.challengeByOrder(order, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -312,7 +312,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent order and seize buyer\'s funds', async () => {
-                    await ethersFraudChallengeByOrder.challengeByOrder(order, overrideOptions);
+                    await ethersFraudChallengeByOrder.challenge(order, overrideOptions);
                     const [operationalModeExit, fraudulentOrdersCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentOrdersCount(),

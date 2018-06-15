@@ -33,7 +33,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Vali
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challengeByTrade(Types.Trade trade)
+    function challenge(Types.Trade trade)
     public
     validatorInitialized
     onlySealedTrade(trade)

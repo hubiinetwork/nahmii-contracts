@@ -36,7 +36,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Confi
     /// @param firstPayment Reference payment
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
-    function challengeBySuccessivePayments(
+    function challenge(
         Types.Payment firstPayment,
         Types.Payment lastPayment,
         address wallet

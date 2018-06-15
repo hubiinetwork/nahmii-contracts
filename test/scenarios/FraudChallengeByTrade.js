@@ -256,7 +256,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeByTrade()', () => {
+        describe('challenge()', () => {
             let trade, overrideOptions, filter;
 
             before(async () => {
@@ -280,7 +280,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByTrade.challengeByTrade(trade, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByTrade.challenge(trade, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -291,7 +291,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByTrade.challengeByTrade(trade, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByTrade.challenge(trade, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -306,7 +306,7 @@ module.exports = (glob) => {
                     });
 
                     it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
-                        await ethersFraudChallengeByTrade.challengeByTrade(trade, overrideOptions);
+                        await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
                         const [operationalModeExit, fraudulentTradesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                             ethersConfiguration.isOperationalModeExit(),
                             ethersFraudChallenge.fraudulentTradesCount(),
@@ -339,7 +339,7 @@ module.exports = (glob) => {
                     });
 
                     it('should set operational mode exit, store fraudulent trade and seize seller\'s funds', async () => {
-                        await ethersFraudChallengeByTrade.challengeByTrade(trade, overrideOptions);
+                        await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
                         const [operationalModeExit, fraudulentTradesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                             ethersConfiguration.isOperationalModeExit(),
                             ethersFraudChallenge.fraudulentTradesCount(),
@@ -370,7 +370,7 @@ module.exports = (glob) => {
                     });
 
                     it('should set operational mode exit, store fraudulent trade and seize seller\'s funds', async () => {
-                        await ethersFraudChallengeByTrade.challengeByTrade(trade, overrideOptions);
+                        await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
                         const [operationalModeExit, fraudulentTradesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                             ethersConfiguration.isOperationalModeExit(),
                             ethersFraudChallenge.fraudulentTradesCount(),
@@ -403,7 +403,7 @@ module.exports = (glob) => {
                     });
 
                     it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
-                        await ethersFraudChallengeByTrade.challengeByTrade(trade, overrideOptions);
+                        await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
                         const [operationalModeExit, fraudulentTradesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                             ethersConfiguration.isOperationalModeExit(),
                             ethersFraudChallenge.fraudulentTradesCount(),
@@ -430,7 +430,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
-                    await ethersFraudChallengeByTrade.challengeByTrade(trade, overrideOptions);
+                    await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
                     const [operationalModeExit, fraudulentTradesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradesCount(),
@@ -456,7 +456,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent trade and seize seller\'s funds', async () => {
-                    await ethersFraudChallengeByTrade.challengeByTrade(trade, overrideOptions);
+                    await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
                     const [operationalModeExit, fraudulentTradesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradesCount(),

@@ -37,7 +37,7 @@ contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, C
     /// @param payment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
     /// @param currency Address of concerned currency of trade (0 if ETH)
-    function challengeByPaymentSucceedingTrade(
+    function challenge(
         Types.Trade trade,
         Types.Payment payment,
         address wallet,

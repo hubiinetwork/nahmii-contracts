@@ -252,7 +252,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeByPaymentSucceedingTrade()', () => {
+        describe('challenge()', () => {
             let trade, payment, overrideOptions, filter;
 
             before(async () => {
@@ -283,7 +283,7 @@ module.exports = (glob) => {
 
             describe('if trade and payment are genuine', () => {
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     ).should.be.rejected;
                 });
@@ -295,7 +295,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     ).should.be.rejected;
                 });
@@ -307,7 +307,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     ).should.be.rejected;
                 });
@@ -321,7 +321,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, payment.sender.wallet, trade.currencies.intended, overrideOptions
                     ).should.be.rejected;
                 });
@@ -335,7 +335,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     ).should.be.rejected;
                 });
@@ -355,7 +355,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, payment.currency, overrideOptions
                     ).should.be.rejected;
                 });
@@ -372,7 +372,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     ).should.be.rejected;
                 });
@@ -384,7 +384,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     ).should.be.rejected;
                 });
@@ -396,7 +396,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
-                    await ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    await ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     );
                     const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
@@ -423,7 +423,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
-                    await ethersFraudChallengeByPaymentSucceedingTrade.challengeByPaymentSucceedingTrade(
+                    await ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended, overrideOptions
                     );
                     const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([

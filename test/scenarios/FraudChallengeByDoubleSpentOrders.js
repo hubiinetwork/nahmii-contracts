@@ -212,7 +212,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeByDoubleSpentOrders()', () => {
+        describe('challenge()', () => {
             let trade1, trade2, overrideOptions, filter;
 
             before(async () => {
@@ -252,7 +252,7 @@ module.exports = (glob) => {
 
             describe('if trades are genuine', () => {
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDoubleSpentOrders.challengeByDoubleSpentOrders(
+                    return ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     ).should.be.rejected;
                 });
@@ -264,7 +264,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDoubleSpentOrders.challengeByDoubleSpentOrders(
+                    return ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     ).should.be.rejected;
                 });
@@ -277,7 +277,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByDoubleSpentOrders.challengeByDoubleSpentOrders(
+                    return ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     ).should.be.rejected;
                 });
@@ -316,7 +316,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent trades and stage in security bond', async () => {
-                    await ethersFraudChallengeByDoubleSpentOrders.challengeByDoubleSpentOrders(
+                    await ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     );
                     const [operationalModeExit, fraudulentTradesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([
@@ -371,7 +371,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent trades and stage in security bond', async () => {
-                    await ethersFraudChallengeByDoubleSpentOrders.challengeByDoubleSpentOrders(
+                    await ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     );
                     const [operationalModeExit, fraudulentTradesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([

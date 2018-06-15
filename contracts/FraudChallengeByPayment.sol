@@ -34,7 +34,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challengeByPayment(Types.Payment payment)
+    function challenge(Types.Payment payment)
     public
     validatorInitialized
     onlyExchangeSealedPayment(payment)

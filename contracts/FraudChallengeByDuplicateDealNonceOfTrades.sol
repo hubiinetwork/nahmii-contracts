@@ -35,7 +35,7 @@ contract FraudChallengeByDuplicateDealNonceOfTrades is Ownable, FraudChallengabl
     /// duplicate deal nonce
     /// @param trade1 First trade with duplicate deal nonce
     /// @param trade2 Second trade with duplicate deal nonce
-    function challengeByDuplicateDealNonceOfTrades(
+    function challenge(
         Types.Trade trade1,
         Types.Trade trade2
     )
