@@ -22,7 +22,7 @@ contract RevenueToken is ERC20, Ownable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event Mint(address indexed to, uint256 amount);
-    event ChangedTokenInformation(string name, string symbol);
+    event SetTokenInformation(string name, string symbol);
 
     //
     // Variables
@@ -61,8 +61,9 @@ contract RevenueToken is ERC20, Ownable {
         symbol = newSymbol;
 
         //emit event
-        emit ChangedTokenInformation(newName, newSymbol);
+        emit SetTokenInformation(newName, newSymbol);
     }
+
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
@@ -304,10 +305,7 @@ contract RevenueToken is ERC20, Ownable {
             }
             holderEnumIndex++;
         }
-        //while (counter < _holders.length) {
-        //    _holders[counter] = address(0);
-        //    counter++;
-        //}
+
         return  _holders;
     }
 
