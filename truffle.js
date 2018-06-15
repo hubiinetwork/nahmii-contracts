@@ -44,13 +44,13 @@ module.exports = {
         },
         "hubii-ropsten": {
             host: "geth-ropsten.ethereum",
-            port: 8545,
+            port: 80,
             network_id: "*",
             gas: 7000000
         },
         "hubii-rinkeby": {
             host: "geth-rinkeby.ethereum",
-            port: 8545,
+            port: 80,
             network_id: "*",
             gas: 7000000
         }
