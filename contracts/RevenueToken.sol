@@ -22,6 +22,7 @@ contract RevenueToken is ERC20, Ownable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event Mint(address indexed to, uint256 amount);
+    event SetTokenInformation(string name, string symbol);
 
     //
     // Variables
@@ -37,12 +38,30 @@ contract RevenueToken is ERC20, Ownable {
     mapping(address => uint256[]) balanceBlockNumbers;
     mapping(address => mapping(address => uint256)) private allowed;
 
+    string public name = "Striim";
+    string public symbol = "STRM";
+    uint8 public constant decimals = 15;
+
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor() public ERC20() Ownable(msg.sender) {
         totalSupply = 0;
         holderEnumIndex = 0;
+    }
+
+    //
+    // Token settings
+    // -----------------------------------------------------------------------------------------------------------------
+    function setTokenInformation(string newName, string newSymbol) public onlyOwner {
+        require(bytes(newName).length > 0);
+        require(bytes(newSymbol).length > 0 && bytes(newSymbol).length < 5);
+
+        name = newName;
+        symbol = newSymbol;
+
+        //emit event
+        emit SetTokenInformation(newName, newSymbol);
     }
 
     //
@@ -286,10 +305,7 @@ contract RevenueToken is ERC20, Ownable {
             }
             holderEnumIndex++;
         }
-        //while (counter < _holders.length) {
-        //    _holders[counter] = address(0);
-        //    counter++;
-        //}
+
         return  _holders;
     }
 
