@@ -11,7 +11,8 @@
     "test": "node run_tests.js",
     "deploy": "npm run deploy:test",
     "deploy:test": "truffle migrate --network testnet",
-    "deploy:main": "truffle migrate --network mainnet"
+    "deploy:main": "truffle migrate --network mainnet",
+    "deploy:ci": "truffle migrate"
   },
   "author": "Hubii",
   "license": "Commercial",
