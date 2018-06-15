@@ -125,7 +125,8 @@ contract DealSettlementChallengePartialChallenge is Ownable, Modifiable, Configu
         challenge.challenger = address(0);
         DealSettlementChallenge(dealSettlementChallenge).setWalletChallengeMap(order.wallet, challenge);
 
-        securityBond.stage(configuration.getUnchallengeOrderCandidateByTradeStakeAmount(), configuration.getUnchallengeOrderCandidateByTradeStakeCurrency(), original_sender);
+        (address stageCurrency, int256 stageAmount) = configuration.getUnchallengeOrderCandidateByTradeStake();
+        securityBond.stage(stageAmount, stageCurrency, original_sender);
 
         //raise event
         emit UnchallengeOrderCandidateByTradeEvent(order, trade, challenge.nonce, challenge.dealType, original_sender);
