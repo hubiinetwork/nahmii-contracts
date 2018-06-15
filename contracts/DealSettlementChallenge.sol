@@ -1,27 +1,29 @@
-/*!
- * Hubii - Omphalos
+/*
+ * Hubii Striim
  *
- * Compliant with the Omphalos specification v0.12.
+ * Compliant with the Hubii Striim specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
+
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./Types.sol";
-import {DealSettlementChallengePartialChallenge} from "./DealSettlementChallengePartialChallenge.sol";
-import {Configuration} from "./Configuration.sol";
-import {Validator} from "./Validator.sol";
-import {SecurityBond} from "./SecurityBond.sol";
+import {Modifiable} from "./Modifiable.sol";
+import {Configurable} from "./Configurable.sol";
+import {Validatable, Validator} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
+import {DealSettlementChallenger} from "./DealSettlementChallenger.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract DealSettlementChallenge is Ownable {
+contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatable, SecurityBondable {
     using SafeMathInt for int256;
 
     //
@@ -43,9 +45,6 @@ contract DealSettlementChallenge is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Configuration public configuration;
-    Validator public validator;
-    SecurityBond public securityBond;
     CancelOrdersChallenge public cancelOrdersChallenge;
 
     mapping(address => Challenge) public walletChallengeMap;
@@ -57,17 +56,13 @@ contract DealSettlementChallenge is Ownable {
     Types.Trade[] public challengeCandidateTrades;
     Types.Payment[] public challengeCandidatePayments;
 
-    address private dealSettlementChallengePartialChallenge;
+    address private dealSettlementChallenger;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
-    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
-    event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
-    event 
-    hallengeFromTradeEvent(Types.Trade trade, address wallet);
+    event StartChallengeFromTradeEvent(Types.Trade trade, address wallet);
     event StartChallengeFromPaymentEvent(Types.Payment payment, address wallet);
 
     //
@@ -79,56 +74,7 @@ contract DealSettlementChallenge is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
-    public
-    onlyOwner
-    notNullAddress(newConfiguration)
-    notEqualAddresses(newConfiguration, configuration)
-    {
-        Configuration oldConfiguration = configuration;
-        configuration = newConfiguration;
-
-        //update implementers
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).changeConfiguration(configuration);
-
-        //raise event
-        emit ChangeConfigurationEvent(oldConfiguration, configuration);
-    }
-
-    /// @notice Change the validator contract
-    /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(Validator newValidator)
-    public
-    onlyOwner
-    notNullAddress(newValidator)
-    notEqualAddresses(newValidator, validator)
-    {
-        Validator oldValidator = validator;
-        validator = newValidator;
-        emit ChangeValidatorEvent(oldValidator, validator);
-    }
-
-    /// @notice Change the security bond contract
-    /// @param newSecurityBond The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newSecurityBond)
-    public
-    onlyOwner
-    notNullAddress(newSecurityBond)
-    notEqualAddresses(newSecurityBond, securityBond)
-    {
-        SecurityBond oldSecurityBond = securityBond;
-        securityBond = newSecurityBond;
-
-        //update implementers
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).changeSecurityBond(securityBond);
-
-        //raise event
-        emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
-    }
-
-    /// @notice Change the cance orders challenge contract
+    /// @notice Change the cancel orders challenge contract
     /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
     function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
     public
@@ -138,20 +84,15 @@ contract DealSettlementChallenge is Ownable {
     {
         CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
         cancelOrdersChallenge = newCancelOrdersChallenge;
-
-        //update implementers
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).changeCancelOrdersChallenge(cancelOrdersChallenge);
-
-        //raise event
         emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
     }
 
     /// @notice Set the child implementers
-    /// @param _dealSettlementChallengePartialChallenge The (address of) DealSettlementChallengePartialChallenge contract instance
-    function setImplementers(address _dealSettlementChallengePartialChallenge) public onlyOwner notNullAddress(_dealSettlementChallengePartialChallenge) {
-        require(dealSettlementChallengePartialChallenge == address(0));
+    /// @param _dealSettlementChallenger The (address of) DealSettlementChallenger contract instance
+    function setDealSettlementChallenger(address _dealSettlementChallenger) public onlyOwner notNullAddress(_dealSettlementChallenger) {
+        require(dealSettlementChallenger == address(0));
 
-        dealSettlementChallengePartialChallenge = _dealSettlementChallengePartialChallenge;
+        dealSettlementChallenger = _dealSettlementChallenger;
     }
 
     /// @notice Get the number of current and past deal settlement challenges from trade for given wallet
@@ -282,113 +223,88 @@ contract DealSettlementChallenge is Ownable {
     }
 
     //
-    // Functions implemented in DealSettlementChallengePartialChallenge
+    // Functions implemented in DealSettlementChallenger
     // -----------------------------------------------------------------------------------------------------------------
 
-        /// @notice Challenge the deal settlement by providing order candidate
+    /// @notice Challenge the deal settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged deal
     function challengeByOrder(Types.Order order) public {
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).challengeByOrder(order, msg.sender);
+        DealSettlementChallenger(dealSettlementChallenger).challengeByOrder(order, msg.sender);
     }
 
     /// @notice Unchallenge deal settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged deal
     /// @param trade The trade in which order has been filled
     function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade) public {
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+        DealSettlementChallenger(dealSettlementChallenger).unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing trade candidate
     /// @param trade The trade candidate that challenges the challenged deal
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeByTrade(Types.Trade trade, address wallet) public {
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).challengeByTrade(trade, wallet, msg.sender);
+        DealSettlementChallenger(dealSettlementChallenger).challengeByTrade(trade, wallet, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing payment candidate
     /// @param payment The payment candidate that challenges the challenged deal
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeByPayment(Types.Payment payment, address wallet) public {
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).challengeByPayment(payment, wallet, msg.sender);
+        DealSettlementChallenger(dealSettlementChallenger).challengeByPayment(payment, wallet, msg.sender);
     }
 
     //
     // DealSettlementChallenge implementers helpers
     // -----------------------------------------------------------------------------------------------------------------
-    function getWalletChallengeMap(address wallet) public view onlyDealSettlementChallengeImplementers returns (Challenge) {
+    function getWalletChallengeMap(address wallet) public view onlyDealSettlementChallenger returns (Challenge) {
         return walletChallengeMap[wallet];
     }
 
-    function setWalletChallengeMap(address wallet, Challenge challenge) public onlyDealSettlementChallengeImplementers {
+    function setWalletChallengeMap(address wallet, Challenge challenge) public onlyDealSettlementChallenger {
         walletChallengeMap[wallet] = challenge;
     }
 
-    function getWalletChallengeTradesMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallengeImplementers returns (Types.Trade) {
+    function getWalletChallengeTradesMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Trade) {
         return walletChallengedTradesMap[wallet][dealIndex];
     }
 
-    function getWalletChallengePaymentsMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallengeImplementers returns (Types.Payment) {
+    function getWalletChallengePaymentsMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Payment) {
         return walletChallengedPaymentsMap[wallet][dealIndex];
     }
 
-    function pushChallengeCandidateOrders(Types.Order order) public onlyDealSettlementChallengeImplementers {
+    function pushChallengeCandidateOrders(Types.Order order) public onlyDealSettlementChallenger {
         challengeCandidateOrders.push(order);
     }
 
-    function getChallengeCandidateOrdersLength() public view onlyDealSettlementChallengeImplementers returns (uint256) {
+    function getChallengeCandidateOrdersLength() public view onlyDealSettlementChallenger returns (uint256) {
         return challengeCandidateOrders.length;
     }
 
-    function pushChallengeCandidateTrades(Types.Trade trade) public onlyDealSettlementChallengeImplementers {
+    function pushChallengeCandidateTrades(Types.Trade trade) public onlyDealSettlementChallenger {
         challengeCandidateTrades.push(trade);
     }
 
-    function getChallengeCandidateTradesLength() public view onlyDealSettlementChallengeImplementers returns (uint256) {
+    function getChallengeCandidateTradesLength() public view onlyDealSettlementChallenger returns (uint256) {
         return challengeCandidateTrades.length;
     }
 
-    function pushChallengeCandidatePayments(Types.Payment payment) public onlyDealSettlementChallengeImplementers {
+    function pushChallengeCandidatePayments(Types.Payment payment) public onlyDealSettlementChallenger {
         challengeCandidatePayments.push(payment);
     }
 
-    function getChallengeCandidatePaymentsLength() public view onlyDealSettlementChallengeImplementers returns (uint256) {
+    function getChallengeCandidatePaymentsLength() public view onlyDealSettlementChallenger returns (uint256) {
         return challengeCandidatePayments.length;
     }
-    
-    function getValidator() public view onlyDealSettlementChallengeImplementers validatorInitialized returns (Validator) {
+
+    function getValidator() public view onlyDealSettlementChallenger validatorInitialized returns (Validator) {
         return validator;
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
-    modifier onlyDealSettlementChallengeImplementers() {
-        require(msg.sender == dealSettlementChallengePartialChallenge);
-        _;
-    }
-
-    modifier notEqualAddresses(address address1, address address2) {
-        require(address1 != address2);
-        _;
-    }
-
-    modifier validatorInitialized() {
-        require(validator != address(0));
-        _;
-    }
-
-    modifier onlySealedTrade(Types.Trade trade) {
-        require(validator.isGenuineTradeSeal(trade, owner), "Trade is not sealed");
-        _;
-    }
-
-    modifier onlySealedPayment(Types.Payment payment) {
-        require(validator.isGenuinePaymentSeals(payment, owner), "Payment is not sealed");
+    modifier onlyDealSettlementChallenger() {
+        require(msg.sender == dealSettlementChallenger);
         _;
     }
 }

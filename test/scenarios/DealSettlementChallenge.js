@@ -52,8 +52,8 @@ module.exports = (glob) => {
             await ethersDealSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
             await ethersDealSettlementChallengeOwner.changeValidator(ethersValidator.address);
             await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
-            await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
             await ethersDealSettlementChallengeOwner.changeCancelOrdersChallenge(ethersCancelOrdersChallengeOwner.address);
+
             await ethersCancelOrdersChallengeOwner.changeConfiguration(ethersConfiguration.address);
         });
 

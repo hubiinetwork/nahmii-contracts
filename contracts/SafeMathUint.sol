@@ -1,9 +1,16 @@
+/*
+ * Hubii Striim
+ *
+ * Compliant with the Hubii Striim specification v0.12.
+ *
+ * Copyright (C) 2017-2018 Hubii AS based on Open-Zeppelin's SafeMath library
+ */
+
 pragma solidity ^0.4.24;
 
 /**
  * @title     SafeMathUint
  * @dev       Math operations with safety checks that throw on error
- * Copyright  (C) 2017-2018 Hubii AS based on Open-Zeppelin's SafeMath library
  */
 library SafeMathUint {
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {

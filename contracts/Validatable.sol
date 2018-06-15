@@ -1,10 +1,11 @@
-/*!
- * Hubii - Omphalos
+/*
+ * Hubii Striim
  *
- * Compliant with the Omphalos specification v0.12.
+ * Compliant with the Hubii Striim specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
+
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
@@ -51,6 +52,11 @@ contract Validatable is Ownable, Modifiable {
 
     modifier onlyExchangeSealedOrder(Types.Order order) {
         require(validator.isGenuineOrderExchangeSeal(order, owner));
+        _;
+    }
+
+    modifier onlySealedOrder(Types.Order order) {
+        require(validator.isGenuineOrderSeals(order, owner));
         _;
     }
 

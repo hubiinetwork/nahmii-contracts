@@ -43,5 +43,5 @@ exports.unlockAddress = function (web3, address, password, timeoutInSecs)
 
 exports.isTestNetwork = function (network)
 {
-	return (network.indexOf('develop') >= 0) ? true : false;
+	return (network.includes('develop') || network.includes('ganache'));
 };

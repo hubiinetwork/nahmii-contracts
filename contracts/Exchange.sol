@@ -1,10 +1,11 @@
-/*!
- * Hubii - Omphalos
+/*
+ * Hubii Striim
  *
- * Compliant with the Omphalos specification v0.12.
+ * Compliant with the Hubii Striim specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
+
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
@@ -13,19 +14,19 @@ import {SafeMathUint} from "./SafeMathUint.sol";
 import "./Ownable.sol";
 import "./Types.sol";
 import "./ERC20.sol";
-import {Configuration} from "./Configuration.sol";
-import {Validator} from "./Validator.sol";
-import "./ClientFund.sol";
+import {Configurable} from "./Configurable.sol";
+import {Validatable} from "./Validatable.sol";
+import {ClientFundable} from "./ClientFundable.sol";
+import {CommunityVotable} from "./CommunityVotable.sol";
 import "./ReserveFund.sol";
 import "./RevenueFund.sol";
 import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
-import "./CommunityVote.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract Exchange is Ownable {
+contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -37,17 +38,11 @@ contract Exchange is Ownable {
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
-    Configuration public configuration;
-    Validator public validator;
     DealSettlementChallenge public dealSettlementChallenge;
-    ClientFund public clientFund;
     ReserveFund public tradesReserveFund;
     ReserveFund public paymentsReserveFund;
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
-    CommunityVote public communityVote;
-
-    bool public communityVoteUpdateDisabled;
 
     Types.Settlement[] public settlements;
     mapping(address => uint256[]) walletSettlementIndexMap;
@@ -57,15 +52,11 @@ contract Exchange is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
-    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
     event ChangeDealSettlementChallengeEvent(DealSettlementChallenge oldDealSettlementChallenge, DealSettlementChallenge newDealSettlementChallenge);
-    event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
     event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangePaymentsReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
 
     //
     // Constructor
@@ -76,32 +67,6 @@ contract Exchange is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
-    public
-    onlyOwner
-    notNullAddress(newConfiguration)
-    notEqualAddresses(newConfiguration, configuration)
-    {
-        Configuration oldConfiguration = configuration;
-        configuration = newConfiguration;
-        emit ChangeConfigurationEvent(oldConfiguration, configuration);
-    }
-
-    /// @notice Change the validator contract
-    /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(Validator newValidator)
-    public
-    onlyOwner
-    notNullAddress(newValidator)
-    notEqualAddresses(newValidator, validator)
-    {
-        Validator oldValidator = validator;
-        validator = newValidator;
-        emit ChangeValidatorEvent(oldValidator, validator);
-    }
-
     /// @notice Change the deal settlement challenge contract
     /// @param newDealSettlementChallenge The (address of) DealSettlementChallenge contract instance
     function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
@@ -113,19 +78,6 @@ contract Exchange is Ownable {
         DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
         dealSettlementChallenge = newDealSettlementChallenge;
         emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
-    }
-
-    /// @notice Change the client fund contract
-    /// @param newClientFund The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newClientFund)
-    public
-    onlyOwner
-    notNullAddress(newClientFund)
-    notEqualAddresses(newClientFund, clientFund)
-    {
-        ClientFund oldClientFund = clientFund;
-        clientFund = newClientFund;
-        emit ChangeClientFundEvent(oldClientFund, clientFund);
     }
 
     /// @notice Change the trades reserve fund contract
@@ -180,42 +132,10 @@ contract Exchange is Ownable {
         emit ChangePaymentsRevenueFundEvent(oldPaymentsRevenueFund, paymentsRevenueFund);
     }
 
-    /// @notice Disable future updates of community vote contract
-    function disableUpdateOfCommunityVote() public onlyOwner {
-        communityVoteUpdateDisabled = true;
-    }
-
-    /// @notice Change the community vote contract
-    /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote)
-    public
-    onlyOwner
-    notNullAddress(newCommunityVote)
-    notEqualAddresses(newCommunityVote, communityVote)
-    {
-        require(!communityVoteUpdateDisabled);
-        CommunityVote oldCommunityVote = communityVote;
-        communityVote = newCommunityVote;
-        emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
-    }
-
-    /// @notice Change the deal settlement challenge contract
-    /// @param newDealSettlementChallenge The (address of) DealSettlementChallengeA contract instance
-    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
-    public
-    onlyOwner
-    notNullAddress(newDealSettlementChallenge)
-    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallenge)
-    {
-        DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
-        dealSettlementChallenge = newDealSettlementChallenge;
-        emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, newDealSettlementChallenge);
-    }
-
     /// @notice Get the seized status of given wallet
     /// @return true if wallet is seized, false otherwise
-    function isSeizedWallet(address _address) public view returns (bool) {
-        return seizedWalletsMap[_address];
+    function isSeizedWallet(address wallet) public view returns (bool) {
+        return seizedWalletsMap[wallet];
     }
 
     /// @notice Get the number of wallets whose funds have be seized

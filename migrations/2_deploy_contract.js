@@ -1,5 +1,5 @@
 /*!
- * Hubii - Omphalos
+ * Hubii Striim
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -13,7 +13,7 @@ const Configuration = artifacts.require("./Configuration.sol");
 const Exchange = artifacts.require("./Exchange.sol");
 const CancelOrdersChallenge = artifacts.require("./CancelOrdersChallenge.sol");
 const DealSettlementChallenge = artifacts.require("./DealSettlementChallenge.sol");
-const DealSettlementChallengePartialChallenge = artifacts.require("./DealSettlementChallengePartialChallenge.sol");
+const DealSettlementChallenger = artifacts.require("./DealSettlementChallenger.sol");
 const Hasher = artifacts.require('./Hasher.sol');
 const Validator = artifacts.require('./Validator.sol');
 const FraudChallengeByOrder = artifacts.require("./FraudChallengeByOrder.sol");
@@ -73,7 +73,7 @@ module.exports = function (deployer, network, accounts) {
 	});
 
 	deployer.link(SafeMathIntLib, [
-		ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallengePartialChallenge,
+		ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger,
 		FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
 	]);
 
@@ -82,7 +82,7 @@ module.exports = function (deployer, network, accounts) {
 	]);
 
 	deployer.link(Types, [
-		Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallengePartialChallenge, 
+		Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger, 
     FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
     FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
     FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDealNonceOfTrades,
@@ -124,10 +124,10 @@ module.exports = function (deployer, network, accounts) {
 	}).then(() => {
 		addresses.DealSettlementChallenge = DealSettlementChallenge.address;
 
-		deployer.deploy(DealSettlementChallengePartialChallenge, ownerAccount, DealSettlementChallenge.address, {
+		deployer.deploy(DealSettlementChallenger, ownerAccount, DealSettlementChallenge.address, {
 			from : ownerAccount
 		}).then(() => {
-			addresses.DealSettlementChallengePartialChallenge = DealSettlementChallengePartialChallenge.address;
+			addresses.DealSettlementChallenger = DealSettlementChallenger.address;
 		});
 	});
 
