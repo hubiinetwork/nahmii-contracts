@@ -14,6 +14,7 @@ import "./Ownable.sol";
 import "./ERC20.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {AccrualBenefactor} from "./AccrualBenefactor.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Revenue fund
@@ -21,7 +22,7 @@ import {AccrualBenefactor} from "./AccrualBenefactor.sol";
  reserve fund contributors and revenue token holders. There will likely be 2 instances of this smart contract,
  one for revenue from trades and one for revenue from payments.
 */
-contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor {
+contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

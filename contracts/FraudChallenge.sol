@@ -13,8 +13,9 @@ import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Servable} from "./Servable.sol";
 import {Types} from "./Types.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
-contract FraudChallenge is Ownable, Modifiable, Servable {
+contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
 
     //
     // Variables

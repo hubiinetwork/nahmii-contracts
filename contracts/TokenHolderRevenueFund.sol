@@ -14,12 +14,13 @@ import "./Ownable.sol";
 import "./RevenueToken.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import "./Servable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Token holder revenue fund
 @notice Fund that manages the revenue earned by revenue token holders.
 */
-contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable {
+contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

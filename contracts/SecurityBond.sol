@@ -13,12 +13,13 @@ import "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./ERC20.sol";
 import "./Servable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Security bond
 @notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
 */
-contract SecurityBond is Ownable, Servable {
+contract SecurityBond is Ownable, Servable, SelfDestructible {
     using SafeMathInt for int256;
 
     //

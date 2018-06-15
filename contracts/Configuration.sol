@@ -11,12 +11,13 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Configuration
 @notice An oracle for configurations such as fees, challenge timeouts and stakes
 */
-contract Configuration is Ownable {
+contract Configuration is Ownable, SelfDestructible {
     using SafeMathInt for int256;
 
     //
