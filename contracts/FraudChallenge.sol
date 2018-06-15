@@ -18,26 +18,26 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    string constant ADD_SEIZED_WALLETS = "add_seized_wallets";
+    string constant ADD_SEIZED_WALLET = "add_seized_wallet";
     string constant ADD_DOUBLE_SPENDER_WALLET = "add_double_spender_wallet";
     string constant ADD_FRAUDULENT_ORDER = "add_fraudulent_order";
     string constant ADD_FRAUDULENT_TRADE = "add_fraudulent_trade";
     string constant ADD_FRAUDULENT_PAYMENT = "add_fraudulent_payment";
-
-    Types.Order[] public fraudulentOrders;
-    mapping(bytes32 => bool) public fraudulentOrderHashMap;
-
-    Types.Trade[] public fraudulentTrades;
-    mapping(bytes32 => bool) public fraudulentTradeHashMap;
-
-    Types.Payment[] public fraudulentPayments;
-    mapping(bytes32 => bool) public fraudulentPaymentHashMap;
 
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
     address[] public doubleSpenderWallets;
     mapping(address => bool) public doubleSpenderWalletsMap;
+
+    Types.Order[] public fraudulentOrders;
+    mapping(bytes32 => bool) public fraudulentOrderExchangeHashMap;
+
+    Types.Trade[] public fraudulentTrades;
+    mapping(bytes32 => bool) public fraudulentTradeHashMap;
+
+    Types.Payment[] public fraudulentPayments;
+    mapping(bytes32 => bool) public fraudulentPaymentExchangeHashMap;
 
     //
     // Events
@@ -48,7 +48,6 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
     event AddFraudulentTradeEvent(Types.Trade trade);
     event AddFraudulentPaymentEvent(Types.Payment payment);
 
-
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
@@ -58,18 +57,6 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Add given wallet to store of seized wallets if not already present
-    /// @param wallet The seized wallet
-    function addSeizedWallet(address wallet) public
-    onlyOwnerOrServiceAction(ADD_SEIZED_WALLETS)
-    {
-        if (!seizedWalletsMap[wallet]) {
-            seizedWallets.push(wallet);
-            seizedWalletsMap[wallet] = true;
-            emit AddSeizedWalletEvent(wallet);
-        }
-    }
-
     /// @notice Get the seized status of given wallet
     /// @param wallet The wallet address for which to check seized status
     /// @return true if wallet is seized, false otherwise
@@ -83,15 +70,15 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
         return seizedWallets.length;
     }
 
-    /// @notice Add given wallets to store of double spender wallets if not already present
-    /// @param wallet The first wallet to add
-    function addDoubleSpenderWallet(address wallet) public
-    onlyOwnerOrServiceAction(ADD_DOUBLE_SPENDER_WALLET)
+    /// @notice Add given wallet to store of seized wallets if not already present
+    /// @param wallet The seized wallet
+    function addSeizedWallet(address wallet) public
+    onlyOwnerOrServiceAction(ADD_SEIZED_WALLET)
     {
-        if (!doubleSpenderWalletsMap[wallet]) {
-            doubleSpenderWallets.push(wallet);
-            doubleSpenderWalletsMap[wallet] = true;
-            emit AddDoubleSpenderWalletEvent(wallet);
+        if (!seizedWalletsMap[wallet]) {
+            seizedWallets.push(wallet);
+            seizedWalletsMap[wallet] = true;
+            emit AddSeizedWalletEvent(wallet);
         }
     }
 
@@ -108,20 +95,49 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
         return doubleSpenderWallets.length;
     }
 
-    /// @notice Add given trade to store of fraudulent trades if not already present
-    function addFraudulentOrder(Types.Order order) public
-    onlyOwnerOrServiceAction(ADD_FRAUDULENT_ORDER)
+    /// @notice Add given wallets to store of double spender wallets if not already present
+    /// @param wallet The first wallet to add
+    function addDoubleSpenderWallet(address wallet) public
+    onlyOwnerOrServiceAction(ADD_DOUBLE_SPENDER_WALLET)
     {
-        if (!fraudulentOrderHashMap[order.seals.exchange.hash]) {
-            fraudulentOrders.push(order);
-            fraudulentOrderHashMap[order.seals.exchange.hash] = true;
-            emit AddFraudulentOrderEvent(order);
+        if (!doubleSpenderWalletsMap[wallet]) {
+            doubleSpenderWallets.push(wallet);
+            doubleSpenderWalletsMap[wallet] = true;
+            emit AddDoubleSpenderWalletEvent(wallet);
         }
     }
 
     /// @notice Get the number of fraudulent orders
     function fraudulentOrdersCount() public view returns (uint256) {
         return fraudulentOrders.length;
+    }
+
+    /// @notice Get the state about whether the given hash equals the exchange' hash of a fraudulent order
+    /// @param hash The hash to be tested
+    function isFraudulentOrderExchangeHash(bytes32 hash) public view returns (bool) {
+        return fraudulentOrderExchangeHashMap[hash];
+    }
+
+    /// @notice Add given trade to store of fraudulent trades if not already present
+    function addFraudulentOrder(Types.Order order) public
+    onlyOwnerOrServiceAction(ADD_FRAUDULENT_ORDER)
+    {
+        if (!fraudulentOrderExchangeHashMap[order.seals.exchange.hash]) {
+            fraudulentOrders.push(order);
+            fraudulentOrderExchangeHashMap[order.seals.exchange.hash] = true;
+            emit AddFraudulentOrderEvent(order);
+        }
+    }
+
+    /// @notice Get the number of fraudulent trades
+    function fraudulentTradesCount() public view returns (uint256) {
+        return fraudulentTrades.length;
+    }
+
+    /// @notice Get the state about whether the given hash equals the hash of a fraudulent trade
+    /// @param hash The hash to be tested
+    function isFraudulentTradeHash(bytes32 hash) public view returns (bool) {
+        return fraudulentTradeHashMap[hash];
     }
 
     /// @notice Add given order to store of fraudulent orders if not already present
@@ -135,24 +151,25 @@ contract FraudChallenge is Ownable, Modifiable, Servable {
         }
     }
 
-    /// @notice Get the number of fraudulent trades
-    function fraudulentTradesCount() public view returns (uint256) {
-        return fraudulentTrades.length;
+    /// @notice Get the number of fraudulent payments
+    function fraudulentPaymentsCount() public view returns (uint256) {
+        return fraudulentPayments.length;
+    }
+
+    /// @notice Get the state about whether the given hash equals the exchange' hash of a fraudulent payment
+    /// @param hash The hash to be tested
+    function isFraudulentPaymentExchangeHash(bytes32 hash) public view returns (bool) {
+        return fraudulentPaymentExchangeHashMap[hash];
     }
 
     /// @notice Add given payment to store of fraudulent payments if not already present
     function addFraudulentPayment(Types.Payment payment) public
     onlyOwnerOrServiceAction(ADD_FRAUDULENT_PAYMENT)
     {
-        if (!fraudulentPaymentHashMap[payment.seals.exchange.hash]) {
+        if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
             fraudulentPayments.push(payment);
-            fraudulentPaymentHashMap[payment.seals.exchange.hash] = true;
+            fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;
             emit AddFraudulentPaymentEvent(payment);
         }
-    }
-
-    /// @notice Get the number of fraudulent payments
-    function fraudulentPaymentsCount() public view returns (uint256) {
-        return fraudulentPayments.length;
     }
 }

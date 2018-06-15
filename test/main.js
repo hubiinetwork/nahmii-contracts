@@ -486,8 +486,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/Exchange')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DealSettlementChallenge')(glob);
-    // TODO Enable FraudChallenge test
-    // require('./scenarios/FraudChallenge')(glob);
+    require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
     require('./scenarios/FraudChallengeByTrade')(glob);
     require('./scenarios/FraudChallengeByPayment')(glob);
