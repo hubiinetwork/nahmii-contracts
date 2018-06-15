@@ -481,9 +481,9 @@ contract('Smart contract checks', function () {
     require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
-    require('./scenarios/Exchange')(glob);
-    require('./scenarios/CancelOrdersChallenge')(glob);
-    require('./scenarios/DealSettlementChallenge')(glob);
+    // require('./scenarios/Exchange')(glob);
+    // require('./scenarios/CancelOrdersChallenge')(glob);
+    // require('./scenarios/DealSettlementChallenge')(glob);
     require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
     require('./scenarios/FraudChallengeByTrade')(glob);
@@ -497,8 +497,8 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDuplicateDealNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDealNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDealNonceOfTradeAndPayment')(glob);
-    require('./scenarios/ReserveFund')(glob);
+    // require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
-    require('./scenarios/SecurityBond')(glob);
-    require('./scenarios/TokenHolderRevenueFund')(glob);
+    // require('./scenarios/SecurityBond')(glob);
+    // require('./scenarios/TokenHolderRevenueFund')(glob);
 });

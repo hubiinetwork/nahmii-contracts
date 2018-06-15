@@ -140,7 +140,7 @@ contract StandardTokenEx is ERC20 {
     }
 
     /* Testing purposes only */
-    //	function testMint(address receiver, uint amount) public {
-    //		mintInternal(receiver, amount);
-    //	}
+    function testMint(address receiver, uint amount) public {
+        mintInternal(receiver, amount);
+    }
 }
