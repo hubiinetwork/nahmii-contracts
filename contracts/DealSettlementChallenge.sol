@@ -16,7 +16,7 @@ import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable, Validator} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {DealSettlementChallengePartialChallenge} from "./DealSettlementChallengePartialChallenge.sol";
+import {DealSettlementChallenger} from "./DealSettlementChallenger.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 
 /**
@@ -56,7 +56,7 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     Types.Trade[] public challengeCandidateTrades;
     Types.Payment[] public challengeCandidatePayments;
 
-    address private dealSettlementChallengePartialChallenge;
+    address private dealSettlementChallenger;
 
     //
     // Events
@@ -88,11 +88,11 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     }
 
     /// @notice Set the child implementers
-    /// @param _dealSettlementChallengePartialChallenge The (address of) DealSettlementChallengePartialChallenge contract instance
-    function setImplementers(address _dealSettlementChallengePartialChallenge) public onlyOwner notNullAddress(_dealSettlementChallengePartialChallenge) {
-        require(dealSettlementChallengePartialChallenge == address(0));
+    /// @param _dealSettlementChallenger The (address of) DealSettlementChallenger contract instance
+    function setDealSettlementChallenger(address _dealSettlementChallenger) public onlyOwner notNullAddress(_dealSettlementChallenger) {
+        require(dealSettlementChallenger == address(0));
 
-        dealSettlementChallengePartialChallenge = _dealSettlementChallengePartialChallenge;
+        dealSettlementChallenger = _dealSettlementChallenger;
     }
 
     /// @notice Get the number of current and past deal settlement challenges from trade for given wallet
@@ -223,88 +223,88 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     }
 
     //
-    // Functions implemented in DealSettlementChallengePartialChallenge
+    // Functions implemented in DealSettlementChallenger
     // -----------------------------------------------------------------------------------------------------------------
 
     /// @notice Challenge the deal settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged deal
     function challengeByOrder(Types.Order order) public {
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).challengeByOrder(order, msg.sender);
+        DealSettlementChallenger(dealSettlementChallenger).challengeByOrder(order, msg.sender);
     }
 
     /// @notice Unchallenge deal settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged deal
     /// @param trade The trade in which order has been filled
     function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade) public {
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+        DealSettlementChallenger(dealSettlementChallenger).unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing trade candidate
     /// @param trade The trade candidate that challenges the challenged deal
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeByTrade(Types.Trade trade, address wallet) public {
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).challengeByTrade(trade, wallet, msg.sender);
+        DealSettlementChallenger(dealSettlementChallenger).challengeByTrade(trade, wallet, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing payment candidate
     /// @param payment The payment candidate that challenges the challenged deal
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeByPayment(Types.Payment payment, address wallet) public {
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).challengeByPayment(payment, wallet, msg.sender);
+        DealSettlementChallenger(dealSettlementChallenger).challengeByPayment(payment, wallet, msg.sender);
     }
 
     //
     // DealSettlementChallenge implementers helpers
     // -----------------------------------------------------------------------------------------------------------------
-    function getWalletChallengeMap(address wallet) public view onlyDealSettlementChallengeImplementers returns (Challenge) {
+    function getWalletChallengeMap(address wallet) public view onlyDealSettlementChallenger returns (Challenge) {
         return walletChallengeMap[wallet];
     }
 
-    function setWalletChallengeMap(address wallet, Challenge challenge) public onlyDealSettlementChallengeImplementers {
+    function setWalletChallengeMap(address wallet, Challenge challenge) public onlyDealSettlementChallenger {
         walletChallengeMap[wallet] = challenge;
     }
 
-    function getWalletChallengeTradesMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallengeImplementers returns (Types.Trade) {
+    function getWalletChallengeTradesMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Trade) {
         return walletChallengedTradesMap[wallet][dealIndex];
     }
 
-    function getWalletChallengePaymentsMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallengeImplementers returns (Types.Payment) {
+    function getWalletChallengePaymentsMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Payment) {
         return walletChallengedPaymentsMap[wallet][dealIndex];
     }
 
-    function pushChallengeCandidateOrders(Types.Order order) public onlyDealSettlementChallengeImplementers {
+    function pushChallengeCandidateOrders(Types.Order order) public onlyDealSettlementChallenger {
         challengeCandidateOrders.push(order);
     }
 
-    function getChallengeCandidateOrdersLength() public view onlyDealSettlementChallengeImplementers returns (uint256) {
+    function getChallengeCandidateOrdersLength() public view onlyDealSettlementChallenger returns (uint256) {
         return challengeCandidateOrders.length;
     }
 
-    function pushChallengeCandidateTrades(Types.Trade trade) public onlyDealSettlementChallengeImplementers {
+    function pushChallengeCandidateTrades(Types.Trade trade) public onlyDealSettlementChallenger {
         challengeCandidateTrades.push(trade);
     }
 
-    function getChallengeCandidateTradesLength() public view onlyDealSettlementChallengeImplementers returns (uint256) {
+    function getChallengeCandidateTradesLength() public view onlyDealSettlementChallenger returns (uint256) {
         return challengeCandidateTrades.length;
     }
 
-    function pushChallengeCandidatePayments(Types.Payment payment) public onlyDealSettlementChallengeImplementers {
+    function pushChallengeCandidatePayments(Types.Payment payment) public onlyDealSettlementChallenger {
         challengeCandidatePayments.push(payment);
     }
 
-    function getChallengeCandidatePaymentsLength() public view onlyDealSettlementChallengeImplementers returns (uint256) {
+    function getChallengeCandidatePaymentsLength() public view onlyDealSettlementChallenger returns (uint256) {
         return challengeCandidatePayments.length;
     }
 
-    function getValidator() public view onlyDealSettlementChallengeImplementers validatorInitialized returns (Validator) {
+    function getValidator() public view onlyDealSettlementChallenger validatorInitialized returns (Validator) {
         return validator;
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyDealSettlementChallengeImplementers() {
-        require(msg.sender == dealSettlementChallengePartialChallenge);
+    modifier onlyDealSettlementChallenger() {
+        require(msg.sender == dealSettlementChallenger);
         _;
     }
 }

@@ -23,7 +23,7 @@ import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract DealSettlementChallengePartialChallenge is Ownable, Modifiable, Configurable, Validatable, SecurityBondable {
+contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validatable, SecurityBondable {
     using SafeMathInt for int256;
 
     //
