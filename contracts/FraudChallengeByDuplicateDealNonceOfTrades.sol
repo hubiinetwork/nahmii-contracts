@@ -11,16 +11,16 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByDuplicateDealNonceOfTrades is Ownable, FraudChallengable, Configurable, SecurityBondable, Validatable {
+contract FraudChallengeByDuplicateDealNonceOfTrades is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDealNonceOfTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger);
+    event ChallengeByDuplicateDealNonceOfTradesEvent(Types.Trade trade1, Types.Trade trade2, address challenger);
 
     //
     // Constructor
@@ -55,6 +55,9 @@ contract FraudChallengeByDuplicateDealNonceOfTrades is Ownable, FraudChallengabl
         fraudChallenge.addFraudulentTrade(trade1);
         fraudChallenge.addFraudulentTrade(trade2);
 
+        //        address stakeCurrency;
+        //        int256 stakeAmount;
+        //        (stakeCurrency, stakeAmount) = configuration.getDuplicateDealNonceStake();
         (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDealNonceStake();
         securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
 

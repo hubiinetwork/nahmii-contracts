@@ -340,6 +340,17 @@ contract('Smart contract checks', function () {
         }
     });
 
+    before("Preflight: Instantiate FraudChallengeByDuplicateDealNonceOfTrades contract", async () => {
+        try {
+            glob.web3FraudChallengeByDuplicateDealNonceOfTrades = await FraudChallengeByDuplicateDealNonceOfTrades.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDuplicateDealNonceOfTrades, null);
+            glob.ethersIoFraudChallengeByDuplicateDealNonceOfTrades = new ethers.Contract(glob.web3FraudChallengeByDuplicateDealNonceOfTrades.address, FraudChallengeByDuplicateDealNonceOfTrades.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDealNonceOfTrades contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
     before("Preflight: Instantiate ReserveFund contract", async () => {
         try {
             glob.web3ReserveFund = await ReserveFund.deployed();
@@ -462,6 +473,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByTradeSucceedingPayment')(glob);
     require('./scenarios/FraudChallengeByTradeOrderResiduals')(glob);
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTrades')(glob);
     require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);

@@ -212,18 +212,60 @@ module.exports = (glob) => {
             });
         });
 
+        describe('securityBond()', () => {
+            it('should equal value initialized', async () => {
+                const securityBond = await ethersFraudChallengeByDuplicateDealNonceOfTrades.securityBond();
+                securityBond.should.equal(utils.getAddress(ethersSecurityBond.address));
+            });
+        });
+
+        describe('changeSecurityBond()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let securityBond;
+
+                beforeEach(async () => {
+                    securityBond = await web3FraudChallengeByDuplicateDealNonceOfTrades.securityBond.call();
+                });
+
+                afterEach(async () => {
+                    await web3FraudChallengeByDuplicateDealNonceOfTrades.changeSecurityBond(securityBond);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3FraudChallengeByDuplicateDealNonceOfTrades.changeSecurityBond(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeSecurityBondEvent');
+                    const securityBond = await web3FraudChallengeByDuplicateDealNonceOfTrades.securityBond();
+                    utils.getAddress(securityBond).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3FraudChallengeByDuplicateDealNonceOfTrades.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
         describe('challengeByDuplicateDealNonceOfTrades()', () => {
             let trade1, trade2, overrideOptions, filter;
 
             before(async () => {
-                overrideOptions = {gasLimit: 2e6};
-                await ethersConfiguration.setDoubleSpentOrderStake(mocks.address0, utils.bigNumberify(1000));
+                overrideOptions = {gasLimit: 3e6};
+                await ethersConfiguration.setDuplicateDealNonceStake(mocks.address0, utils.bigNumberify(1000));
             });
 
             beforeEach(async () => {
                 await ethersFraudChallenge.reset(overrideOptions);
                 await ethersConfiguration.reset(overrideOptions);
                 await ethersValidator.reset(overrideOptions);
+                await ethersSecurityBond.reset(overrideOptions);
 
                 trade1 = await mocks.mockTrade(glob.owner, {
                     nonce: utils.bigNumberify(1),
@@ -325,17 +367,15 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByDuplicateDealNonceOfTrades.challengeByDuplicateDealNonceOfTrades(
                         trade1, trade2, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradesCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradesCount(),
-                        ethersFraudChallenge.doubleSpenderWalletsCount(),
                         ethersSecurityBond.stagesCount(),
                         ethersSecurityBond.stages(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradesCount.eq(2).should.be.true;
-                    doubleSpenderWalletsCount.eq(2).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
                     stage.currency.should.equal(mocks.address0);
