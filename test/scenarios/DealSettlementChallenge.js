@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const ethers = require('ethers');
+const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const MockedSecurityBond = artifacts.require("MockedSecurityBond");
 
@@ -9,13 +9,12 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
 
-const utils = ethers.utils;
-const Wallet = ethers.Wallet;
-
 module.exports = (glob) => {
     describe('DealSettlementChallenge', () => {
         let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
+        let web3Hasher, ethersHasher;
         let web3Configuration, ethersConfiguration;
+        let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallengeOwner;
         let provider;
@@ -26,13 +25,17 @@ module.exports = (glob) => {
         before(async () => {
             web3DealSettlementChallenge = glob.web3DealSettlementChallenge;
             ethersDealSettlementChallengeOwner = glob.ethersIoDealSettlementChallenge;
+            web3Hasher = glob.web3Hasher;
+            ethersHasher = glob.ethersIoHasher;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
+            web3Validator = glob.web3Validator;
+            ethersValidator = glob.ethersIoValidator;
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
             ethersCancelOrdersChallengeOwner = glob.ethersIoCancelOrdersChallenge;
 
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
-            ethersSecurityBond = new ethers.Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
+            ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
             ethersDealSettlementChallengeUserA = ethersDealSettlementChallengeOwner.connect(glob.signer_a);
             ethersDealSettlementChallengeUserB = ethersDealSettlementChallengeOwner.connect(glob.signer_b);
@@ -43,7 +46,12 @@ module.exports = (glob) => {
 
             await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(mocks.address0, 1000);
 
+            await ethersValidator.changeConfiguration(ethersConfiguration.address);
+            await ethersValidator.changeHasher(ethersHasher.address);
+
             await ethersDealSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
+            await ethersDealSettlementChallengeOwner.changeValidator(ethersValidator.address);
+            await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
             await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
             await ethersDealSettlementChallengeOwner.changeCancelOrdersChallenge(ethersCancelOrdersChallengeOwner.address);
             await ethersCancelOrdersChallengeOwner.changeConfiguration(ethersConfiguration.address);
@@ -104,6 +112,47 @@ module.exports = (glob) => {
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
                     web3DealSettlementChallenge.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('validator()', () => {
+            it('should equal value initialized', async () => {
+                const validator = await ethersDealSettlementChallengeOwner.validator();
+                validator.should.equal(utils.getAddress(ethersValidator.address));
+            });
+        });
+
+        describe('changeValidator()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let validator;
+
+                beforeEach(async () => {
+                    validator = await web3DealSettlementChallenge.validator.call();
+                });
+
+                afterEach(async () => {
+                    await web3DealSettlementChallenge.changeValidator(validator);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3DealSettlementChallenge.changeValidator(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    const validator = await web3DealSettlementChallenge.validator();
+                    utils.getAddress(validator).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3DealSettlementChallenge.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -360,94 +409,6 @@ module.exports = (glob) => {
                 });
             });
         });
-
-        // describe('getChallengedDealAsTrade()', () => {
-        //     let overrideOptions;
-        //
-        //     before(async () => {
-        //         overrideOptions = {gasLimit: 2e6};
-        //     });
-        //
-        //     describe('if called with address whose deal settlement challenge was started on trade', () => {
-        //         let trade;
-        //
-        //         beforeEach(async () => {
-        //             trade = await mocks.mockTrade(glob.owner);
-        //
-        //             await ethersDealSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
-        //         });
-        //
-        //         it('should operate successfully', async () => {
-        //             const result = await ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(trade.buyer.wallet);
-        //             result[0].toNumber().should.equal(trade.nonce.toNumber());
-        //         });
-        //     });
-        //
-        //     describe('if called with address for which no deal settlement challenge has ever been started', () => {
-        //         it('should revert', async () => {
-        //             const address = Wallet.createRandom().address;
-        //             ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(address).should.be.rejected;
-        //         });
-        //     });
-        //
-        //     describe('if called with address whose deal settlement challenge was started on payment', () => {
-        //         let payment;
-        //
-        //         beforeEach(async () => {
-        //             payment = await mocks.mockPayment(glob.owner);
-        //
-        //             await ethersDealSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
-        //         });
-        //
-        //         it('should revert', async () => {
-        //             ethersDealSettlementChallengeOwner.getChallengedDealAsTrade(payment.sender.wallet).should.be.rejected;
-        //         });
-        //     });
-        // });
-
-        // describe('getChallengedDealAsPayment()', () => {
-        //     let overrideOptions;
-        //
-        //     before(async () => {
-        //         overrideOptions = {gasLimit: 2e6};
-        //     });
-        //
-        //     describe('if called with address whose deal settlement challenge was started on payment', () => {
-        //         let payment;
-        //
-        //         beforeEach(async () => {
-        //             payment = await mocks.mockPayment(glob.owner);
-        //
-        //             await ethersDealSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
-        //         });
-        //
-        //         it('should operate successfully', async () => {
-        //             const result = await ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(payment.sender.wallet);
-        //             result[0].toNumber().should.equal(payment.nonce.toNumber());
-        //         });
-        //     });
-        //
-        //     describe('if called with address for which no deal settlement challenge has ever been started', () => {
-        //         it('should revert', async () => {
-        //             const address = Wallet.createRandom().address;
-        //             ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(address).should.be.rejected;
-        //         });
-        //     });
-        //
-        //     describe('if called with address whose deal settlement challenge was started on trade', () => {
-        //         let trade;
-        //
-        //         beforeEach(async () => {
-        //             trade = await mocks.mockTrade(glob.owner);
-        //
-        //             await ethersDealSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
-        //         });
-        //
-        //         it('should revert', async () => {
-        //             ethersDealSettlementChallengeOwner.getChallengedDealAsPayment(trade.buyer.wallet).should.be.rejected;
-        //         });
-        //     });
-        // });
 
         describe('dealSettlementChallengePhase()', () => {
             describe('if no deal settlement challenge has been started for given wallet', () => {

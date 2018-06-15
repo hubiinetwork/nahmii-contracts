@@ -11,82 +11,11 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 
-contract AbstractConfiguration {
-
-    function isRegisteredService(address service, string action) public returns (bool);
-
-    function registerService(address service, string action) public;
-
-    function deregisterService(address service, string action) public;
-
-    function setOperationalModeExit() public;
-
-    function isOperationalModeNormal() public view returns (bool);
-
-    function isOperationalModeExit() public view returns (bool);
-
-    function getPartsPer() public view returns (int256);
-
-    function getTradeMakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
-
-    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
-
-    function getTradeMakerFeesCount() public view returns (uint256);
-
-    function getTradeTakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
-
-    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
-
-    function getTradeTakerFeesCount() public view returns (uint256);
-
-    function getPaymentFee(uint256 blockNumber, int256 discountTier) public view returns (int256);
-
-    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public;
-
-    function getPaymentFeesCount() public view returns (uint256);
-
-    function getTradeMakerMinimumFee(uint256 blockNumber) public view returns (int256);
-
-    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal) public;
-
-    function getTradeMakerMinimumFeesCount() public view returns (uint256);
-
-    function getTradeTakerMinimumFee(uint256 blockNumber) public view returns (int256);
-
-    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal) public;
-
-    function getTradeTakerMinimumFeesCount() public view returns (uint256);
-
-    function getPaymentMinimumFee(uint256 blockNumber) public view returns (int256);
-
-    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal) public;
-
-    function getPaymentMinimumFeesCount() public view returns (uint256);
-
-    function setCancelOrderChallengeTimeout(uint256 timeout) public;
-
-    function getCancelOrderChallengeTimeout() public view returns (uint256);
-
-    function setDealSettlementChallengeTimeout(uint256 timeout) public;
-
-    function getDealSettlementChallengeTimeout() public view returns (uint256);
-
-    function setUnchallengeOrderCandidateByTradeStake(address currency, int256 amount) public;
-
-    function getUnchallengeOrderCandidateByTradeStakeCurrency() public view returns (address);
-
-    function getUnchallengeOrderCandidateByTradeStakeAmount() public view returns (int256);
-
-    function setFalseWalletSignatureStake(address currency, int256 amount) public;
-
-    function getFalseWalletSignatureStake() public view returns (address, int256);
-}
-
 /**
 @title Configuration
 @notice An oracle for configurations such as fees, challenge timeouts and stakes
 */
-contract Configuration is Ownable, AbstractConfiguration {
+contract Configuration is Ownable {
     using SafeMathInt for int256;
 
     //
@@ -130,22 +59,28 @@ contract Configuration is Ownable, AbstractConfiguration {
     mapping(uint256 => DiscountableFee) tradeMakerFees;
     mapping(uint256 => DiscountableFee) tradeTakerFees;
     mapping(uint256 => DiscountableFee) paymentFees;
+    mapping(address => mapping(uint256 => DiscountableFee)) currencyPaymentFees;
     uint256[] public tradeMakerFeeBlockNumbers;
     uint256[] public tradeTakerFeeBlockNumbers;
     uint256[] public paymentFeeBlockNumbers;
+    mapping(address => uint256[]) public currencyPaymentFeeBlockNumbers;
 
     mapping(uint256 => StaticFee) tradeMakerMinimumFees;
     mapping(uint256 => StaticFee) tradeTakerMinimumFees;
     mapping(uint256 => StaticFee) paymentMinimumFees;
+    mapping(address => mapping(uint256 => StaticFee)) currencyPaymentMinimumFees;
     uint256[] public tradeMakerMinimumFeeBlockNumbers;
     uint256[] public tradeTakerMinimumFeeBlockNumbers;
     uint256[] public paymentMinimumFeeBlockNumbers;
+    mapping(address => uint256[]) public currencyPaymentMinimumFeeBlockNumbers;
 
     uint256 public cancelOrderChallengeTimeout;
     uint256 public dealSettlementChallengeTimeout;
 
     Lot public unchallengeOrderCandidateByTradeStake;
     Lot public falseWalletSignatureStake;
+    Lot public duplicateDealNonceStake;
+    Lot public doubleSpentOrderStake;
 
     //
     // Events
@@ -157,18 +92,24 @@ contract Configuration is Ownable, AbstractConfiguration {
     event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetTradeTakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetPaymentFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
+    event SetCurrencyPaymentFeeEvent(address currency, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetTradeMakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetTradeTakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetPaymentMinimumFeeEvent(uint256 blockNumber, int256 nominal);
+    event SetCurrencyPaymentMinimumFeeEvent(address currency, uint256 blockNumber, int256 nominal);
     event SetCancelOrderChallengeTimeout(uint256 timeout);
     event SetDealSettlementChallengeTimeout(uint256 timeout);
     event SetUnchallengeDealSettlementOrderByTradeStakeEvent(address currency, int256 amount);
     event SetFalseWalletSignatureStakeEvent(address currency, int256 amount);
+    event SetDuplicateDealNonceStakeEvent(address currency, int256 amount);
+    event SetDoubleSpentOrderStakeEvent(address currency, int256 amount);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) Ownable(owner) public {
+        cancelOrderChallengeTimeout = 3 hours;
+        dealSettlementChallengeTimeout = 5 hours;
     }
 
     //
@@ -177,7 +118,7 @@ contract Configuration is Ownable, AbstractConfiguration {
     /// @notice Returns the service status of an address and an action
     /// @param service The address of contract
     /// @param action The action in question
-    function isRegisteredService(address service, string action) public returns (bool) {
+    function isRegisteredService(address service, string action) public view returns (bool) {
         return registeredServiceActionMap[service][keccak256(abi.encode(action))];
     }
 
@@ -214,7 +155,8 @@ contract Configuration is Ownable, AbstractConfiguration {
         return OperationalMode.Exit == operationalMode;
     }
 
-    function getPartsPer() public view returns (int256) {
+    /// @notice Return the parts per constant
+    function getPartsPer() public pure returns (int256) {
         return PARTS_PER;
     }
 
@@ -320,6 +262,46 @@ contract Configuration is Ownable, AbstractConfiguration {
         return paymentFeeBlockNumbers.length;
     }
 
+    /// @notice Get payment relative fee for given currency at given block number, possibly discounted by discount tier value
+    /// @param currency Concerned currency (address(0) == ETH)
+    /// @param blockNumber Lower block number for the tier
+    /// @param discountTier Tiered value that determines discount
+    function getCurrencyPaymentFee(address currency, uint256 blockNumber, int256 discountTier) public view returns (int256) {
+        // If no currency specific fee has not been set the currency agnostic one should be used
+        if (0 == currencyPaymentFeeBlockNumbers[currency].length)
+            return getPaymentFee(blockNumber, discountTier);
+
+        uint256 index = getIndexOfLower(currencyPaymentFeeBlockNumbers[currency], blockNumber);
+        if (0 < index) {
+            uint256 setBlockNumber = currencyPaymentFeeBlockNumbers[currency][index - 1];
+            DiscountableFee storage fee = currencyPaymentFees[currency][setBlockNumber];
+            return getDiscountableFee(fee, discountTier);
+        } else
+            return getCurrencyPaymentMinimumFee(currency, blockNumber);
+    }
+
+    /// @notice Set payment nominal relative fee and discount tiers and values for given currency at given block number tier
+    /// @param currency Concerned currency (address(0) == ETH)
+    /// @param blockNumber Lower block number tier
+    /// @param nominal Nominal relative fee
+    /// @param nominal Discount tier levels
+    /// @param nominal Discount values
+    function setCurrencyPaymentFee(address currency, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    public
+    onlyOwner
+    onlyLaterBlockNumber(blockNumber)
+    {
+        DiscountableFee storage fee = currencyPaymentFees[currency][blockNumber];
+        setDiscountableFee(fee, currencyPaymentFeeBlockNumbers[currency], blockNumber, nominal, discountTiers, discountValues);
+        emit SetCurrencyPaymentFeeEvent(currency, blockNumber, nominal, discountTiers, discountValues);
+    }
+
+    /// @notice Get number of payment fee tiers of given currency
+    /// @param currency Concerned currency (address(0) == ETH)
+    function getCurrencyPaymentFeesCount(address currency) public view returns (uint256) {
+        return currencyPaymentFeeBlockNumbers[currency].length;
+    }
+
     /// @notice Get trade maker minimum relative fee at given block number
     /// @param blockNumber Lower block number for the tier
     function getTradeMakerMinimumFee(uint256 blockNumber) public view returns (int256) {
@@ -413,6 +395,43 @@ contract Configuration is Ownable, AbstractConfiguration {
         return paymentMinimumFeeBlockNumbers.length;
     }
 
+    /// @notice Get payment minimum relative fee for given currency at given block number
+    /// @param currency Concerned currency (address(0) == ETH)
+    /// @param blockNumber Lower block number for the tier
+    function getCurrencyPaymentMinimumFee(address currency, uint256 blockNumber) public view returns (int256) {
+        // If no currency specific fee has been set the currency agnostic one should be used
+        if (0 == currencyPaymentMinimumFeeBlockNumbers[currency].length)
+            return getPaymentMinimumFee(blockNumber);
+
+        uint256 index = getIndexOfLower(currencyPaymentMinimumFeeBlockNumbers[currency], blockNumber);
+        if (0 < index) {
+            uint256 setBlockNumber = currencyPaymentMinimumFeeBlockNumbers[currency][index - 1];
+            StaticFee storage fee = currencyPaymentMinimumFees[currency][setBlockNumber];
+            return fee.nominal;
+        } else
+            return 0;
+    }
+
+    /// @notice Set payment minimum relative fee for given currency at given block number tier
+    /// @param currency Concerned currency (address(0) == ETH)
+    /// @param blockNumber Lower block number tier
+    /// @param nominal Minimum relative fee
+    function setCurrencyPaymentMinimumFee(address currency, uint256 blockNumber, int256 nominal)
+    public
+    onlyOwner
+    onlyLaterBlockNumber(blockNumber)
+    {
+        StaticFee storage fee = currencyPaymentMinimumFees[currency][blockNumber];
+        setStaticFee(fee, currencyPaymentMinimumFeeBlockNumbers[currency], blockNumber, nominal);
+        emit SetCurrencyPaymentMinimumFeeEvent(currency, blockNumber, nominal);
+    }
+
+    /// @notice Get number of minimum payment fee tiers for given currency
+    /// @param currency Concerned currency (address(0) == ETH)
+    function getCurrencyPaymentMinimumFeesCount(address currency) public view returns (uint256) {
+        return currencyPaymentMinimumFeeBlockNumbers[currency].length;
+    }
+
     /// @notice Set timeout of cancel order challenge
     /// @param timeout Timeout duration
     function setCancelOrderChallengeTimeout(uint256 timeout) public onlyOwner {
@@ -420,6 +439,7 @@ contract Configuration is Ownable, AbstractConfiguration {
         emit SetCancelOrderChallengeTimeout(timeout);
     }
 
+    /// @notice Get timeout of cancel order challenge
     function getCancelOrderChallengeTimeout() public view returns (uint256) {
         return cancelOrderChallengeTimeout;
     }
@@ -431,6 +451,7 @@ contract Configuration is Ownable, AbstractConfiguration {
         emit SetDealSettlementChallengeTimeout(timeout);
     }
 
+    /// @notice Get timeout of deal challenge
     function getDealSettlementChallengeTimeout() public view returns (uint256) {
         return dealSettlementChallengeTimeout;
     }
@@ -461,7 +482,7 @@ contract Configuration is Ownable, AbstractConfiguration {
     /// @param currency Address of currency gained (0 represents ETH)
     /// @param amount Amount gained
     function setFalseWalletSignatureStake(address currency, int256 amount) public onlyOwner {
-        falseWalletSignatureStake = Lot({currency: currency, amount: amount});
+        falseWalletSignatureStake = Lot({currency : currency, amount : amount});
         emit SetFalseWalletSignatureStakeEvent(currency, amount);
     }
 
@@ -469,6 +490,36 @@ contract Configuration is Ownable, AbstractConfiguration {
     /// false wallet signature on order or payment
     function getFalseWalletSignatureStake() public view returns (address, int256) {
         return (falseWalletSignatureStake.currency, falseWalletSignatureStake.amount);
+    }
+
+    /// @notice Set currency and amount that will be gained when someone successfully challenges
+    /// duplicate deal nonce
+    /// @param currency Address of currency gained (0 represents ETH)
+    /// @param amount Amount gained
+    function setDuplicateDealNonceStake(address currency, int256 amount) public onlyOwner {
+        duplicateDealNonceStake = Lot({currency : currency, amount : amount});
+        emit SetDuplicateDealNonceStakeEvent(currency, amount);
+    }
+
+    /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
+    /// duplicate deal nonce
+    function getDuplicateDealNonceStake() public view returns (address, int256) {
+        return (duplicateDealNonceStake.currency, duplicateDealNonceStake.amount);
+    }
+
+    /// @notice Set currency and amount that will be gained when someone successfully challenges
+    /// double spent order
+    /// @param currency Address of currency gained (0 represents ETH)
+    /// @param amount Amount gained
+    function setDoubleSpentOrderStake(address currency, int256 amount) public onlyOwner {
+        doubleSpentOrderStake = Lot({currency : currency, amount : amount});
+        emit SetDoubleSpentOrderStakeEvent(currency, amount);
+    }
+
+    /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
+    /// double spent order
+    function getDoubleSpentOrderStake() public view returns (address, int256) {
+        return (doubleSpentOrderStake.currency, doubleSpentOrderStake.amount);
     }
 
     function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,

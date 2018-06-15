@@ -4,26 +4,38 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-var SafeMathIntLib = artifacts.require('./SafeMathInt.sol');
-var SafeMathUintLib = artifacts.require('./SafeMathUint.sol');
-var Types = artifacts.require('./Types.sol');
-var ClientFund = artifacts.require("./ClientFund.sol");
-var CommunityVote = artifacts.require("./CommunityVote.sol");
-var Configuration = artifacts.require("./Configuration.sol");
-var Exchange = artifacts.require("./Exchange.sol");
-var CancelOrdersChallenge = artifacts.require("./CancelOrdersChallenge.sol");
-var DealSettlementChallenge = artifacts.require("./DealSettlementChallenge.sol");
-var DealSettlementChallengePartialChallenge = artifacts.require("./DealSettlementChallengePartialChallenge.sol");
-var Hasher = artifacts.require('./Hasher.sol');
-var Validator = artifacts.require('./Validator.sol');
-var FraudChallenge = artifacts.require("./FraudChallenge.sol");
-var ReserveFund = artifacts.require("./ReserveFund.sol");
-var RevenueFund = artifacts.require("./RevenueFund.sol");
-var SecurityBond = artifacts.require("./SecurityBond.sol");
-var TokenHolderRevenueFund = artifacts.require("./TokenHolderRevenueFund.sol");
+const SafeMathIntLib = artifacts.require('./SafeMathInt.sol');
+const SafeMathUintLib = artifacts.require('./SafeMathUint.sol');
+const Types = artifacts.require('./Types.sol');
+const ClientFund = artifacts.require("./ClientFund.sol");
+const CommunityVote = artifacts.require("./CommunityVote.sol");
+const Configuration = artifacts.require("./Configuration.sol");
+const Exchange = artifacts.require("./Exchange.sol");
+const CancelOrdersChallenge = artifacts.require("./CancelOrdersChallenge.sol");
+const DealSettlementChallenge = artifacts.require("./DealSettlementChallenge.sol");
+const DealSettlementChallengePartialChallenge = artifacts.require("./DealSettlementChallengePartialChallenge.sol");
+const Hasher = artifacts.require('./Hasher.sol');
+const Validator = artifacts.require('./Validator.sol');
+const FraudChallengeByOrder = artifacts.require("./FraudChallengeByOrder.sol");
+const FraudChallengeByTrade = artifacts.require("./FraudChallengeByTrade.sol");
+const FraudChallengeByPayment = artifacts.require("./FraudChallengeByPayment.sol");
+const FraudChallengeBySuccessiveTrades = artifacts.require("./FraudChallengeBySuccessiveTrades.sol");
+const FraudChallengeBySuccessivePayments = artifacts.require("./FraudChallengeBySuccessivePayments.sol");
+const FraudChallengeByPaymentSucceedingTrade = artifacts.require("./FraudChallengeByPaymentSucceedingTrade.sol");
+const FraudChallengeByTradeSucceedingPayment = artifacts.require("./FraudChallengeByTradeSucceedingPayment.sol");
+const FraudChallengeByTradeOrderResiduals = artifacts.require("./FraudChallengeByTradeOrderResiduals.sol");
+const FraudChallengeByDoubleSpentOrders = artifacts.require("./FraudChallengeByDoubleSpentOrders.sol");
+const FraudChallengeByDuplicateDealNonceOfTrades = artifacts.require("./FraudChallengeByDuplicateDealNonceOfTrades.sol");
+const FraudChallengeByDuplicateDealNonceOfPayments = artifacts.require("./FraudChallengeByDuplicateDealNonceOfPayments.sol");
+const FraudChallengeByDuplicateDealNonceOfTradeAndPayment = artifacts.require("./FraudChallengeByDuplicateDealNonceOfTradeAndPayment.sol");
+const FraudChallenge = artifacts.require("./FraudChallenge.sol");
+const ReserveFund = artifacts.require("./ReserveFund.sol");
+const RevenueFund = artifacts.require("./RevenueFund.sol");
+const SecurityBond = artifacts.require("./SecurityBond.sol");
+const TokenHolderRevenueFund = artifacts.require("./TokenHolderRevenueFund.sol");
 
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
 var helpers = require('./helpers.js');
 
@@ -70,7 +82,11 @@ module.exports = function (deployer, network, accounts) {
 	]);
 
 	deployer.link(Types, [
-		Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallengePartialChallenge, FraudChallenge
+		Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallengePartialChallenge, 
+    FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
+    FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
+    FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDealNonceOfTrades,
+    FraudChallengeByDuplicateDealNonceOfPayments,FraudChallengeByDuplicateDealNonceOfTradeAndPayment, FraudChallenge
 	]);
 
 	deployer.deploy(ClientFund, ownerAccount, {
@@ -126,13 +142,85 @@ module.exports = function (deployer, network, accounts) {
 	}).then(() => {
 		addresses.Validator = Validator.address;
 	});
-/*
-	deployer.deploy(FraudChallenge, ownerAccount, {
+  
+    deployer.deploy(FraudChallengeByOrder, ownerAccount, {
 		from : ownerAccount
 	}).then(() => {
-		addresses.FraudChallenge = FraudChallenge.address;
-	});
-*/
+        addresses.FraudChallengeByOrder = FraudChallengeByOrder.address;
+    });
+
+    deployer.deploy(FraudChallengeByTrade, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByTrade = FraudChallengeByTrade.address;
+    });
+
+    deployer.deploy(FraudChallengeByPayment, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByPayment = FraudChallengeByPayment.address;
+    });
+
+    deployer.deploy(FraudChallengeBySuccessiveTrades, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeBySuccessiveTrades = FraudChallengeBySuccessiveTrades.address;
+    });
+
+    deployer.deploy(FraudChallengeBySuccessivePayments, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeBySuccessivePayments = FraudChallengeBySuccessivePayments.address;
+    });
+
+    deployer.deploy(FraudChallengeByPaymentSucceedingTrade, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByPaymentSucceedingTrade = FraudChallengeByPaymentSucceedingTrade.address;
+    });
+
+    deployer.deploy(FraudChallengeByTradeSucceedingPayment, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByTradeSucceedingPayment = FraudChallengeByTradeSucceedingPayment.address;
+    });
+
+    deployer.deploy(FraudChallengeByTradeOrderResiduals, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByTradeOrderResiduals = FraudChallengeByTradeOrderResiduals.address;
+    });
+
+    deployer.deploy(FraudChallengeByDoubleSpentOrders, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByDoubleSpentOrders = FraudChallengeByDoubleSpentOrders.address;
+    });
+
+    deployer.deploy(FraudChallengeByDuplicateDealNonceOfTrades, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByDuplicateDealNonceOfTrades = FraudChallengeByDuplicateDealNonceOfTrades.address;
+    });
+
+    deployer.deploy(FraudChallengeByDuplicateDealNonceOfPayments, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByDuplicateDealNonceOfPayments = FraudChallengeByDuplicateDealNonceOfPayments.address;
+    });
+
+    deployer.deploy(FraudChallengeByDuplicateDealNonceOfTradeAndPayment, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallengeByDuplicateDealNonceOfTradeAndPayment = FraudChallengeByDuplicateDealNonceOfTradeAndPayment.address;
+    });
+
+    deployer.deploy(FraudChallenge, ownerAccount, {
+		from : ownerAccount
+	}).then(() => {
+        addresses.FraudChallenge = FraudChallenge.address;
+    });  
+  
 	deployer.deploy(ReserveFund, ownerAccount, {
 		from : ownerAccount
 	}).then(() => {
@@ -170,8 +258,8 @@ module.exports = function (deployer, network, accounts) {
 	}).then(() => {
 		addresses.TokenHolderRevenueFund = TokenHolderRevenueFund.address;
 
-		saveAddresses(deployer, addresses);
-	});
+        saveAddresses(deployer, addresses);
+    });
 };
 
 function saveAddresses(deployer, addresses)

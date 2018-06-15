@@ -1,8 +1,9 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const ethers = require('ethers');
+const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
+const cryptography = require('omphalos-commons').util.cryptography;
 const MockedClientFund = artifacts.require("MockedClientFund");
 const MockedReserveFund = artifacts.require("MockedReserveFund");
 const MockedRevenueFund = artifacts.require("MockedRevenueFund");
@@ -13,20 +14,19 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
 
-const utils = ethers.utils;
-const Wallet = ethers.Wallet;
-
 let provider;
 
 module.exports = (glob) => {
     describe('Exchange', () => {
         let web3Exchange, ethersExchange;
         let web3Configuration, ethersConfiguration;
-        let web3RevenueFund, ethersRevenueFund;
-        let web3DealSettlementChallenge, ethersDealSettlementChallenge;
-        let web3CommunityVote, ethersCommunityVote;
         let web3ClientFund, ethersClientFund;
         let web3ReserveFund, ethersReserveFund;
+        let web3RevenueFund, ethersRevenueFund;
+        let web3CommunityVote, ethersCommunityVote;
+        let web3DealSettlementChallenge, ethersDealSettlementChallenge;
+        let web3Validator, ethersValidator;
+        let web3Hasher, ethersHasher;
         let blockNumber0, blockNumber10, blockNumber20;
 
         before(async () => {
@@ -36,26 +36,33 @@ module.exports = (glob) => {
             ethersExchange = glob.ethersIoExchange;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
+            web3Validator = glob.web3Validator;
+            ethersValidator = glob.ethersIoValidator;
+            web3Hasher = glob.web3Hasher;
+            ethersHasher = glob.ethersIoHasher;
 
-            web3RevenueFund = await MockedRevenueFund.new(/*glob.owner*/);
-            ethersRevenueFund = new ethers.Contract(web3RevenueFund.address, MockedRevenueFund.abi, glob.signer_owner);
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
-            ethersClientFund = new ethers.Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
+            ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
             web3ReserveFund = await MockedReserveFund.new(/*glob.owner*/);
-            ethersReserveFund = new ethers.Contract(web3ReserveFund.address, MockedReserveFund.abi, glob.signer_owner);
-            web3DealSettlementChallenge = await MockedDealSettlementChallenge.new(/*glob.owner*/);
-            ethersDealSettlementChallenge = new ethers.Contract(web3DealSettlementChallenge.address, MockedDealSettlementChallenge.abi, glob.signer_owner);
+            ethersReserveFund = new Contract(web3ReserveFund.address, MockedReserveFund.abi, glob.signer_owner);
+            web3RevenueFund = await MockedRevenueFund.new(/*glob.owner*/);
+            ethersRevenueFund = new Contract(web3RevenueFund.address, MockedRevenueFund.abi, glob.signer_owner);
             web3CommunityVote = await MockedCommunityVote.new(/*glob.owner*/);
-            ethersCommunityVote = new ethers.Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
+            ethersCommunityVote = new Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
+            web3DealSettlementChallenge = await MockedDealSettlementChallenge.new(/*glob.owner*/);
+            ethersDealSettlementChallenge = new Contract(web3DealSettlementChallenge.address, MockedDealSettlementChallenge.abi, glob.signer_owner);
+
+            await ethersValidator.changeHasher(web3Hasher.address);
 
             await ethersExchange.changeConfiguration(web3Configuration.address);
-            await ethersExchange.changeCommunityVote(web3CommunityVote.address);
-            await ethersExchange.changeTradesRevenueFund(web3RevenueFund.address);
-            await ethersExchange.changePaymentsRevenueFund(web3RevenueFund.address);
             await ethersExchange.changeClientFund(web3ClientFund.address);
             await ethersExchange.changeTradesReserveFund(web3ReserveFund.address);
             await ethersExchange.changePaymentsReserveFund(web3ReserveFund.address);
+            await ethersExchange.changeTradesRevenueFund(web3RevenueFund.address);
+            await ethersExchange.changePaymentsRevenueFund(web3RevenueFund.address);
+            await ethersExchange.changeCommunityVote(web3CommunityVote.address);
             await ethersExchange.changeDealSettlementChallenge(web3DealSettlementChallenge.address);
+            await ethersExchange.changeValidator(web3Validator.address);
         });
 
         beforeEach(async () => {
@@ -130,6 +137,88 @@ module.exports = (glob) => {
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
                     web3Exchange.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('validator()', () => {
+            it('should equal value initialized', async () => {
+                const validator = await ethersExchange.validator();
+                validator.should.equal(utils.getAddress(ethersValidator.address));
+            });
+        });
+
+        describe('changeValidator()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let validator;
+
+                beforeEach(async () => {
+                    validator = await web3Exchange.validator.call();
+                });
+
+                afterEach(async () => {
+                    await web3Exchange.changeValidator(validator);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Exchange.changeValidator(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    const validator = await web3Exchange.validator();
+                    utils.getAddress(validator).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Exchange.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('dealSettlementChallenge()', () => {
+            it('should equal value initialized', async () => {
+                const dealSettlementChallenge = await ethersExchange.dealSettlementChallenge();
+                dealSettlementChallenge.should.equal(utils.getAddress(ethersDealSettlementChallenge.address));
+            });
+        });
+
+        describe('changeDealSettlementChallenge()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let dealSettlementChallenge;
+
+                beforeEach(async () => {
+                    dealSettlementChallenge = await web3Exchange.dealSettlementChallenge.call();
+                });
+
+                afterEach(async () => {
+                    await web3Exchange.changeDealSettlementChallenge(dealSettlementChallenge);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Exchange.changeDealSettlementChallenge(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeDealSettlementChallengeEvent');
+                    const dealSettlementChallenge = await web3Exchange.dealSettlementChallenge();
+                    utils.getAddress(dealSettlementChallenge).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Exchange.changeDealSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -465,6 +554,18 @@ module.exports = (glob) => {
                 await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
             });
 
+            describe('if trade hash is wrongly calculated', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner);
+                    trade.seal.hash = cryptography.hash('some trade');
+                    trade.seal.signature = await mocks.createWeb3Signer(glob.owner)(trade.seal.hash);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
             describe('if trade is not signed by exchange', () => {
                 beforeEach(async () => {
                     trade = await mocks.mockTrade(glob.user_a);
@@ -756,6 +857,36 @@ module.exports = (glob) => {
 
                 await ethersConfiguration.setPaymentFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [], [], overrideOptions);
                 await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
+            });
+
+            describe('if payment hash as wallet is wrongly calculated', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner, {
+                        sender: {wallet: glob.user_a}
+                    });
+                    payment.seals.wallet.hash = cryptography.hash('some payment');
+                    payment.seals.wallet.signature = await mocks.createWeb3Signer(glob.user_a)(payment.seals.wallet.hash);
+                    payment.seals.exchange.hash = mocks.hashPaymentAsExchange(payment);
+                    payment.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment.seals.exchange.hash);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment hash as exchange is wrongly calculated', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner, {
+                        sender: {wallet: glob.user_a}
+                    });
+                    payment.seals.exchange.hash = mocks.hashPaymentAsWallet(payment);
+                    payment.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment.seals.exchange.hash);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                });
             });
 
             describe('if payment is not signed by exchange', () => {

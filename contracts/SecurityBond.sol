@@ -13,31 +13,6 @@ import "./Ownable.sol";
 import "./ERC20.sol";
 import "./Servable.sol";
 
-contract AbstractSecurityBond {
-
-    function setWithdrawalTimeout(uint256 timeoutInSeconds) public;
-
-    function() public payable;
-
-    function depositTokens(address token, int256 amount) public;
-
-    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token);
-
-    function activeBalance(address token) public view returns (int256);
-
-    function stagedBalance(address wallet, address token) public view returns (int256);
-
-    function stage(int256 amount, address token, address wallet) public;
-
-    function withdrawEthers(int256 amount) public;
-
-    function withdrawTokens(int256 amount, address token) public;
-
-    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token);
-
-    function withdrawalCount(address wallet) public view returns (uint256);
-}
-
 /**
 @title Security bond
 @notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
@@ -80,20 +55,20 @@ contract SecurityBond is Ownable, Servable {
 
         // Staged balance of ethers and tokens.
         int256 stagedEtherBalance;
-        mapping (address => int256) stagedTokenBalance;
+        mapping(address => int256) stagedTokenBalance;
 
         SubStageInfo subStagedEtherBalances;
-        mapping (address => SubStageInfo) subStagedTokenBalances;
+        mapping(address => SubStageInfo) subStagedTokenBalances;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping (address => WalletInfo) private walletInfoMap;
+    mapping(address => WalletInfo) private walletInfoMap;
 
     // Active balance of ethers and tokens shared among all wallets
     int256 activeEtherBalance;
-    mapping (address => int256) activeTokenBalance;
+    mapping(address => int256) activeTokenBalance;
 
     uint256 private withdrawalTimeout;
 
@@ -121,7 +96,7 @@ contract SecurityBond is Ownable, Servable {
     //
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
-    function () public payable {
+    function() public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet active balance
@@ -189,13 +164,13 @@ contract SecurityBond is Ownable, Servable {
             amount = amount.clampMax(activeEtherBalance);
             if (amount <= 0)
                 return;
-            
+
             //move from active balance to staged
             activeEtherBalance = activeEtherBalance.sub_nn(amount);
             walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(amount);
 
             //add substage info
-            start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0); 
+            start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0);
             walletInfoMap[wallet].subStagedEtherBalances.list.push(SubStageItem(amount, start_time));
         } else {
             //clamp amount to move
@@ -208,7 +183,7 @@ contract SecurityBond is Ownable, Servable {
             walletInfoMap[wallet].stagedTokenBalance[token] = walletInfoMap[wallet].stagedTokenBalance[token].add_nn(amount);
 
             //add substage info
-            start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0); 
+            start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0);
             walletInfoMap[wallet].subStagedTokenBalances[token].list.push(SubStageItem(amount, start_time));
         }
 
@@ -239,7 +214,7 @@ contract SecurityBond is Ownable, Servable {
             }
 
             this_round_amount = (amount - to_send_amount).clampMax(walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].available_amount);
-            
+
             walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].available_amount = walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].available_amount.sub_nn(this_round_amount);
             if (walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].available_amount == 0) {
                 walletInfoMap[msg.sender].subStagedEtherBalances.current_index++;
@@ -285,7 +260,7 @@ contract SecurityBond is Ownable, Servable {
             }
 
             this_round_amount = (amount - to_send_amount).clampMax(walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].available_amount);
-            
+
             walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].available_amount = walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].available_amount.sub_nn(this_round_amount);
             if (walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].available_amount == 0) {
                 walletInfoMap[msg.sender].subStagedTokenBalances[token].current_index++;
