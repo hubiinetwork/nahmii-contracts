@@ -465,10 +465,16 @@ contract Configuration is Ownable {
         emit SetUnchallengeDealSettlementOrderByTradeStakeEvent(currency, amount);
     }
 
-    /// @notice Get the currency and amount that will be gained when someone successfully
+    /// @notice Get the currency that will be gained when someone successfully
     /// unchallenges (deal settlement) order candidate by trade
-    function getUnchallengeOrderCandidateByTradeStake() public view returns (address, int256) {
-        return (unchallengeOrderCandidateByTradeStake.currency, unchallengeOrderCandidateByTradeStake.amount);
+    function getUnchallengeOrderCandidateByTradeStakeCurrency() public view returns (address) {
+        return unchallengeOrderCandidateByTradeStake.currency;
+    }
+
+    /// @notice Get the amount that will be gained when someone successfully
+    /// unchallenges (deal settlement) order candidate by trade
+    function getUnchallengeOrderCandidateByTradeStakeAmount() public view returns (int256) {
+        return unchallengeOrderCandidateByTradeStake.amount;
     }
 
     /// @notice Set currency and amount that will be gained when someone successfully challenges

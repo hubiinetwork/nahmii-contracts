@@ -15,10 +15,10 @@ import "./Types.sol";
 import "./ERC20.sol";
 import {Configuration} from "./Configuration.sol";
 import {Validator} from "./Validator.sol";
-import "./DealSettlementChallenge.sol";
 import "./ClientFund.sol";
 import "./ReserveFund.sol";
 import "./RevenueFund.sol";
+import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
 import "./CommunityVote.sol";
 
 /**
@@ -197,6 +197,19 @@ contract Exchange is Ownable {
         CommunityVote oldCommunityVote = communityVote;
         communityVote = newCommunityVote;
         emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
+    }
+
+    /// @notice Change the deal settlement challenge contract
+    /// @param newDealSettlementChallenge The (address of) DealSettlementChallengeA contract instance
+    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
+    public
+    onlyOwner
+    notNullAddress(newDealSettlementChallenge)
+    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallenge)
+    {
+        DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
+        dealSettlementChallenge = newDealSettlementChallenge;
+        emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, newDealSettlementChallenge);
     }
 
     /// @notice Get the seized status of given wallet
