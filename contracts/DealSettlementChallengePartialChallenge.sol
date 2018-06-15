@@ -11,9 +11,9 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./Types.sol";
-import {AbstractConfiguration} from "./Configuration.sol";
+import {Configuration} from "./Configuration.sol";
 import {SecurityBond} from "./SecurityBond.sol";
-import {AbstractCancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
+import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
 
 /**
@@ -26,9 +26,9 @@ contract DealSettlementChallengePartialChallenge is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    AbstractConfiguration public configuration;
+    Configuration public configuration;
     SecurityBond public securityBond;
-    AbstractCancelOrdersChallenge public cancelOrdersChallenge;
+    CancelOrdersChallenge public cancelOrdersChallenge;
 
     address private dealSettlementChallenge;
 
@@ -47,7 +47,7 @@ contract DealSettlementChallengePartialChallenge is Ownable {
         dealSettlementChallenge = _dealSettlementChallenge;
     }
 
-    function changeConfiguration(AbstractConfiguration _configuration) public onlyController {
+    function changeConfiguration(Configuration _configuration) public onlyController {
         configuration = _configuration;
     }
 
@@ -55,7 +55,7 @@ contract DealSettlementChallengePartialChallenge is Ownable {
         securityBond = _securityBond;
     }
 
-    function changeCancelOrdersChallenge(AbstractCancelOrdersChallenge _cancelOrdersChallenge) public onlyController {
+    function changeCancelOrdersChallenge(CancelOrdersChallenge _cancelOrdersChallenge) public onlyController {
         cancelOrdersChallenge = _cancelOrdersChallenge;
     }
 

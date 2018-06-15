@@ -66,8 +66,7 @@ contract DealSettlementChallenge is Ownable {
     event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
     event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
-    event 
-    hallengeFromTradeEvent(Types.Trade trade, address wallet);
+    event StartChallengeFromTradeEvent(Types.Trade trade, address wallet);
     event StartChallengeFromPaymentEvent(Types.Payment payment, address wallet);
 
     //

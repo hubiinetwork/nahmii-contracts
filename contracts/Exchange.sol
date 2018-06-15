@@ -199,19 +199,6 @@ contract Exchange is Ownable {
         emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
     }
 
-    /// @notice Change the deal settlement challenge contract
-    /// @param newDealSettlementChallenge The (address of) DealSettlementChallengeA contract instance
-    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
-    public
-    onlyOwner
-    notNullAddress(newDealSettlementChallenge)
-    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallenge)
-    {
-        DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
-        dealSettlementChallenge = newDealSettlementChallenge;
-        emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, newDealSettlementChallenge);
-    }
-
     /// @notice Get the seized status of given wallet
     /// @return true if wallet is seized, false otherwise
     function isSeizedWallet(address _address) public view returns (bool) {
