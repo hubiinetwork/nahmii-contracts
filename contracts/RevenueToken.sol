@@ -11,12 +11,13 @@ pragma solidity ^0.4.24;
 import './ERC20.sol';
 import './SafeMathUint.sol';
 import './Ownable.sol';
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
  * @title Standard token
  * @dev Basic implementation of the EIP20 standard token (also known as ERC20 token).
  */
-contract RevenueToken is ERC20, Ownable {
+contract RevenueToken is ERC20, Ownable, SelfDestructible {
     using SafeMathUint for uint256;
 
     //

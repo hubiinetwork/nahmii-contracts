@@ -15,8 +15,9 @@ import {Types} from "./Types.sol";
 import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Hashable} from "./Hashable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
-contract Validator is Ownable, Configurable, Hashable {
+contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

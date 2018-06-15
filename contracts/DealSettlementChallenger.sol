@@ -18,12 +18,13 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validatable, SecurityBondable {
+contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validatable, SecurityBondable, SelfDestructible {
     using SafeMathInt for int256;
 
     //

@@ -15,12 +15,13 @@ import "./Ownable.sol";
 import "./Types.sol";
 import {Configuration} from "./Configuration.sol";
 import {Validator} from "./Validator.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract CancelOrdersChallenge is Ownable {
+contract CancelOrdersChallenge is Ownable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

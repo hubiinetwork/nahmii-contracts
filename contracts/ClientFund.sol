@@ -15,13 +15,14 @@ import "./Beneficiary.sol";
 import "./Benefactor.sol";
 import "./ReserveFund.sol";
 import "./Servable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Factored out from previous Trade smart contract.
 */
-contract ClientFund is Ownable, Beneficiary, Benefactor, Servable {
+contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructible {
     using SafeMathInt for int256;
 
     //

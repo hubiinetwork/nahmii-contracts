@@ -18,13 +18,14 @@ import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import "./Servable.sol";
 import "./ClientFund.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Reserve fund
 @notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
  There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
 */
-contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable {
+contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

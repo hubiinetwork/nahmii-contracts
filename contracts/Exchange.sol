@@ -21,12 +21,13 @@ import {CommunityVotable} from "./CommunityVotable.sol";
 import "./ReserveFund.sol";
 import "./RevenueFund.sol";
 import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable {
+contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
