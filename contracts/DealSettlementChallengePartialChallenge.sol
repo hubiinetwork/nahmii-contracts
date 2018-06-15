@@ -11,8 +11,10 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./Types.sol";
-import {Configuration} from "./Configuration.sol";
-import {SecurityBond} from "./SecurityBond.sol";
+import {Modifiable} from "./Modifiable.sol";
+import {Configurable} from "./Configurable.sol";
+import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
 
@@ -20,14 +22,12 @@ import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract DealSettlementChallengePartialChallenge is Ownable {
+contract DealSettlementChallengePartialChallenge is Ownable, Modifiable, Configurable, Validatable, SecurityBondable {
     using SafeMathInt for int256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Configuration public configuration;
-    SecurityBond public securityBond;
     CancelOrdersChallenge public cancelOrdersChallenge;
 
     address private dealSettlementChallenge;
@@ -35,6 +35,7 @@ contract DealSettlementChallengePartialChallenge is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
     event ChallengeByOrderEvent(Types.Order order, uint256 nonce, Types.DealType dealType, address reporter);
     event ChallengeByTradeEvent(Types.Trade trade, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
     event ChallengeByPaymentEvent(Types.Payment payment, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
@@ -47,16 +48,17 @@ contract DealSettlementChallengePartialChallenge is Ownable {
         dealSettlementChallenge = _dealSettlementChallenge;
     }
 
-    function changeConfiguration(Configuration _configuration) public onlyController {
-        configuration = _configuration;
-    }
-
-    function changeSecurityBond(SecurityBond _securityBond) public onlyController {
-        securityBond = _securityBond;
-    }
-
-    function changeCancelOrdersChallenge(CancelOrdersChallenge _cancelOrdersChallenge) public onlyController {
-        cancelOrdersChallenge = _cancelOrdersChallenge;
+    /// @notice Change the cancel orders challenge contract
+    /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
+    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
+    public
+    onlyOwner
+    notNullAddress(newCancelOrdersChallenge)
+    notEqualAddresses(newCancelOrdersChallenge, cancelOrdersChallenge)
+    {
+        CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
+        cancelOrdersChallenge = newCancelOrdersChallenge;
+        emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
     }
 
     /// @notice Challenge the deal settlement by providing order candidate
@@ -64,9 +66,9 @@ contract DealSettlementChallengePartialChallenge is Ownable {
     function challengeByOrder(Types.Order order, address original_sender)
     public
     onlyController
-    orderSigned(order.seals, owner, order.wallet)
+    onlySealedOrder(order)
     {
-        require(cancelOrdersChallenge != address(0), "CancelOrdersChallenge is missing");
+        require(cancelOrdersChallenge != address(0));
 
         DealSettlementChallenge.Challenge memory challenge = DealSettlementChallenge(dealSettlementChallenge).getWalletChallengeMap(order.wallet);
         require(
@@ -103,14 +105,15 @@ contract DealSettlementChallengePartialChallenge is Ownable {
     /// @param trade The trade in which order has been filled
     function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade, address original_sender)
     public
+    validatorInitialized
     onlyController
-    orderSigned(order.seals, owner, order.wallet)
-    tradeSigned(trade)
+    onlySealedOrder(order)
+    onlySealedTrade(trade)
     onlyTradeParty(trade, order.wallet)
     onlyTradeOrder(trade, order)
     {
-        require(configuration != address(0), "Configuration is missing");
-        require(securityBond != address(0), "SecurityBond is missing");
+        require(configuration != address(0));
+        require(securityBond != address(0));
 
         DealSettlementChallenge.Challenge memory challenge = DealSettlementChallenge(dealSettlementChallenge).getWalletChallengeMap(order.wallet);
         require(challenge.candidateType == DealSettlementChallenge.ChallengeCandidateType.Order);
@@ -132,11 +135,12 @@ contract DealSettlementChallengePartialChallenge is Ownable {
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeByTrade(Types.Trade trade, address wallet, address original_sender)
     public
+    validatorInitialized
     onlyController
-    tradeSigned(trade)
+    onlySealedTrade(trade)
     onlyTradeParty(trade, wallet)
     {
-        require(cancelOrdersChallenge != address(0), "CancelOrdersChallenge is missing");
+        require(cancelOrdersChallenge != address(0));
 
         DealSettlementChallenge.Challenge memory challenge = DealSettlementChallenge(dealSettlementChallenge).getWalletChallengeMap(wallet);
         require(
@@ -192,8 +196,9 @@ contract DealSettlementChallengePartialChallenge is Ownable {
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeByPayment(Types.Payment payment, address wallet, address original_sender)
     public
+    validatorInitialized
     onlyController
-    paymentSigned(payment)
+    onlySealedPayment(payment)
     onlyPaymentSender(payment, wallet) // Wallet is recipient in (candidate) payment -> nothing to consider
     {
         DealSettlementChallenge.Challenge memory challenge = DealSettlementChallenge(dealSettlementChallenge).getWalletChallengeMap(wallet);
@@ -262,16 +267,6 @@ contract DealSettlementChallengePartialChallenge is Ownable {
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
-    modifier notEqualAddresses(address address1, address address2) {
-        require(address1 != address2);
-        _;
-    }
-
     modifier onlyTradeParty(Types.Trade trade, address wallet) {
         require(Types.isTradeParty(trade, wallet));
         _;
@@ -282,62 +277,13 @@ contract DealSettlementChallengePartialChallenge is Ownable {
         _;
     }
 
-    //    modifier onlyPaymentParty(Types.Payment payment, address wallet) {
-    //        require(Types.isPaymentParty(payment, wallet));
-    //        _;
-    //    }
-
     modifier onlyPaymentSender(Types.Payment payment, address wallet) {
         require(Types.isPaymentSender(payment, wallet));
         _;
     }
 
-    //    modifier onlyPaymentRecipient(Types.Payment payment, address wallet) {
-    //        require(Types.isPaymentRecipient(payment, wallet));
-    //        _;
-    //    }
-
     modifier signedBy(bytes32 hash, Types.Signature signature, address signer) {
         require(Types.isGenuineSignature(hash, signature, signer));
-        _;
-    }
-
-    modifier orderSigned(Types.WalletExchangeSeals walletSeals, address signer1, address signer2) {
-        //require(Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, owner));
-        //require(Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet));
-        require(Types.isGenuineSignature(walletSeals.exchange.hash, walletSeals.exchange.signature, signer1));
-        require(Types.isGenuineSignature(walletSeals.wallet.hash, walletSeals.wallet.signature, signer2));
-        _;
-    }
-
-    modifier orderSignedByExchange(Types.Order order) {
-        require(Types.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, owner));
-        _;
-    }
-
-    modifier orderSignedByWallet(Types.Order order) {
-        require(Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet));
-        _;
-    }
-
-    modifier tradeSigned(Types.Trade trade) {
-        require(Types.isGenuineSignature(trade.seal.hash, trade.seal.signature, owner));
-        _;
-    }
-
-    modifier paymentSigned(Types.Payment payment) {
-        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
-        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
-        _;
-    }
-
-    modifier paymentSignedByExchange(Types.Payment payment) {
-        require(Types.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, owner));
-        _;
-    }
-
-    modifier paymentSignedByWallet(Types.Payment payment) {
-        require(Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet));
         _;
     }
 

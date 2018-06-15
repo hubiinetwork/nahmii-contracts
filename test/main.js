@@ -4,9 +4,7 @@
  * Copyright (C) 2017-2018 Hubii
  */
 
-const async = require('async');
 const ethers = require('ethers');
-const keccak256 = require("augmented-keccak256");
 const Helpers = require('./helpers');
 const w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 

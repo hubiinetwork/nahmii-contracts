@@ -54,6 +54,11 @@ contract Validatable is Ownable, Modifiable {
         _;
     }
 
+    modifier onlySealedOrder(Types.Order order) {
+        require(validator.isGenuineOrderSeals(order, owner));
+        _;
+    }
+
     modifier onlySealedTrade(Types.Trade trade) {
         require(validator.isGenuineTradeSeal(trade, owner));
         _;

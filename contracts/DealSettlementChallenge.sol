@@ -11,17 +11,17 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import "./Ownable.sol";
 import "./Types.sol";
+import {Configurable} from "./Configurable.sol";
+import {Validatable, Validator} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {DealSettlementChallengePartialChallenge} from "./DealSettlementChallengePartialChallenge.sol";
-import {Configuration} from "./Configuration.sol";
-import {Validator} from "./Validator.sol";
-import {SecurityBond} from "./SecurityBond.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract DealSettlementChallenge is Ownable {
+contract DealSettlementChallenge is Ownable, Configurable, Validatable, SecurityBondable  {
     using SafeMathInt for int256;
 
     //
@@ -43,9 +43,6 @@ contract DealSettlementChallenge is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Configuration public configuration;
-    Validator public validator;
-    SecurityBond public securityBond;
     CancelOrdersChallenge public cancelOrdersChallenge;
 
     mapping(address => Challenge) public walletChallengeMap;
@@ -62,9 +59,6 @@ contract DealSettlementChallenge is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
-    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
-    event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
     event StartChallengeFromTradeEvent(Types.Trade trade, address wallet);
     event StartChallengeFromPaymentEvent(Types.Payment payment, address wallet);
@@ -78,56 +72,7 @@ contract DealSettlementChallenge is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
-    public
-    onlyOwner
-    notNullAddress(newConfiguration)
-    notEqualAddresses(newConfiguration, configuration)
-    {
-        Configuration oldConfiguration = configuration;
-        configuration = newConfiguration;
-
-        //update implementers
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).changeConfiguration(configuration);
-
-        //raise event
-        emit ChangeConfigurationEvent(oldConfiguration, configuration);
-    }
-
-    /// @notice Change the validator contract
-    /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(Validator newValidator)
-    public
-    onlyOwner
-    notNullAddress(newValidator)
-    notEqualAddresses(newValidator, validator)
-    {
-        Validator oldValidator = validator;
-        validator = newValidator;
-        emit ChangeValidatorEvent(oldValidator, validator);
-    }
-
-    /// @notice Change the security bond contract
-    /// @param newSecurityBond The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newSecurityBond)
-    public
-    onlyOwner
-    notNullAddress(newSecurityBond)
-    notEqualAddresses(newSecurityBond, securityBond)
-    {
-        SecurityBond oldSecurityBond = securityBond;
-        securityBond = newSecurityBond;
-
-        //update implementers
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).changeSecurityBond(securityBond);
-
-        //raise event
-        emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
-    }
-
-    /// @notice Change the cance orders challenge contract
+    /// @notice Change the cancel orders challenge contract
     /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
     function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
     public
@@ -137,11 +82,6 @@ contract DealSettlementChallenge is Ownable {
     {
         CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
         cancelOrdersChallenge = newCancelOrdersChallenge;
-
-        //update implementers
-        DealSettlementChallengePartialChallenge(dealSettlementChallengePartialChallenge).changeCancelOrdersChallenge(cancelOrdersChallenge);
-
-        //raise event
         emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
     }
 
