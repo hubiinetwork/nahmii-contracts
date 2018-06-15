@@ -41,6 +41,18 @@ module.exports = {
             port: 8545,
             network_id: "*",
             gas: 7000000
+        },
+        "hubii-ropsten": {
+            host: "geth-ropsten",
+            port: 8545,
+            network_id: "*",
+            gas: 7000000
+        },
+        "hubii-rinkeby": {
+            host: "geth-rinkeby",
+            port: 8545,
+            network_id: "*",
+            gas: 7000000
         }
     },
     solc: {
