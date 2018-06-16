@@ -18,7 +18,7 @@ module.exports = function(deployer, network, accounts) {
 	else {
 		ownerAccount = helpers.getOwnerAccountFromArgs();
 		ownerAccountPassword = helpers.getPasswordFromArgs();
-		helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 600); //10 minutes
+		helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 1200); //20 minutes
 	}
 
 	deployer.deploy(Migrations, {
