@@ -19,5 +19,7 @@ contract AccrualBeneficiary is Beneficiary {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public;
+    function closeAccrualPeriod() public {
+        emit CloseAccrualPeriodEvent();
+    }
 }
