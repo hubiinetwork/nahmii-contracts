@@ -4,7 +4,7 @@ var ethers = require('ethers');
 module.exports = function (glob) {
 	var testCounter = Helpers.TestCounter();
 
-	describe.only("ReserveFund", function () {
+	describe("ReserveFund", function () {
 		// Local test-wide variables
 		// ------------------------------------------------------------------------------------------------------
 		const TOKEN_DEPOSIT_AMOUNT_A = 5;
@@ -668,7 +668,7 @@ module.exports = function (glob) {
 				});
 		});
 
-		it.only(testCounter.next() + ": MUST SUCCEED [twoWayTransfer]: Inbound (C to SC): 1 ETH", async () => {
+		it(testCounter.next() + ": MUST SUCCEED [twoWayTransfer]: Inbound (C to SC): 1 ETH", async () => {
 
 			try {
                 const currency = '0x0000000000000000000000000000000000000000';

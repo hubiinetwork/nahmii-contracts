@@ -209,21 +209,21 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             int256 transferIntendedAbs = trade.transfers.intended.net.abs();
 
             // Positive transfer of conjugate currency defined as being from trade buyer to seller
-            bool transferConjugateToParty = ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
-            || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole));
-            int256 transferConjugateAbs = trade.transfers.conjugate.net.abs();
+            //            bool transferConjugateToParty = ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
+            //            || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole));
+            //            int256 transferConjugateAbs = trade.transfers.conjugate.net.abs();
 
-            if (!trade.immediateSettlement &&
-            (!transferIntendedToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.intended, transferIntendedAbs)) &&
-            (!transferConjugateToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, transferConjugateAbs))) {
-                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, transferIntendedToParty ? transferIntendedAbs.mul(-1) : transferIntendedAbs);
-                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.conjugate, transferConjugateToParty ? transferConjugateAbs.mul(-1) : transferConjugateAbs);
-                addOneSidedSettlementFromTrade(trade, wallet);
-            } else {
-                settleTradeTransfers(trade);
-                settleTradeFees(trade);
-                addTwoSidedSettlementFromTrade(trade);
-            }
+            //            if (!trade.immediateSettlement &&
+            //            (!transferIntendedToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.intended, transferIntendedAbs)) &&
+            //            (!transferConjugateToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, transferConjugateAbs))) {
+            //                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, transferIntendedToParty ? transferIntendedAbs.mul(- 1) : transferIntendedAbs);
+            //                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.conjugate, transferConjugateToParty ? transferConjugateAbs.mul(- 1) : transferConjugateAbs);
+            //                addOneSidedSettlementFromTrade(trade, wallet);
+            //            } else {
+            settleTradeTransfers(trade);
+            settleTradeFees(trade);
+            addTwoSidedSettlementFromTrade(trade);
+            //            }
 
             if (trade.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = trade.nonce;
@@ -268,19 +268,19 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
             // Positive transfer defined as being from payment sender to recipient
-            bool transferToParty = ((0 > payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
-            || (0 < payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole));
-            int256 transferAbs = payment.transfers.net.abs();
+            //            bool transferToParty = ((0 > payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
+            //            || (0 < payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole));
+            //            int256 transferAbs = payment.transfers.net.abs();
 
-            if (!payment.immediateSettlement &&
-            (!transferToParty || paymentsReserveFund.outboundTransferSupported(payment.currency, transferAbs))) {
-                paymentsReserveFund.twoWayTransfer(wallet, payment.currency, transferToParty ? transferAbs.mul(-1) : transferAbs);
-                addOneSidedSettlementFromPayment(payment, wallet);
-            } else {
-                settlePaymentTransfers(payment);
-                settlePaymentFees(payment);
-                addTwoSidedSettlementFromPayment(payment);
-            }
+            //            if (!payment.immediateSettlement &&
+            //            (!transferToParty || paymentsReserveFund.outboundTransferSupported(payment.currency, transferAbs))) {
+            //                paymentsReserveFund.twoWayTransfer(wallet, payment.currency, transferToParty ? transferAbs.mul(-1) : transferAbs);
+            //                addOneSidedSettlementFromPayment(payment, wallet);
+            //            } else {
+            settlePaymentTransfers(payment);
+            settlePaymentFees(payment);
+            addTwoSidedSettlementFromPayment(payment);
+            //            }
 
             if (payment.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = payment.nonce;
