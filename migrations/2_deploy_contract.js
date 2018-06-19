@@ -60,203 +60,203 @@ module.exports = function (deployer, network, accounts) {
         addresses.SafeMathInt = SafeMathIntLib.address;
     });
 
-    // deployer.deploy(SafeMathUintLib, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.SafeMathUint = SafeMathUintLib.address;
-    // });
-    //
-    // deployer.deploy(Types, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.Types = Types.address;
-    // });
+    deployer.deploy(SafeMathUintLib, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.SafeMathUint = SafeMathUintLib.address;
+    });
+
+    deployer.deploy(Types, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.Types = Types.address;
+    });
 
     deployer.link(SafeMathIntLib, [
-        /*ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger,
-        FraudChallenge, ReserveFund, RevenueFund, */SecurityBond/*, TokenHolderRevenueFund*/
+        ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger,
+        FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
     ]);
 
-    // deployer.link(SafeMathUintLib, [
-    // 	Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
-    // ]);
-    //
-    // deployer.link(Types, [
-    // 	Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger,
-    // FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
-    // FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
-    // FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDealNonceOfTrades,
-    // FraudChallengeByDuplicateDealNonceOfPayments,FraudChallengeByDuplicateDealNonceOfTradeAndPayment, FraudChallenge
-    // ]);
-    //
-    // deployer.deploy(ClientFund, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.ClientFund = ClientFund.address;
-    // });
-    //
-    // deployer.deploy(CommunityVote, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.CommunityVote = CommunityVote.address;
-    // });
-    //
-    // deployer.deploy(Configuration, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.Configuration = Configuration.address;
-    // });
-    //
-    // deployer.deploy(Exchange, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.Exchange = Exchange.address;
-    // });
-    //
-    // deployer.deploy(CancelOrdersChallenge, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.CancelOrdersChallenge = CancelOrdersChallenge.address;
-    // });
-    //
-    // deployer.deploy(DealSettlementChallenge, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.DealSettlementChallenge = DealSettlementChallenge.address;
-    //
-    // 	deployer.deploy(DealSettlementChallenger, ownerAccount, DealSettlementChallenge.address, {
-    // 		from : ownerAccount
-    // 	}).then(() => {
-    // 		addresses.DealSettlementChallenger = DealSettlementChallenger.address;
-    // 	});
-    // });
-    //
-    // deployer.deploy(Hasher, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.Hasher = Hasher.address;
-    // });
-    //
-    // deployer.deploy(Validator, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.Validator = Validator.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByOrder, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByOrder = FraudChallengeByOrder.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByTrade, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByTrade = FraudChallengeByTrade.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByPayment, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByPayment = FraudChallengeByPayment.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeBySuccessiveTrades, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeBySuccessiveTrades = FraudChallengeBySuccessiveTrades.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeBySuccessivePayments, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeBySuccessivePayments = FraudChallengeBySuccessivePayments.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByPaymentSucceedingTrade, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByPaymentSucceedingTrade = FraudChallengeByPaymentSucceedingTrade.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByTradeSucceedingPayment, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByTradeSucceedingPayment = FraudChallengeByTradeSucceedingPayment.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByTradeOrderResiduals, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByTradeOrderResiduals = FraudChallengeByTradeOrderResiduals.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByDoubleSpentOrders, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByDoubleSpentOrders = FraudChallengeByDoubleSpentOrders.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByDuplicateDealNonceOfTrades, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByDuplicateDealNonceOfTrades = FraudChallengeByDuplicateDealNonceOfTrades.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByDuplicateDealNonceOfPayments, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByDuplicateDealNonceOfPayments = FraudChallengeByDuplicateDealNonceOfPayments.address;
-    // });
-    //
-    // deployer.deploy(FraudChallengeByDuplicateDealNonceOfTradeAndPayment, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallengeByDuplicateDealNonceOfTradeAndPayment = FraudChallengeByDuplicateDealNonceOfTradeAndPayment.address;
-    // });
-    //
-    // deployer.deploy(FraudChallenge, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    //    addresses.FraudChallenge = FraudChallenge.address;
-    // });
-    //
-    // deployer.deploy(ReserveFund, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.ReserveFund1 = ReserveFund.address;
-    // });
-    //
-    // deployer.deploy(ReserveFund, ownerAccount, {
-    // 	from : ownerAccount,
-    // 	overwrite : true
-    // }).then(() => {
-    // 	addresses.ReserveFund2 = ReserveFund.address;
-    // });
-    //
-    // deployer.deploy(RevenueFund, ownerAccount, {
-    // 	from : ownerAccount
-    // }).then(() => {
-    // 	addresses.RevenueFund1 = RevenueFund.address;
-    // });
-    //
-    // deployer.deploy(RevenueFund, ownerAccount, {
-    // 	from : ownerAccount,
-    // 	overwrite : true
-    // }).then(() => {
-    // 	addresses.RevenueFund2 = RevenueFund.address;
-    // });
+    deployer.link(SafeMathUintLib, [
+        Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
+    ]);
+
+    deployer.link(Types, [
+        Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger,
+        FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
+        FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
+        FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDealNonceOfTrades,
+        FraudChallengeByDuplicateDealNonceOfPayments, FraudChallengeByDuplicateDealNonceOfTradeAndPayment, FraudChallenge
+    ]);
+
+    deployer.deploy(ClientFund, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.ClientFund = ClientFund.address;
+    });
+
+    deployer.deploy(CommunityVote, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.CommunityVote = CommunityVote.address;
+    });
+
+    deployer.deploy(Configuration, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.Configuration = Configuration.address;
+    });
+
+    deployer.deploy(Exchange, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.Exchange = Exchange.address;
+    });
+
+    deployer.deploy(CancelOrdersChallenge, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.CancelOrdersChallenge = CancelOrdersChallenge.address;
+    });
+
+    deployer.deploy(DealSettlementChallenge, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.DealSettlementChallenge = DealSettlementChallenge.address;
+
+        deployer.deploy(DealSettlementChallenger, ownerAccount, DealSettlementChallenge.address, {
+            from: ownerAccount
+        }).then(() => {
+            addresses.DealSettlementChallenger = DealSettlementChallenger.address;
+        });
+    });
+
+    deployer.deploy(Hasher, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.Hasher = Hasher.address;
+    });
+
+    deployer.deploy(Validator, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.Validator = Validator.address;
+    });
+
+    deployer.deploy(FraudChallengeByOrder, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByOrder = FraudChallengeByOrder.address;
+    });
+
+    deployer.deploy(FraudChallengeByTrade, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByTrade = FraudChallengeByTrade.address;
+    });
+
+    deployer.deploy(FraudChallengeByPayment, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByPayment = FraudChallengeByPayment.address;
+    });
+
+    deployer.deploy(FraudChallengeBySuccessiveTrades, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeBySuccessiveTrades = FraudChallengeBySuccessiveTrades.address;
+    });
+
+    deployer.deploy(FraudChallengeBySuccessivePayments, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeBySuccessivePayments = FraudChallengeBySuccessivePayments.address;
+    });
+
+    deployer.deploy(FraudChallengeByPaymentSucceedingTrade, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByPaymentSucceedingTrade = FraudChallengeByPaymentSucceedingTrade.address;
+    });
+
+    deployer.deploy(FraudChallengeByTradeSucceedingPayment, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByTradeSucceedingPayment = FraudChallengeByTradeSucceedingPayment.address;
+    });
+
+    deployer.deploy(FraudChallengeByTradeOrderResiduals, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByTradeOrderResiduals = FraudChallengeByTradeOrderResiduals.address;
+    });
+
+    deployer.deploy(FraudChallengeByDoubleSpentOrders, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByDoubleSpentOrders = FraudChallengeByDoubleSpentOrders.address;
+    });
+
+    deployer.deploy(FraudChallengeByDuplicateDealNonceOfTrades, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByDuplicateDealNonceOfTrades = FraudChallengeByDuplicateDealNonceOfTrades.address;
+    });
+
+    deployer.deploy(FraudChallengeByDuplicateDealNonceOfPayments, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByDuplicateDealNonceOfPayments = FraudChallengeByDuplicateDealNonceOfPayments.address;
+    });
+
+    deployer.deploy(FraudChallengeByDuplicateDealNonceOfTradeAndPayment, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallengeByDuplicateDealNonceOfTradeAndPayment = FraudChallengeByDuplicateDealNonceOfTradeAndPayment.address;
+    });
+
+    deployer.deploy(FraudChallenge, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.FraudChallenge = FraudChallenge.address;
+    });
+
+    deployer.deploy(ReserveFund, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.ReserveFund1 = ReserveFund.address;
+    });
+
+    deployer.deploy(ReserveFund, ownerAccount, {
+        from: ownerAccount,
+        overwrite: true
+    }).then(() => {
+        addresses.ReserveFund2 = ReserveFund.address;
+    });
+
+    deployer.deploy(RevenueFund, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.RevenueFund1 = RevenueFund.address;
+    });
+
+    deployer.deploy(RevenueFund, ownerAccount, {
+        from: ownerAccount,
+        overwrite: true
+    }).then(() => {
+        addresses.RevenueFund2 = RevenueFund.address;
+    });
 
     deployer.deploy(SecurityBond, ownerAccount, {
         from: ownerAccount
     }).then(() => {
         addresses.SecurityBond = SecurityBond.address;
-        // });
-        //
-        // deployer.deploy(TokenHolderRevenueFund, ownerAccount, {
-        // 	from : ownerAccount
-        // }).then(() => {
-        // 	addresses.TokenHolderRevenueFund = TokenHolderRevenueFund.address;
+    });
+
+    deployer.deploy(TokenHolderRevenueFund, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.TokenHolderRevenueFund = TokenHolderRevenueFund.address;
 
         saveAddresses(deployer, addresses);
     });
