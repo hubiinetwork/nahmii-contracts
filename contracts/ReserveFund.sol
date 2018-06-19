@@ -115,7 +115,7 @@ contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfD
     event StageEvent(address wallet, int256 amount, address token); //token==0 for ethers
     event StageToEvent(address from, int256 amount, address token, address beneficiary); //token==0 for ethers
     event WithdrawEvent(address wallet, int256 amount, address token); //token==0 for ethers
-    event TwoWayTransferEvent(address wallet, address inboundCurrency, int256 inboundAmount, address outboundCurrency, int256 outboundAmount);
+    event TwoWayTransferEvent(address wallet, address currency, int256 amount);
     event ClaimAccrualEvent(address token); //token==0 for ethers
     event CloseAccrualPeriodEvent();
     event ChangeClientFundEvent(address oldClientFund, address newClientFund);
@@ -480,57 +480,54 @@ contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfD
         return (currency == address(0) ? amount <= aggregatedEtherBalance : amount <= aggregatedTokenBalance[currency]);
     }
 
-    function twoWayTransfer(address wallet, address inboundCurrency, int256 inboundAmount, address outboundCurrency, int256 outboundAmount) public onlyOwner {
+    function twoWayTransfer(address wallet, address currency, int256 amount) public onlyOwner {
         ClientFund sc_clientfund;
         ERC20 erc20_token;
 
         //require (msg.sender == exchangeSmartContract);
         require(clientFund != address(0));
-        require(inboundAmount.isPositiveInt256());
-        require(outboundAmount.isPositiveInt256());
         require(wallet != address(0));
 
         sc_clientfund = ClientFund(clientFund);
 
         // Perform outbound (SC to W) transfers if outbound amount is non-zero
-        if (outboundAmount.isNonZeroPositiveInt256()) {
-            if (outboundCurrency == address(0)) {
-                aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(outboundAmount);
+        if (amount.isNonZeroNegativeInt256()) {
+            int256 amountAbs = amount.abs();
 
-                clientFund.transfer(uint256(outboundAmount));
-                sc_clientfund.reserveFundAddToStaged(wallet, outboundAmount, outboundCurrency);
+            if (currency == address(0)) {
+                aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(amountAbs);
 
-                walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(outboundAmount);
+                clientFund.transfer(uint256(amountAbs));
+                sc_clientfund.reserveFundAddToStaged(wallet, amountAbs, currency);
+
+                walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(amountAbs);
             } else {
-                erc20_token = ERC20(outboundCurrency);
+                erc20_token = ERC20(currency);
 
-                erc20_token.transfer(clientFund, uint256(outboundAmount));
-                sc_clientfund.reserveFundAddToStaged(wallet, outboundAmount, outboundCurrency);
+                erc20_token.transfer(clientFund, uint256(amountAbs));
+                sc_clientfund.reserveFundAddToStaged(wallet, amountAbs, currency);
 
-                aggregatedTokenBalance[outboundCurrency] = aggregatedTokenBalance[outboundCurrency].sub_nn(outboundAmount);
+                aggregatedTokenBalance[currency] = aggregatedTokenBalance[currency].sub_nn(amountAbs);
             }
         }
 
         // Perform inbound (w to SC) transfers if inbound amount is non-zero
-        if (inboundAmount.isNonZeroPositiveInt256()) {
-            if (inboundCurrency == address(0)) {
-                sc_clientfund.reserveFundGetFromDeposited(wallet, inboundAmount, inboundCurrency);
+        if (amount.isNonZeroPositiveInt256()) {
+            if (currency == address(0)) {
+                sc_clientfund.reserveFundGetFromDeposited(wallet, amount, currency);
 
-                aggregatedEtherBalance = aggregatedEtherBalance.add_nn(inboundAmount);
+                aggregatedEtherBalance = aggregatedEtherBalance.add_nn(amount);
             } else {
-                sc_clientfund.reserveFundGetFromDeposited(wallet, inboundAmount, inboundCurrency);
+                sc_clientfund.reserveFundGetFromDeposited(wallet, amount, currency);
 
-                aggregatedTokenBalance[inboundCurrency] = aggregatedTokenBalance[inboundCurrency].add_nn(inboundAmount);
+                aggregatedTokenBalance[currency] = aggregatedTokenBalance[currency].add_nn(amount);
             }
         }
 
         //raise event
-        emit TwoWayTransferEvent(wallet, inboundCurrency, inboundAmount, outboundCurrency, outboundAmount);
+        emit TwoWayTransferEvent(wallet, currency, amount);
     }
 
-    //
-    // Debugging helper functions
-    // -----------------------------------------------------------------------------------------------------------------
     function debugBalanceBlocksIn(address wallet, address token, uint256 startBlock, uint256 endBlock) external view onlyOwner returns (int256) {
         return internalBalanceBlocksIn(wallet, token, startBlock, endBlock);
     }

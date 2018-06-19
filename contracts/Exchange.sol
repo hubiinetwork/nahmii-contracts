@@ -203,20 +203,21 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
             Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
-            int256 partyInboundTransferIntended;
-            int256 partyInboundTransferConjugate;
-            if ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
-                || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole))
-                partyInboundTransferIntended = trade.transfers.intended.net.abs();
-            if ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
-                || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole))
-                partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
+            // Positive transfer of intended currency defined as being from trade seller to buyer
+            bool transferIntendedToParty = ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
+            || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole));
+            int256 transferIntendedAbs = trade.transfers.intended.net.abs();
+
+            // Positive transfer of conjugate currency defined as being from trade buyer to seller
+            bool transferConjugateToParty = ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
+            || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole));
+            int256 transferConjugateAbs = trade.transfers.conjugate.net.abs();
 
             if (!trade.immediateSettlement &&
-            tradesReserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended) &&
-            tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, partyInboundTransferConjugate)) {
-                // TODO Uncomment
-                // tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
+            (!transferIntendedToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.intended, transferIntendedAbs)) &&
+            (!transferConjugateToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, transferConjugateAbs))) {
+                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, transferIntendedToParty ? transferIntendedAbs.mul(-1) : transferIntendedAbs);
+                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.conjugate, transferConjugateToParty ? transferConjugateAbs.mul(-1) : transferConjugateAbs);
                 addOneSidedSettlementFromTrade(trade, wallet);
             } else {
                 settleTradeTransfers(trade);
@@ -266,15 +267,14 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
             Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
-            int256 partyInboundTransfer;
-            if ((0 < payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
-                || (0 > payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole))
-                partyInboundTransfer = payment.transfers.net.abs();
+            // Positive transfer defined as being from payment sender to recipient
+            bool transferToParty = ((0 > payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
+            || (0 < payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole));
+            int256 transferAbs = payment.transfers.net.abs();
 
             if (!payment.immediateSettlement &&
-            paymentsReserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)) {
-                // TODO Uncomment
-                // paymentsReserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
+            (!transferToParty || paymentsReserveFund.outboundTransferSupported(payment.currency, transferAbs))) {
+                paymentsReserveFund.twoWayTransfer(wallet, payment.currency, transferToParty ? transferAbs.mul(-1) : transferAbs);
                 addOneSidedSettlementFromPayment(payment, wallet);
             } else {
                 settlePaymentTransfers(payment);

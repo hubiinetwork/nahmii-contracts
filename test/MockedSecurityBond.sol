@@ -12,8 +12,8 @@ pragma experimental ABIEncoderV2;
 //import "../contracts/SecurityBond.sol";
 
 /**
-@title Security bond
-@notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
+@title Mocked security bond
+@notice Mocked implementation of security bond contract
 */
 contract MockedSecurityBond /*is SecurityBond*/ {
 
