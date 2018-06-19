@@ -198,33 +198,33 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
         if (Types.ChallengeResult.Qualified == result) {
 
-            if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (trade.nonce < highestAbsoluteDealNonce)) {
+            require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
+                || (trade.nonce < highestAbsoluteDealNonce));
 
-                Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+            Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
-                int256 partyInboundTransferIntended;
-                int256 partyInboundTransferConjugate;
-                if ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
-                    || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole))
-                    partyInboundTransferIntended = trade.transfers.intended.net.abs();
-                if ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
-                    || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole))
-                    partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
+            int256 partyInboundTransferIntended;
+            int256 partyInboundTransferConjugate;
+            if ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
+                || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole))
+                partyInboundTransferIntended = trade.transfers.intended.net.abs();
+            if ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
+                || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole))
+                partyInboundTransferConjugate = trade.transfers.conjugate.net.abs();
 
-                if (!trade.immediateSettlement &&
-                tradesReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(trade.currencies.intended, partyInboundTransferIntended)) &&
-                tradesReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(trade.currencies.conjugate, partyInboundTransferConjugate))) {
-                    // TODO Uncomment and replace last 4 arguments by 2 instances of ReserveFund.TransferInfo
-                    // tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
-                    addOneSidedSettlementFromTrade(trade, wallet);
-                } else {
-                    settleTradeTransfers(trade);
-                    settleTradeFees(trade);
-                    addTwoSidedSettlementFromTrade(trade);
-                }
+            if (!trade.immediateSettlement &&
+            tradesReserveFund.outboundTransferSupported(trade.currencies.intended, partyInboundTransferIntended) &&
+            tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, partyInboundTransferConjugate)) {
+                // TODO Uncomment
+                // tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, partyInboundTransferIntended, trade.currencies.conjugate, partyInboundTransferConjugate);
+                addOneSidedSettlementFromTrade(trade, wallet);
+            } else {
+                settleTradeTransfers(trade);
+                settleTradeFees(trade);
+                addTwoSidedSettlementFromTrade(trade);
+            }
 
-            } else if (trade.nonce > highestAbsoluteDealNonce)
+            if (trade.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = trade.nonce;
 
         } else if (Types.ChallengeResult.Disqualified == result) {
@@ -261,28 +261,28 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
         if (Types.ChallengeResult.Qualified == result) {
 
-            if ((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (payment.nonce < highestAbsoluteDealNonce)) {
+            require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
+                || (payment.nonce < highestAbsoluteDealNonce));
 
-                Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+            Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
-                int256 partyInboundTransfer;
-                if ((0 < payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
-                    || (0 > payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole))
-                    partyInboundTransfer = payment.transfers.net.abs();
+            int256 partyInboundTransfer;
+            if ((0 < payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
+                || (0 > payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole))
+                partyInboundTransfer = payment.transfers.net.abs();
 
-                if (!payment.immediateSettlement &&
-                paymentsReserveFund.outboundTransferSupported(ReserveFund.TransferInfo(payment.currency, partyInboundTransfer))) {
-                    // TODO Uncomment and replace last 2 arguments by 1 instance of ReserveFund.TransferInfo
-                    // paymentsReserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
-                    addOneSidedSettlementFromPayment(payment, wallet);
-                } else {
-                    settlePaymentTransfers(payment);
-                    settlePaymentFees(payment);
-                    addTwoSidedSettlementFromPayment(payment);
-                }
+            if (!payment.immediateSettlement &&
+            paymentsReserveFund.outboundTransferSupported(payment.currency, partyInboundTransfer)) {
+                // TODO Uncomment
+                // paymentsReserveFund.oneWayTransfer(wallet, payment.currency, partyInboundTransfer);
+                addOneSidedSettlementFromPayment(payment, wallet);
+            } else {
+                settlePaymentTransfers(payment);
+                settlePaymentFees(payment);
+                addTwoSidedSettlementFromPayment(payment);
+            }
 
-            } else if (payment.nonce > highestAbsoluteDealNonce)
+            if (payment.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = payment.nonce;
 
         } else if (Types.ChallengeResult.Disqualified == result) {
