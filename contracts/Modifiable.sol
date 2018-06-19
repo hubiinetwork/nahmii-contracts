@@ -16,9 +16,4 @@ contract Modifiable {
         require(_address != address(0));
         _;
     }
-
-    modifier notEqualAddresses(address address1, address address2) {
-        require(address1 != address2);
-        _;
-    }
 }

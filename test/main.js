@@ -16,6 +16,7 @@ const Configuration = artifacts.require("Configuration");
 const Exchange = artifacts.require("Exchange");
 const CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
 const DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
+const DealSettlementChallenger = artifacts.require("DealSettlementChallenger");
 const FraudChallenge = artifacts.require("FraudChallenge");
 const FraudChallengeByOrder = artifacts.require("FraudChallengeByOrder");
 const FraudChallengeByTrade = artifacts.require("FraudChallengeByTrade");
@@ -224,6 +225,17 @@ contract('Smart contract checks', function () {
             glob.web3DealSettlementChallenge = await DealSettlementChallenge.deployed();
             assert.notEqual(glob.web3DealSettlementChallenge, null);
             glob.ethersIoDealSettlementChallenge = new ethers.Contract(glob.web3DealSettlementChallenge.address, DealSettlementChallenge.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate DealSettlementChallenge contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate DealSettlementChallenger contract", async () => {
+        try {
+            glob.web3DealSettlementChallenger = await DealSettlementChallenger.deployed();
+            assert.notEqual(glob.web3DealSettlementChallenger, null);
+            glob.ethersIoDealSettlementChallenger = new ethers.Contract(glob.web3DealSettlementChallenger.address, DealSettlementChallenger.abi, glob.signer_owner);
         }
         catch (err) {
             assert(false, 'Failed to instantiate DealSettlementChallenge contract address. [Error: ' + err.toString() + ']');
@@ -482,8 +494,9 @@ contract('Smart contract checks', function () {
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
     // require('./scenarios/Exchange')(glob);
-    // require('./scenarios/CancelOrdersChallenge')(glob);
-    // require('./scenarios/DealSettlementChallenge')(glob);
+	// require('./scenarios/CancelOrdersChallenge')(glob);
+	require('./scenarios/DealSettlementChallenge')(glob);
+	/*
     require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
     require('./scenarios/FraudChallengeByTrade')(glob);
@@ -496,9 +509,10 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
     require('./scenarios/FraudChallengeByDuplicateDealNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDealNonceOfPayments')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTradeAndPayment')(glob);
-    // require('./scenarios/ReserveFund')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTradeAndPayment')(glob);*/
+	require('./scenarios/ReserveFund')(glob);
+	/*
     require('./scenarios/RevenueFund')(glob);
-    // require('./scenarios/SecurityBond')(glob);
-    // require('./scenarios/TokenHolderRevenueFund')(glob);
+    require('./scenarios/SecurityBond')(glob);
+    require('./scenarios/TokenHolderRevenueFund')(glob);*/
 });

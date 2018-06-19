@@ -59,7 +59,6 @@ contract CancelOrdersChallenge is Ownable, SelfDestructible {
     public
     onlyOwner
     notNullAddress(newConfiguration)
-    notEqualAddresses(newConfiguration, configuration)
     {
         Configuration oldConfiguration = configuration;
         configuration = newConfiguration;
@@ -72,7 +71,6 @@ contract CancelOrdersChallenge is Ownable, SelfDestructible {
     public
     onlyOwner
     notNullAddress(newValidator)
-    notEqualAddresses(newValidator, validator)
     {
         Validator oldValidator = validator;
         validator = newValidator;
@@ -178,11 +176,6 @@ contract CancelOrdersChallenge is Ownable, SelfDestructible {
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier notEqualAddresses(address address1, address address2) {
-        require(address1 != address2);
         _;
     }
 }

@@ -17,7 +17,7 @@ import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import "./Servable.sol";
-import "./ClientFund.sol";
+import {ClientFund} from "./ClientFund.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**

@@ -267,9 +267,9 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
  
-		it(testCounter.next() + ": MUST FAIL [registerService]: Register UnitTestHelpers_FAIL SC as a service from non-owner", async() => {
+		it(testCounter.next() + ": MUST FAIL [registerServiceAction]: Register UnitTestHelpers_FAIL SC as a service from non-owner", async() => {
 			try {
-				await glob.web3SecurityBond.registerService(glob.web3UnitTestHelpers_FAIL_TESTS.address, { from: glob.user_a });
+				await glob.web3SecurityBond.registerServiceAction(glob.web3UnitTestHelpers_FAIL_TESTS.address, "stage", { from: glob.user_a });
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
@@ -279,9 +279,9 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [registerService]: Register UnitTestHelpers_SUCCESS SC as a service", async() => {
+		it(testCounter.next() + ": MUST SUCCEED [registerServiceAction]: Register UnitTestHelpers_SUCCESS SC as a service", async() => {
 			try {
-				await glob.web3SecurityBond.registerService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
+				await glob.web3SecurityBond.registerServiceAction(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, "stage");
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');

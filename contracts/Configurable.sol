@@ -30,7 +30,6 @@ contract Configurable is Ownable, Modifiable {
     public
     onlyOwner
     notNullAddress(newConfiguration)
-    notEqualAddresses(newConfiguration, configuration)
     {
         Configuration oldConfiguration = configuration;
         configuration = newConfiguration;

@@ -81,7 +81,6 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     public
     onlyOwner
     notNullAddress(newCancelOrdersChallenge)
-    notEqualAddresses(newCancelOrdersChallenge, cancelOrdersChallenge)
     {
         CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
         cancelOrdersChallenge = newCancelOrdersChallenge;

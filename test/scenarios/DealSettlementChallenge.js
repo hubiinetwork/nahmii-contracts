@@ -11,7 +11,8 @@ chai.should();
 
 module.exports = (glob) => {
     describe('DealSettlementChallenge', () => {
-        let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
+		let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
+		let web3DealSettlementChallenger, ethersDealSettlementChallengerOwner;
         let web3Hasher, ethersHasher;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
@@ -25,6 +26,8 @@ module.exports = (glob) => {
         before(async () => {
             web3DealSettlementChallenge = glob.web3DealSettlementChallenge;
             ethersDealSettlementChallengeOwner = glob.ethersIoDealSettlementChallenge;
+            web3DealSettlementChallenger = glob.web3DealSettlementChallenger;
+            ethersDealSettlementChallengerOwner = glob.ethersIoDealSettlementChallenger;
             web3Hasher = glob.web3Hasher;
             ethersHasher = glob.ethersIoHasher;
             web3Configuration = glob.web3Configuration;
@@ -45,16 +48,13 @@ module.exports = (glob) => {
             provider = glob.signer_owner.provider;
 
             await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(mocks.address0, 1000);
-
-            await ethersValidator.changeConfiguration(ethersConfiguration.address);
+			await ethersValidator.changeConfiguration(ethersConfiguration.address);
             await ethersValidator.changeHasher(ethersHasher.address);
-
-            await ethersDealSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
-            await ethersDealSettlementChallengeOwner.changeValidator(ethersValidator.address);
-            await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
-            await ethersDealSettlementChallengeOwner.changeCancelOrdersChallenge(ethersCancelOrdersChallengeOwner.address);
-
-            await ethersCancelOrdersChallengeOwner.changeConfiguration(ethersConfiguration.address);
+			await ethersDealSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
+			await ethersDealSettlementChallengeOwner.changeValidator(ethersValidator.address);
+			await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
+			await ethersDealSettlementChallengeOwner.changeCancelOrdersChallenge(ethersCancelOrdersChallengeOwner.address);
+			await ethersCancelOrdersChallengeOwner.changeConfiguration(ethersConfiguration.address);
         });
 
         beforeEach(async () => {
@@ -280,11 +280,11 @@ module.exports = (glob) => {
             let overrideOptions, trade, topic, filter;
 
             before(async () => {
-                overrideOptions = {gasLimit: 2e6};
+                overrideOptions = {gasLimit: 4e6};
             });
 
             beforeEach(async () => {
-                topic = ethersDealSettlementChallengeOwner.interface.events.StartChallengeFromTradeEvent.topics[0];
+                topic = ethersDealSettlementChallengeOwner.interface.events['StartChallengeFromTradeEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -345,7 +345,7 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                topic = ethersDealSettlementChallengeOwner.interface.events.StartChallengeFromPaymentEvent.topics[0];
+                topic = ethersDealSettlementChallengeOwner.interface.events['StartChallengeFromPaymentEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -498,7 +498,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
 
-                topic = ethersDealSettlementChallengeOwner.interface.events.ChallengeByOrderEvent.topics[0];
+                topic = ethersDealSettlementChallengerOwner.interface.events['ChallengeByOrderEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -621,15 +621,26 @@ module.exports = (glob) => {
                         });
 
                         it('should disqualify challenged deal, update challenge with challenger and emit event', async () => {
+							console.log("A-1");
                             await ethersDealSettlementChallengeUserA.challengeByOrder(order, overrideOptions);
-                            const logs = await provider.getLogs(filter);
+							console.log("A0");
+							const logs = await provider.getLogs(filter);
+							console.log("A1");
+							console.log(logs);
                             logs[logs.length - 1].topics[0].should.equal(topic);
-                            const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidateOrdersCount();
+							console.log("A2");
+							const candidatesCount = await ethersDealSettlementChallengeOwner.challengeCandidateOrdersCount();
+							console.log("A3");
                             const dealSettlementChallenge = await ethersDealSettlementChallengeOwner.walletChallengeMap(trade.buyer.wallet);
+							console.log("A4");
                             dealSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+							console.log("A5");
                             dealSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
+							console.log("A6");
                             dealSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
+							console.log("A7");
                             dealSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
+							console.log("A8");
                         });
                     });
 
@@ -782,7 +793,7 @@ module.exports = (glob) => {
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
                 await ethersSecurityBond.reset(overrideOptions);
 
-                topic = ethersDealSettlementChallengeOwner.interface.events.UnchallengeOrderCandidateByTradeEvent.topics[0];
+                topic = ethersDealSettlementChallengerOwner.interface.events['UnchallengeOrderCandidateByTradeEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -945,7 +956,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
 
-                topic = ethersDealSettlementChallengeOwner.interface.events.ChallengeByTradeEvent.topics[0];
+                topic = ethersDealSettlementChallengerOwner.interface.events['ChallengeByTradeEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -1143,7 +1154,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
 
-                topic = ethersDealSettlementChallengeOwner.interface.events.ChallengeByPaymentEvent.topics[0];
+                topic = ethersDealSettlementChallengerOwner.interface.events['ChallengeByPaymentEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]

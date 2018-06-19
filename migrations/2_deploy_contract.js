@@ -83,10 +83,10 @@ module.exports = function (deployer, network, accounts) {
 
 	deployer.link(Types, [
 		Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger, 
-    FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
-    FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
-    FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDealNonceOfTrades,
-    FraudChallengeByDuplicateDealNonceOfPayments,FraudChallengeByDuplicateDealNonceOfTradeAndPayment, FraudChallenge
+		FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
+		FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
+		FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDealNonceOfTrades,
+		FraudChallengeByDuplicateDealNonceOfPayments,FraudChallengeByDuplicateDealNonceOfTradeAndPayment, FraudChallenge
 	]);
 
 	deployer.deploy(ClientFund, ownerAccount, {
@@ -124,10 +124,17 @@ module.exports = function (deployer, network, accounts) {
 	}).then(() => {
 		addresses.DealSettlementChallenge = DealSettlementChallenge.address;
 
-		deployer.deploy(DealSettlementChallenger, ownerAccount, DealSettlementChallenge.address, {
+		return deployer.deploy(DealSettlementChallenger, ownerAccount, DealSettlementChallenge.address, {
 			from : ownerAccount
-		}).then(() => {
-			addresses.DealSettlementChallenger = DealSettlementChallenger.address;
+		})
+	}).then(() => {
+		addresses.DealSettlementChallenger = DealSettlementChallenger.address;
+
+		return DealSettlementChallenge.deployed();
+	}).then((web3DealSettlementChallenge) => {
+
+		return web3DealSettlementChallenge.setDealSettlementChallenger(DealSettlementChallenger.address, {
+			from : ownerAccount
 		});
 	});
 
@@ -158,32 +165,32 @@ module.exports = function (deployer, network, accounts) {
     deployer.deploy(FraudChallengeByPayment, ownerAccount, {
 		from : ownerAccount
 	}).then(() => {
-        addresses.FraudChallengeByPayment = FraudChallengeByPayment.address;
-    });
+		addresses.FraudChallengeByPayment = FraudChallengeByPayment.address;
+	});
 
-    deployer.deploy(FraudChallengeBySuccessiveTrades, ownerAccount, {
+	deployer.deploy(FraudChallengeBySuccessiveTrades, ownerAccount, {
 		from : ownerAccount
 	}).then(() => {
-        addresses.FraudChallengeBySuccessiveTrades = FraudChallengeBySuccessiveTrades.address;
-    });
+		addresses.FraudChallengeBySuccessiveTrades = FraudChallengeBySuccessiveTrades.address;
+	});
 
-    deployer.deploy(FraudChallengeBySuccessivePayments, ownerAccount, {
+	deployer.deploy(FraudChallengeBySuccessivePayments, ownerAccount, {
 		from : ownerAccount
 	}).then(() => {
-        addresses.FraudChallengeBySuccessivePayments = FraudChallengeBySuccessivePayments.address;
-    });
+		addresses.FraudChallengeBySuccessivePayments = FraudChallengeBySuccessivePayments.address;
+	});
 
-    deployer.deploy(FraudChallengeByPaymentSucceedingTrade, ownerAccount, {
+	deployer.deploy(FraudChallengeByPaymentSucceedingTrade, ownerAccount, {
 		from : ownerAccount
 	}).then(() => {
-        addresses.FraudChallengeByPaymentSucceedingTrade = FraudChallengeByPaymentSucceedingTrade.address;
-    });
+		addresses.FraudChallengeByPaymentSucceedingTrade = FraudChallengeByPaymentSucceedingTrade.address;
+	});
 
-    deployer.deploy(FraudChallengeByTradeSucceedingPayment, ownerAccount, {
+	deployer.deploy(FraudChallengeByTradeSucceedingPayment, ownerAccount, {
 		from : ownerAccount
 	}).then(() => {
-        addresses.FraudChallengeByTradeSucceedingPayment = FraudChallengeByTradeSucceedingPayment.address;
-    });
+		addresses.FraudChallengeByTradeSucceedingPayment = FraudChallengeByTradeSucceedingPayment.address;
+	});
 
     deployer.deploy(FraudChallengeByTradeOrderResiduals, ownerAccount, {
 		from : ownerAccount
@@ -258,8 +265,8 @@ module.exports = function (deployer, network, accounts) {
 	}).then(() => {
 		addresses.TokenHolderRevenueFund = TokenHolderRevenueFund.address;
 
-        saveAddresses(deployer, addresses);
-    });
+		saveAddresses(deployer, addresses);
+	});
 };
 
 function saveAddresses(deployer, addresses)
