@@ -18,7 +18,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Security bond
-@notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
+@notice Fund that contains crypto incentive for challenging operator fraud.
 */
 contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible {
     using SafeMathInt for int256;
