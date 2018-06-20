@@ -8,9 +8,9 @@
 
 pragma solidity ^0.4.24;
 
-import './ERC20.sol';
-import './SafeMathUint.sol';
-import './Ownable.sol';
+import {ERC20} from "./ERC20.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
+import {Ownable} from "./Ownable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
@@ -239,8 +239,8 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
         uint256 res;
         uint256 h;
 
-        require (startBlock < endBlock);
-        require (wallet != address(0));
+        require(startBlock < endBlock);
+        require(wallet != address(0));
 
         uint256[] storage _balanceBlocks = balanceBlocks[wallet];
         uint256[] storage _balanceBlockNumbers = balanceBlockNumbers[wallet];
@@ -255,7 +255,7 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
         }
 
         if (idx >= _balanceBlockNumbers.length) {
-            res = _balanceBlocks[_balanceBlockNumbers.length - 1].mul( endBlock.sub(startBlock) );
+            res = _balanceBlocks[_balanceBlockNumbers.length - 1].mul(endBlock.sub(startBlock));
         }
         else {
             low = (idx == 0) ? startBlock : _balanceBlockNumbers[idx - 1];
@@ -266,7 +266,7 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
             }
 
             h = h.sub(startBlock);
-            res = (h == 0) ? 0 : beta(wallet, idx).mul( h ).div( _balanceBlockNumbers[idx].sub(low) );
+            res = (h == 0) ? 0 : beta(wallet, idx).mul(h).div(_balanceBlockNumbers[idx].sub(low));
             idx++;
 
             while (idx < _balanceBlockNumbers.length && _balanceBlockNumbers[idx] < endBlock) {
@@ -275,9 +275,9 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
             }
 
             if (idx >= _balanceBlockNumbers.length) {
-                res = res.add(_balanceBlocks[_balanceBlockNumbers.length - 1].mul( endBlock.sub(_balanceBlockNumbers[_balanceBlockNumbers.length - 1]) ));
+                res = res.add(_balanceBlocks[_balanceBlockNumbers.length - 1].mul(endBlock.sub(_balanceBlockNumbers[_balanceBlockNumbers.length - 1])));
             } else if (_balanceBlockNumbers[idx - 1] < endBlock) {
-                res = res.add(beta(wallet, idx).mul( endBlock.sub(_balanceBlockNumbers[idx - 1]) ).div( _balanceBlockNumbers[idx].sub(_balanceBlockNumbers[idx - 1]) ));
+                res = res.add(beta(wallet, idx).mul(endBlock.sub(_balanceBlockNumbers[idx - 1])).div(_balanceBlockNumbers[idx].sub(_balanceBlockNumbers[idx - 1])));
             }
         }
 
@@ -308,7 +308,7 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
             holderEnumIndex++;
         }
 
-        return  _holders;
+        return _holders;
     }
 
     //
@@ -318,7 +318,7 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
         uint256 len;
 
         len = balanceBlockNumbers[msg.sender].length;
-        balanceBlocks[msg.sender].push(balances[msg.sender].mul(block.number.sub(len > 0 ? balanceBlockNumbers[msg.sender][len- 1] : 0)));
+        balanceBlocks[msg.sender].push(balances[msg.sender].mul(block.number.sub(len > 0 ? balanceBlockNumbers[msg.sender][len - 1] : 0)));
         balanceBlockNumbers[msg.sender].push(block.number);
 
         len = balanceBlockNumbers[_to].length;

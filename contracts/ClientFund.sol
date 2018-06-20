@@ -9,18 +9,17 @@
 pragma solidity ^0.4.24;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import "./Ownable.sol";
-import "./ERC20.sol";
-import "./Beneficiary.sol";
-import "./Benefactor.sol";
-import "./ReserveFund.sol";
-import "./Servable.sol";
+import {Ownable} from "./Ownable.sol";
+import {ERC20} from "./ERC20.sol";
+import {Beneficiary} from "./Beneficiary.sol";
+import {Benefactor} from "./Benefactor.sol";
+import {ReserveFund} from "./ReserveFund.sol";
+import {Servable} from "./Servable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
-@dev Factored out from previous Trade smart contract.
 */
 contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructible {
     using SafeMathInt for int256;

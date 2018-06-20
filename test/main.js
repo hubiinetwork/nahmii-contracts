@@ -509,7 +509,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
     require('./scenarios/FraudChallengeByDuplicateDealNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDealNonceOfPayments')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTradeAndPayment')(glob);*/
+    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTradeAndPayment')(glob);
 	require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);

@@ -8,13 +8,14 @@
 
 pragma solidity ^0.4.24;
 
+import {Ownable} from "./Ownable.sol";
+import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
+import {Servable} from "./Servable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import "./Ownable.sol";
-import "./RevenueToken.sol";
-import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
-import "./Servable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {RevenueToken} from "./RevenueToken.sol";
+import {ERC20} from "./ERC20.sol";
 
 /**
 @title Token holder revenue fund

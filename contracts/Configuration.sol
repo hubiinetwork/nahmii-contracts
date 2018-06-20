@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import "./Ownable.sol";
+import {Ownable} from "./Ownable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**

@@ -9,12 +9,12 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import "./SafeMathInt.sol";
-import "./Ownable.sol";
+import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
-import "./ERC20.sol";
-import "./Servable.sol";
+import {Servable} from "./Servable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {ERC20} from "./ERC20.sol";
 
 /**
 @title Security bond

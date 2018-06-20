@@ -9,8 +9,8 @@
 pragma solidity ^0.4.24;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import "./Ownable.sol";
-import "./ERC20.sol";
+import {Ownable} from "./Ownable.sol";
+import {ERC20} from "./ERC20.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
