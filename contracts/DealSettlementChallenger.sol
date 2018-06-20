@@ -10,8 +10,8 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import "./Ownable.sol";
-import "./Types.sol";
+import {Ownable} from "./Ownable.sol";
+import {Types} from "./Types.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
@@ -21,8 +21,8 @@ import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
-@title Exchange
-@notice The orchestrator of trades and payments on-chain.
+@title DealSettlementChallenger
+@notice The workhorse of deal settlement challenges, utilized by DealSettlementChallenge
 */
 contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validatable, SecurityBondable, SelfDestructible {
     using SafeMathInt for int256;
@@ -30,9 +30,8 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
+    DealSettlementChallenge public dealSettlementChallenge;
     CancelOrdersChallenge public cancelOrdersChallenge;
-
-    address private dealSettlementChallenge;
 
     //
     // Events
@@ -64,8 +63,10 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
 
     /// @notice Challenge the deal settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged deal
-    function challengeByOrder(Types.Order order, address original_sender)
+    /// @param wallet The address of the concerned wallet
+    function challengeByOrder(Types.Order order, address wallet)
     public
+    validatorInitialized
     onlyController
     onlySealedOrder(order)
     {
@@ -82,10 +83,10 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
         address orderCurrency;
         int256 orderAmount;
         (orderCurrency, orderAmount) = (Types.Intention.Sell == order.placement.intention ? (order.placement.currencies.intended, order.placement.amount)
-                                                                                          : (order.placement.currencies.conjugate, order.placement.amount.div(order.placement.rate)));
+        : (order.placement.currencies.conjugate, order.placement.amount.div(order.placement.rate)));
 
         int256 balance = (Types.DealType.Trade == challenge.dealType ? getTradeBalance(DealSettlementChallenge(dealSettlementChallenge).getWalletChallengeTradesMap(order.wallet, challenge.dealIndex), order.wallet, orderCurrency)
-                                                                     : getPaymentBalance(DealSettlementChallenge(dealSettlementChallenge).getWalletChallengePaymentsMap(order.wallet, challenge.dealIndex), order.wallet, orderCurrency));
+        : getPaymentBalance(DealSettlementChallenge(dealSettlementChallenge).getWalletChallengePaymentsMap(order.wallet, challenge.dealIndex), order.wallet, orderCurrency));
 
         require(orderAmount > balance);
 
@@ -94,11 +95,11 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
         challenge.result = Types.ChallengeResult.Disqualified;
         challenge.candidateType = DealSettlementChallenge.ChallengeCandidateType.Order;
         challenge.candidateIndex = DealSettlementChallenge(dealSettlementChallenge).getChallengeCandidateOrdersLength() - 1;
-        challenge.challenger = cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash) ? address(0) : original_sender;
+        challenge.challenger = cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash) ? address(0) : wallet;
         DealSettlementChallenge(dealSettlementChallenge).setWalletChallengeMap(order.wallet, challenge);
 
         //raise event
-        emit ChallengeByOrderEvent(order, challenge.nonce, challenge.dealType, original_sender);
+        emit ChallengeByOrderEvent(order, challenge.nonce, challenge.dealType, wallet);
     }
 
     /// @notice Unchallenge deal settlement by providing trade that shows that challenge order candidate has been filled
@@ -290,7 +291,7 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
     }
 
     modifier onlyController() {
-        require(msg.sender == dealSettlementChallenge);
+        require(msg.sender == address(dealSettlementChallenge));
         _;
     }
 }

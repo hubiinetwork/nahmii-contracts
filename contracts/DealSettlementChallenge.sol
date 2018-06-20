@@ -10,21 +10,19 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import "./Ownable.sol";
-import "./Types.sol";
+import {Ownable} from "./Ownable.sol";
+import {Types} from "./Types.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Validatable, Validator} from "./Validatable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
+import {Validatable} from "./Validatable.sol";
 import {DealSettlementChallenger} from "./DealSettlementChallenger.sol";
-import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
-@title Exchange
-@notice The orchestrator of trades and payments on-chain.
+@title DealSettlementChallenge
+@notice Where deal settlements are challenged
 */
-contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatable, SecurityBondable, SelfDestructible {
+contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatable, SelfDestructible {
     using SafeMathInt for int256;
 
     //
@@ -46,7 +44,7 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    CancelOrdersChallenge public cancelOrdersChallenge;
+    DealSettlementChallenger public dealSettlementChallenger;
 
     mapping(address => Challenge) public walletChallengeMap;
 
@@ -57,12 +55,10 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     Types.Trade[] public challengeCandidateTrades;
     Types.Payment[] public challengeCandidatePayments;
 
-    address private dealSettlementChallenger;
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
+    event ChangeDealSettlementChallengerEvent(DealSettlementChallenger oldDealSettlementChallenger, DealSettlementChallenger newDealSettlementChallenger);
     event StartChallengeFromTradeEvent(Types.Trade trade, address wallet);
     event StartChallengeFromPaymentEvent(Types.Payment payment, address wallet);
 
@@ -75,24 +71,16 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the cancel orders challenge contract
-    /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
-    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
+    /// @notice Change the deal settlement challenger contract
+    /// @param newDealSettlementChallenger The (address of) DealSettlementChallenger contract instance
+    function changeDealSettlementChallenger(DealSettlementChallenger newDealSettlementChallenger)
     public
     onlyOwner
-    notNullAddress(newCancelOrdersChallenge)
+    notNullAddress(newDealSettlementChallenger)
     {
-        CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
-        cancelOrdersChallenge = newCancelOrdersChallenge;
-        emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
-    }
-
-    /// @notice Set the child implementers
-    /// @param _dealSettlementChallenger The (address of) DealSettlementChallenger contract instance
-    function setDealSettlementChallenger(address _dealSettlementChallenger) public onlyOwner notNullAddress(_dealSettlementChallenger) {
-        require(dealSettlementChallenger == address(0));
-
-        dealSettlementChallenger = _dealSettlementChallenger;
+        DealSettlementChallenger oldDealSettlementChallenger = dealSettlementChallenger;
+        dealSettlementChallenger = newDealSettlementChallenger;
+        emit ChangeDealSettlementChallengerEvent(oldDealSettlementChallenger, dealSettlementChallenger);
     }
 
     /// @notice Get the number of current and past deal settlement challenges from trade for given wallet
@@ -229,32 +217,32 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     /// @notice Challenge the deal settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged deal
     function challengeByOrder(Types.Order order) public {
-        DealSettlementChallenger(dealSettlementChallenger).challengeByOrder(order, msg.sender);
+        dealSettlementChallenger.challengeByOrder(order, msg.sender);
     }
 
     /// @notice Unchallenge deal settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged deal
     /// @param trade The trade in which order has been filled
     function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade) public {
-        DealSettlementChallenger(dealSettlementChallenger).unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+        dealSettlementChallenger.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing trade candidate
     /// @param trade The trade candidate that challenges the challenged deal
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeByTrade(Types.Trade trade, address wallet) public {
-        DealSettlementChallenger(dealSettlementChallenger).challengeByTrade(trade, wallet, msg.sender);
+        dealSettlementChallenger.challengeByTrade(trade, wallet, msg.sender);
     }
 
     /// @notice Challenge the deal settlement by providing payment candidate
     /// @param payment The payment candidate that challenges the challenged deal
     /// @param wallet The wallet whose deal settlement is being challenged
     function challengeByPayment(Types.Payment payment, address wallet) public {
-        DealSettlementChallenger(dealSettlementChallenger).challengeByPayment(payment, wallet, msg.sender);
+        dealSettlementChallenger.challengeByPayment(payment, wallet, msg.sender);
     }
 
     //
-    // DealSettlementChallenge implementers helpers
+    // Helpers for DealSettlementChallenger
     // -----------------------------------------------------------------------------------------------------------------
     function getWalletChallengeMap(address wallet) public view onlyDealSettlementChallenger returns (Challenge) {
         return walletChallengeMap[wallet];
@@ -296,15 +284,11 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
         return challengeCandidatePayments.length;
     }
 
-    function getValidator() public view onlyDealSettlementChallenger validatorInitialized returns (Validator) {
-        return validator;
-    }
-
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyDealSettlementChallenger() {
-        require(msg.sender == dealSettlementChallenger);
+        require(msg.sender == address(dealSettlementChallenger));
         _;
     }
 }

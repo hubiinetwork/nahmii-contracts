@@ -37,13 +37,13 @@ const TokenHolderRevenueFund = artifacts.require("./TokenHolderRevenueFund.sol")
 const fs = require('fs');
 const path = require('path');
 
-var helpers = require('./helpers.js');
+const helpers = require('./helpers.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = function (deployer, network, accounts) {
 	var ownerAccount;
-	var addresses = {};
+	const addresses = {};
 
 	if (helpers.isTestNetwork(network)) {
 		ownerAccount = accounts[0];
@@ -133,7 +133,7 @@ module.exports = function (deployer, network, accounts) {
 		return DealSettlementChallenge.deployed();
 	}).then((web3DealSettlementChallenge) => {
 
-		return web3DealSettlementChallenge.setDealSettlementChallenger(DealSettlementChallenger.address, {
+		return web3DealSettlementChallenge.changeDealSettlementChallenger(DealSettlementChallenger.address, {
 			from : ownerAccount
 		});
 	});
