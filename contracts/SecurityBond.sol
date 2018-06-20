@@ -11,15 +11,16 @@ pragma experimental ABIEncoderV2;
 
 import "./SafeMathInt.sol";
 import "./Ownable.sol";
+import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import "./ERC20.sol";
 import "./Servable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Security bond
-@notice Fund that contains crypto incentive for function UnchallengeDealSettlementOrderByTrade().s
+@notice Fund that contains crypto incentive for challenging operator fraud.
 */
-contract SecurityBond is Ownable, Servable, SelfDestructible {
+contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible {
     using SafeMathInt for int256;
 
     //
@@ -99,18 +100,26 @@ contract SecurityBond is Ownable, Servable, SelfDestructible {
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
+        receiveEthers(msg.sender);
+    }
+
+    function receiveEthers(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet active balance
         activeEtherBalance = activeEtherBalance.add_nn(amount);
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
+        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
 
         //emit event
-        emit DepositEvent(msg.sender, amount, address(0));
+        emit DepositEvent(wallet, amount, address(0));
+    }
+
+    function depositTokens(address token, int256 amount) public {
+        receiveTokens(msg.sender, amount, token);
     }
 
     //NOTE: msg.sender must call ERC20.approve first
-    function depositTokens(address token, int256 amount) public {
+    function receiveTokens(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -118,14 +127,14 @@ contract SecurityBond is Ownable, Servable, SelfDestructible {
 
         //try to execute token transfer
         erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(msg.sender, this, uint256(amount)));
+        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
 
         //add to per-wallet deposited balance
         activeTokenBalance[token] = activeTokenBalance[token].add_nn(amount);
-        walletInfoMap[msg.sender].deposits.push(DepositInfo(amount, block.timestamp, token));
+        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, token));
 
         //emit event
-        emit DepositEvent(msg.sender, amount, token);
+        emit DepositEvent(wallet, amount, token);
     }
 
     function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {

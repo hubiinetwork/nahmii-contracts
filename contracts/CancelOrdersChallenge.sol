@@ -12,11 +12,11 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
-import {Types} from "./Types.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
+import {Types} from "./Types.sol";
 
 /**
 @title CancelOrdersChallenge
@@ -113,8 +113,8 @@ contract CancelOrdersChallenge is Ownable, Modifiable, Configurable, Validatable
     /// @param wallet The concerned wallet
     function challengeCancelledOrder(Types.Trade trade, address wallet)
     public
+    onlySealedTrade(trade)
     {
-        require(validator.isGenuineTradeSeal(trade, owner));
         require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
 
         bytes32 orderExchangeHash = (
@@ -129,6 +129,7 @@ contract CancelOrdersChallenge is Ownable, Modifiable, Configurable, Validatable
 
         uint256 orderIndex = walletOrderExchangeHashIndexMap[wallet][orderExchangeHash];
         Types.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
+
         emit ChallengeCancelledOrderEvent(order, trade, msg.sender);
     }
 

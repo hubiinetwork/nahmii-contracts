@@ -1,8 +1,9 @@
 const chai = require('chai');
 const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
-const {Wallet, utils} = require('ethers');
+const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
+const MockedValidator = artifacts.require("MockedValidator");
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -12,24 +13,30 @@ module.exports = (glob) => {
     describe('CancelOrdersChallenge', () => {
         let web3CancelOrdersChallenge, ethersCancelOrdersChallengeOwner;
         let web3Configuration, ethersConfiguration;
+        let web3Validator, ethersValidator;
         let provider;
         let ethersCancelOrdersChallengeUserA, ethersCancelOrdersChallengeUserB,
             ethersCancelOrdersChallengeUserC, ethersCancelOrdersChallengeUserD;
         let blockNumber0, blockNumber10, blockNumber20, blockNumber30;
 
         before(async () => {
+            provider = glob.signer_owner.provider;
+
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
             ethersCancelOrdersChallengeOwner = glob.ethersIoCancelOrdersChallenge;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
+
+            web3Validator = await MockedValidator.new(glob.owner);
+            ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
             ethersCancelOrdersChallengeUserA = ethersCancelOrdersChallengeOwner.connect(glob.signer_a);
             ethersCancelOrdersChallengeUserB = ethersCancelOrdersChallengeOwner.connect(glob.signer_b);
             ethersCancelOrdersChallengeUserC = ethersCancelOrdersChallengeOwner.connect(glob.signer_c);
             ethersCancelOrdersChallengeUserD = ethersCancelOrdersChallengeOwner.connect(glob.signer_d);
 
-            provider = glob.signer_owner.provider;
             await ethersCancelOrdersChallengeOwner.changeConfiguration(ethersConfiguration.address);
+            await ethersCancelOrdersChallengeOwner.changeValidator(ethersValidator.address);
         });
 
         beforeEach(async () => {
@@ -160,10 +167,12 @@ module.exports = (glob) => {
             let overrideOptions, order1, order2, topic, filter;
 
             before(() => {
-                overrideOptions = {gasLimit: 1e6};
+                overrideOptions = {gasLimit: 3e6};
             });
 
             beforeEach(async () => {
+                await ethersValidator.reset(overrideOptions);
+
                 order1 = await mocks.mockOrder(glob.owner, {
                     wallet: glob.user_a,
                     blockNumber: utils.bigNumberify(blockNumber10)
@@ -186,7 +195,7 @@ module.exports = (glob) => {
             });
 
             describe('if orders are genuine', () => {
-                it('should successfully cancel order', async () => {
+                it('should successfully cancel orders', async () => {
                     await ethersCancelOrdersChallengeUserA.cancelOrders([order1, order2], overrideOptions);
                     const count = await ethersCancelOrdersChallengeOwner.getCancelledOrdersCount(glob.user_a);
                     count.toNumber().should.equal(2);
@@ -206,19 +215,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not signed by wallet', () => {
-                beforeEach(() => {
-                    order1.seals.wallet.hash = order1.seals.exchange.hash;
-                });
-
-                it('should revert', async () => {
-                    ethersCancelOrdersChallengeUserA.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if not signed by exchange', () => {
-                beforeEach(() => {
-                    order1.seals.exchange.hash = order1.seals.wallet.hash;
+            describe('if order is not sealed', () => {
+                beforeEach(async () => {
+                    await ethersValidator.setGenuineOrderSeals(false);
                 });
 
                 it('should revert', async () => {
@@ -231,10 +230,12 @@ module.exports = (glob) => {
             let overrideOptions, order, trade, topic, filter;
 
             before(async () => {
-                overrideOptions = {gasLimit: 1e6};
+                overrideOptions = {gasLimit: 3e6};
             });
 
             beforeEach(async () => {
+                ethersValidator.reset(overrideOptions);
+
                 topic = ethersCancelOrdersChallengeOwner.interface.events.ChallengeCancelledOrderEvent.topics[0];
                 filter = {
                     fromBlock: blockNumber0,
@@ -242,7 +243,7 @@ module.exports = (glob) => {
                 };
             });
 
-            describe('if order cancelled', () => {
+            describe('if order has been cancelled', () => {
                 describe('if cancel order challenge timeout has not expired', () => {
                     beforeEach(async () => {
                         order = await mocks.mockOrder(glob.owner, {
@@ -312,9 +313,11 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trade is not signed by exchange', () => {
+            describe('if trade is not sealed', () => {
                 beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.user_a);
+                    await ethersValidator.setGenuineTradeSeal(false);
+
+                    trade = await mocks.mockTrade(glob.owner);
                 });
 
                 it('should revert', async () => {

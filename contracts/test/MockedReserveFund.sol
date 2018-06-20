@@ -14,9 +14,24 @@ import "../ReserveFund.sol";
 contract MockedReserveFund /*is ReserveFund*/ {
 
     //
+    // Types
+    // -----------------------------------------------------------------------------------------------------------------
+    struct Transfer {
+        address wallet;
+        address currency;
+        int256 amount;
+    }
+
+    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => int256) public currencyAmountMap;
+    Transfer[] public transfers;
+
+    //
+    // Events
+    // -----------------------------------------------------------------------------------------------------------------
+    event TwoWayTransferEvent(address wallet, address currency, int256 amount);
 
     //
     // Constructor
@@ -27,11 +42,20 @@ contract MockedReserveFund /*is ReserveFund*/ {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setMaxOutboundTransfer(ReserveFund.TransferInfo outboundTx) public {
-        currencyAmountMap[outboundTx.currency] = outboundTx.amount;
+    function reset() public {
+        transfers.length = 0;
     }
 
-    function outboundTransferSupported(ReserveFund.TransferInfo outboundTx) public view returns (bool) {
-        return currencyAmountMap[outboundTx.currency] >= outboundTx.amount;
+    function setMaxOutboundTransfer(address currency, int256 amount) public {
+        currencyAmountMap[currency] = amount;
+    }
+
+    function outboundTransferSupported(address currency, int256 amount) public view returns (bool) {
+        return currencyAmountMap[currency] >= amount;
+    }
+
+    function twoWayTransfer(address wallet, address currency, int256 amount) public {
+        transfers.push(Transfer(wallet, currency, amount));
+        emit TwoWayTransferEvent(wallet, currency, amount);
     }
 }
