@@ -9,9 +9,13 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import "../Types.sol";
-import "../DealSettlementChallenge.sol";
+import {DealSettlementChallenge} from "../DealSettlementChallenge.sol";
+import {Types} from "../Types.sol";
 
+/**
+@title Mocked deal settlement challenge
+@notice Mocked implementation of deal settlement challenge contract
+*/
 contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
 
     //

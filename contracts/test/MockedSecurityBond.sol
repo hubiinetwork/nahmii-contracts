@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-//import "../SecurityBond.sol";
+//import {SecurityBond} from "../SecurityBond.sol";
 
 /**
 @title Mocked security bond

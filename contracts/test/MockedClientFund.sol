@@ -8,8 +8,12 @@
 
 pragma solidity ^0.4.24;
 
-//import "../ClientFund.sol";
+//import {ClientFund} from "../ClientFund.sol";
 
+/**
+@title Mocked client fund
+@notice Mocked implementation of client fund contract
+*/
 contract MockedClientFund /*is ClientFund*/ {
 
     //

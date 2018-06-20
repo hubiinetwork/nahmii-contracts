@@ -8,8 +8,12 @@
 
 pragma solidity ^0.4.24;
 
-import "../Configuration.sol";
+import {Configuration} from "../Configuration.sol";
 
+/**
+@title Mocked configuration
+@notice Mocked implementation of configuration contract
+*/
 contract MockedConfiguration is Configuration {
 
     //

@@ -7,8 +7,8 @@ pragma solidity ^0.4.24;
  * This version is being used for Truffle Unit Testing. Please do not remove.
  */
 
-import '../ERC20.sol';
-import '../SafeMathUint.sol';
+import {ERC20} from "../ERC20.sol";
+import {SafeMathUint} from "../SafeMathUint.sol";
 
 /**
  * @title Standard token
