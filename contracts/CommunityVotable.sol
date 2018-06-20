@@ -40,7 +40,6 @@ contract CommunityVotable is Ownable, Modifiable {
     public
     onlyOwner
     notNullAddress(newCommunityVote)
-    notEqualAddresses(newCommunityVote, communityVote)
     {
         require(!communityVoteUpdateDisabled);
         CommunityVote oldCommunityVote = communityVote;

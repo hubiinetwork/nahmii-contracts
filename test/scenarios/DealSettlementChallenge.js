@@ -3,6 +3,7 @@ const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
+const MockedValidator = artifacts.require("MockedValidator");
 const MockedSecurityBond = artifacts.require("MockedSecurityBond");
 
 chai.use(sinonChai);
@@ -12,7 +13,7 @@ chai.should();
 module.exports = (glob) => {
     describe('DealSettlementChallenge', () => {
         let web3DealSettlementChallenge, ethersDealSettlementChallengeOwner;
-        let web3Hasher, ethersHasher;
+        let web3DealSettlementChallenger, ethersDealSettlementChallenger;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
@@ -23,17 +24,19 @@ module.exports = (glob) => {
         let blockNumber0, blockNumber10, blockNumber20, blockNumber30;
 
         before(async () => {
+            provider = glob.signer_owner.provider;
+
             web3DealSettlementChallenge = glob.web3DealSettlementChallenge;
             ethersDealSettlementChallengeOwner = glob.ethersIoDealSettlementChallenge;
-            web3Hasher = glob.web3Hasher;
-            ethersHasher = glob.ethersIoHasher;
+            web3DealSettlementChallenger = glob.web3DealSettlementChallenger;
+            ethersDealSettlementChallenger = glob.ethersIoDealSettlementChallenger;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
-            web3Validator = glob.web3Validator;
-            ethersValidator = glob.ethersIoValidator;
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
             ethersCancelOrdersChallengeOwner = glob.ethersIoCancelOrdersChallenge;
 
+            web3Validator = await MockedValidator.new(glob.owner);
+            ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
@@ -42,19 +45,19 @@ module.exports = (glob) => {
             ethersCancelOrdersChallengeUserA = ethersCancelOrdersChallengeOwner.connect(glob.signer_a);
             ethersCancelOrdersChallengeUserE = ethersCancelOrdersChallengeOwner.connect(glob.signer_e);
 
-            provider = glob.signer_owner.provider;
-
             await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(mocks.address0, 1000);
-
-            await ethersValidator.changeConfiguration(ethersConfiguration.address);
-            await ethersValidator.changeHasher(ethersHasher.address);
 
             await ethersDealSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
             await ethersDealSettlementChallengeOwner.changeValidator(ethersValidator.address);
-            await ethersDealSettlementChallengeOwner.changeSecurityBond(ethersSecurityBond.address);
-            await ethersDealSettlementChallengeOwner.changeCancelOrdersChallenge(ethersCancelOrdersChallengeOwner.address);
+            await ethersDealSettlementChallengeOwner.changeDealSettlementChallenger(ethersDealSettlementChallenger.address);
+
+            await ethersDealSettlementChallenger.changeCancelOrdersChallenge(ethersCancelOrdersChallengeOwner.address);
+            await ethersDealSettlementChallenger.changeConfiguration(ethersConfiguration.address);
+            await ethersDealSettlementChallenger.changeValidator(ethersValidator.address);
+            await ethersDealSettlementChallenger.changeSecurityBond(ethersSecurityBond.address);
 
             await ethersCancelOrdersChallengeOwner.changeConfiguration(ethersConfiguration.address);
+            await ethersCancelOrdersChallengeOwner.changeValidator(ethersValidator.address);
         });
 
         beforeEach(async () => {
@@ -157,14 +160,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('securityBond()', () => {
+        describe('dealSettlementChallenger()', () => {
             it('should equal value initialized', async () => {
-                const securityBond = await ethersDealSettlementChallengeOwner.securityBond();
-                securityBond.should.equal(utils.getAddress(ethersSecurityBond.address));
+                const dealSettlementChallenger = await ethersDealSettlementChallengeOwner.dealSettlementChallenger();
+                dealSettlementChallenger.should.equal(utils.getAddress(ethersDealSettlementChallenger.address));
             });
         });
 
-        describe('changeSecurityBond()', () => {
+        describe('changeDealSettlementChallenger()', () => {
             let address;
 
             before(() => {
@@ -172,69 +175,28 @@ module.exports = (glob) => {
             });
 
             describe('if called with owner as sender', () => {
-                let securityBond;
+                let dealSettlementChallenger;
 
                 beforeEach(async () => {
-                    securityBond = await web3DealSettlementChallenge.securityBond.call();
+                    dealSettlementChallenger = await web3DealSettlementChallenge.dealSettlementChallenger.call();
                 });
 
                 afterEach(async () => {
-                    await web3DealSettlementChallenge.changeSecurityBond(securityBond);
+                    await web3DealSettlementChallenge.changeDealSettlementChallenger(dealSettlementChallenger);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DealSettlementChallenge.changeSecurityBond(address);
+                    const result = await web3DealSettlementChallenge.changeDealSettlementChallenger(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeSecurityBondEvent');
-                    const securityBond = await web3DealSettlementChallenge.securityBond();
-                    utils.getAddress(securityBond).should.equal(address);
+                    result.logs[0].event.should.equal('ChangeDealSettlementChallengerEvent');
+                    const dealSettlementChallenger = await web3DealSettlementChallenge.dealSettlementChallenger();
+                    utils.getAddress(dealSettlementChallenger).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DealSettlementChallenge.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-        });
-
-        describe('cancelOrdersChallenge()', () => {
-            it('should equal value initialized', async () => {
-                const cancelOrdersChallenge = await ethersDealSettlementChallengeOwner.cancelOrdersChallenge();
-                cancelOrdersChallenge.should.equal(utils.getAddress(ethersCancelOrdersChallengeOwner.address));
-            });
-        });
-
-        describe('changeCancelOrdersChallenge()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called with owner as sender', () => {
-                let cancelOrdersChallenge;
-
-                beforeEach(async () => {
-                    cancelOrdersChallenge = await web3DealSettlementChallenge.cancelOrdersChallenge.call();
-                });
-
-                afterEach(async () => {
-                    await web3DealSettlementChallenge.changeCancelOrdersChallenge(cancelOrdersChallenge);
-                });
-
-                it('should set new value and emit event', async () => {
-                    const result = await web3DealSettlementChallenge.changeCancelOrdersChallenge(address);
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeCancelOrdersChallengeEvent');
-                    const cancelOrdersChallenge = await web3DealSettlementChallenge.cancelOrdersChallenge();
-                    utils.getAddress(cancelOrdersChallenge).should.equal(address);
-                });
-            });
-
-            describe('if called with sender that is not owner', () => {
-                it('should revert', async () => {
-                    web3DealSettlementChallenge.changeCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3DealSettlementChallenge.changeDealSettlementChallenger(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -280,11 +242,13 @@ module.exports = (glob) => {
             let overrideOptions, trade, topic, filter;
 
             before(async () => {
-                overrideOptions = {gasLimit: 2e6};
+                overrideOptions = {gasLimit: 4e6};
             });
 
             beforeEach(async () => {
-                topic = ethersDealSettlementChallengeOwner.interface.events.StartChallengeFromTradeEvent.topics[0];
+                await ethersValidator.reset(overrideOptions);
+
+                topic = ethersDealSettlementChallengeOwner.interface.events['StartChallengeFromTradeEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -305,8 +269,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trade is not signed by exchange', () => {
+            describe('if trade is not sealed', () => {
                 beforeEach(async () => {
+                    await ethersValidator.setGenuineTradeSeal(false);
                     trade = await mocks.mockTrade(glob.user_a);
                 });
 
@@ -345,7 +310,9 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                topic = ethersDealSettlementChallengeOwner.interface.events.StartChallengeFromPaymentEvent.topics[0];
+                await ethersValidator.reset(overrideOptions);
+
+                topic = ethersDealSettlementChallengeOwner.interface.events['StartChallengeFromPaymentEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -366,21 +333,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payment is not signed by exchange', () => {
+            describe('if payment is not sealed', () => {
                 beforeEach(async () => {
+                    await ethersValidator.setGenuinePaymentSeals(false);
                     payment = await mocks.mockPayment(glob.user_a);
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if payment is not signed by wallet', () => {
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner);
-                    const sign = mocks.createWeb3Signer(glob.user_b);
-                    payment.seals.wallet.signature = await sign(payment.seals.wallet.hash);
                 });
 
                 it('should revert', async () => {
@@ -496,30 +452,21 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
+                await ethersValidator.reset(overrideOptions);
+
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
 
-                topic = ethersDealSettlementChallengeOwner.interface.events.ChallengeByOrderEvent.topics[0];
+                topic = ethersDealSettlementChallenger.interface.events['ChallengeByOrderEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
                 };
             });
 
-            describe('if order is not signed by wallet', () => {
+            describe('if order is not sealed', () => {
                 beforeEach(async () => {
+                    await ethersValidator.setGenuineOrderSeals(false);
                     order = await mocks.mockOrder(glob.owner);
-                    order.seals.wallet.signature = order.seals.exchange.signature;
-                });
-
-                it('should revert', async () => {
-                    ethersDealSettlementChallengeOwner.challengeByOrder(order, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if order is not signed by exchange', () => {
-                beforeEach(async () => {
-                    order = await mocks.mockOrder(glob.owner);
-                    order.seals.exchange.signature = order.seals.wallet.signature;
                 });
 
                 it('should revert', async () => {
@@ -782,7 +729,7 @@ module.exports = (glob) => {
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
                 await ethersSecurityBond.reset(overrideOptions);
 
-                topic = ethersDealSettlementChallengeOwner.interface.events.UnchallengeOrderCandidateByTradeEvent.topics[0];
+                topic = ethersDealSettlementChallenger.interface.events['UnchallengeOrderCandidateByTradeEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -945,7 +892,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
 
-                topic = ethersDealSettlementChallengeOwner.interface.events.ChallengeByTradeEvent.topics[0];
+                topic = ethersDealSettlementChallenger.interface.events['ChallengeByTradeEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -1143,7 +1090,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersConfiguration.setDealSettlementChallengeTimeout(2);
 
-                topic = ethersDealSettlementChallengeOwner.interface.events.ChallengeByPaymentEvent.topics[0];
+                topic = ethersDealSettlementChallenger.interface.events['ChallengeByPaymentEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]

@@ -32,7 +32,6 @@ contract Hashable is Ownable, Modifiable {
     public
     onlyOwner
     notNullAddress(newHasher)
-    notEqualAddresses(newHasher, hasher)
     {
         Hasher oldHasher = hasher;
         hasher = newHasher;

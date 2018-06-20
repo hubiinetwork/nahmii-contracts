@@ -20,9 +20,9 @@ import {Types} from "./Types.sol";
 
 /**
 @title CancelOrdersChallenge
-@notice Contract to manage wallets' cancellation of orders as precursor for settling deals
+@notice Where orders are cancelled and cancellation challenged
 */
-contract CancelOrdersChallenge is Ownable, Modifiable , Configurable, Validatable, SelfDestructible {
+contract CancelOrdersChallenge is Ownable, Modifiable, Configurable, Validatable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

@@ -74,7 +74,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     public
     onlyOwner
     notNullAddress(newDealSettlementChallenge)
-    notEqualAddresses(newDealSettlementChallenge, dealSettlementChallenge)
     {
         DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
         dealSettlementChallenge = newDealSettlementChallenge;
@@ -87,7 +86,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     public
     onlyOwner
     notNullAddress(newTradesReserveFund)
-    notEqualAddresses(newTradesReserveFund, tradesReserveFund)
     {
         ReserveFund oldTradesReserveFund = tradesReserveFund;
         tradesReserveFund = newTradesReserveFund;
@@ -100,7 +98,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     public
     onlyOwner
     notNullAddress(newPaymentsReserveFund)
-    notEqualAddresses(newPaymentsReserveFund, paymentsReserveFund)
     {
         ReserveFund oldPaymentsReserveFund = paymentsReserveFund;
         paymentsReserveFund = newPaymentsReserveFund;
@@ -113,7 +110,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     public
     onlyOwner
     notNullAddress(newTradesRevenueFund)
-    notEqualAddresses(newTradesRevenueFund, tradesRevenueFund)
     {
         RevenueFund oldTradesRevenueFund = tradesRevenueFund;
         tradesRevenueFund = newTradesRevenueFund;
@@ -126,7 +122,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     public
     onlyOwner
     notNullAddress(newPaymentsRevenueFund)
-    notEqualAddresses(newPaymentsRevenueFund, paymentsRevenueFund)
     {
         RevenueFund oldPaymentsRevenueFund = paymentsRevenueFund;
         paymentsRevenueFund = newPaymentsRevenueFund;
@@ -461,16 +456,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     // -----------------------------------------------------------------------------------------------------------------
     modifier notNullAddress(address _address) {
         require(_address != address(0));
-        _;
-    }
-
-    modifier notEqualAddresses(address address1, address address2) {
-        require(address1 != address2);
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(isOwner());
         _;
     }
 

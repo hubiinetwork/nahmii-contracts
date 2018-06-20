@@ -35,7 +35,6 @@ contract ClientFundable is Ownable, Modifiable {
     public
     onlyOwner
     notNullAddress(newClientFund)
-    notEqualAddresses(newClientFund, clientFund)
     {
         ClientFund oldClientFund = clientFund;
         clientFund = newClientFund;

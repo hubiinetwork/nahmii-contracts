@@ -29,7 +29,10 @@ contract Servable is Ownable {
         require(service != address(0));
         require(service != address(this));
 
-        registeredServiceActions[service][keccak256(abi.encodePacked(action))] = true;
+        bytes32 _hash = keccak256(abi.encodePacked(action));
+
+        require(!registeredServiceActions[service][_hash]);
+        registeredServiceActions[service][_hash] = true;
 
         //raise event
         emit RegisterServiceActionEvent(service, action);
@@ -39,7 +42,10 @@ contract Servable is Ownable {
         require(service != address(0));
         require(service != address(this));
 
-        registeredServiceActions[service][keccak256(abi.encodePacked(action))] = false;
+        bytes32 _hash = keccak256(abi.encodePacked(action));
+
+        require(registeredServiceActions[service][_hash]);
+        registeredServiceActions[service][_hash] = false;
 
         //raise event
         emit DeregisterServiceActionEvent(service, action);

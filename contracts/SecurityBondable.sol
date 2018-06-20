@@ -33,7 +33,6 @@ contract SecurityBondable is Ownable, Modifiable {
     public
     onlyOwner
     notNullAddress(newSecurityBond)
-    notEqualAddresses(newSecurityBond, securityBond)
     {
         SecurityBond oldSecurityBond = securityBond;
         securityBond = newSecurityBond;

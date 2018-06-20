@@ -37,13 +37,13 @@ const TokenHolderRevenueFund = artifacts.require("./TokenHolderRevenueFund.sol")
 const fs = require('fs');
 const path = require('path');
 
-var helpers = require('./helpers.js');
+const helpers = require('./helpers.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = function (deployer, network, accounts) {
-    var ownerAccount;
-    var addresses = {};
+	var ownerAccount;
+	const addresses = {};
 
     if (helpers.isTestNetwork(network)) {
         ownerAccount = accounts[0];
@@ -124,12 +124,19 @@ module.exports = function (deployer, network, accounts) {
     }).then(() => {
         addresses.DealSettlementChallenge = DealSettlementChallenge.address;
 
-        deployer.deploy(DealSettlementChallenger, ownerAccount, DealSettlementChallenge.address, {
-            from: ownerAccount
-        }).then(() => {
-            addresses.DealSettlementChallenger = DealSettlementChallenger.address;
-        });
-    });
+		return deployer.deploy(DealSettlementChallenger, ownerAccount, DealSettlementChallenge.address, {
+			from : ownerAccount
+		})
+	}).then(() => {
+		addresses.DealSettlementChallenger = DealSettlementChallenger.address;
+
+		return DealSettlementChallenge.deployed();
+	}).then((web3DealSettlementChallenge) => {
+
+		return web3DealSettlementChallenge.changeDealSettlementChallenger(DealSettlementChallenger.address, {
+			from : ownerAccount
+		});
+	});
 
     deployer.deploy(Hasher, ownerAccount, {
         from: ownerAccount
@@ -258,8 +265,8 @@ module.exports = function (deployer, network, accounts) {
     }).then(() => {
         addresses.TokenHolderRevenueFund = TokenHolderRevenueFund.address;
 
-        saveAddresses(deployer, addresses);
-    });
+		saveAddresses(deployer, addresses);
+	});
 };
 
 function saveAddresses(deployer, addresses) {

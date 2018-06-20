@@ -37,7 +37,6 @@ contract FraudChallengable is Ownable, Modifiable, SelfDestructible {
     public
     onlyOwner
     notNullAddress(newFraudChallenge)
-    notEqualAddresses(newFraudChallenge, fraudChallenge)
     {
         FraudChallenge oldFraudChallenge = fraudChallenge;
         fraudChallenge = newFraudChallenge;

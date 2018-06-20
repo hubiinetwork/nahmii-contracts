@@ -785,9 +785,9 @@ module.exports = function (glob) {
 					done();
 				})
 		});
-		
-		it(testCounter.next() + ": MUST SUCCEED [registerService]: Register a mock service  ", function (done) {
-			glob.web3ReserveFund.registerService(MOCK_SERVICE_ADDRESS)
+
+		it(testCounter.next() + ": MUST SUCCEED [registerServiceAction]: Register a mock service  ", function (done) {
+			glob.web3ReserveFund.registerServiceAction(MOCK_SERVICE_ADDRESS, "closeAccrualPeriodServiceAction")
 				.then(() => {
 					done();
 				})
@@ -797,8 +797,8 @@ module.exports = function (glob) {
 
 		});
 
-		it(testCounter.next() + ": MUST FAIL [registerService]: Cannot be called from non-owner address ", function (done) {
-			glob.web3ReserveFund.registerService(MOCK_SERVICE_ADDRESS, { from: glob.user_a })
+		it(testCounter.next() + ": MUST FAIL [registerServiceAction]: Cannot be called from non-owner address ", function (done) {
+			glob.web3ReserveFund.registerServiceAction(MOCK_SERVICE_ADDRESS, "closeAccrualPeriodServiceAction", { from: glob.user_a })
 				.then(() => {
 					done(new Error('This test must fail'));
 				})
@@ -807,8 +807,8 @@ module.exports = function (glob) {
 				});
 		});
 
-		it(testCounter.next() + ": MUST FAIL [registerService]: Register a mock service twice  ", function (done) {
-			glob.web3ReserveFund.registerService(MOCK_SERVICE_ADDRESS)
+		it(testCounter.next() + ": MUST FAIL [registerServiceAction]: Register a mock service twice  ", function (done) {
+			glob.web3ReserveFund.registerServiceAction(MOCK_SERVICE_ADDRESS, "closeAccrualPeriodServiceAction")
 				.then(() => {
 					done(new Error('This test must fail'));
 				})
@@ -818,8 +818,8 @@ module.exports = function (glob) {
 
 		});
 
-		it(testCounter.next() + ": MUST FAIL [deregisterService]: Cannot be called from non-owner address ", function (done) {
-			glob.web3ReserveFund.deregisterService(MOCK_SERVICE_ADDRESS, { from: glob.user_a })
+		it(testCounter.next() + ": MUST FAIL [deregisterServiceAction]: Cannot be called from non-owner address ", function (done) {
+			glob.web3ReserveFund.deregisterServiceAction(MOCK_SERVICE_ADDRESS, "closeAccrualPeriodServiceAction", { from: glob.user_a })
 				.then(() => {
 					done(new Error('This test must fail'));
 				})
@@ -828,8 +828,8 @@ module.exports = function (glob) {
 				});
 		});
 
-		it(testCounter.next() + ": MUST SUCCEED [deregisterService]: Deregister a mock service  ", function (done) {
-			glob.web3ReserveFund.deregisterService(MOCK_SERVICE_ADDRESS)
+		it(testCounter.next() + ": MUST SUCCEED [deregisterServiceAction]: Deregister a mock service  ", function (done) {
+			glob.web3ReserveFund.deregisterServiceAction(MOCK_SERVICE_ADDRESS, "closeAccrualPeriodServiceAction")
 				.then(() => {
 					done();
 				})
@@ -838,8 +838,8 @@ module.exports = function (glob) {
 				});
 		});
 
-		it(testCounter.next() + ": MUST FAIL [deregisterService]: Deregister a non-existent or already deregistered service  ", function (done) {
-			glob.web3ReserveFund.deregisterService(MOCK_SERVICE_ADDRESS)
+		it(testCounter.next() + ": MUST FAIL [deregisterServiceAction]: Deregister a non-existent or already deregistered service  ", function (done) {
+			glob.web3ReserveFund.deregisterServiceAction(MOCK_SERVICE_ADDRESS, "closeAccrualPeriodServiceAction")
 				.then(() => {
 					done(new Error('This test must fail'));
 				})

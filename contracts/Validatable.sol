@@ -35,7 +35,6 @@ contract Validatable is Ownable, Modifiable {
     public
     onlyOwner
     notNullAddress(newValidator)
-    notEqualAddresses(newValidator, validator)
     {
         Validator oldValidator = validator;
         validator = newValidator;
