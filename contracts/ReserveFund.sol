@@ -11,12 +11,12 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import "./Ownable.sol";
-import './ERC20.sol';
+import {Ownable} from "./Ownable.sol";
+import {ERC20} from "./ERC20.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
-import "./Servable.sol";
+import {Servable} from "./Servable.sol";
 import {ClientFund} from "./ClientFund.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
