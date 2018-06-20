@@ -11,15 +11,15 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import "./Ownable.sol";
-import "./Types.sol";
-import "./ERC20.sol";
+import {Ownable} from "./Ownable.sol";
+import {Types} from "./Types.sol";
+import {ERC20} from "./ERC20.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
-import "./ReserveFund.sol";
-import "./RevenueFund.sol";
+import {ReserveFund} from "./ReserveFund.sol";
+import {RevenueFund} from "./RevenueFund.sol";
 import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
@@ -209,21 +209,21 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             int256 transferIntendedAbs = trade.transfers.intended.net.abs();
 
             // Positive transfer of conjugate currency defined as being from trade buyer to seller
-            //            bool transferConjugateToParty = ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
-            //            || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole));
-            //            int256 transferConjugateAbs = trade.transfers.conjugate.net.abs();
+            bool transferConjugateToParty = ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
+            || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole));
+            int256 transferConjugateAbs = trade.transfers.conjugate.net.abs();
 
-            //            if (!trade.immediateSettlement &&
-            //            (!transferIntendedToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.intended, transferIntendedAbs)) &&
-            //            (!transferConjugateToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, transferConjugateAbs))) {
-            //                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, transferIntendedToParty ? transferIntendedAbs.mul(- 1) : transferIntendedAbs);
-            //                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.conjugate, transferConjugateToParty ? transferConjugateAbs.mul(- 1) : transferConjugateAbs);
-            //                addOneSidedSettlementFromTrade(trade, wallet);
-            //            } else {
-            settleTradeTransfers(trade);
-            settleTradeFees(trade);
-            addTwoSidedSettlementFromTrade(trade);
-            //            }
+            if (!trade.immediateSettlement &&
+            (!transferIntendedToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.intended, transferIntendedAbs)) &&
+            (!transferConjugateToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, transferConjugateAbs))) {
+                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, transferIntendedToParty ? transferIntendedAbs.neg() : transferIntendedAbs);
+                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.conjugate, transferConjugateToParty ? transferConjugateAbs.neg() : transferConjugateAbs);
+                addOneSidedSettlementFromTrade(trade, wallet);
+            } else {
+                settleTradeTransfers(trade);
+                settleTradeFees(trade);
+                addTwoSidedSettlementFromTrade(trade);
+            }
 
             if (trade.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = trade.nonce;
@@ -268,24 +268,25 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
             // Positive transfer defined as being from payment sender to recipient
-            //            bool transferToParty = ((0 > payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
-            //            || (0 < payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole));
-            //            int256 transferAbs = payment.transfers.net.abs();
+            bool transferToParty = ((0 > payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
+            || (0 < payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole));
+            int256 transferAbs = payment.transfers.net.abs();
 
-            //            if (!payment.immediateSettlement &&
-            //            (!transferToParty || paymentsReserveFund.outboundTransferSupported(payment.currency, transferAbs))) {
-            //                paymentsReserveFund.twoWayTransfer(wallet, payment.currency, transferToParty ? transferAbs.mul(-1) : transferAbs);
-            //                addOneSidedSettlementFromPayment(payment, wallet);
-            //            } else {
-            settlePaymentTransfers(payment);
-            settlePaymentFees(payment);
-            addTwoSidedSettlementFromPayment(payment);
-            //            }
+            if (!payment.immediateSettlement &&
+            (!transferToParty || paymentsReserveFund.outboundTransferSupported(payment.currency, transferAbs))) {
+                paymentsReserveFund.twoWayTransfer(wallet, payment.currency, transferToParty ? transferAbs.neg() : transferAbs);
+                addOneSidedSettlementFromPayment(payment, wallet);
+            } else {
+                settlePaymentTransfers(payment);
+                settlePaymentFees(payment);
+                addTwoSidedSettlementFromPayment(payment);
+            }
 
             if (payment.nonce > highestAbsoluteDealNonce)
                 highestAbsoluteDealNonce = payment.nonce;
 
-        } else if (Types.ChallengeResult.Disqualified == result) {
+        }
+        else if (Types.ChallengeResult.Disqualified == result) {
             clientFund.seizeDepositedAndSettledBalances(wallet, challenger);
             addToSeizedWallets(wallet);
         }
@@ -330,52 +331,22 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     }
 
     function settlePaymentTransfers(Types.Payment payment) private {
-        if (0 < payment.transfers.net.sub(payment.sender.netFee)) {// Transfer from sender to recipient
+        if (0 < payment.transfers.net) {// Transfer from sender to recipient
             clientFund.transferFromDepositedToSettledBalance(
                 payment.sender.wallet,
                 payment.recipient.wallet,
-                payment.transfers.net.sub(payment.sender.netFee),
+                payment.transfers.net,
                 payment.currency
             );
 
-        } else if (0 > payment.transfers.net.add(payment.recipient.netFee)) {// Transfer from recipient to sender
+        } else if (0 > payment.transfers.net) {// Transfer from recipient to sender
             clientFund.transferFromDepositedToSettledBalance(
                 payment.recipient.wallet,
                 payment.sender.wallet,
-                payment.transfers.net.add(payment.recipient.netFee).abs(),
+                payment.transfers.net.abs(),
                 payment.currency
             );
         }
-    }
-
-    function addOneSidedSettlementFromTrade(Types.Trade trade, address wallet) private {
-        settlements.push(
-            Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.OneSided, [wallet, address(0)])
-        );
-        walletSettlementIndexMap[wallet].push(settlements.length - 1);
-    }
-
-    function addTwoSidedSettlementFromTrade(Types.Trade trade) private {
-        settlements.push(
-            Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.TwoSided, [trade.buyer.wallet, trade.seller.wallet])
-        );
-        walletSettlementIndexMap[trade.buyer.wallet].push(settlements.length - 1);
-        walletSettlementIndexMap[trade.seller.wallet].push(settlements.length - 1);
-    }
-
-    function addOneSidedSettlementFromPayment(Types.Payment payment, address wallet) private {
-        settlements.push(
-            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.OneSided, [wallet, address(0)])
-        );
-        walletSettlementIndexMap[wallet].push(settlements.length - 1);
-    }
-
-    function addTwoSidedSettlementFromPayment(Types.Payment payment) private {
-        settlements.push(
-            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.sender.wallet, payment.recipient.wallet])
-        );
-        walletSettlementIndexMap[payment.sender.wallet].push(settlements.length - 1);
-        walletSettlementIndexMap[payment.recipient.wallet].push(settlements.length - 1);
     }
 
     function settleTradeFees(Types.Trade trade) private {
@@ -446,6 +417,36 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             if (address(0) != payment.currency)
                 paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.recipient.netFee);
         }
+    }
+
+    function addOneSidedSettlementFromTrade(Types.Trade trade, address wallet) private {
+        settlements.push(
+            Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.OneSided, [wallet, address(0)])
+        );
+        walletSettlementIndexMap[wallet].push(settlements.length - 1);
+    }
+
+    function addTwoSidedSettlementFromTrade(Types.Trade trade) private {
+        settlements.push(
+            Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.TwoSided, [trade.buyer.wallet, trade.seller.wallet])
+        );
+        walletSettlementIndexMap[trade.buyer.wallet].push(settlements.length - 1);
+        walletSettlementIndexMap[trade.seller.wallet].push(settlements.length - 1);
+    }
+
+    function addOneSidedSettlementFromPayment(Types.Payment payment, address wallet) private {
+        settlements.push(
+            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.OneSided, [wallet, address(0)])
+        );
+        walletSettlementIndexMap[wallet].push(settlements.length - 1);
+    }
+
+    function addTwoSidedSettlementFromPayment(Types.Payment payment) private {
+        settlements.push(
+            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.sender.wallet, payment.recipient.wallet])
+        );
+        walletSettlementIndexMap[payment.sender.wallet].push(settlements.length - 1);
+        walletSettlementIndexMap[payment.recipient.wallet].push(settlements.length - 1);
     }
 
     function addToSeizedWallets(address _address) private {

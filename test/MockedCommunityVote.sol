@@ -22,12 +22,17 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(/*address owner*/) public /*CommunityVote(owner)*/ {
-        dataAvailable = true;
+        reset();
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    function reset() public {
+        highestAbsoluteDealNonce = 0;
+        dataAvailable = true;
+    }
+
     function setDoubleSpenderWallet(address wallet, bool doubleSpender) public returns (address[3]) {
         doubleSpenderWalletsMap[wallet] = doubleSpender;
     }

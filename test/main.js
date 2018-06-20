@@ -481,8 +481,8 @@ contract('Smart contract checks', function () {
     require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
-    // require('./scenarios/Exchange')(glob);
-    // require('./scenarios/CancelOrdersChallenge')(glob);
+    require('./scenarios/Exchange')(glob);
+    require('./scenarios/CancelOrdersChallenge')(glob);
     // require('./scenarios/DealSettlementChallenge')(glob);
     require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
