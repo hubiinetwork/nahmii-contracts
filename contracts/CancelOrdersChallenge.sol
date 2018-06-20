@@ -11,26 +11,24 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import "./Ownable.sol";
-import "./Types.sol";
-import {Configuration} from "./Configuration.sol";
-import {Validator} from "./Validator.sol";
+import {Ownable} from "./Ownable.sol";
+import {Modifiable} from "./Modifiable.sol";
+import {Configurable} from "./Configurable.sol";
+import {Validatable} from "./Validatable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
+import {Types} from "./Types.sol";
 
 /**
-@title Exchange
-@notice The orchestrator of trades and payments on-chain.
+@title CancelOrdersChallenge
+@notice Contract to manage wallets' cancellation of orders as precursor for settling deals
 */
-contract CancelOrdersChallenge is Ownable, SelfDestructible {
+contract CancelOrdersChallenge is Ownable, Modifiable , Configurable, Validatable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Configuration public configuration;
-    Validator public validator;
-
     mapping(address => mapping(bytes32 => bool)) public walletOrderExchangeHashCancelledMap;
     mapping(address => Types.Order[]) public walletOrderCancelledListMap;
     mapping(address => mapping(bytes32 => uint256)) public walletOrderExchangeHashIndexMap;
@@ -39,8 +37,6 @@ contract CancelOrdersChallenge is Ownable, SelfDestructible {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
-    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
     event CancelOrdersEvent(Types.Order[] orders, address wallet);
     event ChallengeCancelledOrderEvent(Types.Order order, Types.Trade trade, address wallet);
 
@@ -53,32 +49,6 @@ contract CancelOrdersChallenge is Ownable, SelfDestructible {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
-    public
-    onlyOwner
-    notNullAddress(newConfiguration)
-    notEqualAddresses(newConfiguration, configuration)
-    {
-        Configuration oldConfiguration = configuration;
-        configuration = newConfiguration;
-        emit ChangeConfigurationEvent(oldConfiguration, configuration);
-    }
-
-    /// @notice Change the validator contract
-    /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(Validator newValidator)
-    public
-    onlyOwner
-    notNullAddress(newValidator)
-    notEqualAddresses(newValidator, validator)
-    {
-        Validator oldValidator = validator;
-        validator = newValidator;
-        emit ChangeValidatorEvent(oldValidator, validator);
-    }
-
     /// @notice Get count of cancelled orders for given wallet
     /// @param wallet The wallet for which to return the count of cancelled orders
     function getCancelledOrdersCount(address wallet) public view returns (uint256) {
@@ -143,8 +113,8 @@ contract CancelOrdersChallenge is Ownable, SelfDestructible {
     /// @param wallet The concerned wallet
     function challengeCancelledOrder(Types.Trade trade, address wallet)
     public
+    onlySealedTrade(trade)
     {
-        require(validator.isGenuineTradeSeal(trade, owner));
         require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
 
         bytes32 orderExchangeHash = (
@@ -159,6 +129,7 @@ contract CancelOrdersChallenge is Ownable, SelfDestructible {
 
         uint256 orderIndex = walletOrderExchangeHashIndexMap[wallet][orderExchangeHash];
         Types.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
+
         emit ChallengeCancelledOrderEvent(order, trade, msg.sender);
     }
 
@@ -171,18 +142,5 @@ contract CancelOrdersChallenge is Ownable, SelfDestructible {
             return Types.ChallengePhase.Dispute;
         else
             return Types.ChallengePhase.Closed;
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
-    modifier notEqualAddresses(address address1, address address2) {
-        require(address1 != address2);
-        _;
     }
 }
