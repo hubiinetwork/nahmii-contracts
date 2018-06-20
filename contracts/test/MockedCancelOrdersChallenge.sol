@@ -28,6 +28,7 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event CancelOrdersEvent(Types.Order[] orders, address wallet);
+    event CancelOrdersByHashEvent(bytes32[] orders, address wallet);
 
     //
     // Constructor
@@ -51,6 +52,15 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
         }
 
         emit CancelOrdersEvent(orders, msg.sender);
+    }
+
+    function cancelOrdersByHash(bytes32[] orderHashes) public {
+        for (uint256 i = 0; i < orderHashes.length; i++) {
+            cancelledOrderHashes.push(orderHashes[i]);
+            orderHashCancelledMap[orderHashes[i]] = true;
+        }
+
+        emit CancelOrdersByHashEvent(orderHashes, msg.sender);
     }
 
     function isOrderCancelled(address wallet, bytes32 orderHash) public view returns (bool) {

@@ -72,6 +72,8 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
     {
         require(cancelOrdersChallenge != address(0));
 
+        require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
+
         DealSettlementChallenge.Challenge memory challenge = dealSettlementChallenge.getWalletChallenge(order.wallet);
         require(
             0 < challenge.nonce
@@ -95,7 +97,7 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
         challenge.result = Types.ChallengeResult.Disqualified;
         challenge.candidateType = DealSettlementChallenge.ChallengeCandidateType.Order;
         challenge.candidateIndex = dealSettlementChallenge.getChallengeCandidateOrdersLength() - 1;
-        challenge.challenger = cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash) ? address(0) : challenger;
+        challenge.challenger = challenger;
         dealSettlementChallenge.setWalletChallenge(order.wallet, challenge);
 
         //raise event
@@ -145,6 +147,12 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
     {
         require(cancelOrdersChallenge != address(0));
 
+        bytes32 orderExchangeHash = (trade.buyer.wallet == wallet ?
+        trade.buyer.order.hashes.exchange :
+        trade.seller.order.hashes.exchange);
+
+        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
+
         DealSettlementChallenge.Challenge memory challenge = dealSettlementChallenge.getWalletChallenge(wallet);
         require(
             0 < challenge.nonce
@@ -179,15 +187,10 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
 
         dealSettlementChallenge.pushChallengeCandidateTrade(trade);
 
-        bytes32 orderExchangeHash = (trade.buyer.wallet == wallet ?
-        trade.buyer.order.hashes.exchange :
-        trade.seller.order.hashes.exchange);
-
-        bool orderCancelled = cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash);
         challenge.result = Types.ChallengeResult.Disqualified;
         challenge.candidateType = DealSettlementChallenge.ChallengeCandidateType.Trade;
         challenge.candidateIndex = dealSettlementChallenge.getChallengeCandidateTradesLength() - 1;
-        challenge.challenger = orderCancelled ? address(0) : challenger;
+        challenge.challenger = challenger;
         dealSettlementChallenge.setWalletChallenge(wallet, challenge);
 
         //raise event
