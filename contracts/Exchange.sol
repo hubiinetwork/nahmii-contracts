@@ -14,6 +14,7 @@ import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
 import {Types} from "./Types.sol";
 import {ERC20} from "./ERC20.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
@@ -27,7 +28,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title Exchange
 @notice The orchestrator of trades and payments on-chain.
 */
-contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
+contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -449,28 +450,5 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             seizedWallets.push(_address);
             seizedWalletsMap[_address] = true;
         }
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
-    modifier validatorInitialized() {
-        require(validator != address(0));
-        _;
-    }
-
-    modifier onlySealedTrade(Types.Trade trade) {
-        require(validator.isGenuineTradeSeal(trade, owner));
-        _;
-    }
-
-    modifier onlySealedPayment(Types.Payment payment) {
-        require(validator.isGenuinePaymentSeals(payment, owner));
-        _;
     }
 }
