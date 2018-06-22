@@ -50,8 +50,8 @@ module.exports = function (deployer, network, accounts) {
     }
     else {
         ownerAccount = helpers.getOwnerAccountFromArgs();
-        ownerAccountPassword = helpers.getPasswordFromArgs();
-        helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 1200); //20 minutes
+        const ownerAccountPassword = helpers.getPasswordFromArgs();
+        helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 3600); //60 minutes
     }
 
     deployer.deploy(SafeMathIntLib, {
