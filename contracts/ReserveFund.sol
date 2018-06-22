@@ -17,7 +17,7 @@ import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {Servable} from "./Servable.sol";
-import {ClientFund} from "./ClientFund.sol";
+import {ClientFundable} from "./ClientFundable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
@@ -25,7 +25,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
  There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
 */
-contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfDestructible {
+contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, ClientFundable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -106,8 +106,6 @@ contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfD
 
     uint256[] accrualBlockNumbers;
 
-    address private clientFund;
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -118,28 +116,11 @@ contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfD
     event TwoWayTransferEvent(address wallet, address currency, int256 amount);
     event ClaimAccrualEvent(address token); //token==0 for ethers
     event CloseAccrualPeriodEvent();
-    event ChangeClientFundEvent(address oldClientFund, address newClientFund);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) Ownable(owner) AccrualBeneficiary() Benefactor() Servable() public {
-    }
-
-    function changeClientFund(address newClientFund) public onlyOwner {
-        address oldClientFund;
-
-        require(newClientFund != address(0));
-        require(newClientFund != address(this));
-
-        if (newClientFund != clientFund) {
-            // Set new address
-            oldClientFund = clientFund;
-            clientFund = newClientFund;
-
-            // Emit event
-            emit ChangeClientFundEvent(oldClientFund, newClientFund);
-        }
     }
 
     //
@@ -183,18 +164,25 @@ contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfD
 
     //NOTE: 'wallet' must call ERC20.approve first
     function receiveTokens(address wallet, int256 amount, address token) public {
-        ERC20 erc20_token;
-
         require(token != address(0));
         require(amount > 0);
-        erc20_token = ERC20(token);
+
+        // Amount must be >0 so there's no problem with conversion to unsigned.
+        ERC20 erc20 = ERC20(token);
+        require(erc20.transferFrom(wallet, this, uint256(amount)));
+
+        registerReceivedTokens(wallet, amount, token);
+    }
+
+    function registerReceivedTokens(address wallet, int256 amount, address token) public {
+        require(token != address(0));
+        require(amount > 0);
 
         if (wallet == owner) {
             periodAccrualTokenBalance[token] = periodAccrualTokenBalance[token].add_nn(amount);
             aggregateAccrualTokenBalance[token] = aggregateAccrualTokenBalance[token].add_nn(amount);
 
-            if (isAccruedTokenMap[token] == 0)
-            {
+            if (isAccruedTokenMap[token] == 0) {
                 accrualPeriodTokenList.push(token);
                 isAccruedTokenMap[token] = 1;
             }
@@ -212,8 +200,6 @@ contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfD
             aggregatedTokenBalance[token] = aggregatedTokenBalance[token].add_nn(amount);
         }
 
-        // Amount must be >0 so there's no problem with conversion to unsigned.
-        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
         walletInfoMap[wallet].depositsToken[token].push(DepositInfo(amount, now, walletInfoMap[wallet].activeTokenBalance[token], block.number));
         walletInfoMap[wallet].depositsHistory.push(DepositHistory(token, walletInfoMap[wallet].depositsToken[token].length - 1));
 
@@ -481,48 +467,32 @@ contract ReserveFund is Ownable, AccrualBeneficiary, Benefactor, Servable, SelfD
     }
 
     function twoWayTransfer(address wallet, address currency, int256 amount) public onlyOwner {
-        ClientFund sc_clientfund;
-        ERC20 erc20_token;
-
         //require (msg.sender == exchangeSmartContract);
         require(clientFund != address(0));
         require(wallet != address(0));
 
-        sc_clientfund = ClientFund(clientFund);
-
-        // Perform outbound (SC to W) transfers if outbound amount is non-zero
+        // Perform outbound (from this) transfer if amount is negative
         if (amount.isNonZeroNegativeInt256()) {
             int256 amountAbs = amount.abs();
 
             if (currency == address(0)) {
                 aggregatedEtherBalance = aggregatedEtherBalance.sub_nn(amountAbs);
 
-                clientFund.transfer(uint256(amountAbs));
-                sc_clientfund.reserveFundAddToStaged(wallet, amountAbs, currency);
+                clientFund.reserveFundAddToStaged.value(uint256(amountAbs))(wallet, amountAbs, currency);
 
-                walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(amountAbs);
             } else {
-                erc20_token = ERC20(currency);
-
-                erc20_token.transfer(clientFund, uint256(amountAbs));
-                sc_clientfund.reserveFundAddToStaged(wallet, amountAbs, currency);
-
                 aggregatedTokenBalance[currency] = aggregatedTokenBalance[currency].sub_nn(amountAbs);
+
+                ERC20 erc20 = ERC20(currency);
+                erc20.approve(clientFund, uint256(amountAbs));
+
+                clientFund.reserveFundAddToStaged(wallet, amountAbs, currency);
             }
         }
 
-        // Perform inbound (w to SC) transfers if inbound amount is non-zero
-        if (amount.isNonZeroPositiveInt256()) {
-            if (currency == address(0)) {
-                sc_clientfund.reserveFundGetFromDeposited(wallet, amount, currency);
-
-                aggregatedEtherBalance = aggregatedEtherBalance.add_nn(amount);
-            } else {
-                sc_clientfund.reserveFundGetFromDeposited(wallet, amount, currency);
-
-                aggregatedTokenBalance[currency] = aggregatedTokenBalance[currency].add_nn(amount);
-            }
-        }
+        // Perform inbound (to this) transfer if inbound amount positive
+        if (amount.isNonZeroPositiveInt256())
+            clientFund.reserveFundGetFromDeposited(wallet, amount, currency);
 
         //raise event
         emit TwoWayTransferEvent(wallet, currency, amount);
