@@ -14,6 +14,10 @@ import {Modifiable} from "./Modifiable.sol";
 import {Validator} from "./Validator.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title Validatable
+@notice An ownable that has a validator property
+*/
 contract Validatable is Ownable, Modifiable {
 
     //

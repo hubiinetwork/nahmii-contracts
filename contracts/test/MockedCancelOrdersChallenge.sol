@@ -13,7 +13,7 @@ pragma experimental ABIEncoderV2;
 import {Types} from "../Types.sol";
 
 /**
-@title Mocked cancel orders challenge
+@title MockedCancelOrdersChallenge
 @notice Mocked implementation of cancel orders challenge contract
 */
 contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {

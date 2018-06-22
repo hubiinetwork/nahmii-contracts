@@ -14,6 +14,10 @@ import {Modifiable} from "./Modifiable.sol";
 import {Hasher} from "./Hasher.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title Hashable
+@notice An ownable that has a hasher property
+*/
 contract Hashable is Ownable, Modifiable {
 
     //

@@ -16,6 +16,10 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title FraudChallengeByDuplicateDriipNonceOfTradeAndPayment
+@notice Where driips are challenged wrt fraud by duplicate drip nonce of trade and payment
+*/
 contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //

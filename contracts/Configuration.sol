@@ -15,7 +15,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Configuration
-@notice An oracle for configurations such as fees, challenge timeouts and stakes
+@notice An oracle for configurations values
 */
 contract Configuration is Ownable, SelfDestructible {
     using SafeMathInt for int256;

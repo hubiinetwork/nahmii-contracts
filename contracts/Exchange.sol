@@ -26,7 +26,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Exchange
-@notice The orchestrator of trades and payments on-chain.
+@notice The orchestrator of driip settlements
 */
 contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
     using SafeMathInt for int256;

@@ -16,6 +16,10 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title FraudChallengeByOrder
+@notice Where order is challenged wrt signature error
+*/
 contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //

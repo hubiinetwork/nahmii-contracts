@@ -16,6 +16,10 @@ import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title FraudChallengeByPaymentSucceedingTrade
+@notice Where driips are challenged wrt fraud by mismatch in payment succeeding trade
+*/
 contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
 
     //

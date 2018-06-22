@@ -8,6 +8,10 @@
 
 pragma solidity ^0.4.24;
 
+/**
+@title Beneficiary
+@notice A recipient of ethers and tokens
+*/
 contract Beneficiary {
     function receiveEthers(address wallet) public payable;
 

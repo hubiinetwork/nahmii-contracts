@@ -16,6 +16,10 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title FraudChallengeByDoubleSpentOrders
+@notice Where driips are challenged wrt fraud by double spent orders
+*/
 contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //

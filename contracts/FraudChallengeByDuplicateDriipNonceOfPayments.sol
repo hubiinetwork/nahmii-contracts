@@ -12,13 +12,15 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Hashable} from "./Hashable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
 import {Validatable} from "./Validatable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Configurable, Hashable, SecurityBondable, Validatable, ClientFundable {
+/**
+@title FraudChallengeByDuplicateDriipNonceOfPayments
+@notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
+*/
+contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //
     // Events

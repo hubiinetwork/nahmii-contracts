@@ -17,6 +17,10 @@ import {Configurable} from "./Configurable.sol";
 import {Hashable} from "./Hashable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
+/**
+@title Validatable
+@notice An ownable that validates valuable types (order, trade, payment)
+*/
 contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
@@ -35,12 +39,12 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
         int256 discountTier;
         if (Types.LiquidityRole.Maker == trade.buyer.liquidityRole) {
             discountTier = int256(trade.buyer.rollingVolume);
-            return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            return (trade.singleFees.intended <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
             && (trade.singleFees.intended == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.singleFees.intended >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
         } else {// Types.LiquidityRole.Maker == trade.seller.liquidityRole
             discountTier = int256(trade.seller.rollingVolume);
-            return (trade.singleFees.conjugate <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
+            return (trade.singleFees.conjugate <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, 0)).div(trade.rate.mul(feePartsPer)))
             && (trade.singleFees.conjugate == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(trade.rate.mul(feePartsPer)))
             && (trade.singleFees.conjugate >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(trade.rate.mul(feePartsPer)));
         }

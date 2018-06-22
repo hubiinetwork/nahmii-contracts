@@ -12,7 +12,7 @@ pragma solidity ^0.4.24;
 import {ERC20} from "../ERC20.sol";
 
 /**
-@title Mocked revenue fund
+@title MockedRevenueFund
 @notice Mocked implementation of revenue fund contract
 */
 contract MockedRevenueFund /*is RevenueFund*/ {

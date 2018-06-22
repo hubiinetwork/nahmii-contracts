@@ -12,6 +12,10 @@ import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {CommunityVote} from "./CommunityVote.sol";
 
+/**
+@title CommunityVotable
+@notice An ownable that has a community vote property
+*/
 contract CommunityVotable is Ownable, Modifiable {
 
     //

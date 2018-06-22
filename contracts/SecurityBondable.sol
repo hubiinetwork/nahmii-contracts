@@ -12,6 +12,10 @@ import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {SecurityBond} from "./SecurityBond.sol";
 
+/**
+@title SecurityBondable
+@notice An ownable that has a security bond property
+*/
 contract SecurityBondable is Ownable, Modifiable {
 
     //

@@ -13,6 +13,10 @@ import {Ownable} from "./Ownable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title Hasher
+@notice Contract that hashes types in Types contract
+*/
 contract Hasher is Ownable, SelfDestructible {
 
     //

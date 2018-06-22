@@ -12,6 +12,10 @@ import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Configuration} from "./Configuration.sol";
 
+/**
+@title Benefactor
+@notice An ownable that has a client fund property
+*/
 contract Configurable is Ownable, Modifiable {
 
     //

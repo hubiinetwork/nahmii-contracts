@@ -13,7 +13,7 @@ import {DriipSettlementChallenge} from "../DriipSettlementChallenge.sol";
 import {Types} from "../Types.sol";
 
 /**
-@title Mocked driip settlement challenge
+@title MockedDriipSettlementChallenge
 @notice Mocked implementation of driip settlement challenge contract
 */
 contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {

@@ -14,8 +14,8 @@ import {Ownable} from "./Ownable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
- * @title Standard token
- * @dev Basic implementation of the EIP20 standard token (also known as ERC20 token).
+ * @title RevenueToken
+ * @dev Implementation of the EIP20 standard token (also known as ERC20 token) with addition of calculation of balance blocks
  */
 contract RevenueToken is ERC20, Ownable, SelfDestructible {
     using SafeMathUint for uint256;
@@ -41,7 +41,7 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
     mapping(address => mapping(address => uint256)) private allowed;
 
     string public name = "Striim";
-    string public symbol = "STRM";
+    string public symbol = "SII";
     uint8 public constant decimals = 15;
 
     //

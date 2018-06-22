@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 //import {CommunityVote} from "../CommunityVote.sol";
 
 /**
-@title Mocked community vote
+@title MockedCommunityVote
 @notice Mocked implementation of community vote contract
 */
 contract MockedCommunityVote /* is CommunityVote*/ {

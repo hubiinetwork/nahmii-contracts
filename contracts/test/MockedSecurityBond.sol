@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 //import {SecurityBond} from "../SecurityBond.sol";
 
 /**
-@title Mocked security bond
+@title MockedSecurityBond
 @notice Mocked implementation of security bond contract
 */
 contract MockedSecurityBond /*is SecurityBond*/ {

@@ -17,6 +17,10 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title FraudChallengeByPayment
+@notice Where driips are challenged wrt fraud by mismatch in single trade property values
+*/
 contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable, ClientFundable {
 
     //

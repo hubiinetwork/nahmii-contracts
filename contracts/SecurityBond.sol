@@ -17,7 +17,7 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {ERC20} from "./ERC20.sol";
 
 /**
-@title Security bond
+@title SecurityBond
 @notice Fund that contains crypto incentive for challenging operator fraud.
 */
 contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible {

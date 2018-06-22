@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 /**
  * @title     Types
- * @dev       Data types
+ * @dev       Data types of order, trade, payment and more
  */
 library Types {
 
