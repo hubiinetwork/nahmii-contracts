@@ -9,18 +9,17 @@
 pragma solidity ^0.4.24;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import "./Ownable.sol";
-import "./ERC20.sol";
-import "./Beneficiary.sol";
-import "./Benefactor.sol";
-import "./ReserveFund.sol";
-import "./Servable.sol";
+import {Ownable} from "./Ownable.sol";
+import {ERC20} from "./ERC20.sol";
+import {Beneficiary} from "./Beneficiary.sol";
+import {Benefactor} from "./Benefactor.sol";
+import {ReserveFund} from "./ReserveFund.sol";
+import {Servable} from "./Servable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
-@dev Factored out from previous Trade smart contract.
 */
 contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructible {
     using SafeMathInt for int256;
@@ -28,7 +27,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public twoWayTransferServiceAction = "two_way_transfer";
+    string constant public reserveFundGetFromDepositedAction = "reserve_fund_get_from_deposited_action";
+    string constant public reserveFundAddToStagedAction = "reserve_fun_add_to_stage_action";
 
     //
     // Structures
@@ -128,14 +128,13 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
 
     //NOTE: 'wallet' must call ERC20.approve first
     function receiveTokens(address wallet, int256 amount, address token) public {
-        ERC20 erc20_token;
 
         require(token != address(0));
         require(amount.isNonZeroPositiveInt256());
 
         //try to execute token transfer
-        erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
+        ERC20 erc20 = ERC20(token);
+        require(erc20.transferFrom(wallet, this, uint256(amount)));
 
         //add to per-wallet deposited balance
         walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].add_nn(amount);
@@ -210,8 +209,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
     }
 
     function withdrawFromDepositedBalance(address sourceWallet, address destWallet, int256 amount, address token) public notOwner {
-        ERC20 erc20_token;
-
         require(isAcceptedServiceForWallet(msg.sender, sourceWallet));
         require(isAcceptedServiceForWallet(msg.sender, destWallet));
         require(sourceWallet != address(0));
@@ -230,8 +227,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
             walletInfoMap[sourceWallet].depositedTokenBalance[token] = walletInfoMap[sourceWallet].depositedTokenBalance[token].sub_nn(amount);
 
             //execute transfer
-            erc20_token = ERC20(token);
-            erc20_token.transfer(destWallet, uint256(amount));
+            ERC20 erc20 = ERC20(token);
+            erc20.transfer(destWallet, uint256(amount));
         }
 
         //emit event
@@ -254,8 +251,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
 
     //NOTE: msg.sender must call ERC20.approve first
     function depositTokensToSettledBalance(address destWallet, address token, int256 amount) public notOwner {
-        ERC20 erc20_token;
-
         require(isAcceptedServiceForWallet(msg.sender, destWallet));
         require(destWallet != address(0));
         require(amount.isNonZeroPositiveInt256());
@@ -270,8 +265,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
         }
 
         //try to execute token transfer
-        erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(msg.sender, destWallet, uint256(amount)));
+        ERC20 erc20 = ERC20(token);
+        require(erc20.transferFrom(msg.sender, destWallet, uint256(amount)));
 
         //emit event
         emit DepositToSettledBalance(destWallet, amount, token);
@@ -363,7 +358,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
             //transfer funds to the beneficiary
             beneficiary_sc.receiveEthers.value(uint256(amount))(msg.sender);
         } else {
-            ERC20 erc20_token;
 
             //clamp amount to move
             amount = amount.clampMax(walletInfoMap[msg.sender].depositedTokenBalance[token].add(walletInfoMap[msg.sender].settledTokenBalance[token]));
@@ -384,8 +378,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
             walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].sub_nn(amount);
 
             //first approve token transfer
-            erc20_token = ERC20(token);
-            require(erc20_token.approve(beneficiary, uint256(amount)));
+            ERC20 erc20 = ERC20(token);
+            require(erc20.approve(beneficiary, uint256(amount)));
 
             //transfer funds to the beneficiary
             beneficiary_sc.receiveTokens(msg.sender, amount, token);
@@ -464,34 +458,36 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
     //
     // Reserve funds functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reserveFundGetFromDeposited(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(twoWayTransferServiceAction) {
-        ReserveFund sc_reservefund;
-        ERC20 erc20_token;
-
+    function reserveFundGetFromDeposited(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(reserveFundGetFromDepositedAction) {
         require(wallet != address(0));
         require(amount.isPositiveInt256());
 
-        sc_reservefund = ReserveFund(msg.sender);
+        ReserveFund reserveFund = ReserveFund(msg.sender);
 
         if (token == address(0)) {
             walletInfoMap[wallet].depositedEtherBalance = walletInfoMap[wallet].depositedEtherBalance.sub_nn(amount);
 
-            msg.sender.transfer(uint256(amount));
+            reserveFund.receiveEthers.value(uint256(amount))(wallet);
         } else {
             walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].sub_nn(amount);
 
-            erc20_token = ERC20(token);
-            erc20_token.transfer(msg.sender, uint256(amount));
+            ERC20 erc20 = ERC20(token);
+            erc20.transfer(reserveFund, uint256(amount));
+
+            reserveFund.registerReceivedTokens(wallet, amount, token);
         }
     }
 
-    function reserveFundAddToStaged(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(twoWayTransferServiceAction) {
+    function reserveFundAddToStaged(address wallet, int256 amount, address token) public payable onlyOwnerOrServiceAction(reserveFundAddToStagedAction) {
         require(wallet != address(0));
         require(amount.isPositiveInt256());
 
         if (token == address(0)) {
             walletInfoMap[wallet].settledEtherBalance = walletInfoMap[wallet].settledEtherBalance.add(amount);
         } else {
+            ERC20 erc20 = ERC20(token);
+            erc20.transferFrom(msg.sender, this, uint256(amount));
+
             walletInfoMap[wallet].settledTokenBalance[token] = walletInfoMap[wallet].settledTokenBalance[token].add(amount);
         }
     }
@@ -517,8 +513,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
     }
 
     function withdrawTokens(int256 amount, address token) public notOwner {
-        ERC20 erc20_token;
-
         require(token != address(0));
         require(amount.isNonZeroPositiveInt256());
 
@@ -530,8 +524,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
         walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, token));
 
         //execute transfer
-        erc20_token = ERC20(token);
-        erc20_token.transfer(msg.sender, uint256(amount));
+        ERC20 erc20 = ERC20(token);
+        erc20.transfer(msg.sender, uint256(amount));
 
         //emit event
         emit WithdrawEvent(msg.sender, amount, token);

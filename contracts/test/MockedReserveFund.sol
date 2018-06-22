@@ -9,8 +9,12 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import "../ReserveFund.sol";
+//import {ReserveFund} from "../ReserveFund.sol";
 
+/**
+@title Mocked reserve fund
+@notice Mocked implementation of reserve fund contract
+*/
 contract MockedReserveFund /*is ReserveFund*/ {
 
     //

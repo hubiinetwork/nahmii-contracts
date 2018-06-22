@@ -9,11 +9,11 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-//import {Validator} from "../Validator.sol";
 import {Ownable} from "../Ownable.sol";
+//import {Validator} from "../Validator.sol";
 import {Types} from "../Types.sol";
 
-contract MockedValidator is Ownable /*is Validator*/ {
+contract MockedValidator is Ownable /*, Validator*/ {
 
     //
     // Types

@@ -12,6 +12,10 @@ pragma experimental ABIEncoderV2;
 import {FraudChallenge} from "../FraudChallenge.sol";
 import {Types} from "../Types.sol";
 
+/**
+@title Mocked fraud challenge
+@notice Mocked implementation of fraud challenge contract
+*/
 contract MockedFraudChallenge is FraudChallenge {
 
     //

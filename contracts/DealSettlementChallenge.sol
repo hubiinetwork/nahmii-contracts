@@ -244,23 +244,23 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     //
     // Helpers for DealSettlementChallenger
     // -----------------------------------------------------------------------------------------------------------------
-    function getWalletChallengeMap(address wallet) public view onlyDealSettlementChallenger returns (Challenge) {
+    function getWalletChallenge(address wallet) public view onlyDealSettlementChallenger returns (Challenge) {
         return walletChallengeMap[wallet];
     }
 
-    function setWalletChallengeMap(address wallet, Challenge challenge) public onlyDealSettlementChallenger {
+    function setWalletChallenge(address wallet, Challenge challenge) public onlyDealSettlementChallenger {
         walletChallengeMap[wallet] = challenge;
     }
 
-    function getWalletChallengeTradesMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Trade) {
+    function getWalletChallengeTrade(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Trade) {
         return walletChallengedTradesMap[wallet][dealIndex];
     }
 
-    function getWalletChallengePaymentsMap(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Payment) {
+    function getWalletChallengePayment(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Payment) {
         return walletChallengedPaymentsMap[wallet][dealIndex];
     }
 
-    function pushChallengeCandidateOrders(Types.Order order) public onlyDealSettlementChallenger {
+    function pushChallengeCandidateOrder(Types.Order order) public onlyDealSettlementChallenger {
         challengeCandidateOrders.push(order);
     }
 
@@ -268,7 +268,7 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
         return challengeCandidateOrders.length;
     }
 
-    function pushChallengeCandidateTrades(Types.Trade trade) public onlyDealSettlementChallenger {
+    function pushChallengeCandidateTrade(Types.Trade trade) public onlyDealSettlementChallenger {
         challengeCandidateTrades.push(trade);
     }
 
@@ -276,7 +276,7 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
         return challengeCandidateTrades.length;
     }
 
-    function pushChallengeCandidatePayments(Types.Payment payment) public onlyDealSettlementChallenger {
+    function pushChallengeCandidatePayment(Types.Payment payment) public onlyDealSettlementChallenger {
         challengeCandidatePayments.push(payment);
     }
 

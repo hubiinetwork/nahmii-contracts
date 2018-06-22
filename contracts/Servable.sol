@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import "./Ownable.sol";
+import {Ownable} from "./Ownable.sol";
 
 contract Servable is Ownable {
     //
@@ -51,7 +51,7 @@ contract Servable is Ownable {
         emit DeregisterServiceActionEvent(service, action);
     }
 
-    function isRegisteredServiceAction(address service, string action) internal view returns (bool) {
+    function isRegisteredServiceAction(address service, string action) public view returns (bool) {
         return registeredServiceActions[service][keccak256(abi.encodePacked(action))];
     }
 
