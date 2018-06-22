@@ -2,6 +2,10 @@
 
 This is the home of code for Hubii's Striim smart contracts.
 
+## Whitepaper
+
+Please see the release page (https://github.com/hubiinetwork/striim-contracts/releases) to download the whitepaper.
+
 ## Deployments
 
 The contracts are currently deployed to the **Ropsten** test network under the following addresses:
