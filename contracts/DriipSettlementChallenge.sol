@@ -15,14 +15,14 @@ import {Types} from "./Types.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
-import {DealSettlementChallenger} from "./DealSettlementChallenger.sol";
+import {DriipSettlementChallenger} from "./DriipSettlementChallenger.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
-@title DealSettlementChallenge
-@notice Where deal settlements are challenged
+@title DriipSettlementChallenge
+@notice Where driip settlements are challenged
 */
-contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatable, SelfDestructible {
+contract DriipSettlementChallenge is Ownable, Modifiable, Configurable, Validatable, SelfDestructible {
     using SafeMathInt for int256;
 
     //
@@ -32,10 +32,10 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
 
     struct Challenge {
         uint256 nonce;
-        Types.DealType dealType;
+        Types.DriipType driipType;
         uint256 timeout;
         Types.ChallengeResult result;
-        uint256 dealIndex;
+        uint256 driipIndex;
         ChallengeCandidateType candidateType;
         uint256 candidateIndex;
         address challenger;
@@ -44,7 +44,7 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    DealSettlementChallenger public dealSettlementChallenger;
+    DriipSettlementChallenger public driipSettlementChallenger;
 
     mapping(address => Challenge) public walletChallengeMap;
 
@@ -58,7 +58,7 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeDealSettlementChallengerEvent(DealSettlementChallenger oldDealSettlementChallenger, DealSettlementChallenger newDealSettlementChallenger);
+    event ChangeDriipSettlementChallengerEvent(DriipSettlementChallenger oldDriipSettlementChallenger, DriipSettlementChallenger newDriipSettlementChallenger);
     event StartChallengeFromTradeEvent(Types.Trade trade, address wallet);
     event StartChallengeFromPaymentEvent(Types.Payment payment, address wallet);
 
@@ -71,25 +71,25 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the deal settlement challenger contract
-    /// @param newDealSettlementChallenger The (address of) DealSettlementChallenger contract instance
-    function changeDealSettlementChallenger(DealSettlementChallenger newDealSettlementChallenger)
+    /// @notice Change the driip settlement challenger contract
+    /// @param newDriipSettlementChallenger The (address of) DriipSettlementChallenger contract instance
+    function changeDriipSettlementChallenger(DriipSettlementChallenger newDriipSettlementChallenger)
     public
     onlyOwner
-    notNullAddress(newDealSettlementChallenger)
+    notNullAddress(newDriipSettlementChallenger)
     {
-        DealSettlementChallenger oldDealSettlementChallenger = dealSettlementChallenger;
-        dealSettlementChallenger = newDealSettlementChallenger;
-        emit ChangeDealSettlementChallengerEvent(oldDealSettlementChallenger, dealSettlementChallenger);
+        DriipSettlementChallenger oldDriipSettlementChallenger = driipSettlementChallenger;
+        driipSettlementChallenger = newDriipSettlementChallenger;
+        emit ChangeDriipSettlementChallengerEvent(oldDriipSettlementChallenger, driipSettlementChallenger);
     }
 
-    /// @notice Get the number of current and past deal settlement challenges from trade for given wallet
+    /// @notice Get the number of current and past driip settlement challenges from trade for given wallet
     /// @param wallet The wallet for which to return count
     function walletChallengedTradesCount(address wallet) public view returns (uint256) {
         return walletChallengedTradesMap[wallet].length;
     }
 
-    /// @notice Get the number of current and past deal settlement challenges from payment for given wallet
+    /// @notice Get the number of current and past driip settlement challenges from payment for given wallet
     /// @param wallet The wallet for which to return count
     function walletChallengedPaymentsCount(address wallet) public view returns (uint256) {
         return walletChallengedPaymentsMap[wallet].length;
@@ -110,9 +110,9 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
         return challengeCandidatePayments.length;
     }
 
-    /// @notice Start deal settlement challenge on deal of trade type
-    /// @param trade The challenged deal
-    /// @param wallet The relevant deal party
+    /// @notice Start driip settlement challenge on driip of trade type
+    /// @param trade The challenged driip
+    /// @param wallet The relevant driip party
     function startChallengeFromTrade(Types.Trade trade, address wallet)
     public
     validatorInitialized
@@ -134,8 +134,8 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
 
         Challenge memory challenge = Challenge(
             trade.nonce,
-            Types.DealType.Trade,
-            block.timestamp + configuration.getDealSettlementChallengeTimeout(),
+            Types.DriipType.Trade,
+            block.timestamp + configuration.getDriipSettlementChallengeTimeout(),
             Types.ChallengeResult.Qualified,
             walletChallengedTradesMap[wallet].length - 1,
             ChallengeCandidateType.None,
@@ -147,9 +147,9 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
         emit StartChallengeFromTradeEvent(trade, wallet);
     }
 
-    /// @notice Start deal settlement challenge on deal of payment type
-    /// @param payment The challenged deal
-    /// @param wallet The relevant deal party
+    /// @notice Start driip settlement challenge on driip of payment type
+    /// @param payment The challenged driip
+    /// @param wallet The relevant driip party
     function startChallengeFromPayment(Types.Payment payment, address wallet)
     public
     validatorInitialized
@@ -171,8 +171,8 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
 
         Challenge memory challenge = Challenge(
             payment.nonce,
-            Types.DealType.Payment,
-            block.timestamp + configuration.getDealSettlementChallengeTimeout(),
+            Types.DriipType.Payment,
+            block.timestamp + configuration.getDriipSettlementChallengeTimeout(),
             Types.ChallengeResult.Qualified,
             walletChallengedPaymentsMap[wallet].length - 1,
             ChallengeCandidateType.None,
@@ -184,9 +184,9 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
         emit StartChallengeFromPaymentEvent(payment, wallet);
     }
 
-    /// @notice Get deal settlement challenge phase of given wallet
+    /// @notice Get driip settlement challenge phase of given wallet
     /// @param wallet The wallet whose challenge phase will be returned
-    function dealSettlementChallengePhase(address wallet) public view returns (uint, Types.ChallengePhase) {
+    function driipSettlementChallengePhase(address wallet) public view returns (uint, Types.ChallengePhase) {
         if (msg.sender != owner)
             wallet = msg.sender;
         if (0 == walletChallengeMap[wallet].nonce)
@@ -197,10 +197,10 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
             return (walletChallengeMap[wallet].nonce, Types.ChallengePhase.Closed);
     }
 
-    /// @notice Get deal settlement challenge result and challenger (wallet) of given (challenge) wallet
+    /// @notice Get driip settlement challenge result and challenger (wallet) of given (challenge) wallet
     /// @param wallet The wallet whose challenge status will be returned
-    /// @param nonce The nonce of the challenged deal
-    function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
+    /// @param nonce The nonce of the challenged driip
+    function driipSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
         if (msg.sender != owner)
             wallet = msg.sender;
         if ((0 == walletChallengeMap[wallet].nonce) ||
@@ -211,84 +211,84 @@ contract DealSettlementChallenge is Ownable, Modifiable, Configurable, Validatab
     }
 
     //
-    // Functions implemented in DealSettlementChallenger
+    // Functions implemented in DriipSettlementChallenger
     // -----------------------------------------------------------------------------------------------------------------
 
-    /// @notice Challenge the deal settlement by providing order candidate
-    /// @param order The order candidate that challenges the challenged deal
+    /// @notice Challenge the driip settlement by providing order candidate
+    /// @param order The order candidate that challenges the challenged driip
     function challengeByOrder(Types.Order order) public {
-        dealSettlementChallenger.challengeByOrder(order, msg.sender);
+        driipSettlementChallenger.challengeByOrder(order, msg.sender);
     }
 
-    /// @notice Unchallenge deal settlement by providing trade that shows that challenge order candidate has been filled
-    /// @param order The order candidate that challenged deal
+    /// @notice Unchallenge driip settlement by providing trade that shows that challenge order candidate has been filled
+    /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
     function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade) public {
-        dealSettlementChallenger.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+        driipSettlementChallenger.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
-    /// @notice Challenge the deal settlement by providing trade candidate
-    /// @param trade The trade candidate that challenges the challenged deal
-    /// @param wallet The wallet whose deal settlement is being challenged
+    /// @notice Challenge the driip settlement by providing trade candidate
+    /// @param trade The trade candidate that challenges the challenged driip
+    /// @param wallet The wallet whose driip settlement is being challenged
     function challengeByTrade(Types.Trade trade, address wallet) public {
-        dealSettlementChallenger.challengeByTrade(trade, wallet, msg.sender);
+        driipSettlementChallenger.challengeByTrade(trade, wallet, msg.sender);
     }
 
-    /// @notice Challenge the deal settlement by providing payment candidate
-    /// @param payment The payment candidate that challenges the challenged deal
-    /// @param wallet The wallet whose deal settlement is being challenged
+    /// @notice Challenge the driip settlement by providing payment candidate
+    /// @param payment The payment candidate that challenges the challenged driip
+    /// @param wallet The wallet whose driip settlement is being challenged
     function challengeByPayment(Types.Payment payment, address wallet) public {
-        dealSettlementChallenger.challengeByPayment(payment, wallet, msg.sender);
+        driipSettlementChallenger.challengeByPayment(payment, wallet, msg.sender);
     }
 
     //
-    // Helpers for DealSettlementChallenger
+    // Helpers for DriipSettlementChallenger
     // -----------------------------------------------------------------------------------------------------------------
-    function getWalletChallenge(address wallet) public view onlyDealSettlementChallenger returns (Challenge) {
+    function getWalletChallenge(address wallet) public view onlyDriipSettlementChallenger returns (Challenge) {
         return walletChallengeMap[wallet];
     }
 
-    function setWalletChallenge(address wallet, Challenge challenge) public onlyDealSettlementChallenger {
+    function setWalletChallenge(address wallet, Challenge challenge) public onlyDriipSettlementChallenger {
         walletChallengeMap[wallet] = challenge;
     }
 
-    function getWalletChallengeTrade(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Trade) {
-        return walletChallengedTradesMap[wallet][dealIndex];
+    function getWalletChallengeTrade(address wallet, uint256 driipIndex) public view onlyDriipSettlementChallenger returns (Types.Trade) {
+        return walletChallengedTradesMap[wallet][driipIndex];
     }
 
-    function getWalletChallengePayment(address wallet, uint256 dealIndex) public view onlyDealSettlementChallenger returns (Types.Payment) {
-        return walletChallengedPaymentsMap[wallet][dealIndex];
+    function getWalletChallengePayment(address wallet, uint256 driipIndex) public view onlyDriipSettlementChallenger returns (Types.Payment) {
+        return walletChallengedPaymentsMap[wallet][driipIndex];
     }
 
-    function pushChallengeCandidateOrder(Types.Order order) public onlyDealSettlementChallenger {
+    function pushChallengeCandidateOrder(Types.Order order) public onlyDriipSettlementChallenger {
         challengeCandidateOrders.push(order);
     }
 
-    function getChallengeCandidateOrdersLength() public view onlyDealSettlementChallenger returns (uint256) {
+    function getChallengeCandidateOrdersLength() public view onlyDriipSettlementChallenger returns (uint256) {
         return challengeCandidateOrders.length;
     }
 
-    function pushChallengeCandidateTrade(Types.Trade trade) public onlyDealSettlementChallenger {
+    function pushChallengeCandidateTrade(Types.Trade trade) public onlyDriipSettlementChallenger {
         challengeCandidateTrades.push(trade);
     }
 
-    function getChallengeCandidateTradesLength() public view onlyDealSettlementChallenger returns (uint256) {
+    function getChallengeCandidateTradesLength() public view onlyDriipSettlementChallenger returns (uint256) {
         return challengeCandidateTrades.length;
     }
 
-    function pushChallengeCandidatePayment(Types.Payment payment) public onlyDealSettlementChallenger {
+    function pushChallengeCandidatePayment(Types.Payment payment) public onlyDriipSettlementChallenger {
         challengeCandidatePayments.push(payment);
     }
 
-    function getChallengeCandidatePaymentsLength() public view onlyDealSettlementChallenger returns (uint256) {
+    function getChallengeCandidatePaymentsLength() public view onlyDriipSettlementChallenger returns (uint256) {
         return challengeCandidatePayments.length;
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyDealSettlementChallenger() {
-        require(msg.sender == address(dealSettlementChallenger));
+    modifier onlyDriipSettlementChallenger() {
+        require(msg.sender == address(driipSettlementChallenger));
         _;
     }
 }

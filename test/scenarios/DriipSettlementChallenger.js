@@ -11,8 +11,8 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe('DealSettlementChallenger', () => {
-        let web3DealSettlementChallenger, ethersDealSettlementChallenger;
+    describe('DriipSettlementChallenger', () => {
+        let web3DriipSettlementChallenger, ethersDriipSettlementChallenger;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
@@ -23,8 +23,8 @@ module.exports = (glob) => {
         before(async () => {
             provider = glob.signer_owner.provider;
 
-            web3DealSettlementChallenger = glob.web3DealSettlementChallenger;
-            ethersDealSettlementChallenger = glob.ethersIoDealSettlementChallenger;
+            web3DriipSettlementChallenger = glob.web3DriipSettlementChallenger;
+            ethersDriipSettlementChallenger = glob.ethersIoDriipSettlementChallenger;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
@@ -37,16 +37,16 @@ module.exports = (glob) => {
 
             await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(mocks.address0, 1000);
 
-            await ethersDealSettlementChallenger.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
-            await ethersDealSettlementChallenger.changeConfiguration(ethersConfiguration.address);
-            await ethersDealSettlementChallenger.changeValidator(ethersValidator.address);
-            await ethersDealSettlementChallenger.changeSecurityBond(ethersSecurityBond.address);
+            await ethersDriipSettlementChallenger.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
+            await ethersDriipSettlementChallenger.changeConfiguration(ethersConfiguration.address);
+            await ethersDriipSettlementChallenger.changeValidator(ethersValidator.address);
+            await ethersDriipSettlementChallenger.changeSecurityBond(ethersSecurityBond.address);
         });
 
         beforeEach(async () => {
             // Default configuration timeouts for all tests. Particular tests override these defaults.
             await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-            await ethersConfiguration.setDealSettlementChallengeTimeout(1e4);
+            await ethersConfiguration.setDriipSettlementChallengeTimeout(1e4);
 
             blockNumber0 = await provider.getBlockNumber();
             blockNumber10 = blockNumber0 + 10;
@@ -56,14 +56,14 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3DealSettlementChallenger.owner.call();
+                const owner = await web3DriipSettlementChallenger.owner.call();
                 owner.should.equal(glob.owner);
             });
         });
 
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
-                const configuration = await ethersDealSettlementChallenger.configuration();
+                const configuration = await ethersDriipSettlementChallenger.configuration();
                 configuration.should.equal(utils.getAddress(ethersConfiguration.address));
             });
         });
@@ -79,32 +79,32 @@ module.exports = (glob) => {
                 let configuration;
 
                 beforeEach(async () => {
-                    configuration = await web3DealSettlementChallenger.configuration.call();
+                    configuration = await web3DriipSettlementChallenger.configuration.call();
                 });
 
                 afterEach(async () => {
-                    await web3DealSettlementChallenger.changeConfiguration(configuration);
+                    await web3DriipSettlementChallenger.changeConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DealSettlementChallenger.changeConfiguration(address);
+                    const result = await web3DriipSettlementChallenger.changeConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeConfigurationEvent');
-                    const configuration = await web3DealSettlementChallenger.configuration();
+                    const configuration = await web3DriipSettlementChallenger.configuration();
                     utils.getAddress(configuration).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DealSettlementChallenger.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementChallenger.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('validator()', () => {
             it('should equal value initialized', async () => {
-                const validator = await ethersDealSettlementChallenger.validator();
+                const validator = await ethersDriipSettlementChallenger.validator();
                 validator.should.equal(utils.getAddress(ethersValidator.address));
             });
         });
@@ -120,32 +120,32 @@ module.exports = (glob) => {
                 let validator;
 
                 beforeEach(async () => {
-                    validator = await web3DealSettlementChallenger.validator.call();
+                    validator = await web3DriipSettlementChallenger.validator.call();
                 });
 
                 afterEach(async () => {
-                    await web3DealSettlementChallenger.changeValidator(validator);
+                    await web3DriipSettlementChallenger.changeValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DealSettlementChallenger.changeValidator(address);
+                    const result = await web3DriipSettlementChallenger.changeValidator(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeValidatorEvent');
-                    const validator = await web3DealSettlementChallenger.validator();
+                    const validator = await web3DriipSettlementChallenger.validator();
                     utils.getAddress(validator).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DealSettlementChallenger.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementChallenger.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('securityBond()', () => {
             it('should equal value initialized', async () => {
-                const securityBond = await ethersDealSettlementChallenger.securityBond();
+                const securityBond = await ethersDriipSettlementChallenger.securityBond();
                 securityBond.should.equal(utils.getAddress(ethersSecurityBond.address));
             });
         });
@@ -161,32 +161,32 @@ module.exports = (glob) => {
                 let securityBond;
 
                 beforeEach(async () => {
-                    securityBond = await web3DealSettlementChallenger.securityBond.call();
+                    securityBond = await web3DriipSettlementChallenger.securityBond.call();
                 });
 
                 afterEach(async () => {
-                    await web3DealSettlementChallenger.changeSecurityBond(securityBond);
+                    await web3DriipSettlementChallenger.changeSecurityBond(securityBond);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DealSettlementChallenger.changeSecurityBond(address);
+                    const result = await web3DriipSettlementChallenger.changeSecurityBond(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeSecurityBondEvent');
-                    const securityBond = await web3DealSettlementChallenger.securityBond();
+                    const securityBond = await web3DriipSettlementChallenger.securityBond();
                     utils.getAddress(securityBond).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DealSettlementChallenger.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementChallenger.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('cancelOrdersChallenge()', () => {
             it('should equal value initialized', async () => {
-                const cancelOrdersChallenge = await ethersDealSettlementChallenger.cancelOrdersChallenge();
+                const cancelOrdersChallenge = await ethersDriipSettlementChallenger.cancelOrdersChallenge();
                 cancelOrdersChallenge.should.equal(utils.getAddress(ethersCancelOrdersChallenge.address));
             });
         });
@@ -202,25 +202,25 @@ module.exports = (glob) => {
                 let cancelOrdersChallenge;
 
                 beforeEach(async () => {
-                    cancelOrdersChallenge = await web3DealSettlementChallenger.cancelOrdersChallenge.call();
+                    cancelOrdersChallenge = await web3DriipSettlementChallenger.cancelOrdersChallenge.call();
                 });
 
                 afterEach(async () => {
-                    await web3DealSettlementChallenger.changeCancelOrdersChallenge(cancelOrdersChallenge);
+                    await web3DriipSettlementChallenger.changeCancelOrdersChallenge(cancelOrdersChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DealSettlementChallenger.changeCancelOrdersChallenge(address);
+                    const result = await web3DriipSettlementChallenger.changeCancelOrdersChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeCancelOrdersChallengeEvent');
-                    const cancelOrdersChallenge = await web3DealSettlementChallenger.cancelOrdersChallenge();
+                    const cancelOrdersChallenge = await web3DriipSettlementChallenger.cancelOrdersChallenge();
                     utils.getAddress(cancelOrdersChallenge).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DealSettlementChallenger.changeCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementChallenger.changeCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

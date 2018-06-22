@@ -17,36 +17,36 @@ import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
-import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
+import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
-@title DealSettlementChallenger
-@notice The workhorse of deal settlement challenges, utilized by DealSettlementChallenge
+@title DriipSettlementChallenger
+@notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
-contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validatable, SecurityBondable, SelfDestructible {
+contract DriipSettlementChallenger is Ownable, Modifiable, Configurable, Validatable, SecurityBondable, SelfDestructible {
     using SafeMathInt for int256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    DealSettlementChallenge public dealSettlementChallenge;
+    DriipSettlementChallenge public driipSettlementChallenge;
     CancelOrdersChallenge public cancelOrdersChallenge;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
-    event ChallengeByOrderEvent(Types.Order order, uint256 nonce, Types.DealType dealType, address reporter);
-    event ChallengeByTradeEvent(Types.Trade trade, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
-    event ChallengeByPaymentEvent(Types.Payment payment, address wallet, uint256 nonce, Types.DealType dealType, address reporter);
-    event UnchallengeOrderCandidateByTradeEvent(Types.Order order, Types.Trade trade, uint256 nonce, Types.DealType dealType, address reporter);
+    event ChallengeByOrderEvent(Types.Order order, uint256 nonce, Types.DriipType driipType, address reporter);
+    event ChallengeByTradeEvent(Types.Trade trade, address wallet, uint256 nonce, Types.DriipType driipType, address reporter);
+    event ChallengeByPaymentEvent(Types.Payment payment, address wallet, uint256 nonce, Types.DriipType driipType, address reporter);
+    event UnchallengeOrderCandidateByTradeEvent(Types.Order order, Types.Trade trade, uint256 nonce, Types.DriipType driipType, address reporter);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner, DealSettlementChallenge _dealSettlementChallenge) Ownable(_owner) notNullAddress(_dealSettlementChallenge) public {
-        dealSettlementChallenge = _dealSettlementChallenge;
+    constructor(address _owner, DriipSettlementChallenge _driipSettlementChallenge) Ownable(_owner) notNullAddress(_driipSettlementChallenge) public {
+        driipSettlementChallenge = _driipSettlementChallenge;
     }
 
     /// @notice Change the cancel orders challenge contract
@@ -61,8 +61,8 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
         emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
     }
 
-    /// @notice Challenge the deal settlement by providing order candidate
-    /// @param order The order candidate that challenges the challenged deal
+    /// @notice Challenge the driip settlement by providing order candidate
+    /// @param order The order candidate that challenges the challenged driip
     /// @param challenger The address of the challenger
     function challengeByOrder(Types.Order order, address challenger)
     public
@@ -74,7 +74,7 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
 
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
 
-        DealSettlementChallenge.Challenge memory challenge = dealSettlementChallenge.getWalletChallenge(order.wallet);
+        DriipSettlementChallenge.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(order.wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -87,25 +87,25 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
         (orderCurrency, orderAmount) = (Types.Intention.Sell == order.placement.intention ? (order.placement.currencies.intended, order.placement.amount)
         : (order.placement.currencies.conjugate, order.placement.amount.div(order.placement.rate)));
 
-        int256 balance = (Types.DealType.Trade == challenge.dealType ? getTradeBalance(dealSettlementChallenge.getWalletChallengeTrade(order.wallet, challenge.dealIndex), order.wallet, orderCurrency)
-        : getPaymentBalance(dealSettlementChallenge.getWalletChallengePayment(order.wallet, challenge.dealIndex), order.wallet, orderCurrency));
+        int256 balance = (Types.DriipType.Trade == challenge.driipType ? getTradeBalance(driipSettlementChallenge.getWalletChallengeTrade(order.wallet, challenge.driipIndex), order.wallet, orderCurrency)
+        : getPaymentBalance(driipSettlementChallenge.getWalletChallengePayment(order.wallet, challenge.driipIndex), order.wallet, orderCurrency));
 
         require(orderAmount > balance);
 
-        dealSettlementChallenge.pushChallengeCandidateOrder(order);
+        driipSettlementChallenge.pushChallengeCandidateOrder(order);
 
         challenge.result = Types.ChallengeResult.Disqualified;
-        challenge.candidateType = DealSettlementChallenge.ChallengeCandidateType.Order;
-        challenge.candidateIndex = dealSettlementChallenge.getChallengeCandidateOrdersLength() - 1;
+        challenge.candidateType = DriipSettlementChallenge.ChallengeCandidateType.Order;
+        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidateOrdersLength() - 1;
         challenge.challenger = challenger;
-        dealSettlementChallenge.setWalletChallenge(order.wallet, challenge);
+        driipSettlementChallenge.setWalletChallenge(order.wallet, challenge);
 
         //raise event
-        emit ChallengeByOrderEvent(order, challenge.nonce, challenge.dealType, challenger);
+        emit ChallengeByOrderEvent(order, challenge.nonce, challenge.driipType, challenger);
     }
 
-    /// @notice Unchallenge deal settlement by providing trade that shows that challenge order candidate has been filled
-    /// @param order The order candidate that challenged deal
+    /// @notice Unchallenge driip settlement by providing trade that shows that challenge order candidate has been filled
+    /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
     function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade, address challenger)
     public
@@ -119,25 +119,25 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
         require(configuration != address(0));
         require(securityBond != address(0));
 
-        DealSettlementChallenge.Challenge memory challenge = dealSettlementChallenge.getWalletChallenge(order.wallet);
-        require(challenge.candidateType == DealSettlementChallenge.ChallengeCandidateType.Order);
+        DriipSettlementChallenge.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(order.wallet);
+        require(challenge.candidateType == DriipSettlementChallenge.ChallengeCandidateType.Order);
 
         challenge.result = Types.ChallengeResult.Qualified;
-        challenge.candidateType = DealSettlementChallenge.ChallengeCandidateType.None;
+        challenge.candidateType = DriipSettlementChallenge.ChallengeCandidateType.None;
         challenge.candidateIndex = 0;
         challenge.challenger = address(0);
-        dealSettlementChallenge.setWalletChallenge(order.wallet, challenge);
+        driipSettlementChallenge.setWalletChallenge(order.wallet, challenge);
 
         (address stageCurrency, int256 stageAmount) = configuration.getUnchallengeOrderCandidateByTradeStake();
         securityBond.stage(stageAmount, stageCurrency, challenger);
 
         //raise event
-        emit UnchallengeOrderCandidateByTradeEvent(order, trade, challenge.nonce, challenge.dealType, challenger);
+        emit UnchallengeOrderCandidateByTradeEvent(order, trade, challenge.nonce, challenge.driipType, challenger);
     }
 
-    /// @notice Challenge the deal settlement by providing trade candidate
-    /// @param trade The trade candidate that challenges the challenged deal
-    /// @param wallet The wallet whose deal settlement is being challenged
+    /// @notice Challenge the driip settlement by providing trade candidate
+    /// @param trade The trade candidate that challenges the challenged driip
+    /// @param wallet The wallet whose driip settlement is being challenged
     function challengeByTrade(Types.Trade trade, address wallet, address challenger)
     public
     validatorInitialized
@@ -153,7 +153,7 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
 
         require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
 
-        DealSettlementChallenge.Challenge memory challenge = dealSettlementChallenge.getWalletChallenge(wallet);
+        DriipSettlementChallenge.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -171,35 +171,35 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
         (trade.currencies.conjugate, trade.transfers.conjugate.single.abs()) :
         (trade.currencies.intended, trade.transfers.intended.single.abs()));
 
-        int256 challengeBalance = (Types.DealType.Trade == challenge.dealType ?
+        int256 challengeBalance = (Types.DriipType.Trade == challenge.driipType ?
         getTradeBalance(
-            dealSettlementChallenge.getWalletChallengeTrade(wallet, challenge.dealIndex),
+            driipSettlementChallenge.getWalletChallengeTrade(wallet, challenge.driipIndex),
             wallet,
             currency
         ) :
         getPaymentBalance(
-            dealSettlementChallenge.getWalletChallengePayment(wallet, challenge.dealIndex),
+            driipSettlementChallenge.getWalletChallengePayment(wallet, challenge.driipIndex),
             wallet,
             currency
         ));
 
         require(candidateTransfer > challengeBalance);
 
-        dealSettlementChallenge.pushChallengeCandidateTrade(trade);
+        driipSettlementChallenge.pushChallengeCandidateTrade(trade);
 
         challenge.result = Types.ChallengeResult.Disqualified;
-        challenge.candidateType = DealSettlementChallenge.ChallengeCandidateType.Trade;
-        challenge.candidateIndex = dealSettlementChallenge.getChallengeCandidateTradesLength() - 1;
+        challenge.candidateType = DriipSettlementChallenge.ChallengeCandidateType.Trade;
+        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidateTradesLength() - 1;
         challenge.challenger = challenger;
-        dealSettlementChallenge.setWalletChallenge(wallet, challenge);
+        driipSettlementChallenge.setWalletChallenge(wallet, challenge);
 
         //raise event
-        emit ChallengeByTradeEvent(trade, wallet, challenge.nonce, challenge.dealType, challenger);
+        emit ChallengeByTradeEvent(trade, wallet, challenge.nonce, challenge.driipType, challenger);
     }
 
-    /// @notice Challenge the deal settlement by providing payment candidate
-    /// @param payment The payment candidate that challenges the challenged deal
-    /// @param wallet The wallet whose deal settlement is being challenged
+    /// @notice Challenge the driip settlement by providing payment candidate
+    /// @param payment The payment candidate that challenges the challenged driip
+    /// @param wallet The wallet whose driip settlement is being challenged
     function challengeByPayment(Types.Payment payment, address wallet, address challenger)
     public
     validatorInitialized
@@ -207,7 +207,7 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
     onlySealedPayment(payment)
     onlyPaymentSender(payment, wallet) // Wallet is recipient in (candidate) payment -> nothing to consider
     {
-        DealSettlementChallenge.Challenge memory challenge = dealSettlementChallenge.getWalletChallenge(wallet);
+        DriipSettlementChallenge.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -215,30 +215,30 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
 
         int256 candidateTransfer = payment.transfers.single.abs();
 
-        int256 challengeBalance = (Types.DealType.Trade == challenge.dealType ?
+        int256 challengeBalance = (Types.DriipType.Trade == challenge.driipType ?
         getTradeBalance(
-            dealSettlementChallenge.getWalletChallengeTrade(wallet, challenge.dealIndex),
+            driipSettlementChallenge.getWalletChallengeTrade(wallet, challenge.driipIndex),
             wallet,
             payment.currency
         ) :
         getPaymentBalance(
-            dealSettlementChallenge.getWalletChallengePayment(wallet, challenge.dealIndex),
+            driipSettlementChallenge.getWalletChallengePayment(wallet, challenge.driipIndex),
             wallet,
             payment.currency
         ));
 
         require(candidateTransfer > challengeBalance);
 
-        dealSettlementChallenge.pushChallengeCandidatePayment(payment);
+        driipSettlementChallenge.pushChallengeCandidatePayment(payment);
 
         challenge.result = Types.ChallengeResult.Disqualified;
-        challenge.candidateType = DealSettlementChallenge.ChallengeCandidateType.Payment;
-        challenge.candidateIndex = dealSettlementChallenge.getChallengeCandidatePaymentsLength() - 1;
+        challenge.candidateType = DriipSettlementChallenge.ChallengeCandidateType.Payment;
+        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidatePaymentsLength() - 1;
         challenge.challenger = challenger;
-        dealSettlementChallenge.setWalletChallenge(wallet, challenge);
+        driipSettlementChallenge.setWalletChallenge(wallet, challenge);
 
         //raise event
-        emit ChallengeByPaymentEvent(payment, wallet, challenge.nonce, challenge.dealType, challenger);
+        emit ChallengeByPaymentEvent(payment, wallet, challenge.nonce, challenge.driipType, challenger);
     }
 
     function getTradeBalance(Types.Trade trade, address wallet, address currency) private pure returns (int256) {
@@ -294,7 +294,7 @@ contract DealSettlementChallenger is Ownable, Modifiable, Configurable, Validata
     }
 
     modifier onlyController() {
-        require(msg.sender == address(dealSettlementChallenge));
+        require(msg.sender == address(driipSettlementChallenge));
         _;
     }
 }

@@ -654,37 +654,37 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getDealSettlementChallengeTimeout()', () => {
+        describe('getDriipSettlementChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.dealSettlementChallengeTimeout.call();
+                const value = await web3Configuration.driipSettlementChallengeTimeout.call();
                 value.toNumber().should.equal(60 * 60 * 5);
             });
         });
 
-        describe('setDealSettlementChallengeTimeout()', () => {
+        describe('setDriipSettlementChallengeTimeout()', () => {
             describe('if called with sender that is owner', () => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await web3Configuration.dealSettlementChallengeTimeout.call();
+                    initialValue = await web3Configuration.driipSettlementChallengeTimeout.call();
                 });
 
                 after(async () => {
-                    await web3Configuration.setDealSettlementChallengeTimeout(initialValue);
+                    await web3Configuration.setDriipSettlementChallengeTimeout(initialValue);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDealSettlementChallengeTimeout(100);
+                    const result = await web3Configuration.setDriipSettlementChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDealSettlementChallengeTimeout');
-                    const value = await web3Configuration.dealSettlementChallengeTimeout.call();
+                    result.logs[0].event.should.equal('SetDriipSettlementChallengeTimeout');
+                    const value = await web3Configuration.driipSettlementChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setDealSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setDriipSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -719,7 +719,7 @@ module.exports = (glob) => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setUnchallengeOrderCandidateByTradeStake(currency, 1e18);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetUnchallengeDealSettlementOrderByTradeStakeEvent');
+                    result.logs[0].event.should.equal('SetUnchallengeDriipSettlementOrderByTradeStakeEvent');
                     const values = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
                     utils.getAddress(values[0]).should.equal(currency);
                     values[1].toNumber().should.equal(1e18);
@@ -777,16 +777,16 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getDuplicateDealNonceStake()', () => {
+        describe('getDuplicateDriipNonceStake()', () => {
             it('should equal values initialized at construction time', async () => {
-                const values = await web3Configuration.getDuplicateDealNonceStake.call();
+                const values = await web3Configuration.getDuplicateDriipNonceStake.call();
                 values.should.be.an('array').and.have.lengthOf(2);
                 values[0].should.equal(address0);
                 values[1].toNumber().should.equal(0);
             });
         });
 
-        describe('setDuplicateDealNonceStake()', () => {
+        describe('setDuplicateDriipNonceStake()', () => {
             let currency;
 
             before(() => {
@@ -797,18 +797,18 @@ module.exports = (glob) => {
                 let initialValues;
 
                 before(async () => {
-                    initialValues = await web3Configuration.duplicateDealNonceStake.call();
+                    initialValues = await web3Configuration.duplicateDriipNonceStake.call();
                 });
 
                 after(async () => {
-                    await web3Configuration.setDuplicateDealNonceStake(initialValues[0], initialValues[1]);
+                    await web3Configuration.setDuplicateDriipNonceStake(initialValues[0], initialValues[1]);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDuplicateDealNonceStake(currency, 1e18);
+                    const result = await web3Configuration.setDuplicateDriipNonceStake(currency, 1e18);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDuplicateDealNonceStakeEvent');
-                    const values = await web3Configuration.duplicateDealNonceStake.call();
+                    result.logs[0].event.should.equal('SetDuplicateDriipNonceStakeEvent');
+                    const values = await web3Configuration.duplicateDriipNonceStake.call();
                     utils.getAddress(values[0]).should.equal(currency);
                     values[1].toNumber().should.equal(1e18);
                 });
@@ -816,7 +816,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setDuplicateDealNonceStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setDuplicateDriipNonceStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

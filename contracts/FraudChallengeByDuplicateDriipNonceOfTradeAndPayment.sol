@@ -16,12 +16,12 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByDuplicateDealNonceOfTradeAndPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
+contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDealNonceOfTradeAndPaymentEvent(Types.Trade trade, Types.Payment payment, address challenger);
+    event ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(Types.Trade trade, Types.Payment payment, address challenger);
 
     //
     // Constructor
@@ -33,9 +33,9 @@ contract FraudChallengeByDuplicateDealNonceOfTradeAndPayment is Ownable, FraudCh
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit one trade candidate and one payment candidate in continuous Fraud
-    /// Challenge (FC) to be tested for duplicate deal nonce
-    /// @param trade Trade with duplicate deal nonce
-    /// @param payment Payment with duplicate deal nonce
+    /// Challenge (FC) to be tested for duplicate driip nonce
+    /// @param trade Trade with duplicate driip nonce
+    /// @param payment Payment with duplicate driip nonce
     function challenge(
         Types.Trade trade,
         Types.Payment payment
@@ -55,9 +55,9 @@ contract FraudChallengeByDuplicateDealNonceOfTradeAndPayment is Ownable, FraudCh
         fraudChallenge.addFraudulentTrade(trade);
         fraudChallenge.addFraudulentPayment(payment);
 
-        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDealNonceStake();
+        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDriipNonceStake();
         securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
 
-        emit ChallengeByDuplicateDealNonceOfTradeAndPaymentEvent(trade, payment, msg.sender);
+        emit ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(trade, payment, msg.sender);
     }
 }

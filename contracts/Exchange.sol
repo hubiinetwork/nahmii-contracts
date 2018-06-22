@@ -21,7 +21,7 @@ import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {ReserveFund} from "./ReserveFund.sol";
 import {RevenueFund} from "./RevenueFund.sol";
-import {DealSettlementChallenge} from "./DealSettlementChallenge.sol";
+import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
@@ -35,12 +35,12 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint256 public highestAbsoluteDealNonce;
+    uint256 public highestAbsoluteDriipNonce;
 
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
-    DealSettlementChallenge public dealSettlementChallenge;
+    DriipSettlementChallenge public driipSettlementChallenge;
     ReserveFund public tradesReserveFund;
     ReserveFund public paymentsReserveFund;
     RevenueFund public tradesRevenueFund;
@@ -52,9 +52,9 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SettleDealAsTradeEvent(Types.Trade trade, address wallet);
-    event SettleDealAsPaymentEvent(Types.Payment payment, address wallet);
-    event ChangeDealSettlementChallengeEvent(DealSettlementChallenge oldDealSettlementChallenge, DealSettlementChallenge newDealSettlementChallenge);
+    event SettleDriipAsTradeEvent(Types.Trade trade, address wallet);
+    event SettleDriipAsPaymentEvent(Types.Payment payment, address wallet);
+    event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge, DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangePaymentsReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
@@ -69,16 +69,16 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the deal settlement challenge contract
-    /// @param newDealSettlementChallenge The (address of) DealSettlementChallenge contract instance
-    function changeDealSettlementChallenge(DealSettlementChallenge newDealSettlementChallenge)
+    /// @notice Change the driip settlement challenge contract
+    /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
+    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge)
     public
     onlyOwner
-    notNullAddress(newDealSettlementChallenge)
+    notNullAddress(newDriipSettlementChallenge)
     {
-        DealSettlementChallenge oldDealSettlementChallenge = dealSettlementChallenge;
-        dealSettlementChallenge = newDealSettlementChallenge;
-        emit ChangeDealSettlementChallengeEvent(oldDealSettlementChallenge, dealSettlementChallenge);
+        DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
+        driipSettlementChallenge = newDriipSettlementChallenge;
+        emit ChangeDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
     }
 
     /// @notice Change the trades reserve fund contract
@@ -160,24 +160,24 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         return settlements[walletSettlementIndexMap[wallet][index]];
     }
 
-    /// @notice Update the highest absolute deal nonce property from CommunityVote contract
-    function updateHighestAbsoluteDealNonce() public {
-        uint256 _highestAbsoluteDealNonce = communityVote.getHighestAbsoluteDealNonce();
-        if (_highestAbsoluteDealNonce > 0) {
-            highestAbsoluteDealNonce = _highestAbsoluteDealNonce;
+    /// @notice Update the highest absolute driip nonce property from CommunityVote contract
+    function updateHighestAbsoluteDriipNonce() public {
+        uint256 _highestAbsoluteDriipNonce = communityVote.getHighestAbsoluteDriipNonce();
+        if (_highestAbsoluteDriipNonce > 0) {
+            highestAbsoluteDriipNonce = _highestAbsoluteDriipNonce;
         }
     }
 
-    /// @notice Settle deal that is a trade
+    /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
-    /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
-    function settleDealAsTrade(Types.Trade trade, address wallet)
+    /// @param wallet The wallet whose side of the driip is to be settled one-sidedly if supported by reserve fund
+    function settleDriipAsTrade(Types.Trade trade, address wallet)
     public
     validatorInitialized
     onlySealedTrade(trade)
     {
         require(communityVote != address(0));
-        require(dealSettlementChallenge != address(0));
+        require(driipSettlementChallenge != address(0));
         require(configuration != address(0));
         require(clientFund != address(0));
 
@@ -190,12 +190,12 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         require(Types.isTradeParty(trade, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        (Types.ChallengeResult result, address challenger) = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, trade.nonce);
+        (Types.ChallengeResult result, address challenger) = driipSettlementChallenge.driipSettlementChallengeStatus(wallet, trade.nonce);
 
         if (Types.ChallengeResult.Qualified == result) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (trade.nonce < highestAbsoluteDealNonce));
+                || (trade.nonce < highestAbsoluteDriipNonce));
 
             Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
 
@@ -221,27 +221,27 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
                 addTwoSidedSettlementFromTrade(trade);
             }
 
-            if (trade.nonce > highestAbsoluteDealNonce)
-                highestAbsoluteDealNonce = trade.nonce;
+            if (trade.nonce > highestAbsoluteDriipNonce)
+                highestAbsoluteDriipNonce = trade.nonce;
 
         } else if (Types.ChallengeResult.Disqualified == result) {
             clientFund.seizeDepositedAndSettledBalances(wallet, challenger);
             addToSeizedWallets(wallet);
         }
 
-        emit SettleDealAsTradeEvent(trade, wallet);
+        emit SettleDriipAsTradeEvent(trade, wallet);
     }
 
-    /// @notice Settle deal that is a payment
+    /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
-    /// @param wallet The wallet whose side of the deal is to be settled one-sidedly if supported by reserve fund
-    function settleDealAsPayment(Types.Payment payment, address wallet)
+    /// @param wallet The wallet whose side of the driip is to be settled one-sidedly if supported by reserve fund
+    function settleDriipAsPayment(Types.Payment payment, address wallet)
     public
     validatorInitialized
     onlySealedPayment(payment)
     {
         require(communityVote != address(0));
-        require(dealSettlementChallenge != address(0));
+        require(driipSettlementChallenge != address(0));
         require(configuration != address(0));
         require(clientFund != address(0));
 
@@ -254,12 +254,12 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         require(Types.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        (Types.ChallengeResult result, address challenger) = dealSettlementChallenge.dealSettlementChallengeStatus(wallet, payment.nonce);
+        (Types.ChallengeResult result, address challenger) = driipSettlementChallenge.driipSettlementChallengeStatus(wallet, payment.nonce);
 
         if (Types.ChallengeResult.Qualified == result) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (payment.nonce < highestAbsoluteDealNonce));
+                || (payment.nonce < highestAbsoluteDriipNonce));
 
             Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
 
@@ -278,8 +278,8 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
                 addTwoSidedSettlementFromPayment(payment);
             }
 
-            if (payment.nonce > highestAbsoluteDealNonce)
-                highestAbsoluteDealNonce = payment.nonce;
+            if (payment.nonce > highestAbsoluteDriipNonce)
+                highestAbsoluteDriipNonce = payment.nonce;
 
         }
         else if (Types.ChallengeResult.Disqualified == result) {
@@ -287,7 +287,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
             addToSeizedWallets(wallet);
         }
 
-        emit SettleDealAsPaymentEvent(payment, wallet);
+        emit SettleDriipAsPaymentEvent(payment, wallet);
     }
 
     function settleTradeTransfers(Types.Trade trade) private {
@@ -417,14 +417,14 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
 
     function addOneSidedSettlementFromTrade(Types.Trade trade, address wallet) private {
         settlements.push(
-            Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.OneSided, [wallet, address(0)])
+            Types.Settlement(trade.nonce, Types.DriipType.Trade, Types.Sidedness.OneSided, [wallet, address(0)])
         );
         walletSettlementIndexMap[wallet].push(settlements.length - 1);
     }
 
     function addTwoSidedSettlementFromTrade(Types.Trade trade) private {
         settlements.push(
-            Types.Settlement(trade.nonce, Types.DealType.Trade, Types.Sidedness.TwoSided, [trade.buyer.wallet, trade.seller.wallet])
+            Types.Settlement(trade.nonce, Types.DriipType.Trade, Types.Sidedness.TwoSided, [trade.buyer.wallet, trade.seller.wallet])
         );
         walletSettlementIndexMap[trade.buyer.wallet].push(settlements.length - 1);
         walletSettlementIndexMap[trade.seller.wallet].push(settlements.length - 1);
@@ -432,14 +432,14 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
 
     function addOneSidedSettlementFromPayment(Types.Payment payment, address wallet) private {
         settlements.push(
-            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.OneSided, [wallet, address(0)])
+            Types.Settlement(payment.nonce, Types.DriipType.Payment, Types.Sidedness.OneSided, [wallet, address(0)])
         );
         walletSettlementIndexMap[wallet].push(settlements.length - 1);
     }
 
     function addTwoSidedSettlementFromPayment(Types.Payment payment) private {
         settlements.push(
-            Types.Settlement(payment.nonce, Types.DealType.Payment, Types.Sidedness.TwoSided, [payment.sender.wallet, payment.recipient.wallet])
+            Types.Settlement(payment.nonce, Types.DriipType.Payment, Types.Sidedness.TwoSided, [payment.sender.wallet, payment.recipient.wallet])
         );
         walletSettlementIndexMap[payment.sender.wallet].push(settlements.length - 1);
         walletSettlementIndexMap[payment.recipient.wallet].push(settlements.length - 1);
