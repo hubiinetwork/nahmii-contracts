@@ -36,40 +36,6 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		// it(testCounter.next() + ": MUST FAIL [payable]: Cannot be called from owner", async() => {
-		// 	try {
-		// 		await web3.eth.sendTransactionPromise({
-		// 				from: glob.owner,
-		// 				to: glob.web3ClientFund.address,
-		// 				value: web3.toWei(10, 'ether'),
-		// 				gas: glob.gasLimit
-		// 			});
-		// 		assert(false, 'This test must fail.');
-		// 	}
-		// 	catch (err) {
-		// 		assert(err.toString().includes('revert'), err.toString());
-		// 	}
-		// });
-
-		//-------------------------------------------------------------------------
-
-		it(testCounter.next() + ": MUST FAIL [payable]: cannot be called with 0 ethers", async() => {
-			try {
-				await web3.eth.sendTransactionPromise({
-						from: glob.user_a,
-						to: glob.web3ClientFund.address,
-						value: web3.toWei(0, 'ether'),
-						gas: glob.gasLimit
-					});
-				assert(false, 'This test must fail.');
-			}
-			catch (err) {
-				assert(err.toString().includes('revert'), err.toString());
-			}
-		});
-
-		//-------------------------------------------------------------------------
-
 		it(testCounter.next() + ": MUST SUCCEED [depositTokens]: 10 tokens added to A deposited balance", async() => {
 			try {
 				await glob.web3Erc20.approve(glob.web3ClientFund.address, 10, { from: glob.user_a });

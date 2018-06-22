@@ -4,7 +4,7 @@ const ethers = require('ethers');
 module.exports = function (glob) {
     var testCounter = Helpers.TestCounter();
 
-    describ("ReserveFund", function () {
+    describe("ReserveFund", function () {
         // Local test-wide variables
         // ------------------------------------------------------------------------------------------------------
         const TOKEN_DEPOSIT_AMOUNT_A = 5;

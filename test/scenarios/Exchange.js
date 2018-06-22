@@ -10,6 +10,7 @@ const MockedReserveFund = artifacts.require("MockedReserveFund");
 const MockedRevenueFund = artifacts.require("MockedRevenueFund");
 const MockedDealSettlementChallenge = artifacts.require("MockedDealSettlementChallenge");
 const MockedCommunityVote = artifacts.require("MockedCommunityVote");
+const MockedValidator = artifacts.require("MockedValidator");
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -27,7 +28,6 @@ module.exports = (glob) => {
         let web3CommunityVote, ethersCommunityVote;
         let web3DealSettlementChallenge, ethersDealSettlementChallenge;
         let web3Validator, ethersValidator;
-        let web3Hasher, ethersHasher;
         let blockNumber0, blockNumber10, blockNumber20;
 
         before(async () => {
@@ -35,10 +35,6 @@ module.exports = (glob) => {
 
             web3Exchange = glob.web3Exchange;
             ethersExchange = glob.ethersIoExchange;
-            web3Validator = glob.web3Validator;
-            ethersValidator = glob.ethersIoValidator;
-            web3Hasher = glob.web3Hasher;
-            ethersHasher = glob.ethersIoHasher;
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
@@ -52,8 +48,8 @@ module.exports = (glob) => {
             ethersCommunityVote = new Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
             web3DealSettlementChallenge = await MockedDealSettlementChallenge.new(/*glob.owner*/);
             ethersDealSettlementChallenge = new Contract(web3DealSettlementChallenge.address, MockedDealSettlementChallenge.abi, glob.signer_owner);
-
-            await ethersValidator.changeHasher(web3Hasher.address);
+            web3Validator = await MockedValidator.new(glob.owner);
+            ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
             await ethersExchange.changeConfiguration(web3Configuration.address);
             await ethersExchange.changeClientFund(web3ClientFund.address);
@@ -543,13 +539,15 @@ module.exports = (glob) => {
             let trade, overrideOptions;
 
             before(async () => {
-                overrideOptions = {gasLimit: 2e6};
+                overrideOptions = {gasLimit: 5e6};
             });
 
             beforeEach(async () => {
                 await ethersClientFund.reset(overrideOptions);
                 await ethersCommunityVote.reset(overrideOptions);
                 await ethersReserveFund.reset(overrideOptions);
+                await ethersConfiguration.reset(overrideOptions);
+                await ethersValidator.reset(overrideOptions);
 
                 await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.001', 18), [], [], overrideOptions);
                 await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
@@ -557,25 +555,14 @@ module.exports = (glob) => {
                 await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
             });
 
-            describe('if trade hash is wrongly calculated', () => {
+            describe('if trade is not sealed', () => {
                 beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner);
-                    trade.seal.hash = cryptography.hash('some trade');
-                    trade.seal.signature = await mocks.createWeb3Signer(glob.owner)(trade.seal.hash);
-                });
-
-                it('should revert', async () => {
-                    ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if trade is not signed by exchange', () => {
-                beforeEach(async () => {
+                    await ethersValidator.setGenuineTradeSeal(false, overrideOptions);
                     trade = await mocks.mockTrade(glob.user_a);
                 });
 
                 it('should revert', async () => {
-                    ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    await ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -860,7 +847,7 @@ module.exports = (glob) => {
             let payment, overrideOptions;
 
             before(async () => {
-                overrideOptions = {gasLimit: 2e6};
+                overrideOptions = {gasLimit: 5e6};
             });
 
             beforeEach(async () => {
@@ -868,59 +855,20 @@ module.exports = (glob) => {
                 await ethersCommunityVote.reset(overrideOptions);
                 await ethersReserveFund.reset(overrideOptions);
                 await ethersConfiguration.reset(overrideOptions);
+                await ethersValidator.reset(overrideOptions);
 
                 await ethersConfiguration.setPaymentFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [], [], overrideOptions);
                 await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
             });
 
-            describe('if payment hash as wallet is wrongly calculated', () => {
+            describe('if payment is not sealed', () => {
                 beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner, {
-                        sender: {wallet: glob.user_a}
-                    });
-                    payment.seals.wallet.hash = cryptography.hash('some payment');
-                    payment.seals.wallet.signature = await mocks.createWeb3Signer(glob.user_a)(payment.seals.wallet.hash);
-                    payment.seals.exchange.hash = mocks.hashPaymentAsExchange(payment);
-                    payment.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment.seals.exchange.hash);
-                });
-
-                it('should revert', async () => {
-                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if payment hash as exchange is wrongly calculated', () => {
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner, {
-                        sender: {wallet: glob.user_a}
-                    });
-                    payment.seals.exchange.hash = mocks.hashPaymentAsWallet(payment);
-                    payment.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment.seals.exchange.hash);
-                });
-
-                it('should revert', async () => {
-                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if payment is not signed by exchange', () => {
-                beforeEach(async () => {
+                    await ethersValidator.setGenuinePaymentSeals(false, overrideOptions);
                     payment = await mocks.mockPayment(glob.user_a);
                 });
 
                 it('should revert', async () => {
-                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if payment is not signed by wallet', () => {
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner);
-                    payment.seals.wallet.signature = payment.seals.exchange.signature;
-                });
-
-                it('should revert', async () => {
-                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    await ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
