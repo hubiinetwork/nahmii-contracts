@@ -464,6 +464,7 @@ contract('Smart contract checks', function () {
 			await glob.web3Erc20.testMint(glob.user_b, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.user_c, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.user_d, initialTokensForAll);
+			await glob.web3Erc20.testMint(glob.user_e, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
 			await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_1.address, initialTokensForAll);
