@@ -10,7 +10,12 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 
+/**
+@title SecurityBondable
+@notice Contract that allows for self-destruction
+*/
 contract SelfDestructible is Ownable {
+
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------

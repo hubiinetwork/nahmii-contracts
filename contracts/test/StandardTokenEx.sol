@@ -12,7 +12,7 @@ import {SafeMathUint} from "../SafeMathUint.sol";
 
 /**
  * @title Standard token
- * @dev Basic implementation of the EIP20 standard token (also known as ERC20 token).
+ * @notice Basic implementation of the EIP20 standard token (also known as ERC20 token).
  */
 contract StandardTokenEx is ERC20 {
     using SafeMathUint for uint;

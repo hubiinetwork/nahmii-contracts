@@ -15,8 +15,8 @@ const Validator = artifacts.require("Validator");
 const Configuration = artifacts.require("Configuration");
 const Exchange = artifacts.require("Exchange");
 const CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
-const DealSettlementChallenge = artifacts.require("DealSettlementChallenge");
-const DealSettlementChallenger = artifacts.require("DealSettlementChallenger");
+const DriipSettlementChallenge = artifacts.require("DriipSettlementChallenge");
+const DriipSettlementChallenger = artifacts.require("DriipSettlementChallenger");
 const FraudChallenge = artifacts.require("FraudChallenge");
 const FraudChallengeByOrder = artifacts.require("FraudChallengeByOrder");
 const FraudChallengeByTrade = artifacts.require("FraudChallengeByTrade");
@@ -27,9 +27,9 @@ const FraudChallengeByPaymentSucceedingTrade = artifacts.require("FraudChallenge
 const FraudChallengeByTradeSucceedingPayment = artifacts.require("FraudChallengeByTradeSucceedingPayment");
 const FraudChallengeByTradeOrderResiduals = artifacts.require("FraudChallengeByTradeOrderResiduals");
 const FraudChallengeByDoubleSpentOrders = artifacts.require("FraudChallengeByDoubleSpentOrders");
-const FraudChallengeByDuplicateDealNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDealNonceOfTrades");
-const FraudChallengeByDuplicateDealNonceOfPayments = artifacts.require("FraudChallengeByDuplicateDealNonceOfPayments");
-const FraudChallengeByDuplicateDealNonceOfTradeAndPayment = artifacts.require("FraudChallengeByDuplicateDealNonceOfTradeAndPayment");
+const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTrades");
+const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require("FraudChallengeByDuplicateDriipNonceOfPayments");
+const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTradeAndPayment");
 const ReserveFund = artifacts.require("ReserveFund");
 const RevenueFund = artifacts.require("RevenueFund");
 const SecurityBond = artifacts.require("SecurityBond");
@@ -220,25 +220,25 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate DealSettlementChallenge contract", async () => {
+    before("Preflight: Instantiate DriipSettlementChallenge contract", async () => {
         try {
-            glob.web3DealSettlementChallenge = await DealSettlementChallenge.deployed();
-            assert.notEqual(glob.web3DealSettlementChallenge, null);
-            glob.ethersIoDealSettlementChallenge = new ethers.Contract(glob.web3DealSettlementChallenge.address, DealSettlementChallenge.abi, glob.signer_owner);
+            glob.web3DriipSettlementChallenge = await DriipSettlementChallenge.deployed();
+            assert.notEqual(glob.web3DriipSettlementChallenge, null);
+            glob.ethersIoDriipSettlementChallenge = new ethers.Contract(glob.web3DriipSettlementChallenge.address, DriipSettlementChallenge.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate DealSettlementChallenge contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate DriipSettlementChallenge contract address. [Error: ' + err.toString() + ']');
         }
     });
 
-    before("Preflight: Instantiate DealSettlementChallenger contract", async () => {
+    before("Preflight: Instantiate DriipSettlementChallenger contract", async () => {
         try {
-            glob.web3DealSettlementChallenger = await DealSettlementChallenger.deployed();
-            assert.notEqual(glob.web3DealSettlementChallenger, null);
-            glob.ethersIoDealSettlementChallenger = new ethers.Contract(glob.web3DealSettlementChallenger.address, DealSettlementChallenger.abi, glob.signer_owner);
+            glob.web3DriipSettlementChallenger = await DriipSettlementChallenger.deployed();
+            assert.notEqual(glob.web3DriipSettlementChallenger, null);
+            glob.ethersIoDriipSettlementChallenger = new ethers.Contract(glob.web3DriipSettlementChallenger.address, DriipSettlementChallenger.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate DealSettlementChallenge contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate DriipSettlementChallenge contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -352,36 +352,36 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByDuplicateDealNonceOfTrades contract", async () => {
+    before("Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfTrades contract", async () => {
         try {
-            glob.web3FraudChallengeByDuplicateDealNonceOfTrades = await FraudChallengeByDuplicateDealNonceOfTrades.deployed();
-            assert.notEqual(glob.web3FraudChallengeByDuplicateDealNonceOfTrades, null);
-            glob.ethersIoFraudChallengeByDuplicateDealNonceOfTrades = new ethers.Contract(glob.web3FraudChallengeByDuplicateDealNonceOfTrades.address, FraudChallengeByDuplicateDealNonceOfTrades.abi, glob.signer_owner);
+            glob.web3FraudChallengeByDuplicateDriipNonceOfTrades = await FraudChallengeByDuplicateDriipNonceOfTrades.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfTrades, null);
+            glob.ethersIoFraudChallengeByDuplicateDriipNonceOfTrades = new ethers.Contract(glob.web3FraudChallengeByDuplicateDriipNonceOfTrades.address, FraudChallengeByDuplicateDriipNonceOfTrades.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDealNonceOfTrades contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDriipNonceOfTrades contract address. [Error: ' + err.toString() + ']');
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByDuplicateDealNonceOfPayments contract", async () => {
+    before("Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfPayments contract", async () => {
         try {
-            glob.web3FraudChallengeByDuplicateDealNonceOfPayments = await FraudChallengeByDuplicateDealNonceOfPayments.deployed();
-            assert.notEqual(glob.web3FraudChallengeByDuplicateDealNonceOfPayments, null);
-            glob.ethersIoFraudChallengeByDuplicateDealNonceOfPayments = new ethers.Contract(glob.web3FraudChallengeByDuplicateDealNonceOfPayments.address, FraudChallengeByDuplicateDealNonceOfPayments.abi, glob.signer_owner);
+            glob.web3FraudChallengeByDuplicateDriipNonceOfPayments = await FraudChallengeByDuplicateDriipNonceOfPayments.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfPayments, null);
+            glob.ethersIoFraudChallengeByDuplicateDriipNonceOfPayments = new ethers.Contract(glob.web3FraudChallengeByDuplicateDriipNonceOfPayments.address, FraudChallengeByDuplicateDriipNonceOfPayments.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDealNonceOfPayments contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDriipNonceOfPayments contract address. [Error: ' + err.toString() + ']');
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByDuplicateDealNonceOfTradeAndPayment contract", async () => {
+    before("Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfTradeAndPayment contract", async () => {
         try {
-            glob.web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment = await FraudChallengeByDuplicateDealNonceOfTradeAndPayment.deployed();
-            assert.notEqual(glob.web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment, null);
-            glob.ethersIoFraudChallengeByDuplicateDealNonceOfTradeAndPayment = new ethers.Contract(glob.web3FraudChallengeByDuplicateDealNonceOfTradeAndPayment.address, FraudChallengeByDuplicateDealNonceOfTradeAndPayment.abi, glob.signer_owner);
+            glob.web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = await FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.deployed();
+            assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, null);
+            glob.ethersIoFraudChallengeByDuplicateDriipNonceOfTradeAndPayment = new ethers.Contract(glob.web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDealNonceOfTradeAndPayment contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate FraudChallengeByDuplicateDriipNonceOfTradeAndPayment contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -496,8 +496,8 @@ contract('Smart contract checks', function () {
     require('./scenarios/Configuration')(glob);
     require('./scenarios/Exchange')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
-	require('./scenarios/DealSettlementChallenge')(glob);
-	require('./scenarios/DealSettlementChallenger')(glob);
+	require('./scenarios/DriipSettlementChallenge')(glob);
+	require('./scenarios/DriipSettlementChallenger')(glob);
     require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
     require('./scenarios/FraudChallengeByTrade')(glob);
@@ -508,9 +508,9 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByTradeSucceedingPayment')(glob);
     require('./scenarios/FraudChallengeByTradeOrderResiduals')(glob);
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTrades')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDealNonceOfPayments')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDealNonceOfTradeAndPayment')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
+    require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
 	require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);

@@ -8,6 +8,10 @@
 
 pragma solidity ^0.4.24;
 
+/**
+@title Ownable
+@notice A contract that has an owner property
+*/
 contract Ownable {
     //
     // Variables

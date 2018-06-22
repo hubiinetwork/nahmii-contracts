@@ -12,18 +12,20 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Hashable} from "./Hashable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
 import {Validatable} from "./Validatable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByDuplicateDealNonceOfPayments is Ownable, FraudChallengable, Configurable, Hashable, SecurityBondable, Validatable, ClientFundable {
+/**
+@title FraudChallengeByDuplicateDriipNonceOfPayments
+@notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
+*/
+contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDealNonceOfPaymentsEvent(Types.Payment payment1, Types.Payment payment2, address challenger);
+    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(Types.Payment payment1, Types.Payment payment2, address challenger);
 
     //
     // Constructor
@@ -35,9 +37,9 @@ contract FraudChallengeByDuplicateDealNonceOfPayments is Ownable, FraudChallenga
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit two payment candidates in continuous Fraud Challenge (FC) to be tested for
-    /// duplicate deal nonce
-    /// @param payment1 First payment with duplicate deal nonce
-    /// @param payment2 Second payment with duplicate deal nonce
+    /// duplicate driip nonce
+    /// @param payment1 First payment with duplicate driip nonce
+    /// @param payment2 Second payment with duplicate driip nonce
     function challenge(
         Types.Payment payment1,
         Types.Payment payment2
@@ -58,9 +60,9 @@ contract FraudChallengeByDuplicateDealNonceOfPayments is Ownable, FraudChallenga
         fraudChallenge.addFraudulentPayment(payment1);
         fraudChallenge.addFraudulentPayment(payment2);
 
-        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDealNonceStake();
+        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDriipNonceStake();
         securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
 
-        emit ChallengeByDuplicateDealNonceOfPaymentsEvent(payment1, payment2, msg.sender);
+        emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(payment1, payment2, msg.sender);
     }
 }

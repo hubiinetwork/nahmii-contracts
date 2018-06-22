@@ -18,7 +18,7 @@ import {RevenueToken} from "./RevenueToken.sol";
 import {ERC20} from "./ERC20.sol";
 
 /**
-@title Token holder revenue fund
+@title TokenHolderRevenueFund
 @notice Fund that manages the revenue earned by revenue token holders.
 */
 contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDestructible {

@@ -13,7 +13,7 @@ import {FraudChallenge} from "../FraudChallenge.sol";
 import {Types} from "../Types.sol";
 
 /**
-@title Mocked fraud challenge
+@title MockedFraudChallenge
 @notice Mocked implementation of fraud challenge contract
 */
 contract MockedFraudChallenge is FraudChallenge {

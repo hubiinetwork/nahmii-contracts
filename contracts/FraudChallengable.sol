@@ -13,6 +13,10 @@ import {Modifiable} from "./Modifiable.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
+/**
+@title FraudChallengable
+@notice An ownable that has a fraud challenge property
+*/
 contract FraudChallengable is Ownable, Modifiable, SelfDestructible {
 
     //

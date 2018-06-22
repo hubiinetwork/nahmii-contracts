@@ -16,6 +16,10 @@ import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title FraudChallengeByTradeOrderResiduals
+@notice Where driips are challenged wrt fraud by mismatch in trade order residuals
+*/
 contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
 
     //

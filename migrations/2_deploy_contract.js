@@ -12,8 +12,8 @@ const CommunityVote = artifacts.require("./CommunityVote.sol");
 const Configuration = artifacts.require("./Configuration.sol");
 const Exchange = artifacts.require("./Exchange.sol");
 const CancelOrdersChallenge = artifacts.require("./CancelOrdersChallenge.sol");
-const DealSettlementChallenge = artifacts.require("./DealSettlementChallenge.sol");
-const DealSettlementChallenger = artifacts.require("./DealSettlementChallenger.sol");
+const DriipSettlementChallenge = artifacts.require("./DriipSettlementChallenge.sol");
+const DriipSettlementChallenger = artifacts.require("./DriipSettlementChallenger.sol");
 const Hasher = artifacts.require('./Hasher.sol');
 const Validator = artifacts.require('./Validator.sol');
 const FraudChallengeByOrder = artifacts.require("./FraudChallengeByOrder.sol");
@@ -25,9 +25,9 @@ const FraudChallengeByPaymentSucceedingTrade = artifacts.require("./FraudChallen
 const FraudChallengeByTradeSucceedingPayment = artifacts.require("./FraudChallengeByTradeSucceedingPayment.sol");
 const FraudChallengeByTradeOrderResiduals = artifacts.require("./FraudChallengeByTradeOrderResiduals.sol");
 const FraudChallengeByDoubleSpentOrders = artifacts.require("./FraudChallengeByDoubleSpentOrders.sol");
-const FraudChallengeByDuplicateDealNonceOfTrades = artifacts.require("./FraudChallengeByDuplicateDealNonceOfTrades.sol");
-const FraudChallengeByDuplicateDealNonceOfPayments = artifacts.require("./FraudChallengeByDuplicateDealNonceOfPayments.sol");
-const FraudChallengeByDuplicateDealNonceOfTradeAndPayment = artifacts.require("./FraudChallengeByDuplicateDealNonceOfTradeAndPayment.sol");
+const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require("./FraudChallengeByDuplicateDriipNonceOfTrades.sol");
+const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require("./FraudChallengeByDuplicateDriipNonceOfPayments.sol");
+const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require("./FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.sol");
 const FraudChallenge = artifacts.require("./FraudChallenge.sol");
 const ReserveFund = artifacts.require("./ReserveFund.sol");
 const RevenueFund = artifacts.require("./RevenueFund.sol");
@@ -73,7 +73,7 @@ module.exports = function (deployer, network, accounts) {
     });
 
     deployer.link(SafeMathIntLib, [
-        ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger,
+        ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
         FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
     ]);
 
@@ -82,11 +82,11 @@ module.exports = function (deployer, network, accounts) {
     ]);
 
     deployer.link(Types, [
-        Exchange, CancelOrdersChallenge, DealSettlementChallenge, DealSettlementChallenger,
+        Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
         FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
         FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
-        FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDealNonceOfTrades,
-        FraudChallengeByDuplicateDealNonceOfPayments, FraudChallengeByDuplicateDealNonceOfTradeAndPayment, FraudChallenge
+        FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfTrades,
+        FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallenge
     ]);
 
     deployer.deploy(ClientFund, ownerAccount, {
@@ -119,21 +119,21 @@ module.exports = function (deployer, network, accounts) {
         addresses.CancelOrdersChallenge = CancelOrdersChallenge.address;
     });
 
-    deployer.deploy(DealSettlementChallenge, ownerAccount, {
+    deployer.deploy(DriipSettlementChallenge, ownerAccount, {
         from: ownerAccount
     }).then(() => {
-        addresses.DealSettlementChallenge = DealSettlementChallenge.address;
+        addresses.DriipSettlementChallenge = DriipSettlementChallenge.address;
 
-		return deployer.deploy(DealSettlementChallenger, ownerAccount, DealSettlementChallenge.address, {
+		return deployer.deploy(DriipSettlementChallenger, ownerAccount, DriipSettlementChallenge.address, {
 			from : ownerAccount
 		})
 	}).then(() => {
-		addresses.DealSettlementChallenger = DealSettlementChallenger.address;
+		addresses.DriipSettlementChallenger = DriipSettlementChallenger.address;
 
-		return DealSettlementChallenge.deployed();
-	}).then((web3DealSettlementChallenge) => {
+		return DriipSettlementChallenge.deployed();
+	}).then((web3DriipSettlementChallenge) => {
 
-		return web3DealSettlementChallenge.changeDealSettlementChallenger(DealSettlementChallenger.address, {
+		return web3DriipSettlementChallenge.changeDriipSettlementChallenger(DriipSettlementChallenger.address, {
 			from : ownerAccount
 		});
 	});
@@ -204,22 +204,22 @@ module.exports = function (deployer, network, accounts) {
         addresses.FraudChallengeByDoubleSpentOrders = FraudChallengeByDoubleSpentOrders.address;
     });
 
-    deployer.deploy(FraudChallengeByDuplicateDealNonceOfTrades, ownerAccount, {
+    deployer.deploy(FraudChallengeByDuplicateDriipNonceOfTrades, ownerAccount, {
         from: ownerAccount
     }).then(() => {
-        addresses.FraudChallengeByDuplicateDealNonceOfTrades = FraudChallengeByDuplicateDealNonceOfTrades.address;
+        addresses.FraudChallengeByDuplicateDriipNonceOfTrades = FraudChallengeByDuplicateDriipNonceOfTrades.address;
     });
 
-    deployer.deploy(FraudChallengeByDuplicateDealNonceOfPayments, ownerAccount, {
+    deployer.deploy(FraudChallengeByDuplicateDriipNonceOfPayments, ownerAccount, {
         from: ownerAccount
     }).then(() => {
-        addresses.FraudChallengeByDuplicateDealNonceOfPayments = FraudChallengeByDuplicateDealNonceOfPayments.address;
+        addresses.FraudChallengeByDuplicateDriipNonceOfPayments = FraudChallengeByDuplicateDriipNonceOfPayments.address;
     });
 
-    deployer.deploy(FraudChallengeByDuplicateDealNonceOfTradeAndPayment, ownerAccount, {
+    deployer.deploy(FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, ownerAccount, {
         from: ownerAccount
     }).then(() => {
-        addresses.FraudChallengeByDuplicateDealNonceOfTradeAndPayment = FraudChallengeByDuplicateDealNonceOfTradeAndPayment.address;
+        addresses.FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address;
     });
 
     deployer.deploy(FraudChallenge, ownerAccount, {

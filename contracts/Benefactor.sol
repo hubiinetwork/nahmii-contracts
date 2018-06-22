@@ -10,6 +10,10 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 
+/**
+@title Benefactor
+@notice An ownable that contains registered beneficiaries
+*/
 contract Benefactor is Ownable {
     //
     // Variables

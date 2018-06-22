@@ -17,10 +17,10 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 import {ERC20} from "./ERC20.sol";
 
 /**
-@title Revenue fund
-@notice The target of all revenue earned in deal settlements and from which accrued revenue is split amongst
- reserve fund contributors and revenue token holders. There will likely be 2 instances of this smart contract,
- one for revenue from trades and one for revenue from payments.
+@title RevenueFund
+@notice The target of all revenue earned in driip settlements and from which accrued revenue is split amongst
+ accrual beneficiaries. There will likely be 2 instances of this smart contract, one for revenue from trades
+ and one for revenue from payments.
 */
 contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDestructible {
     using SafeMathInt for int256;

@@ -16,12 +16,16 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
 
-contract FraudChallengeByDuplicateDealNonceOfTrades is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
+/**
+@title FraudChallengeByDuplicateDriipNonceOfTrades
+@notice Where driips are challenged wrt fraud by duplicate drip nonce of trades
+*/
+contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDealNonceOfTradesEvent(Types.Trade trade1, Types.Trade trade2, address challenger);
+    event ChallengeByDuplicateDriipNonceOfTradesEvent(Types.Trade trade1, Types.Trade trade2, address challenger);
 
     //
     // Constructor
@@ -33,9 +37,9 @@ contract FraudChallengeByDuplicateDealNonceOfTrades is Ownable, FraudChallengabl
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit two trade candidates in continuous Fraud Challenge (FC) to be tested for
-    /// duplicate deal nonce
-    /// @param trade1 First trade with duplicate deal nonce
-    /// @param trade2 Second trade with duplicate deal nonce
+    /// duplicate driip nonce
+    /// @param trade1 First trade with duplicate driip nonce
+    /// @param trade2 Second trade with duplicate driip nonce
     function challenge(
         Types.Trade trade1,
         Types.Trade trade2
@@ -56,12 +60,9 @@ contract FraudChallengeByDuplicateDealNonceOfTrades is Ownable, FraudChallengabl
         fraudChallenge.addFraudulentTrade(trade1);
         fraudChallenge.addFraudulentTrade(trade2);
 
-        //        address stakeCurrency;
-        //        int256 stakeAmount;
-        //        (stakeCurrency, stakeAmount) = configuration.getDuplicateDealNonceStake();
-        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDealNonceStake();
+        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDriipNonceStake();
         securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
 
-        emit ChallengeByDuplicateDealNonceOfTradesEvent(trade1, trade2, msg.sender);
+        emit ChallengeByDuplicateDriipNonceOfTradesEvent(trade1, trade2, msg.sender);
     }
 }

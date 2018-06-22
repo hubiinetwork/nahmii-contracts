@@ -20,7 +20,7 @@ import {Types} from "./Types.sol";
 
 /**
 @title CancelOrdersChallenge
-@notice Where orders are cancelled and cancellation challenged
+@notice Where orders are cancelled and cancellations challenged
 */
 contract CancelOrdersChallenge is Ownable, Modifiable, Configurable, Validatable, SelfDestructible {
     using SafeMathInt for int256;

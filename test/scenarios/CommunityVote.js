@@ -21,9 +21,9 @@ module.exports = function (glob) {
             });
         });
 
-        describe('getHighestAbsoluteDealNonce()', () => {
+        describe('getHighestAbsoluteDriipNonce()', () => {
             it('should return 0', async () => {
-                const result = await ethersInstance.getHighestAbsoluteDealNonce();
+                const result = await ethersInstance.getHighestAbsoluteDriipNonce();
                 result.eq(utils.bigNumberify(0)).should.be.true;
             });
         });

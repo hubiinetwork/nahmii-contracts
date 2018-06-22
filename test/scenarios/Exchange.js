@@ -8,7 +8,7 @@ const MockedConfiguration = artifacts.require("MockedConfiguration");
 const MockedClientFund = artifacts.require("MockedClientFund");
 const MockedReserveFund = artifacts.require("MockedReserveFund");
 const MockedRevenueFund = artifacts.require("MockedRevenueFund");
-const MockedDealSettlementChallenge = artifacts.require("MockedDealSettlementChallenge");
+const MockedDriipSettlementChallenge = artifacts.require("MockedDriipSettlementChallenge");
 const MockedCommunityVote = artifacts.require("MockedCommunityVote");
 const MockedValidator = artifacts.require("MockedValidator");
 
@@ -26,7 +26,7 @@ module.exports = (glob) => {
         let web3ReserveFund, ethersReserveFund;
         let web3RevenueFund, ethersRevenueFund;
         let web3CommunityVote, ethersCommunityVote;
-        let web3DealSettlementChallenge, ethersDealSettlementChallenge;
+        let web3DriipSettlementChallenge, ethersDriipSettlementChallenge;
         let web3Validator, ethersValidator;
         let blockNumber0, blockNumber10, blockNumber20;
 
@@ -46,8 +46,8 @@ module.exports = (glob) => {
             ethersRevenueFund = new Contract(web3RevenueFund.address, MockedRevenueFund.abi, glob.signer_owner);
             web3CommunityVote = await MockedCommunityVote.new(/*glob.owner*/);
             ethersCommunityVote = new Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
-            web3DealSettlementChallenge = await MockedDealSettlementChallenge.new(/*glob.owner*/);
-            ethersDealSettlementChallenge = new Contract(web3DealSettlementChallenge.address, MockedDealSettlementChallenge.abi, glob.signer_owner);
+            web3DriipSettlementChallenge = await MockedDriipSettlementChallenge.new(/*glob.owner*/);
+            ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, MockedDriipSettlementChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
@@ -58,7 +58,7 @@ module.exports = (glob) => {
             await ethersExchange.changeTradesRevenueFund(web3RevenueFund.address);
             await ethersExchange.changePaymentsRevenueFund(web3RevenueFund.address);
             await ethersExchange.changeCommunityVote(web3CommunityVote.address);
-            await ethersExchange.changeDealSettlementChallenge(web3DealSettlementChallenge.address);
+            await ethersExchange.changeDriipSettlementChallenge(web3DriipSettlementChallenge.address);
             await ethersExchange.changeValidator(web3Validator.address);
         });
 
@@ -179,14 +179,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('dealSettlementChallenge()', () => {
+        describe('driipSettlementChallenge()', () => {
             it('should equal value initialized', async () => {
-                const dealSettlementChallenge = await ethersExchange.dealSettlementChallenge();
-                dealSettlementChallenge.should.equal(utils.getAddress(ethersDealSettlementChallenge.address));
+                const driipSettlementChallenge = await ethersExchange.driipSettlementChallenge();
+                driipSettlementChallenge.should.equal(utils.getAddress(ethersDriipSettlementChallenge.address));
             });
         });
 
-        describe('changeDealSettlementChallenge()', () => {
+        describe('changeDriipSettlementChallenge()', () => {
             let address;
 
             before(() => {
@@ -194,28 +194,28 @@ module.exports = (glob) => {
             });
 
             describe('if called with owner as sender', () => {
-                let dealSettlementChallenge;
+                let driipSettlementChallenge;
 
                 beforeEach(async () => {
-                    dealSettlementChallenge = await web3Exchange.dealSettlementChallenge.call();
+                    driipSettlementChallenge = await web3Exchange.driipSettlementChallenge.call();
                 });
 
                 afterEach(async () => {
-                    await web3Exchange.changeDealSettlementChallenge(dealSettlementChallenge);
+                    await web3Exchange.changeDriipSettlementChallenge(driipSettlementChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3Exchange.changeDealSettlementChallenge(address);
+                    const result = await web3Exchange.changeDriipSettlementChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDealSettlementChallengeEvent');
-                    const dealSettlementChallenge = await web3Exchange.dealSettlementChallenge();
-                    utils.getAddress(dealSettlementChallenge).should.equal(address);
+                    result.logs[0].event.should.equal('ChangeDriipSettlementChallengeEvent');
+                    const driipSettlementChallenge = await web3Exchange.driipSettlementChallenge();
+                    utils.getAddress(driipSettlementChallenge).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Exchange.changeDealSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3Exchange.changeDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -496,46 +496,46 @@ module.exports = (glob) => {
             });
         });
 
-        describe('highestAbsoluteDealNonce()', () => {
+        describe('highestAbsoluteDriipNonce()', () => {
             it('should equal value initialized', async () => {
-                const highestAbsoluteDealNonce = await ethersExchange.highestAbsoluteDealNonce();
-                highestAbsoluteDealNonce.eq(utils.bigNumberify(0)).should.be.true;
+                const highestAbsoluteDriipNonce = await ethersExchange.highestAbsoluteDriipNonce();
+                highestAbsoluteDriipNonce.eq(utils.bigNumberify(0)).should.be.true;
             });
         });
 
-        describe('updateHighestAbsoluteDealNonce()', () => {
+        describe('updateHighestAbsoluteDriipNonce()', () => {
             describe('if community vote returns 0', () => {
-                let highestAbsoluteDealNonce;
+                let highestAbsoluteDriipNonce;
 
                 before(async () => {
-                    highestAbsoluteDealNonce = await ethersExchange.highestAbsoluteDealNonce();
-                    await ethersCommunityVote.setHighestAbsoluteDealNonce(utils.bigNumberify(0));
+                    highestAbsoluteDriipNonce = await ethersExchange.highestAbsoluteDriipNonce();
+                    await ethersCommunityVote.setHighestAbsoluteDriipNonce(utils.bigNumberify(0));
                 });
 
-                it('should not update highestAbsoluteDealNonce property', async () => {
-                    await ethersExchange.updateHighestAbsoluteDealNonce();
-                    const result = await ethersExchange.highestAbsoluteDealNonce();
-                    result.eq(highestAbsoluteDealNonce).should.be.true;
+                it('should not update highestAbsoluteDriipNonce property', async () => {
+                    await ethersExchange.updateHighestAbsoluteDriipNonce();
+                    const result = await ethersExchange.highestAbsoluteDriipNonce();
+                    result.eq(highestAbsoluteDriipNonce).should.be.true;
                 });
             });
 
             describe('if community vote returns non-zero value', () => {
-                let highestAbsoluteDealNonce;
+                let highestAbsoluteDriipNonce;
 
                 before(async () => {
-                    highestAbsoluteDealNonce = utils.bigNumberify(10);
-                    await ethersCommunityVote.setHighestAbsoluteDealNonce(highestAbsoluteDealNonce);
+                    highestAbsoluteDriipNonce = utils.bigNumberify(10);
+                    await ethersCommunityVote.setHighestAbsoluteDriipNonce(highestAbsoluteDriipNonce);
                 });
 
-                it('should update highestAbsoluteDealNonce property', async () => {
-                    await ethersExchange.updateHighestAbsoluteDealNonce();
-                    const result = await ethersExchange.highestAbsoluteDealNonce();
-                    result.eq(highestAbsoluteDealNonce).should.be.true;
+                it('should update highestAbsoluteDriipNonce property', async () => {
+                    await ethersExchange.updateHighestAbsoluteDriipNonce();
+                    const result = await ethersExchange.highestAbsoluteDriipNonce();
+                    result.eq(highestAbsoluteDriipNonce).should.be.true;
                 });
             });
         });
 
-        describe('settleDealAsTrade()', () => {
+        describe('settleDriipAsTrade()', () => {
             let trade, overrideOptions;
 
             before(async () => {
@@ -562,7 +562,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    await ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    await ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -573,7 +573,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
-                    ethersExchange.settleDealAsTrade(trade, address, overrideOptions).should.be.rejected;
+                    ethersExchange.settleDriipAsTrade(trade, address, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -584,34 +584,34 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
-            describe('if deal settlement challenge result is Qualified', () => {
+            describe('if driip settlement challenge result is Qualified', () => {
                 let challenger;
 
                 before(() => {
                     challenger = Wallet.createRandom().address;
                 });
 
-                describe('if operational mode is exit and trade nonce is higher than absolute deal nonce', () => {
+                describe('if operational mode is exit and trade nonce is higher than absolute driip nonce', () => {
                     beforeEach(async () => {
                         await ethersConfiguration.setOperationalModeExit();
                     });
 
                     it('should revert', async () => {
-                        ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                        ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                     });
                 });
 
-                describe('if data is unavailable and trade nonce is higher than absolute deal nonce', () => {
+                describe('if data is unavailable and trade nonce is higher than absolute driip nonce', () => {
                     beforeEach(async () => {
                         await ethersCommunityVote.setDataAvailable(false);
                     });
 
                     it('should revert', async () => {
-                        ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                        ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                     });
                 });
 
@@ -620,7 +620,7 @@ module.exports = (glob) => {
                         trade = await mocks.mockTrade(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                        await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
                             trade.buyer.wallet,
                             trade.nonce,
                             mocks.challengeResults.indexOf('Qualified'),
@@ -630,7 +630,7 @@ module.exports = (glob) => {
                     });
 
                     it('should settle both trade parties', async () => {
-                        await ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions);
+                        await ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions);
 
                         const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -644,10 +644,10 @@ module.exports = (glob) => {
                             ethersRevenueFund.interface.events.RecordDepositTokensEvent.topics[0]
                         ));
                         revenueFundRecordEvents.should.have.lengthOf(2);
-                        const settleDealEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersExchange.interface.events.SettleDealAsTradeEvent.topics[0]
+                        const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersExchange.interface.events.SettleDriipAsTradeEvent.topics[0]
                         ));
-                        settleDealEvents.should.have.lengthOf(1);
+                        settleDriipEvents.should.have.lengthOf(1);
 
                         const transfer0 = await ethersClientFund.transfers(0);
                         transfer0.source.should.equal(trade.seller.wallet);
@@ -676,7 +676,7 @@ module.exports = (glob) => {
                         const nBuyerSettlements = await ethersExchange.walletSettlementsCount(trade.buyer.wallet);
                         const buyerSettlement = await ethersExchange.walletSettlement(trade.buyer.wallet, nBuyerSettlements - 1);
                         buyerSettlement.nonce.eq(trade.nonce).should.be.true;
-                        buyerSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Trade'));
+                        buyerSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
                         buyerSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('TwoSided'));
                         buyerSettlement.wallets.should.have.members([trade.buyer.wallet, trade.seller.wallet]);
 
@@ -693,7 +693,7 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                            await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
                                 trade.buyer.wallet,
                                 trade.nonce,
                                 mocks.challengeResults.indexOf('Qualified'),
@@ -705,7 +705,7 @@ module.exports = (glob) => {
                         });
 
                         it('should settle both trade parties', async () => {
-                            await ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions);
+                            await ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions);
 
                             const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                                 ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -719,10 +719,10 @@ module.exports = (glob) => {
                                 ethersRevenueFund.interface.events.RecordDepositTokensEvent.topics[0]
                             ));
                             revenueFundRecordEvents.should.have.lengthOf(2);
-                            const settleDealEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                                ethersExchange.interface.events.SettleDealAsTradeEvent.topics[0]
+                            const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersExchange.interface.events.SettleDriipAsTradeEvent.topics[0]
                             ));
-                            settleDealEvents.should.have.lengthOf(1);
+                            settleDriipEvents.should.have.lengthOf(1);
 
                             const transfer0 = await ethersClientFund.transfers(0);
                             transfer0.source.should.equal(trade.seller.wallet);
@@ -751,7 +751,7 @@ module.exports = (glob) => {
                             const nBuyerSettlements = await ethersExchange.walletSettlementsCount(trade.buyer.wallet);
                             const buyerSettlement = await ethersExchange.walletSettlement(trade.buyer.wallet, nBuyerSettlements - 1);
                             buyerSettlement.nonce.eq(trade.nonce).should.be.true;
-                            buyerSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Trade'));
+                            buyerSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
                             buyerSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('TwoSided'));
                             buyerSettlement.wallets.should.have.members([trade.buyer.wallet, trade.seller.wallet]);
 
@@ -767,7 +767,7 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                            await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
                                 trade.buyer.wallet,
                                 trade.nonce,
                                 mocks.challengeResults.indexOf('Qualified'),
@@ -779,7 +779,7 @@ module.exports = (glob) => {
                         });
 
                         it('should settle only provided party', async () => {
-                            await ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions);
+                            await ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions);
 
                             const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                                 ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -793,15 +793,15 @@ module.exports = (glob) => {
                                 ethersRevenueFund.interface.events.RecordDepositTokensEvent.topics[0]
                             ));
                             revenueFundRecordEvents.should.be.empty;
-                            const settleDealEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                                ethersExchange.interface.events.SettleDealAsTradeEvent.topics[0]
+                            const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersExchange.interface.events.SettleDriipAsTradeEvent.topics[0]
                             ));
-                            settleDealEvents.should.have.lengthOf(1);
+                            settleDriipEvents.should.have.lengthOf(1);
 
                             const nBuyerSettlements = await ethersExchange.walletSettlementsCount(trade.buyer.wallet);
                             const buyerSettlement = await ethersExchange.walletSettlement(trade.buyer.wallet, nBuyerSettlements - 1);
                             buyerSettlement.nonce.eq(trade.nonce).should.be.true;
-                            buyerSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Trade'));
+                            buyerSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
                             buyerSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('OneSided'));
                             buyerSettlement.wallets.should.have.members([trade.buyer.wallet, mocks.address0]);
 
@@ -812,7 +812,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if deal settlement challenge result is Disqualified', () => {
+            describe('if driip settlement challenge result is Disqualified', () => {
                 let challenger;
 
                 before(() => {
@@ -823,7 +823,7 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                    await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
                         trade.buyer.wallet,
                         trade.nonce,
                         mocks.challengeResults.indexOf('Disqualified'),
@@ -833,7 +833,7 @@ module.exports = (glob) => {
                 });
 
                 it('should seize the wallet', async () => {
-                    await ethersExchange.settleDealAsTrade(trade, trade.buyer.wallet, overrideOptions);
+                    await ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions);
                     const seized = await ethersExchange.isSeizedWallet(trade.buyer.wallet);
                     seized.should.be.true;
                     const seizure = await ethersClientFund.seizures(0);
@@ -843,7 +843,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('settleDealAsPayment()', () => {
+        describe('settleDriipAsPayment()', () => {
             let payment, overrideOptions;
 
             before(async () => {
@@ -868,7 +868,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    await ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    await ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -879,7 +879,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
-                    ethersExchange.settleDealAsPayment(payment, address, overrideOptions).should.be.rejected;
+                    ethersExchange.settleDriipAsPayment(payment, address, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -890,34 +890,34 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
-            describe('if deal settlement challenge result is Qualified', () => {
+            describe('if driip settlement challenge result is Qualified', () => {
                 let challenger;
 
                 before(() => {
                     challenger = Wallet.createRandom().address;
                 });
 
-                describe('if operational mode is exit and payment nonce is higher than absolute deal nonce', () => {
+                describe('if operational mode is exit and payment nonce is higher than absolute driip nonce', () => {
                     beforeEach(async () => {
                         await ethersConfiguration.setOperationalModeExit();
                     });
 
                     it('should revert', async () => {
-                        ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                        ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                     });
                 });
 
-                describe('if data is unavailable and payment nonce is higher than absolute deal nonce', () => {
+                describe('if data is unavailable and payment nonce is higher than absolute driip nonce', () => {
                     beforeEach(async () => {
                         await ethersCommunityVote.setDataAvailable(false);
                     });
 
                     it('should revert', async () => {
-                        ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                        ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                     });
                 });
 
@@ -926,7 +926,7 @@ module.exports = (glob) => {
                         payment = await mocks.mockPayment(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                        await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
                             payment.sender.wallet,
                             payment.nonce,
                             mocks.challengeResults.indexOf('Qualified'),
@@ -936,7 +936,7 @@ module.exports = (glob) => {
                     });
 
                     it('should settle both payment parties', async () => {
-                        await ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions);
+                        await ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions);
 
                         const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -950,10 +950,10 @@ module.exports = (glob) => {
                             ethersRevenueFund.interface.events.RecordDepositTokensEvent.topics[0]
                         ));
                         revenueFundRecordEvents.should.have.lengthOf(1);
-                        const settleDealEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersExchange.interface.events.SettleDealAsPaymentEvent.topics[0]
+                        const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersExchange.interface.events.SettleDriipAsPaymentEvent.topics[0]
                         ));
-                        settleDealEvents.should.have.lengthOf(1);
+                        settleDriipEvents.should.have.lengthOf(1);
 
                         const transfer = await ethersClientFund.transfers(0);
                         transfer.source.should.equal(payment.sender.wallet);
@@ -970,7 +970,7 @@ module.exports = (glob) => {
                         const nSenderSettlements = await ethersExchange.walletSettlementsCount(payment.sender.wallet);
                         const senderSettlement = await ethersExchange.walletSettlement(payment.sender.wallet, nSenderSettlements - 1);
                         senderSettlement.nonce.eq(payment.nonce).should.be.true;
-                        senderSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
+                        senderSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
                         senderSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('TwoSided'));
                         senderSettlement.wallets.should.have.members([payment.sender.wallet, payment.recipient.wallet]);
 
@@ -988,7 +988,7 @@ module.exports = (glob) => {
                                 recipient: {netFee: utils.parseUnits('0.1', 18)},
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                            await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
                                 payment.recipient.wallet,
                                 payment.nonce,
                                 mocks.challengeResults.indexOf('Qualified'),
@@ -999,7 +999,7 @@ module.exports = (glob) => {
                         });
 
                         it('should settle both payment parties', async () => {
-                            await ethersExchange.settleDealAsPayment(payment, payment.recipient.wallet, overrideOptions);
+                            await ethersExchange.settleDriipAsPayment(payment, payment.recipient.wallet, overrideOptions);
 
                             const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                                 ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -1013,10 +1013,10 @@ module.exports = (glob) => {
                                 ethersRevenueFund.interface.events.RecordDepositTokensEvent.topics[0]
                             ));
                             revenueFundRecordEvents.should.have.lengthOf(2);
-                            const settleDealEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                                ethersExchange.interface.events.SettleDealAsPaymentEvent.topics[0]
+                            const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersExchange.interface.events.SettleDriipAsPaymentEvent.topics[0]
                             ));
-                            settleDealEvents.should.have.lengthOf(1);
+                            settleDriipEvents.should.have.lengthOf(1);
 
                             const transfer = await ethersClientFund.transfers(0);
                             transfer.source.should.equal(payment.sender.wallet);
@@ -1039,7 +1039,7 @@ module.exports = (glob) => {
                             const nSenderSettlements = await ethersExchange.walletSettlementsCount(payment.sender.wallet);
                             const senderSettlement = await ethersExchange.walletSettlement(payment.sender.wallet, nSenderSettlements - 1);
                             senderSettlement.nonce.eq(payment.nonce).should.be.true;
-                            senderSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
+                            senderSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
                             senderSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('TwoSided'));
                             senderSettlement.wallets.should.have.members([payment.sender.wallet, payment.recipient.wallet]);
 
@@ -1055,7 +1055,7 @@ module.exports = (glob) => {
                                 immediateSettlement: false,
                                 blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                             });
-                            await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                            await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
                                 payment.recipient.wallet,
                                 payment.nonce,
                                 mocks.challengeResults.indexOf('Qualified'),
@@ -1066,7 +1066,7 @@ module.exports = (glob) => {
                         });
 
                         it('should settle only provided party', async () => {
-                            await ethersExchange.settleDealAsPayment(payment, payment.recipient.wallet, overrideOptions);
+                            await ethersExchange.settleDriipAsPayment(payment, payment.recipient.wallet, overrideOptions);
 
                             const clientFundTransferEvents = await provider.getLogs(await fromBlockTopicsFilter(
                                 ethersClientFund.interface.events.TransferFromDepositedToSettledBalanceEvent.topics[0]
@@ -1080,10 +1080,10 @@ module.exports = (glob) => {
                                 ethersRevenueFund.interface.events.RecordDepositTokensEvent.topics[0]
                             ));
                             revenueFundRecordEvents.should.be.empty;
-                            const settleDealEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                                ethersExchange.interface.events.SettleDealAsPaymentEvent.topics[0]
+                            const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersExchange.interface.events.SettleDriipAsPaymentEvent.topics[0]
                             ));
-                            settleDealEvents.should.have.lengthOf(1);
+                            settleDriipEvents.should.have.lengthOf(1);
 
                             const nSenderSettlements = await ethersExchange.walletSettlementsCount(payment.sender.wallet);
                             nSenderSettlements.eq(0).should.be.true;
@@ -1091,7 +1091,7 @@ module.exports = (glob) => {
                             const nRecipientSettlements = await ethersExchange.walletSettlementsCount(payment.recipient.wallet);
                             const recipientSettlement = await ethersExchange.walletSettlement(payment.recipient.wallet, nRecipientSettlements - 1);
                             recipientSettlement.nonce.eq(payment.nonce).should.be.true;
-                            recipientSettlement.dealType.should.equal(mocks.dealTypes.indexOf('Payment'));
+                            recipientSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
                             recipientSettlement.sidedness.should.equal(mocks.sidednesses.indexOf('OneSided'));
                             recipientSettlement.wallets.should.have.members([payment.recipient.wallet, mocks.address0]);
                         });
@@ -1099,7 +1099,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if deal settlement challenge result is Disqualified', () => {
+            describe('if driip settlement challenge result is Disqualified', () => {
                 let challenger;
 
                 before(() => {
@@ -1110,7 +1110,7 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    await ethersDealSettlementChallenge.setDealSettlementChallengeStatus(
+                    await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
                         payment.sender.wallet,
                         payment.nonce,
                         mocks.challengeResults.indexOf('Disqualified'),
@@ -1120,7 +1120,7 @@ module.exports = (glob) => {
                 });
 
                 it('should seize the wallet', async () => {
-                    await ethersExchange.settleDealAsPayment(payment, payment.sender.wallet, overrideOptions);
+                    await ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions);
                     const seized = await ethersExchange.isSeizedWallet(payment.sender.wallet);
                     seized.should.be.true;
                     const seizure = await ethersClientFund.seizures(0);

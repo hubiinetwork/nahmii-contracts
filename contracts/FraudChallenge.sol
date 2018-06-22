@@ -15,6 +15,10 @@ import {Servable} from "./Servable.sol";
 import {Types} from "./Types.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
+/**
+@title FraudChallenge
+@notice Where fraud challenge results are found
+*/
 contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
 
     //

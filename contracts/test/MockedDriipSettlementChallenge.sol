@@ -9,33 +9,33 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {DealSettlementChallenge} from "../DealSettlementChallenge.sol";
+import {DriipSettlementChallenge} from "../DriipSettlementChallenge.sol";
 import {Types} from "../Types.sol";
 
 /**
-@title Mocked deal settlement challenge
-@notice Mocked implementation of deal settlement challenge contract
+@title MockedDriipSettlementChallenge
+@notice Mocked implementation of driip settlement challenge contract
 */
-contract MockedDealSettlementChallenge /*is DealSettlementChallenge*/ {
+contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => DealSettlementChallenge.Challenge) walletChallengeMap;
+    mapping(address => DriipSettlementChallenge.Challenge) walletChallengeMap;
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*DealSettlementChallenge(owner)*/{
+    constructor(/*address owner*/) public /*DriipSettlementChallenge(owner)*/{
     }
 
-    function setDealSettlementChallengeStatus(address wallet, uint256 nonce, Types.ChallengeResult result, address challenger) public {
+    function setDriipSettlementChallengeStatus(address wallet, uint256 nonce, Types.ChallengeResult result, address challenger) public {
         walletChallengeMap[wallet].nonce = nonce;
         walletChallengeMap[wallet].result = result;
         walletChallengeMap[wallet].challenger = challenger;
     }
 
-    function dealSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
+    function driipSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (Types.ChallengeResult, address) {
         if ((0 == walletChallengeMap[wallet].nonce) ||
             (nonce != walletChallengeMap[wallet].nonce))
             return (Types.ChallengeResult.Unknown, address(0));

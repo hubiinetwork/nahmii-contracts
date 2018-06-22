@@ -10,6 +10,10 @@ pragma solidity ^0.4.24;
 
 import {Beneficiary} from "./Beneficiary.sol";
 
+/**
+@title AccrualBeneficiary
+@notice A beneficiary of accruals
+*/
 contract AccrualBeneficiary is Beneficiary {
     //
     // Events

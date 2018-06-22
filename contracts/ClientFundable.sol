@@ -14,6 +14,10 @@ import {Modifiable} from "./Modifiable.sol";
 import {ClientFund} from "./ClientFund.sol";
 import {Types} from "./Types.sol";
 
+/**
+@title ClientFundable
+@notice An ownable that has a client fund property
+*/
 contract ClientFundable is Ownable, Modifiable {
 
     //

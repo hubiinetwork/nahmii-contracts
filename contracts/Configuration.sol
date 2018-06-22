@@ -15,7 +15,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Configuration
-@notice An oracle for configurations such as fees, challenge timeouts and stakes
+@notice An oracle for configurations values
 */
 contract Configuration is Ownable, SelfDestructible {
     using SafeMathInt for int256;
@@ -77,11 +77,11 @@ contract Configuration is Ownable, SelfDestructible {
     mapping(address => uint256[]) public currencyPaymentMinimumFeeBlockNumbers;
 
     uint256 public cancelOrderChallengeTimeout;
-    uint256 public dealSettlementChallengeTimeout;
+    uint256 public driipSettlementChallengeTimeout;
 
     Lot public unchallengeOrderCandidateByTradeStake;
     Lot public falseWalletSignatureStake;
-    Lot public duplicateDealNonceStake;
+    Lot public duplicateDriipNonceStake;
     Lot public doubleSpentOrderStake;
 
     //
@@ -100,10 +100,10 @@ contract Configuration is Ownable, SelfDestructible {
     event SetPaymentMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetCurrencyPaymentMinimumFeeEvent(address currency, uint256 blockNumber, int256 nominal);
     event SetCancelOrderChallengeTimeout(uint256 timeout);
-    event SetDealSettlementChallengeTimeout(uint256 timeout);
-    event SetUnchallengeDealSettlementOrderByTradeStakeEvent(address currency, int256 amount);
+    event SetDriipSettlementChallengeTimeout(uint256 timeout);
+    event SetUnchallengeDriipSettlementOrderByTradeStakeEvent(address currency, int256 amount);
     event SetFalseWalletSignatureStakeEvent(address currency, int256 amount);
-    event SetDuplicateDealNonceStakeEvent(address currency, int256 amount);
+    event SetDuplicateDriipNonceStakeEvent(address currency, int256 amount);
     event SetDoubleSpentOrderStakeEvent(address currency, int256 amount);
 
     //
@@ -111,7 +111,7 @@ contract Configuration is Ownable, SelfDestructible {
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) Ownable(owner) public {
         cancelOrderChallengeTimeout = 3 hours;
-        dealSettlementChallengeTimeout = 5 hours;
+        driipSettlementChallengeTimeout = 5 hours;
     }
 
     //
@@ -446,29 +446,29 @@ contract Configuration is Ownable, SelfDestructible {
         return cancelOrderChallengeTimeout;
     }
 
-    /// @notice Set timeout of deal challenge
+    /// @notice Set timeout of driip challenge
     /// @param timeout Timeout duration
-    function setDealSettlementChallengeTimeout(uint256 timeout) public onlyOwner {
-        dealSettlementChallengeTimeout = timeout;
-        emit SetDealSettlementChallengeTimeout(timeout);
+    function setDriipSettlementChallengeTimeout(uint256 timeout) public onlyOwner {
+        driipSettlementChallengeTimeout = timeout;
+        emit SetDriipSettlementChallengeTimeout(timeout);
     }
 
-    /// @notice Get timeout of deal challenge
-    function getDealSettlementChallengeTimeout() public view returns (uint256) {
-        return dealSettlementChallengeTimeout;
+    /// @notice Get timeout of driip challenge
+    function getDriipSettlementChallengeTimeout() public view returns (uint256) {
+        return driipSettlementChallengeTimeout;
     }
 
     /// @notice Set currency and amount that will be gained when someone successfully unchallenges
-    /// (deal settlement) order candidate by trade
+    /// (driip settlement) order candidate by trade
     /// @param currency Address of currency gained (0 represents ETH)
     /// @param amount Amount gained
     function setUnchallengeOrderCandidateByTradeStake(address currency, int256 amount) public onlyOwner {
         unchallengeOrderCandidateByTradeStake = Lot({currency : currency, amount : amount});
-        emit SetUnchallengeDealSettlementOrderByTradeStakeEvent(currency, amount);
+        emit SetUnchallengeDriipSettlementOrderByTradeStakeEvent(currency, amount);
     }
 
     /// @notice Get the currency and amount that will be gained when someone successfully
-    /// unchallenges (deal settlement) order candidate by trade
+    /// unchallenges (driip settlement) order candidate by trade
     function getUnchallengeOrderCandidateByTradeStake() public view returns (address, int256) {
         return (unchallengeOrderCandidateByTradeStake.currency, unchallengeOrderCandidateByTradeStake.amount);
     }
@@ -489,18 +489,18 @@ contract Configuration is Ownable, SelfDestructible {
     }
 
     /// @notice Set currency and amount that will be gained when someone successfully challenges
-    /// duplicate deal nonce
+    /// duplicate driip nonce
     /// @param currency Address of currency gained (0 represents ETH)
     /// @param amount Amount gained
-    function setDuplicateDealNonceStake(address currency, int256 amount) public onlyOwner {
-        duplicateDealNonceStake = Lot({currency : currency, amount : amount});
-        emit SetDuplicateDealNonceStakeEvent(currency, amount);
+    function setDuplicateDriipNonceStake(address currency, int256 amount) public onlyOwner {
+        duplicateDriipNonceStake = Lot({currency : currency, amount : amount});
+        emit SetDuplicateDriipNonceStakeEvent(currency, amount);
     }
 
     /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
-    /// duplicate deal nonce
-    function getDuplicateDealNonceStake() public view returns (address, int256) {
-        return (duplicateDealNonceStake.currency, duplicateDealNonceStake.amount);
+    /// duplicate driip nonce
+    function getDuplicateDriipNonceStake() public view returns (address, int256) {
+        return (duplicateDriipNonceStake.currency, duplicateDriipNonceStake.amount);
     }
 
     /// @notice Set currency and amount that will be gained when someone successfully challenges

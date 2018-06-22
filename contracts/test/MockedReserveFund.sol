@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 //import {ReserveFund} from "../ReserveFund.sol";
 
 /**
-@title Mocked reserve fund
+@title MockedReserveFund
 @notice Mocked implementation of reserve fund contract
 */
 contract MockedReserveFund /*is ReserveFund*/ {

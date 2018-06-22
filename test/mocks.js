@@ -4,7 +4,7 @@ const cryptography = require('omphalos-commons').util.cryptography;
 
 exports.liquidityRoles = ['Maker', 'Taker'];
 exports.intentions = ['Buy', 'Sell'];
-exports.dealTypes = ['Trade', 'Payment'];
+exports.driipTypes = ['Trade', 'Payment'];
 exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
 exports.challengeResults = ['Unknown', 'Qualified', 'Disqualified'];

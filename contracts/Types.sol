@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 /**
  * @title     Types
- * @dev       Data types
+ * @dev       Data types of order, trade, payment and more
  */
 library Types {
 
@@ -19,7 +19,7 @@ library Types {
     // -----------------------------------------------------------------------------------------------------------------
     enum LiquidityRole {Maker, Taker}
     enum CurrencyRole {Intended, Conjugate}
-    enum DealType {Trade, Payment}
+    enum DriipType {Trade, Payment}
     enum Sidedness {OneSided, TwoSided}
     enum Intention {Buy, Sell}
     enum TradePartyRole {Buyer, Seller}
@@ -165,7 +165,7 @@ library Types {
 
     struct Settlement {
         uint256 nonce;
-        DealType dealType;
+        DriipType driipType;
         Sidedness sidedness;
         address[2] wallets;
     }

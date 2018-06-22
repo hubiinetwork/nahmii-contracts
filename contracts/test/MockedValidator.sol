@@ -13,6 +13,10 @@ import {Ownable} from "../Ownable.sol";
 //import {Validator} from "../Validator.sol";
 import {Types} from "../Types.sol";
 
+/**
+@title MockedValidator
+@notice Mocked implementation of validator contract
+*/
 contract MockedValidator is Ownable /*, Validator*/ {
 
     //

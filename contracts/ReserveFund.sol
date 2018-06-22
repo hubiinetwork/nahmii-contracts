@@ -21,7 +21,7 @@ import {ClientFundable} from "./ClientFundable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
-@title Reserve fund
+@title ReserveFund
 @notice Fund into which users may make deposits and earn share of revenue relative to their contribution.
  There will likely be 2 instances of this smart contract, one for trade reserves and one for payment reserves.
 */
