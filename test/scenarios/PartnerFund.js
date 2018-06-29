@@ -8,7 +8,7 @@ module.exports = function (glob) {
 
 	const _1e18 = '1000000000000000000';
 
-	describe("PartnerFund", function () {
+	describe.only("PartnerFund", function () {
 		it(testCounter.next() + ": MUST FAIL [payable]: Payable is disabled", async() => {
 			try {
 				await web3.eth.sendTransactionPromise({
@@ -52,7 +52,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST SUCCEED [registerPartner]: Register user A tag and owner can change the address", async() => {
 			try {
-				let BN = web3.BigNumber.another({DECIMAL_PLACES: 0, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+				let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
 				var fee_1_pct = (new BN(_1e18)).div(100);
 
@@ -65,9 +65,9 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [setPartnerAddress]: Set user A address", async() => {
+		it(testCounter.next() + ": MUST SUCCEED [setPartnerWallet]: Set user A address", async() => {
 			try {
-				await glob.web3PartnerFund.setPartnerAddress(userATag, glob.user_a);
+				await glob.web3PartnerFund.setPartnerWallet(userATag, glob.user_a);
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -76,9 +76,9 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [setPartnerAddress]: User A trying to modify his address", async() => {
+		it(testCounter.next() + ": MUST FAIL [setPartnerWallet]: User A trying to modify his address", async() => {
 			try {
-				await glob.web3PartnerFund.setPartnerAddress(userATag, glob.user_a, { from: glob.user_a });
+				await glob.web3PartnerFund.setPartnerWallet(userATag, glob.user_a, { from: glob.user_a });
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
@@ -90,7 +90,7 @@ module.exports = function (glob) {
 
 		it(testCounter.next() + ": MUST SUCCEED [registerPartner]: Register user B tag and only he can change the address", async() => {
 			try {
-				let BN = web3.BigNumber.another({DECIMAL_PLACES: 0, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+				let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
 				var fee_2_pct = (new BN(_1e18)).div(100).mul(2);
 
@@ -103,21 +103,21 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [setPartnerAddress]: User B trying to modify his address but not set previously", async() => {
+		it(testCounter.next() + ": MUST FAIL [setPartnerWallet]: User B trying to modify his address but not set previously", async() => {
 			try {
-				await glob.web3PartnerFund.setPartnerAddress(userBTag, glob.user_b, { from: glob.user_b });
+				await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b, { from: glob.user_b });
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
 				assert(err.toString().includes('revert'), err.toString());
 			}
-		});		
+		});
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [setPartnerAddress]: Set user B address", async() => {
+		it(testCounter.next() + ": MUST SUCCEED [setPartnerWallet]: Set user B address", async() => {
 			try {
-				await glob.web3PartnerFund.setPartnerAddress(userBTag, glob.user_b);
+				await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b);
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -126,9 +126,9 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [setPartnerAddress]: Owner trying to set user B address again", async() => {
+		it(testCounter.next() + ": MUST FAIL [setPartnerWallet]: Owner trying to set user B address again", async() => {
 			try {
-				await glob.web3PartnerFund.setPartnerAddress(userBTag, glob.user_b);
+				await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b);
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
@@ -138,9 +138,88 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [setPartnerAddress]: User B changing his address", async() => {
+		it(testCounter.next() + ": MUST SUCCEED [setPartnerWallet]: User B changing his address", async() => {
 			try {
-				await glob.web3PartnerFund.setPartnerAddress(userBTag, glob.user_b, { from: glob.user_b });
+				await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b, { from: glob.user_b });
+			}
+			catch (err) {
+				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST SUCCEED [getPartnerFee]: Get user B fee", async() => {
+			try {
+				let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+
+				var fee_2_pct = (new BN(_1e18)).div(100).mul(2);
+
+				let fee = await glob.web3PartnerFund.getPartnerFee(userBTag);
+				assert.equal(fee.toString(), fee_2_pct.toString(), "Fee is not 2%. [Got " + fee_2_pct.div(_1e18).mul(100).toString() + "%].");
+			}
+			catch (err) {
+				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST FAIL [changePartnerFee]: Change non-registered user fee", async() => {
+			try {
+				let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+
+				var fee_5_pct = (new BN(_1e18)).div(100).mul(5);
+
+				await glob.web3PartnerFund.changePartnerFee(dummyTag, fee_5_pct);
+				assert(false, 'This test must fail.');
+			}
+			catch (err) {
+				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST FAIL [changePartnerFee]: User B wants to change its fee", async() => {
+			try {
+				let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+
+				var fee_5_pct = (new BN(_1e18)).div(100).mul(5);
+
+				await glob.web3PartnerFund.changePartnerFee(userBTag, fee_5_pct, { from: glob.user_b });
+				assert(false, 'This test must fail.');
+			}
+			catch (err) {
+				assert(err.toString().includes('revert'), err.toString());
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST SUCCEED [changePartnerFee]: Set new fee to user B", async() => {
+			try {
+				let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+
+				var fee_3_pct = (new BN(_1e18)).div(100).mul(3);
+
+				await glob.web3PartnerFund.changePartnerFee(userBTag, fee_3_pct);
+			}
+			catch (err) {
+				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+			}
+		});
+
+		//-------------------------------------------------------------------------
+
+		it(testCounter.next() + ": MUST SUCCEED [getPartnerFee]: Verify new user B fee", async() => {
+			try {
+				let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+
+				var fee_3_pct = (new BN(_1e18)).div(100).mul(3);
+
+				let fee = await glob.web3PartnerFund.getPartnerFee(userBTag);
+				assert.equal(fee.toString(), fee_3_pct.toString(), "Fee is not 3%. [Got " + fee_3_pct.div(_1e18).mul(100).toString() + "%].");
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');

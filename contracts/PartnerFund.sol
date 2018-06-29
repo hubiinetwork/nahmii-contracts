@@ -111,7 +111,7 @@ contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
         return walletInfoMap[tag].fee;
     }
 
-    function setPartnerAddress(address tag, address newWallet) public isRegisteredTag(tag) {
+    function setPartnerWallet(address tag, address newWallet) public isRegisteredTag(tag) {
         address oldWallet;
 
         require(newWallet != owner);
