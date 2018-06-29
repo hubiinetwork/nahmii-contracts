@@ -33,7 +33,7 @@ const ReserveFund = artifacts.require("./ReserveFund.sol");
 const RevenueFund = artifacts.require("./RevenueFund.sol");
 const SecurityBond = artifacts.require("./SecurityBond.sol");
 const TokenHolderRevenueFund = artifacts.require("./TokenHolderRevenueFund.sol");
-
+const PartnerFund = artifacts.require("./PartnerFund.sol");
 const fs = require('fs');
 const path = require('path');
 
@@ -74,7 +74,7 @@ module.exports = function (deployer, network, accounts) {
 
     deployer.link(SafeMathIntLib, [
         ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-        FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
+        FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
     ]);
 
     deployer.link(SafeMathUintLib, [
@@ -264,9 +264,15 @@ module.exports = function (deployer, network, accounts) {
         from: ownerAccount
     }).then(() => {
         addresses.TokenHolderRevenueFund = TokenHolderRevenueFund.address;
+    });
 
-		saveAddresses(deployer, addresses);
-	});
+    deployer.deploy(PartnerFund, ownerAccount, {
+        from: ownerAccount
+    }).then(() => {
+        addresses.PartnerFund = PartnerFund.address;
+
+        saveAddresses(deployer, addresses);
+    });
 };
 
 function saveAddresses(deployer, addresses) {

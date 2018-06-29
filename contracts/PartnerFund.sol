@@ -16,10 +16,10 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 
 /**
-@title ParnerFund
+@title PartnerFund
 @notice XXXX
 */
-contract ParnerFund is Ownable, Beneficiary, SelfDestructible {
+contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
     using SafeMathInt for int256;
 
     //
@@ -119,10 +119,16 @@ contract ParnerFund is Ownable, Beneficiary, SelfDestructible {
         oldWallet = walletInfoMap[tag].wallet;
 
         //checks
-        if (isOwner()) {
+        if (oldWallet == address(0)) {
+            //if address not set, owner is the only allowed to change it
+            require(isOwner());
+        }
+        else if (isOwner()) {
+            //owner trying to change address, verify access
             require(walletInfoMap[tag].ownerCanChangeAddress);
         }
         else {
+            //partner trying to change address, verify access
             require(walletInfoMap[tag].canChangeAddress);
 
             require(oldWallet != address(0) && msg.sender == oldWallet); //only the address owner can change it
@@ -216,7 +222,7 @@ contract ParnerFund is Ownable, Beneficiary, SelfDestructible {
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(address token, int256 amount) public notOwner {
+    function stage(int256 amount, address token) public notOwner {
         address tag = partnerFromWallet(msg.sender);
         require(amount.isPositiveInt256());
 
@@ -272,7 +278,7 @@ contract ParnerFund is Ownable, Beneficiary, SelfDestructible {
     //
     // Withdrawal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function withdrawEther(int256 amount) public {
+    function withdrawEthers(int256 amount) public {
         address tag = partnerFromWallet(msg.sender);
 
         if (amount > walletInfoMap[tag].stagedEtherBalance) {
@@ -289,7 +295,7 @@ contract ParnerFund is Ownable, Beneficiary, SelfDestructible {
         emit WithdrawEvent(tag, msg.sender, amount, address(0));
     }
 
-    function withdrawTokens(address token, int256 amount) public {
+    function withdrawTokens(int256 amount, address token) public {
         address tag = partnerFromWallet(msg.sender);
         require(token != address(0));
 

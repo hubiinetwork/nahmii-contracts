@@ -58,13 +58,13 @@ module.exports = function (glob) {
 				await glob.web3Erc20.approve(glob.web3SecurityBond.address, 10, { from: glob.user_a });
 			}
 			catch (err) {
-				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
+				assert(false, 'This test must succeed. Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
 			}
 			try {
 				await glob.web3SecurityBond.depositTokens(glob.web3Erc20.address, 10, { from: glob.user_a });
 			}
 			catch (err) {
-				assert(false, 'This test must succeed. Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
+				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
 			}
 		});
 
