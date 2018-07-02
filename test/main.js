@@ -34,6 +34,7 @@ const ReserveFund = artifacts.require("ReserveFund");
 const RevenueFund = artifacts.require("RevenueFund");
 const SecurityBond = artifacts.require("SecurityBond");
 const TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
+const PartnerFund = artifacts.require("PartnerFund");
 const ERC20Token = artifacts.require("StandardTokenEx");
 const UnitTestHelpers = artifacts.require("UnitTestHelpers");
 
@@ -429,6 +430,17 @@ contract('Smart contract checks', function () {
         }
     });
 
+    before("Preflight: Instantiate PartnerFund contract", async () => {
+        try {
+            glob.web3PartnerFund = await PartnerFund.deployed();
+            assert.notEqual(glob.web3PartnerFund, null);
+            glob.ethersIoPartnerFund = new ethers.Contract(glob.web3PartnerFund.address, PartnerFund.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate PartnerFund contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
     before("Preflight: Distribute test ethers", async () => {
         try {
             await web3.eth.sendTransactionPromise({
@@ -511,8 +523,9 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
-	require('./scenarios/ReserveFund')(glob);
+    require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);
+    require('./scenarios/PartnerFund')(glob);
 });
