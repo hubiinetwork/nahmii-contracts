@@ -22,6 +22,7 @@ import {CommunityVotable} from "./CommunityVotable.sol";
 import {ReserveFund} from "./ReserveFund.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
+import {FraudChallenge} from "./FraudChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
@@ -40,6 +41,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
+    FraudChallenge public fraudChallenge;
     DriipSettlementChallenge public driipSettlementChallenge;
     ReserveFund public tradesReserveFund;
     ReserveFund public paymentsReserveFund;
@@ -54,6 +56,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     // -----------------------------------------------------------------------------------------------------------------
     event SettleDriipAsTradeEvent(Types.Trade trade, address wallet);
     event SettleDriipAsPaymentEvent(Types.Payment payment, address wallet);
+    event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge, DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangePaymentsReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
@@ -69,6 +72,18 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Change the fraud challenge contract
+    /// @param newFraudChallenge The (address of) FraudChallenge contract instance
+    function changeFraudChallenge(FraudChallenge newFraudChallenge)
+    public
+    onlyOwner
+    notNullAddress(newFraudChallenge)
+    {
+        FraudChallenge oldFraudChallenge = fraudChallenge;
+        fraudChallenge = newFraudChallenge;
+        emit ChangeFraudChallengeEvent(oldFraudChallenge, fraudChallenge);
+    }
+
     /// @notice Change the driip settlement challenge contract
     /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
     function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge)
@@ -176,6 +191,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     validatorInitialized
     onlySealedTrade(trade)
     {
+        require(fraudChallenge != address(0));
         require(communityVote != address(0));
         require(driipSettlementChallenge != address(0));
         require(configuration != address(0));
@@ -187,6 +203,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         if (msg.sender != owner)
             wallet = msg.sender;
 
+        require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
         require(Types.isTradeParty(trade, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
@@ -240,6 +257,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     validatorInitialized
     onlySealedPayment(payment)
     {
+        require(fraudChallenge != address(0));
         require(communityVote != address(0));
         require(driipSettlementChallenge != address(0));
         require(configuration != address(0));
@@ -251,6 +269,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         if (msg.sender != owner)
             wallet = msg.sender;
 
+        require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
         require(Types.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 

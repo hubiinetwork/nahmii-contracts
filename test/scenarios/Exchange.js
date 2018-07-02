@@ -3,11 +3,11 @@ const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const cryptography = require('omphalos-commons').util.cryptography;
 const MockedConfiguration = artifacts.require("MockedConfiguration");
 const MockedClientFund = artifacts.require("MockedClientFund");
 const MockedReserveFund = artifacts.require("MockedReserveFund");
 const MockedRevenueFund = artifacts.require("MockedRevenueFund");
+const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
 const MockedDriipSettlementChallenge = artifacts.require("MockedDriipSettlementChallenge");
 const MockedCommunityVote = artifacts.require("MockedCommunityVote");
 const MockedValidator = artifacts.require("MockedValidator");
@@ -26,6 +26,7 @@ module.exports = (glob) => {
         let web3ReserveFund, ethersReserveFund;
         let web3RevenueFund, ethersRevenueFund;
         let web3CommunityVote, ethersCommunityVote;
+        let web3FraudChallenge, ethersFraudChallenge;
         let web3DriipSettlementChallenge, ethersDriipSettlementChallenge;
         let web3Validator, ethersValidator;
         let blockNumber0, blockNumber10, blockNumber20;
@@ -46,6 +47,8 @@ module.exports = (glob) => {
             ethersRevenueFund = new Contract(web3RevenueFund.address, MockedRevenueFund.abi, glob.signer_owner);
             web3CommunityVote = await MockedCommunityVote.new(/*glob.owner*/);
             ethersCommunityVote = new Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
+            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3DriipSettlementChallenge = await MockedDriipSettlementChallenge.new(/*glob.owner*/);
             ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, MockedDriipSettlementChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner);
@@ -58,6 +61,7 @@ module.exports = (glob) => {
             await ethersExchange.changeTradesRevenueFund(web3RevenueFund.address);
             await ethersExchange.changePaymentsRevenueFund(web3RevenueFund.address);
             await ethersExchange.changeCommunityVote(web3CommunityVote.address);
+            await ethersExchange.changeFraudChallenge(web3FraudChallenge.address);
             await ethersExchange.changeDriipSettlementChallenge(web3DriipSettlementChallenge.address);
             await ethersExchange.changeValidator(web3Validator.address);
         });
@@ -566,6 +570,21 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if trade is flagged as fraudulent', () => {
+                beforeEach(async () => {
+                    await ethersFraudChallenge.setFraudulentTradeHash(true);
+                    trade = await mocks.mockTrade(glob.owner);
+                });
+
+                afterEach(async () => {
+                    await ethersFraudChallenge.reset(overrideOptions);
+                });
+
+                it('should revert', async () => {
+                    ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
             describe('if wallet is not trade party', () => {
                 beforeEach(async () => {
                     trade = await mocks.mockTrade(glob.owner);
@@ -865,6 +884,21 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuinePaymentSeals(false, overrideOptions);
                     payment = await mocks.mockPayment(glob.user_a);
+                });
+
+                it('should revert', async () => {
+                    await ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment is flagged as fraudulent', () => {
+                beforeEach(async () => {
+                    await ethersFraudChallenge.setFraudulentPaymentExchangeHash(true);
+                    payment = await mocks.mockPayment(glob.user_a);
+                });
+
+                afterEach(async () => {
+                    await ethersFraudChallenge.reset(overrideOptions);
                 });
 
                 it('should revert', async () => {

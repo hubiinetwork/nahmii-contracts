@@ -25,6 +25,8 @@ contract MockedFraudChallenge is FraudChallenge {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
+    bool public fraudulentTradeHash;
+    bool public fraudulentPaymentExchangeHash;
 
     //
     // Events
@@ -45,6 +47,8 @@ contract MockedFraudChallenge is FraudChallenge {
         fraudulentPayments.length = 0;
         seizedWallets.length = 0;
         doubleSpenderWallets.length = 0;
+        fraudulentTradeHash = false;
+        fraudulentPaymentExchangeHash = false;
     }
 
     function addFraudulentOrder(Types.Order order) public {
@@ -70,5 +74,25 @@ contract MockedFraudChallenge is FraudChallenge {
     function addDoubleSpenderWallet(address wallet) public {
         doubleSpenderWallets.push(wallet);
         emit AddDoubleSpenderWalletEvent(wallet);
+    }
+
+    function setFraudulentTradeHash(bool _fraudulentTradeHash) public {
+        fraudulentTradeHash = _fraudulentTradeHash;
+    }
+
+    function isFraudulentTradeHash(bytes32 hash) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(hash == hash);
+        return fraudulentTradeHash;
+    }
+
+    function setFraudulentPaymentExchangeHash(bool _fraudulentPaymentExchangeHash) public {
+        fraudulentPaymentExchangeHash = _fraudulentPaymentExchangeHash;
+    }
+
+    function isFraudulentPaymentExchangeHash(bytes32 hash) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(hash == hash);
+        return fraudulentPaymentExchangeHash;
     }
 }
