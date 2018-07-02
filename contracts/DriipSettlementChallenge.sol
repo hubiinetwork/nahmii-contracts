@@ -100,6 +100,14 @@ contract DriipSettlementChallenge is Ownable, Modifiable, Configurable, Validata
         return challengeCandidateOrders.length;
     }
 
+    /// @notice Return the challenge candidate order at the given index
+    /// @dev This acts as a double of challengeCandidateOrders() which rather then returning Types.Order
+    /// returns (uint256, address, Types.OrderPlacement, Types.WalletExchangeSeals, uint256)
+    /// @param index The index of challenge order candidate
+    function getChallengeCandidateOrder(uint256 index) public view returns (Types.Order) {
+        return challengeCandidateOrders[index];
+    }
+
     /// @notice Return the number of (challenge) candidate trades
     function challengeCandidateTradesCount() public view returns (uint256) {
         return challengeCandidateTrades.length;
