@@ -7,11 +7,12 @@ const path = require('path');
 // Launch ganache-cli (https://github.com/trufflesuite/ganache-cli)
 let cmd = getCommand('ganache-cli');
 const ganache = child_proc.spawn(cmd, [
-    '--defaultBalanceEther', '100',
-    '--blockTime', '1', //<<---- REQUIRED
+    //'--defaultBalanceEther', '100',
+    //'--blockTime', '1', //<<---- REQUIRED
     //'--gasPrice', '20000000000',
     '--gasLimit', '6000000',
-    '--accounts', '10',
+    //'--accounts', '10',
+    '--mnemonic', 'dead fish racket soul plunger dirty boats cracker mammal nicholas cage',
     '--port', '8456'
 ], {
     stdio: 'ignore',
@@ -35,13 +36,13 @@ const truffle = child_proc.spawn(cmd, [
 });
 
 if (!truffle) {
-    ganache.kill();
+    killProcess(ganache);
     console.log('Error: Cannot launch \'truffle test\'');
     process.exit(1);
 }
 
 truffle.on('exit', function (code) {
-    ganache.kill();
+    killProcess(ganache);
     process.exit(code);
 });
 
@@ -50,4 +51,25 @@ truffle.on('exit', function (code) {
 function getCommand(appName) {
     const command = (os.platform() == 'win32') ? (appName + '.cmd') : appName;
     return __dirname + path.sep + 'node_modules' + path.sep + '.bin' + path.sep + command;
+}
+
+function killProcess(process)
+{
+    if (os.platform() == 'win32') {
+        try {
+            child_proc.execSync('taskkill.exe /f /t /pid ' + process.pid.toString());
+        }
+        catch (err) {
+            //console.log(err.toString());
+        }
+    }
+    else {
+        process.kill();
+        //try {
+        //    child_proc.execSync('kill -9 ' + pid.toString());
+        //}
+        //catch (err) {
+        //    //console.log(err.toString());
+        //}
+    }
 }
