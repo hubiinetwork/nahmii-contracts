@@ -8,7 +8,7 @@ module.exports = function (glob) {
 
 	const _1e18 = '1000000000000000000';
 
-	describe.only("PartnerFund", function () {
+	describe("PartnerFund", function () {
 		it(testCounter.next() + ": MUST FAIL [payable]: Payable is disabled", async() => {
 			try {
 				await web3.eth.sendTransactionPromise({
