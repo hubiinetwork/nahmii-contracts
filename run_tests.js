@@ -53,8 +53,7 @@ function getCommand(appName) {
     return __dirname + path.sep + 'node_modules' + path.sep + '.bin' + path.sep + command;
 }
 
-function killProcess(process)
-{
+function killProcess(process) {
     if (os.platform() == 'win32') {
         try {
             child_proc.execSync('taskkill.exe /f /t /pid ' + process.pid.toString());
@@ -64,7 +63,7 @@ function killProcess(process)
         }
     }
     else {
-        process.kill();
+        process.kill('SIGKILL');
         //try {
         //    child_proc.execSync('kill -9 ' + pid.toString());
         //}
