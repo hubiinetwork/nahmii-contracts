@@ -45,3 +45,35 @@ exports.isTestNetwork = function (network)
 {
 	return (network.includes('develop') || network.includes('ganache'));
 };
+
+exports.getFiltersFromArgs = function ()
+{
+	var finalFilters = [];
+	var i;
+
+	for (i = 0; i < process.argv.length; i++) {
+		if (process.argv[i] == '--filter') {
+			if (i >= process.argv.length + 1)
+				throw new Error('Error: Missing argument for \'--filter\'');
+
+			var filter = process.argv[i + 1];
+			filter = filter.split(',');
+			for (i = 0; i < filter.length; i++) {
+				if (!(/^[0-9A-Za-z\*]+$/.test(filter[i])))
+					throw new Error('Error: Invalid filters specified in \'--filter\' argument');
+				finalFilters.push(new RegExp('^' + filter[i].replace(/\*/g, '.*')  + '$', 'i'));
+			}
+			break;
+		}
+	}
+	return (finalFilters.length > 0) ? finalFilters : null;
+};
+
+exports.isResetArgPresent = function ()
+{
+	for (i = 0; i < process.argv.length; i++) {
+		if (process.argv[i] == '--reset')
+			return true;
+	}
+	return false;
+};

@@ -43,282 +43,500 @@ const helpers = require('./helpers.js');
 
 module.exports = function (deployer, network, accounts) {
 	var ownerAccount;
+	var deployFilters;
 	const addresses = {};
 
-    if (helpers.isTestNetwork(network)) {
-        ownerAccount = accounts[0];
-    }
-    else {
-        ownerAccount = helpers.getOwnerAccountFromArgs();
-        const ownerAccountPassword = helpers.getPasswordFromArgs();
-        helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 3600); //60 minutes
-    }
+	if (helpers.isTestNetwork(network)) {
+		ownerAccount = accounts[0];
+	}
+	else {
+		ownerAccount = helpers.getOwnerAccountFromArgs();
+		const ownerAccountPassword = helpers.getPasswordFromArgs();
+		helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 3600); //60 minutes
+	}
 
-    deployer.deploy(SafeMathIntLib, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.SafeMathInt = SafeMathIntLib.address;
-    });
+	deployFilters = helpers.getFiltersFromArgs();
 
-    deployer.deploy(SafeMathUintLib, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.SafeMathUint = SafeMathUintLib.address;
-    });
-
-    deployer.deploy(Types, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.Types = Types.address;
-    });
-
-    deployer.link(SafeMathIntLib, [
-        ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-        FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
-    ]);
-
-    deployer.link(SafeMathUintLib, [
-        Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
-    ]);
-
-    deployer.link(Types, [
-        Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-        FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
-        FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
-        FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfTrades,
-        FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallenge
-    ]);
-
-    deployer.deploy(ClientFund, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.ClientFund = ClientFund.address;
-    });
-
-    deployer.deploy(CommunityVote, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.CommunityVote = CommunityVote.address;
-    });
-
-    deployer.deploy(Configuration, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.Configuration = Configuration.address;
-    });
-
-    deployer.deploy(Exchange, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.Exchange = Exchange.address;
-    });
-
-    deployer.deploy(CancelOrdersChallenge, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.CancelOrdersChallenge = CancelOrdersChallenge.address;
-    });
-
-    deployer.deploy(DriipSettlementChallenge, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.DriipSettlementChallenge = DriipSettlementChallenge.address;
-
-		return deployer.deploy(DriipSettlementChallenger, ownerAccount, DriipSettlementChallenge.address, {
-			from : ownerAccount
-		})
+	deployer.deploy(SafeMathIntLib, {
+		from: ownerAccount
 	}).then(() => {
-		addresses.DriipSettlementChallenger = DriipSettlementChallenger.address;
-
-		return DriipSettlementChallenge.deployed();
-	}).then((web3DriipSettlementChallenge) => {
-
-		return web3DriipSettlementChallenge.changeDriipSettlementChallenger(DriipSettlementChallenger.address, {
-			from : ownerAccount
-		});
+		addresses.SafeMathInt = SafeMathIntLib.address;
 	});
 
-    deployer.deploy(Hasher, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.Hasher = Hasher.address;
-    });
+	deployer.deploy(SafeMathUintLib, {
+		from: ownerAccount
+	}).then(() => {
+		addresses.SafeMathUint = SafeMathUintLib.address;
+	});
 
-    deployer.deploy(Validator, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.Validator = Validator.address;
-    });
+	deployer.deploy(Types, {
+		from: ownerAccount
+	}).then(() => {
+		addresses.Types = Types.address;
+	});
 
-    deployer.deploy(FraudChallengeByOrder, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByOrder = FraudChallengeByOrder.address;
-    });
+	deployer.link(SafeMathIntLib, [
+		ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
+		FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
+	]);
 
-    deployer.deploy(FraudChallengeByTrade, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByTrade = FraudChallengeByTrade.address;
-    });
+	deployer.link(SafeMathUintLib, [
+		Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
+	]);
 
-    deployer.deploy(FraudChallengeByPayment, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByPayment = FraudChallengeByPayment.address;
-    });
+	deployer.link(Types, [
+		Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
+		FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
+		FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
+		FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfTrades,
+		FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallenge
+	]);
 
-    deployer.deploy(FraudChallengeBySuccessiveTrades, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeBySuccessiveTrades = FraudChallengeBySuccessiveTrades.address;
-    });
+	deployer.then(() => {
+		if (!shouldDeploy("ClientFund", deployFilters))
+			return next();
 
-    deployer.deploy(FraudChallengeBySuccessivePayments, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeBySuccessivePayments = FraudChallengeBySuccessivePayments.address;
-    });
+		return deployer.deploy(ClientFund, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.ClientFund = instance.address;
 
-    deployer.deploy(FraudChallengeByPaymentSucceedingTrade, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByPaymentSucceedingTrade = FraudChallengeByPaymentSucceedingTrade.address;
-    });
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("CommunityVote", deployFilters))
+			return next();
 
-    deployer.deploy(FraudChallengeByTradeSucceedingPayment, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByTradeSucceedingPayment = FraudChallengeByTradeSucceedingPayment.address;
-    });
+		return deployer.deploy(CommunityVote, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.CommunityVote = instance.address;
 
-    deployer.deploy(FraudChallengeByTradeOrderResiduals, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByTradeOrderResiduals = FraudChallengeByTradeOrderResiduals.address;
-    });
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("Configuration", deployFilters))
+			return next();
 
-    deployer.deploy(FraudChallengeByDoubleSpentOrders, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByDoubleSpentOrders = FraudChallengeByDoubleSpentOrders.address;
-    });
+		return deployer.deploy(Configuration, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.Configuration = instance.address;
 
-    deployer.deploy(FraudChallengeByDuplicateDriipNonceOfTrades, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByDuplicateDriipNonceOfTrades = FraudChallengeByDuplicateDriipNonceOfTrades.address;
-    });
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("Exchange", deployFilters))
+			return next();
 
-    deployer.deploy(FraudChallengeByDuplicateDriipNonceOfPayments, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByDuplicateDriipNonceOfPayments = FraudChallengeByDuplicateDriipNonceOfPayments.address;
-    });
+		return deployer.deploy(Exchange, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.Exchange = instance.address;
 
-    deployer.deploy(FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address;
-    });
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("CancelOrdersChallenge", deployFilters))
+			return next();
 
-    deployer.deploy(FraudChallenge, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.FraudChallenge = FraudChallenge.address;
-    });
+		return deployer.deploy(CancelOrdersChallenge, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.CancelOrdersChallenge = instance.address;
 
-    deployer.deploy(ReserveFund, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.ReserveFund1 = ReserveFund.address;
-    });
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("DriipSettlementChallenge", deployFilters))
+			return next();
 
-    deployer.deploy(ReserveFund, ownerAccount, {
-        from: ownerAccount,
-        overwrite: true
-    }).then(() => {
-        addresses.ReserveFund2 = ReserveFund.address;
-    });
+		return deployer.deploy(DriipSettlementChallenge, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance) {
+			addresses.DriipSettlementChallenge = instance.address;
 
-    deployer.deploy(RevenueFund, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.RevenueFund1 = RevenueFund.address;
-    });
+			return deployer.deploy(DriipSettlementChallenger, ownerAccount, instance.address, {
+				from : ownerAccount
+			});
+		}
+		else {
+			return next();
+		}
+	}).then((instance) => {
+		if (instance) {
+			addresses.DriipSettlementChallenger = instance.address;
 
-    deployer.deploy(RevenueFund, ownerAccount, {
-        from: ownerAccount,
-        overwrite: true
-    }).then(() => {
-        addresses.RevenueFund2 = RevenueFund.address;
-    });
+			return DriipSettlementChallenge.deployed();
+		}
+		else {
+			return next();
+		}
+	}).then((web3DriipSettlementChallenge) => {
+		if (web3DriipSettlementChallenge) {
+			return web3DriipSettlementChallenge.changeDriipSettlementChallenger(addresses.DriipSettlementChallenger, {
+				from : ownerAccount
+			});
+		}
+		else {
+			return next();
+		}
+	}).then(() => {
+		if (!shouldDeploy("Hasher", deployFilters))
+			return next();
 
-    deployer.deploy(SecurityBond, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.SecurityBond = SecurityBond.address;
-    });
+		return deployer.deploy(Hasher, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.Hasher = instance.address;
 
-    deployer.deploy(TokenHolderRevenueFund, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.TokenHolderRevenueFund = TokenHolderRevenueFund.address;
-    });
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("Validator", deployFilters))
+			return next();
 
-    deployer.deploy(PartnerFund, ownerAccount, {
-        from: ownerAccount
-    }).then(() => {
-        addresses.PartnerFund = PartnerFund.address;
+		return deployer.deploy(Validator, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.Validator = instance.address;
 
-        saveAddresses(deployer, addresses);
-    });
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByOrder", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeByOrder, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByOrder = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByTrade", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeByTrade, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByTrade = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByPayment", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeByPayment, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByPayment = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeBySuccessiveTrades", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeBySuccessiveTrades, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeBySuccessiveTrades = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeBySuccessivePayments", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeBySuccessivePayments, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeBySuccessivePayments = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByPaymentSucceedingTrade", deployFilters))
+			return next();
+
+			return deployer.deploy(FraudChallengeByPaymentSucceedingTrade, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByPaymentSucceedingTrade = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByTradeSucceedingPayment", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeByTradeSucceedingPayment, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByTradeSucceedingPayment = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByDoubleSpentOrders", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeByDoubleSpentOrders, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByDoubleSpentOrders = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByDuplicateDriipNonceOfTrades", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeByDuplicateDriipNonceOfTrades, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByDuplicateDriipNonceOfTrades = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByDuplicateDriipNonceOfPayments", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeByDuplicateDriipNonceOfPayments, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByDuplicateDriipNonceOfPayments = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallengeByDuplicateDriipNonceOfTradeAndPayment", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("FraudChallenge", deployFilters))
+			return next();
+
+		return deployer.deploy(FraudChallenge, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.FraudChallenge = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("ReserveFund", deployFilters))
+			return next();
+
+		return deployer.deploy(ReserveFund, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance) {
+			addresses.ReserveFund1 = instance.address;
+
+			return deployer.deploy(ReserveFund, ownerAccount, {
+				from: ownerAccount,
+				overwrite: true
+			});
+		}
+		else {
+			return next();
+		}
+	}).then((instance) => {
+		if (instance)
+			addresses.ReserveFund2 = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("RevenueFund", deployFilters))
+			return next();
+
+		return deployer.deploy(RevenueFund, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance) {
+			addresses.RevenueFund1 = instance.address;
+
+			return deployer.deploy(RevenueFund, ownerAccount, {
+				from: ownerAccount,
+				overwrite: true
+			});
+		}
+		else {
+			return next();
+		}
+	}).then((instance) => {
+		if (instance)
+			addresses.RevenueFund2 = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("SecurityBond", deployFilters))
+			return next();
+
+		return deployer.deploy(SecurityBond, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.SecurityBond = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("TokenHolderRevenueFund", deployFilters))
+			return next();
+
+		return deployer.deploy(TokenHolderRevenueFund, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.TokenHolderRevenueFund = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("PartnerFund", deployFilters))
+			return next();
+
+		return deployer.deploy(PartnerFund, ownerAccount, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.PartnerFund = instance.address;
+
+		return next();
+	}).then(() => {
+		return updateAddresses(deployer, addresses, helpers.isResetArgPresent());
+	}).then(() => {
+		//done
+	}).catch((err) => {
+		throw err;
+	});
 };
 
-function saveAddresses(deployer, addresses) {
-    return new Promise((resolve, reject) => {
-        var build_path = deployer.basePath + path.sep + '..' + path.sep + 'build';
-        var address_filename = build_path + path.sep + 'addresses.json';
+function loadAddressesFromFile(filename)
+{
+	return new Promise((resolve, reject) => {
+		//No need to handle the error. If the file doesn't exist then we'll start afresh with a new object.
+		fs.readFile(filename, {encoding: 'utf8'}, function (err, json) {
+			if (!err) {
+				try {
+					json = JSON.parse(json);
+				} catch (err) {
+					reject(err);
+					return;
+				}
+			}
+			if (typeof json !== 'object') {
+				json = {};
+			}
+			if (typeof json.networks !== 'object') {
+				json.networks = {};
+			}
+			resolve(json);
+		});
+	});
+}
 
-        //No need to handle the error. If the file doesn't exist then we'll start afresh with a new object.
-        fs.readFile(address_filename, {encoding: 'utf8'}, function (err, json) {
-            if (!err) {
-                try {
-                    json = JSON.parse(json);
-                } catch (err) {
-                    reject(err);
-                    return;
-                }
-            }
-            if (typeof json !== 'object') {
-                json = {};
-            }
-            if (typeof json.networks !== 'object') {
-                json.networks = {};
-            }
+function saveAddressesToFile(filename, json)
+{
+	return new Promise((resolve, reject) => {
+		var folder = filename.substr(0, filename.lastIndexOf(path.sep));
 
-            json.networks[deployer.network_id] = addresses;
+		//write json file (by this time the build folder should exists)
+		fs.mkdir(folder, function (err) {
+			if ((!err) || (err && err.code == 'EEXIST')) {
+				fs.writeFile(filename, json, 'utf8', function (err) {
+					if (!err)
+						resolve();
+					else
+						reject(err);
+				});
+			}
+			else {
+				reject(err);
+			}
+		});
+	});
+}
 
-            //update timestamp
-            json.updatedAt = new Date().toISOString();
+function updateAddresses(deployer, addresses, doReset)
+{
+	return new Promise((resolve, reject) => {
+		var filename = deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json';
 
-            //convert to text
-            json = JSON.stringify(json, null, 2);
+		loadAddressesFromFile(filename).then(function (json) {
+			if (doReset || typeof json.networks[deployer.network_id] !== 'object') {
+				json.networks[deployer.network_id] = {};
+			}
 
-            //write json file (by this time the build folder should exists)
-            fs.mkdir(build_path, function (err) {
-                if ((!err) || (err && err.code == 'EEXIST')) {
-                    fs.writeFile(address_filename, json, 'utf8', function (err) {
-                        if (!err)
-                            resolve();
-                        else
-                            reject(err);
-                    });
-                }
-                else {
-                    reject(err);
-                }
-            });
-        });
-    });
+			//update addresses
+			Object.keys(addresses).forEach(function (key) {
+				json.networks[deployer.network_id][key] = addresses[key];
+			});
+
+			//update timestamp
+			json.updatedAt = new Date().toISOString();
+
+			return saveAddressesToFile(filename, JSON.stringify(json, null, 2));
+		}).then(function () {
+			resolve();
+		}).catch(function (err) {
+			reject(err);
+		});
+	});
+}
+
+function shouldDeploy(contractName, deployFilters)
+{
+	if (!deployFilters) {
+		return true;
+	}
+	for (var i = 0; i < deployFilters.length; i++) {
+		if (deployFilters[i].test(contractName))
+			return true;
+	}
+	return false;
+}
+
+function next()
+{
+	return new Promise((resolve, reject) => {
+		resolve(null);
+	});
 }
