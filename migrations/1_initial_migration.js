@@ -11,17 +11,18 @@ const helpers = require('./helpers.js');
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = function (deployer, network, accounts) {
-    var ownerAccount;
+	var ownerAccount;
 
-    if (helpers.isTestNetwork(network)) {
-        ownerAccount = accounts[0];
-    } else {
-        ownerAccount = helpers.getOwnerAccountFromArgs();
-        const ownerAccountPassword = helpers.getPasswordFromArgs();
-        helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 3600); //60 minutes
-    }
+	if (helpers.isTestNetwork(network)) {
+		ownerAccount = accounts[0];
+	}
+	else {
+		ownerAccount = helpers.getOwnerAccountFromArgs();
+		const ownerAccountPassword = helpers.getPasswordFromArgs();
+		helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 3600); //60 minutes
+	}
 
-    deployer.deploy(Migrations, {
-        from: ownerAccount
-    });
+	deployer.deploy(Migrations, {
+		from: ownerAccount
+	});
 };
