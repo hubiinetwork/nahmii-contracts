@@ -6,6 +6,8 @@ const RevenueToken = artifacts.require("RevenueToken");
 
 var fs_readFilePromise = BlueBird.promisify(fs.readFile);
 
+const MINT_COUNT_PER_ROUND = 100;
+
 //------------------------------------------------------------------------------
 
 var config, state;
@@ -16,7 +18,7 @@ module.exports = function(callback) {
 
 	//read config
 	try {
-		config = require("./config.json");
+		config = require(__dirname + path.sep + "config.json");
 	}
 	catch (err) {
 		callback(new Error("Unable to read configuration."));
@@ -25,7 +27,7 @@ module.exports = function(callback) {
 
 	//read last processed address
 	try {
-		state = require("./state.json");
+		state = require(__dirname + path.sep + "state.json");
 	}
 	catch (err) {
 		if (err.code !== 'MODULE_NOT_FOUND') {
@@ -35,10 +37,10 @@ module.exports = function(callback) {
 		state = {};
 	}
 
-	if (typeof state.lastProcessedIndex !== 'number')
-		state.lastProcessedIndex = -1;
-	else if (state.lastProcessedIndex < -1)
-		state.lastProcessedIndex = -1;
+	if (typeof state.nextToProcessIndex !== 'number')
+		state.nextToProcessIndex = 0;
+	else if (state.nextToProcessIndex < 0)
+		state.nextToProcessIndex = 0;
 
 	//check owner setting
 	config.owner = validateAddress(config.owner);
@@ -99,15 +101,27 @@ module.exports = function(callback) {
 	}).then(async () => {
 
 		//start minting from last index
-		for (let i = state.lastProcessedIndex + 1; i < addresses.length; i++) {
+		let i = state.nextToProcessIndex;
+		while (i < addresses.length) {
+			let _to = [];
+			let _amounts = [];
+			let count = 0;
+
+			while (i < addresses.length && count < MINT_COUNT_PER_ROUND) {
+				_to.push(addresses[i].address);
+				_amounts.push(addresses[i].amount);
+				i++;
+				count++;
+			}
+
 			try {
-				let tx = await revenueToken.mint(addresses[i].address, addresses[i].amount, {
+				let tx = await revenueToken.multiMint(_to, _amounts, {
 					from: config.owner
 				});
 
 				//if transaction was sent, update state
-				state.lastProcessedIndex = i;
-				fs.writeFileSync(file, JSON.stringify(state), { encoding: 'utf8' });
+				state.nextToProcessIndex = i;
+				fs.writeFileSync(__dirname + path.sep + "state.json", JSON.stringify(state), { encoding: 'utf8' });
 			}
 			catch (err) {
 				callback(err);

@@ -34,6 +34,7 @@ const RevenueFund = artifacts.require("./RevenueFund.sol");
 const SecurityBond = artifacts.require("./SecurityBond.sol");
 const TokenHolderRevenueFund = artifacts.require("./TokenHolderRevenueFund.sol");
 const PartnerFund = artifacts.require("./PartnerFund.sol");
+const RevenueToken = artifacts.require("./RevenueToken.sol");
 const fs = require('fs');
 const path = require('path');
 
@@ -81,7 +82,7 @@ module.exports = function (deployer, network, accounts) {
 	]);
 
 	deployer.link(SafeMathUintLib, [
-		Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
+		Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund, RevenueToken
 	]);
 
 	deployer.link(Types, [
@@ -438,6 +439,18 @@ module.exports = function (deployer, network, accounts) {
 	}).then((instance) => {
 		if (instance)
 			addresses.PartnerFund = instance.address;
+
+		return next();
+	}).then(() => {
+		if (!shouldDeploy("RevenueToken", deployFilters))
+			return next();
+
+		return deployer.deploy(RevenueToken, {
+			from: ownerAccount
+		});
+	}).then((instance) => {
+		if (instance)
+			addresses.RevenueToken = instance.address;
 
 		return next();
 	}).then(() => {

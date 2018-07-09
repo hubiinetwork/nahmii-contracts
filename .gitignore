@@ -4,3 +4,6 @@ package-lock.json
 build/
 node_modules/
 tmp/
+scripts/distribute_tokens/addresses.csv
+scripts/distribute_tokens/config.json
+scripts/distribute_tokens/state.json

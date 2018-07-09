@@ -219,10 +219,28 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
             holders.push(_to);
         }
 
+        //adjust balance blocks
+        addBalanceBlocks(_to);
+
         //raise events
         emit Mint(_to, _amount);
         emit Transfer(address(0), _to, _amount);
         return true;
+    }
+
+    /**
+     * @notice Function to mint tokens to multiple accounts
+     * @param _to The address that will receive the minted tokens.
+     * @param _amount The amount of tokens to mint.
+     */
+    function multiMint(address[] _to, uint256[] _amount) onlyOwner public {
+        uint i;
+
+        require(_to.length == _amount.length);
+
+        for (i = 0; i < _to.length; i++) {
+            mint(_to[i], _amount[i]);
+        }
     }
 
     /**
