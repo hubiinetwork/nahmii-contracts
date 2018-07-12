@@ -1,79 +1,73 @@
-exports.getOwnerAccountFromArgs = function ()
-{
-	var i;
+exports.getOwnerAccountFromArgs = function () {
+    var i;
 
-	for (i = 0; i < process.argv.length; i++) {
-		if (process.argv[i] == '--wallet') {
-			if (i >= process.argv.length + 1)
-				throw new Error('Error: Missing argument for \'--wallet\'');
+    for (i = 0; i < process.argv.length; i++) {
+        if (process.argv[i] == '--wallet') {
+            if (i >= process.argv.length + 1)
+                throw new Error('Error: Missing argument for \'--wallet\'');
 
-			var address = process.argv[i + 1];
-			if (address.substr(0, 2).toLowerCase() == '0x')
-				address = address.substr(2); //remove prefix
-			if (!/^[0-9a-f]{40}$/i.test(address))
-				throw new Error('Error: Invalid address specified in \'--wallet\' argument');
-			return '0x' + address;
-		}
-	}
-	throw new Error('Error: Missing \'--wallet\' parameter');
+            var address = process.argv[i + 1];
+            if (address.substr(0, 2).toLowerCase() == '0x')
+                address = address.substr(2); //remove prefix
+            if (!/^[0-9a-f]{40}$/i.test(address))
+                throw new Error('Error: Invalid address specified in \'--wallet\' argument');
+            return '0x' + address;
+        }
+    }
+    throw new Error('Error: Missing \'--wallet\' parameter');
 };
 
-exports.getPasswordFromArgs = function ()
-{
-	var i;
+exports.getPasswordFromArgs = function () {
+    var i;
 
-	for (i = 0; i < process.argv.length; i++) {
-		if (process.argv[i] == '--password') {
-			if (i >= process.argv.length + 1)
-				throw new Error('Error: Missing argument for \'--password\'');
+    for (i = 0; i < process.argv.length; i++) {
+        if (process.argv[i] == '--password') {
+            if (i >= process.argv.length + 1)
+                throw new Error('Error: Missing argument for \'--password\'');
 
-			var password = process.argv[i + 1];
-			if (password.length == 0)
-				throw new Error('Error: Invalid address specified in \'--password\' argument');
-			return password;
-		}
-	}
-	throw new Error('Error: Missing \'--password\' parameter');
+            var password = process.argv[i + 1];
+            if (password.length == 0)
+                throw new Error('Error: Invalid address specified in \'--password\' argument');
+            return password;
+        }
+    }
+    throw new Error('Error: Missing \'--password\' parameter');
 };
 
-exports.unlockAddress = function (web3, address, password, timeoutInSecs)
-{
-	web3.personal.unlockAccount(address, password, timeoutInSecs);
+exports.unlockAddress = function (web3, address, password, timeoutInSecs) {
+    web3.personal.unlockAccount(address, password, timeoutInSecs);
 };
 
-exports.isTestNetwork = function (network)
-{
-	return (network.includes('develop') || network.includes('ganache'));
+exports.isTestNetwork = function (network) {
+    return (network.includes('develop') || network.includes('ganache'));
 };
 
-exports.getFiltersFromArgs = function ()
-{
-	var finalFilters = [];
-	var i;
+exports.getFiltersFromArgs = function () {
+    var finalFilters = [];
+    var i;
 
-	for (i = 0; i < process.argv.length; i++) {
-		if (process.argv[i] == '--filter') {
-			if (i >= process.argv.length + 1)
-				throw new Error('Error: Missing argument for \'--filter\'');
+    for (i = 0; i < process.argv.length; i++) {
+        if (process.argv[i] == '--filter') {
+            if (i >= process.argv.length + 1)
+                throw new Error('Error: Missing argument for \'--filter\'');
 
-			var filter = process.argv[i + 1];
-			filter = filter.split(',');
-			for (i = 0; i < filter.length; i++) {
-				if (!(/^[0-9A-Za-z\*]+$/.test(filter[i])))
-					throw new Error('Error: Invalid filters specified in \'--filter\' argument');
-				finalFilters.push(new RegExp('^' + filter[i].replace(/\*/g, '.*')  + '$', 'i'));
-			}
-			break;
-		}
-	}
-	return (finalFilters.length > 0) ? finalFilters : null;
+            var filter = process.argv[i + 1];
+            filter = filter.split(',');
+            for (i = 0; i < filter.length; i++) {
+                if (!(/^[0-9A-Za-z\*]+$/.test(filter[i])))
+                    throw new Error('Error: Invalid filters specified in \'--filter\' argument');
+                finalFilters.push(new RegExp('^' + filter[i].replace(/\*/g, '.*') + '$', 'i'));
+            }
+            break;
+        }
+    }
+    return (finalFilters.length > 0) ? finalFilters : null;
 };
 
-exports.isResetArgPresent = function ()
-{
-	for (i = 0; i < process.argv.length; i++) {
-		if (process.argv[i] == '--reset')
-			return true;
-	}
-	return false;
+exports.isResetArgPresent = function () {
+    for (i = 0; i < process.argv.length; i++) {
+        if (process.argv[i] == '--reset')
+            return true;
+    }
+    return false;
 };
