@@ -11,11 +11,13 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe('DriipSettlementChallenger', () => {
+    describe.only('DriipSettlementChallenger', () => {
         let web3DriipSettlementChallenger, ethersDriipSettlementChallenger;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
+        let web3DriipSettlementChallenge, ethersDriipSettlementChallenge;
+        let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
         let blockNumber0, blockNumber10, blockNumber20, blockNumber30;
@@ -27,6 +29,10 @@ module.exports = (glob) => {
             ethersDriipSettlementChallenger = glob.ethersIoDriipSettlementChallenger;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
+            web3DriipSettlementChallenge = glob.web3DriipSettlementChallenge;
+            ethersDriipSettlementChallenge = glob.ethersIoDriipSettlementChallenge;
+            web3FraudChallenge = glob.web3FraudChallenge;
+            ethersFraudChallenge = glob.ethersIoFraudChallenge;
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
             ethersCancelOrdersChallenge = glob.ethersIoCancelOrdersChallenge;
 
@@ -37,6 +43,8 @@ module.exports = (glob) => {
 
             await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(mocks.address0, 1000);
 
+            await ethersDriipSettlementChallenger.changeDriipSettlementChallenge(ethersDriipSettlementChallenge.address);
+            await ethersDriipSettlementChallenger.changeFraudChallenge(ethersFraudChallenge.address);
             await ethersDriipSettlementChallenger.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
             await ethersDriipSettlementChallenger.changeConfiguration(ethersConfiguration.address);
             await ethersDriipSettlementChallenger.changeValidator(ethersValidator.address);
@@ -180,6 +188,88 @@ module.exports = (glob) => {
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
                     web3DriipSettlementChallenger.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('driipSettlementChallenge()', () => {
+            it('should equal value initialized', async () => {
+                const driipSettlementChallenge = await ethersDriipSettlementChallenger.driipSettlementChallenge();
+                driipSettlementChallenge.should.equal(utils.getAddress(ethersDriipSettlementChallenge.address));
+            });
+        });
+
+        describe('changeDriipSettlementChallenge()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let driipSettlementChallenge;
+
+                beforeEach(async () => {
+                    driipSettlementChallenge = await web3DriipSettlementChallenger.driipSettlementChallenge.call();
+                });
+
+                afterEach(async () => {
+                    await web3DriipSettlementChallenger.changeDriipSettlementChallenge(driipSettlementChallenge);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3DriipSettlementChallenger.changeDriipSettlementChallenge(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeDriipSettlementChallengeEvent');
+                    const driipSettlementChallenge = await web3DriipSettlementChallenger.driipSettlementChallenge();
+                    utils.getAddress(driipSettlementChallenge).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3DriipSettlementChallenger.changeDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('fraudChallenge()', () => {
+            it('should equal value initialized', async () => {
+                const fraudChallenge = await ethersDriipSettlementChallenger.fraudChallenge();
+                fraudChallenge.should.equal(utils.getAddress(ethersFraudChallenge.address));
+            });
+        });
+
+        describe('changeFraudChallenge()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                let fraudChallenge;
+
+                beforeEach(async () => {
+                    fraudChallenge = await web3DriipSettlementChallenger.fraudChallenge.call();
+                });
+
+                afterEach(async () => {
+                    await web3DriipSettlementChallenger.changeFraudChallenge(fraudChallenge);
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3DriipSettlementChallenger.changeFraudChallenge(address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeFraudChallengeEvent');
+                    const fraudChallenge = await web3DriipSettlementChallenger.fraudChallenge();
+                    utils.getAddress(fraudChallenge).should.equal(address);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3DriipSettlementChallenger.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
