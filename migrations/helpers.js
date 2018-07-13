@@ -38,6 +38,10 @@ exports.unlockAddress = function (web3, address, password, timeoutInSecs) {
     web3.personal.unlockAccount(address, password, timeoutInSecs);
 };
 
+exports.lockAddress = function (web3, address) {
+    web3.personal.lockAccount(address);
+};
+
 exports.isTestNetwork = function (network) {
     return (network.includes('develop') || network.includes('ganache'));
 };
