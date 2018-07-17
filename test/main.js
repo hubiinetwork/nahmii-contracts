@@ -166,17 +166,6 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate Validator contract", async () => {
-        try {
-            glob.web3Validator = await Validator.deployed();
-            assert.notEqual(glob.web3Validator, null);
-            glob.ethersIoValidator = new ethers.Contract(glob.web3Validator.address, Validator.abi, glob.signer_owner);
-        }
-        catch (err) {
-            assert(false, 'Failed to instantiate Validator contract address. [Error: ' + err.toString() + ']');
-        }
-    });
-
     before("Preflight: Instantiate CommunityVote contract", async () => {
         try {
             glob.web3CommunityVote = await CommunityVote.deployed();

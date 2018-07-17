@@ -53,6 +53,7 @@ module.exports = (glob) => {
             await ethersDriipSettlementChallengeOwner.changeValidator(ethersValidator.address);
             await ethersDriipSettlementChallengeOwner.changeDriipSettlementChallenger(ethersDriipSettlementChallenger.address);
 
+            await ethersDriipSettlementChallenger.changeDriipSettlementChallenge(ethersDriipSettlementChallengeOwner.address);
             await ethersDriipSettlementChallenger.changeFraudChallenge(ethersFraudChallenge.address);
             await ethersDriipSettlementChallenger.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
             await ethersDriipSettlementChallenger.changeConfiguration(ethersConfiguration.address);

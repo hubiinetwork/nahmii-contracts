@@ -38,6 +38,7 @@ contract DriipSettlementChallenger is Ownable, Modifiable, Configurable, Validat
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge, DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
     event ChallengeByOrderEvent(Types.Order order, uint256 nonce, Types.DriipType driipType, address reporter);
@@ -48,8 +49,19 @@ contract DriipSettlementChallenger is Ownable, Modifiable, Configurable, Validat
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner, DriipSettlementChallenge _driipSettlementChallenge) Ownable(_owner) notNullAddress(_driipSettlementChallenge) public {
-        driipSettlementChallenge = _driipSettlementChallenge;
+    constructor(address owner) Ownable(owner) public {
+    }
+
+    /// @notice Change the driip settlement challenge contract
+    /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
+    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge)
+    public
+    onlyOwner
+    notNullAddress(newDriipSettlementChallenge)
+    {
+        DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
+        driipSettlementChallenge = newDriipSettlementChallenge;
+        emit ChangeDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
     }
 
     /// @notice Change the fraud challenge contract
