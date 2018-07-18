@@ -42,416 +42,179 @@ const helpers = require('./helpers.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 
-module.exports = function (deployer, network, accounts) {
-    let ownerAccount;
-    if (helpers.isTestNetwork(network)) {
-        ownerAccount = accounts[0];
-    }
-    else {
-        ownerAccount = helpers.getOwnerAccountFromArgs();
-        const ownerAccountPassword = helpers.getPasswordFromArgs();
-        helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 7200); //120 minutes
-    }
+module.exports = (deployer, network, accounts) => {
+	let ownerAccount;
 
-    const deployFilters = helpers.getFiltersFromArgs();
+	deployer.then(async () => {
+		if (helpers.isTestNetwork(network)) {
+			ownerAccount = accounts[0];
+		}
+		else {
+			ownerAccount = helpers.getOwnerAccountFromArgs();
+			const ownerAccountPassword = helpers.getPasswordFromArgs();
+			helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 7200); //120 minutes
+		}
 
-    const addresses = {};
+		try {
+			const deployFilters = helpers.getFiltersFromArgs();
 
-    deployer
-        .then(() => {
-            return shouldDeploy('SafeMathInt', deployFilters) ?
-                deployer.deploy(SafeMathInt, {
-                    from: ownerAccount
-                }) :
-                null;
-        }).then((instance) => {
-        addresses.SafeMathInt = instance.address;
-    }).then(() => {
-        return shouldDeploy('SafeMathUint', deployFilters) ?
-            deployer.deploy(SafeMathUint, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        addresses.SafeMathUint = instance.address;
-    }).then(() => {
-        return shouldDeploy('Types', deployFilters) ?
-            deployer.deploy(Types, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        addresses.Types = instance.address;
-    }).then(() => {
-        return deployer.link(SafeMathInt, [
-            ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-            FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
-        ]);
-    }).then(() => {
-        return deployer.link(SafeMathUint, [
-            Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
-        ]);
-    }).then(() => {
-        return deployer.link(Types, [
-            Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-            FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
-            FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
-            FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfTrades,
-            FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallenge
-        ]);
-    }).then(() => {
-        return shouldDeploy('ClientFund', deployFilters) ?
-            deployer.deploy(ClientFund, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.ClientFund = instance.address;
-    }).then(() => {
-        return shouldDeploy('CommunityVote', deployFilters) ?
-            deployer.deploy(CommunityVote, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.CommunityVote = instance.address;
-    }).then(() => {
-        return shouldDeploy('Configuration', deployFilters) ?
-            deployer.deploy(Configuration, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.Configuration = instance.address;
-    }).then(() => {
-        return shouldDeploy('Exchange', deployFilters) ?
-            deployer.deploy(Exchange, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.Exchange = instance.address;
-    }).then(() => {
-        return shouldDeploy('CancelOrdersChallenge', deployFilters) ?
-            deployer.deploy(CancelOrdersChallenge, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.CancelOrdersChallenge = instance.address;
-    }).then(() => {
-        return shouldDeploy('DriipSettlementChallenge', deployFilters) ?
-            deployer.deploy(DriipSettlementChallenge, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.DriipSettlementChallenge = instance.address;
-    }).then(() => {
-        return shouldDeploy('DriipSettlementChallenge', deployFilters) ?
-            deployer.deploy(DriipSettlementChallenger, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.DriipSettlementChallenger = instance.address;
-    }).then(() => {
-        return shouldDeploy('Hasher', deployFilters) ?
-            deployer.deploy(Hasher, ownerAccount, {
-                from: ownerAccount
-            }) : null;
-    }).then((instance) => {
-        if (instance)
-            addresses.Hasher = instance.address;
-    }).then(() => {
-        return shouldDeploy('Validator', deployFilters) ?
-            deployer.deploy(Validator, ownerAccount, {
-                from: ownerAccount
-            }) : null;
-    }).then((instance) => {
-        if (instance)
-            addresses.Validator = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByOrder', deployFilters) ?
-            deployer.deploy(FraudChallengeByOrder, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByOrder = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByTrade', deployFilters) ?
-            deployer.deploy(FraudChallengeByTrade, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByTrade = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByPayment', deployFilters) ?
-            deployer.deploy(FraudChallengeByPayment, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByPayment = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeBySuccessiveTrades', deployFilters) ?
-            deployer.deploy(FraudChallengeBySuccessiveTrades, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeBySuccessiveTrades = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeBySuccessivePayments', deployFilters) ?
-            deployer.deploy(FraudChallengeBySuccessivePayments, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeBySuccessivePayments = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByPaymentSucceedingTrade', deployFilters) ?
-            deployer.deploy(FraudChallengeByPaymentSucceedingTrade, ownerAccount, {
-                from: ownerAccount
-            }) : null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByPaymentSucceedingTrade = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByTradeSucceedingPayment', deployFilters) ?
-            deployer.deploy(FraudChallengeByTradeSucceedingPayment, ownerAccount, {
-                from: ownerAccount
-            }) : null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByTradeSucceedingPayment = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByTradeOrderResiduals', deployFilters) ?
-            deployer.deploy(FraudChallengeByTradeOrderResiduals, ownerAccount, {
-                from: ownerAccount
-            }) : null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByTradeOrderResiduals = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByDoubleSpentOrders', deployFilters) ?
-            deployer.deploy(FraudChallengeByDoubleSpentOrders, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByDoubleSpentOrders = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByDuplicateDriipNonceOfTrades', deployFilters) ?
-            deployer.deploy(FraudChallengeByDuplicateDriipNonceOfTrades, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByDuplicateDriipNonceOfTrades = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByDuplicateDriipNonceOfPayments', deployFilters) ?
-            deployer.deploy(FraudChallengeByDuplicateDriipNonceOfPayments, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByDuplicateDriipNonceOfPayments = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', deployFilters) ?
-            deployer.deploy(FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = instance.address;
-    }).then(() => {
-        return shouldDeploy('FraudChallenge', deployFilters) ?
-            deployer.deploy(FraudChallenge, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.FraudChallenge = instance.address;
-    }).then(() => {
-        return shouldDeploy('ReserveFund1', deployFilters) ?
-            deployer.deploy(ReserveFund, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.ReserveFund1 = instance.address;
-    }).then(() => {
-        return shouldDeploy('ReserveFund2', deployFilters) ?
-            deployer.deploy(ReserveFund, ownerAccount, {
-                from: ownerAccount,
-                overwrite: true
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.ReserveFund2 = instance.address;
-    }).then(() => {
-        return shouldDeploy('RevenueFund1', deployFilters) ?
-            deployer.deploy(RevenueFund, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.RevenueFund1 = instance.address;
-    }).then(() => {
-        return shouldDeploy('RevenueFund2', deployFilters) ?
-            deployer.deploy(RevenueFund, ownerAccount, {
-                from: ownerAccount,
-                overwrite: true
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.RevenueFund2 = instance.address;
-    }).then(() => {
-        return shouldDeploy('SecurityBond', deployFilters) ?
-            deployer.deploy(SecurityBond, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.SecurityBond = instance.address;
-    }).then(() => {
-        return shouldDeploy('TokenHolderRevenueFund', deployFilters) ?
-            deployer.deploy(TokenHolderRevenueFund, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.TokenHolderRevenueFund = instance.address;
-    }).then(() => {
-        return shouldDeploy('PartnerFund', deployFilters) ?
-            deployer.deploy(PartnerFund, ownerAccount, {
-                from: ownerAccount
-            }) :
-            null;
-    }).then((instance) => {
-        if (instance)
-            addresses.PartnerFund = instance.address;
-    }).then(() => {
-        return updateAddresses(deployer, addresses, helpers.isResetArgPresent());
-    }).then(() => {
-        if (!helpers.isTestNetwork(network))
-            helpers.lockAddress(web3, ownerAccount);
-    }).catch((err) => {
-        if (!helpers.isTestNetwork(network))
-            helpers.lockAddress(web3, ownerAccount);
-        throw err;
-    });
+			const addresses = {};
+
+			await execDeploy(deployer, 'SafeMathInt', SafeMathInt, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'SafeMathUint', SafeMathUint, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'Types', Types, deployFilters, addresses, ownerAccount);
+
+			await deployer.link(SafeMathInt, [
+					ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
+					FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
+			]);
+			await deployer.link(SafeMathUint, [
+				Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
+			]);
+			await deployer.link(Types, [
+				Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
+				FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
+				FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
+				FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfTrades,
+				FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallenge
+			]);
+
+			await execDeploy(deployer, 'ClientFund', ClientFund, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'CommunityVote', CommunityVote, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'Configuration', Configuration, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'Exchange', Exchange, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'CancelOrdersChallenge', CancelOrdersChallenge, deployFilters, addresses, ownerAccount);
+			if (shouldDeploy('DriipSettlementChallenge', deployFilters)) {
+				let instance = await deployer.deploy(DriipSettlementChallenge, ownerAccount, { from: ownerAccount });
+				addresses.DriipSettlementChallenge = instance.address;
+
+				instance = await deployer.deploy(DriipSettlementChallenger, ownerAccount, { from: ownerAccount, overwrite: true });
+				addresses.DriipSettlementChallenger = instance.address;
+			}
+			await execDeploy(deployer, 'Hasher', Hasher, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'Validator', Validator, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByOrder', FraudChallengeByOrder, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByTrade', FraudChallengeByTrade, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByPayment', FraudChallengeByPayment, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeBySuccessiveTrades', FraudChallengeBySuccessiveTrades, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeBySuccessivePayments', FraudChallengeBySuccessivePayments, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByPaymentSucceedingTrade', FraudChallengeByPaymentSucceedingTrade, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByTradeSucceedingPayment', FraudChallengeByTradeSucceedingPayment, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByTradeOrderResiduals', FraudChallengeByTradeOrderResiduals, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByDoubleSpentOrders', FraudChallengeByDoubleSpentOrders, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfTrades', FraudChallengeByDuplicateDriipNonceOfTrades, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfPayments', FraudChallengeByDuplicateDriipNonceOfPayments, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'FraudChallenge', FraudChallenge, deployFilters, addresses, ownerAccount);
+			if (shouldDeploy('ReserveFund', deployFilters)) {
+				let instance = await deployer.deploy(ReserveFund, ownerAccount, { from: ownerAccount });
+				addresses.ReserveFund1 = instance.address;
+
+				instance = await deployer.deploy(ReserveFund, ownerAccount, { from: ownerAccount, overwrite: true });
+				addresses.ReserveFund2 = instance.address;
+			}
+			if (shouldDeploy('RevenueFund', deployFilters)) {
+				let instance = await deployer.deploy(RevenueFund, ownerAccount, { from: ownerAccount });
+				addresses.RevenueFund1 = instance.address;
+
+				instance = await deployer.deploy(RevenueFund, ownerAccount, { from: ownerAccount, overwrite: true });
+				addresses.RevenueFund2 = instance.address;
+			}
+			await execDeploy(deployer, 'SecurityBond', SecurityBond, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'TokenHolderRevenueFund', TokenHolderRevenueFund, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'PartnerFund', PartnerFund, deployFilters, addresses, ownerAccount);
+
+			console.log("Saving addresses...");
+			await updateAddresses(deployer, addresses, helpers.isResetArgPresent());
+		}
+		catch (err) {
+			if (!helpers.isTestNetwork(network))
+				helpers.lockAddress(web3, ownerAccount);
+
+			throw err;
+		}
+
+		if (!helpers.isTestNetwork(network))
+			helpers.lockAddress(web3, ownerAccount);
+	});
 };
 
-function loadAddressesFromFile(filename) {
-    return new Promise((resolve, reject) => {
-        //No need to handle the error. If the file doesn't exist then we'll start afresh with a new object.
-        fs.readFile(filename, {encoding: 'utf8'}, function (err, json) {
-            if (!err) {
-                try {
-                    json = JSON.parse(json);
-                } catch (err) {
-                    reject(err);
-                    return;
-                }
-            }
-            if (typeof json !== 'object') {
-                json = {};
-            }
-            if (typeof json.networks !== 'object') {
-                json.networks = {};
-            }
-            resolve(json);
-        });
-    });
+async function loadAddressesFromFile(filename)
+{
+	var json;
+
+	try {
+		//No need to handle the error. If the file doesn't exist then we'll start afresh with a new object.
+		json = fs.readFileSync(filename, {encoding: 'utf8'});
+
+		json = JSON.parse(json);
+	}
+	catch (err) {
+		if (err.code !== 'ENOENT')
+			throw err;
+
+		json = {};
+	}
+	if (typeof json.networks !== 'object') {
+		json.networks = {};
+	}
+	return json;
 }
 
-function saveAddressesToFile(filename, json) {
-    return new Promise((resolve, reject) => {
-        var folder = filename.substr(0, filename.lastIndexOf(path.sep));
+async function saveAddressesToFile(filename, json)
+{
+	var folder = filename.substr(0, filename.lastIndexOf(path.sep));
 
-        //write json file (by this time the build folder should exists)
-        fs.mkdir(folder, function (err) {
-            if ((!err) || (err && err.code == 'EEXIST')) {
-                fs.writeFile(filename, json, 'utf8', function (err) {
-                    if (!err)
-                        resolve();
-                    else
-                        reject(err);
-                });
-            }
-            else {
-                reject(err);
-            }
-        });
-    });
+	//write json file (by this time the build folder should exists)
+	try {
+		fs.mkdirSync(folder);
+	}
+	catch (err) {
+		if (err.code !== 'EEXIST')
+			throw err;
+	}
+
+	fs.writeFileSync(filename, json, 'utf8');
 }
 
-function updateAddresses(deployer, addresses, doReset) {
-    return new Promise((resolve, reject) => {
-        var filename = deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json';
+async function updateAddresses(deployer, addresses, doReset)
+{
+	var filename = deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json';
 
-        loadAddressesFromFile(filename).then(function (json) {
-            if (doReset || typeof json.networks[deployer.network_id] !== 'object') {
-                json.networks[deployer.network_id] = {};
-            }
+	var json = await loadAddressesFromFile(filename);
 
-            //update addresses
-            Object.keys(addresses).forEach(function (key) {
-                json.networks[deployer.network_id][key] = addresses[key];
-            });
+	if (doReset || typeof json.networks[deployer.network_id] !== 'object') {
+		json.networks[deployer.network_id] = {};
+	}
 
-            //update timestamp
-            json.updatedAt = new Date().toISOString();
+	//update addresses
+	Object.keys(addresses).forEach(function (key) {
+		json.networks[deployer.network_id][key] = addresses[key];
+	});
 
-            return saveAddressesToFile(filename, JSON.stringify(json, null, 2));
-        }).then(function () {
-            resolve();
-        }).catch(function (err) {
-            reject(err);
-        });
-    });
+	//update timestamp
+	json.updatedAt = new Date().toISOString();
+
+	await saveAddressesToFile(filename, JSON.stringify(json, null, 2));
 }
 
-function shouldDeploy(contractName, deployFilters) {
-    if (!deployFilters) {
-        return true;
-    }
-    for (var i = 0; i < deployFilters.length; i++) {
-        if (deployFilters[i].test(contractName))
-            return true;
-    }
-    return false;
+async function execDeploy(deployer, contractName, contract, deployFilters, addresses, ownerAccount)
+{
+	if (shouldDeploy(contractName, deployFilters)) {
+		await deployer.deploy(contract, ownerAccount, { from: ownerAccount });
+		let instance = await contract.deployed();
+		addresses[contractName] = instance.address;
+	}
 }
 
-function next() {
-    return new Promise((resolve, reject) => {
-        resolve(null);
-    });
+function shouldDeploy(contractName, deployFilters)
+{
+	if (!deployFilters) {
+		return true;
+	}
+	for (var i = 0; i < deployFilters.length; i++) {
+		if (deployFilters[i].test(contractName))
+			return true;
+	}
+	return false;
 }
