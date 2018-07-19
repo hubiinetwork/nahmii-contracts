@@ -13,7 +13,6 @@ import {Ownable} from "./Ownable.sol";
 import {ERC20} from "./ERC20.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
-import {ReserveFund} from "./ReserveFund.sol";
 import {Servable} from "./Servable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
@@ -23,12 +22,6 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 */
 contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructible {
     using SafeMathInt for int256;
-
-    //
-    // Constants
-    // -----------------------------------------------------------------------------------------------------------------
-    string constant public reserveFundGetFromDepositedAction = "reserve_fund_get_from_deposited_action";
-    string constant public reserveFundAddToStagedAction = "reserve_fun_add_to_stage_action";
 
     //
     // Structures
@@ -453,43 +446,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
 
         //emit event
         emit SeizeDepositedAndSettledBalancesEvent(sourceWallet, targetWallet);
-    }
-
-    //
-    // Reserve funds functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function reserveFundGetFromDeposited(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(reserveFundGetFromDepositedAction) {
-        require(wallet != address(0));
-        require(amount.isPositiveInt256());
-
-        ReserveFund reserveFund = ReserveFund(msg.sender);
-
-        if (token == address(0)) {
-            walletInfoMap[wallet].depositedEtherBalance = walletInfoMap[wallet].depositedEtherBalance.sub_nn(amount);
-
-            reserveFund.receiveEthers.value(uint256(amount))(wallet);
-        } else {
-            walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].sub_nn(amount);
-
-            ERC20 erc20 = ERC20(token);
-            erc20.transfer(reserveFund, uint256(amount));
-
-            reserveFund.registerReceivedTokens(wallet, amount, token);
-        }
-    }
-
-    function reserveFundAddToStaged(address wallet, int256 amount, address token) public payable onlyOwnerOrServiceAction(reserveFundAddToStagedAction) {
-        require(wallet != address(0));
-        require(amount.isPositiveInt256());
-
-        if (token == address(0)) {
-            walletInfoMap[wallet].settledEtherBalance = walletInfoMap[wallet].settledEtherBalance.add(amount);
-        } else {
-            ERC20 erc20 = ERC20(token);
-            erc20.transferFrom(msg.sender, this, uint256(amount));
-
-            walletInfoMap[wallet].settledTokenBalance[token] = walletInfoMap[wallet].settledTokenBalance[token].add(amount);
-        }
     }
 
     //

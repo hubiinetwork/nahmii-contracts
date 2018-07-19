@@ -30,7 +30,6 @@ const FraudChallengeByDoubleSpentOrders = artifacts.require("FraudChallengeByDou
 const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTrades");
 const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require("FraudChallengeByDuplicateDriipNonceOfPayments");
 const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTradeAndPayment");
-const ReserveFund = artifacts.require("ReserveFund");
 const RevenueFund = artifacts.require("RevenueFund");
 const SecurityBond = artifacts.require("SecurityBond");
 const TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
@@ -375,17 +374,6 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate ReserveFund contract", async () => {
-        try {
-            glob.web3ReserveFund = await ReserveFund.deployed();
-            assert.notEqual(glob.web3ReserveFund, null);
-            glob.ethersIoReserveFund = new ethers.Contract(glob.web3ReserveFund.address, ReserveFund.abi, glob.signer_owner);
-        }
-        catch (err) {
-            assert(false, 'Failed to instantiate ReserveFund contract address. [Error: ' + err.toString() + ']');
-        }
-    });
-
     before("Preflight: Instantiate RevenueFund contract", async () => {
         try {
             glob.web3RevenueFund = await RevenueFund.deployed();
@@ -512,7 +500,6 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
-    require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);

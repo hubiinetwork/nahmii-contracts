@@ -20,7 +20,6 @@ library Types {
     enum LiquidityRole {Maker, Taker}
     enum CurrencyRole {Intended, Conjugate}
     enum DriipType {Trade, Payment}
-    enum Sidedness {OneSided, TwoSided}
     enum Intention {Buy, Sell}
     enum TradePartyRole {Buyer, Seller}
     enum PaymentPartyRole {Sender, Recipient}
@@ -99,7 +98,6 @@ library Types {
 
     struct Trade {
         uint256 nonce;
-        bool immediateSettlement;
         int256 amount;
         int256 rate;
 
@@ -127,7 +125,6 @@ library Types {
 
     struct Payment {
         uint256 nonce;
-        bool immediateSettlement;
         int256 amount;
 
         address currency;
@@ -146,7 +143,6 @@ library Types {
 
     struct OrderPlacement {
         Intention intention;
-        bool immediateSettlement;
         int256 amount;
         int256 rate;
 
@@ -166,8 +162,7 @@ library Types {
     struct Settlement {
         uint256 nonce;
         DriipType driipType;
-        Sidedness sidedness;
-        address[2] wallets;
+        address[2] wallets; // TODO Possibly replace by named fields "origin" (trade seller and payment sender) and "target" (trade buyer and payment recipient)
     }
 
     //

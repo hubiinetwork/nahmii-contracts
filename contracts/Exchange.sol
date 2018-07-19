@@ -19,7 +19,6 @@ import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
-import {ReserveFund} from "./ReserveFund.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
@@ -43,8 +42,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
 
     FraudChallenge public fraudChallenge;
     DriipSettlementChallenge public driipSettlementChallenge;
-    ReserveFund public tradesReserveFund;
-    ReserveFund public paymentsReserveFund;
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
 
@@ -58,8 +55,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     event SettleDriipAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge, DriipSettlementChallenge newDriipSettlementChallenge);
-    event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
-    event ChangePaymentsReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
 
@@ -94,30 +89,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
         driipSettlementChallenge = newDriipSettlementChallenge;
         emit ChangeDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
-    }
-
-    /// @notice Change the trades reserve fund contract
-    /// @param newTradesReserveFund The (address of) trades ReserveFund contract instance
-    function changeTradesReserveFund(ReserveFund newTradesReserveFund)
-    public
-    onlyOwner
-    notNullAddress(newTradesReserveFund)
-    {
-        ReserveFund oldTradesReserveFund = tradesReserveFund;
-        tradesReserveFund = newTradesReserveFund;
-        emit ChangeTradesReserveFundEvent(oldTradesReserveFund, tradesReserveFund);
-    }
-
-    /// @notice Change the payments reserve fund contract
-    /// @param newPaymentsReserveFund The (address of) payments ReserveFund contract instance
-    function changePaymentsReserveFund(ReserveFund newPaymentsReserveFund)
-    public
-    onlyOwner
-    notNullAddress(newPaymentsReserveFund)
-    {
-        ReserveFund oldPaymentsReserveFund = paymentsReserveFund;
-        paymentsReserveFund = newPaymentsReserveFund;
-        emit ChangePaymentsReserveFundEvent(oldPaymentsReserveFund, paymentsReserveFund);
     }
 
     /// @notice Change the trades revenue fund contract
@@ -183,9 +154,9 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         }
     }
 
+    // TODO Remove wallet parameter
     /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
-    /// @param wallet The wallet whose side of the driip is to be settled one-sidedly if supported by reserve fund
     function settleDriipAsTrade(Types.Trade trade, address wallet)
     public
     validatorInitialized
@@ -196,9 +167,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         require(driipSettlementChallenge != address(0));
         require(configuration != address(0));
         require(clientFund != address(0));
-
-        if (!trade.immediateSettlement)
-            require(tradesReserveFund != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -214,29 +182,9 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < highestAbsoluteDriipNonce));
 
-            Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
-
-            // Positive transfer of intended currency defined as being from trade seller to buyer
-            bool transferIntendedToParty = ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
-            || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole));
-            int256 transferIntendedAbs = trade.transfers.intended.net.abs();
-
-            // Positive transfer of conjugate currency defined as being from trade buyer to seller
-            bool transferConjugateToParty = ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
-            || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole));
-            int256 transferConjugateAbs = trade.transfers.conjugate.net.abs();
-
-            if (!trade.immediateSettlement &&
-            (!transferIntendedToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.intended, transferIntendedAbs)) &&
-            (!transferConjugateToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, transferConjugateAbs))) {
-                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, transferIntendedToParty ? transferIntendedAbs.neg() : transferIntendedAbs);
-                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.conjugate, transferConjugateToParty ? transferConjugateAbs.neg() : transferConjugateAbs);
-                addOneSidedSettlementFromTrade(trade, wallet);
-            } else {
-                settleTradeTransfers(trade);
-                settleTradeFees(trade);
-                addTwoSidedSettlementFromTrade(trade);
-            }
+            settleTradeTransfers(trade);
+            settleTradeFees(trade);
+            addSettlementFromTrade(trade);
 
             if (trade.nonce > highestAbsoluteDriipNonce)
                 highestAbsoluteDriipNonce = trade.nonce;
@@ -249,9 +197,9 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         emit SettleDriipAsTradeEvent(trade, wallet);
     }
 
+    // TODO Remove wallet parameter
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
-    /// @param wallet The wallet whose side of the driip is to be settled one-sidedly if supported by reserve fund
     function settleDriipAsPayment(Types.Payment payment, address wallet)
     public
     validatorInitialized
@@ -262,9 +210,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         require(driipSettlementChallenge != address(0));
         require(configuration != address(0));
         require(clientFund != address(0));
-
-        if (!payment.immediateSettlement)
-            require(paymentsReserveFund != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -280,22 +225,9 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (payment.nonce < highestAbsoluteDriipNonce));
 
-            Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
-
-            // Positive transfer defined as being from payment sender to recipient
-            bool transferToParty = ((0 > payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
-            || (0 < payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole));
-            int256 transferAbs = payment.transfers.net.abs();
-
-            if (!payment.immediateSettlement &&
-            (!transferToParty || paymentsReserveFund.outboundTransferSupported(payment.currency, transferAbs))) {
-                paymentsReserveFund.twoWayTransfer(wallet, payment.currency, transferToParty ? transferAbs.neg() : transferAbs);
-                addOneSidedSettlementFromPayment(payment, wallet);
-            } else {
-                settlePaymentTransfers(payment);
-                settlePaymentFees(payment);
-                addTwoSidedSettlementFromPayment(payment);
-            }
+            settlePaymentTransfers(payment);
+            settlePaymentFees(payment);
+            addSettlementFromPayment(payment);
 
             if (payment.nonce > highestAbsoluteDriipNonce)
                 highestAbsoluteDriipNonce = payment.nonce;
@@ -434,31 +366,17 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         }
     }
 
-    function addOneSidedSettlementFromTrade(Types.Trade trade, address wallet) private {
+    function addSettlementFromTrade(Types.Trade trade) private {
         settlements.push(
-            Types.Settlement(trade.nonce, Types.DriipType.Trade, Types.Sidedness.OneSided, [wallet, address(0)])
-        );
-        walletSettlementIndexMap[wallet].push(settlements.length - 1);
-    }
-
-    function addTwoSidedSettlementFromTrade(Types.Trade trade) private {
-        settlements.push(
-            Types.Settlement(trade.nonce, Types.DriipType.Trade, Types.Sidedness.TwoSided, [trade.buyer.wallet, trade.seller.wallet])
+            Types.Settlement(trade.nonce, Types.DriipType.Trade, [trade.buyer.wallet, trade.seller.wallet])
         );
         walletSettlementIndexMap[trade.buyer.wallet].push(settlements.length - 1);
         walletSettlementIndexMap[trade.seller.wallet].push(settlements.length - 1);
     }
 
-    function addOneSidedSettlementFromPayment(Types.Payment payment, address wallet) private {
+    function addSettlementFromPayment(Types.Payment payment) private {
         settlements.push(
-            Types.Settlement(payment.nonce, Types.DriipType.Payment, Types.Sidedness.OneSided, [wallet, address(0)])
-        );
-        walletSettlementIndexMap[wallet].push(settlements.length - 1);
-    }
-
-    function addTwoSidedSettlementFromPayment(Types.Payment payment) private {
-        settlements.push(
-            Types.Settlement(payment.nonce, Types.DriipType.Payment, Types.Sidedness.TwoSided, [payment.sender.wallet, payment.recipient.wallet])
+            Types.Settlement(payment.nonce, Types.DriipType.Payment, [payment.sender.wallet, payment.recipient.wallet])
         );
         walletSettlementIndexMap[payment.sender.wallet].push(settlements.length - 1);
         walletSettlementIndexMap[payment.recipient.wallet].push(settlements.length - 1);

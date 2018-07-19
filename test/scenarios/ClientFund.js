@@ -286,17 +286,6 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [registerService]: Register ReserveFunds SC as a service", async() => {
-			try {
-				await glob.web3ClientFund.registerService(glob.web3ReserveFund.address);
-			}
-			catch (err) {
-				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-			}
-		});
-
-		//-------------------------------------------------------------------------
-
 		it(testCounter.next() + ": MUST FAIL [registerService]: Register ClientFund SC as a service", async() => {
 			try {
 				await glob.web3ClientFund.registerService(glob.web3ClientFund.address);
@@ -578,53 +567,6 @@ module.exports = function (glob) {
 		});
 
 		//-------------------------------------------------------------------------
-
-		it(testCounter.next() + ": MUST FAIL [stageTo]: User D now wants to stage 0.2 ETH to ReserveFunds (without being registered as beneficiary)", async() => {
-			try {
-				let result = await glob.web3ClientFund.stageTo(web3.toWei(0.2, 'ether'), 0, glob.web3ReserveFund.address, { from: glob.user_d });
-				assert(false, 'This test must fail.');
-			}
-			catch (err) {
-				assert(err.toString().includes('revert'), err.toString());
-			}
-		});
-
-		//-------------------------------------------------------------------------
-
-		it(testCounter.next() + ": MUST FAIL [stageTo]: User D now wants to stage 3 tokens to ReserveFunds (without being registered as beneficiary)", async() => {
-			try {
-				let result = await glob.web3ClientFund.stageTo(3, glob.web3Erc20.address, glob.web3ReserveFund.address, { from: glob.user_d });
-				assert(false, 'This test must fail.');
-			}
-			catch (err) {
-				assert(err.toString().includes('revert'), err.toString());
-			}
-		});
-
-		//-------------------------------------------------------------------------
-
-		it(testCounter.next() + ": MUST FAIL [registerBeneficiary]: Called from a non-onwer", async() => {
-			try {
-				let result = await glob.web3ClientFund.registerBeneficiary(glob.web3ReserveFund.address, { from: glob.user_d });
-				assert(false, 'This test must fail.');
-			}
-			catch (err) {
-				assert(err.toString().includes('revert'), err.toString());
-			}
-		});
-
-		//------------------------------------------------------------------------
-
-		it(testCounter.next() + ": MUST SUCCEED [registerBeneficiary]: Register ReserveFunds as a beneficiary of ClientFunds", async() => {
-			try {
-				let result = await glob.web3ClientFund.registerBeneficiary(glob.web3ReserveFund.address);
-			}
-			catch (err) {
-				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-			}
-		});
-
-		//------------------------------------------------------------------------
 
 		it(testCounter.next() + ": MUST SUCCEED [withdrawEthers]: User D wants to withdraw 0.1 ETH", async() => {
 			try {
