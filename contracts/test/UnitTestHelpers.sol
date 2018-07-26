@@ -26,8 +26,8 @@ contract UnitTestHelpers is AccrualBeneficiary {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEthersWasCalled(address wallet);
-    event ReceiveTokensWasCalled(address wallet, int256 amount, address token);
+    event DepositEthersToWasCalled(address wallet);
+    event DepositTokensToWasCalled(address wallet, int256 amount, address token);
     event CloseAccrualPeriodWasCalled();
 
     //
@@ -95,14 +95,14 @@ contract UnitTestHelpers is AccrualBeneficiary {
         sc.depositTokens(token, amount);
     }
 
-    function receiveEthers(address wallet) public payable {
-        emit ReceiveEthersWasCalled(wallet);
+    function depositEthersTo(address wallet) public payable {
+        emit DepositEthersToWasCalled(wallet);
     }
 
-    function receiveTokens(address wallet, int256 amount, address token) public {
+    function depositTokensTo(address wallet, int256 amount, address token) public {
         ERC20 tok = ERC20(token);
         tok.transferFrom(msg.sender, this, uint256(amount));
-        emit ReceiveTokensWasCalled(wallet, amount, token);
+        emit DepositTokensToWasCalled(wallet, amount, token);
     }
 
     function closeAccrualPeriod() public {

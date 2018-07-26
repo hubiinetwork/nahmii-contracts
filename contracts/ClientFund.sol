@@ -101,10 +101,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        receiveEthers(msg.sender);
+        depositEthersTo(msg.sender);
     }
 
-    function receiveEthers(address wallet) public payable {
+    function depositEthersTo(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet deposited balance
@@ -116,13 +116,11 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructi
     }
 
     function depositTokens(address token, int256 amount) public {
-        receiveTokens(msg.sender, amount, token);
+        depositTokensTo(msg.sender, amount, token);
     }
 
     //NOTE: 'wallet' must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public {
-
-        require(token != address(0));
+    function depositTokensTo(address wallet, int256 amount, address token) public notNullAddress(token) {
         require(amount.isNonZeroPositiveInt256());
 
         //try to execute token transfer

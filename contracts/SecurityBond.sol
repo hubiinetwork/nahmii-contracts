@@ -100,10 +100,10 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        receiveEthers(msg.sender);
+        depositEthersTo(msg.sender);
     }
 
-    function receiveEthers(address wallet) public payable {
+    function depositEthersTo(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet active balance
@@ -115,11 +115,11 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible
     }
 
     function depositTokens(address token, int256 amount) public {
-        receiveTokens(msg.sender, amount, token);
+        depositTokensTo(msg.sender, amount, token);
     }
 
     //NOTE: msg.sender must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public {
+    function depositTokensTo(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));

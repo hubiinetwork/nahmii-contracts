@@ -60,10 +60,10 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        receiveEthers(msg.sender);
+        depositEthersTo(msg.sender);
     }
 
-    function receiveEthers(address wallet) public payable {
+    function depositEthersTo(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to balances
@@ -76,18 +76,18 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
     }
 
     function depositTokens(address token, int256 amount) public {
-        receiveTokens(msg.sender, amount, token);
+        depositTokensTo(msg.sender, amount, token);
     }
 
     //NOTE: 'wallet' must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public {
-        ERC20 erc20_token = ERC20(token);
+    function depositTokensTo(address wallet, int256 amount, address token) public {
+        ERC20 erc20 = ERC20(token);
 
         //record deposit
-        recordDepositTokensPrivate(erc20_token, amount);
+        recordDepositTokensPrivate(erc20, amount);
 
         //try to execute token transfer
-        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
+        require(erc20.transferFrom(wallet, this, uint256(amount)));
 
         //emit event
         emit DepositEvent(wallet, amount, token);
@@ -155,7 +155,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
 
                 if (to_transfer > 0) {
                     beneficiary = AccrualBeneficiary(beneficiaryAddress);
-                    beneficiary.receiveEthers.value(to_transfer)(address(0));
+                    beneficiary.depositEthersTo.value(to_transfer)(address(0));
 
                     remaining = remaining.sub(to_transfer);
                 }
@@ -188,7 +188,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
                         tokenContract.approve(beneficiaryAddress, to_transfer);
 
                         beneficiary = AccrualBeneficiary(beneficiaryAddress);
-                        beneficiary.receiveTokens(address(0), int256(to_transfer), token);
+                        beneficiary.depositTokensTo(address(0), int256(to_transfer), token);
 
                         remaining = remaining.sub(to_transfer);
                     }
