@@ -35,7 +35,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint256 public highestAbsoluteDriipNonce;
+    uint256 public maxDriipNonce;
 
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
@@ -146,11 +146,11 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         return settlements[walletSettlementIndexMap[wallet][index]];
     }
 
-    /// @notice Update the highest absolute driip nonce property from CommunityVote contract
-    function updateHighestAbsoluteDriipNonce() public {
-        uint256 _highestAbsoluteDriipNonce = communityVote.getHighestAbsoluteDriipNonce();
-        if (_highestAbsoluteDriipNonce > 0) {
-            highestAbsoluteDriipNonce = _highestAbsoluteDriipNonce;
+    /// @notice Update the max driip nonce property from CommunityVote contract
+    function updateMaxDriipNonce() public {
+        uint256 _maxDriipNonce = communityVote.getMaxDriipNonce();
+        if (_maxDriipNonce > 0) {
+            maxDriipNonce = _maxDriipNonce;
         }
     }
 

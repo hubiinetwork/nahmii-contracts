@@ -426,41 +426,41 @@ module.exports = (glob) => {
             });
         });
 
-        describe('highestAbsoluteDriipNonce()', () => {
+        describe('maxDriipNonce()', () => {
             it('should equal value initialized', async () => {
-                const highestAbsoluteDriipNonce = await ethersExchange.highestAbsoluteDriipNonce();
-                highestAbsoluteDriipNonce.eq(utils.bigNumberify(0)).should.be.true;
+                const maxDriipNonce = await ethersExchange.maxDriipNonce();
+                maxDriipNonce.eq(utils.bigNumberify(0)).should.be.true;
             });
         });
 
-        describe('updateHighestAbsoluteDriipNonce()', () => {
+        describe('updateMaxDriipNonce()', () => {
             describe('if community vote returns 0', () => {
-                let highestAbsoluteDriipNonce;
+                let maxDriipNonce;
 
                 before(async () => {
-                    highestAbsoluteDriipNonce = await ethersExchange.highestAbsoluteDriipNonce();
-                    await ethersCommunityVote.setHighestAbsoluteDriipNonce(utils.bigNumberify(0));
+                    maxDriipNonce = await ethersExchange.maxDriipNonce();
+                    await ethersCommunityVote.setMaxDriipNonce(utils.bigNumberify(0));
                 });
 
-                it('should not update highestAbsoluteDriipNonce property', async () => {
-                    await ethersExchange.updateHighestAbsoluteDriipNonce();
-                    const result = await ethersExchange.highestAbsoluteDriipNonce();
-                    result.eq(highestAbsoluteDriipNonce).should.be.true;
+                it('should not update maxDriipNonce property', async () => {
+                    await ethersExchange.updateMaxDriipNonce();
+                    const result = await ethersExchange.maxDriipNonce();
+                    result.eq(maxDriipNonce).should.be.true;
                 });
             });
 
             describe('if community vote returns non-zero value', () => {
-                let highestAbsoluteDriipNonce;
+                let maxDriipNonce;
 
                 before(async () => {
-                    highestAbsoluteDriipNonce = utils.bigNumberify(10);
-                    await ethersCommunityVote.setHighestAbsoluteDriipNonce(highestAbsoluteDriipNonce);
+                    maxDriipNonce = utils.bigNumberify(10);
+                    await ethersCommunityVote.setMaxDriipNonce(maxDriipNonce);
                 });
 
-                it('should update highestAbsoluteDriipNonce property', async () => {
-                    await ethersExchange.updateHighestAbsoluteDriipNonce();
-                    const result = await ethersExchange.highestAbsoluteDriipNonce();
-                    result.eq(highestAbsoluteDriipNonce).should.be.true;
+                it('should update maxDriipNonce property', async () => {
+                    await ethersExchange.updateMaxDriipNonce();
+                    const result = await ethersExchange.maxDriipNonce();
+                    result.eq(maxDriipNonce).should.be.true;
                 });
             });
         });

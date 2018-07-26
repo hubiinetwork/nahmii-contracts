@@ -19,7 +19,7 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => bool) internal doubleSpenderWalletsMap;
-    uint256 internal highestAbsoluteDriipNonce;
+    uint256 internal maxDriipNonce;
     bool internal dataAvailable;
 
     //
@@ -33,7 +33,7 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function reset() public {
-        highestAbsoluteDriipNonce = 0;
+        maxDriipNonce = 0;
         dataAvailable = true;
     }
 
@@ -45,12 +45,12 @@ contract MockedCommunityVote /* is CommunityVote*/ {
         return doubleSpenderWalletsMap[wallet];
     }
 
-    function setHighestAbsoluteDriipNonce(uint256 _highestAbsoluteDriipNonce) public returns (uint256) {
-        return highestAbsoluteDriipNonce = _highestAbsoluteDriipNonce;
+    function setMaxDriipNonce(uint256 _maxDriipNonce) public returns (uint256) {
+        return maxDriipNonce = _maxDriipNonce;
     }
 
-    function getHighestAbsoluteDriipNonce() public view returns (uint256) {
-        return highestAbsoluteDriipNonce;
+    function getMaxDriipNonce() public view returns (uint256) {
+        return maxDriipNonce;
     }
 
     function setDataAvailable(bool _dataAvailable) public returns (bool) {
