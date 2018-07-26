@@ -36,10 +36,18 @@ module.exports = (glob) => {
             });
         });
 
-        describe('isRegisteredService', () => {
+        describe('isRegisteredActiveService', () => {
             it('should equal value initialized', async () => {
                 const address = Wallet.createRandom().address;
-                const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
+                const registered = await web3Configuration.isRegisteredActiveService.call(address);
+                registered.should.be.false;
+            });
+        });
+
+        describe('isEnabledServiceAction', () => {
+            it('should equal value initialized', async () => {
+                const address = Wallet.createRandom().address;
+                const registered = await web3Configuration.isEnabledServiceAction.call(address, 'some_action');
                 registered.should.be.false;
             });
         });
@@ -53,17 +61,29 @@ module.exports = (glob) => {
 
             describe('if called with owner as sender', () => {
                 it('should register service and emit event', async () => {
-                    const result = await web3Configuration.registerService(address, 'some_action');
+                    const result = await web3Configuration.registerService(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('RegisterServiceEvent');
-                    const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
+                    const registered = await web3Configuration.isRegisteredActiveService.call(address);
                     registered.should.be.true;
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Configuration.registerService(address, 'some_action', {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.registerService(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    web3Configuration.registerService(address0).should.be.rejected;
+                });
+            });
+
+            describe('if called with address of self', () => {
+                it('should revert', async () => {
+                    web3Configuration.registerService(web3Configuration.address).should.be.rejected;
                 });
             });
         });
@@ -71,23 +91,117 @@ module.exports = (glob) => {
         describe('deregisterService()', () => {
             let address;
 
-            before(() => {
+            before(async () => {
                 address = Wallet.createRandom().address;
+                await web3Configuration.registerService(address)
             });
 
             describe('if called with owner as sender', () => {
                 it('should deregister service and emit event', async () => {
-                    const result = await web3Configuration.deregisterService(address, 'some_action');
+                    const result = await web3Configuration.deregisterService(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('DeregisterServiceEvent');
-                    const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
+                    const registered = await web3Configuration.isRegisteredActiveService.call(address);
                     registered.should.be.false;
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Configuration.deregisterService(address, 'some_action', {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.deregisterService(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    web3Configuration.deregisterService(address0).should.be.rejected;
+                });
+            });
+
+            describe('if called with address of self', () => {
+                it('should revert', async () => {
+                    web3Configuration.deregisterService(web3Configuration.address).should.be.rejected;
+                });
+            });
+        });
+
+        describe('enableServiceAction()', () => {
+            let address;
+
+            before(async () => {
+                address = Wallet.createRandom().address;
+                await web3Configuration.registerService(address);
+            });
+
+            describe('if called with owner as sender', () => {
+                it('should enable service action and emit event', async () => {
+                    const result = await web3Configuration.enableServiceAction(address, 'some_action');
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('EnableServiceActionEvent');
+                    const enabled = await web3Configuration.isEnabledServiceAction.call(address, 'some_action');
+                    enabled.should.be.true;
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Configuration.enableServiceAction(address, 'some_action', {from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    web3Configuration.enableServiceAction(address0, 'some_action').should.be.rejected;
+                });
+            });
+
+            describe('if called with address of self', () => {
+                it('should revert', async () => {
+                    web3Configuration.enableServiceAction(web3Configuration.address, 'some_action').should.be.rejected;
+                });
+            });
+
+            describe('if called with service address that is not registered', () => {
+                it('should revert', async () => {
+                    web3Configuration.enableServiceAction(Wallet.createRandom().address, 'some_action').should.be.rejected;
+                });
+            });
+        });
+
+        describe('disableServiceAction()', () => {
+            let address;
+
+            before(async () => {
+                address = Wallet.createRandom().address;
+                await web3Configuration.registerService(address);
+                await web3Configuration.enableServiceAction(address, 'some_action')
+            });
+
+            describe('if called with owner as sender', () => {
+                it('should disable service action and emit event', async () => {
+                    const result = await web3Configuration.disableServiceAction(address, 'some_action');
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('DisableServiceActionEvent');
+                    const enabled = await web3Configuration.isEnabledServiceAction.call(address, 'some_action');
+                    enabled.should.be.false;
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Configuration.disableServiceAction(address, 'some_action', {from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    web3Configuration.disableServiceAction(address0, 'some_action').should.be.rejected;
+                });
+            });
+
+            describe('if called with address of self', () => {
+                it('should revert', async () => {
+                    web3Configuration.disableServiceAction(web3Configuration.address, 'some_action').should.be.rejected;
                 });
             });
         });
@@ -124,7 +238,8 @@ module.exports = (glob) => {
 
             describe('if called with registered service as sender', () => {
                 before(async () => {
-                    await web3Configuration.registerService(glob.user_a, 'OperationalMode');
+                    await web3Configuration.registerService(glob.user_a);
+                    await web3Configuration.enableServiceAction(glob.user_a, 'operational_mode');
                 });
 
                 it('should set exit operational mode', async () => {

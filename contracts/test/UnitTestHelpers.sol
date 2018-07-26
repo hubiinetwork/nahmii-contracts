@@ -56,34 +56,34 @@ contract UnitTestHelpers is AccrualBeneficiary {
     //
     // Helper for ClientFunds SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToTransferFromDepositedToSettledBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
+    function callToUpdateSettledBalance_CLIENTFUND(address clientFund, address wallet, int256 amount, address token) public {
         require(clientFund != address(0));
         ClientFund sc = ClientFund(clientFund);
-        sc.transferFromDepositedToSettledBalance(sourceWallet, destWallet, amount, token);
+        sc.updateSettledBalance(wallet, token, amount);
     }
 
-    function callToWithdrawFromDepositedBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.withdrawFromDepositedBalance(sourceWallet, destWallet, amount, token);
-    }
+    //    function callToWithdrawFromDepositedBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
+    //        require(clientFund != address(0));
+    //        ClientFund sc = ClientFund(clientFund);
+    //        sc.withdrawFromDepositedBalance(sourceWallet, destWallet, amount, token);
+    //    }
 
-    function callToDepositEthersToSettledBalance_CLIENTFUND(address clientFund, address destWallet) public payable {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.depositEthersToSettledBalance.value(msg.value)(destWallet);
-    }
+    //    function callToDepositEthersToSettledBalance_CLIENTFUND(address clientFund, address destWallet) public payable {
+    //        require(clientFund != address(0));
+    //        ClientFund sc = ClientFund(clientFund);
+    //        sc.depositEthersToSettledBalance.value(msg.value)(destWallet);
+    //    }
 
-    function callToDepositTokensToSettledBalance_CLIENTFUND(address clientFund, address destWallet, address token, int256 amount) public {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.depositTokensToSettledBalance(destWallet, token, amount);
-    }
+    //    function callToDepositTokensToSettledBalance_CLIENTFUND(address clientFund, address destWallet, address token, int256 amount) public {
+    //        require(clientFund != address(0));
+    //        ClientFund sc = ClientFund(clientFund);
+    //        sc.depositTokensToSettledBalance(destWallet, token, amount);
+    //    }
 
-    function callToSeizeDepositedAndSettledBalances_CLIENTFUND(address clientFund, address sourceWallet, address destWallet) public {
+    function callToSeizeAllBalances_CLIENTFUND(address clientFund, address sourceWallet, address destWallet) public {
         require(clientFund != address(0));
         ClientFund sc = ClientFund(clientFund);
-        sc.seizeDepositedAndSettledBalances(sourceWallet, destWallet);
+        sc.seizeAllBalances(sourceWallet, destWallet);
     }
 
     //

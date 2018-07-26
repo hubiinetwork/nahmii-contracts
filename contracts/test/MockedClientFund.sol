@@ -19,13 +19,6 @@ contract MockedClientFund /*is ClientFund*/ {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct Shift {
-        address source;
-        address destination;
-        int256 amount;
-        address currency;
-    }
-
     struct Seizure {
         address source;
         address destination;
@@ -34,16 +27,12 @@ contract MockedClientFund /*is ClientFund*/ {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Shift[] public transfers;
-    Shift[] public withdrawals;
     Seizure[] public seizures;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event TransferFromDepositedToSettledBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
-    event WithdrawFromDepositedBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
-    event SeizeDepositedAndSettledBalancesEvent(address sourceWallet, address targetWallet);
+    event SeizeAllBalancesEvent(address sourceWallet, address targetWallet);
 
     //
     // Constructor
@@ -55,23 +44,11 @@ contract MockedClientFund /*is ClientFund*/ {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function reset() public {
-        transfers.length = 0;
-        withdrawals.length = 0;
         seizures.length = 0;
     }
 
-    function transferFromDepositedToSettledBalance(address sourceWallet, address destinationWallet, int256 amount, address token) public {
-        transfers.push(Shift(sourceWallet, destinationWallet, amount, token));
-        emit TransferFromDepositedToSettledBalanceEvent(sourceWallet, destinationWallet, amount, token);
-    }
-
-    function withdrawFromDepositedBalance(address sourceWallet, address destinationWallet, int256 amount, address token) public {
-        withdrawals.push(Shift(sourceWallet, destinationWallet, amount, token));
-        emit WithdrawFromDepositedBalanceEvent(sourceWallet, destinationWallet, amount, token);
-    }
-
-    function seizeDepositedAndSettledBalances(address sourceWallet, address destinationWallet) public {
+    function seizeAllBalances(address sourceWallet, address destinationWallet) public {
         seizures.push(Seizure(sourceWallet, destinationWallet));
-        emit SeizeDepositedAndSettledBalancesEvent(sourceWallet, destinationWallet);
+        emit SeizeAllBalancesEvent(sourceWallet, destinationWallet);
     }
 }

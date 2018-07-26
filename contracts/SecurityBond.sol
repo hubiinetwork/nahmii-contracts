@@ -26,7 +26,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public stageServiceAction = "stage";
+    string constant public STAGE_ACTION = "stage";
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -165,7 +165,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) onlyOwnerOrServiceAction(stageServiceAction) {
+    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) onlyOwnerOrEnabledServiceAction(STAGE_ACTION) {
         uint256 start_time;
 
         require(amount.isPositiveInt256());

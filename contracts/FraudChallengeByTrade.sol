@@ -71,7 +71,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Vali
         if (!genuineSellerAndFee)
             seizedWallet = trade.seller.wallet;
         if (address(0) != seizedWallet) {
-            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
+            clientFund.seizeAllBalances(seizedWallet, msg.sender);
             fraudChallenge.addSeizedWallet(seizedWallet);
         }
 

@@ -24,11 +24,11 @@ contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    string constant ADD_SEIZED_WALLET = "add_seized_wallet";
-    string constant ADD_DOUBLE_SPENDER_WALLET = "add_double_spender_wallet";
-    string constant ADD_FRAUDULENT_ORDER = "add_fraudulent_order";
-    string constant ADD_FRAUDULENT_TRADE = "add_fraudulent_trade";
-    string constant ADD_FRAUDULENT_PAYMENT = "add_fraudulent_payment";
+    string constant public ADD_SEIZED_WALLET_ACTION = "add_seized_wallet";
+    string constant public ADD_DOUBLE_SPENDER_WALLET_ACTION = "add_double_spender_wallet";
+    string constant public ADD_FRAUDULENT_ORDER_ACTION = "add_fraudulent_order";
+    string constant public ADD_FRAUDULENT_TRADE_ACTION = "add_fraudulent_trade";
+    string constant public ADD_FRAUDULENT_PAYMENT_ACTION = "add_fraudulent_payment";
 
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
@@ -79,7 +79,7 @@ contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
     /// @notice Add given wallet to store of seized wallets if not already present
     /// @param wallet The seized wallet
     function addSeizedWallet(address wallet) public
-    onlyOwnerOrServiceAction(ADD_SEIZED_WALLET)
+    onlyOwnerOrEnabledServiceAction(ADD_SEIZED_WALLET_ACTION)
     {
         if (!seizedWalletsMap[wallet]) {
             seizedWallets.push(wallet);
@@ -104,7 +104,7 @@ contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
     /// @notice Add given wallets to store of double spender wallets if not already present
     /// @param wallet The first wallet to add
     function addDoubleSpenderWallet(address wallet) public
-    onlyOwnerOrServiceAction(ADD_DOUBLE_SPENDER_WALLET)
+    onlyOwnerOrEnabledServiceAction(ADD_DOUBLE_SPENDER_WALLET_ACTION)
     {
         if (!doubleSpenderWalletsMap[wallet]) {
             doubleSpenderWallets.push(wallet);
@@ -126,7 +126,7 @@ contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
 
     /// @notice Add given trade to store of fraudulent trades if not already present
     function addFraudulentOrder(Types.Order order) public
-    onlyOwnerOrServiceAction(ADD_FRAUDULENT_ORDER)
+    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION)
     {
         if (!fraudulentOrderExchangeHashMap[order.seals.exchange.hash]) {
             fraudulentOrders.push(order);
@@ -148,7 +148,7 @@ contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
 
     /// @notice Add given order to store of fraudulent orders if not already present
     function addFraudulentTrade(Types.Trade trade) public
-    onlyOwnerOrServiceAction(ADD_FRAUDULENT_TRADE)
+    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
     {
         if (!fraudulentTradeHashMap[trade.seal.hash]) {
             fraudulentTrades.push(trade);
@@ -170,7 +170,7 @@ contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
 
     /// @notice Add given payment to store of fraudulent payments if not already present
     function addFraudulentPayment(Types.Payment payment) public
-    onlyOwnerOrServiceAction(ADD_FRAUDULENT_PAYMENT)
+    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
     {
         if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
             fraudulentPayments.push(payment);

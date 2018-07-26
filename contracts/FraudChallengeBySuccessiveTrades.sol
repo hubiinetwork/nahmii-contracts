@@ -78,7 +78,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Configu
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTrade(lastTrade);
 
-        clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
+        clientFund.seizeAllBalances(wallet, msg.sender);
         fraudChallenge.addSeizedWallet(wallet);
 
         emit ChallengeBySuccessiveTradesEvent(firstTrade, lastTrade, msg.sender, wallet);

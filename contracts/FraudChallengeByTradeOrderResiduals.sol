@@ -78,7 +78,7 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Conf
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTrade(lastTrade);
 
-        clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
+        clientFund.seizeAllBalances(wallet, msg.sender);
         fraudChallenge.addSeizedWallet(wallet);
 
         emit ChallengeByTradeOrderResidualsEvent(firstTrade, lastTrade, msg.sender, wallet);

@@ -28,7 +28,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public closeAccrualPeriodServiceAction = "close_accrual_period";
+    string constant public CLOSE_ACCRUAL_PERIOD_ACTION = "close_accrual_period";
 
     //
     // Structures
@@ -197,7 +197,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Accrual functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyOwnerOrServiceAction(closeAccrualPeriodServiceAction) {
+    function closeAccrualPeriod() public onlyOwnerOrEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
         uint256 i;
 
         //register this block
