@@ -25,6 +25,7 @@ library Types {
     enum PaymentPartyRole {Sender, Recipient}
     enum ChallengePhase {Dispute, Closed}
     enum ChallengeResult {Unknown, Qualified, Disqualified}
+    enum SettlementRole {Origin, Target}
 
     //
     // Structures
@@ -162,7 +163,8 @@ library Types {
     struct Settlement {
         uint256 nonce;
         DriipType driipType;
-        address[2] wallets; // TODO Possibly replace by named fields "origin" (trade seller and payment sender) and "target" (trade buyer and payment recipient)
+        address origin;
+        address target;
     }
 
     //
