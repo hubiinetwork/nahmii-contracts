@@ -9,10 +9,10 @@
 pragma solidity ^0.4.24;
 
 /**
-@title TokenTypeInterface
+@title TokenController
 @notice A base contract to handle different token types
 */
-contract TokenTypeInterface {
+contract TokenController {
     event TokenTransferred(address token, address from, address to, uint256 amount, uint256 id);
 
     function isTyped() public view returns(bool);

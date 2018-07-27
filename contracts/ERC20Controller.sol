@@ -8,14 +8,14 @@
 
 pragma solidity ^0.4.24;
 
-import {TokenTypeInterface} from "./TokenTypeInterface.sol";
+import {TokenController} from "./TokenController.sol";
 import "./ERC20.sol";
 
 /**
 @title ERC20Controller
 @notice Handles transfers of an ERC20 token
 */
-contract ERC20Controller is TokenTypeInterface {
+contract ERC20Controller is TokenController {
     function isTyped() public view returns(bool) {
         return false;
     }

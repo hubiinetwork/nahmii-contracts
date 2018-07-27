@@ -9,6 +9,7 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import "./ERC20Controller.sol";
 import "./ERC721Controller.sol";
@@ -17,23 +18,23 @@ import "./ERC721Controller.sol";
 @title TokenManager
 @notice Handles registration of tokens
 */
-contract TokenManager is Ownable, SelfDestructible {
+contract TokenManager is Ownable, Modifiable, SelfDestructible {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    uint32 constant BLACKLISTED = 2147483648;
+    uint32 constant BLACKLISTED = 2147483648; //0x80000000
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(uint32 => address) registeredInterfaces;
+    mapping(uint32 => address) registeredTokenControllers;
     mapping(address => uint32) registeredTokens;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisteredInterface(uint32 _id, address _interface);
-    event DeregisteredInterface(uint32 _id);
+    event RegisteredTokenController(uint32 _id, address _interface);
+    event DeregisteredTokenController(uint32 _id);
 
     event RegisteredToken(address token, uint32 interface_id);
     event DeregisteredToken(address token);
@@ -49,28 +50,26 @@ contract TokenManager is Ownable, SelfDestructible {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerInterface(uint32 _id, address _interface) external onlyOwner {
+    function registerTokenController(uint32 _id, address _interface) external onlyOwner notNullAddress(_interface) {
         require(_id >= 1 && _id <= 1048576);
-        require(_interface != address(0));
-        require(registeredInterfaces[_id] == address(0));
+        require(registeredTokenControllers[_id] == address(0));
 
-        registeredInterfaces[_id] = _interface;
-
-        //raise event
-        emit RegisteredInterface(_id, _interface);
-    }
-
-    function deregisterInterface(uint32 _id) external onlyOwner {
-        require(registeredInterfaces[_id] != address(0));
-
-        registeredInterfaces[_id] = address(0);
+        registeredTokenControllers[_id] = _interface;
 
         //raise event
-        emit DeregisteredInterface(_id);
+        emit RegisteredTokenController(_id, _interface);
     }
 
-    function registerToken(address token, uint32 interface_id) external onlyOwner {
-        require(token != address(0));
+    function deregisterTokenController(uint32 _id) external onlyOwner {
+        require(registeredTokenControllers[_id] != address(0));
+
+        registeredTokenControllers[_id] = address(0);
+
+        //raise event
+        emit DeregisteredTokenController(_id);
+    }
+
+    function registerToken(address token, uint32 interface_id) external onlyOwner notNullAddress(token) {
         require(interface_id >= 1 && interface_id <= 1048576);
         require(registeredTokens[token] == 0);
 
@@ -81,7 +80,6 @@ contract TokenManager is Ownable, SelfDestructible {
     }
 
     function deregisterToken(address token) external onlyOwner {
-        require(token != address(0));
         require(registeredTokens[token] != 0);
 
         registeredTokens[token] = 0;
@@ -91,7 +89,6 @@ contract TokenManager is Ownable, SelfDestructible {
     }
 
     function blacklistToken(address token) external onlyOwner {
-        require(token != address(0));
         require(registeredTokens[token] != 0);
 
         registeredTokens[token] = registeredTokens[token] | BLACKLISTED;
@@ -101,7 +98,6 @@ contract TokenManager is Ownable, SelfDestructible {
     }
 
     function whitelistToken(address token) external onlyOwner {
-        require(token != address(0));
         require(registeredTokens[token] != 0);
 
         registeredTokens[token] = registeredTokens[token] & (~BLACKLISTED);
@@ -110,12 +106,12 @@ contract TokenManager is Ownable, SelfDestructible {
         emit WhitelistedToken(token);
     }
 
-    function getInferface(address token) public view returns (TokenTypeInterface) {
+    function getTokenController(address token) public view returns (TokenController) {
         uint32 interface_id = registeredTokens[token];
 
         require(interface_id != 0 && (interface_id & BLACKLISTED) == 0);
-        require(registeredInterfaces[interface_id] != address(0));
+        require(registeredTokenControllers[interface_id] != address(0));
 
-        return TokenTypeInterface(registeredInterfaces[interface_id]);
+        return TokenController(registeredTokenControllers[interface_id]);
     }
 }
