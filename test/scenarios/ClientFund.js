@@ -332,9 +332,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [disableRegisteredService]: Disable UnitTestHelpers_FAIL as a service for User A", async () => {
+        it(testCounter.next() + ": MUST SUCCEED [unauthorizeRegisteredService]: Unauthorize UnitTestHelpers_FAIL as a service for User A", async () => {
             try {
-                await glob.web3ClientFund.disableRegisteredService(glob.web3UnitTestHelpers_FAIL_TESTS.address, {from: glob.user_a});
+                await glob.web3ClientFund.unauthorizeRegisteredService(glob.web3UnitTestHelpers_FAIL_TESTS.address, {from: glob.user_a});
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');

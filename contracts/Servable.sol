@@ -23,7 +23,7 @@ contract Servable is Ownable, Modifiable {
     struct ServiceInfo {
         bool registered;
         uint256 activationTimestamp;
-        mapping(bytes32 => bool) actionsMap;
+        mapping(bytes32 => bool) actionsEnabledMap;
         bytes32[] actionsList;
     }
 
@@ -36,8 +36,9 @@ contract Servable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event ServiceActivationTimeoutEvent(uint256 timeoutInSeconds);
     event RegisterServiceEvent(address service);
-    event RegisterDeferredServiceEvent(address service, uint256 timeout);
+    event RegisterServiceDeferredEvent(address service, uint256 timeout);
     event DeregisterServiceEvent(address service);
     event EnableServiceActionEvent(address service, string action);
     event DisableServiceActionEvent(address service, string action);
@@ -49,6 +50,9 @@ contract Servable is Ownable, Modifiable {
     /// @param timeoutInSeconds The set timeout in unit of seconds
     function setServiceActivationTimeout(uint256 timeoutInSeconds) public onlyOwner {
         serviceActivationTimeout = timeoutInSeconds;
+
+        //emit event
+        emit ServiceActivationTimeoutEvent(timeoutInSeconds);
     }
 
     /// @notice Register a service contract whose activation is immediate
@@ -56,17 +60,17 @@ contract Servable is Ownable, Modifiable {
     function registerService(address service) public onlyOwner notNullOrThisAddress(service) {
         registerServicePrivate(service, 0);
 
-        //raise event
+        //emit event
         emit RegisterServiceEvent(service);
     }
 
     /// @notice Register a service contract whose activation is deferred by the service activation timeout
     /// @param service The address of the registered service contract
-    function registerDeferredService(address service) public onlyOwner notNullOrThisAddress(service) {
+    function registerServiceDeferred(address service) public onlyOwner notNullOrThisAddress(service) {
         registerServicePrivate(service, serviceActivationTimeout);
 
-        //raise event
-        emit RegisterDeferredServiceEvent(service, serviceActivationTimeout);
+        //emit event
+        emit RegisterServiceDeferredEvent(service, serviceActivationTimeout);
     }
 
     /// @notice Deregister a service contract
@@ -76,7 +80,7 @@ contract Servable is Ownable, Modifiable {
 
         registeredServicesMap[service].registered = false;
 
-        //raise event
+        //emit event
         emit DeregisterServiceEvent(service);
     }
 
@@ -88,12 +92,12 @@ contract Servable is Ownable, Modifiable {
     
         bytes32 actionHash = hashString(action);
 
-        require(!registeredServicesMap[service].actionsMap[actionHash]);
+        require(!registeredServicesMap[service].actionsEnabledMap[actionHash]);
 
-        registeredServicesMap[service].actionsMap[actionHash] = true;
+        registeredServicesMap[service].actionsEnabledMap[actionHash] = true;
         registeredServicesMap[service].actionsList.push(actionHash);
 
-        //raise event
+        //emit event
         emit EnableServiceActionEvent(service, action);
     }
 
@@ -103,20 +107,24 @@ contract Servable is Ownable, Modifiable {
     function disableServiceAction(address service, string action) public onlyOwner notNullOrThisAddress(service) {
         bytes32 actionHash = hashString(action);
 
-        require(registeredServicesMap[service].actionsMap[actionHash]);
+        require(registeredServicesMap[service].actionsEnabledMap[actionHash]);
 
-        registeredServicesMap[service].actionsMap[actionHash] = false;
+        registeredServicesMap[service].actionsEnabledMap[actionHash] = false;
 
-        //raise event
+        //emit event
         emit DisableServiceActionEvent(service, action);
+    }
+
+    /// @notice Gauge whether a service contract is registered
+    /// @param service The address of the service contract
+    function isRegisteredService(address service) public view returns (bool) {
+        return registeredServicesMap[service].registered;
     }
 
     /// @notice Gauge whether a service contract is registered and activated
     /// @param service The address of the service contract
     function isRegisteredActiveService(address service) public view returns (bool) {
-        if (!registeredServicesMap[service].registered)
-            return false;
-        return block.timestamp >= registeredServicesMap[service].activationTimestamp;
+        return isRegisteredService(service) && block.timestamp >= registeredServicesMap[service].activationTimestamp;
     }
 
     /// @notice Gauge whether a service contract action is enabled which implies also registered and activated
@@ -124,7 +132,7 @@ contract Servable is Ownable, Modifiable {
     /// @param action The name of action
     function isEnabledServiceAction(address service, string action) public view returns (bool) {
         bytes32 actionHash = hashString(action);
-        return isRegisteredActiveService(service) && registeredServicesMap[service].actionsMap[actionHash];
+        return isRegisteredActiveService(service) && registeredServicesMap[service].actionsEnabledMap[actionHash];
     }
 
     //

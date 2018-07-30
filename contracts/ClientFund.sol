@@ -13,7 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
-import {TogglableServable} from "./TogglableServable.sol";
+import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {ERC20} from "./ERC20.sol";
 
@@ -21,7 +21,7 @@ import {ERC20} from "./ERC20.sol";
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 */
-contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, TogglableServable, SelfDestructible {
+contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, AuthorizableServable, SelfDestructible {
     using SafeMathInt for int256;
 
     //
@@ -239,7 +239,7 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, TogglableSe
     }
 
     function updateSettledBalance(address wallet, address currency, int256 amount) public onlyRegisteredActiveService notNullAddress(wallet) {
-        require(isAcceptedServiceForWallet(msg.sender, wallet));
+        require(isAuthorizedServiceForWallet(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
         if (address(0) == currency)
@@ -258,7 +258,7 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, TogglableSe
     }
 
     function stageToBeneficiaryUntargeted(address sourceWallet, address beneficiary, address currency, int256 amount) public onlyRegisteredActiveService notNullAddress(sourceWallet) notNullAddress(beneficiary) {
-        require(isAcceptedServiceForWallet(msg.sender, sourceWallet));
+        require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
         stageToBeneficiaryPrivate(sourceWallet, address(0), beneficiary, currency, amount);
 
         //emit event
@@ -324,7 +324,7 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, TogglableSe
     }
 
     function seizeAllBalances(address sourceWallet, address targetWallet) public onlyRegisteredActiveService notNullAddress(sourceWallet) notNullAddress(targetWallet) {
-        require(isAcceptedServiceForWallet(msg.sender, sourceWallet));
+        require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
 
         //seize ethers
         int256 amount = walletInfoMap[sourceWallet].depositedEtherBalance.add(walletInfoMap[sourceWallet].settledEtherBalance).add(walletInfoMap[sourceWallet].stagedEtherBalance);
