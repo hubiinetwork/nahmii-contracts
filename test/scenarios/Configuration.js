@@ -2,13 +2,15 @@ const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
 const {Wallet, utils} = require('ethers');
 const address0 = require('../mocks').address0;
+const setTimeoutPromise = require('util').promisify(setTimeout);
 
 chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
     describe('Configuration', () => {
-        let web3Configuration, provider, blockNumberAhead, blockNumberBehind;
+        let web3Configuration;
+        let provider, blockNumberAhead, blockNumberBehind;
         const feeUpdates = {
             tradeMakerFee: 0,
             tradeTakerFee: 0,
@@ -33,62 +35,6 @@ module.exports = (glob) => {
             it('should initialize fields', async () => {
                 const owner = await web3Configuration.owner.call();
                 owner.should.equal(glob.owner);
-            });
-        });
-
-        describe('isRegisteredService', () => {
-            it('should equal value initialized', async () => {
-                const address = Wallet.createRandom().address;
-                const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
-                registered.should.be.false;
-            });
-        });
-
-        describe('registerService()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called with owner as sender', () => {
-                it('should register service and emit event', async () => {
-                    const result = await web3Configuration.registerService(address, 'some_action');
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('RegisterServiceEvent');
-                    const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
-                    registered.should.be.true;
-                });
-            });
-
-            describe('if called with sender that is not owner', () => {
-                it('should revert', async () => {
-                    web3Configuration.registerService(address, 'some_action', {from: glob.user_a}).should.be.rejected;
-                });
-            });
-        });
-
-        describe('deregisterService()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called with owner as sender', () => {
-                it('should deregister service and emit event', async () => {
-                    const result = await web3Configuration.deregisterService(address, 'some_action');
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('DeregisterServiceEvent');
-                    const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
-                    registered.should.be.false;
-                });
-            });
-
-            describe('if called with sender that is not owner', () => {
-                it('should revert', async () => {
-                    web3Configuration.deregisterService(address, 'some_action', {from: glob.user_a}).should.be.rejected;
-                });
             });
         });
 
@@ -124,7 +70,8 @@ module.exports = (glob) => {
 
             describe('if called with registered service as sender', () => {
                 before(async () => {
-                    await web3Configuration.registerService(glob.user_a, 'OperationalMode');
+                    await web3Configuration.registerService(glob.user_a);
+                    await web3Configuration.enableServiceAction(glob.user_a, 'operational_mode');
                 });
 
                 it('should set exit operational mode', async () => {

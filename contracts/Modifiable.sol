@@ -20,4 +20,15 @@ contract Modifiable {
         require(_address != address(0));
         _;
     }
+
+    modifier notThisAddress(address _address) {
+        require(_address != address(this));
+        _;
+    }
+
+    modifier notNullOrThisAddress(address _address) {
+        require(_address != address(0));
+        require(_address != address(this));
+        _;
+    }
 }

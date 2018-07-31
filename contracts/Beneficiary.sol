@@ -13,8 +13,8 @@ pragma solidity ^0.4.24;
 @notice A recipient of ethers and tokens
 */
 contract Beneficiary {
-    function receiveEthers(address wallet) public payable;
+    function depositEthersTo(address wallet) public payable;
 
     //NOTE: 'wallet' must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public;
+    function depositTokensTo(address wallet, int256 amount, address token) public;
 }

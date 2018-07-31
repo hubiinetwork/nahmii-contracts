@@ -26,7 +26,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public stageServiceAction = "stage";
+    string constant public STAGE_ACTION = "stage";
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -100,10 +100,10 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        receiveEthers(msg.sender);
+        depositEthersTo(msg.sender);
     }
 
-    function receiveEthers(address wallet) public payable {
+    function depositEthersTo(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet active balance
@@ -115,11 +115,11 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible
     }
 
     function depositTokens(address token, int256 amount) public {
-        receiveTokens(msg.sender, amount, token);
+        depositTokensTo(msg.sender, amount, token);
     }
 
     //NOTE: msg.sender must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public {
+    function depositTokensTo(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -165,7 +165,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) onlyOwnerOrServiceAction(stageServiceAction) {
+    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) onlyOwnerOrEnabledServiceAction(STAGE_ACTION) {
         uint256 start_time;
 
         require(amount.isPositiveInt256());

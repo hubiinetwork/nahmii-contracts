@@ -23,7 +23,7 @@ contract CommunityVote is Ownable, SelfDestructible {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => bool) doubleSpenderWalletsMap;
-    uint256 highestAbsoluteDriipNonce;
+    uint256 maxDriipNonce;
     bool dataAvailable;
 
     //
@@ -43,10 +43,10 @@ contract CommunityVote is Ownable, SelfDestructible {
         return doubleSpenderWalletsMap[wallet];
     }
 
-    /// @notice Get the highest absolute driip nonce to be accepted in settlements
-    /// @return the highest absolute driip nonce
-    function getHighestAbsoluteDriipNonce() public view returns (uint256) {
-        return highestAbsoluteDriipNonce;
+    /// @notice Get the max driip nonce to be accepted in settlements
+    /// @return the max driip nonce
+    function getMaxDriipNonce() public view returns (uint256) {
+        return maxDriipNonce;
     }
 
     /// @notice Get the data availability status

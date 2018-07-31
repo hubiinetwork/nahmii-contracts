@@ -76,7 +76,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
             if (!genuineRecipient)
                 seizedWallet = payment.recipient.wallet;
             if (address(0) != seizedWallet) {
-                clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
+                clientFund.seizeAllBalances(seizedWallet, msg.sender);
                 fraudChallenge.addSeizedWallet(seizedWallet);
             }
         }

@@ -159,7 +159,7 @@ contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
         revert();
     }
 
-    function receiveEthers(address tag) public isRegisteredTag(tag) payable {
+    function depositEthersTo(address tag) public isRegisteredTag(tag) payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         walletInfoMap[tag].activeEtherBalance = walletInfoMap[tag].activeEtherBalance.add_nn(amount);
@@ -172,7 +172,7 @@ contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
     }
 
     //NOTE: 'wallet' must call ERC20.approve first
-    function receiveTokens(address tag, int256 amount, address token) public isRegisteredTag(tag) {
+    function depositTokensTo(address tag, int256 amount, address token) public isRegisteredTag(tag) {
         require(token != address(0));
         require(amount > 0);
 

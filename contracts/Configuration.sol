@@ -9,16 +9,22 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
 import {Ownable} from "./Ownable.sol";
+import {Servable} from "./Servable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
 
 /**
 @title Configuration
 @notice An oracle for configurations values
 */
-contract Configuration is Ownable, SelfDestructible {
+contract Configuration is Ownable, Servable, SelfDestructible {
     using SafeMathInt for int256;
+
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public OPERATIONAL_MODE_ACTION = "operational_mode";
 
     //
     // Enums
@@ -54,8 +60,6 @@ contract Configuration is Ownable, SelfDestructible {
     // -----------------------------------------------------------------------------------------------------------------
     OperationalMode public operationalMode = OperationalMode.Normal;
 
-    mapping(address => mapping(bytes32 => bool)) public registeredServiceActionMap;
-
     int256 constant public PARTS_PER = 1e18;
 
     mapping(uint256 => DiscountableFee) tradeMakerFees;
@@ -87,8 +91,6 @@ contract Configuration is Ownable, SelfDestructible {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisterServiceEvent(address service, string action);
-    event DeregisterServiceEvent(address service, string action);
     event SetOperationalModeExitEvent();
     event SetPartsPerEvent(int256 partsPer);
     event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
@@ -117,32 +119,9 @@ contract Configuration is Ownable, SelfDestructible {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Returns the service status of an address and an action
-    /// @param service The address of contract
-    /// @param action The action in question
-    function isRegisteredService(address service, string action) public view returns (bool) {
-        return registeredServiceActionMap[service][keccak256(abi.encode(action))];
-    }
-
-    /// @notice Register a contract as a service that may carry out an action
-    /// @param service The address of service contract
-    /// @param action The action that the service may carry out
-    function registerService(address service, string action) public onlyOwner {
-        registeredServiceActionMap[service][keccak256(abi.encode(action))] = true;
-        emit RegisterServiceEvent(service, action);
-    }
-
-    /// @notice Deregister a contract from the set of services that may carry out an action
-    /// @param service The address of service contract
-    /// @param action The action that the service may carry out
-    function deregisterService(address service, string action) public onlyOwner {
-        registeredServiceActionMap[service][keccak256(abi.encode(action))] = false;
-        emit DeregisterServiceEvent(service, action);
-    }
-
     /// @notice Set operational mode to Exit
     /// @dev Once operational mode is set to Exit it may not be set back to Normal
-    function setOperationalModeExit() public onlyOwnerOrServiceAction('OperationalMode') {
+    function setOperationalModeExit() public onlyOwnerOrEnabledServiceAction(OPERATIONAL_MODE_ACTION) {
         operationalMode = OperationalMode.Exit;
         emit SetOperationalModeExitEvent();
     }
@@ -574,11 +553,6 @@ contract Configuration is Ownable, SelfDestructible {
 
     modifier onlyLaterBlockNumber(uint256 blockNumber) {
         require(blockNumber > block.number);
-        _;
-    }
-
-    modifier onlyOwnerOrServiceAction(string action) {
-        require(msg.sender == owner || registeredServiceActionMap[msg.sender][keccak256(abi.encode(action))]);
         _;
     }
 }

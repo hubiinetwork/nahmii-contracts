@@ -30,9 +30,10 @@ const FraudChallengeByDoubleSpentOrders = artifacts.require("FraudChallengeByDou
 const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTrades");
 const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require("FraudChallengeByDuplicateDriipNonceOfPayments");
 const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTradeAndPayment");
-const ReserveFund = artifacts.require("ReserveFund");
 const RevenueFund = artifacts.require("RevenueFund");
 const SecurityBond = artifacts.require("SecurityBond");
+const TestServable = artifacts.require("TestServable");
+const TestAuthorizableServable = artifacts.require("TestAuthorizableServable");
 const TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
 const PartnerFund = artifacts.require("PartnerFund");
 const ERC20Token = artifacts.require("StandardTokenEx");
@@ -130,6 +131,28 @@ contract('Smart contract checks', function () {
         }
         catch (err) {
             assert(false, 'Failed to create an instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate Servable contract", async () => {
+        try {
+            glob.web3Servable = await TestServable.new(glob.owner);
+            assert.notEqual(glob.web3Servable, null);
+            glob.ethersIoServable = new ethers.Contract(glob.web3Servable.address, TestServable.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate Servable contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate AuthorizableServable contract", async () => {
+        try {
+            glob.web3AuthorizableServable = await TestAuthorizableServable.new(glob.owner);
+            assert.notEqual(glob.web3AuthorizableServable, null);
+            glob.ethersIoAuthorizableServable = new ethers.Contract(glob.web3AuthorizableServable.address, TestAuthorizableServable.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate AuthorizableServable contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -375,17 +398,6 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate ReserveFund contract", async () => {
-        try {
-            glob.web3ReserveFund = await ReserveFund.deployed();
-            assert.notEqual(glob.web3ReserveFund, null);
-            glob.ethersIoReserveFund = new ethers.Contract(glob.web3ReserveFund.address, ReserveFund.abi, glob.signer_owner);
-        }
-        catch (err) {
-            assert(false, 'Failed to instantiate ReserveFund contract address. [Error: ' + err.toString() + ']');
-        }
-    });
-
     before("Preflight: Instantiate RevenueFund contract", async () => {
         try {
             glob.web3RevenueFund = await RevenueFund.deployed();
@@ -512,9 +524,10 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
-    require('./scenarios/ReserveFund')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
+    require('./scenarios/Servable')(glob);
+    require('./scenarios/AuthorizableServable')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);
     require('./scenarios/PartnerFund')(glob);
 });

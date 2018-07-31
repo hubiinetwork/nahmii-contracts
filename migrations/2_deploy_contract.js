@@ -29,7 +29,6 @@ const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChal
 const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
 const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
 const FraudChallenge = artifacts.require('FraudChallenge');
-const ReserveFund = artifacts.require('ReserveFund');
 const RevenueFund = artifacts.require('RevenueFund');
 const SecurityBond = artifacts.require('SecurityBond');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
@@ -66,10 +65,10 @@ module.exports = (deployer, network, accounts) => {
 
 			await deployer.link(SafeMathInt, [
 					ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-					FraudChallenge, ReserveFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
+					FraudChallenge, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
 			]);
 			await deployer.link(SafeMathUint, [
-				Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, ReserveFund, TokenHolderRevenueFund
+				Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, TokenHolderRevenueFund
 			]);
 			await deployer.link(Types, [
 				Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
@@ -106,13 +105,6 @@ module.exports = (deployer, network, accounts) => {
 			await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfPayments', FraudChallengeByDuplicateDriipNonceOfPayments, deployFilters, addresses, ownerAccount);
 			await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, deployFilters, addresses, ownerAccount);
 			await execDeploy(deployer, 'FraudChallenge', FraudChallenge, deployFilters, addresses, ownerAccount);
-			if (shouldDeploy('ReserveFund', deployFilters)) {
-				let instance = await deployer.deploy(ReserveFund, ownerAccount, { from: ownerAccount });
-				addresses.ReserveFund1 = instance.address;
-
-				instance = await deployer.deploy(ReserveFund, ownerAccount, { from: ownerAccount, overwrite: true });
-				addresses.ReserveFund2 = instance.address;
-			}
 			if (shouldDeploy('RevenueFund', deployFilters)) {
 				let instance = await deployer.deploy(RevenueFund, ownerAccount, { from: ownerAccount });
 				addresses.RevenueFund1 = instance.address;

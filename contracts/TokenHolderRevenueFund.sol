@@ -28,7 +28,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public closeAccrualPeriodServiceAction = "close_accrual_period";
+    string constant public CLOSE_ACCRUAL_PERIOD_ACTION = "close_accrual_period";
 
     //
     // Structures
@@ -112,10 +112,10 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        receiveEthers(msg.sender);
+        depositEthersTo(msg.sender);
     }
 
-    function receiveEthers(address wallet) public payable {
+    function depositEthersTo(address wallet) public payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to balances
@@ -131,11 +131,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     }
 
     function depositTokens(address token, int256 amount) public {
-        receiveTokens(msg.sender, amount, token);
+        depositTokensTo(msg.sender, amount, token);
     }
 
     //NOTE: msg.sender must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public {
+    function depositTokensTo(address wallet, int256 amount, address token) public {
         ERC20 erc20_token;
 
         require(token != address(0));
@@ -197,7 +197,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Accrual functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyOwnerOrServiceAction(closeAccrualPeriodServiceAction) {
+    function closeAccrualPeriod() public onlyOwnerOrEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
         uint256 i;
 
         //register this block

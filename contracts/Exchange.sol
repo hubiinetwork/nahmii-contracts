@@ -19,7 +19,6 @@ import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
-import {ReserveFund} from "./ReserveFund.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
@@ -36,20 +35,20 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint256 public highestAbsoluteDriipNonce;
+    uint256 public maxDriipNonce;
 
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
     FraudChallenge public fraudChallenge;
     DriipSettlementChallenge public driipSettlementChallenge;
-    ReserveFund public tradesReserveFund;
-    ReserveFund public paymentsReserveFund;
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
 
     Types.Settlement[] public settlements;
+    mapping(uint256 => uint256) driipNonceSettlementIndexMap;
     mapping(address => uint256[]) walletSettlementIndexMap;
+    mapping(address => mapping(address => uint256)) walletCurrencyMaxDriipNonce;
 
     //
     // Events
@@ -58,8 +57,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     event SettleDriipAsPaymentEvent(Types.Payment payment, address wallet);
     event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge, DriipSettlementChallenge newDriipSettlementChallenge);
-    event ChangeTradesReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
-    event ChangePaymentsReserveFundEvent(ReserveFund oldReserveFund, ReserveFund newReserveFund);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
 
@@ -94,30 +91,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
         driipSettlementChallenge = newDriipSettlementChallenge;
         emit ChangeDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
-    }
-
-    /// @notice Change the trades reserve fund contract
-    /// @param newTradesReserveFund The (address of) trades ReserveFund contract instance
-    function changeTradesReserveFund(ReserveFund newTradesReserveFund)
-    public
-    onlyOwner
-    notNullAddress(newTradesReserveFund)
-    {
-        ReserveFund oldTradesReserveFund = tradesReserveFund;
-        tradesReserveFund = newTradesReserveFund;
-        emit ChangeTradesReserveFundEvent(oldTradesReserveFund, tradesReserveFund);
-    }
-
-    /// @notice Change the payments reserve fund contract
-    /// @param newPaymentsReserveFund The (address of) payments ReserveFund contract instance
-    function changePaymentsReserveFund(ReserveFund newPaymentsReserveFund)
-    public
-    onlyOwner
-    notNullAddress(newPaymentsReserveFund)
-    {
-        ReserveFund oldPaymentsReserveFund = paymentsReserveFund;
-        paymentsReserveFund = newPaymentsReserveFund;
-        emit ChangePaymentsReserveFundEvent(oldPaymentsReserveFund, paymentsReserveFund);
     }
 
     /// @notice Change the trades revenue fund contract
@@ -175,17 +148,17 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         return settlements[walletSettlementIndexMap[wallet][index]];
     }
 
-    /// @notice Update the highest absolute driip nonce property from CommunityVote contract
-    function updateHighestAbsoluteDriipNonce() public {
-        uint256 _highestAbsoluteDriipNonce = communityVote.getHighestAbsoluteDriipNonce();
-        if (_highestAbsoluteDriipNonce > 0) {
-            highestAbsoluteDriipNonce = _highestAbsoluteDriipNonce;
+    /// @notice Update the max driip nonce property from CommunityVote contract
+    function updateMaxDriipNonce() public {
+        uint256 _maxDriipNonce = communityVote.getMaxDriipNonce();
+        if (_maxDriipNonce > 0) {
+            maxDriipNonce = _maxDriipNonce;
         }
     }
 
     /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
-    /// @param wallet The wallet whose side of the driip is to be settled one-sidedly if supported by reserve fund
+    /// @param wallet The wallet whose side of the trade is to be settled
     function settleDriipAsTrade(Types.Trade trade, address wallet)
     public
     validatorInitialized
@@ -196,9 +169,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         require(driipSettlementChallenge != address(0));
         require(configuration != address(0));
         require(clientFund != address(0));
-
-        if (!trade.immediateSettlement)
-            require(tradesReserveFund != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -212,37 +182,47 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         if (Types.ChallengeResult.Qualified == result) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (trade.nonce < highestAbsoluteDriipNonce));
+                || (trade.nonce < maxDriipNonce));
 
-            Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+            // Get settlement
+            // If no settlement of nonce then create one
+            Types.Settlement storage settlement = hasSettlement(trade.nonce) ?
+            getSettlement(trade.nonce, Types.DriipType.Trade) :
+            createSettlementFromTrade(trade, wallet);
 
-            // Positive transfer of intended currency defined as being from trade seller to buyer
-            bool transferIntendedToParty = ((0 < trade.transfers.intended.net && Types.TradePartyRole.Buyer == tradePartyRole)
-            || (0 > trade.transfers.intended.net && Types.TradePartyRole.Seller == tradePartyRole));
-            int256 transferIntendedAbs = trade.transfers.intended.net.abs();
+            Types.SettlementRole settlementRole = getSettlementRoleFromTrade(trade, wallet);
 
-            // Positive transfer of conjugate currency defined as being from trade buyer to seller
-            bool transferConjugateToParty = ((0 < trade.transfers.conjugate.net && Types.TradePartyRole.Seller == tradePartyRole)
-            || (0 > trade.transfers.conjugate.net && Types.TradePartyRole.Buyer == tradePartyRole));
-            int256 transferConjugateAbs = trade.transfers.conjugate.net.abs();
+            // (If exists settlement of nonce then) Require that wallet has not already settled
+            require(
+                (Types.SettlementRole.Origin == settlementRole && address(0) == settlement.origin) ||
+                (Types.SettlementRole.Target == settlementRole && address(0) == settlement.target)
+            );
 
-            if (!trade.immediateSettlement &&
-            (!transferIntendedToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.intended, transferIntendedAbs)) &&
-            (!transferConjugateToParty || tradesReserveFund.outboundTransferSupported(trade.currencies.conjugate, transferConjugateAbs))) {
-                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.intended, transferIntendedToParty ? transferIntendedAbs.neg() : transferIntendedAbs);
-                tradesReserveFund.twoWayTransfer(wallet, trade.currencies.conjugate, transferConjugateToParty ? transferConjugateAbs.neg() : transferConjugateAbs);
-                addOneSidedSettlementFromTrade(trade, wallet);
-            } else {
-                settleTradeTransfers(trade);
-                settleTradeFees(trade);
-                addTwoSidedSettlementFromTrade(trade);
+            if (Types.SettlementRole.Origin == settlementRole)
+                settlement.origin = wallet;
+            else
+                settlement.target = wallet;
+
+            Types.TradeParty memory party = Types.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
+
+            // If wallet has previously settled with higher driip nonce with any of the concerned currencies then don't settle currency balances
+            if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended] < trade.nonce) {
+                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, trade.currencies.intended, party.netFees.intended);
+                clientFund.updateSettledBalance(wallet, trade.currencies.intended, party.balances.intended.current);
+                walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended] = trade.nonce;
             }
 
-            if (trade.nonce > highestAbsoluteDriipNonce)
-                highestAbsoluteDriipNonce = trade.nonce;
+            if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate] < trade.nonce) {
+                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, trade.currencies.conjugate, party.netFees.conjugate);
+                clientFund.updateSettledBalance(wallet, trade.currencies.conjugate, party.balances.conjugate.current);
+                walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate] = trade.nonce;
+            }
+
+            if (trade.nonce > maxDriipNonce)
+                maxDriipNonce = trade.nonce;
 
         } else if (Types.ChallengeResult.Disqualified == result) {
-            clientFund.seizeDepositedAndSettledBalances(wallet, challenger);
+            clientFund.seizeAllBalances(wallet, challenger);
             addToSeizedWallets(wallet);
         }
 
@@ -251,7 +231,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
 
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
-    /// @param wallet The wallet whose side of the driip is to be settled one-sidedly if supported by reserve fund
+    /// @param wallet The wallet whose side of the payment is to be settled
     function settleDriipAsPayment(Types.Payment payment, address wallet)
     public
     validatorInitialized
@@ -262,9 +242,6 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         require(driipSettlementChallenge != address(0));
         require(configuration != address(0));
         require(clientFund != address(0));
-
-        if (!payment.immediateSettlement)
-            require(paymentsReserveFund != address(0));
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -278,190 +255,107 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
         if (Types.ChallengeResult.Qualified == result) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-                || (payment.nonce < highestAbsoluteDriipNonce));
+                || (payment.nonce < maxDriipNonce));
 
-            Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+            // Get settlement
+            // If no settlement of nonce then create one
+            Types.Settlement storage settlement = hasSettlement(payment.nonce) ?
+            getSettlement(payment.nonce, Types.DriipType.Payment) :
+            createSettlementFromPayment(payment, wallet);
 
-            // Positive transfer defined as being from payment sender to recipient
-            bool transferToParty = ((0 > payment.transfers.net && Types.PaymentPartyRole.Sender == paymentPartyRole)
-            || (0 < payment.transfers.net && Types.PaymentPartyRole.Recipient == paymentPartyRole));
-            int256 transferAbs = payment.transfers.net.abs();
+            Types.SettlementRole settlementRole = getSettlementRoleFromPayment(payment, wallet);
 
-            if (!payment.immediateSettlement &&
-            (!transferToParty || paymentsReserveFund.outboundTransferSupported(payment.currency, transferAbs))) {
-                paymentsReserveFund.twoWayTransfer(wallet, payment.currency, transferToParty ? transferAbs.neg() : transferAbs);
-                addOneSidedSettlementFromPayment(payment, wallet);
-            } else {
-                settlePaymentTransfers(payment);
-                settlePaymentFees(payment);
-                addTwoSidedSettlementFromPayment(payment);
+            // (If exists settlement of nonce then) Require that wallet has not already settled
+            require(
+                (Types.SettlementRole.Origin == settlementRole && address(0) == settlement.origin) ||
+                (Types.SettlementRole.Target == settlementRole && address(0) == settlement.target)
+            );
+
+            if (Types.SettlementRole.Origin == settlementRole)
+                settlement.origin = wallet;
+            else
+                settlement.target = wallet;
+
+            Types.PaymentParty memory party = Types.isPaymentSender(payment, wallet) ? payment.sender : payment.recipient;
+
+            // If wallet has previously settled with higher driip nonce with the currency, then don't settle the balance
+            if (walletCurrencyMaxDriipNonce[wallet][payment.currency] < payment.nonce) {
+                clientFund.stageToBeneficiaryUntargeted(wallet, paymentsRevenueFund, payment.currency, party.netFee);
+                clientFund.updateSettledBalance(wallet, payment.currency, party.balances.current);
+                walletCurrencyMaxDriipNonce[wallet][payment.currency] = payment.nonce;
             }
 
-            if (payment.nonce > highestAbsoluteDriipNonce)
-                highestAbsoluteDriipNonce = payment.nonce;
+            if (payment.nonce > maxDriipNonce)
+                maxDriipNonce = payment.nonce;
 
         }
         else if (Types.ChallengeResult.Disqualified == result) {
-            clientFund.seizeDepositedAndSettledBalances(wallet, challenger);
+            clientFund.seizeAllBalances(wallet, challenger);
             addToSeizedWallets(wallet);
         }
 
         emit SettleDriipAsPaymentEvent(payment, wallet);
     }
 
-    function settleTradeTransfers(Types.Trade trade) private {
-        if (0 < trade.transfers.intended.net.sub(trade.buyer.netFees.intended)) {// Transfer from seller to buyer
-            clientFund.transferFromDepositedToSettledBalance(
-                trade.seller.wallet,
-                trade.buyer.wallet,
-                trade.transfers.intended.net.sub(trade.buyer.netFees.intended),
-                trade.currencies.intended
-            );
-
-        } else if (0 > trade.transfers.intended.net.add(trade.seller.netFees.intended)) {// Transfer from buyer to seller
-            clientFund.transferFromDepositedToSettledBalance(
-                trade.buyer.wallet,
-                trade.seller.wallet,
-                trade.transfers.intended.net.add(trade.seller.netFees.intended).abs(),
-                trade.currencies.intended
-            );
-        }
-
-        if (0 < trade.transfers.conjugate.net.sub(trade.seller.netFees.conjugate)) {// Transfer from buyer to seller
-            clientFund.transferFromDepositedToSettledBalance(
-                trade.buyer.wallet,
-                trade.seller.wallet,
-                trade.transfers.conjugate.net.sub(trade.seller.netFees.conjugate),
-                trade.currencies.conjugate
-            );
-
-        } else if (0 > trade.transfers.conjugate.net.add(trade.buyer.netFees.conjugate)) {// Transfer from seller to buyer
-            clientFund.transferFromDepositedToSettledBalance(
-                trade.seller.wallet,
-                trade.buyer.wallet,
-                trade.transfers.conjugate.net.add(trade.buyer.netFees.conjugate).abs(),
-                trade.currencies.conjugate
-            );
-        }
+    function getSettlementRoleFromTrade(Types.Trade trade, address wallet) private pure returns (Types.SettlementRole) {
+        return (wallet == trade.seller.wallet ? Types.SettlementRole.Origin : Types.SettlementRole.Target);
     }
 
-    function settlePaymentTransfers(Types.Payment payment) private {
-        if (0 < payment.transfers.net) {// Transfer from sender to recipient
-            clientFund.transferFromDepositedToSettledBalance(
-                payment.sender.wallet,
-                payment.recipient.wallet,
-                payment.transfers.net,
-                payment.currency
-            );
-
-        } else if (0 > payment.transfers.net) {// Transfer from recipient to sender
-            clientFund.transferFromDepositedToSettledBalance(
-                payment.recipient.wallet,
-                payment.sender.wallet,
-                payment.transfers.net.abs(),
-                payment.currency
-            );
-        }
+    function getSettlementRoleFromPayment(Types.Payment payment, address wallet) private pure returns (Types.SettlementRole) {
+        return (wallet == payment.sender.wallet ? Types.SettlementRole.Origin : Types.SettlementRole.Target);
     }
 
-    function settleTradeFees(Types.Trade trade) private {
-        if (0 < trade.buyer.netFees.intended) {
-            clientFund.withdrawFromDepositedBalance(
-                trade.buyer.wallet,
-                tradesRevenueFund,
-                trade.buyer.netFees.intended,
-                trade.currencies.intended
-            );
-            if (address(0) != trade.currencies.intended)
-                tradesRevenueFund.recordDepositTokens(ERC20(trade.currencies.intended), trade.buyer.netFees.intended);
-        }
-
-        if (0 < trade.buyer.netFees.conjugate) {
-            clientFund.withdrawFromDepositedBalance(
-                trade.buyer.wallet,
-                tradesRevenueFund,
-                trade.buyer.netFees.conjugate,
-                trade.currencies.conjugate
-            );
-            if (address(0) != trade.currencies.conjugate)
-                tradesRevenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.buyer.netFees.conjugate);
-        }
-
-        if (0 < trade.seller.netFees.intended) {
-            clientFund.withdrawFromDepositedBalance(
-                trade.seller.wallet,
-                tradesRevenueFund,
-                trade.seller.netFees.intended,
-                trade.currencies.intended
-            );
-            if (address(0) != trade.currencies.intended)
-                tradesRevenueFund.recordDepositTokens(ERC20(trade.currencies.intended), trade.seller.netFees.intended);
-        }
-
-        if (0 < trade.seller.netFees.conjugate) {
-            clientFund.withdrawFromDepositedBalance(
-                trade.seller.wallet,
-                tradesRevenueFund,
-                trade.seller.netFees.conjugate,
-                trade.currencies.conjugate
-            );
-            if (address(0) != trade.currencies.conjugate)
-                tradesRevenueFund.recordDepositTokens(ERC20(trade.currencies.conjugate), trade.seller.netFees.conjugate);
-        }
+    function hasSettlement(uint256 nonce) private view returns (bool) {
+        return 0 < driipNonceSettlementIndexMap[nonce];
     }
 
-    function settlePaymentFees(Types.Payment payment) private {
-        if (0 < payment.sender.netFee) {
-            clientFund.withdrawFromDepositedBalance(
-                payment.sender.wallet,
-                paymentsRevenueFund,
-                payment.sender.netFee,
-                payment.currency
-            );
-            if (address(0) != payment.currency)
-                paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.sender.netFee);
-        }
+    function getSettlement(uint256 nonce, Types.DriipType driipType) private view returns (Types.Settlement storage) {
+        uint256 index = driipNonceSettlementIndexMap[nonce];
+        Types.Settlement storage settlement = settlements[index - 1];
 
-        if (0 < payment.recipient.netFee) {
-            clientFund.withdrawFromDepositedBalance(
-                payment.recipient.wallet,
-                paymentsRevenueFund,
-                payment.recipient.netFee,
-                payment.currency
-            );
-            if (address(0) != payment.currency)
-                paymentsRevenueFund.recordDepositTokens(ERC20(payment.currency), payment.recipient.netFee);
-        }
+        require(driipType == settlement.driipType);
+
+        return settlement;
     }
 
-    function addOneSidedSettlementFromTrade(Types.Trade trade, address wallet) private {
-        settlements.push(
-            Types.Settlement(trade.nonce, Types.DriipType.Trade, Types.Sidedness.OneSided, [wallet, address(0)])
+    function createSettlementFromTrade(Types.Trade trade, address wallet) private returns (Types.Settlement storage) {
+        bool origin = (wallet == trade.seller.wallet);
+
+        Types.Settlement memory settlement = Types.Settlement(
+            trade.nonce,
+            Types.DriipType.Trade,
+            origin ? wallet : address(0),
+            origin ? address(0) : wallet
         );
-        walletSettlementIndexMap[wallet].push(settlements.length - 1);
+        settlements.push(settlement);
+
+        // Index is 1 based
+        uint256 index = settlements.length;
+        driipNonceSettlementIndexMap[trade.nonce] = index;
+        walletSettlementIndexMap[trade.buyer.wallet].push(index);
+        walletSettlementIndexMap[trade.seller.wallet].push(index);
+
+        return settlements[index - 1];
     }
 
-    function addTwoSidedSettlementFromTrade(Types.Trade trade) private {
-        settlements.push(
-            Types.Settlement(trade.nonce, Types.DriipType.Trade, Types.Sidedness.TwoSided, [trade.buyer.wallet, trade.seller.wallet])
-        );
-        walletSettlementIndexMap[trade.buyer.wallet].push(settlements.length - 1);
-        walletSettlementIndexMap[trade.seller.wallet].push(settlements.length - 1);
-    }
+    function createSettlementFromPayment(Types.Payment payment, address wallet) private returns (Types.Settlement storage) {
+        bool origin = (wallet == payment.sender.wallet);
 
-    function addOneSidedSettlementFromPayment(Types.Payment payment, address wallet) private {
-        settlements.push(
-            Types.Settlement(payment.nonce, Types.DriipType.Payment, Types.Sidedness.OneSided, [wallet, address(0)])
+        Types.Settlement memory settlement = Types.Settlement(
+            payment.nonce,
+            Types.DriipType.Payment,
+            origin ? wallet : address(0),
+            origin ? address(0) : wallet
         );
-        walletSettlementIndexMap[wallet].push(settlements.length - 1);
-    }
+        settlements.push(settlement);
 
-    function addTwoSidedSettlementFromPayment(Types.Payment payment) private {
-        settlements.push(
-            Types.Settlement(payment.nonce, Types.DriipType.Payment, Types.Sidedness.TwoSided, [payment.sender.wallet, payment.recipient.wallet])
-        );
-        walletSettlementIndexMap[payment.sender.wallet].push(settlements.length - 1);
-        walletSettlementIndexMap[payment.recipient.wallet].push(settlements.length - 1);
+        // Index is 1 based
+        uint256 index = settlements.length;
+        driipNonceSettlementIndexMap[payment.nonce] = index;
+        walletSettlementIndexMap[payment.sender.wallet].push(index);
+        walletSettlementIndexMap[payment.recipient.wallet].push(index);
+
+        return settlements[index - 1];
     }
 
     function addToSeizedWallets(address _address) private {

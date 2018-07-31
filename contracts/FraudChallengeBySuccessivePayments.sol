@@ -72,7 +72,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Confi
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentPayment(lastPayment);
 
-        clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
+        clientFund.seizeAllBalances(wallet, msg.sender);
         fraudChallenge.addSeizedWallet(wallet);
 
         emit ChallengeBySuccessivePaymentsEvent(firstPayment, lastPayment, msg.sender, wallet);
