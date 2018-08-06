@@ -24,28 +24,26 @@ contract ERC20Controller is TokenController {
         return true;
     }
 
-    function receive(address token, address from, address to, uint256 amount, uint256 id) public {
+    function receive(address from, address to, address token, uint256 amount, uint256 id) public {
         require(amount > 0);
         require(id == 0);
 
-        ERC20 erc20 = ERC20(token);
-        require(erc20.transferFrom(from, to, uint256(amount)));
+        require(ERC20(token).transferFrom(from, to, amount));
 
         //raise event
-        emit TokenTransferred(token, from, to, amount, 0);
+        emit TokenTransferred(from, to, amount, token, 0);
     }
 
-    function send(address token, address to, uint256 amount, uint256 id) public {
+    function send(address to, address token, uint256 amount, uint256 id) public {
         require(msg.sender != address(0));
         require(amount > 0);
         require(id == 0);
 
-        ERC20 erc20 = ERC20(token);
-        require(erc20.approve(to, amount));
-        require(erc20.transferFrom(msg.sender, to, amount));
+        require(ERC20(token).approve(to, amount));
+        require(ERC20(token).transferFrom(msg.sender, to, amount));
 
         //raise event
-        emit TokenTransferred(token, msg.sender, to, amount, 0);
+        emit TokenTransferred(msg.sender, to, amount, token, 0);
     }
 }
 

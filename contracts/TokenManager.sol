@@ -22,21 +22,24 @@ contract TokenManager is Ownable, Modifiable, SelfDestructible {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    uint32 constant BLACKLISTED = 2147483648; //0x80000000
+    struct RegisterToken {
+        bytes32 interface_id;
+        bool blacklisted;
+    }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(uint32 => address) registeredTokenControllers;
-    mapping(address => uint32) registeredTokens;
+    mapping(bytes32 => address) registeredTokenControllers;
+    mapping(address => RegisterToken) registeredTokens;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisteredTokenController(uint32 _id, address _interface);
-    event DeregisteredTokenController(uint32 _id);
+    event RegisteredTokenController(bytes32 interface_id, address _interface);
+    event DeregisteredTokenController(bytes32 interface_id);
 
-    event RegisteredToken(address token, uint32 interface_id);
+    event RegisteredToken(address token, bytes32 interface_id);
     event DeregisteredToken(address token);
     event BlacklistedToken(address token);
     event WhitelistedToken(address token);
@@ -50,8 +53,10 @@ contract TokenManager is Ownable, Modifiable, SelfDestructible {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerTokenController(uint32 _id, address _interface) external onlyOwner notNullAddress(_interface) {
-        require(_id >= 1 && _id <= 1048576);
+    function registerTokenController(string standard, address _interface) external onlyOwner notNullAddress(_interface) {
+        require(bytes(standard).length > 0);
+        bytes32 _id = keccak256(abi.encodePacked(standard));
+
         require(registeredTokenControllers[_id] == address(0));
 
         registeredTokenControllers[_id] = _interface;
@@ -60,7 +65,10 @@ contract TokenManager is Ownable, Modifiable, SelfDestructible {
         emit RegisteredTokenController(_id, _interface);
     }
 
-    function deregisterTokenController(uint32 _id) external onlyOwner {
+    function deregisterTokenController(string standard) external onlyOwner {
+        require(bytes(standard).length > 0);
+        bytes32 _id = keccak256(abi.encodePacked(standard));
+
         require(registeredTokenControllers[_id] != address(0));
 
         registeredTokenControllers[_id] = address(0);
@@ -69,49 +77,63 @@ contract TokenManager is Ownable, Modifiable, SelfDestructible {
         emit DeregisteredTokenController(_id);
     }
 
-    function registerToken(address token, uint32 interface_id) external onlyOwner notNullAddress(token) {
-        require(interface_id >= 1 && interface_id <= 1048576);
-        require(registeredTokens[token] == 0);
+    function registerToken(address token, string standard) external onlyOwner notNullAddress(token) {
+        require(bytes(standard).length > 0);
+        bytes32 _id = keccak256(abi.encodePacked(standard));
 
-        registeredTokens[token] = interface_id;
+        require(registeredTokens[token].interface_id == bytes32(0));
+
+        registeredTokens[token].interface_id = _id;
 
         //raise event
-        emit RegisteredToken(token, interface_id);
+        emit RegisteredToken(token, _id);
     }
 
     function deregisterToken(address token) external onlyOwner {
-        require(registeredTokens[token] != 0);
+        require(registeredTokens[token].interface_id != 0);
 
-        registeredTokens[token] = 0;
+        registeredTokens[token].interface_id = bytes32(0);
+        registeredTokens[token].blacklisted = false;
 
         //raise event
         emit DeregisteredToken(token);
     }
 
     function blacklistToken(address token) external onlyOwner {
-        require(registeredTokens[token] != 0);
+        require(registeredTokens[token].interface_id != bytes32(0));
 
-        registeredTokens[token] = registeredTokens[token] | BLACKLISTED;
+        registeredTokens[token].blacklisted = true;
 
         //raise event
         emit BlacklistedToken(token);
     }
 
     function whitelistToken(address token) external onlyOwner {
-        require(registeredTokens[token] != 0);
+        require(registeredTokens[token].interface_id != bytes32(0));
 
-        registeredTokens[token] = registeredTokens[token] & (~BLACKLISTED);
+        registeredTokens[token].blacklisted = false;
 
         //raise event
         emit WhitelistedToken(token);
     }
 
-    function getTokenController(address token) public view returns (TokenController) {
-        uint32 interface_id = registeredTokens[token];
+    function getTokenController(address token, string standard) public view returns (TokenController) {
+        if (registeredTokens[token].interface_id != bytes32(0)) {
+            require(!registeredTokens[token].blacklisted);
 
-        require(interface_id != 0 && (interface_id & BLACKLISTED) == 0);
-        require(registeredTokenControllers[interface_id] != address(0));
+            address interface_address = registeredTokenControllers[registeredTokens[token].interface_id];
+            require(interface_address != address(0));
 
-        return TokenController(registeredTokenControllers[interface_id]);
+            return TokenController(interface_address);
+        }
+
+        if (bytes(standard).length > 0) {
+            bytes32 _id = keccak256(abi.encodePacked(standard));
+
+            require(registeredTokenControllers[_id] != address(0));
+            return TokenController(registeredTokenControllers[_id]);
+        }
+
+        revert();
     }
 }

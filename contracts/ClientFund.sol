@@ -15,54 +15,40 @@ import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
-import {ERC20} from "./ERC20.sol";
+import {TokenManager} from "./TokenManager.sol";
+import {TokenController} from "./TokenController.sol";
+import {BalanceLib} from "./BalanceLib.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 */
 contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, AuthorizableServable, SelfDestructible {
+    using BalanceLib for BalanceLib.Balance;
     using SafeMathInt for int256;
 
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct DepositInfo {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
+    struct InUseTokenItem {
+        address token;
+        uint256 nonfungible_id;
     }
 
-    struct WithdrawalInfo {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
-    }
+    struct Wallet {
+        BalanceLib.Balance deposited;
+        BalanceLib.Balance staged;
+        BalanceLib.Balance settled;
 
-    struct WalletInfo {
-        DepositInfo[] deposits;
-        WithdrawalInfo[] withdrawals;
-
-        // Deposited balance of ethers and tokens.
-        int256 depositedEtherBalance;
-        mapping(address => int256) depositedTokenBalance;
-
-        // Staged balance of ethers and tokens.
-        int256 stagedEtherBalance;
-        mapping(address => int256) stagedTokenBalance;
-
-        // Settled balance of ethers and tokens.
-        int256 settledEtherBalance;
-        mapping(address => int256) settledTokenBalance;
-
-        address[] inUseTokenList;
-        mapping(address => bool) inUseTokenMap;
+        InUseTokenItem[] inUseTokenList;
+        mapping(address => mapping(uint256 => bool)) inUseTokenMap;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => WalletInfo) private walletInfoMap;
+    mapping(address => Wallet) private walletMap;
+    TokenManager tokenManager;
 
     mapping(address => uint256) private registeredServicesMap;
     mapping(address => mapping(address => bool)) private disabledServicesMap;
@@ -70,20 +56,27 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event DepositEvent(address from, int256 amount, address currency); //currency==0 for ethers
-    event StageEvent(address from, int256 amount, address currency); //currency==0 for ethers
-    event UnstageEvent(address from, int256 amount, address currency); //currency==0 for ethers
-    event UpdateSettledBalanceEvent(address wallet, address currency, int256 amount); //currency==0 for ethers
+    event DepositEvent(address from, int256 amount, address currency, uint256 nonfungible_id); //currency==0 for ethers
+    event WithdrawEvent(address to, int256 amount, address currency, uint256 nonfungible_id);  //currency==0 for ethers
+
+    event StageEvent(address from, int256 amount, address currency, uint256 nonfungible_id); //currency==0 for ethers
+    event UnstageEvent(address from, int256 amount, address currency, uint256 nonfungible_id); //currency==0 for ethers
+
+    event UpdateSettledBalanceEvent(address wallet, address currency, uint256 nonfungible_id, int256 amount); //currency==0 for ethers
     event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, address currency, int256 amount); //currency==0 for ethers
     event StageToBeneficiaryUntargetedEvent(address sourceWallet, address beneficiary, address currency, int256 amount); //currency==0 for ethers
+
     event SeizeAllBalancesEvent(address sourceWallet, address targetWallet);
-    event WithdrawEvent(address to, int256 amount, address currency);  //currency==0 for ethers
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() public {
         serviceActivationTimeout = 1 weeks;
+    }
+
+    function setTokenManager(address manager) public onlyOwner {
+        tokenManager = TokenManager(manager);
     }
 
     //
@@ -97,120 +90,95 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to per-wallet deposited balance
-        walletInfoMap[wallet].depositedEtherBalance = walletInfoMap[wallet].depositedEtherBalance.add_nn(amount);
-        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
+        walletMap[wallet].deposited.add(amount, address(0), 0, true);
 
         //emit event
-        emit DepositEvent(wallet, amount, address(0));
+        emit DepositEvent(wallet, amount, address(0), 0);
     }
 
-    function depositTokens(address token, int256 amount) public {
-        depositTokensTo(msg.sender, amount, token);
+    function depositTokens(int256 amount, address token, uint256 nonfungible_id, string standard) public {
+        depositTokensTo(msg.sender, amount, token, nonfungible_id, standard);
     }
 
-    //NOTE: 'wallet' must call ERC20.approve first
-    function depositTokensTo(address wallet, int256 amount, address token) public notNullAddress(token) {
+    function depositTokensTo(address wallet, int256 amount, address token, uint256 nonfungible_id, string standard) public {
         require(amount.isNonZeroPositiveInt256());
 
-        //try to execute token transfer
-        ERC20 erc20 = ERC20(token);
-        require(erc20.transferFrom(wallet, this, uint256(amount)));
+        //execute transfer
+        TokenController controller = tokenManager.getTokenController(token, standard);
+        controller.receive(msg.sender, this, uint256(amount), token, nonfungible_id);
 
         //add to per-wallet deposited balance
-        walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].add_nn(amount);
-        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, token));
+        walletMap[wallet].deposited.add(amount, token, nonfungible_id, true);
 
         //add token to in-use list
-        if (!walletInfoMap[wallet].inUseTokenMap[token]) {
-            walletInfoMap[wallet].inUseTokenMap[token] = true;
-            walletInfoMap[wallet].inUseTokenList.push(token);
+        if (!walletMap[wallet].inUseTokenMap[token][nonfungible_id]) {
+            walletMap[wallet].inUseTokenMap[token][nonfungible_id] = true;
+            walletMap[wallet].inUseTokenList.push(InUseTokenItem(token, nonfungible_id));
         }
 
         //emit event
-        emit DepositEvent(wallet, amount, token);
+        emit DepositEvent(wallet, amount, token, nonfungible_id);
     }
 
-    function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
-        require(index < walletInfoMap[wallet].deposits.length);
-
-        amount = walletInfoMap[wallet].deposits[index].amount;
-        timestamp = walletInfoMap[wallet].deposits[index].timestamp;
-        token = walletInfoMap[wallet].deposits[index].token;
+    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
+        return walletMap[wallet].deposited.deposit(index);
     }
 
-    function depositCount(address wallet) public view onlyOwner returns (uint256) {
-        return walletInfoMap[wallet].deposits.length;
+    function depositCount(address wallet) public view returns (uint256) {
+        return walletMap[wallet].deposited.depositCount();
     }
 
     //
-    // Balance functions
+    // Balance retrieval functions
     // -----------------------------------------------------------------------------------------------------------------
-    function depositedBalance(address wallet, address currency) public view notNullAddress(wallet) returns (int256) {
-        return currency == address(0) ? walletInfoMap[wallet].depositedEtherBalance : walletInfoMap[wallet].depositedTokenBalance[currency];
+    function depositedBalance(address wallet, address currency, uint256 nonfungible_id) public view notNullAddress(wallet) returns (int256) {
+        return walletMap[wallet].deposited.get(currency, nonfungible_id);
     }
 
-    function stagedBalance(address wallet, address currency) public view notNullAddress(wallet) returns (int256) {
-        return currency == address(0) ? walletInfoMap[wallet].stagedEtherBalance : walletInfoMap[wallet].stagedTokenBalance[currency];
+    function stagedBalance(address wallet, address currency, uint256 nonfungible_id) public view notNullAddress(wallet) returns (int256) {
+        return walletMap[wallet].staged.get(currency, nonfungible_id);
     }
 
-    function settledBalance(address wallet, address currency) public view notNullAddress(wallet) returns (int256) {
-        return currency == address(0) ? walletInfoMap[wallet].settledEtherBalance : walletInfoMap[wallet].settledTokenBalance[currency];
+    function settledBalance(address wallet, address currency, uint256 nonfungible_id) public view notNullAddress(wallet) returns (int256) {
+        return walletMap[wallet].settled.get(currency, nonfungible_id);
     }
 
-    function stage(int256 amount, address currency) public notOwner {
+    //
+    // Staging functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function stage(int256 amount, address currency, uint256 nonfungible_id) public notOwner {
         int256 amountCopy;
-        int256 toMove;
+        int256 deposited = walletMap[msg.sender].deposited.get(currency, nonfungible_id);
+        int256 settled = walletMap[msg.sender].settled.get(currency, nonfungible_id);
 
         require(amount.isPositiveInt256());
 
-        if (currency == address(0)) {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[msg.sender].depositedEtherBalance.add(walletInfoMap[msg.sender].settledEtherBalance));
-            if (amount <= 0)
-                return;
+        deposited = walletMap[msg.sender].deposited.get(currency, nonfungible_id);
+        settled = walletMap[msg.sender].settled.get(currency, nonfungible_id);
 
-            amountCopy = amount;
+        //clamp amount to move
+        amount = amount.clampMax(deposited.add(settled));
+        if (amount <= 0)
+            return;
+        amountCopy = amount;
 
-            //move from settled balance to staged, if balance greater than zero
-            if (walletInfoMap[msg.sender].settledEtherBalance > 0) {
-                toMove = amount.clampMax(walletInfoMap[msg.sender].settledEtherBalance);
+        //first move from settled to staged if settled balance is positive
+        if (settled > 0) {
+            walletMap[msg.sender].settled.sub_allow_neg(settled, currency, nonfungible_id, false);
+            walletMap[msg.sender].staged.add(settled, currency, nonfungible_id, false);
 
-                walletInfoMap[msg.sender].settledEtherBalance = walletInfoMap[msg.sender].settledEtherBalance.sub(toMove);
-                amount = amount.sub(toMove);
-            }
+            amount = amount.sub(settled);
+        }
 
-            //move (remaining) from deposited balance to staged
-            walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.sub_nn(amount);
-
-            //add to staged balance
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add_nn(amountCopy);
-        } else {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[msg.sender].depositedTokenBalance[currency].add(walletInfoMap[msg.sender].settledTokenBalance[currency]));
-            if (amount <= 0)
-                return;
-
-            amountCopy = amount;
-
-            //move from settled balance to staged, if balance greater than zero
-            if (walletInfoMap[msg.sender].settledTokenBalance[currency] > 0) {
-                toMove = amount.clampMax(walletInfoMap[msg.sender].settledTokenBalance[currency]);
-
-                walletInfoMap[msg.sender].settledTokenBalance[currency] = walletInfoMap[msg.sender].settledTokenBalance[currency].sub(toMove);
-                amount = amount.sub(toMove);
-            }
-
-            //move (remaining) from deposited balance to staged
-            walletInfoMap[msg.sender].depositedTokenBalance[currency] = walletInfoMap[msg.sender].depositedTokenBalance[currency].sub_nn(amount);
-
-            //add to staged balance
-            walletInfoMap[msg.sender].stagedTokenBalance[currency] = walletInfoMap[msg.sender].stagedTokenBalance[currency].add_nn(amountCopy);
+        //move the remaining from deposited to staged
+        if (amount > 0) {
+            walletMap[msg.sender].deposited.transfer(walletMap[msg.sender].staged, amount, currency, nonfungible_id, false);
         }
 
         //emit event
-        emit StageEvent(msg.sender, amount, currency);
+        emit StageEvent(msg.sender, amountCopy, currency, nonfungible_id);
     }
-
+    /*
     function unstage(int256 amount, address currency) public notOwner {
         require(amount.isPositiveInt256());
 
@@ -414,4 +382,5 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
     function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
         return walletInfoMap[wallet].withdrawals.length;
     }
+    */
 }

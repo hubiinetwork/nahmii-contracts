@@ -24,27 +24,25 @@ contract ERC721Controller is TokenController {
         return false;
     }
 
-    function receive(address token, address from, address to, uint256 amount, uint256 id) public {
+    function receive(address from, address to, address token, uint256 amount, uint256 id) public {
         require(amount == 1);
         require(id != 0);
 
-        ERC721 erc721 = ERC721(token);
-        erc721.safeTransferFrom(from, to, id);
+        ERC721(token).safeTransferFrom(from, to, id);
 
         //raise event
-        emit TokenTransferred(token, from, to, 1, id);
+        emit TokenTransferred(from, to, 1, token, id);
     }
 
-    function send(address token, address to, uint256 amount, uint256 id) public {
+    function send(address to, address token, uint256 amount, uint256 id) public {
         require(msg.sender != address(0));
         require(amount == 1);
         require(id != 0);
 
-        ERC721 erc721 = ERC721(token);
-        erc721.approve(to, id);
-        erc721.safeTransferFrom(msg.sender, to, id);
+        ERC721(token).approve(to, id);
+        ERC721(token).safeTransferFrom(msg.sender, to, id);
 
         //raise event
-        emit TokenTransferred(token, msg.sender, to, 1, id);
+        emit TokenTransferred(msg.sender, to, 1, token, id);
     }
 }
