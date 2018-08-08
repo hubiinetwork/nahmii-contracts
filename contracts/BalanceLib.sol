@@ -13,134 +13,63 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 library BalanceLib {
     using SafeMathInt for int256;
 
-    struct Deposit {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
-        uint256 nonfungible_id;
-    }
-
-    struct Withdrawal {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
-        uint256 nonfungible_id;
-    }
-
     struct Balance {
-        int256 ethers;
-        mapping(address => mapping(uint256 => int256)) tokens;
-
-        Deposit[] deposits;
-        Withdrawal[] withdrawals;
+        mapping(address => mapping(uint256 => int256)) currencies;
     }
 
-    function get(Balance storage self, address token, uint256 id) internal view returns (int256) {
-        if (token == address(0)) {
-            return self.ethers;
+    function get(Balance storage self, address currency, uint256 currencyId) internal view returns (int256) {
+        if (currency == address(0)) {
+            require(currencyId == 0);
         }
-        return self.tokens[token][id];
+        return self.currencies[currency][currencyId];
     }
 
-    function add(Balance storage self, int256 amount, address token, uint256 id, bool addToHistory) internal {
-        if (token == address(0)) {
-            self.ethers = self.ethers.add_nn(amount);
-            if (addToHistory) {
-                self.deposits.push(Deposit(amount, block.timestamp, address(0), 0));
-            }
+    function set(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
+        if (currency == address(0)) {
+            require(currencyId == 0);
         }
-        else {
-            self.tokens[token][id] = self.tokens[token][id].add_nn(amount);
-            if (addToHistory) {
-                self.deposits.push(Deposit(amount, block.timestamp, token, id));
-            }
-        }
-    }
-
-    function sub(Balance storage self, int256 amount, address token, uint256 id, bool addToHistory) internal {
-        if (token == address(0)) {
-            self.ethers = self.ethers.sub_nn(amount);
-            if (addToHistory) {
-                self.withdrawals.push(Withdrawal(amount, block.timestamp, address(0), 0));
-            }
-        }
-        else {
-            self.tokens[token][id] = self.tokens[token][id].sub_nn(amount);
-            if (addToHistory) {
-                self.withdrawals.push(Withdrawal(amount, block.timestamp,  token, id));
-            }
-        }
-    }
-
-    function transfer(Balance storage _from, Balance storage _to, int256 amount, address token, uint256 id, bool addToHistory) internal {
-        sub(_from, amount, token, id, addToHistory);
-        add(_to, amount, token, id, addToHistory);
+        self.currencies[currency][currencyId] = amount;
     }
 
     //----
 
-    function add_allow_neg(Balance storage self, int256 amount, address token, uint256 id, bool addToHistory) internal {
-        if (token == address(0)) {
-            self.ethers = self.ethers.add(amount);
-            if (addToHistory) {
-                self.deposits.push(Deposit(amount, block.timestamp, address(0), 0));
-            }
+    function add(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
+        if (currency == address(0)) {
+            require(currencyId == 0);
         }
-        else {
-            self.tokens[token][id] = self.tokens[token][id].add(amount);
-            if (addToHistory) {
-                self.deposits.push(Deposit(amount, block.timestamp, token, id));
-            }
-        }
+        self.currencies[currency][currencyId] = self.currencies[currency][currencyId].add_nn(amount);
     }
 
-    function sub_allow_neg(Balance storage self, int256 amount, address token, uint256 id, bool addToHistory) internal {
-        if (token == address(0)) {
-            self.ethers = self.ethers.sub(amount);
-            if (addToHistory) {
-                self.withdrawals.push(Withdrawal(amount, block.timestamp, address(0), 0));
-            }
+    function sub(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
+        if (currency == address(0)) {
+            require(currencyId == 0);
         }
-        else {
-            self.tokens[token][id] = self.tokens[token][id].sub(amount);
-            if (addToHistory) {
-                self.withdrawals.push(Withdrawal(amount, block.timestamp,  token, id));
-            }
-        }
+        self.currencies[currency][currencyId] = self.currencies[currency][currencyId].sub_nn(amount);
     }
 
-    function transfer_allow_neg(Balance storage _from, Balance storage _to, int256 amount, address token, uint256 id, bool addToHistory) internal {
-        sub_allow_neg(_from, amount, token, id, addToHistory);
-        add_allow_neg(_to, amount, token, id, addToHistory);
+    function transfer(Balance storage _from, Balance storage _to, int256 amount, address currency, uint256 currencyId) internal {
+        sub(_from, amount, currency, currencyId);
+        add(_to, amount, currency, currencyId);
     }
 
     //----
 
-    function deposit(Balance storage self, uint index) internal view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
-        require(index < self.deposits.length);
-
-        amount = self.deposits[index].amount;
-        timestamp = self.deposits[index].timestamp;
-        token = self.deposits[index].token;
-        id = self.deposits[index].nonfungible_id;
+    function add_allow_neg(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
+        if (currency == address(0)) {
+            require(currencyId == 0);
+        }
+        self.currencies[currency][currencyId] = self.currencies[currency][currencyId].add(amount);
     }
 
-    function depositCount(Balance storage self) internal view returns (uint256) {
-        return self.deposits.length;
+    function sub_allow_neg(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
+        if (currency == address(0)) {
+            require(currencyId == 0);
+        }
+        self.currencies[currency][currencyId] = self.currencies[currency][currencyId].sub(amount);
     }
 
-    //----
-
-    function withdrawal(Balance storage self, uint index) internal view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
-        require(index < self.withdrawals.length);
-
-        amount = self.withdrawals[index].amount;
-        timestamp = self.withdrawals[index].timestamp;
-        token = self.withdrawals[index].token;
-        id = self.withdrawals[index].nonfungible_id;
-    }
-
-    function withdrawalCount(Balance storage self) internal view returns (uint256) {
-        return self.withdrawals.length;
+    function transfer_allow_neg(Balance storage _from, Balance storage _to, int256 amount, address currency, uint256 currencyId) internal {
+        sub_allow_neg(_from, amount, currency, currencyId);
+        add_allow_neg(_to, amount, currency, currencyId);
     }
 }
