@@ -52,7 +52,8 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => Wallet) private walletMap;
-    CurrencyManager currencyManager;
+
+    CurrencyManager private currencyManager;
 
     mapping(address => uint256) private registeredServicesMap;
     mapping(address => mapping(address => bool)) private disabledServicesMap;
@@ -60,6 +61,8 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event CurrencyManagerChangedEvent(address oldAddress, address newAddress);
+
     event DepositEvent(address from, int256 amount, address currency, uint256 currencyId); //currency==0 for ethers
     event WithdrawEvent(address to, int256 amount, address currency, uint256 currencyId);  //currency==0 for ethers
 
@@ -79,8 +82,17 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
         serviceActivationTimeout = 1 weeks;
     }
 
-    function setCurrencyManager(address manager) public onlyOwner {
-        currencyManager = CurrencyManager(manager);
+    function setCurrencyManagerAddress(address newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != address(currencyManager)) {
+            address oldAddress;
+
+            //set new currency manager address
+            oldAddress = currencyManager;
+            currencyManager = CurrencyManager(newAddress);
+
+            //emit event
+            emit CurrencyManagerChangedEvent(oldAddress, newAddress);
+        }
     }
 
     //
@@ -101,8 +113,8 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
         emit DepositEvent(wallet, amount, address(0), 0);
     }
 
-    function depositTokens(int256 amount, address token, uint256 currencyId, string standard) public {
-        depositTokensTo(msg.sender, amount, token, currencyId, standard);
+    function depositTokens(int256 amount, address currency, uint256 currencyId, string standard) public {
+        depositTokensTo(msg.sender, amount, currency, currencyId, standard);
     }
 
     function depositTokensTo(address wallet, int256 amount, address currency, uint256 currencyId, string standard) public {
@@ -271,6 +283,9 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
         }
     }
 
+    //
+    // Seizing function
+    // -----------------------------------------------------------------------------------------------------------------
     function seizeAllBalances(address sourceWallet, address targetWallet) public onlyRegisteredActiveService notNullAddress(sourceWallet) notNullAddress(targetWallet) {
         int256 amount;
         uint256 i;
