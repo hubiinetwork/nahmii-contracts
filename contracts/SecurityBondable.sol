@@ -9,15 +9,13 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {SecurityBond} from "./SecurityBond.sol";
 
 /**
 @title SecurityBondable
 @notice An ownable that has a security bond property
 */
-contract SecurityBondable is Ownable, Modifiable {
-
+contract SecurityBondable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -26,20 +24,21 @@ contract SecurityBondable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
+    event SecurityBondChangedEvent(address oldAddress, address newAddress);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the security bond contract
-    /// @param newSecurityBond The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newSecurityBond)
-    public
-    onlyOwner
-    notNullAddress(newSecurityBond)
-    {
-        SecurityBond oldSecurityBond = securityBond;
-        securityBond = newSecurityBond;
-        emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
+    /// @param newAddress The (address of) SecurityBond contract instance
+    function changeSecurityBond(address newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != address(securityBond)) {
+            //set new security bond
+            address oldAddress = address(securityBond);
+            securityBond = SecurityBond(newAddress);
+
+            //emit event
+            emit SecurityBondChangedEvent(oldAddress, newAddress);
+        }
     }
 }

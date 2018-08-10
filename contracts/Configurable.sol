@@ -9,15 +9,13 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {Configuration} from "./Configuration.sol";
 
 /**
 @title Benefactor
 @notice An ownable that has a client fund property
 */
-contract Configurable is Ownable, Modifiable {
-
+contract Configurable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -26,18 +24,22 @@ contract Configurable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
+    event ChangeConfigurationEvent(address oldAddress, address newAddress);
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
-    /// @param newConfiguration The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newConfiguration)
-    public
-    onlyOwner
-    notNullAddress(newConfiguration)
-    {
-        Configuration oldConfiguration = configuration;
-        configuration = newConfiguration;
-        emit ChangeConfigurationEvent(oldConfiguration, configuration);
+    /// @param newAddress The (address of) Configuration contract instance
+    function changeConfiguration(address newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != address(configuration)) {
+            //set new configuration
+            address oldAddress = address(configuration);
+            configuration = Configuration(newAddress);
+
+            //emit event
+            emit ChangeConfigurationEvent(oldAddress, newAddress);
+        }
     }
 
     //

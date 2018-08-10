@@ -34,9 +34,7 @@ contract ERC721Controller is CurrencyController {
         emit CurrencyTransferred(from, to, 1, currency, currencyId);
     }
 
-    /**
-    @notice MUST be called with DELEGATECALL
-    */
+    /// @notice MUST be called with DELEGATECALL
     function approve(address to, uint256 amount, address currency, uint256 currencyId) public {
         require(msg.sender != address(0));
         require(amount == 1);
@@ -45,9 +43,7 @@ contract ERC721Controller is CurrencyController {
         ERC721(currency).approve(to, currencyId);
     }
 
-    /**
-    @notice MUST be called with DELEGATECALL
-    */
+    /// @notice MUST be called with DELEGATECALL
     function send(address to, uint256 amount, address currency, uint256 currencyId) public {
         require(msg.sender != address(0));
         require(amount == 1);

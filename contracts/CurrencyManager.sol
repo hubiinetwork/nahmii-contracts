@@ -9,7 +9,6 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {CurrencyController} from "./CurrencyController.sol";
 
@@ -17,7 +16,7 @@ import {CurrencyController} from "./CurrencyController.sol";
 @title CurrencyManager
 @notice Handles registration of currencies
 */
-contract CurrencyManager is Ownable, Modifiable, SelfDestructible {
+contract CurrencyManager is Ownable, SelfDestructible {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------

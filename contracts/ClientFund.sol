@@ -61,7 +61,7 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CurrencyManagerChangedEvent(address oldAddress, address newAddress);
+    event ChangeCurrencyManagerEvent(address oldAddress, address newAddress);
 
     event DepositEvent(address from, int256 amount, address currency, uint256 currencyId); //currency==0 for ethers
     event WithdrawEvent(address to, int256 amount, address currency, uint256 currencyId);  //currency==0 for ethers
@@ -82,16 +82,16 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
         serviceActivationTimeout = 1 weeks;
     }
 
-    function setCurrencyManagerAddress(address newAddress) public onlyOwner notNullAddress(newAddress) {
+    /// @notice Change the currency manager contract
+    /// @param newAddress The (address of) CurrencyManager contract instance
+    function changeCurrencyManager(address newAddress) public onlyOwner notNullAddress(newAddress) {
         if (newAddress != address(currencyManager)) {
-            address oldAddress;
-
-            //set new currency manager address
-            oldAddress = currencyManager;
+            //set new currency manager
+            address oldAddress = address(currencyManager);
             currencyManager = CurrencyManager(newAddress);
 
             //emit event
-            emit CurrencyManagerChangedEvent(oldAddress, newAddress);
+            emit ChangeCurrencyManagerEvent(oldAddress, newAddress);
         }
     }
 
@@ -324,31 +324,26 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
     //
     // Withdrawal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function withdrawEthers(int256 amount) public notOwner {
+    function withdraw(int256 amount, address currency, uint256 currencyId) public {
         require(amount.isNonZeroPositiveInt256());
 
-        //subtract to per-wallet staged balance (will check for sufficient balance)
-        walletMap[msg.sender].staged.sub(amount, address(0), 0);
-        walletMap[msg.sender].txHistory.addWithdrawal(amount, address(0), 0);
+        amount = amount.clampMax(walletMap[msg.sender].staged.get(currency, currencyId));
+        if (amount <= 0)
+            return;
 
-        //execute transfer
-        msg.sender.transfer(uint256(amount));
-
-        //emit event
-        emit WithdrawEvent(msg.sender, amount, address(0), 0);
-    }
-
-    function withdrawTokens(int256 amount, address currency, uint256 currencyId) public notOwner notNullAddress(currency) {
-        require(amount.isNonZeroPositiveInt256());
-
-        //subtract to per-wallet staged balance (will check for sufficient balance)
+        //subtract to per-wallet staged balance
         walletMap[msg.sender].staged.sub(amount, currency, currencyId);
         walletMap[msg.sender].txHistory.addWithdrawal(amount, currency, currencyId);
 
         //execute transfer
-        CurrencyController controller = currencyManager.getCurrencyController(currency, "");
-        if (!address(controller).delegatecall(controller.send_signature, msg.sender, uint256(amount), currency, currencyId)) {
-            revert();
+        if (currency == address(0)) {
+            msg.sender.transfer(uint256(amount));
+        }
+        else {
+            CurrencyController controller = currencyManager.getCurrencyController(currency, "");
+            if (!address(controller).delegatecall(controller.send_signature, msg.sender, uint256(amount), currency, currencyId)) {
+                revert();
+            }
         }
 
         //emit event

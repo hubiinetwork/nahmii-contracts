@@ -9,15 +9,13 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {CommunityVote} from "./CommunityVote.sol";
 
 /**
 @title CommunityVotable
 @notice An ownable that has a community vote property
 */
-contract CommunityVotable is Ownable, Modifiable {
-
+contract CommunityVotable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -28,7 +26,7 @@ contract CommunityVotable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
+    event ChangeCommunityVoteEvent(address oldAddress, address newAddress);
 
     //
     // Functions
@@ -39,16 +37,18 @@ contract CommunityVotable is Ownable, Modifiable {
     }
 
     /// @notice Change the community vote contract
-    /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote)
-    public
-    onlyOwner
-    notNullAddress(newCommunityVote)
-    {
+    /// @param newAddress The (address of) CommunityVote contract instance
+    function changeCommunityVote(address newAddress) public onlyOwner notNullAddress(newAddress) {
         require(!communityVoteUpdateDisabled);
-        CommunityVote oldCommunityVote = communityVote;
-        communityVote = newCommunityVote;
-        emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
+
+        if (newAddress != address(communityVote)) {
+            //set new community vote
+            address oldAddress = address(communityVote);
+            communityVote = CommunityVote(newAddress);
+
+            //emit event
+            emit ChangeCommunityVoteEvent(oldAddress, newAddress);
+        }
     }
 
     //

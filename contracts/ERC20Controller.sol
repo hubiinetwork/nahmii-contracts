@@ -34,9 +34,7 @@ contract ERC20Controller is CurrencyController {
         emit CurrencyTransferred(from, to, amount, currency, 0);
     }
 
-    /**
-    @notice MUST be called with DELEGATECALL
-    */
+    /// @notice MUST be called with DELEGATECALL
     function approve(address to, uint256 amount, address currency, uint256 currencyId) public {
         require(msg.sender != address(0));
         require(amount > 0);
@@ -45,9 +43,7 @@ contract ERC20Controller is CurrencyController {
         require(ERC20(currency).approve(to, amount));
     }
 
-    /**
-    @notice MUST be called with DELEGATECALL
-    */
+    /// @notice MUST be called with DELEGATECALL
     function send(address to, uint256 amount, address currency, uint256 currencyId) public {
         require(msg.sender != address(0));
         require(amount > 0);

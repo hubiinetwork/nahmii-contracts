@@ -32,13 +32,9 @@ contract CurrencyController {
 
     function receive(address from, address to, uint256 amount, address currency, uint256 currencyId) public;
 
-    /**
-    @notice MUST be called with DELEGATECALL
-    */
+    /// @notice MUST be called with DELEGATECALL
     function approve(address to, uint256 amount, address currency, uint256 currencyId) public;
 
-    /**
-    @notice MUST be called with DELEGATECALL
-    */
+    /// @notice MUST be called with DELEGATECALL
     function send(address to, uint256 amount, address currency, uint256 currencyId) public;
 }

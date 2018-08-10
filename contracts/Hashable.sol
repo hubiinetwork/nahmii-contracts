@@ -7,10 +7,8 @@
  */
 
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {Hasher} from "./Hasher.sol";
 import {Types} from "./Types.sol";
 
@@ -18,8 +16,7 @@ import {Types} from "./Types.sol";
 @title Hashable
 @notice An ownable that has a hasher property
 */
-contract Hashable is Ownable, Modifiable {
-
+contract Hashable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -28,17 +25,18 @@ contract Hashable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeHasherEvent(Hasher oldHasher, Hasher newHasher);
+    event ChangeHasherEvent(address oldHasher, address newHasher);
 
     /// @notice Change the hasher contract
     /// @param newHasher The (address of) Hasher contract instance
-    function changeHasher(Hasher newHasher)
-    public
-    onlyOwner
-    notNullAddress(newHasher)
-    {
-        Hasher oldHasher = hasher;
-        hasher = newHasher;
-        emit ChangeHasherEvent(oldHasher, hasher);
+    function changeHasher(address newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != address(hasher)) {
+            //set new hasher
+            address oldAddress = address(hasher);
+            hasher = Hasher(newAddress);
+
+            //emit event
+            emit ChangeHasherEvent(oldAddress, newAddress);
+        }
     }
 }

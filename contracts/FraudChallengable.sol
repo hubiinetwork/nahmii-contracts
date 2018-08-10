@@ -9,7 +9,6 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
@@ -17,8 +16,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title FraudChallengable
 @notice An ownable that has a fraud challenge property
 */
-contract FraudChallengable is Ownable, Modifiable, SelfDestructible {
-
+contract FraudChallengable is Ownable, SelfDestructible {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -33,17 +31,21 @@ contract FraudChallengable is Ownable, Modifiable, SelfDestructible {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
+    event ChangeFraudChallengeEvent(address oldAddress, address newAddress);
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the fraudChallenge contract
-    /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge)
-    public
-    onlyOwner
-    notNullAddress(newFraudChallenge)
-    {
-        FraudChallenge oldFraudChallenge = fraudChallenge;
-        fraudChallenge = newFraudChallenge;
-        emit ChangeFraudChallengeEvent(oldFraudChallenge, fraudChallenge);
+    /// @param newAddress The (address of) FraudChallenge contract instance
+    function changeFraudChallenge(address newAddress) public onlyOwner notNullAddress(newFraudChallenge) {
+        if (newAddress != address(fraudChallenge)) {
+            //set new fraud challenge
+            address oldAddress = address(fraudChallenge);
+            fraudChallenge = FraudChallenge(newAddress);
+
+            //emit event
+            emit ChangeFraudChallengeEvent(oldAddress, newAddress);
+        }
     }
 }

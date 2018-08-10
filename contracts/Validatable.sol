@@ -7,10 +7,8 @@
  */
 
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {Validator} from "./Validator.sol";
 import {Types} from "./Types.sol";
 
@@ -18,8 +16,7 @@ import {Types} from "./Types.sol";
 @title Validatable
 @notice An ownable that has a validator property
 */
-contract Validatable is Ownable, Modifiable {
-
+contract Validatable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -28,21 +25,22 @@ contract Validatable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
+    event ChangeValidatorEvent(address oldAddress, address newAddress);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the validator contract
     /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(Validator newValidator)
-    public
-    onlyOwner
-    notNullAddress(newValidator)
-    {
-        Validator oldValidator = validator;
-        validator = newValidator;
-        emit ChangeValidatorEvent(oldValidator, validator);
+    function changeValidator(address newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != address(validator)) {
+            //set new validator
+            address oldAddress = address(validator);
+            validator = Validator(newAddress);
+
+            //emit event
+            emit ChangeValidatorEvent(oldAddress, newAddress);
+        }
     }
 
     //

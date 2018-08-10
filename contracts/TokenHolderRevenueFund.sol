@@ -73,8 +73,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
    //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RevenueTokenChangedEvent(address oldAddress, address newAddress);
-    event CurrencyManagerChangedEvent(address oldAddress, address newAddress);
+    event ChangeRevenueTokenEvent(address oldAddress, address newAddress);
+    event ChangeCurrencyManagerEvent(address oldAddress, address newAddress);
     event DepositEvent(address from, int256 amount, address currency, uint256 currencyId); //currency==0 for ethers
     event WithdrawEvent(address to, int256 amount, address currency, uint256 currencyId);  //currency==0 for ethers
     event CloseAccrualPeriodEvent();
@@ -89,29 +89,29 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setRevenueTokenAddress(address newAddress) public onlyOwner notNullAddress(newAddress) {
+    /// @notice Change the revenue token contract
+    /// @param newAddress The (address of) RevenueToken contract instance
+    function changeRevenueToken(address newAddress) public onlyOwner notNullAddress(newAddress) {
         if (newAddress != address(revenueToken)) {
-            address oldAddress;
-
-            //set new revenue token address
-            oldAddress = revenueToken;
+            //set new revenue token
+            address oldAddress = address(revenueToken);
             revenueToken = RevenueToken(newAddress);
 
             //emit event
-            emit RevenueTokenChangedEvent(oldAddress, newAddress);
+            emit ChangeRevenueTokenEvent(oldAddress, newAddress);
         }
     }
 
-    function setCurrencyManagerAddress(address newAddress) public onlyOwner notNullAddress(newAddress) {
+    /// @notice Change the currency manager contract
+    /// @param newAddress The (address of) CurrencyManager contract instance
+    function changeCurrencyManager(address newAddress) public onlyOwner notNullAddress(newAddress) {
         if (newAddress != address(currencyManager)) {
-            address oldAddress;
-
-            //set new currency manager address
-            oldAddress = currencyManager;
+            //set new currency manager
+            address oldAddress = address(currencyManager);
             currencyManager = CurrencyManager(newAddress);
 
             //emit event
-            emit CurrencyManagerChangedEvent(oldAddress, newAddress);
+            emit ChangeCurrencyManagerEvent(oldAddress, newAddress);
         }
     }
 
@@ -265,39 +265,26 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Withdrawal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function withdrawEthers(int256 amount) public {
-        require(amount.isNonZeroPositiveInt256());
-
-        amount = amount.clampMax(walletMap[msg.sender].staged.get(address(0), 0));
-        if (amount <= 0)
-            return;
-
-        //subtract to per-wallet staged balance (will check for sufficient balance)
-        walletMap[msg.sender].staged.sub(amount, address(0), 0);
-        walletMap[msg.sender].txHistory.addWithdrawal(amount, address(0), 0);
-
-        //execute transfer
-        msg.sender.transfer(uint256(amount));
-
-        //emit event
-        emit WithdrawEvent(msg.sender, amount, address(0), 0);
-    }
-
-    function withdrawTokens(int256 amount, address currency, uint256 currencyId) public notNullAddress(currency) {
+    function withdraw(int256 amount, address currency, uint256 currencyId) public notOwner {
         require(amount.isNonZeroPositiveInt256());
 
         amount = amount.clampMax(walletMap[msg.sender].staged.get(currency, currencyId));
         if (amount <= 0)
             return;
 
-        //subtract to per-wallet staged balance (will check for sufficient balance)
+        //subtract to per-wallet staged balance
         walletMap[msg.sender].staged.sub(amount, currency, currencyId);
         walletMap[msg.sender].txHistory.addWithdrawal(amount, currency, currencyId);
 
         //execute transfer
-        CurrencyController controller = currencyManager.getCurrencyController(currency, "");
-        if (!address(controller).delegatecall(controller.send_signature, msg.sender, uint256(amount), currency, currencyId)) {
-            revert();
+        if (currency == address(0)) {
+            msg.sender.transfer(uint256(amount));
+        }
+        else {
+            CurrencyController controller = currencyManager.getCurrencyController(currency, "");
+            if (!address(controller).delegatecall(controller.send_signature, msg.sender, uint256(amount), currency, currencyId)) {
+                revert();
+            }
         }
 
         //emit event

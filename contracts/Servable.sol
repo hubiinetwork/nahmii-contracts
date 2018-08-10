@@ -9,14 +9,12 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 
 /**
 @title Servable
 @notice An ownable that contains registered services and their actions
 */
-contract Servable is Ownable, Modifiable {
-
+contract Servable is Ownable {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------

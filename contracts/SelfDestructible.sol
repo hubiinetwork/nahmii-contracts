@@ -15,7 +15,6 @@ import {Ownable} from "./Ownable.sol";
 @notice Contract that allows for self-destruction
 */
 contract SelfDestructible is Ownable {
-
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
