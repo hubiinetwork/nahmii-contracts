@@ -25,18 +25,29 @@ contract Hashable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeHasherEvent(address oldHasher, address newHasher);
+    event ChangeHasherEvent(Hasher oldHasher, Hasher newHasher);
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the hasher contract
-    /// @param newHasher The (address of) Hasher contract instance
-    function changeHasher(address newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != address(hasher)) {
+    /// @param newAddress The (address of) Hasher contract instance
+    function changeHasher(Hasher newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != hasher) {
             //set new hasher
-            address oldAddress = address(hasher);
-            hasher = Hasher(newAddress);
+            Hasher oldAddress = hasher;
+            hasher = newAddress;
 
             //emit event
             emit ChangeHasherEvent(oldAddress, newAddress);
         }
+    }
+
+    //
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
+    modifier hasherInitialized() {
+        require(hasher != address(0));
+        _;
     }
 }

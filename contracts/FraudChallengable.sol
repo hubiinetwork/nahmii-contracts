@@ -31,21 +31,29 @@ contract FraudChallengable is Ownable, SelfDestructible {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeFraudChallengeEvent(address oldAddress, address newAddress);
+    event ChangeFraudChallengeEvent(FraudChallenge oldAddress, FraudChallenge newAddress);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the fraudChallenge contract
     /// @param newAddress The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(address newAddress) public onlyOwner notNullAddress(newFraudChallenge) {
-        if (newAddress != address(fraudChallenge)) {
+    function changeFraudChallenge(FraudChallenge newAddress) public onlyOwner notNullAddress(newFraudChallenge) {
+        if (newAddress != fraudChallenge) {
             //set new fraud challenge
-            address oldAddress = address(fraudChallenge);
-            fraudChallenge = FraudChallenge(newAddress);
+            FraudChallenge oldAddress = fraudChallenge;
+            fraudChallenge = newAddress;
 
             //emit event
             emit ChangeFraudChallengeEvent(oldAddress, newAddress);
         }
+    }
+
+    //
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
+    modifier fraudChallengeInitialized() {
+        require(fraudChallenge != address(0));
+        _;
     }
 }

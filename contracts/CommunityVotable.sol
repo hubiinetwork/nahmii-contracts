@@ -6,7 +6,6 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {CommunityVote} from "./CommunityVote.sol";
@@ -26,7 +25,7 @@ contract CommunityVotable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeCommunityVoteEvent(address oldAddress, address newAddress);
+    event ChangeCommunityVoteEvent(CommunityVote oldAddress, CommunityVote newAddress);
 
     //
     // Functions
@@ -38,13 +37,13 @@ contract CommunityVotable is Ownable {
 
     /// @notice Change the community vote contract
     /// @param newAddress The (address of) CommunityVote contract instance
-    function changeCommunityVote(address newAddress) public onlyOwner notNullAddress(newAddress) {
+    function changeCommunityVote(CommunityVote newAddress) public onlyOwner notNullAddress(newAddress) {
         require(!communityVoteUpdateDisabled);
 
-        if (newAddress != address(communityVote)) {
+        if (newAddress != communityVote) {
             //set new community vote
-            address oldAddress = address(communityVote);
-            communityVote = CommunityVote(newAddress);
+            CommunityVote oldAddress = communityVote;
+            communityVote = newAddress;
 
             //emit event
             emit ChangeCommunityVoteEvent(oldAddress, newAddress);

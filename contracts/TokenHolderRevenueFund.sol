@@ -73,8 +73,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
    //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeRevenueTokenEvent(address oldAddress, address newAddress);
-    event ChangeCurrencyManagerEvent(address oldAddress, address newAddress);
+    event ChangeRevenueTokenEvent(RevenueToken oldAddress, RevenueToken newAddress);
+    event ChangeCurrencyManagerEvent(CurrencyManager oldAddress, CurrencyManager newAddress);
     event DepositEvent(address from, int256 amount, address currency, uint256 currencyId); //currency==0 for ethers
     event WithdrawEvent(address to, int256 amount, address currency, uint256 currencyId);  //currency==0 for ethers
     event CloseAccrualPeriodEvent();
@@ -91,11 +91,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the revenue token contract
     /// @param newAddress The (address of) RevenueToken contract instance
-    function changeRevenueToken(address newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != address(revenueToken)) {
+    function changeRevenueToken(RevenueToken newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != revenueToken) {
             //set new revenue token
-            address oldAddress = address(revenueToken);
-            revenueToken = RevenueToken(newAddress);
+            RevenueToken oldAddress = revenueToken;
+            revenueToken = newAddress;
 
             //emit event
             emit ChangeRevenueTokenEvent(oldAddress, newAddress);
@@ -104,11 +104,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
 
     /// @notice Change the currency manager contract
     /// @param newAddress The (address of) CurrencyManager contract instance
-    function changeCurrencyManager(address newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != address(currencyManager)) {
+    function changeCurrencyManager(CurrencyManager newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != currencyManager) {
             //set new currency manager
-            address oldAddress = address(currencyManager);
-            currencyManager = CurrencyManager(newAddress);
+            CurrencyManager oldAddress = currencyManager;
+            currencyManager = newAddress;
 
             //emit event
             emit ChangeCurrencyManagerEvent(oldAddress, newAddress);
@@ -302,13 +302,13 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
+    modifier revenueTokenInitialized() {
+        require(revenueToken != address(0));
         _;
     }
 
-    modifier notMySelfAddress(address _address) {
-        require(_address != address(this));
+    modifier currencyManagerInitialized() {
+        require(currencyManager != address(0));
         _;
     }
 }

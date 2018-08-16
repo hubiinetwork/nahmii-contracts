@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
@@ -24,7 +23,7 @@ import {TxHistoryLib} from "./TxHistoryLib.sol";
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 */
-contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, AuthorizableServable, SelfDestructible {
+contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, SelfDestructible {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -61,7 +60,7 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeCurrencyManagerEvent(address oldAddress, address newAddress);
+    event ChangeCurrencyManagerEvent(CurrencyManager oldAddress, CurrencyManager newAddress);
 
     event DepositEvent(address from, int256 amount, address currency, uint256 currencyId); //currency==0 for ethers
     event WithdrawEvent(address to, int256 amount, address currency, uint256 currencyId);  //currency==0 for ethers
@@ -84,11 +83,11 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
 
     /// @notice Change the currency manager contract
     /// @param newAddress The (address of) CurrencyManager contract instance
-    function changeCurrencyManager(address newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != address(currencyManager)) {
+    function changeCurrencyManager(CurrencyManager newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != currencyManager) {
             //set new currency manager
-            address oldAddress = address(currencyManager);
-            currencyManager = CurrencyManager(newAddress);
+            CurrencyManager oldAddress = currencyManager;
+            currencyManager = newAddress;
 
             //emit event
             emit ChangeCurrencyManagerEvent(oldAddress, newAddress);
@@ -279,7 +278,7 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
             }
 
             //transfer funds to the beneficiary
-            _beneficiary.depositTokensTo(destWallet, amount, currency);
+            _beneficiary.depositTokensTo(destWallet, amount, currency, currencyId);
         }
     }
 
@@ -356,5 +355,14 @@ contract ClientFund is Ownable, Modifiable, Beneficiary, Benefactor, Authorizabl
 
     function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
         return walletMap[wallet].txHistory.withdrawalCount();
+    }
+
+
+    //
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
+    modifier currencyManagerInitialized() {
+        require(currencyManager != address(0));
+        _;
     }
 }

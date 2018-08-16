@@ -7,7 +7,6 @@
  */
 
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {ClientFund} from "./ClientFund.sol";
@@ -33,11 +32,11 @@ contract ClientFundable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the client fund contract
     /// @param newAddress The (address of) ClientFund contract instance
-    function changeClientFund(address newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != address(clientFund)) {
+    function changeClientFund(ClientFund newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != clientFund) {
             //set new community vote
-            address oldAddress = address(clientFund);
-            communityVote = ClientFund(newAddress);
+            ClientFund oldAddress = clientFund;
+            clientFund = newAddress;
 
             //emit event
             emit ChangeClientFundEvent(oldAddress, newAddress);
