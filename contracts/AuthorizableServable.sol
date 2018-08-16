@@ -15,7 +15,6 @@ import {Servable} from "./Servable.sol";
 @notice A servable that may be authorized and unauthorized
 */
 contract AuthorizableServable is Servable {
-
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

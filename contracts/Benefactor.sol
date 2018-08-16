@@ -19,7 +19,7 @@ contract Benefactor is Ownable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     address[] internal beneficiaries;
-    mapping(address => bool) internal beneficiaryRegisteredMap;
+    mapping(address => uint256) internal beneficiariesMap;
 
     //
     // Events
@@ -31,11 +31,11 @@ contract Benefactor is Ownable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function registerBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
-        if (beneficiaryRegisteredMap[beneficiary])
+        if (beneficiariesMap[beneficiary] > 0)
             return false;
 
         beneficiaries.push(beneficiary);
-        beneficiaryRegisteredMap[beneficiary] = true;
+        beneficiariesMap[beneficiary] = beneficiaries.length;
 
         //raise event
         emit RegisterBeneficiaryEvent(beneficiary);
@@ -44,10 +44,24 @@ contract Benefactor is Ownable {
     }
 
     function deregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
-        if (!beneficiaryRegisteredMap[beneficiary])
+        if (beneficiariesMap[beneficiary] == 0)
             return false;
 
-        beneficiaryRegisteredMap[beneficiary] = false;
+        uint256 idx = beneficiariesMap[beneficiary] - 1;
+        if (idx < beneficiaries.length - 1) {
+            //remap the last item in the array to this index
+            beneficiaries[idx] = beneficiaries[beneficiaries.length - 1];
+            beneficiariesMap[beneficiaries[idx]] = idx + 1;
+
+            //delete the last item in the array
+            delete beneficiaries[beneficiaries.length - 1];
+        }
+        else {
+            //it is the last item in the array
+            delete beneficiaries[idx];
+        }
+        beneficiaries.length--;
+        beneficiariesMap[beneficiary] = 0;
 
         //raise event
         emit DeregisterBeneficiaryEvent(beneficiary);
@@ -56,14 +70,6 @@ contract Benefactor is Ownable {
     }
 
     function isRegisteredBeneficiary(address beneficiary) public view returns (bool) {
-        return beneficiaryRegisteredMap[beneficiary];
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
+        return beneficiariesMap[beneficiary] > 0;
     }
 }

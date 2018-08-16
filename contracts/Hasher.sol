@@ -18,7 +18,6 @@ import {Types} from "./Types.sol";
 @notice Contract that hashes types in Types contract
 */
 contract Hasher is Ownable, SelfDestructible {
-
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------

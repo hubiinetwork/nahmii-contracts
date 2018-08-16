@@ -15,6 +15,6 @@ pragma solidity ^0.4.24;
 contract Beneficiary {
     function depositEthersTo(address wallet) public payable;
 
-    //NOTE: 'wallet' must call ERC20.approve first
-    function depositTokensTo(address wallet, int256 amount, address token) public;
+    //NOTE: 'wallet' must call currency's approve first
+    function depositTokensTo(address wallet, int256 amount, address currency, uint256 currencyId) public;
 }

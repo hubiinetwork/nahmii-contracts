@@ -13,7 +13,6 @@ pragma solidity ^0.4.24;
  * @dev       Data types of order, trade, payment and more
  */
 library Types {
-
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------

@@ -6,18 +6,15 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {CommunityVote} from "./CommunityVote.sol";
 
 /**
 @title CommunityVotable
 @notice An ownable that has a community vote property
 */
-contract CommunityVotable is Ownable, Modifiable {
-
+contract CommunityVotable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -28,7 +25,7 @@ contract CommunityVotable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
+    event ChangeCommunityVoteEvent(CommunityVote oldAddress, CommunityVote newAddress);
 
     //
     // Functions
@@ -39,16 +36,18 @@ contract CommunityVotable is Ownable, Modifiable {
     }
 
     /// @notice Change the community vote contract
-    /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote)
-    public
-    onlyOwner
-    notNullAddress(newCommunityVote)
-    {
+    /// @param newAddress The (address of) CommunityVote contract instance
+    function changeCommunityVote(CommunityVote newAddress) public onlyOwner notNullAddress(newAddress) {
         require(!communityVoteUpdateDisabled);
-        CommunityVote oldCommunityVote = communityVote;
-        communityVote = newCommunityVote;
-        emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
+
+        if (newAddress != communityVote) {
+            //set new community vote
+            CommunityVote oldAddress = communityVote;
+            communityVote = newAddress;
+
+            //emit event
+            emit ChangeCommunityVoteEvent(oldAddress, newAddress);
+        }
     }
 
     //

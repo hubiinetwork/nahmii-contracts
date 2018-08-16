@@ -8,14 +8,14 @@
 
 pragma solidity ^0.4.24;
 
-import {TokenController} from "./TokenController.sol";
+import {CurrencyController} from "./CurrencyController.sol";
 import "./ERC20.sol";
 
 /**
 @title ERC20Controller
 @notice Handles transfers of an ERC20 token
 */
-contract ERC20Controller is TokenController {
+contract ERC20Controller is CurrencyController {
     function isTyped() public view returns(bool) {
         return false;
     }
@@ -24,28 +24,36 @@ contract ERC20Controller is TokenController {
         return true;
     }
 
-    function receive(address token, address from, address to, uint256 amount, uint256 id) public {
+    function receive(address from, address to, uint256 amount, address currency, uint256 currencyId) public {
         require(amount > 0);
-        require(id == 0);
+        require(currencyId == 0);
 
-        ERC20 erc20 = ERC20(token);
-        require(erc20.transferFrom(from, to, uint256(amount)));
+        require(ERC20(currency).transferFrom(from, to, amount));
 
         //raise event
-        emit TokenTransferred(token, from, to, amount, 0);
+        emit CurrencyTransferred(from, to, amount, currency, 0);
     }
 
-    function send(address token, address to, uint256 amount, uint256 id) public {
+    /// @notice MUST be called with DELEGATECALL
+    function approve(address to, uint256 amount, address currency, uint256 currencyId) public {
         require(msg.sender != address(0));
         require(amount > 0);
-        require(id == 0);
+        require(currencyId == 0);
 
-        ERC20 erc20 = ERC20(token);
-        require(erc20.approve(to, amount));
-        require(erc20.transferFrom(msg.sender, to, amount));
+        require(ERC20(currency).approve(to, amount));
+    }
+
+    /// @notice MUST be called with DELEGATECALL
+    function send(address to, uint256 amount, address currency, uint256 currencyId) public {
+        require(msg.sender != address(0));
+        require(amount > 0);
+        require(currencyId == 0);
+
+        require(ERC20(currency).approve(to, amount));
+        require(ERC20(currency).transferFrom(msg.sender, to, amount));
 
         //raise event
-        emit TokenTransferred(token, msg.sender, to, amount, 0);
+        emit CurrencyTransferred(msg.sender, to, amount, currency, 0);
     }
 }
 

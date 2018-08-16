@@ -15,13 +15,18 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {RevenueToken} from "./RevenueToken.sol";
-import {ERC20} from "./ERC20.sol";
+import {CurrencyManager} from "./CurrencyManager.sol";
+import {CurrencyController} from "./CurrencyController.sol";
+import {BalanceLib} from "./BalanceLib.sol";
+import {TxHistoryLib} from "./TxHistoryLib.sol";
 
 /**
 @title TokenHolderRevenueFund
 @notice Fund that manages the revenue earned by revenue token holders.
 */
 contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDestructible {
+    using BalanceLib for BalanceLib.Balance;
+    using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -33,58 +38,47 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct DepositInfo {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
+    struct AccrualItem {
+        address currency;
+        uint256 currencyId;
     }
 
-    struct WithdrawalInfo {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
-    }
+    struct Wallet {
+        BalanceLib.Balance staged;
 
-    struct WalletInfo {
-        DepositInfo[] deposits;
-        WithdrawalInfo[] withdrawals;
-
-        // Staged balance of ethers and tokens.
-        int256 stagedEtherBalance;
-        mapping(address => int256) stagedTokenBalance;
+        TxHistoryLib.TxHistory txHistory;
 
         // Claim accrual tracking
-        uint256[] etherClaimAccrualBlockNumbers;
-        mapping(address => uint256[]) tokenClaimAccrualBlockNumbers;
+        mapping(address => mapping(uint256 => uint256[])) claimAccrualBlockNumbers;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address private revenueToken;
+    CurrencyManager private currencyManager;
+    RevenueToken private revenueToken;
 
-    int256 periodAccrualEtherBalance;
-    mapping(address => int256) periodAccrualTokenBalance;
-    address[] periodAccrualTokenList;
-    mapping(address => bool) periodAccrualTokenListMap;
+    BalanceLib.Balance periodAccrual;
+    AccrualItem[] periodAccrualList;
+    mapping(address => mapping(uint256 => bool)) periodAccrualMap;
 
-    int256 aggregateAccrualEtherBalance;
-    mapping(address => int256) aggregateAccrualTokenBalance;
-    address[] aggregateAccrualTokenList;
-    mapping(address => bool) aggregateAccrualTokenListMap;
+    BalanceLib.Balance aggregateAccrual;
+    AccrualItem[] aggregateAccrualList;
+    mapping(address => mapping(uint256 => bool)) aggregateAccrualMap;
 
-    mapping(address => WalletInfo) private walletInfoMap;
+    mapping(address => Wallet) private walletMap;
 
     uint256[] accrualBlockNumbers;
 
-    //
+   //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RevenueTokenChangedEvent(address oldOwner, address newOwner);
-    event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
-    event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
+    event ChangeRevenueTokenEvent(RevenueToken oldAddress, RevenueToken newAddress);
+    event ChangeCurrencyManagerEvent(CurrencyManager oldAddress, CurrencyManager newAddress);
+    event DepositEvent(address from, int256 amount, address currency, uint256 currencyId); //currency==0 for ethers
+    event WithdrawEvent(address to, int256 amount, address currency, uint256 currencyId);  //currency==0 for ethers
     event CloseAccrualPeriodEvent();
-    event ClaimAccrualEvent(address from, address token);  //token==0 for ethers
+    event ClaimAccrualEvent(address from, address currency, uint256 currencyId);  //currency==0 for ethers
 
     //
     // Constructor
@@ -95,16 +89,29 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setRevenueTokenAddress(address newAddress) public onlyOwner notNullAddress(newAddress) {
-        address oldAddress;
-
+    /// @notice Change the revenue token contract
+    /// @param newAddress The (address of) RevenueToken contract instance
+    function changeRevenueToken(RevenueToken newAddress) public onlyOwner notNullAddress(newAddress) {
         if (newAddress != revenueToken) {
-            // Set new revenue token address
-            oldAddress = revenueToken;
+            //set new revenue token
+            RevenueToken oldAddress = revenueToken;
             revenueToken = newAddress;
 
-            // Emit event
-            emit RevenueTokenChangedEvent(oldAddress, newAddress);
+            //emit event
+            emit ChangeRevenueTokenEvent(oldAddress, newAddress);
+        }
+    }
+
+    /// @notice Change the currency manager contract
+    /// @param newAddress The (address of) CurrencyManager contract instance
+    function changeCurrencyManager(CurrencyManager newAddress) public onlyOwner notNullAddress(newAddress) {
+        if (newAddress != currencyManager) {
+            //set new currency manager
+            CurrencyManager oldAddress = currencyManager;
+            currencyManager = newAddress;
+
+            //emit event
+            emit ChangeCurrencyManagerEvent(oldAddress, newAddress);
         }
     }
 
@@ -119,79 +126,71 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
         //add to balances
-        periodAccrualEtherBalance = periodAccrualEtherBalance.add_nn(amount);
-
-        aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add_nn(amount);
+        periodAccrual.add(amount, address(0), 0);
+        aggregateAccrual.add(amount, address(0), 0);
 
         //add deposit info
-        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
+        walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
         //emit event
-        emit DepositEvent(wallet, amount, address(0));
+        emit DepositEvent(wallet, amount, address(0), 0);
     }
 
-    function depositTokens(address token, int256 amount) public {
-        depositTokensTo(msg.sender, amount, token);
+    function depositTokens(int256 amount, address currency, uint256 currencyId, string standard) public {
+        depositTokensTo(msg.sender, amount, currency, currencyId, standard);
     }
 
-    //NOTE: msg.sender must call ERC20.approve first
-    function depositTokensTo(address wallet, int256 amount, address token) public {
-        ERC20 erc20_token;
-
-        require(token != address(0));
+    function depositTokensTo(address wallet, int256 amount, address currency, uint256 currencyId, string standard) public {
         require(amount.isNonZeroPositiveInt256());
 
-        //try to execute token transfer
-        erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
+        //execute transfer
+        CurrencyController controller = currencyManager.getCurrencyController(currency, standard);
+        controller.receive(msg.sender, this, uint256(amount), currency, currencyId);
 
         //add to balances
-        periodAccrualTokenBalance[token] = periodAccrualTokenBalance[token].add_nn(amount);
-        if (!periodAccrualTokenListMap[token]) {
-            periodAccrualTokenListMap[token] = true;
-            periodAccrualTokenList.push(token);
+        periodAccrual.add(amount, currency, currencyId);
+        aggregateAccrual.add(amount, currency, currencyId);
+
+        //add currency to in-use list
+        if (!periodAccrualMap[currency][currencyId]) {
+            periodAccrualMap[currency][currencyId] = true;
+            periodAccrualList.push(AccrualItem(currency, currencyId));
         }
 
-        aggregateAccrualTokenBalance[token] = aggregateAccrualTokenBalance[token].add_nn(amount);
-        if (!aggregateAccrualTokenListMap[token]) {
-            aggregateAccrualTokenListMap[token] = true;
-            aggregateAccrualTokenList.push(token);
+        if (!aggregateAccrualMap[currency][currencyId]) {
+            aggregateAccrualMap[currency][currencyId] = true;
+            aggregateAccrualList.push(AccrualItem(currency, currencyId));
         }
 
         //add deposit info
-        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, token));
+        walletMap[wallet].txHistory.addDeposit(amount, currency, currencyId);
 
         //emit event
-        emit DepositEvent(wallet, amount, token);
+        emit DepositEvent(wallet, amount, currency, currencyId);
     }
 
-    function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
-        require(index < walletInfoMap[wallet].deposits.length);
-
-        amount = walletInfoMap[wallet].deposits[index].amount;
-        timestamp = walletInfoMap[wallet].deposits[index].timestamp;
-        token = walletInfoMap[wallet].deposits[index].token;
+    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
+        return walletMap[wallet].txHistory.deposit(index);
     }
 
-    function depositCount(address wallet) public view onlyOwner returns (uint256) {
-        return walletInfoMap[wallet].deposits.length;
+    function depositCount(address wallet) public view returns (uint256) {
+        return walletMap[wallet].txHistory.depositCount();
     }
 
     //
-    // Balance functions
+    // Balance retrieval functions
     // -----------------------------------------------------------------------------------------------------------------
-    function periodAccrualBalance(address token) public view returns (int256) {
-        return token == address(0) ? periodAccrualEtherBalance : periodAccrualTokenBalance[token];
+    function periodAccrualBalance(address currency, uint256 currencyId) public view returns (int256) {
+        return periodAccrual.get(currency, currencyId);
     }
 
-    function aggregateAccrualBalance(address token) public view returns (int256) {
-        return token == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token];
+    function aggregateAccrualBalance(address currency, uint256 currencyId) public view returns (int256) {
+        return aggregateAccrual.get(currency, currencyId);
     }
 
-    function stagedBalance(address wallet, address token) public view returns (int256) {
-        require(wallet != address(0));
-
-        return token == address(0) ? walletInfoMap[wallet].stagedEtherBalance : walletInfoMap[wallet].stagedTokenBalance[token];
+    function stagedBalance(address wallet, address currency, uint256 currencyId) public view returns (int256) {
+        //require(wallet != address(0));
+        return walletMap[wallet].staged.get(currency, currencyId);
     }
 
     //
@@ -199,34 +198,33 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     // -----------------------------------------------------------------------------------------------------------------
     function closeAccrualPeriod() public onlyOwnerOrEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
         uint256 i;
+        uint256 len;
 
         //register this block
         accrualBlockNumbers.push(block.number);
 
         //clear accruals
-        periodAccrualEtherBalance = 0;
-        for (i = 0; i < periodAccrualTokenList.length; i++) {
-            periodAccrualTokenBalance[periodAccrualTokenList[i]] = 0;
+        len = periodAccrualList.length;
+        for (i = 0; i < len; i++) {
+            AccrualItem storage item = periodAccrualList[i];
+            periodAccrual.set(0, item.currency, item.currencyId);
         }
 
         //raise event
         emit CloseAccrualPeriodEvent();
     }
 
-    function claimAccrual(address token) public {
-        RevenueToken revenue_token;
+    function claimAccrual(address currency, uint256 currencyId) public {
         int256 balance;
         int256 amount;
         int256 fraction;
         int256 bb;
         uint256 bn_low;
         uint256 bn_up;
-        uint256 len;
 
-        require(revenueToken != address(0));
-        revenue_token = RevenueToken(revenueToken);
+        require(address(revenueToken) != address(0));
 
-        balance = (token == address(0)) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token];
+        balance = aggregateAccrual.get(currency, currencyId);
         require(balance.isNonZeroPositiveInt256());
 
         // lower bound = last accrual block number claimed for currency c by msg.sender OR 0
@@ -235,31 +233,18 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
         require(accrualBlockNumbers.length > 0);
         bn_up = accrualBlockNumbers[accrualBlockNumbers.length - 1];
 
-        if (token == address(0)) {
-            len = walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers.length;
-            if (len == 0) {
-                bn_low = 0;
-                // no block numbers for claimed accruals yet
-            }
-            else {
-                bn_low = walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers[len - 1];
-            }
+        uint256[] storage claimAccrualBlockNumbers = walletMap[msg.sender].claimAccrualBlockNumbers[currency][currencyId];
+        if (claimAccrualBlockNumbers.length == 0) {
+            bn_low = 0; //no block numbers for claimed accruals yet
         }
         else {
-            len = walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[token].length;
-            if (len == 0) {
-                bn_low = 0;
-                // no block numbers for claimed accruals yet
-            }
-            else {
-                bn_low = walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[token][len - 1];
-            }
+            bn_low = claimAccrualBlockNumbers[claimAccrualBlockNumbers.length - 1];
         }
 
         require(bn_low != bn_up);
         // avoid division by 0
 
-        bb = int256(revenue_token.balanceBlocksIn(msg.sender, bn_low, bn_up));
+        bb = int256(revenueToken.balanceBlocksIn(msg.sender, bn_low, bn_up));
 
         fraction = bb.mul_nn(1e18).mul_nn(balance).div_nn(balance.mul_nn(int256(bn_up.sub(bn_low))).mul_nn(1e18));
         amount = fraction.mul_nn(balance).div_nn(1e18);
@@ -267,91 +252,63 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
             return;
 
         // Move calculated amount a of currency c from aggregate active balance of currency c to msg.sender’s staged balance of currency c
-        if (token == address(0)) {
-            aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.sub_nn(amount);
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add_nn(amount);
-        } else {
-            aggregateAccrualTokenBalance[token] = aggregateAccrualTokenBalance[token].sub_nn(amount);
-            walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount);
-        }
+        aggregateAccrual.sub(amount, currency, currencyId);
+        walletMap[msg.sender].staged.add(amount, currency, currencyId);
 
         // Store upper bound as the last claimed accrual block number for currency
-        if (token == address(0)) {
-            walletInfoMap[msg.sender].etherClaimAccrualBlockNumbers.push(bn_up);
-        }
-        else {
-            walletInfoMap[msg.sender].tokenClaimAccrualBlockNumbers[token].push(bn_up);
-        }
+        claimAccrualBlockNumbers.push(bn_up);
 
         //raise event
-        emit ClaimAccrualEvent(msg.sender, token);
+        emit ClaimAccrualEvent(msg.sender, currency, currencyId);
     }
 
     //
     // Withdrawal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function withdrawEthers(int256 amount) public {
+    function withdraw(int256 amount, address currency, uint256 currencyId) public notOwner {
         require(amount.isNonZeroPositiveInt256());
 
-        amount = amount.clampMax(walletInfoMap[msg.sender].stagedEtherBalance);
+        amount = amount.clampMax(walletMap[msg.sender].staged.get(currency, currencyId));
         if (amount <= 0)
             return;
 
         //subtract to per-wallet staged balance
-        walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub_nn(amount);
-        walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, address(0)));
+        walletMap[msg.sender].staged.sub(amount, currency, currencyId);
+        walletMap[msg.sender].txHistory.addWithdrawal(amount, currency, currencyId);
 
         //execute transfer
-        msg.sender.transfer(uint256(amount));
+        if (currency == address(0)) {
+            msg.sender.transfer(uint256(amount));
+        }
+        else {
+            CurrencyController controller = currencyManager.getCurrencyController(currency, "");
+            if (!address(controller).delegatecall(controller.send_signature, msg.sender, uint256(amount), currency, currencyId)) {
+                revert();
+            }
+        }
 
         //emit event
-        emit WithdrawEvent(msg.sender, amount, address(0));
+        emit WithdrawEvent(msg.sender, amount, currency, currencyId);
     }
 
-    function withdrawTokens(int256 amount, address token) public {
-        ERC20 erc20_token;
-
-        require(token != address(0));
-        require(amount.isNonZeroPositiveInt256());
-
-        amount = amount.clampMax(walletInfoMap[msg.sender].stagedTokenBalance[token]);
-        if (amount <= 0)
-            return;
-
-        //subtract to per-wallet staged balance
-        walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub_nn(amount);
-        walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, token));
-
-        //execute transfer
-        erc20_token = ERC20(token);
-        erc20_token.transfer(msg.sender, uint256(amount));
-
-        //emit event
-        emit WithdrawEvent(msg.sender, amount, token);
-    }
-
-    function withdrawal(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
-        require(index < walletInfoMap[wallet].withdrawals.length);
-
-        amount = walletInfoMap[wallet].withdrawals[index].amount;
-        timestamp = walletInfoMap[wallet].withdrawals[index].timestamp;
-        token = walletInfoMap[wallet].withdrawals[index].token;
+    function withdrawal(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token, uint256 id) {
+        return walletMap[wallet].txHistory.withdrawal(index);
     }
 
     function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
-        return walletInfoMap[wallet].withdrawals.length;
+        return walletMap[wallet].txHistory.withdrawalCount();
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
+    modifier revenueTokenInitialized() {
+        require(revenueToken != address(0));
         _;
     }
 
-    modifier notMySelfAddress(address _address) {
-        require(_address != address(this));
+    modifier currencyManagerInitialized() {
+        require(currencyManager != address(0));
         _;
     }
 }

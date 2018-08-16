@@ -12,7 +12,6 @@ pragma solidity ^0.4.24;
 @notice A contract with basic modifiers
 */
 contract Modifiable {
-
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------

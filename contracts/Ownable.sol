@@ -8,11 +8,12 @@
 
 pragma solidity ^0.4.24;
 
+import {Modifiable} from "./Modifiable.sol";
 /**
 @title Ownable
 @notice A contract that has an owner property
 */
-contract Ownable {
+contract Ownable is Modifiable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -38,18 +39,13 @@ contract Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the owner of this contract
     /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner) public onlyOwner {
-        address oldOwner;
-
-        require(newOwner != address(0));
-        require(newOwner != address(this));
-
+    function changeOwner(address newOwner) public onlyOwner notNullOrThisAddress(newOwner) {
         if (newOwner != owner) {
-            // Set new owner
-            oldOwner = owner;
+            //set new owner
+            address oldOwner = owner;
             owner = newOwner;
 
-            // Emit event
+            //emit event
             emit ChangeOwnerEvent(oldOwner, newOwner);
         }
     }

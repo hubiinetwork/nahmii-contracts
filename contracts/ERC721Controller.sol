@@ -8,14 +8,14 @@
 
 pragma solidity ^0.4.24;
 
-import {TokenController} from "./TokenController.sol";
+import {CurrencyController} from "./CurrencyController.sol";
 import "./ERC721.sol";
 
 /**
 @title ERC721Controller
 @notice Handles transfers of an ERC721 token
 */
-contract ERC721Controller is TokenController {
+contract ERC721Controller is CurrencyController {
     function isTyped() public view returns (bool) {
         return true;
     }
@@ -24,27 +24,35 @@ contract ERC721Controller is TokenController {
         return false;
     }
 
-    function receive(address token, address from, address to, uint256 amount, uint256 id) public {
+    function receive(address from, address to, uint256 amount, address currency, uint256 currencyId) public {
         require(amount == 1);
-        require(id != 0);
+        require(currencyId != 0);
 
-        ERC721 erc721 = ERC721(token);
-        erc721.safeTransferFrom(from, to, id);
+        ERC721(currency).safeTransferFrom(from, to, currencyId);
 
         //raise event
-        emit TokenTransferred(token, from, to, 1, id);
+        emit CurrencyTransferred(from, to, 1, currency, currencyId);
     }
 
-    function send(address token, address to, uint256 amount, uint256 id) public {
+    /// @notice MUST be called with DELEGATECALL
+    function approve(address to, uint256 amount, address currency, uint256 currencyId) public {
         require(msg.sender != address(0));
         require(amount == 1);
-        require(id != 0);
+        require(currencyId != 0);
 
-        ERC721 erc721 = ERC721(token);
-        erc721.approve(to, id);
-        erc721.safeTransferFrom(msg.sender, to, id);
+        ERC721(currency).approve(to, currencyId);
+    }
+
+    /// @notice MUST be called with DELEGATECALL
+    function send(address to, uint256 amount, address currency, uint256 currencyId) public {
+        require(msg.sender != address(0));
+        require(amount == 1);
+        require(currencyId != 0);
+
+        ERC721(currency).approve(to, currencyId);
+        ERC721(currency).safeTransferFrom(msg.sender, to, currencyId);
 
         //raise event
-        emit TokenTransferred(token, msg.sender, to, 1, id);
+        emit CurrencyTransferred(msg.sender, to, 1, currency, currencyId);
     }
 }
