@@ -56,10 +56,11 @@ contract UnitTestHelpers is AccrualBeneficiary {
     //
     // Helper for ClientFunds SC
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO Update to two-component currency descriptor
     function callToUpdateSettledBalance_CLIENTFUND(address clientFund, address wallet, int256 amount, address token) public {
         require(clientFund != address(0));
         ClientFund sc = ClientFund(clientFund);
-        sc.updateSettledBalance(wallet, token, amount);
+        sc.updateSettledBalance(wallet, amount, token, 0);
     }
 
     //    function callToWithdrawFromDepositedBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
@@ -121,10 +122,11 @@ contract UnitTestHelpers is AccrualBeneficiary {
     //
     // Helpers for TokenHolderRevenueFund SC
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO Update to two-component currency descriptor
     function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund, address token, int256 amount) public {
         require(tokenHolderRevenueFund != address(0));
         TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFund);
-        sc.depositTokens(token, amount);
+        sc.depositTokens(amount, token, 0, '');
     }
 
     function callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund) public {
