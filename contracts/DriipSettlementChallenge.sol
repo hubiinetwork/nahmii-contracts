@@ -22,7 +22,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title DriipSettlementChallenge
 @notice Where driip settlements are challenged
 */
-contract DriipSettlementChallenge is Ownable, Modifiable, Configurable, Validatable, SelfDestructible {
+contract DriipSettlementChallenge is Ownable, Configurable, Validatable, SelfDestructible {
     using SafeMathInt for int256;
 
     //

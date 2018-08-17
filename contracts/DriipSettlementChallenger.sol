@@ -25,7 +25,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title DriipSettlementChallenger
 @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
-contract DriipSettlementChallenger is Ownable, Modifiable, Configurable, Validatable, SecurityBondable, SelfDestructible {
+contract DriipSettlementChallenger is Ownable, Configurable, Validatable, SecurityBondable, SelfDestructible {
     using SafeMathInt for int256;
 
     //

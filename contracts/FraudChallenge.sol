@@ -19,7 +19,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
+contract FraudChallenge is Ownable, Servable, SelfDestructible {
 
     //
     // Variables
