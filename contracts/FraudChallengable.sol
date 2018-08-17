@@ -38,7 +38,7 @@ contract FraudChallengable is Ownable, SelfDestructible {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the fraudChallenge contract
     /// @param newAddress The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newAddress) public onlyOwner notNullAddress(newFraudChallenge) {
+    function changeFraudChallenge(FraudChallenge newAddress) public onlyOwner notNullAddress(newAddress) {
         if (newAddress != fraudChallenge) {
             //set new fraud challenge
             FraudChallenge oldAddress = fraudChallenge;
