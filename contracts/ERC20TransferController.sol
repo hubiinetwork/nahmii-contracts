@@ -8,19 +8,19 @@
 
 pragma solidity ^0.4.24;
 
-import {CurrencyController} from "./CurrencyController.sol";
-import "./ERC20.sol";
+import {TransferController} from "./TransferController.sol";
+import {ERC20} from "./ERC20.sol";
 
 /**
-@title ERC20Controller
-@notice Handles transfers of an ERC20 token
+@title ERC20TransferController
+@notice Handles transfers of ERC20 tokens
 */
-contract ERC20Controller is CurrencyController {
-    function isTyped() public view returns(bool) {
+contract ERC20TransferController is TransferController {
+    function isTyped() public view returns (bool) {
         return false;
     }
 
-    function isQuantifiable() public view returns(bool) {
+    function isQuantifiable() public view returns (bool) {
         return true;
     }
 

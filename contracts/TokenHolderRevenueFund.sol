@@ -15,8 +15,8 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {RevenueToken} from "./RevenueToken.sol";
-import {CurrencyManager} from "./CurrencyManager.sol";
-import {CurrencyController} from "./CurrencyController.sol";
+import {TransferControllerManager} from "./TransferControllerManager.sol";
+import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 
@@ -55,7 +55,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    CurrencyManager private currencyManager;
+    TransferControllerManager private transferControllerManager;
     RevenueToken private revenueToken;
 
     BalanceLib.Balance periodAccrual;
@@ -73,10 +73,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
    //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeRevenueTokenEvent(RevenueToken oldAddress, RevenueToken newAddress);
-    event ChangeCurrencyManagerEvent(CurrencyManager oldAddress, CurrencyManager newAddress);
-    event DepositEvent(address from, int256 amount, address currency, uint256 currencyId); //currency==0 for ethers
-    event WithdrawEvent(address to, int256 amount, address currency, uint256 currencyId);  //currency==0 for ethers
+    event ChangeRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
+    event ChangeTransferControllerManagerEvent(TransferControllerManager oldTransferControllerManager,
+        TransferControllerManager newTransferControllerManager);
+    event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId); //currencyCt==0 for ethers
+    event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);  //currencyCt==0 for ethers
     event CloseAccrualPeriodEvent();
     event ClaimAccrualEvent(address from, address currency, uint256 currencyId);  //currency==0 for ethers
 
@@ -144,8 +145,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
-        CurrencyController controller = currencyManager.getCurrencyController(currency, standard);
-        controller.receive(msg.sender, this, uint256(amount), currency, currencyId);
+        TransferController controller = transferControllerManager.getTransferController(currencyCt, standard);
+        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
 
         //add to balances
         periodAccrual.add(amount, currency, currencyId);
@@ -281,8 +282,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
             msg.sender.transfer(uint256(amount));
         }
         else {
-            CurrencyController controller = currencyManager.getCurrencyController(currency, "");
-            if (!address(controller).delegatecall(controller.send_signature, msg.sender, uint256(amount), currency, currencyId)) {
+            TransferController controller = transferControllerManager.getTransferController(currencyCt, standard);
+            if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(amount), currencyCt, currencyId)) {
                 revert();
             }
         }

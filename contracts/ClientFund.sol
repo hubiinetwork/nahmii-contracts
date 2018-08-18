@@ -14,8 +14,8 @@ import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
-import {CurrencyManager} from "./CurrencyManager.sol";
-import {CurrencyController} from "./CurrencyController.sol";
+import {TransferControllerManager} from "./TransferControllerManager.sol";
+import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 
@@ -52,7 +52,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => Wallet) private walletMap;
 
-    CurrencyManager private currencyManager;
+    TransferControllerManager private transferControllerManager;
 
     mapping(address => uint256) private registeredServicesMap;
     mapping(address => mapping(address => bool)) private disabledServicesMap;
@@ -82,16 +82,18 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     }
 
     /// @notice Change the currency manager contract
-    /// @param newAddress The (address of) CurrencyManager contract instance
-    function changeCurrencyManager(CurrencyManager newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != currencyManager) {
-            //set new currency manager
-            CurrencyManager oldAddress = currencyManager;
-            currencyManager = newAddress;
+    /// @param newTransferControllerManager The (address of) TransferControllerManager contract instance
+    function changeTransferControllerManager(TransferControllerManager newTransferControllerManager) public
+    onlyOwner
+    notNullAddress(newTransferControllerManager)
+    notSameAddresses(newTransferControllerManager, transferControllerManager)
+    {
+        //set new currency manager
+        TransferControllerManager oldTransferControllerManager = transferControllerManager;
+        transferControllerManager = newTransferControllerManager;
 
-            //emit event
-            emit ChangeCurrencyManagerEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit ChangeTransferControllerManagerEvent(oldTransferControllerManager, newTransferControllerManager);
     }
 
     //
@@ -120,8 +122,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
-        CurrencyController controller = currencyManager.getCurrencyController(currency, standard);
-        controller.receive(msg.sender, this, uint256(amount), currency, currencyId);
+        TransferController controller = transferControllerManager.getTransferController(currencyCt, standard);
+        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
 
         //add to per-wallet deposited balance
         walletMap[wallet].deposited.add(amount, currency, currencyId);
@@ -265,8 +267,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         }
         else {
             //execute transfer
-            CurrencyController controller = currencyManager.getCurrencyController(currency, "");
-            if (!address(controller).delegatecall(controller.approve_signature, _beneficiary, uint256(amountCopy), currency, currencyId)) {
+            TransferController controller = transferControllerManager.getTransferController(currencyCt, "");
+            if (!address(controller).delegatecall(controller.APPROVE_SIGNATURE, beneficiary, uint256(amountCopy), currencyCt, currencyId))
                 revert();
             }
 
@@ -345,8 +347,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
             msg.sender.transfer(uint256(amount));
         }
         else {
-            CurrencyController controller = currencyManager.getCurrencyController(currency, "");
-            if (!address(controller).delegatecall(controller.send_signature, msg.sender, uint256(amount), currency, currencyId)) {
+            TransferController controller = transferControllerManager.getTransferController(currencyCt, standard);
+            if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(amount), currencyCt, currencyId))
                 revert();
             }
         }
@@ -367,8 +369,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier currencyManagerInitialized() {
-        require(currencyManager != address(0));
+    modifier transferControllerManagerInitialized() {
+        require(transferControllerManager != address(0));
         _;
     }
 }

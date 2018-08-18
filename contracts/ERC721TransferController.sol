@@ -8,14 +8,14 @@
 
 pragma solidity ^0.4.24;
 
-import {CurrencyController} from "./CurrencyController.sol";
-import "./ERC721.sol";
+import {TransferController} from "./TransferController.sol";
+import {ERC721} from "./ERC721.sol";
 
 /**
-@title ERC721Controller
-@notice Handles transfers of an ERC721 token
+@title ERC721TransferController
+@notice Handles transfers of ERC721 tokens
 */
-contract ERC721Controller is CurrencyController {
+contract ERC721TransferController is TransferController {
     function isTyped() public view returns (bool) {
         return true;
     }
