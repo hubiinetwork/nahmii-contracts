@@ -24,36 +24,36 @@ contract ERC20TransferController is TransferController {
         return true;
     }
 
-    function receive(address from, address to, uint256 amount, address currency, uint256 currencyId) public {
+    function receive(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public {
         require(amount > 0);
         require(currencyId == 0);
 
-        require(ERC20(currency).transferFrom(from, to, amount));
+        require(ERC20(currencyCt).transferFrom(from, to, amount));
 
         //raise event
-        emit CurrencyTransferred(from, to, amount, currency, 0);
+        emit CurrencyTransferred(from, to, amount, currencyCt, 0);
     }
 
     /// @notice MUST be called with DELEGATECALL
-    function approve(address to, uint256 amount, address currency, uint256 currencyId) public {
+    function approve(address to, uint256 amount, address currencyCt, uint256 currencyId) public {
         require(msg.sender != address(0));
         require(amount > 0);
         require(currencyId == 0);
 
-        require(ERC20(currency).approve(to, amount));
+        require(ERC20(currencyCt).approve(to, amount));
     }
 
     /// @notice MUST be called with DELEGATECALL
-    function send(address to, uint256 amount, address currency, uint256 currencyId) public {
+    function send(address to, uint256 amount, address currencyCt, uint256 currencyId) public {
         require(msg.sender != address(0));
         require(amount > 0);
         require(currencyId == 0);
 
-        require(ERC20(currency).approve(to, amount));
-        require(ERC20(currency).transferFrom(msg.sender, to, amount));
+        require(ERC20(currencyCt).approve(to, amount));
+        require(ERC20(currencyCt).transferFrom(msg.sender, to, amount));
 
         //raise event
-        emit CurrencyTransferred(msg.sender, to, amount, currency, 0);
+        emit CurrencyTransferred(msg.sender, to, amount, currencyCt, 0);
     }
 }
 
