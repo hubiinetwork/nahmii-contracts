@@ -22,6 +22,7 @@ import {ERC20} from "./ERC20.sol";
  accrual beneficiaries. There will likely be 2 instances of this smart contract, one for revenue from trades
  and one for revenue from payments.
 */
+// TODO Update to two-component currency descriptor
 contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
@@ -129,7 +130,6 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
     //
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Update to two-component currency descriptor
     function closeAccrualPeriod() public onlyOwner {
         uint256 idx;
         uint256 tokidx;
@@ -189,7 +189,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
                         tokenContract.approve(beneficiaryAddress, transferable);
 
                         beneficiary = AccrualBeneficiary(beneficiaryAddress);
-                        beneficiary.depositTokensTo(address(0), int256(transferable), token, 0);
+                        beneficiary.depositTokensTo(address(0), int256(transferable), token, 0, "");
 
                         remaining = remaining.sub(transferable);
                     }

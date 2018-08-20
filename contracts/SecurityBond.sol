@@ -20,6 +20,7 @@ import {ERC20} from "./ERC20.sol";
 @title SecurityBond
 @notice Fund that contains crypto incentive for challenging operator fraud.
 */
+// TODO Update to two-component currency descriptor
 contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible {
     using SafeMathInt for int256;
 
