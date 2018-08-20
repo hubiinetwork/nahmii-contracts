@@ -19,6 +19,7 @@ import {Beneficiary} from "./Beneficiary.sol";
 @title PartnerFund
 @notice XXXX
 */
+// TODO Update to two-component currency descriptor
 contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
     using SafeMathInt for int256;
 
@@ -131,9 +132,11 @@ contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
             //partner trying to change address, verify access
             require(walletInfoMap[tag].canChangeAddress);
 
-            require(oldWallet != address(0) && msg.sender == oldWallet); //only the address owner can change it
+            require(oldWallet != address(0) && msg.sender == oldWallet);
+            //only the address owner can change it
 
-            require(newWallet != address(0)); //partners are not allowed to unlink the tag
+            require(newWallet != address(0));
+            //partners are not allowed to unlink the tag
         }
 
         //proceed with the change
