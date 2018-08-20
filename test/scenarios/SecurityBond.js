@@ -3,7 +3,7 @@ var Helpers = require('../helpers');
 module.exports = function (glob) {
 	var testCounter = Helpers.TestCounter();
 
-	describe("SecurityBond", function () {
+	describe.skip("SecurityBond", function () {
 		it(testCounter.next() + ": MUST FAIL [payable]: cannot be called with 0 ethers", async() => {
 			try {
 				await web3.eth.sendTransactionPromise({
