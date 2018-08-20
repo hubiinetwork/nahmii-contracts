@@ -28,7 +28,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title Exchange
 @notice The orchestrator of driip settlements
 */
-contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
+contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -159,6 +159,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
     /// @param wallet The wallet whose side of the trade is to be settled
+    // TODO Update to two-component currency descriptor
     function settleDriipAsTrade(Types.Trade trade, address wallet)
     public
     validatorInitialized
@@ -207,14 +208,14 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
 
             // If wallet has previously settled with higher driip nonce with any of the concerned currencies then don't settle currency balances
             if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended] < trade.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, trade.currencies.intended, party.netFees.intended);
-                clientFund.updateSettledBalance(wallet, trade.currencies.intended, party.balances.intended.current);
+                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, party.netFees.intended, trade.currencies.intended, 0);
+                clientFund.updateSettledBalance(wallet, party.balances.intended.current, trade.currencies.intended, 0);
                 walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended] = trade.nonce;
             }
 
             if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate] < trade.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, trade.currencies.conjugate, party.netFees.conjugate);
-                clientFund.updateSettledBalance(wallet, trade.currencies.conjugate, party.balances.conjugate.current);
+                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, party.netFees.conjugate, trade.currencies.conjugate, 0);
+                clientFund.updateSettledBalance(wallet, party.balances.conjugate.current, trade.currencies.conjugate, 0);
                 walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate] = trade.nonce;
             }
 
@@ -232,6 +233,7 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
     /// @param wallet The wallet whose side of the payment is to be settled
+    // TODO Update to two-component currency descriptor
     function settleDriipAsPayment(Types.Payment payment, address wallet)
     public
     validatorInitialized
@@ -280,8 +282,8 @@ contract Exchange is Ownable, Modifiable, Configurable, Validatable, ClientFunda
 
             // If wallet has previously settled with higher driip nonce with the currency, then don't settle the balance
             if (walletCurrencyMaxDriipNonce[wallet][payment.currency] < payment.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, paymentsRevenueFund, payment.currency, party.netFee);
-                clientFund.updateSettledBalance(wallet, payment.currency, party.balances.current);
+                clientFund.stageToBeneficiaryUntargeted(wallet, paymentsRevenueFund, party.netFee, payment.currency, 0);
+                clientFund.updateSettledBalance(wallet, party.balances.current, payment.currency, 0);
                 walletCurrencyMaxDriipNonce[wallet][payment.currency] = payment.nonce;
             }
 

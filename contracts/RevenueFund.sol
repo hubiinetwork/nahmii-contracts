@@ -129,13 +129,14 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
     //
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO Update to two-component currency descriptor
     function closeAccrualPeriod() public onlyOwner {
         uint256 idx;
         uint256 tokidx;
         uint256 remaining;
         address beneficiaryAddress;
         AccrualBeneficiary beneficiary;
-        uint256 to_transfer;
+        uint256 transferable;
         address token;
 
         require(totalBeneficiaryFraction == PARTS_PER);
@@ -149,15 +150,15 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
                 continue;
 
             if (getBeneficiaryFraction(beneficiaryAddress) > 0) {
-                to_transfer = uint256(periodAccrualEtherBalance).mul(getBeneficiaryFraction(beneficiaryAddress)).div(PARTS_PER);
-                if (to_transfer > remaining)
-                    to_transfer = remaining;
+                transferable = uint256(periodAccrualEtherBalance).mul(getBeneficiaryFraction(beneficiaryAddress)).div(PARTS_PER);
+                if (transferable > remaining)
+                    transferable = remaining;
 
-                if (to_transfer > 0) {
+                if (transferable > 0) {
                     beneficiary = AccrualBeneficiary(beneficiaryAddress);
-                    beneficiary.depositEthersTo.value(to_transfer)(address(0));
+                    beneficiary.depositEthersTo.value(transferable)(address(0));
 
-                    remaining = remaining.sub(to_transfer);
+                    remaining = remaining.sub(transferable);
                 }
             }
         }
@@ -177,20 +178,20 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
 
                 if (getBeneficiaryFraction(beneficiaryAddress) > 0) {
 
-                    to_transfer = uint256(periodAccrualTokenBalance[token])
+                    transferable = uint256(periodAccrualTokenBalance[token])
                     .mul(getBeneficiaryFraction(beneficiaryAddress))
                     .div(PARTS_PER);
-                    if (to_transfer > remaining)
-                        to_transfer = remaining;
+                    if (transferable > remaining)
+                        transferable = remaining;
 
-                    if (to_transfer > 0) {
+                    if (transferable > 0) {
                         ERC20 tokenContract = ERC20(token);
-                        tokenContract.approve(beneficiaryAddress, to_transfer);
+                        tokenContract.approve(beneficiaryAddress, transferable);
 
                         beneficiary = AccrualBeneficiary(beneficiaryAddress);
-                        beneficiary.depositTokensTo(address(0), int256(to_transfer), token);
+                        beneficiary.depositTokensTo(address(0), int256(transferable), token, 0);
 
-                        remaining = remaining.sub(to_transfer);
+                        remaining = remaining.sub(transferable);
                     }
                 }
             }
