@@ -262,45 +262,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         emit StageToBeneficiaryUntargetedEvent(sourceWallet, beneficiary, amount, currencyCt, currencyId);
     }
 
-    function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
-        int256 amount, address currencyCt, uint256 currencyId) private {
-
-        int256 amountCopy;
-
-        require(amount.isPositiveInt256());
-        require(isRegisteredBeneficiary(beneficiary));
-
-        //clamp amount to move
-        amount = amount.clampMax(sumDepositedAndSettledBalancesOfWalletAndCurrency(sourceWallet, currencyCt, currencyId));
-        if (amount <= 0)
-            return;
-
-        amountCopy = amount;
-
-        //first move from settled to staged if settled balance is positive
-        if (walletMap[sourceWallet].settled.get(currencyCt, currencyId) > 0) {
-            walletMap[sourceWallet].settled.sub_allow_neg(walletMap[sourceWallet].settled.get(currencyCt, currencyId), currencyCt, currencyId);
-            amount = amount.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId));
-        }
-
-        //move the remaining from deposited to staged
-        if (amount > 0)
-            walletMap[sourceWallet].deposited.sub(amount, currencyCt, currencyId);
-
-        //transfer funds to the beneficiary
-        if (currencyCt == address(0))
-            beneficiary.depositEthersTo.value(uint256(amountCopy))(destWallet);
-        else {
-            //execute transfer
-            TransferController controller = transferControllerManager.getTransferController(currencyCt, "");
-            if (!address(controller).delegatecall(controller.APPROVE_SIGNATURE, beneficiary, uint256(amountCopy), currencyCt, currencyId))
-                revert();
-
-            //transfer funds to the beneficiary
-            beneficiary.depositTokensTo(destWallet, amount, currencyCt, currencyId, "");
-        }
-    }
-
     //
     // Seizing function
     // -----------------------------------------------------------------------------------------------------------------
@@ -337,23 +298,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
 
         //emit event
         emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
-    }
-
-    function sumDepositedAndSettledBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private view returns (int256){
-        return walletMap[wallet].deposited.get(currencyCt, currencyId)
-        .add(walletMap[wallet].settled.get(currencyCt, currencyId));
-    }
-
-    function sumAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private view returns (int256){
-        return walletMap[wallet].deposited.get(currencyCt, currencyId)
-        .add(walletMap[wallet].settled.get(currencyCt, currencyId))
-        .add(walletMap[wallet].staged.get(currencyCt, currencyId));
-    }
-
-    function zeroAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private {
-        walletMap[wallet].deposited.set(0, currencyCt, currencyId);
-        walletMap[wallet].settled.set(0, currencyCt, currencyId);
-        walletMap[wallet].staged.set(0, currencyCt, currencyId);
     }
 
     //
@@ -393,6 +337,66 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
 
     function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
         return walletMap[wallet].txHistory.withdrawalCount();
+    }
+
+    //
+    // Private functions
+    //
+    // -----------------------------------------------------------------------------------------------------------------
+    function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
+        int256 amount, address currencyCt, uint256 currencyId) private {
+
+        int256 amountCopy;
+
+        require(amount.isPositiveInt256());
+        require(isRegisteredBeneficiary(beneficiary));
+
+        //clamp amount to move
+        amount = amount.clampMax(sumDepositedAndSettledBalancesOfWalletAndCurrency(sourceWallet, currencyCt, currencyId));
+        if (amount <= 0)
+            return;
+
+        amountCopy = amount;
+
+        //first move from settled to staged if settled balance is positive
+        if (walletMap[sourceWallet].settled.get(currencyCt, currencyId) > 0) {
+            walletMap[sourceWallet].settled.sub_allow_neg(walletMap[sourceWallet].settled.get(currencyCt, currencyId), currencyCt, currencyId);
+            amount = amount.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId));
+        }
+
+        //move the remaining from deposited to staged
+        if (amount > 0)
+            walletMap[sourceWallet].deposited.sub(amount, currencyCt, currencyId);
+
+        //transfer funds to the beneficiary
+        if (currencyCt == address(0))
+            beneficiary.depositEthersTo.value(uint256(amountCopy))(destWallet);
+        else {
+            //execute transfer
+            TransferController controller = transferControllerManager.getTransferController(currencyCt, "");
+            if (!address(controller).delegatecall(controller.APPROVE_SIGNATURE, beneficiary, uint256(amountCopy), currencyCt, currencyId))
+                revert();
+
+            //transfer funds to the beneficiary
+            beneficiary.depositTokensTo(destWallet, amount, currencyCt, currencyId, "");
+        }
+    }
+
+    function sumDepositedAndSettledBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private view returns (int256){
+        return walletMap[wallet].deposited.get(currencyCt, currencyId)
+        .add(walletMap[wallet].settled.get(currencyCt, currencyId));
+    }
+
+    function sumAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private view returns (int256){
+        return walletMap[wallet].deposited.get(currencyCt, currencyId)
+        .add(walletMap[wallet].settled.get(currencyCt, currencyId))
+        .add(walletMap[wallet].staged.get(currencyCt, currencyId));
+    }
+
+    function zeroAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private {
+        walletMap[wallet].deposited.set(0, currencyCt, currencyId);
+        walletMap[wallet].settled.set(0, currencyCt, currencyId);
+        walletMap[wallet].staged.set(0, currencyCt, currencyId);
     }
 
     //
