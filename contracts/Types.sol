@@ -29,6 +29,30 @@ library Types {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
+    struct Currency {
+        address smartContract;
+        uint256 id;
+    }
+
+    struct IntendedConjugateCurrency {
+        Currency intended;
+        Currency conjugate;
+    }
+
+    struct Valuable {
+        Currency currency;
+        int256 amount;
+    }
+
+    struct SingleValuableNetValuables {
+        Valuable single;
+        Valuable[] net;
+    }
+
+    struct NetValuables {
+        Valuable[] net;
+    }
+
     struct CurrentPreviousInt256 {
         int256 current;
         int256 previous;
@@ -49,23 +73,12 @@ library Types {
         SingleNetInt256 conjugate;
     }
 
-    struct IntendedConjugateAddress {
-        address intended;
-        address conjugate;
-    }
-
-    struct IntendedConjugateInt256 {
-        int256 intended;
-        int256 conjugate;
-    }
-
     struct WalletExchangeHashes {
         bytes32 wallet;
         bytes32 exchange;
     }
 
     struct TradeOrder {
-        int256 amount;
         WalletExchangeHashes hashes;
         CurrentPreviousInt256 residuals;
     }
@@ -87,21 +100,26 @@ library Types {
     }
 
     struct TradeParty {
-        address wallet;
         uint256 nonce;
+        address wallet;
+
         uint256 rollingVolume;
+
         LiquidityRole liquidityRole;
+
         TradeOrder order;
+
         IntendedConjugateCurrentPreviousInt256 balances;
-        IntendedConjugateInt256 netFees;
+
+        SingleValuableNetValuables fees;
     }
 
     struct Trade {
         uint256 nonce;
-        int256 amount;
-        int256 rate;
 
-        IntendedConjugateAddress currencies;
+        int256 amount;
+        IntendedConjugateCurrency currencies;
+        int256 rate;
 
         TradeParty buyer;
         TradeParty seller;
@@ -110,32 +128,39 @@ library Types {
         // Positive conjugate transfer is always in direction from buyer to seller
         IntendedConjugateSingleNetInt256 transfers;
 
-        IntendedConjugateInt256 singleFees;
-
         Seal seal;
         uint256 blockNumber;
     }
 
-    struct PaymentParty {
-        address wallet;
+    struct PaymentSenderParty {
         uint256 nonce;
+        address wallet;
+
         CurrentPreviousInt256 balances;
-        int256 netFee;
+
+        SingleValuableNetValuables fees;
+    }
+
+    struct PaymentRecipientParty {
+        uint256 nonce;
+        address wallet;
+
+        CurrentPreviousInt256 balances;
+
+        NetValuables fees;
     }
 
     struct Payment {
         uint256 nonce;
+
         int256 amount;
+        Currency currency;
 
-        address currency;
-
-        PaymentParty sender;
-        PaymentParty recipient;
+        PaymentSenderParty sender;
+        PaymentRecipientParty recipient;
 
         // Positive transfer is always in direction from sender to recipient
         SingleNetInt256 transfers;
-
-        int256 singleFee;
 
         WalletExchangeSeals seals;
         uint256 blockNumber;
@@ -143,10 +168,10 @@ library Types {
 
     struct OrderPlacement {
         Intention intention;
-        int256 amount;
-        int256 rate;
 
-        IntendedConjugateAddress currencies;
+        int256 amount;
+        IntendedConjugateCurrency currencies;
+        int256 rate;
 
         CurrentPreviousInt256 residuals;
     }
@@ -154,7 +179,9 @@ library Types {
     struct Order {
         uint256 nonce;
         address wallet;
+
         OrderPlacement placement;
+
         WalletExchangeSeals seals;
         uint256 blockNumber;
     }

@@ -124,8 +124,11 @@ contract Hasher is Ownable, SelfDestructible {
                 trade.buyer.balances.intended.previous,
                 trade.buyer.balances.conjugate.current,
                 trade.buyer.balances.conjugate.previous,
-                trade.buyer.netFees.intended,
-                trade.buyer.netFees.conjugate
+                trade.buyer.fees.single.amount,
+                trade.buyer.fees.single.currency.ct,
+                trade.buyer.fees.single.currency.id
+            // TODO Consider adding dynamic size 'trade.buyer.fees.net' to hash
+            // trade.buyer.fees.net
             ));
     }
 
@@ -142,8 +145,11 @@ contract Hasher is Ownable, SelfDestructible {
                 trade.seller.balances.intended.previous,
                 trade.seller.balances.conjugate.current,
                 trade.seller.balances.conjugate.previous,
-                trade.seller.netFees.intended,
-                trade.seller.netFees.conjugate
+                trade.seller.fees.single.amount,
+                trade.seller.fees.single.currency.ct,
+                trade.seller.fees.single.currency.id
+            // TODO Consider adding dynamic size 'trade.seller.fees.net' to hash
+            // trade.seller.fees.net
             ));
     }
 
@@ -173,7 +179,9 @@ contract Hasher is Ownable, SelfDestructible {
                 payment.sender.wallet,
                 payment.sender.balances.current,
                 payment.sender.balances.previous,
-                payment.sender.netFee
+                payment.sender.fees.single.amount,
+                payment.sender.fees.single.currency.ct,
+                payment.sender.fees.single.currency.id
             ));
     }
 
