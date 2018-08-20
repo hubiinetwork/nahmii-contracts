@@ -30,4 +30,9 @@ contract Modifiable {
         require(_address != address(this));
         _;
     }
+
+    modifier notSameAddresses(address _address1, address _address2) {
+        if (_address1 != _address2)
+            _;
+    }
 }

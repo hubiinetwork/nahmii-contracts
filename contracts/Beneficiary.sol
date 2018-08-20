@@ -16,5 +16,5 @@ contract Beneficiary {
     function depositEthersTo(address wallet) public payable;
 
     //NOTE: 'wallet' must call currency's approve first
-    function depositTokensTo(address wallet, int256 amount, address currency, uint256 currencyId, string standard) public;
+    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public;
 }
