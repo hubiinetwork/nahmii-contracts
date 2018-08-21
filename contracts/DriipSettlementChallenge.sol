@@ -260,6 +260,13 @@ contract DriipSettlementChallenge is Ownable, Configurable, Validatable, SelfDes
         walletChallengeMap[wallet] = challenge;
     }
 
+    function resetWalletChallenge(address wallet) public onlyDriipSettlementChallenger {
+        walletChallengeMap[wallet].result = Types.ChallengeResult.Qualified;
+        walletChallengeMap[wallet].candidateType = DriipSettlementChallenge.ChallengeCandidateType.None;
+        walletChallengeMap[wallet].candidateIndex = 0;
+        walletChallengeMap[wallet].challenger = address(0);
+    }
+
     function getWalletChallengeTrade(address wallet, uint256 driipIndex) public view onlyDriipSettlementChallenger returns (Types.Trade) {
         return walletChallengedTradesMap[wallet][driipIndex];
     }

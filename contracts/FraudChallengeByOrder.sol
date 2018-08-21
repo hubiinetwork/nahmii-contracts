@@ -56,8 +56,9 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Vali
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentOrder(order);
 
-        (address stakeCurrency, int256 stakeAmount) = configuration.getFalseWalletSignatureStake();
-        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+        (int256 stakeAmount, address stakeCurrencyCt, /*uint256 stakeCurrencyId*/) = configuration.getFalseWalletSignatureStake();
+        // TODO Update call with stageCurrencyId argument
+        securityBond.stage(stakeAmount, stakeCurrencyCt, msg.sender);
 
         emit ChallengeByOrderEvent(order, msg.sender);
     }

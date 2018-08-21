@@ -139,11 +139,12 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
         return isGenuinePaymentWalletSeal(payment) && isGenuinePaymentExchangeSeal(payment, exchange);
     }
 
+    // TODO Update with payment.currency.id in calls to configuration
     function isGenuinePaymentFee(Types.Payment payment) public view returns (bool) {
         int256 feePartsPer = int256(configuration.getPartsPer());
-        return (payment.singleFee <= payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency, payment.blockNumber, 0)).div(feePartsPer))
-        && (payment.singleFee == payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency, payment.blockNumber, payment.amount)).div(feePartsPer))
-        && (payment.singleFee >= payment.amount.mul(configuration.getCurrencyPaymentMinimumFee(payment.currency, payment.blockNumber)).div(feePartsPer));
+        return (payment.singleFee <= payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency, 0, payment.blockNumber, 0)).div(feePartsPer))
+        && (payment.singleFee == payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency, 0, payment.blockNumber, payment.amount)).div(feePartsPer))
+        && (payment.singleFee >= payment.amount.mul(configuration.getCurrencyPaymentMinimumFee(payment.currency, 0, payment.blockNumber)).div(feePartsPer));
     }
 
     function isGenuinePaymentSender(Types.Payment payment) public pure returns (bool) {

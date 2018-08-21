@@ -9,7 +9,7 @@ chai.should();
 
 module.exports = (glob) => {
     describe('Configuration', () => {
-        let web3Configuration;
+        let web3Configuration, ethersConfiguration;
         let provider, blockNumberAhead, blockNumberBehind;
         const feeUpdates = {
             tradeMakerFee: 0,
@@ -22,6 +22,7 @@ module.exports = (glob) => {
 
         before(async () => {
             web3Configuration = glob.web3Configuration;
+            ethersConfiguration = glob.ethersIoConfiguration;
             provider = glob.signer_owner.provider;
         });
 
@@ -276,35 +277,45 @@ module.exports = (glob) => {
         });
 
         describe('getCurrencyPaymentFee()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             beforeEach(async () => {
                 await web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
-                await web3Configuration.setCurrencyPaymentFee(currency, blockNumberAhead, 2e15, [1, 10], [1e17, 2e17]);
+                await web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumberAhead, 2e15, [1, 10], [1e17, 2e17]);
             });
 
             describe('if called with non-existent currency', () => {
-                it('should get the currency agnostic value', async () => {
-                    const value = await web3Configuration.getCurrencyPaymentFee.call(Wallet.createRandom().address, blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e15);
+                describe('if called with non-existent currency contract', () => {
+                    it('should get the currency agnostic value', async () => {
+                        const value = await web3Configuration.getCurrencyPaymentFee.call(Wallet.createRandom().address, currencyId, blockNumberAhead, 0);
+                        value.toNumber().should.equal(1e15);
+                    });
+                });
+
+                describe('if called with non-existent currency ID', () => {
+                    it('should get the currency agnostic value', async () => {
+                        const value = await web3Configuration.getCurrencyPaymentFee.call(currencyCt, 1, blockNumberAhead, 0);
+                        value.toNumber().should.equal(1e15);
+                    });
                 });
             });
 
             describe('if called with existent currency', () => {
                 describe('if called with non-existent discount key', () => {
                     it('should get the nominal value', async () => {
-                        const value = await web3Configuration.getCurrencyPaymentFee.call(currency, blockNumberAhead, 0);
+                        const value = await web3Configuration.getCurrencyPaymentFee.call(currencyCt, currencyId, blockNumberAhead, 0);
                         value.toNumber().should.equal(2e15);
                     });
                 });
 
                 describe('if called with existent discount key', () => {
                     it('should get the discounted value', async () => {
-                        const value = await web3Configuration.getCurrencyPaymentFee.call(currency, blockNumberAhead, 1);
+                        const value = await web3Configuration.getCurrencyPaymentFee.call(currencyCt, currencyId, blockNumberAhead, 1);
                         value.toNumber().should.equal(18e14);
                     });
                 });
@@ -312,51 +323,53 @@ module.exports = (glob) => {
         });
 
         describe('setCurrencyPaymentFee()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             describe('if provided with correct parameters and called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setCurrencyPaymentFee(currency, blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
+                    const result = await web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCurrencyPaymentFeeEvent');
-                    const value = await web3Configuration.getCurrencyPaymentFee.call(currency, blockNumberAhead, 0);
+                    const value = await web3Configuration.getCurrencyPaymentFee.call(currencyCt, currencyId, blockNumberAhead, 0);
                     value.toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentFee(currency, blockNumberAhead, 1e15, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumberAhead, 1e15, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentFee(currency, blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentFee(currency, blockNumberAhead, 1e15, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                    web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumberAhead, 1e15, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
                 });
             });
         });
 
         describe('getCurrencyPaymentFeesCount()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getCurrencyPaymentFeesCount.call(currency);
+                const value = await web3Configuration.getCurrencyPaymentFeesCount.call(currencyCt, currencyId);
                 value.toNumber().should.equal(0);
             });
         });
@@ -498,70 +511,81 @@ module.exports = (glob) => {
         });
 
         describe('getCurrencyPaymentMinimumFee()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             beforeEach(async () => {
-                await web3Configuration.setCurrencyPaymentMinimumFee(currency, blockNumberAhead, 1e14);
+                await web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberAhead, 1e14);
             });
 
             describe('if called with non-existent currency', () => {
-                it('should be reverted', () => {
-                    web3Configuration.getCurrencyPaymentMinimumFee.call(Wallet.createRandom().address, blockNumberAhead, 0).should.be.rejected;
+                describe('if called with non-existent currency contract', () => {
+                    it('should be reverted', () => {
+                        web3Configuration.getCurrencyPaymentMinimumFee.call(Wallet.createRandom().address, currencyId, blockNumberAhead, 0).should.be.rejected;
+                    });
+                });
+
+                describe('if called with non-existent currency ID', () => {
+                    it('should be reverted', () => {
+                        web3Configuration.getCurrencyPaymentMinimumFee.call(currencyCt, 1, blockNumberAhead, 0).should.be.rejected;
+                    });
                 });
             });
 
             describe('if called with existent currency', () => {
                 it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getCurrencyPaymentMinimumFee.call(currency, blockNumberAhead);
+                    const value = await web3Configuration.getCurrencyPaymentMinimumFee.call(currencyCt, currencyId, blockNumberAhead);
                     value.toNumber().should.equal(1e14);
                 });
             });
         });
 
         describe('setCurrencyPaymentMinimumFee()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             describe('if called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setCurrencyPaymentMinimumFee(currency, blockNumberAhead, 1e18);
+                    const result = await web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberAhead, 1e18);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCurrencyPaymentMinimumFeeEvent');
-                    const value = await web3Configuration.getCurrencyPaymentMinimumFee.call(currency, blockNumberAhead);
+                    const value = await web3Configuration.getCurrencyPaymentMinimumFee.call(currencyCt, currencyId, blockNumberAhead);
                     value.toNumber().should.equal(1e18);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentMinimumFee(currency, blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentMinimumFee(currency, blockNumberBehind, 1e18).should.be.rejected;
+                    web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberBehind, 1e18).should.be.rejected;
                 });
             });
         });
 
         describe('getCurrencyPaymentMinimumFeesCount()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getCurrencyPaymentMinimumFeesCount.call(currency);
+                const value = await web3Configuration.getCurrencyPaymentMinimumFeesCount.call(currencyCt, currencyId);
                 value.toNumber().should.equal(0);
             });
         });
@@ -639,43 +663,48 @@ module.exports = (glob) => {
         describe('getUnchallengeOrderCandidateByTradeStake()', () => {
             it('should equal values initialized at construction time', async () => {
                 const values = await web3Configuration.getUnchallengeOrderCandidateByTradeStake.call();
-                values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal(address0);
-                values[1].toNumber().should.equal(0);
+                values.should.be.an('array').and.have.lengthOf(3);
+                values[0].toNumber().should.equal(0);
+                values[1].should.equal(address0);
+                values[2].toNumber().should.equal(0);
             });
         });
 
         describe('setUnchallengeOrderCandidateByTradeStake()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             describe('if called with sender that is owner', () => {
                 let initialValues;
 
                 before(async () => {
-                    initialValues = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
+                    initialValues = await ethersConfiguration.unchallengeOrderCandidateByTradeStake();
                 });
 
                 after(async () => {
-                    await web3Configuration.setUnchallengeOrderCandidateByTradeStake(initialValues[0], initialValues[1]);
+                    await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(
+                        initialValues[1], initialValues[0][0], initialValues[0][1]
+                    );
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setUnchallengeOrderCandidateByTradeStake(currency, 1e18);
+                    const result = await web3Configuration.setUnchallengeOrderCandidateByTradeStake(1e18, currencyCt, currencyId);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetUnchallengeDriipSettlementOrderByTradeStakeEvent');
-                    const values = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
-                    utils.getAddress(values[0]).should.equal(currency);
-                    values[1].toNumber().should.equal(1e18);
+                    const values = await ethersConfiguration.unchallengeOrderCandidateByTradeStake();
+                    utils.getAddress(values[0][0]).should.equal(currencyCt);
+                    values[0][1].eq(utils.bigNumberify(currencyId)).should.be.true;
+                    values[1].eq(utils.parseUnits('1', 18)).should.be.true;
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setUnchallengeOrderCandidateByTradeStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setUnchallengeOrderCandidateByTradeStake(1e18, currencyCt, currencyId, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -683,43 +712,48 @@ module.exports = (glob) => {
         describe('getFalseWalletSignatureStake()', () => {
             it('should equal values initialized at construction time', async () => {
                 const values = await web3Configuration.getFalseWalletSignatureStake.call();
-                values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal(address0);
-                values[1].toNumber().should.equal(0);
+                values.should.be.an('array').and.have.lengthOf(3);
+                values[0].toNumber().should.equal(0);
+                values[1].should.equal(address0);
+                values[2].toNumber().should.equal(0);
             });
         });
 
         describe('setFalseWalletSignatureStake()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             describe('if called with sender that is owner', () => {
                 let initialValues;
 
                 before(async () => {
-                    initialValues = await web3Configuration.falseWalletSignatureStake.call();
+                    initialValues = await ethersConfiguration.falseWalletSignatureStake();
                 });
 
                 after(async () => {
-                    await web3Configuration.setFalseWalletSignatureStake(initialValues[0], initialValues[1]);
+                    await ethersConfiguration.setFalseWalletSignatureStake(
+                        initialValues[1], initialValues[0][0], initialValues[0][1]
+                    );
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setFalseWalletSignatureStake(currency, 1e18);
+                    const result = await web3Configuration.setFalseWalletSignatureStake(1e18, currencyCt, currencyId);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetFalseWalletSignatureStakeEvent');
-                    const values = await web3Configuration.falseWalletSignatureStake.call();
-                    utils.getAddress(values[0]).should.equal(currency);
-                    values[1].toNumber().should.equal(1e18);
+                    const values = await ethersConfiguration.falseWalletSignatureStake();
+                    utils.getAddress(values[0][0]).should.equal(currencyCt);
+                    values[0][1].eq(utils.bigNumberify(currencyId)).should.be.true;
+                    values[1].eq(utils.parseUnits('1', 18)).should.be.true;
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setFalseWalletSignatureStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setFalseWalletSignatureStake(1e18, currencyCt, currencyId, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -727,43 +761,48 @@ module.exports = (glob) => {
         describe('getDuplicateDriipNonceStake()', () => {
             it('should equal values initialized at construction time', async () => {
                 const values = await web3Configuration.getDuplicateDriipNonceStake.call();
-                values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal(address0);
-                values[1].toNumber().should.equal(0);
+                values.should.be.an('array').and.have.lengthOf(3);
+                values[0].toNumber().should.equal(0);
+                values[1].should.equal(address0);
+                values[2].toNumber().should.equal(0);
             });
         });
 
         describe('setDuplicateDriipNonceStake()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             describe('if called with sender that is owner', () => {
                 let initialValues;
 
                 before(async () => {
-                    initialValues = await web3Configuration.duplicateDriipNonceStake.call();
+                    initialValues = await ethersConfiguration.duplicateDriipNonceStake();
                 });
 
                 after(async () => {
-                    await web3Configuration.setDuplicateDriipNonceStake(initialValues[0], initialValues[1]);
+                    await ethersConfiguration.setDuplicateDriipNonceStake(
+                        initialValues[1], initialValues[0][0], initialValues[0][1]
+                    );
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDuplicateDriipNonceStake(currency, 1e18);
+                    const result = await web3Configuration.setDuplicateDriipNonceStake(1e18, currencyCt, currencyId);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetDuplicateDriipNonceStakeEvent');
-                    const values = await web3Configuration.duplicateDriipNonceStake.call();
-                    utils.getAddress(values[0]).should.equal(currency);
-                    values[1].toNumber().should.equal(1e18);
+                    const values = await ethersConfiguration.duplicateDriipNonceStake();
+                    utils.getAddress(values[0][0]).should.equal(currencyCt);
+                    values[0][1].eq(utils.bigNumberify(currencyId)).should.be.true;
+                    values[1].eq(utils.parseUnits('1', 18)).should.be.true;
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setDuplicateDriipNonceStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setDuplicateDriipNonceStake(1e18, currencyCt, currencyId, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -771,43 +810,48 @@ module.exports = (glob) => {
         describe('getDoubleSpentOrderStake()', () => {
             it('should equal values initialized at construction time', async () => {
                 const values = await web3Configuration.getDoubleSpentOrderStake.call();
-                values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal(address0);
-                values[1].toNumber().should.equal(0);
+                values.should.be.an('array').and.have.lengthOf(3);
+                values[0].toNumber().should.equal(0);
+                values[1].should.equal(address0);
+                values[2].toNumber().should.equal(0);
             });
         });
 
         describe('setDoubleSpentOrderStake()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             describe('if called with sender that is owner', () => {
                 let initialValues;
 
                 before(async () => {
-                    initialValues = await web3Configuration.doubleSpentOrderStake.call();
+                    initialValues = await ethersConfiguration.doubleSpentOrderStake();
                 });
 
                 after(async () => {
-                    await web3Configuration.setDoubleSpentOrderStake(initialValues[0], initialValues[1]);
+                    await ethersConfiguration.setDoubleSpentOrderStake(
+                        initialValues[1], initialValues[0][0], initialValues[0][1]
+                    );
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDoubleSpentOrderStake(currency, 1e18);
+                    const result = await web3Configuration.setDoubleSpentOrderStake(1e18, currencyCt, currencyId);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetDoubleSpentOrderStakeEvent');
-                    const values = await web3Configuration.doubleSpentOrderStake.call();
-                    utils.getAddress(values[0]).should.equal(currency);
-                    values[1].toNumber().should.equal(1e18);
+                    const values = await ethersConfiguration.doubleSpentOrderStake();
+                    utils.getAddress(values[0][0]).should.equal(currencyCt);
+                    values[0][1].eq(utils.bigNumberify(currencyId)).should.be.true;
+                    values[1].eq(utils.parseUnits('1', 18)).should.be.true;
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setDoubleSpentOrderStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setDoubleSpentOrderStake(1e18, currencyCt, currencyId, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

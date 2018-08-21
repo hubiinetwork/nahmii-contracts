@@ -67,8 +67,9 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
         fraudChallenge.addFraudulentPayment(payment);
 
         if (!genuineWalletSignature) {
-            (address stakeCurrency, int256 stakeAmount) = configuration.getFalseWalletSignatureStake();
-            securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+            (int256 stakeAmount, address stakeCurrencyCt, /*uint256 stakeCurrencyId*/) = configuration.getFalseWalletSignatureStake();
+            // TODO Update call with stageCurrencyId argument
+            securityBond.stage(stakeAmount, stakeCurrencyCt, msg.sender);
         } else {
             address seizedWallet;
             if (!genuineSenderAndFee)

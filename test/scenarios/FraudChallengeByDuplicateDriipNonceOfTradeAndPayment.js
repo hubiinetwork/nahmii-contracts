@@ -258,7 +258,7 @@ module.exports = (glob) => {
 
             before(async () => {
                 overrideOptions = {gasLimit: 3e6};
-                await ethersConfiguration.setDuplicateDriipNonceStake(mocks.address0, utils.bigNumberify(1000));
+                await ethersConfiguration.setDuplicateDriipNonceStake(utils.bigNumberify(1000), mocks.address0, utils.bigNumberify(0));
             });
 
             beforeEach(async () => {
