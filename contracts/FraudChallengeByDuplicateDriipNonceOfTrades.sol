@@ -60,8 +60,9 @@ contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengab
         fraudChallenge.addFraudulentTrade(trade1);
         fraudChallenge.addFraudulentTrade(trade2);
 
-        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDriipNonceStake();
-        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+        (int256 stakeAmount, address stakeCurrencyCt, /*uint256 stakeCurrencyId*/) = configuration.getDuplicateDriipNonceStake();
+        // TODO Update call with stageCurrencyId argument
+        securityBond.stage(stakeAmount, stakeCurrencyCt, msg.sender);
 
         emit ChallengeByDuplicateDriipNonceOfTradesEvent(trade1, trade2, msg.sender);
     }

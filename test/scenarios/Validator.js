@@ -187,7 +187,7 @@ module.exports = function (glob) {
         //         await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
         //         await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
         //         await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
-        //         await ethersConfiguration.setFalseWalletSignatureStake(mocks.address0, utils.parseUnits('100', 18));
+        //         await ethersConfiguration.setFalseWalletSignatureStake(utils.parseUnits('100', 18), mocks.address0, utils.bigNumberify(0));
         //
         //         topic = ethersFraudChallenge.interface.events.ChallengeByTradeEvent.topics[0];
         //         filter = {
@@ -812,7 +812,7 @@ module.exports = function (glob) {
         //         await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
         //         await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
         //         await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
-        //         await ethersConfiguration.setFalseWalletSignatureStake(mocks.address0, utils.parseUnits('100', 18));
+        //         await ethersConfiguration.setFalseWalletSignatureStake(utils.parseUnits('100', 18), mocks.address0, utils.bigNumberify(0));
         //
         //         topic = ethersFraudChallenge.interface.events.ChallengeByTradeEvent.topics[0];
         //         filter = {
@@ -1435,7 +1435,7 @@ module.exports = function (glob) {
         //
         //         await ethersConfiguration.setPaymentFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [], [], overrideOptions);
         //         await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
-        //         await ethersConfiguration.setFalseWalletSignatureStake(mocks.address0, utils.parseUnits('100', 18));
+        //         await ethersConfiguration.setFalseWalletSignatureStake(utils.parseUnits('100', 18), mocks.address0, utils.bigNumberify(0));
         //
         //         topic = ethersFraudChallenge.interface.events.ChallengeByPaymentEvent.topics[0];
         //         filter = {

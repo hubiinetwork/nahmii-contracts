@@ -41,7 +41,7 @@ module.exports = (glob) => {
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
-            await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(mocks.address0, 1000);
+            await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(1000, mocks.address0, utils.bigNumberify(0));
 
             await ethersDriipSettlementChallenger.changeDriipSettlementChallenge(ethersDriipSettlementChallenge.address);
             await ethersDriipSettlementChallenger.changeFraudChallenge(ethersFraudChallenge.address);

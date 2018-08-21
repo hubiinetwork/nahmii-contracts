@@ -257,7 +257,7 @@ module.exports = (glob) => {
 
             before(async () => {
                 overrideOptions = {gasLimit: 2e6};
-                await ethersConfiguration.setFalseWalletSignatureStake(mocks.address0, utils.bigNumberify(1000));
+                await ethersConfiguration.setFalseWalletSignatureStake(utils.bigNumberify(1000), mocks.address0, utils.bigNumberify(0));
             });
 
             beforeEach(async () => {

@@ -153,27 +153,10 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
 
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
         require(!fraudChallenge.isFraudulentOrderExchangeHash(trade.buyer.wallet == order.wallet ?
-        trade.buyer.order.hashes.exchange :
-        trade.seller.order.hashes.exchange));
+            trade.buyer.order.hashes.exchange :
+            trade.seller.order.hashes.exchange));
 
-        DriipSettlementChallenge.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(order.wallet);
-        require(challenge.candidateType == DriipSettlementChallenge.ChallengeCandidateType.Order);
-
-        Types.Order memory challengeOrder = driipSettlementChallenge.getChallengeCandidateOrder(challenge.candidateIndex);
-        require(challengeOrder.seals.exchange.hash == order.seals.exchange.hash);
-
-        require(challengeOrder.seals.exchange.hash == (trade.buyer.wallet == order.wallet ?
-        trade.buyer.order.hashes.exchange :
-        trade.seller.order.hashes.exchange));
-
-        challenge.result = Types.ChallengeResult.Qualified;
-        challenge.candidateType = DriipSettlementChallenge.ChallengeCandidateType.None;
-        challenge.candidateIndex = 0;
-        challenge.challenger = address(0);
-        driipSettlementChallenge.setWalletChallenge(order.wallet, challenge);
-
-        (address stageCurrency, int256 stageAmount) = configuration.getUnchallengeOrderCandidateByTradeStake();
-        securityBond.stage(stageAmount, stageCurrency, challenger);
+        DriipSettlementChallenge.Challenge memory challenge = unchallengeOrderCandidatePrivate(order, trade, challenger);
 
         //raise event
         emit UnchallengeOrderCandidateByTradeEvent(order, trade, challenge.nonce, challenge.driipType, challenger);
@@ -322,6 +305,30 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
             return payment.sender.balances.current;
         else //Types.PaymentPartyRole.Recipient == paymentPartyRole
             return payment.recipient.balances.current;
+    }
+
+    function unchallengeOrderCandidatePrivate(Types.Order order, Types.Trade trade, address challenger)
+    private
+    returns (DriipSettlementChallenge.Challenge)
+    {
+        // TODO Instead of operating on challenge in memory consider operating directly on challenge in storage of driipSettlementChallenge
+        DriipSettlementChallenge.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(order.wallet);
+        require(challenge.candidateType == DriipSettlementChallenge.ChallengeCandidateType.Order);
+
+        Types.Order memory challengeOrder = driipSettlementChallenge.getChallengeCandidateOrder(challenge.candidateIndex);
+        require(challengeOrder.seals.exchange.hash == order.seals.exchange.hash);
+
+        require(challengeOrder.seals.exchange.hash == (trade.buyer.wallet == order.wallet ?
+        trade.buyer.order.hashes.exchange :
+        trade.seller.order.hashes.exchange));
+
+        driipSettlementChallenge.resetWalletChallenge(order.wallet);
+
+        (int256 stageAmount, address stageCurrencyCt, /*uint256 stageCurrencyId*/) = configuration.getUnchallengeOrderCandidateByTradeStake();
+        // TODO Update call with stageCurrencyId argument
+        securityBond.stage(stageAmount, stageCurrencyCt, challenger);
+
+        return challenge;
     }
 
     //

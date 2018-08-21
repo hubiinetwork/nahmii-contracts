@@ -47,7 +47,7 @@ module.exports = (glob) => {
             ethersDriipSettlementChallengeUserA = ethersDriipSettlementChallengeOwner.connect(glob.signer_a);
             ethersDriipSettlementChallengeUserB = ethersDriipSettlementChallengeOwner.connect(glob.signer_b);
 
-            await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(mocks.address0, 1000);
+            await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(1000, mocks.address0, utils.bigNumberify(0));
 
             await ethersDriipSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
             await ethersDriipSettlementChallengeOwner.changeValidator(ethersValidator.address);
