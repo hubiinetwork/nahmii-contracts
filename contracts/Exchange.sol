@@ -49,7 +49,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     StriimTypes.Settlement[] public settlements;
     mapping(uint256 => uint256) driipNonceSettlementIndexMap;
     mapping(address => uint256[]) walletSettlementIndexMap;
-    mapping(address => mapping(address => uint256)) walletCurrencyMaxDriipNonce;
+    mapping(address => mapping(address => mapping(uint256 => uint256))) walletCurrencyMaxDriipNonce;
 
     //
     // Events
@@ -160,7 +160,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
     /// @param wallet The wallet whose side of the trade is to be settled
-    // TODO Update to two-component currency descriptor
     function settleDriipAsTrade(StriimTypes.Trade trade, address wallet)
     public
     validatorInitialized
@@ -208,16 +207,16 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             StriimTypes.TradeParty memory party = StriimTypes.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
 
             // If wallet has previously settled with higher driip nonce with any of the concerned currencies then don't settle currency balances
-            if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended] < trade.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, party.netFees.intended, trade.currencies.intended, 0);
-                clientFund.updateSettledBalance(wallet, party.balances.intended.current, trade.currencies.intended, 0);
-                walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended] = trade.nonce;
+            if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended.ct][trade.currencies.intended.id] < trade.nonce) {
+                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, party.netFees.intended, trade.currencies.intended.ct, trade.currencies.intended.id);
+                clientFund.updateSettledBalance(wallet, party.balances.intended.current, trade.currencies.intended.ct, trade.currencies.intended.id);
+                walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended][trade.currencies.intended.id] = trade.nonce;
             }
 
-            if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate] < trade.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, party.netFees.conjugate, trade.currencies.conjugate, 0);
-                clientFund.updateSettledBalance(wallet, party.balances.conjugate.current, trade.currencies.conjugate, 0);
-                walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate] = trade.nonce;
+            if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate.ct][trade.currencies.conjugate.id] < trade.nonce) {
+                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, party.netFees.conjugate, trade.currencies.conjugate.ct, trade.currencies.conjugate.id);
+                clientFund.updateSettledBalance(wallet, party.balances.conjugate.current, trade.currencies.conjugate.ct, trade.currencies.conjugate.id);
+                walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate.ct][trade.currencies.conjugate.id] = trade.nonce;
             }
 
             if (trade.nonce > maxDriipNonce)
@@ -234,7 +233,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
     /// @param wallet The wallet whose side of the payment is to be settled
-    // TODO Update to two-component currency descriptor
     function settleDriipAsPayment(StriimTypes.Payment payment, address wallet)
     public
     validatorInitialized
@@ -290,10 +288,10 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             }
 
             // If wallet has previously settled with higher driip nonce with the currency, then don't settle the balance
-            if (walletCurrencyMaxDriipNonce[wallet][payment.currency] < payment.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, paymentsRevenueFund, netFees, payment.currency, 0);
-                clientFund.updateSettledBalance(wallet, currentBalance, payment.currency, 0);
-                walletCurrencyMaxDriipNonce[wallet][payment.currency] = payment.nonce;
+            if (walletCurrencyMaxDriipNonce[wallet][payment.currency.ct][payment.currency.id] < payment.nonce) {
+                clientFund.stageToBeneficiaryUntargeted(wallet, paymentsRevenueFund, netFees, payment.currency.ct, payment.currency.id);
+                clientFund.updateSettledBalance(wallet, currentBalance, payment.currency.ct, payment.currency.id);
+                walletCurrencyMaxDriipNonce[wallet][payment.currency.ct][payment.currency.id] = payment.nonce;
             }
 
             if (payment.nonce > maxDriipNonce)
