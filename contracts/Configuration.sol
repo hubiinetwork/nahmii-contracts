@@ -445,7 +445,7 @@ contract Configuration is Ownable, Servable, SelfDestructible {
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID currency gained (0 for ETH and ERC20)
     function setUnchallengeOrderCandidateByTradeStake(int256 amount, address currencyCt, uint256 currencyId) public onlyOwner {
-        unchallengeOrderCandidateByTradeStake = MonetaryTypes.Figure(MonetaryTypes.Currency(currencyCt, currencyId), amount);
+        unchallengeOrderCandidateByTradeStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
         emit SetUnchallengeDriipSettlementOrderByTradeStakeEvent(amount, currencyCt, currencyId);
     }
 
@@ -461,7 +461,7 @@ contract Configuration is Ownable, Servable, SelfDestructible {
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID currency gained (0 for ETH and ERC20)
     function setFalseWalletSignatureStake(int256 amount, address currencyCt, uint256 currencyId) public onlyOwner {
-        falseWalletSignatureStake = MonetaryTypes.Figure(MonetaryTypes.Currency(currencyCt, currencyId), amount);
+        falseWalletSignatureStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
         emit SetFalseWalletSignatureStakeEvent(amount, currencyCt, currencyId);
     }
 
@@ -477,7 +477,7 @@ contract Configuration is Ownable, Servable, SelfDestructible {
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID currency gained (0 for ETH and ERC20)
     function setDuplicateDriipNonceStake(int256 amount, address currencyCt, uint256 currencyId) public onlyOwner {
-        duplicateDriipNonceStake = MonetaryTypes.Figure(MonetaryTypes.Currency(currencyCt, currencyId), amount);
+        duplicateDriipNonceStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
         emit SetDuplicateDriipNonceStakeEvent(amount, currencyCt, currencyId);
     }
 
@@ -493,7 +493,7 @@ contract Configuration is Ownable, Servable, SelfDestructible {
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID currency gained (0 for ETH and ERC20)
     function setDoubleSpentOrderStake(int256 amount, address currencyCt, uint256 currencyId) public onlyOwner {
-        doubleSpentOrderStake = MonetaryTypes.Figure(MonetaryTypes.Currency(currencyCt, currencyId), amount);
+        doubleSpentOrderStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
         emit SetDoubleSpentOrderStakeEvent(amount, currencyCt, currencyId);
     }
 
