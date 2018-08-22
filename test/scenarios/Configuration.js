@@ -2,7 +2,6 @@ const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
 const {Wallet, utils} = require('ethers');
 const address0 = require('../mocks').address0;
-const setTimeoutPromise = require('util').promisify(setTimeout);
 
 chai.use(chaiAsPromised);
 chai.should();
@@ -687,7 +686,7 @@ module.exports = (glob) => {
 
                 after(async () => {
                     await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(
-                        initialValues[1], initialValues[0][0], initialValues[0][1]
+                        initialValues[0], initialValues[1][0], initialValues[1][1]
                     );
                 });
 
@@ -696,9 +695,9 @@ module.exports = (glob) => {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetUnchallengeDriipSettlementOrderByTradeStakeEvent');
                     const values = await ethersConfiguration.unchallengeOrderCandidateByTradeStake();
-                    utils.getAddress(values[0][0]).should.equal(currencyCt);
-                    values[0][1].eq(utils.bigNumberify(currencyId)).should.be.true;
-                    values[1].eq(utils.parseUnits('1', 18)).should.be.true;
+                    values[0].eq(utils.parseUnits('1', 18)).should.be.true;
+                    utils.getAddress(values[1][0]).should.equal(currencyCt);
+                    values[1][1].eq(utils.bigNumberify(currencyId)).should.be.true;
                 });
             });
 
@@ -736,7 +735,7 @@ module.exports = (glob) => {
 
                 after(async () => {
                     await ethersConfiguration.setFalseWalletSignatureStake(
-                        initialValues[1], initialValues[0][0], initialValues[0][1]
+                        initialValues[0], initialValues[1][0], initialValues[1][1]
                     );
                 });
 
@@ -745,9 +744,9 @@ module.exports = (glob) => {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetFalseWalletSignatureStakeEvent');
                     const values = await ethersConfiguration.falseWalletSignatureStake();
-                    utils.getAddress(values[0][0]).should.equal(currencyCt);
-                    values[0][1].eq(utils.bigNumberify(currencyId)).should.be.true;
-                    values[1].eq(utils.parseUnits('1', 18)).should.be.true;
+                    values[0].eq(utils.parseUnits('1', 18)).should.be.true;
+                    utils.getAddress(values[1][0]).should.equal(currencyCt);
+                    values[1][1].eq(utils.bigNumberify(currencyId)).should.be.true;
                 });
             });
 
@@ -785,7 +784,7 @@ module.exports = (glob) => {
 
                 after(async () => {
                     await ethersConfiguration.setDuplicateDriipNonceStake(
-                        initialValues[1], initialValues[0][0], initialValues[0][1]
+                        initialValues[0], initialValues[1][0], initialValues[1][1]
                     );
                 });
 
@@ -794,9 +793,9 @@ module.exports = (glob) => {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetDuplicateDriipNonceStakeEvent');
                     const values = await ethersConfiguration.duplicateDriipNonceStake();
-                    utils.getAddress(values[0][0]).should.equal(currencyCt);
-                    values[0][1].eq(utils.bigNumberify(currencyId)).should.be.true;
-                    values[1].eq(utils.parseUnits('1', 18)).should.be.true;
+                    values[0].eq(utils.parseUnits('1', 18)).should.be.true;
+                    utils.getAddress(values[1][0]).should.equal(currencyCt);
+                    values[1][1].eq(utils.bigNumberify(currencyId)).should.be.true;
                 });
             });
 
@@ -834,7 +833,7 @@ module.exports = (glob) => {
 
                 after(async () => {
                     await ethersConfiguration.setDoubleSpentOrderStake(
-                        initialValues[1], initialValues[0][0], initialValues[0][1]
+                        initialValues[0], initialValues[1][0], initialValues[1][1]
                     );
                 });
 
@@ -843,9 +842,9 @@ module.exports = (glob) => {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetDoubleSpentOrderStakeEvent');
                     const values = await ethersConfiguration.doubleSpentOrderStake();
-                    utils.getAddress(values[0][0]).should.equal(currencyCt);
-                    values[0][1].eq(utils.bigNumberify(currencyId)).should.be.true;
-                    values[1].eq(utils.parseUnits('1', 18)).should.be.true;
+                    values[0].eq(utils.parseUnits('1', 18)).should.be.true;
+                    utils.getAddress(values[1][0]).should.equal(currencyCt);
+                    values[1][1].eq(utils.bigNumberify(currencyId)).should.be.true;
                 });
             });
 

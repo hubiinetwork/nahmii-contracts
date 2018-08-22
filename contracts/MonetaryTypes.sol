@@ -22,7 +22,7 @@ library MonetaryTypes {
     }
 
     struct Figure {
-        Currency currency;
         int256 amount;
+        Currency currency;
     }
 }
