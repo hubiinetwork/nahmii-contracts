@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByPayment
@@ -25,7 +25,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Validatable, Sec
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByPaymentEvent(StriimTypes.Payment payment, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -38,7 +38,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Validatable, Sec
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challenge(Types.Payment payment)
+    function challenge(StriimTypes.Payment payment)
     public
     onlyOperationalModeNormal
     validatorInitialized
@@ -52,7 +52,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Validatable, Sec
         require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
-        bool genuineWalletSignature = Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+        bool genuineWalletSignature = StriimTypes.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
 
         // Genuineness affected by sender
         bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&

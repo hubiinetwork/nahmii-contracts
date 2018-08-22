@@ -13,7 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeBySuccessiveTrades
@@ -24,7 +24,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Validat
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeBySuccessiveTradesEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeBySuccessiveTradesEvent(StriimTypes.Trade firstTrade, StriimTypes.Trade lastTrade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -42,8 +42,8 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Validat
     /// @param wallet Address of concerned wallet
     /// @param currency Address of concerned currency (0 if ETH)
     function challenge(
-        Types.Trade firstTrade,
-        Types.Trade lastTrade,
+        StriimTypes.Trade firstTrade,
+        StriimTypes.Trade lastTrade,
         address wallet,
         address currency
     )
@@ -57,22 +57,19 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Validat
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(Types.isTradeParty(firstTrade, wallet));
-        require(Types.isTradeParty(lastTrade, wallet));
+        require(StriimTypes.isTradeParty(firstTrade, wallet));
+        require(StriimTypes.isTradeParty(lastTrade, wallet));
         require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
         require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
 
-        Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
-        Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        StriimTypes.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
+        StriimTypes.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
-        Types.CurrencyRole firstCurrencyRole = (currency == firstTrade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
-        Types.CurrencyRole lastCurrencyRole = (currency == lastTrade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
-
         require(
-            !validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole) ||
-        !validator.isGenuineSuccessiveTradesNetFees(firstTrade, firstTradePartyRole, firstCurrencyRole, lastTrade, lastTradePartyRole, lastCurrencyRole)
+            !validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole) ||
+        !validator.isGenuineSuccessiveTradesNetFees(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole)
         );
 
         configuration.setOperationalModeExit();

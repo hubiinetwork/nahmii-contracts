@@ -13,7 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByTradeSucceedingPayment
@@ -24,7 +24,7 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, V
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeSucceedingPaymentEvent(Types.Payment payment, Types.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeSucceedingPaymentEvent(StriimTypes.Payment payment, StriimTypes.Trade trade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -42,8 +42,8 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, V
     /// @param wallet Address of concerned wallet
     /// @param currency Address of concerned currency of trade (0 if ETH)
     function challenge(
-        Types.Payment payment,
-        Types.Trade trade,
+        StriimTypes.Payment payment,
+        StriimTypes.Trade trade,
         address wallet,
         address currency
     )
@@ -57,21 +57,21 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, V
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(Types.isTradeParty(trade, wallet));
-        require(Types.isPaymentParty(payment, wallet));
+        require(StriimTypes.isTradeParty(trade, wallet));
+        require(StriimTypes.isPaymentParty(payment, wallet));
         require(currency == payment.currency);
         require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
 
-        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
-        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        StriimTypes.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
+        StriimTypes.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
 
         require(validator.isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
 
-        Types.CurrencyRole currencyRole = (currency == trade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
+        StriimTypes.CurrencyRole currencyRole = (currency == trade.currencies.intended ? StriimTypes.CurrencyRole.Intended : StriimTypes.CurrencyRole.Conjugate);
 
         require(
             !validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, currencyRole) ||
-        !validator.isGenuineSuccessivePaymentTradeNetFees(payment, paymentPartyRole, trade, tradePartyRole, currencyRole)
+        !validator.isGenuineSuccessivePaymentTradeNetFees(payment, paymentPartyRole, trade, tradePartyRole)
         );
 
         configuration.setOperationalModeExit();

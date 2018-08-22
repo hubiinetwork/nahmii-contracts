@@ -11,11 +11,11 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title Hasher
-@notice Contract that hashes types in Types contract
+@notice Contract that hashes types in StriimTypes contract
 */
 contract Hasher is Ownable, SelfDestructible {
     //
@@ -27,21 +27,21 @@ contract Hasher is Ownable, SelfDestructible {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function hashOrderAsWallet(Types.Order order) public pure returns (bytes32) {
+    function hashOrderAsWallet(StriimTypes.Order order) public pure returns (bytes32) {
         bytes32 globalHash = hashOrderGlobalData(order);
         bytes32 placementHash = hashOrderPlacementData(order);
 
         return keccak256(abi.encodePacked(globalHash, placementHash));
     }
 
-    function hashOrderAsExchange(Types.Order order) public pure returns (bytes32) {
+    function hashOrderAsExchange(StriimTypes.Order order) public pure returns (bytes32) {
         bytes32 walletSignatureHash = hashSignature(order.seals.wallet.signature);
         bytes32 placementResidualsHash = hashOrderPlacementResidualsData(order);
 
         return keccak256(abi.encodePacked(walletSignatureHash, placementResidualsHash));
     }
 
-    function hashTrade(Types.Trade trade) public pure returns (bytes32) {
+    function hashTrade(StriimTypes.Trade trade) public pure returns (bytes32) {
         bytes32 globalHash = hashTradeGlobalData(trade);
         bytes32 buyerHash = hashTradeBuyerData(trade);
         bytes32 sellerHash = hashTradeSellerData(trade);
@@ -50,7 +50,7 @@ contract Hasher is Ownable, SelfDestructible {
         return keccak256(abi.encodePacked(globalHash, buyerHash, sellerHash, transfersHash));
     }
 
-    function hashPaymentAsWallet(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentAsWallet(StriimTypes.Payment payment) public pure returns (bytes32) {
         bytes32 amountCurrencyHash = hashPaymentAmountCurrencyData(payment);
         bytes32 senderHash = hashPaymentSenderDataAsWallet(payment);
         bytes32 recipientHash = hashPaymentRecipientDataAsWallet(payment);
@@ -58,7 +58,7 @@ contract Hasher is Ownable, SelfDestructible {
         return keccak256(abi.encodePacked(amountCurrencyHash, senderHash, recipientHash));
     }
 
-    function hashPaymentAsExchange(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentAsExchange(StriimTypes.Payment payment) public pure returns (bytes32) {
         bytes32 walletSignatureHash = hashSignature(payment.seals.wallet.signature);
         bytes32 nonceHash = hashPaymentNonce(payment);
         bytes32 senderHash = hashPaymentSenderDataAsExchange(payment);
@@ -68,7 +68,7 @@ contract Hasher is Ownable, SelfDestructible {
         return keccak256(abi.encodePacked(walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash));
     }
 
-    function hashSignature(Types.Signature signature) public pure returns (bytes32) {
+    function hashSignature(StriimTypes.Signature signature) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 signature.v,
                 signature.r,
@@ -76,45 +76,45 @@ contract Hasher is Ownable, SelfDestructible {
             ));
     }
 
-    function hashOrderGlobalData(Types.Order order) public pure returns (bytes32) {
+    function hashOrderGlobalData(StriimTypes.Order order) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 order.nonce,
                 order.wallet
             ));
     }
 
-    function hashOrderPlacementData(Types.Order order) public pure returns (bytes32) {
+    function hashOrderPlacementData(StriimTypes.Order order) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 order.placement.intention,
                 order.placement.amount,
-                order.placement.currencies.intended.smartContract,
+                order.placement.currencies.intended.ct,
                 order.placement.currencies.intended.id,
-                order.placement.currencies.conjugate.smartContract,
+                order.placement.currencies.conjugate.ct,
                 order.placement.currencies.conjugate.id,
                 order.placement.rate
             ));
     }
 
-    function hashOrderPlacementResidualsData(Types.Order order) public pure returns (bytes32) {
+    function hashOrderPlacementResidualsData(StriimTypes.Order order) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 order.placement.residuals.current,
                 order.placement.residuals.previous
             ));
     }
 
-    function hashTradeGlobalData(Types.Trade trade) public pure returns (bytes32) {
+    function hashTradeGlobalData(StriimTypes.Trade trade) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 trade.nonce,
                 trade.amount,
-                trade.currencies.intended.smartContract,
+                trade.currencies.intended.ct,
                 trade.currencies.intended.id,
-                trade.currencies.conjugate.smartContract,
+                trade.currencies.conjugate.ct,
                 trade.currencies.conjugate.id,
                 trade.rate
             ));
     }
 
-    function hashTradeBuyerData(Types.Trade trade) public pure returns (bytes32) {
+    function hashTradeBuyerData(StriimTypes.Trade trade) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 trade.buyer.nonce,
                 trade.buyer.wallet,
@@ -138,7 +138,7 @@ contract Hasher is Ownable, SelfDestructible {
             ));
     }
 
-    function hashTradeSellerData(Types.Trade trade) public pure returns (bytes32) {
+    function hashTradeSellerData(StriimTypes.Trade trade) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 trade.seller.nonce,
                 trade.seller.wallet,
@@ -162,7 +162,7 @@ contract Hasher is Ownable, SelfDestructible {
             ));
     }
 
-    function hashTradeTransfersData(Types.Trade trade) public pure returns (bytes32) {
+    function hashTradeTransfersData(StriimTypes.Trade trade) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 trade.transfers.intended.single,
                 trade.transfers.intended.net,
@@ -171,26 +171,19 @@ contract Hasher is Ownable, SelfDestructible {
             ));
     }
 
-    function hashTradeSingleFeesData(Types.Trade trade) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(
-                trade.singleFees.intended,
-                trade.singleFees.conjugate
-            ));
-    }
-
-    function hashPaymentAmountCurrencyData(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentAmountCurrencyData(StriimTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 payment.amount,
-                payment.currency.smartContract,
+                payment.currency.ct,
                 payment.currency.id
             ));
     }
 
-    function hashPaymentSenderDataAsWallet(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentSenderDataAsWallet(StriimTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(payment.sender.wallet));
     }
 
-    function hashPaymentSenderDataAsExchange(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentSenderDataAsExchange(StriimTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 payment.sender.nonce,
                 payment.sender.balances.current,
@@ -201,11 +194,11 @@ contract Hasher is Ownable, SelfDestructible {
             ));
     }
 
-    function hashPaymentRecipientDataAsWallet(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentRecipientDataAsWallet(StriimTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(payment.recipient.wallet));
     }
 
-    function hashPaymentRecipientDataAsExchange(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentRecipientDataAsExchange(StriimTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 payment.recipient.nonce,
                 payment.recipient.balances.current,
@@ -213,18 +206,14 @@ contract Hasher is Ownable, SelfDestructible {
             ));
     }
 
-    function hashPaymentTransfersData(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentTransfersData(StriimTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 payment.transfers.single,
                 payment.transfers.net
             ));
     }
 
-    function hashPaymentSingleFeeData(Types.Payment payment) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(payment.singleFee));
-    }
-
-    function hashPaymentNonce(Types.Payment payment) public pure returns (bytes32) {
+    function hashPaymentNonce(StriimTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(payment.nonce));
     }
 }

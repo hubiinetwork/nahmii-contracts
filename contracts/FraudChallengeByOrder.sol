@@ -13,7 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByOrder
@@ -24,7 +24,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Validatable, Secur
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByOrderEvent(Types.Order order, address challenger);
+    event ChallengeByOrderEvent(StriimTypes.Order order, address challenger);
 
     //
     // Constructor
@@ -37,7 +37,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Validatable, Secur
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit an order candidate in continuous Fraud Challenge (FC)
     /// @param order Fraudulent order candidate
-    function challenge(Types.Order order)
+    function challenge(StriimTypes.Order order)
     public
     onlyOperationalModeNormal
     validatorInitialized
@@ -50,7 +50,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Validatable, Secur
         require(validator.isGenuineOrderWalletHash(order));
 
         // Genuineness affected by wallet not having signed the payment
-        bool genuineWalletSignature = Types.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
+        bool genuineWalletSignature = StriimTypes.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
         require(!genuineWalletSignature);
 
         configuration.setOperationalModeExit();

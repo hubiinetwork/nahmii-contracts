@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {FraudChallenge} from "../FraudChallenge.sol";
-import {Types} from "../Types.sol";
+import {StriimTypes} from "../StriimTypes.sol";
 
 /**
 @title MockedFraudChallenge
@@ -53,17 +53,17 @@ contract MockedFraudChallenge is FraudChallenge {
         fraudulentPaymentExchangeHash = false;
     }
 
-    function addFraudulentOrder(Types.Order order) public {
+    function addFraudulentOrder(StriimTypes.Order order) public {
         fraudulentOrders.push(order);
         emit AddFraudulentOrderEvent(order);
     }
 
-    function addFraudulentTrade(Types.Trade trade) public {
+    function addFraudulentTrade(StriimTypes.Trade trade) public {
         fraudulentTrades.push(trade);
         emit AddFraudulentTradeEvent(trade);
     }
 
-    function addFraudulentPayment(Types.Payment payment) public {
+    function addFraudulentPayment(StriimTypes.Payment payment) public {
         fraudulentPayments.push(payment);
         emit AddFraudulentPaymentEvent(payment);
     }

@@ -6,7 +6,7 @@
 
 const SafeMathInt = artifacts.require('SafeMathInt');
 const SafeMathUint = artifacts.require('SafeMathUint');
-const Types = artifacts.require('Types');
+const StriimTypes = artifacts.require('StriimTypes');
 const ClientFund = artifacts.require('ClientFund');
 const CommunityVote = artifacts.require('CommunityVote');
 const Configuration = artifacts.require('Configuration');
@@ -59,24 +59,24 @@ module.exports = (deployer, network, accounts) => {
 
             const addresses = {};
 
-            await execDeploy(deployer, 'SafeMathInt', SafeMathInt, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'SafeMathUint', SafeMathUint, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'Types', Types, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'SafeMathInt', SafeMathInt, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'SafeMathUint', SafeMathUint, deployFilters, addresses, ownerAccount);
+			await execDeploy(deployer, 'StriimTypes', StriimTypes, deployFilters, addresses, ownerAccount);
 
-            await deployer.link(SafeMathInt, [
-                ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-                FraudChallenge, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
-            ]);
-            await deployer.link(SafeMathUint, [
-                Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, TokenHolderRevenueFund
-            ]);
-            await deployer.link(Types, [
-                Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-                FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
-                FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
-                FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfTrades,
-                FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallenge
-            ]);
+			await deployer.link(SafeMathInt, [
+					ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
+					FraudChallenge, RevenueFund, SecurityBond, TokenHolderRevenueFund, PartnerFund
+			]);
+			await deployer.link(SafeMathUint, [
+				Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, TokenHolderRevenueFund
+			]);
+			await deployer.link(StriimTypes, [
+				Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
+				FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
+				FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
+				FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfTrades,
+				FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallenge
+			]);
 
             await execDeploy(deployer, 'ClientFund', ClientFund, deployFilters, addresses, ownerAccount);
             await execDeploy(deployer, 'CommunityVote', CommunityVote, deployFilters, addresses, ownerAccount);

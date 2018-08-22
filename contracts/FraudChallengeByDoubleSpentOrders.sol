@@ -13,7 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByDoubleSpentOrders
@@ -24,7 +24,7 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Valida
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDoubleSpentOrdersEvent(Types.Trade trade1, Types.Trade trade2, address challenger);
+    event ChallengeByDoubleSpentOrdersEvent(StriimTypes.Trade trade1, StriimTypes.Trade trade2, address challenger);
 
     //
     // Constructor
@@ -40,8 +40,8 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Valida
     /// @param trade1 First trade with double spent order
     /// @param trade2 Last trade with double spent order
     function challenge(
-        Types.Trade trade1,
-        Types.Trade trade2
+        StriimTypes.Trade trade1,
+        StriimTypes.Trade trade2
     )
     public
     onlyOperationalModeNormal

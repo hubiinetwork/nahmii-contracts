@@ -13,7 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeBySuccessivePayments
@@ -24,7 +24,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Valid
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeBySuccessivePaymentsEvent(Types.Payment firstPayment, Types.Payment lastPayment, address challenger, address seizedWallet);
+    event ChallengeBySuccessivePaymentsEvent(StriimTypes.Payment firstPayment, StriimTypes.Payment lastPayment, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -41,8 +41,8 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Valid
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
     function challenge(
-        Types.Payment firstPayment,
-        Types.Payment lastPayment,
+        StriimTypes.Payment firstPayment,
+        StriimTypes.Payment lastPayment,
         address wallet
     )
     public
@@ -55,18 +55,18 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Valid
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(Types.isPaymentParty(firstPayment, wallet));
-        require(Types.isPaymentParty(lastPayment, wallet));
+        require(StriimTypes.isPaymentParty(firstPayment, wallet));
+        require(StriimTypes.isPaymentParty(lastPayment, wallet));
         require(firstPayment.currency == lastPayment.currency);
 
-        Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
-        Types.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+        StriimTypes.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
+        StriimTypes.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
         require(
             !validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole) ||
-        !validator.isGenuineSuccessivePaymentsNetFees(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)
+        !validator.isGenuineSuccessivePaymentsNetFees(firstPayment, lastPayment)
         );
 
         configuration.setOperationalModeExit();

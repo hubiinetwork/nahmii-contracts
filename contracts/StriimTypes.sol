@@ -8,11 +8,13 @@
 
 pragma solidity ^0.4.24;
 
+import {MonetaryTypes} from "./MonetaryTypes.sol";
+
 /**
- * @title     Types
+ * @title     StriimTypes
  * @dev       Data types of order, trade, payment and more
  */
-library Types {
+library StriimTypes {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
@@ -29,28 +31,18 @@ library Types {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct Currency {
-        address smartContract;
-        uint256 id;
-    }
-
     struct IntendedConjugateCurrency {
-        Currency intended;
-        Currency conjugate;
+        MonetaryTypes.Currency intended;
+        MonetaryTypes.Currency conjugate;
     }
 
-    struct Valuable {
-        Currency currency;
-        int256 amount;
+    struct SingleFigureNetFigures {
+        MonetaryTypes.Figure single;
+        MonetaryTypes.Figure[] net;
     }
 
-    struct SingleValuableNetValuables {
-        Valuable single;
-        Valuable[] net;
-    }
-
-    struct NetValuables {
-        Valuable[] net;
+    struct NetFigures {
+        MonetaryTypes.Figure[] net;
     }
 
     struct CurrentPreviousInt256 {
@@ -79,6 +71,7 @@ library Types {
     }
 
     struct TradeOrder {
+        int256 amount;
         WalletExchangeHashes hashes;
         CurrentPreviousInt256 residuals;
     }
@@ -94,7 +87,7 @@ library Types {
         Signature signature;
     }
 
-    struct WalletExchangeSeals {
+    struct WalletExchangeSeal {
         Seal wallet;
         Seal exchange;
     }
@@ -111,7 +104,7 @@ library Types {
 
         IntendedConjugateCurrentPreviousInt256 balances;
 
-        SingleValuableNetValuables fees;
+        SingleFigureNetFigures fees;
     }
 
     struct Trade {
@@ -138,7 +131,7 @@ library Types {
 
         CurrentPreviousInt256 balances;
 
-        SingleValuableNetValuables fees;
+        SingleFigureNetFigures fees;
     }
 
     struct PaymentRecipientParty {
@@ -147,14 +140,14 @@ library Types {
 
         CurrentPreviousInt256 balances;
 
-        NetValuables fees;
+        NetFigures fees;
     }
 
     struct Payment {
         uint256 nonce;
 
         int256 amount;
-        Currency currency;
+        MonetaryTypes.Currency currency;
 
         PaymentSenderParty sender;
         PaymentRecipientParty recipient;
@@ -162,7 +155,7 @@ library Types {
         // Positive transfer is always in direction from sender to recipient
         SingleNetInt256 transfers;
 
-        WalletExchangeSeals seals;
+        WalletExchangeSeal seals;
         uint256 blockNumber;
     }
 
@@ -182,7 +175,7 @@ library Types {
 
         OrderPlacement placement;
 
-        WalletExchangeSeals seals;
+        WalletExchangeSeal seals;
         uint256 blockNumber;
     }
 
@@ -196,36 +189,36 @@ library Types {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function isTradeParty(Types.Trade trade, address wallet) internal pure returns (bool) {
+    function isTradeParty(StriimTypes.Trade trade, address wallet) internal pure returns (bool) {
         return wallet == trade.buyer.wallet || wallet == trade.seller.wallet;
     }
 
-    function isTradeBuyer(Types.Trade trade, address wallet) internal pure returns (bool) {
+    function isTradeBuyer(StriimTypes.Trade trade, address wallet) internal pure returns (bool) {
         return wallet == trade.buyer.wallet;
     }
 
-    function isTradeSeller(Types.Trade trade, address wallet) internal pure returns (bool) {
+    function isTradeSeller(StriimTypes.Trade trade, address wallet) internal pure returns (bool) {
         return wallet == trade.seller.wallet;
     }
 
-    function isPaymentParty(Types.Payment payment, address wallet) internal pure returns (bool) {
+    function isPaymentParty(StriimTypes.Payment payment, address wallet) internal pure returns (bool) {
         return wallet == payment.sender.wallet || wallet == payment.recipient.wallet;
     }
 
-    function isPaymentSender(Types.Payment payment, address wallet) internal pure returns (bool) {
+    function isPaymentSender(StriimTypes.Payment payment, address wallet) internal pure returns (bool) {
         return wallet == payment.sender.wallet;
     }
 
-    function isPaymentRecipient(Types.Payment payment, address wallet) internal pure returns (bool) {
+    function isPaymentRecipient(StriimTypes.Payment payment, address wallet) internal pure returns (bool) {
         return wallet == payment.recipient.wallet;
     }
 
-    function isTradeOrder(Types.Trade trade, Types.Order order) internal pure returns (bool) {
+    function isTradeOrder(StriimTypes.Trade trade, StriimTypes.Order order) internal pure returns (bool) {
         return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
         trade.seller.order.hashes.exchange == order.seals.exchange.hash);
     }
 
-    function isGenuineSignature(bytes32 hash, Types.Signature signature, address signer) internal pure returns (bool) {
+    function isGenuineSignature(bytes32 hash, StriimTypes.Signature signature, address signer) internal pure returns (bool) {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
         return ecrecover(prefixedHash, signature.v, signature.r, signature.s) == signer;

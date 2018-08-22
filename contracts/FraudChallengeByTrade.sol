@@ -13,7 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByTrade
@@ -24,7 +24,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Validatable, Clien
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(StriimTypes.Trade trade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -37,7 +37,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Validatable, Clien
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(Types.Trade trade)
+    function challenge(StriimTypes.Trade trade)
     public
     onlyOperationalModeNormal
     validatorInitialized
@@ -47,18 +47,13 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Validatable, Clien
         require(configuration != address(0));
         require(clientFund != address(0));
 
-        // Gauge the genuineness of maker and taker fees. Depending on whether maker is buyer or seller
-        // this result is baked into genuineness by buyer and seller below.
-        bool genuineMakerFee = validator.isGenuineTradeMakerFee(trade);
-        bool genuineTakerFee = validator.isGenuineTradeTakerFee(trade);
-
         // Genuineness affected by buyer
         bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade, owner)
-        && (Types.LiquidityRole.Maker == trade.buyer.liquidityRole ? genuineMakerFee : genuineTakerFee);
+        && validator.isGenuineTradeBuyerFee(trade);
 
         // Genuineness affected by seller
         bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade, owner)
-        && (Types.LiquidityRole.Maker == trade.seller.liquidityRole ? genuineMakerFee : genuineTakerFee);
+        && validator.isGenuineTradeSellerFee(trade);
 
         require(!genuineBuyerAndFee || !genuineSellerAndFee);
 

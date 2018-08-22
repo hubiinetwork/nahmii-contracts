@@ -7,6 +7,7 @@
  */
 
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 /**
  * @title     MonetaryTypes
@@ -24,5 +25,14 @@ library MonetaryTypes {
     struct Figure {
         int256 amount;
         Currency currency;
+    }
+
+    function getFigureByCurrency(Figure[] figures, Currency currency)
+    public
+    returns (Figure) {
+        for (uint256 i = 0; i < figures.length; i++)
+            if (figures[i].currency.ct == currency.ct && figures[i].currency.id == currency.id)
+                return figures[i];
+        return Figure(0, currency);
     }
 }
