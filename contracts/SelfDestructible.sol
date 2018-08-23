@@ -16,6 +16,12 @@ import {Ownable} from "./Ownable.sol";
 */
 contract SelfDestructible is Ownable {
     //
+    // Constructor
+    // -----------------------------------------------------------------------------------------------------------------
+    constructor(address owner) Ownable(owner) internal {
+    }
+
+    //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function triggerDestroy() onlyOwner public {

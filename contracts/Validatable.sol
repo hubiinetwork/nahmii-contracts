@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import {Ownable} from "./Ownable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 import {Validator} from "./Validator.sol";
 import {Types} from "./Types.sol";
 
@@ -16,7 +16,7 @@ import {Types} from "./Types.sol";
 @title Validatable
 @notice An ownable that has a validator property
 */
-contract Validatable is Ownable {
+contract Validatable is SelfDestructible {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -32,15 +32,16 @@ contract Validatable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the validator contract
     /// @param newAddress The (address of) Validator contract instance
-    function changeValidator(Validator newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != validator) {
-            //set new validator
-            Validator oldAddress = validator;
-            validator = newAddress;
+    function changeValidator(Validator newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, validator)
+    {
+        //set new validator
+        Validator oldAddress = validator;
+        validator = newAddress;
 
-            //emit event
-            emit ChangeValidatorEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit ChangeValidatorEvent(oldAddress, newAddress);
     }
 
     //

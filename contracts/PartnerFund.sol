@@ -10,17 +10,20 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import {Ownable} from "./Ownable.sol";
-import {ERC20} from "./ERC20.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {Beneficiary} from "./Beneficiary.sol";
+import {TransferControllerManageable} from "./TransferControllerManageable.sol";
+import {TransferController} from "./TransferController.sol";
+import {BalanceLib} from "./BalanceLib.sol";
+import {TxHistoryLib} from "./TxHistoryLib.sol";
+import {MonetaryTypes} from "./MonetaryTypes.sol";
 
 /**
 @title PartnerFund
 @notice XXXX
 */
 // TODO Update to two-component currency descriptor
-contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
+contract PartnerFund is SelfDestructible, Beneficiary {
     using SafeMathInt for int256;
 
     //
@@ -79,7 +82,7 @@ contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner) SelfDestructible(owner) public {
     }
 
     //
@@ -161,7 +164,7 @@ contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
     function() public payable {
         revert();
     }
-
+    /*
     function depositEthersTo(address tag) public isRegisteredTag(tag) payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
@@ -326,7 +329,7 @@ contract PartnerFund is Ownable, Beneficiary, SelfDestructible {
         require(walletInfoMap[tag].isRegistered);
         return tag;
     }
-
+    */
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------

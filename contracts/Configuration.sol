@@ -9,7 +9,6 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
@@ -19,7 +18,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @title Configuration
 @notice An oracle for configurations values
 */
-contract Configuration is Ownable, Servable, SelfDestructible {
+contract Configuration is SelfDestructible, Servable {
     using SafeMathInt for int256;
 
     //
@@ -107,7 +106,7 @@ contract Configuration is Ownable, Servable, SelfDestructible {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner) SelfDestructible(owner) public {
         cancelOrderChallengeTimeout = 3 hours;
         driipSettlementChallengeTimeout = 5 hours;
     }

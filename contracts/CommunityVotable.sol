@@ -7,14 +7,14 @@
  */
 pragma solidity ^0.4.24;
 
-import {Ownable} from "./Ownable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 import {CommunityVote} from "./CommunityVote.sol";
 
 /**
 @title CommunityVotable
 @notice An ownable that has a community vote property
 */
-contract CommunityVotable is Ownable {
+contract CommunityVotable is SelfDestructible {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -37,17 +37,18 @@ contract CommunityVotable is Ownable {
 
     /// @notice Change the community vote contract
     /// @param newAddress The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newAddress) public onlyOwner notNullAddress(newAddress) {
+    function changeCommunityVote(CommunityVote newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, communityVote)
+    {
         require(!communityVoteUpdateDisabled);
 
-        if (newAddress != communityVote) {
-            //set new community vote
-            CommunityVote oldAddress = communityVote;
-            communityVote = newAddress;
+        //set new community vote
+        CommunityVote oldAddress = communityVote;
+        communityVote = newAddress;
 
-            //emit event
-            emit ChangeCommunityVoteEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit ChangeCommunityVoteEvent(oldAddress, newAddress);
     }
 
     //

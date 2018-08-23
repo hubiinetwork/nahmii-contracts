@@ -9,7 +9,6 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Servable} from "./Servable.sol";
 import {Types} from "./Types.sol";
@@ -19,7 +18,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, Servable, SelfDestructible {
+contract FraudChallenge is SelfDestructible, Servable {
 
     //
     // Variables
@@ -57,7 +56,7 @@ contract FraudChallenge is Ownable, Servable, SelfDestructible {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner) SelfDestructible(owner) public {
     }
 
     //

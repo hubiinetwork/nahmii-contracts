@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import {Ownable} from "./Ownable.sol";
 import {Types} from "./Types.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
@@ -22,7 +21,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title DriipSettlementChallenge
 @notice Where driip settlements are challenged
 */
-contract DriipSettlementChallenge is Ownable, Configurable, Validatable, SelfDestructible {
+contract DriipSettlementChallenge is SelfDestructible, Configurable, Validatable {
     using SafeMathInt for int256;
 
     //
@@ -65,7 +64,7 @@ contract DriipSettlementChallenge is Ownable, Configurable, Validatable, SelfDes
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner) SelfDestructible(owner) public {
     }
 
     //

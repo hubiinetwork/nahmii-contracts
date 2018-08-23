@@ -8,16 +8,16 @@
 
 pragma solidity ^0.4.24;
 
-import {ERC20} from "./ERC20.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
+import {ERC20} from "./ERC20.sol";
 
 /**
  * @title RevenueToken
  * @dev Implementation of the EIP20 standard token (also known as ERC20 token) with addition of calculation of balance blocks
  */
-contract RevenueToken is ERC20, Ownable, SelfDestructible {
+contract RevenueToken is ERC20, SelfDestructible {
     using SafeMathUint for uint256;
 
     //
@@ -47,7 +47,7 @@ contract RevenueToken is ERC20, Ownable, SelfDestructible {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor() public ERC20() Ownable(msg.sender) {
+    constructor() public ERC20() SelfDestructible(msg.sender) {
         totalSupply = 0;
         holderEnumIndex = 0;
     }

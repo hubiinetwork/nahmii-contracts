@@ -8,14 +8,13 @@
 
 pragma solidity ^0.4.24;
 
-import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {RevenueToken} from "./RevenueToken.sol";
-import {TransferControllerManager} from "./TransferControllerManager.sol";
+import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
@@ -26,7 +25,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Fund that manages the revenue earned by revenue token holders.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDestructible {
+contract TokenHolderRevenueFund is SelfDestructible, AccrualBeneficiary, Servable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -57,7 +56,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    TransferControllerManager private transferControllerManager;
     RevenueToken private revenueToken;
 
     BalanceLib.Balance periodAccrual;
@@ -76,8 +74,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
-    event ChangeTransferControllerManagerEvent(TransferControllerManager oldTransferControllerManager,
-        TransferControllerManager newTransferControllerManager);
     event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
@@ -86,7 +82,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) Servable() public {
+    constructor(address owner) SelfDestructible(owner) Servable() public {
     }
 
     //
@@ -102,22 +98,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
 
             //emit event
             emit ChangeRevenueTokenEvent(oldRevenueToken, newRevenueToken);
-        }
-    }
-
-    /// @notice Change the currency manager contract
-    /// @param newTransferControllerManager The (address of) TransferControllerManager contract instance
-    function changeTransferControllerManager(TransferControllerManager newTransferControllerManager)
-    public
-    onlyOwner
-    notNullAddress(newTransferControllerManager) {
-        if (newTransferControllerManager != transferControllerManager) {
-            //set new token controller manager
-            TransferControllerManager oldTransferControllerManager = transferControllerManager;
-            transferControllerManager = newTransferControllerManager;
-
-            //emit event
-            emit ChangeTransferControllerManagerEvent(oldTransferControllerManager, newTransferControllerManager);
         }
     }
 
@@ -150,7 +130,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
-        TransferController controller = transferControllerManager.getTransferController(currencyCt, standard);
+        TransferController controller = getTransferController(currencyCt, standard);
         controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
 
         //add to balances
@@ -281,10 +261,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
         walletMap[msg.sender].txHistory.addWithdrawal(amount, currencyCt, currencyId);
 
         //execute transfer
-        if (currencyCt == address(0))
+        if (currencyCt == address(0)) {
             msg.sender.transfer(uint256(amount));
+        }
         else {
-            TransferController controller = transferControllerManager.getTransferController(currencyCt, standard);
+            TransferController controller = getTransferController(currencyCt, standard);
             if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(amount), currencyCt, currencyId)) {
                 revert();
             }
@@ -307,11 +288,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, SelfDe
     // -----------------------------------------------------------------------------------------------------------------
     modifier revenueTokenInitialized() {
         require(revenueToken != address(0));
-        _;
-    }
-
-    modifier transferControllerManagerInitialized() {
-        require(transferControllerManager != address(0));
         _;
     }
 }

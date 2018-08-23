@@ -8,14 +8,14 @@
 
 pragma solidity ^0.4.24;
 
-import {Ownable} from "./Ownable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 import {SecurityBond} from "./SecurityBond.sol";
 
 /**
 @title SecurityBondable
 @notice An ownable that has a security bond property
 */
-contract SecurityBondable is Ownable {
+contract SecurityBondable is SelfDestructible {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -31,15 +31,16 @@ contract SecurityBondable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the security bond contract
     /// @param newAddress The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != securityBond) {
-            //set new security bond
-            SecurityBond oldAddress = securityBond;
-            securityBond = newAddress;
+    function changeSecurityBond(SecurityBond newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, securityBond)
+    {
+        //set new security bond
+        SecurityBond oldAddress = securityBond;
+        securityBond = newAddress;
 
-            //emit event
-            emit SecurityBondChangedEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit SecurityBondChangedEvent(oldAddress, newAddress);
     }
 
     //

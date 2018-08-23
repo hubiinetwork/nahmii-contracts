@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import {Ownable} from "./Ownable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 import {ClientFund} from "./ClientFund.sol";
 import {Types} from "./Types.sol";
 
@@ -16,7 +16,7 @@ import {Types} from "./Types.sol";
 @title ClientFundable
 @notice An ownable that has a client fund property
 */
-contract ClientFundable is Ownable {
+contract ClientFundable is SelfDestructible {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -32,15 +32,16 @@ contract ClientFundable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the client fund contract
     /// @param newAddress The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != clientFund) {
-            //set new community vote
-            ClientFund oldAddress = clientFund;
-            clientFund = newAddress;
+    function changeClientFund(ClientFund newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, clientFund)
+    {
+        //set new community vote
+        ClientFund oldAddress = clientFund;
+        clientFund = newAddress;
 
-            //emit event
-            emit ChangeClientFundEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit ChangeClientFundEvent(oldAddress, newAddress);
     }
 
     //

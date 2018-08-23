@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "./Ownable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
@@ -20,8 +20,7 @@ import {Types} from "./Types.sol";
 @title FraudChallengeBySuccessiveTrades
 @notice Where driips are challenged wrt fraud by mismatch in successive trades
 */
-contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
-
+contract FraudChallengeBySuccessiveTrades is SelfDestructible, FraudChallengable, Configurable, Validatable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Configu
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) SelfDestructible(owner) public {
     }
 
     //

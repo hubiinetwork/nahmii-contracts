@@ -7,17 +7,18 @@
  */
 
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import {Ownable} from "./Ownable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
-import {TransferControllerManager} from "./TransferControllerManager.sol";
+import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
+import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 
 /**
@@ -25,9 +26,10 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, SelfDestructible {
+contract ClientFund is SelfDestructible, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
+    using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
     using SafeMathInt for int256;
 
     //
@@ -40,8 +42,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
 
         TxHistoryLib.TxHistory txHistory;
 
-        MonetaryTypes.Currency[] inUseCurrenciesList;
-        mapping(address => mapping(uint256 => bool)) inUseCurrenciesMap;
+        InUseCurrencyLib.InUseCurrency inUseCurrencies;
     }
 
     //
@@ -49,17 +50,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => Wallet) private walletMap;
 
-    TransferControllerManager private transferControllerManager;
-
     mapping(address => uint256) private registeredServicesMap;
     mapping(address => mapping(address => bool)) private disabledServicesMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeTransferControllerManagerEvent(TransferControllerManager oldTransferControllerManager,
-        TransferControllerManager newTransferControllerManager);
-
     event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
 
@@ -77,23 +73,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) Beneficiary() Benefactor() public {
+    constructor(address owner) SelfDestructible(owner) Beneficiary() Benefactor() public {
         serviceActivationTimeout = 1 weeks;
-    }
-
-    /// @notice Change the currency manager contract
-    /// @param newTransferControllerManager The (address of) TransferControllerManager contract instance
-    function changeTransferControllerManager(TransferControllerManager newTransferControllerManager) public
-    onlyOwner
-    notNullAddress(newTransferControllerManager)
-    notSameAddresses(newTransferControllerManager, transferControllerManager)
-    {
-        //set new currency manager
-        TransferControllerManager oldTransferControllerManager = transferControllerManager;
-        transferControllerManager = newTransferControllerManager;
-
-        //emit event
-        emit ChangeTransferControllerManagerEvent(oldTransferControllerManager, newTransferControllerManager);
     }
 
     //
@@ -110,6 +91,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         walletMap[wallet].deposited.add(amount, address(0), 0);
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
+        //add currency to in-use list
+        walletMap[wallet].inUseCurrencies.addItem(address(0), 0);
+
         //emit event
         emit DepositEvent(wallet, amount, address(0), 0);
     }
@@ -118,12 +102,11 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         depositTokensTo(msg.sender, amount, currencyCt, currencyId, standard);
     }
 
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard)
-    public {
+    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
-        TransferController controller = transferControllerManager.getTransferController(currencyCt, standard);
+        TransferController controller = getTransferController(currencyCt, standard);
         controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
 
         //add to per-wallet deposited balance
@@ -131,17 +114,15 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         //add currency to in-use list
-        if (!walletMap[wallet].inUseCurrenciesMap[currencyCt][currencyId]) {
-            walletMap[wallet].inUseCurrenciesMap[currencyCt][currencyId] = true;
-            walletMap[wallet].inUseCurrenciesList.push(MonetaryTypes.Currency(currencyCt, currencyId));
-        }
+        walletMap[wallet].inUseCurrencies.addItem(currencyCt, currencyId);
 
         //emit event
         emit DepositEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 timestamp,
-        address token, uint256 id) {
+    function deposit(address wallet, uint index) public view
+        returns (int256 amount, uint256 timestamp, address token, uint256 id)
+    {
         return walletMap[wallet].txHistory.deposit(index);
     }
 
@@ -153,26 +134,26 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     // Balance retrieval functions
     // -----------------------------------------------------------------------------------------------------------------
     function depositedBalance(address wallet, address currencyCt, uint256 currencyId)
-    public
-    view
-    notNullAddress(wallet)
-    returns (int256) {
+        public view
+        notNullAddress(wallet)
+        returns (int256)
+    {
         return walletMap[wallet].deposited.get(currencyCt, currencyId);
     }
 
     function stagedBalance(address wallet, address currencyCt, uint256 currencyId)
-    public
-    view
-    notNullAddress(wallet)
-    returns (int256) {
+        public view
+        notNullAddress(wallet)
+        returns (int256)
+    {
         return walletMap[wallet].staged.get(currencyCt, currencyId);
     }
 
     function settledBalance(address wallet, address currencyCt, uint256 currencyId)
-    public
-    view
-    notNullAddress(wallet)
-    returns (int256) {
+        public view
+        notNullAddress(wallet)
+        returns (int256)
+    {
         return walletMap[wallet].settled.get(currencyCt, currencyId);
     }
 
@@ -229,9 +210,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     }
 
     function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
-    public
-    onlyRegisteredActiveService
-    notNullAddress(wallet) {
+        public onlyRegisteredActiveService
+        notNullAddress(wallet)
+    {
         require(isAuthorizedServiceForWallet(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
@@ -241,8 +222,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     }
 
     function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
-    public
-    notOwner {
+        public notOwner
+    {
         stageToBeneficiaryPrivate(msg.sender, msg.sender, beneficiary, amount, currencyCt, currencyId);
 
         //emit event
@@ -250,11 +231,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     }
 
     function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId)
-    public
-    onlyRegisteredActiveService
-    notNullAddress(sourceWallet)
-    notNullAddress(beneficiary) {
+                                            address currencyCt, uint256 currencyId) public onlyRegisteredActiveService
+        notNullAddress(sourceWallet)
+        notNullAddress(beneficiary)
+    {
         require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
         stageToBeneficiaryPrivate(sourceWallet, address(0), beneficiary, amount, currencyCt, currencyId);
 
@@ -265,21 +245,20 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
     //
     // Seizing function
     // -----------------------------------------------------------------------------------------------------------------
-    function seizeAllBalances(address sourceWallet, address targetWallet)
-    public
-    onlyRegisteredActiveService
-    notNullAddress(sourceWallet)
-    notNullAddress(targetWallet) {
+    function seizeAllBalances(address sourceWallet, address targetWallet) public onlyRegisteredActiveService
+        notNullAddress(sourceWallet)
+        notNullAddress(targetWallet)
+    {
         int256 amount;
         uint256 i;
         uint256 len;
 
         require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
 
-        //seize ethers
-        len = walletMap[sourceWallet].inUseCurrenciesList.length;
+        //seize all currencies
+        len = walletMap[sourceWallet].inUseCurrencies.getLength();
         for (i = 0; i < len; i++) {
-            MonetaryTypes.Currency storage currency = walletMap[sourceWallet].inUseCurrenciesList[i];
+            MonetaryTypes.Currency memory currency = walletMap[sourceWallet].inUseCurrencies.getAt(i);
 
             amount = sumAllBalancesOfWalletAndCurrency(sourceWallet, currency.ct, currency.id);
             assert(amount >= 0);
@@ -290,10 +269,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
             walletMap[targetWallet].staged.add(amount, currency.ct, currency.id);
 
             //add currencyCt to in-use list
-            if (!walletMap[targetWallet].inUseCurrenciesMap[currency.ct][currency.id]) {
-                walletMap[targetWallet].inUseCurrenciesMap[currency.ct][currency.id] = true;
-                walletMap[targetWallet].inUseCurrenciesList.push(MonetaryTypes.Currency(currency.ct, currency.id));
-            }
+            walletMap[targetWallet].inUseCurrencies.addItem(currency.ct, currency.id);
         }
 
         //emit event
@@ -315,10 +291,11 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         walletMap[msg.sender].txHistory.addWithdrawal(amount, currencyCt, currencyId);
 
         //execute transfer
-        if (currencyCt == address(0))
+        if (currencyCt == address(0)) {
             msg.sender.transfer(uint256(amount));
+        }
         else {
-            TransferController controller = transferControllerManager.getTransferController(currencyCt, standard);
+            TransferController controller = getTransferController(currencyCt, standard);
             if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(amount), currencyCt, currencyId))
                 revert();
         }
@@ -327,11 +304,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    function withdrawal(address wallet, uint index)
-    public
-    view
-    onlyOwner
-    returns (int256 amount, uint256 timestamp, address token, uint256 id) {
+    function withdrawal(address wallet, uint index) public view onlyOwner
+        returns (int256 amount, uint256 timestamp, address token, uint256 id)
+    {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
@@ -341,13 +316,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
 
     //
     // Private functions
-    //
     // -----------------------------------------------------------------------------------------------------------------
     function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
-        int256 amount, address currencyCt, uint256 currencyId) private {
-
-        int256 amountCopy;
-
+        int256 amount, address currencyCt, uint256 currencyId) private
+    {
         require(amount.isPositiveInt256());
         require(isRegisteredBeneficiary(beneficiary));
 
@@ -355,8 +327,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
         amount = amount.clampMax(sumDepositedAndSettledBalancesOfWalletAndCurrency(sourceWallet, currencyCt, currencyId));
         if (amount <= 0)
             return;
-
-        amountCopy = amount;
 
         //first move from settled to staged if settled balance is positive
         if (walletMap[sourceWallet].settled.get(currencyCt, currencyId) > 0) {
@@ -369,12 +339,13 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
             walletMap[sourceWallet].deposited.sub(amount, currencyCt, currencyId);
 
         //transfer funds to the beneficiary
-        if (currencyCt == address(0))
-            beneficiary.depositEthersTo.value(uint256(amountCopy))(destWallet);
+        if (currencyCt == address(0)) {
+            beneficiary.depositEthersTo.value(uint256(amount))(destWallet);
+        }
         else {
             //execute transfer
-            TransferController controller = transferControllerManager.getTransferController(currencyCt, "");
-            if (!address(controller).delegatecall(controller.APPROVE_SIGNATURE, beneficiary, uint256(amountCopy), currencyCt, currencyId))
+            TransferController controller = getTransferController(currencyCt, "");
+            if (!address(controller).delegatecall(controller.APPROVE_SIGNATURE, beneficiary, uint256(amount), currencyCt, currencyId))
                 revert();
 
             //transfer funds to the beneficiary
@@ -384,26 +355,18 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, S
 
     function sumDepositedAndSettledBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private view returns (int256){
         return walletMap[wallet].deposited.get(currencyCt, currencyId)
-        .add(walletMap[wallet].settled.get(currencyCt, currencyId));
+                    .add(walletMap[wallet].settled.get(currencyCt, currencyId));
     }
 
     function sumAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private view returns (int256){
         return walletMap[wallet].deposited.get(currencyCt, currencyId)
-        .add(walletMap[wallet].settled.get(currencyCt, currencyId))
-        .add(walletMap[wallet].staged.get(currencyCt, currencyId));
+                    .add(walletMap[wallet].settled.get(currencyCt, currencyId))
+                    .add(walletMap[wallet].staged.get(currencyCt, currencyId));
     }
 
     function zeroAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private {
         walletMap[wallet].deposited.set(0, currencyCt, currencyId);
         walletMap[wallet].settled.set(0, currencyCt, currencyId);
         walletMap[wallet].staged.set(0, currencyCt, currencyId);
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier transferControllerManagerInitialized() {
-        require(transferControllerManager != address(0));
-        _;
     }
 }

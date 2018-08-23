@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import {Ownable} from "./Ownable.sol";
 import {Types} from "./Types.sol";
 import {ERC20} from "./ERC20.sol";
 import {Modifiable} from "./Modifiable.sol";
@@ -28,7 +27,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title Exchange
 @notice The orchestrator of driip settlements
 */
-contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
+contract Exchange is SelfDestructible, Configurable, Validatable, ClientFundable, CommunityVotable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -63,7 +62,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner) SelfDestructible(owner) public {
     }
 
     //

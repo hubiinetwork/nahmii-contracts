@@ -9,18 +9,18 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "../Ownable.sol";
+import {SelfDestructible} from "../SelfDestructible.sol";
 import {AuthorizableServable} from "../AuthorizableServable.sol";
 
 /**
 @title TestAuthorizableServable
 @notice A test contract that extends AuthorizableServable
 */
-contract TestAuthorizableServable is Ownable, AuthorizableServable {
+contract TestAuthorizableServable is SelfDestructible, AuthorizableServable {
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner) SelfDestructible(owner) public {
     }
 }
