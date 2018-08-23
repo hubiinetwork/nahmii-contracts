@@ -8,17 +8,19 @@
 
 pragma solidity ^0.4.24;
 
-import {Ownable} from "./Ownable.sol";
-
 /**
-@title SecurityBondable
+@title SelfDestructible
 @notice Contract that allows for self-destruction
 */
-contract SelfDestructible is Ownable {
+contract SelfDestructible {
+
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function triggerDestroy() onlyOwner public {
-        selfdestruct(owner);
+    function triggerDestroy() public {
+        require(msg.sender == owner());
+        selfdestruct(owner());
     }
+
+    function owner() public view returns (address);
 }

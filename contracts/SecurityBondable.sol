@@ -31,15 +31,16 @@ contract SecurityBondable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the security bond contract
     /// @param newAddress The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != securityBond) {
-            //set new security bond
-            SecurityBond oldAddress = securityBond;
-            securityBond = newAddress;
+    function changeSecurityBond(SecurityBond newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, securityBond)
+    {
+        //set new security bond
+        SecurityBond oldAddress = securityBond;
+        securityBond = newAddress;
 
-            //emit event
-            emit SecurityBondChangedEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit SecurityBondChangedEvent(oldAddress, newAddress);
     }
 
     //

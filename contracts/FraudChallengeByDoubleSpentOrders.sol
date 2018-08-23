@@ -21,7 +21,6 @@ import {Types} from "./Types.sol";
 @notice Where driips are challenged wrt fraud by double spent orders
 */
 contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Config
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

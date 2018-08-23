@@ -9,14 +9,13 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
 import {TransferController} from "./TransferController.sol";
 
 /**
 @title TransferControllerManager
 @notice Handles the management of transfer controllers
 */
-contract TransferControllerManager is Ownable, SelfDestructible {
+contract TransferControllerManager is Ownable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
@@ -51,10 +50,9 @@ contract TransferControllerManager is Ownable, SelfDestructible {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerTransferController(string standard, address controller)
-    external
-    onlyOwner
-    notNullAddress(controller) {
+    function registerTransferController(string standard, address controller) external onlyOwner
+        notNullAddress(controller)
+    {
         require(bytes(standard).length > 0);
         bytes32 standardHash = keccak256(abi.encodePacked(standard));
 
@@ -66,10 +64,9 @@ contract TransferControllerManager is Ownable, SelfDestructible {
         emit RegisterTransferControllerEvent(standard, controller);
     }
 
-    function reassociateTransferController(string oldStandard, string newStandard, address controller)
-    external
-    onlyOwner
-    notNullAddress(controller) {
+    function reassociateTransferController(string oldStandard, string newStandard, address controller) external onlyOwner
+        notNullAddress(controller)
+    {
         require(bytes(newStandard).length > 0);
         bytes32 oldStandardHash = keccak256(abi.encodePacked(oldStandard));
         bytes32 newStandardHash = keccak256(abi.encodePacked(newStandard));

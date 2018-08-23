@@ -22,7 +22,6 @@ import {Types} from "./Types.sol";
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
 contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable, ClientFundable {
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -31,7 +30,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

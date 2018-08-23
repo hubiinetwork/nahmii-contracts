@@ -11,18 +11,17 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {Types} from "./Types.sol";
 
 /**
 @title CancelOrdersChallenge
 @notice Where orders are cancelled and cancellations challenged
 */
-contract CancelOrdersChallenge is Ownable, Configurable, Validatable, SelfDestructible {
+contract CancelOrdersChallenge is Ownable, Configurable, Validatable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

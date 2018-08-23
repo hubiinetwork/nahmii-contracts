@@ -21,7 +21,6 @@ import {Types} from "./Types.sol";
 @notice Where driips are challenged wrt fraud by mismatch in trade order residuals
 */
 contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Conf
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

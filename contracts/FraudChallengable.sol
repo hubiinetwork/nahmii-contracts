@@ -10,23 +10,16 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title FraudChallengable
 @notice An ownable that has a fraud challenge property
 */
-contract FraudChallengable is Ownable, SelfDestructible {
+contract FraudChallengable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     FraudChallenge public fraudChallenge;
-
-    //
-    // Constructor
-    // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
-    }
 
     //
     // Events
@@ -38,15 +31,16 @@ contract FraudChallengable is Ownable, SelfDestructible {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the fraudChallenge contract
     /// @param newAddress The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != fraudChallenge) {
-            //set new fraud challenge
-            FraudChallenge oldAddress = fraudChallenge;
-            fraudChallenge = newAddress;
+    function changeFraudChallenge(FraudChallenge newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, fraudChallenge)
+    {
+        //set new fraud challenge
+        FraudChallenge oldAddress = fraudChallenge;
+        fraudChallenge = newAddress;
 
-            //emit event
-            emit ChangeFraudChallengeEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit ChangeFraudChallengeEvent(oldAddress, newAddress);
     }
 
     //

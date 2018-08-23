@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
-import {Ownable} from "./Ownable.sol";
 import {Types} from "./Types.sol";
 import {ERC20} from "./ERC20.sol";
 import {Modifiable} from "./Modifiable.sol";
@@ -22,13 +21,13 @@ import {CommunityVotable} from "./CommunityVotable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of driip settlements
 */
-contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
+contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

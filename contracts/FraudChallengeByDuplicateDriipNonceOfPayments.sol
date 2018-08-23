@@ -21,7 +21,6 @@ import {Types} from "./Types.sol";
 @notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
 */
 contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChalleng
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

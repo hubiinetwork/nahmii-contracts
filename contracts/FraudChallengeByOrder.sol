@@ -21,7 +21,6 @@ import {Types} from "./Types.sol";
 @notice Where order is challenged wrt signature error
 */
 contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Vali
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

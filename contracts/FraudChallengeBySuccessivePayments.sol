@@ -21,7 +21,6 @@ import {Types} from "./Types.sol";
 @notice Where driips are challenged wrt fraud by mismatch in successive payments
 */
 contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Confi
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

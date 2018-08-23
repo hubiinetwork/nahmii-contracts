@@ -9,10 +9,9 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {ERC20} from "./ERC20.sol";
 
@@ -21,7 +20,7 @@ import {ERC20} from "./ERC20.sol";
 @notice Fund that contains crypto incentive for challenging operator fraud.
 */
 // TODO Update to two-component currency descriptor
-contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible {
+contract SecurityBond is Ownable, AccrualBeneficiary, Servable {
     using SafeMathInt for int256;
 
     //

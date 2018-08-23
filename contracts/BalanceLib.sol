@@ -13,10 +13,16 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 library BalanceLib {
     using SafeMathInt for int256;
 
+    //
+    // Structures
+    // -----------------------------------------------------------------------------------------------------------------
     struct Balance {
         mapping(address => mapping(uint256 => int256)) currencies;
     }
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     function get(Balance storage self, address currency, uint256 currencyId) internal view returns (int256) {
         if (currency == address(0)) {
             require(currencyId == 0);

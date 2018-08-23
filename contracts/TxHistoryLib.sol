@@ -9,6 +9,9 @@
 pragma solidity ^0.4.24;
 
 library TxHistoryLib {
+    //
+    // Structures
+    // -----------------------------------------------------------------------------------------------------------------
     struct DepositOrWithdrawal {
         int256 amount;
         uint256 timestamp;
@@ -21,6 +24,9 @@ library TxHistoryLib {
         DepositOrWithdrawal[] withdrawals;
     }
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     function addDeposit(TxHistory storage self, int256 amount, address currency, uint256 currencyId) internal {
         self.deposits.push(DepositOrWithdrawal(amount, block.timestamp, currency, currencyId));
     }

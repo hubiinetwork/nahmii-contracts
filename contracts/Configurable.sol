@@ -31,15 +31,16 @@ contract Configurable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newAddress The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != configuration) {
-            //set new configuration
-            Configuration oldAddress = configuration;
-            configuration = newAddress;
+    function changeConfiguration(Configuration newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, configuration)
+    {
+        //set new configuration
+        Configuration oldAddress = configuration;
+        configuration = newAddress;
 
-            //emit event
-            emit ChangeConfigurationEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit ChangeConfigurationEvent(oldAddress, newAddress);
     }
 
     //

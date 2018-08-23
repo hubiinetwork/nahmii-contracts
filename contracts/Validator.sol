@@ -12,16 +12,15 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {Types} from "./Types.sol";
-import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Hashable} from "./Hashable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title Validatable
 @notice An ownable that validates valuable types (order, trade, payment)
 */
-contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
+contract Validator is Ownable, Configurable, Hashable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
