@@ -9,18 +9,18 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {Types} from "./Types.sol";
 
 /**
 @title Hasher
 @notice Contract that hashes types in Types contract
 */
-contract Hasher is SelfDestructible {
+contract Hasher is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

@@ -14,20 +14,20 @@ import {SafeMathUint} from "./SafeMathUint.sol";
 import {Types} from "./Types.sol";
 import {Configurable} from "./Configurable.sol";
 import {Hashable} from "./Hashable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title Validatable
 @notice An ownable that validates valuable types (order, trade, payment)
 */
-contract Validator is SelfDestructible, Configurable, Hashable {
+contract Validator is Ownable, Configurable, Hashable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {Hasher} from "./Hasher.sol";
 import {Types} from "./Types.sol";
 
@@ -16,7 +16,7 @@ import {Types} from "./Types.sol";
 @title Hashable
 @notice An ownable that has a hasher property
 */
-contract Hashable is SelfDestructible {
+contract Hashable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

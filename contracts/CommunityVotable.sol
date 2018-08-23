@@ -7,14 +7,14 @@
  */
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {CommunityVote} from "./CommunityVote.sol";
 
 /**
 @title CommunityVotable
 @notice An ownable that has a community vote property
 */
-contract CommunityVotable is SelfDestructible {
+contract CommunityVotable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

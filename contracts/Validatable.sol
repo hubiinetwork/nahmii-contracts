@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {Validator} from "./Validator.sol";
 import {Types} from "./Types.sol";
 
@@ -16,7 +16,7 @@ import {Types} from "./Types.sol";
 @title Validatable
 @notice An ownable that has a validator property
 */
-contract Validatable is SelfDestructible {
+contract Validatable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

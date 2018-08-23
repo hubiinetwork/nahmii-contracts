@@ -8,14 +8,14 @@
 
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {SecurityBond} from "./SecurityBond.sol";
 
 /**
 @title SecurityBondable
 @notice An ownable that has a security bond property
 */
-contract SecurityBondable is SelfDestructible {
+contract SecurityBondable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

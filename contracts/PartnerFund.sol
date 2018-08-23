@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
@@ -23,7 +23,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice XXXX
 */
 // TODO Update to two-component currency descriptor
-contract PartnerFund is SelfDestructible, Beneficiary {
+contract PartnerFund is Ownable, Beneficiary {
     using SafeMathInt for int256;
 
     //
@@ -82,7 +82,7 @@ contract PartnerFund is SelfDestructible, Beneficiary {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {ClientFund} from "./ClientFund.sol";
 import {Types} from "./Types.sol";
 
@@ -16,7 +16,7 @@ import {Types} from "./Types.sol";
 @title ClientFundable
 @notice An ownable that has a client fund property
 */
-contract ClientFundable is SelfDestructible {
+contract ClientFundable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

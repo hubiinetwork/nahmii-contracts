@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
@@ -20,7 +20,7 @@ import {Types} from "./Types.sol";
 @title FraudChallengeByDoubleSpentOrders
 @notice Where driips are challenged wrt fraud by double spent orders
 */
-contract FraudChallengeByDoubleSpentOrders is SelfDestructible, FraudChallengable, Configurable, Validatable, SecurityBondable {
+contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ contract FraudChallengeByDoubleSpentOrders is SelfDestructible, FraudChallengabl
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

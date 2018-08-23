@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {ERC20} from "./ERC20.sol";
 
@@ -20,7 +20,7 @@ import {ERC20} from "./ERC20.sol";
 @notice Fund that contains crypto incentive for challenging operator fraud.
 */
 // TODO Update to two-component currency descriptor
-contract SecurityBond is SelfDestructible, AccrualBeneficiary, Servable {
+contract SecurityBond is Ownable, AccrualBeneficiary, Servable {
     using SafeMathInt for int256;
 
     //
@@ -85,7 +85,7 @@ contract SecurityBond is SelfDestructible, AccrualBeneficiary, Servable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) SelfDestructible(_owner) Servable() public {
+    constructor(address _owner) Ownable(_owner) Servable() public {
         withdrawalTimeout = 30 minutes;
     }
 

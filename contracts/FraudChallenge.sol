@@ -12,13 +12,13 @@ pragma experimental ABIEncoderV2;
 import {Modifiable} from "./Modifiable.sol";
 import {Servable} from "./Servable.sol";
 import {Types} from "./Types.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is SelfDestructible, Servable {
+contract FraudChallenge is Ownable, Servable {
 
     //
     // Variables
@@ -56,7 +56,7 @@ contract FraudChallenge is SelfDestructible, Servable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

@@ -13,7 +13,7 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
@@ -26,7 +26,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract ClientFund is SelfDestructible, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
+contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
@@ -73,7 +73,7 @@ contract ClientFund is SelfDestructible, Beneficiary, Benefactor, AuthorizableSe
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) Beneficiary() Benefactor() public {
+    constructor(address owner) Ownable(owner) Beneficiary() Benefactor() public {
         serviceActivationTimeout = 1 weeks;
     }
 

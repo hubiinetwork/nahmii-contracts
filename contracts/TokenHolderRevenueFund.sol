@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {RevenueToken} from "./RevenueToken.sol";
@@ -25,7 +25,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Fund that manages the revenue earned by revenue token holders.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract TokenHolderRevenueFund is SelfDestructible, AccrualBeneficiary, Servable, TransferControllerManageable {
+contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -82,7 +82,7 @@ contract TokenHolderRevenueFund is SelfDestructible, AccrualBeneficiary, Servabl
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) Servable() public {
+    constructor(address owner) Ownable(owner) Servable() public {
     }
 
     //
