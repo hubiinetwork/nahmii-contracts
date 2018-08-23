@@ -9,7 +9,7 @@ chai.should();
 module.exports = (glob) => {
     describe('Configuration', () => {
         let web3Configuration, ethersConfiguration;
-        let provider, blockNumberAhead, blockNumberBehind;
+        let provider, blockNumber, blockNumberAhead;
         const feeUpdates = {
             tradeMakerFee: 0,
             tradeTakerFee: 0,
@@ -26,9 +26,8 @@ module.exports = (glob) => {
         });
 
         beforeEach(async () => {
-            const blockNumber = await provider.getBlockNumber();
-            blockNumberAhead = blockNumber + 10;
-            blockNumberBehind = blockNumber - 10;
+            blockNumber = await provider.getBlockNumber();
+            blockNumberAhead = blockNumber + 60;
         });
 
         describe('constructor', () => {
@@ -95,6 +94,42 @@ module.exports = (glob) => {
             });
         });
 
+        describe('getConfirmations()', () => {
+            it('should get the value initialized at construction time', async () => {
+                const confirmations = await web3Configuration.getConfirmations.call();
+                confirmations.toNumber().should.equal(50);
+            });
+        });
+
+        describe('setConfirmations()', () => {
+            let confirmations;
+
+            before(async () => {
+                confirmations = (await web3Configuration.getConfirmations.call()).toNumber();
+            });
+
+            after(async () => {
+                web3Configuration.setConfirmations(confirmations);
+            });
+
+            describe('if provided with correct parameter and called with sender that is owner', () => {
+                it('should successfully set new value and emit event', async () => {
+                    const result = await web3Configuration.setConfirmations(10);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetConfirmationsEvent');
+                    const value = await web3Configuration.getConfirmations.call();
+                    value.toNumber().should.equal(10);
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should fail to set new values', async () => {
+                    web3Configuration.setConfirmations(20, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
         describe('getTradeMakerFee()', () => {
             beforeEach(async () => {
                 await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
@@ -135,9 +170,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with block number behind the current one', () => {
+            describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setTradeMakerFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setTradeMakerFee(blockNumber, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
@@ -195,9 +230,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with block number behind the current one', () => {
+            describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setTradeTakerFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setTradeTakerFee(blockNumber, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
@@ -255,9 +290,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with block number behind the current one', () => {
+            describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setPaymentFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setPaymentFee(blockNumber, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
@@ -324,7 +359,7 @@ module.exports = (glob) => {
         describe('setCurrencyPaymentFee()', () => {
             let currencyCt, currencyId;
 
-            before(() => {
+            before(async () => {
                 currencyCt = Wallet.createRandom().address;
                 currencyId = 0;
             });
@@ -346,9 +381,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with block number behind the current one', () => {
+            describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumber, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
@@ -404,9 +439,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with block number behind the current one', () => {
+            describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setTradeMakerMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    web3Configuration.setTradeMakerMinimumFee(blockNumber, 1e18).should.be.rejected;
                 });
             });
         });
@@ -449,9 +484,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with block number behind the current one', () => {
+            describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setTradeTakerMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    web3Configuration.setTradeTakerMinimumFee(blockNumber, 1e18).should.be.rejected;
                 });
             });
         });
@@ -495,9 +530,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with block number behind the current one', () => {
+            describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setPaymentMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    web3Configuration.setPaymentMinimumFee(blockNumber, 1e18).should.be.rejected;
                 });
             });
         });
@@ -546,7 +581,7 @@ module.exports = (glob) => {
         describe('setCurrencyPaymentMinimumFee()', () => {
             let currencyCt, currencyId;
 
-            before(() => {
+            before(async () => {
                 currencyCt = Wallet.createRandom().address;
                 currencyId = 0;
             });
@@ -568,9 +603,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with block number behind the current one', () => {
+            describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberBehind, 1e18).should.be.rejected;
+                    web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumber, 1e18).should.be.rejected;
                 });
             });
         });
