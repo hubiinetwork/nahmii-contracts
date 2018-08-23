@@ -15,13 +15,13 @@ import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {DriipSettlementChallenger} from "./DriipSettlementChallenger.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title DriipSettlementChallenge
 @notice Where driip settlements are challenged
 */
-contract DriipSettlementChallenge is SelfDestructible, Configurable, Validatable {
+contract DriipSettlementChallenge is Ownable, Configurable, Validatable {
     using SafeMathInt for int256;
 
     //
@@ -64,7 +64,7 @@ contract DriipSettlementChallenge is SelfDestructible, Configurable, Validatable
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

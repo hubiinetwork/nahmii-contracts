@@ -8,13 +8,13 @@
 
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title Benefactor
 @notice An ownable that contains registered beneficiaries
 */
-contract Benefactor is SelfDestructible {
+contract Benefactor is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

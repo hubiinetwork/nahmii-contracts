@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {TransferControllerManager} from "./TransferControllerManager.sol";
 import {TransferController} from "./TransferController.sol";
 
@@ -16,7 +16,7 @@ import {TransferController} from "./TransferController.sol";
 @title FraudChallengable
 @notice An ownable that has a fraud challenge property
 */
-contract TransferControllerManageable is SelfDestructible {
+contract TransferControllerManageable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

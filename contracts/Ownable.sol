@@ -9,11 +9,13 @@
 pragma solidity ^0.4.24;
 
 import {Modifiable} from "./Modifiable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
+
 /**
 @title Ownable
 @notice A contract that has an owner property
 */
-contract Ownable is Modifiable {
+contract Ownable is Modifiable, SelfDestructible {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

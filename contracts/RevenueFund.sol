@@ -13,7 +13,7 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {AccrualBenefactor} from "./AccrualBenefactor.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
@@ -28,7 +28,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
  and one for revenue from payments.
 */
 // TODO Update to two-component currency descriptor
-contract RevenueFund is SelfDestructible, AccrualBeneficiary, AccrualBenefactor, TransferControllerManageable {
+contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -57,7 +57,7 @@ contract RevenueFund is SelfDestructible, AccrualBeneficiary, AccrualBenefactor,
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

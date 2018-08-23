@@ -21,13 +21,13 @@ import {CommunityVotable} from "./CommunityVotable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of driip settlements
 */
-contract Exchange is SelfDestructible, Configurable, Validatable, ClientFundable, CommunityVotable {
+contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -62,7 +62,7 @@ contract Exchange is SelfDestructible, Configurable, Validatable, ClientFundable
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

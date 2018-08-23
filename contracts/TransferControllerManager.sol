@@ -8,14 +8,14 @@
 
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {TransferController} from "./TransferController.sol";
 
 /**
 @title TransferControllerManager
 @notice Handles the management of transfer controllers
 */
-contract TransferControllerManager is SelfDestructible {
+contract TransferControllerManager is Ownable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ contract TransferControllerManager is SelfDestructible {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

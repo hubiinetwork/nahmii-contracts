@@ -8,13 +8,13 @@
 
 pragma solidity ^0.4.24;
 
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title Servable
 @notice An ownable that contains registered services and their actions
 */
-contract Servable is SelfDestructible {
+contract Servable is Ownable {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------

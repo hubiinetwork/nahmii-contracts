@@ -18,13 +18,13 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title DriipSettlementChallenger
 @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
-contract DriipSettlementChallenger is SelfDestructible, Configurable, Validatable, SecurityBondable {
+contract DriipSettlementChallenger is Ownable, Configurable, Validatable, SecurityBondable {
     using SafeMathInt for int256;
 
     //
@@ -48,7 +48,7 @@ contract DriipSettlementChallenger is SelfDestructible, Configurable, Validatabl
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) SelfDestructible(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     /// @notice Change the driip settlement challenge contract
