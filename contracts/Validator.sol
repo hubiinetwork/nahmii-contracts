@@ -151,7 +151,7 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
     // TODO Implement support for NFT. Current logics only applies to FT.
     function isGenuinePaymentSender(StriimTypes.Payment payment) public pure returns (bool) {
         return (payment.sender.wallet != payment.recipient.wallet)
-        && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.sender.fees.single));
+        && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.sender.fees.single.amount));
     }
 
     function isGenuinePaymentRecipient(StriimTypes.Payment payment) public pure returns (bool) {
@@ -218,20 +218,20 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
     function isGenuineSuccessiveTradesBalances(
         StriimTypes.Trade firstTrade,
         StriimTypes.TradePartyRole firstTradePartyRole,
-        StriimTypes.CurrencyRole firstCurrencyRole,
+        StriimTypes.CurrencyRole firstTradeCurrencyRole,
         StriimTypes.Trade lastTrade,
         StriimTypes.TradePartyRole lastTradePartyRole,
-        StriimTypes.CurrencyRole lastCurrencyRole
+        StriimTypes.CurrencyRole lastTradeCurrencyRole
     )
     public
     pure
     returns (bool)
     {
         StriimTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (StriimTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.balances : firstTrade.seller.balances);
-        StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == firstCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == firstTradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
         StriimTypes.IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (StriimTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
-        StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == lastCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
+        StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == lastTradeCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
@@ -255,7 +255,7 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
     function isGenuineSuccessiveTradePaymentBalances(
         StriimTypes.Trade trade,
         StriimTypes.TradePartyRole tradePartyRole,
-        StriimTypes.CurrencyRole currencyRole,
+        StriimTypes.CurrencyRole tradeCurrencyRole,
         StriimTypes.Payment payment,
         StriimTypes.PaymentPartyRole paymentPartyRole
     )
@@ -264,7 +264,7 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
     returns (bool)
     {
         StriimTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
-        StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == currencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
         StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
@@ -276,7 +276,7 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
         StriimTypes.PaymentPartyRole paymentPartyRole,
         StriimTypes.Trade trade,
         StriimTypes.TradePartyRole tradePartyRole,
-        StriimTypes.CurrencyRole currencyRole
+        StriimTypes.CurrencyRole tradeCurrencyRole
     )
     public
     pure
@@ -285,7 +285,7 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
         StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
         StriimTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
-        StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == currencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
@@ -300,7 +300,7 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
     pure
     returns (bool)
     {
-        MonetaryTypes.Figure memory lastSingleFee = 0;
+        MonetaryTypes.Figure memory lastSingleFee;
         if (StriimTypes.TradePartyRole.Buyer == lastTradePartyRole)
             lastSingleFee = lastTrade.buyer.fees.single;
         else if (StriimTypes.TradePartyRole.Seller == lastTradePartyRole)
@@ -371,7 +371,7 @@ contract Validator is Ownable, Configurable, Hashable, SelfDestructible {
     pure
     returns (bool)
     {
-        MonetaryTypes.Figure memory lastSingleFee = 0;
+        MonetaryTypes.Figure memory lastSingleFee;
         if (StriimTypes.TradePartyRole.Buyer == tradePartyRole)
             lastSingleFee = trade.buyer.fees.single;
         else if (StriimTypes.TradePartyRole.Seller == tradePartyRole)

@@ -11,6 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {Ownable} from "./Ownable.sol";
+import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {StriimTypes} from "./StriimTypes.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
@@ -112,13 +113,15 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
 
         // Buy order -> Conjugate currency and amount
         // Sell order -> Intended currency and amount
-        address orderCurrency;
         int256 orderAmount;
-        (orderCurrency, orderAmount) = (StriimTypes.Intention.Sell == order.placement.intention ? (order.placement.currencies.intended, order.placement.amount)
-        : (order.placement.currencies.conjugate, order.placement.amount.div(order.placement.rate)));
+        MonetaryTypes.Currency memory orderCurrency;
+        (orderAmount, orderCurrency) = (StriimTypes.Intention.Sell == order.placement.intention ?
+        (order.placement.amount, order.placement.currencies.intended) :
+        (order.placement.amount.div(order.placement.rate), order.placement.currencies.conjugate));
 
-        int256 balance = (StriimTypes.DriipType.Trade == challenge.driipType ? getTradeBalance(driipSettlementChallenge.getWalletChallengeTrade(order.wallet, challenge.driipIndex), order.wallet, orderCurrency)
-        : getPaymentBalance(driipSettlementChallenge.getWalletChallengePayment(order.wallet, challenge.driipIndex), order.wallet, orderCurrency));
+        int256 balance = (StriimTypes.DriipType.Trade == challenge.driipType ?
+        getTradeBalance(driipSettlementChallenge.getWalletChallengeTrade(order.wallet, challenge.driipIndex), order.wallet, orderCurrency) :
+        getPaymentBalance(driipSettlementChallenge.getWalletChallengePayment(order.wallet, challenge.driipIndex), order.wallet, orderCurrency));
 
         require(orderAmount > balance);
 
@@ -197,11 +200,11 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
         StriimTypes.TradePartyRole.Buyer :
         StriimTypes.TradePartyRole.Seller);
 
-        address currency;
         int256 candidateTransfer;
-        (currency, candidateTransfer) = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ?
-        (trade.currencies.conjugate, trade.transfers.conjugate.single.abs()) :
-        (trade.currencies.intended, trade.transfers.intended.single.abs()));
+        MonetaryTypes.Currency memory currency;
+        (candidateTransfer, currency) = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ?
+        (trade.transfers.conjugate.single.abs(), trade.currencies.conjugate) :
+        (trade.transfers.intended.single.abs(), trade.currencies.intended));
 
         int256 challengeBalance = (StriimTypes.DriipType.Trade == challenge.driipType ?
         getTradeBalance(
@@ -278,27 +281,28 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
         emit ChallengeByPaymentEvent(payment, wallet, challenge.nonce, challenge.driipType, challenger);
     }
 
-    function getTradeBalance(StriimTypes.Trade trade, address wallet, address currency) private pure returns (int256) {
+    function getTradeBalance(StriimTypes.Trade trade, address wallet, MonetaryTypes.Currency currency) private pure returns (int256) {
         require(0 < trade.nonce);
-        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+        require((currency.ct == trade.currencies.intended.ct && currency.id == trade.currencies.intended.id) ||
+            (currency.ct == trade.currencies.conjugate.ct && currency.id == trade.currencies.conjugate.id));
 
         StriimTypes.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
-        StriimTypes.CurrencyRole tradeCurrencyRole = (currency == trade.currencies.intended ? StriimTypes.CurrencyRole.Intended : StriimTypes.CurrencyRole.Conjugate);
+        StriimTypes.CurrencyRole tradeCurrencyRole = (currency.ct == trade.currencies.intended.ct && currency.id == trade.currencies.intended.id ? StriimTypes.CurrencyRole.Intended : StriimTypes.CurrencyRole.Conjugate);
         if (StriimTypes.TradePartyRole.Buyer == tradePartyRole)
             if (StriimTypes.CurrencyRole.Intended == tradeCurrencyRole)
                 return trade.buyer.balances.intended.current;
-            else // StriimTypes.CurrencyRole.Conjugate == currencyRole
+            else // StriimTypes.CurrencyRole.Conjugate == tradeCurrencyRole
                 return trade.buyer.balances.conjugate.current;
         else // StriimTypes.TradePartyRole.Seller == tradePartyRole
             if (StriimTypes.CurrencyRole.Intended == tradeCurrencyRole)
                 return trade.seller.balances.intended.current;
-            else // StriimTypes.CurrencyRole.Conjugate == currencyRole
+            else // StriimTypes.CurrencyRole.Conjugate == tradeCurrencyRole
                 return trade.seller.balances.conjugate.current;
     }
 
-    function getPaymentBalance(StriimTypes.Payment payment, address wallet, address currency) private pure returns (int256) {
+    function getPaymentBalance(StriimTypes.Payment payment, address wallet, MonetaryTypes.Currency currency) private pure returns (int256) {
         require(0 < payment.nonce);
-        require(currency == payment.currency);
+        require(currency.ct == payment.currency.ct && currency.id == payment.currency.id);
 
         StriimTypes.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
         if (StriimTypes.PaymentPartyRole.Sender == paymentPartyRole)

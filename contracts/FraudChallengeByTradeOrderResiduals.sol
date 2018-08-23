@@ -40,12 +40,14 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Vali
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
-    /// @param currency Address of concerned currency (0 if ETH)
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     function challenge(
         StriimTypes.Trade firstTrade,
         StriimTypes.Trade lastTrade,
         address wallet,
-        address currency
+        address currencyCt,
+        uint256 currencyId
     )
     public
     onlyOperationalModeNormal
@@ -59,8 +61,8 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Vali
 
         require(StriimTypes.isTradeParty(firstTrade, wallet));
         require(StriimTypes.isTradeParty(lastTrade, wallet));
-        require(currency == firstTrade.currencies.intended);
-        require(currency == lastTrade.currencies.intended);
+        require(currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id);
+        require(currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id);
 
         StriimTypes.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
         StriimTypes.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);

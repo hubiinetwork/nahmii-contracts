@@ -208,16 +208,17 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
             // If wallet has previously settled with higher driip nonce with any of the concerned currencies then don't settle currency balances
             if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended.ct][trade.currencies.intended.id] < trade.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, party.netFees.intended, trade.currencies.intended.ct, trade.currencies.intended.id);
                 clientFund.updateSettledBalance(wallet, party.balances.intended.current, trade.currencies.intended.ct, trade.currencies.intended.id);
-                walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended][trade.currencies.intended.id] = trade.nonce;
+                walletCurrencyMaxDriipNonce[wallet][trade.currencies.intended.ct][trade.currencies.intended.id] = trade.nonce;
             }
 
             if (walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate.ct][trade.currencies.conjugate.id] < trade.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, tradesRevenueFund, party.netFees.conjugate, trade.currencies.conjugate.ct, trade.currencies.conjugate.id);
                 clientFund.updateSettledBalance(wallet, party.balances.conjugate.current, trade.currencies.conjugate.ct, trade.currencies.conjugate.id);
                 walletCurrencyMaxDriipNonce[wallet][trade.currencies.conjugate.ct][trade.currencies.conjugate.id] = trade.nonce;
             }
+
+            // TODO Need to make certain that any one set of fees is not staged more than once
+            stageFiguresToRevenueFund(wallet, party.fees.net, tradesRevenueFund);
 
             if (trade.nonce > maxDriipNonce)
                 maxDriipNonce = trade.nonce;
@@ -289,10 +290,12 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
             // If wallet has previously settled with higher driip nonce with the currency, then don't settle the balance
             if (walletCurrencyMaxDriipNonce[wallet][payment.currency.ct][payment.currency.id] < payment.nonce) {
-                clientFund.stageToBeneficiaryUntargeted(wallet, paymentsRevenueFund, netFees, payment.currency.ct, payment.currency.id);
                 clientFund.updateSettledBalance(wallet, currentBalance, payment.currency.ct, payment.currency.id);
                 walletCurrencyMaxDriipNonce[wallet][payment.currency.ct][payment.currency.id] = payment.nonce;
             }
+
+            // TODO Need to make certain that any one set of fees is not staged more than once
+            stageFiguresToRevenueFund(wallet, netFees, paymentsRevenueFund);
 
             if (payment.nonce > maxDriipNonce)
                 maxDriipNonce = payment.nonce;
@@ -371,6 +374,12 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         if (!seizedWalletsMap[_address]) {
             seizedWallets.push(_address);
             seizedWalletsMap[_address] = true;
+        }
+    }
+
+    function stageFiguresToRevenueFund(address wallet, MonetaryTypes.Figure[] figures, RevenueFund revenueFund) private {
+        for (uint256 i = 0; i < figures.length; i++) {
+            clientFund.stageToBeneficiaryUntargeted(wallet, revenueFund, figures[i].amount, figures[i].currency.ct, figures[i].currency.id);
         }
     }
 }

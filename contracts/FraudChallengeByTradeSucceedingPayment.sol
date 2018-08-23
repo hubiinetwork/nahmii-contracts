@@ -40,12 +40,14 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, V
     /// @param payment Reference payment
     /// @param trade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
-    /// @param currency Address of concerned currency of trade (0 if ETH)
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     function challenge(
         StriimTypes.Payment payment,
         StriimTypes.Trade trade,
         address wallet,
-        address currency
+        address currencyCt,
+        uint256 currencyId
     )
     public
     validatorInitialized
@@ -59,18 +61,19 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, V
 
         require(StriimTypes.isTradeParty(trade, wallet));
         require(StriimTypes.isPaymentParty(payment, wallet));
-        require(currency == payment.currency);
-        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+        require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
+        require((currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id)
+            || (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id));
 
         StriimTypes.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
         StriimTypes.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
 
         require(validator.isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
 
-        StriimTypes.CurrencyRole currencyRole = (currency == trade.currencies.intended ? StriimTypes.CurrencyRole.Intended : StriimTypes.CurrencyRole.Conjugate);
+        StriimTypes.CurrencyRole tradeCurrencyRole = (currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id ? StriimTypes.CurrencyRole.Intended : StriimTypes.CurrencyRole.Conjugate);
 
         require(
-            !validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, currencyRole) ||
+            !validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, tradeCurrencyRole) ||
         !validator.isGenuineSuccessivePaymentTradeNetFees(payment, paymentPartyRole, trade, tradePartyRole)
         );
 

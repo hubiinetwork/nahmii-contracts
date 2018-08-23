@@ -29,6 +29,7 @@ library MonetaryTypes {
 
     function getFigureByCurrency(Figure[] figures, Currency currency)
     public
+    pure
     returns (Figure) {
         for (uint256 i = 0; i < figures.length; i++)
             if (figures[i].currency.ct == currency.ct && figures[i].currency.id == currency.id)

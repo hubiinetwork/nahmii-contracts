@@ -40,12 +40,14 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Validat
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
-    /// @param currency Address of concerned currency (0 if ETH)
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     function challenge(
         StriimTypes.Trade firstTrade,
         StriimTypes.Trade lastTrade,
         address wallet,
-        address currency
+        address currencyCt,
+        uint256 currencyId
     )
     public
     onlyOperationalModeNormal
@@ -59,16 +61,21 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Validat
 
         require(StriimTypes.isTradeParty(firstTrade, wallet));
         require(StriimTypes.isTradeParty(lastTrade, wallet));
-        require(currency == firstTrade.currencies.intended || currency == firstTrade.currencies.conjugate);
-        require(currency == lastTrade.currencies.intended || currency == lastTrade.currencies.conjugate);
+        require((currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id) ||
+            (currencyCt == firstTrade.currencies.conjugate.ct && currencyId == firstTrade.currencies.conjugate.id));
+        require((currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id) ||
+            (currencyCt == lastTrade.currencies.conjugate.ct && currencyId == lastTrade.currencies.conjugate.id));
 
         StriimTypes.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
         StriimTypes.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
+        StriimTypes.CurrencyRole firstTradeCurrencyRole = (currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id ? StriimTypes.CurrencyRole.Intended : StriimTypes.CurrencyRole.Conjugate);
+        StriimTypes.CurrencyRole lastTradeCurrencyRole = (currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id ? StriimTypes.CurrencyRole.Intended : StriimTypes.CurrencyRole.Conjugate);
+
         require(
-            !validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole) ||
+            !validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstTradeCurrencyRole, lastTrade, lastTradePartyRole, lastTradeCurrencyRole) ||
         !validator.isGenuineSuccessiveTradesNetFees(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole)
         );
 

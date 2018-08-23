@@ -57,7 +57,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Valid
 
         require(StriimTypes.isPaymentParty(firstPayment, wallet));
         require(StriimTypes.isPaymentParty(lastPayment, wallet));
-        require(firstPayment.currency == lastPayment.currency);
+        require(firstPayment.currency.ct == lastPayment.currency.ct && firstPayment.currency.id == lastPayment.currency.id);
 
         StriimTypes.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
         StriimTypes.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
