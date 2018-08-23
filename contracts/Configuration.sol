@@ -110,7 +110,7 @@ contract Configuration is Ownable, Servable, SelfDestructible {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) Ownable(owner) public {
-        confirmations = 50;
+        confirmations = 12;
         cancelOrderChallengeTimeout = 3 hours;
         driipSettlementChallengeTimeout = 5 hours;
     }

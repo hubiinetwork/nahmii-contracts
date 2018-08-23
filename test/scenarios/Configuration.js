@@ -27,7 +27,7 @@ module.exports = (glob) => {
 
         beforeEach(async () => {
             blockNumber = await provider.getBlockNumber();
-            blockNumberAhead = blockNumber + 60;
+            blockNumberAhead = blockNumber + 15;
         });
 
         describe('constructor', () => {
@@ -97,7 +97,7 @@ module.exports = (glob) => {
         describe('getConfirmations()', () => {
             it('should get the value initialized at construction time', async () => {
                 const confirmations = await web3Configuration.getConfirmations.call();
-                confirmations.toNumber().should.equal(50);
+                confirmations.toNumber().should.equal(12);
             });
         });
 
