@@ -6,7 +6,9 @@
 
 const SafeMathInt = artifacts.require('SafeMathInt');
 const SafeMathUint = artifacts.require('SafeMathUint');
+const MonetaryTypes = artifacts.require('MonetaryTypes');
 const StriimTypes = artifacts.require('StriimTypes');
+const Challenge = artifacts.require('Challenge');
 const ClientFund = artifacts.require('ClientFund');
 const CommunityVote = artifacts.require('CommunityVote');
 const Configuration = artifacts.require('Configuration');
@@ -59,9 +61,15 @@ module.exports = (deployer, network, accounts) => {
 
             const addresses = {};
 
+            await execDeploy(deployer, 'MonetaryTypes', MonetaryTypes, deployFilters, addresses, ownerAccount);
+
+            await deployer.link(MonetaryTypes, [
+                Challenge, ClientFund, Configuration, DriipSettlementChallenger, Exchange, StriimTypes, TokenHolderRevenueFund, Validator
+            ]);
+
 			await execDeploy(deployer, 'SafeMathInt', SafeMathInt, deployFilters, addresses, ownerAccount);
 			await execDeploy(deployer, 'SafeMathUint', SafeMathUint, deployFilters, addresses, ownerAccount);
-			await execDeploy(deployer, 'StriimTypes', StriimTypes, deployFilters, addresses, ownerAccount);
+            await execDeploy(deployer, 'StriimTypes', StriimTypes, deployFilters, addresses, ownerAccount);
 
 			await deployer.link(SafeMathInt, [
 					ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,

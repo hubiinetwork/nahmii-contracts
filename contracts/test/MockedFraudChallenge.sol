@@ -59,12 +59,16 @@ contract MockedFraudChallenge is FraudChallenge {
     }
 
     function addFraudulentTrade(StriimTypes.Trade trade) public {
-        fraudulentTrades.push(trade);
+        // TODO Uncomment/solve
+//        fraudulentTrades.push(trade);
+        pushMemoryTradeToStorageArray(trade, fraudulentTrades);
         emit AddFraudulentTradeEvent(trade);
     }
 
     function addFraudulentPayment(StriimTypes.Payment payment) public {
-        fraudulentPayments.push(payment);
+        // TODO Uncomment/solve
+//        fraudulentPayments.push(payment);
+        pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
         emit AddFraudulentPaymentEvent(payment);
     }
 

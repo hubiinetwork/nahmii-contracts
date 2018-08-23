@@ -9,14 +9,15 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
 import {Ownable} from "./Ownable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {Challenge} from "./Challenge.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Challengable} from "./Challengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {DriipSettlementChallenger} from "./DriipSettlementChallenger.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title DriipSettlementChallenge
@@ -138,7 +139,9 @@ contract DriipSettlementChallenge is Ownable, Challengable, Validatable, SelfDes
             block.timestamp >= walletChallengeMap[wallet].timeout
         );
 
-        walletChallengedTradesMap[wallet].push(trade);
+        // TODO Uncomment/solve
+//        walletChallengedTradesMap[wallet].push(trade);
+        pushMemoryTradeToStorageArray(trade, walletChallengedTradesMap[wallet]);
 
         Challenge memory challenge = Challenge(
             trade.nonce,
@@ -175,7 +178,9 @@ contract DriipSettlementChallenge is Ownable, Challengable, Validatable, SelfDes
             block.timestamp >= walletChallengeMap[wallet].timeout
         );
 
-        walletChallengedPaymentsMap[wallet].push(payment);
+        // TODO Uncomment/solve
+//        walletChallengedPaymentsMap[wallet].push(payment);
+        pushMemoryPaymentToStorageArray(payment, walletChallengedPaymentsMap[wallet]);
 
         Challenge memory challenge = Challenge(
             payment.nonce,
@@ -296,7 +301,9 @@ contract DriipSettlementChallenge is Ownable, Challengable, Validatable, SelfDes
     }
 
     function pushChallengeCandidateTrade(StriimTypes.Trade trade) public onlyDriipSettlementChallenger {
-        challengeCandidateTrades.push(trade);
+        // TODO Uncomment/solve
+//        challengeCandidateTrades.push(trade);
+        pushMemoryTradeToStorageArray(trade, challengeCandidateTrades);
     }
 
     function getChallengeCandidateTradesLength() public view onlyDriipSettlementChallenger returns (uint256) {
@@ -304,7 +311,9 @@ contract DriipSettlementChallenge is Ownable, Challengable, Validatable, SelfDes
     }
 
     function pushChallengeCandidatePayment(StriimTypes.Payment payment) public onlyDriipSettlementChallenger {
-        challengeCandidatePayments.push(payment);
+        // TODO Uncomment/solve
+//        challengeCandidatePayments.push(payment);
+        pushMemoryPaymentToStorageArray(payment, challengeCandidatePayments);
     }
 
     function getChallengeCandidatePaymentsLength() public view onlyDriipSettlementChallenger returns (uint256) {

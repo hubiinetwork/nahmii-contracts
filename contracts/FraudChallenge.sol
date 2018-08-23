@@ -10,16 +10,17 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Modifiable} from "./Modifiable.sol";
 import {Servable} from "./Servable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, Servable, SelfDestructible {
+contract FraudChallenge is Ownable, Challenge, Servable, SelfDestructible {
 
     //
     // Variables
@@ -151,7 +152,9 @@ contract FraudChallenge is Ownable, Servable, SelfDestructible {
     onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
     {
         if (!fraudulentTradeHashMap[trade.seal.hash]) {
-            fraudulentTrades.push(trade);
+            // TODO Uncomment/solve
+//            fraudulentTrades.push(trade);
+            pushMemoryTradeToStorageArray(trade, fraudulentTrades);
             fraudulentTradeHashMap[trade.seal.hash] = true;
             emit AddFraudulentTradeEvent(trade);
         }
@@ -173,7 +176,9 @@ contract FraudChallenge is Ownable, Servable, SelfDestructible {
     onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
     {
         if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
-            fraudulentPayments.push(payment);
+            // TODO Uncomment/solve
+//            fraudulentPayments.push(payment);
+            pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
             fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;
             emit AddFraudulentPaymentEvent(payment);
         }
