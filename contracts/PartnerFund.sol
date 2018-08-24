@@ -23,25 +23,15 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice XXXX
 */
 // TODO Update to two-component currency descriptor
-contract PartnerFund is Ownable, Beneficiary {
+contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
+    using BalanceLib for BalanceLib.Balance;
+    using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
 
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct DepositHistory {
-        address currency;
-        uint listIndex;
-    }
-
-    struct DepositInfo {
-        int256 amount;
-        uint256 timestamp;
-        int256 balance;
-        uint256 block;
-    }
-
-    struct PerWalletInfo {
+    struct Wallet {
         bool isRegistered;
         bool ownerCanChangeAddress;
         bool canChangeAddress;
@@ -49,24 +39,23 @@ contract PartnerFund is Ownable, Beneficiary {
         uint256 fee;
         address wallet;
 
-        DepositInfo[] depositsEther;
-        mapping(address => DepositInfo[]) depositsToken;
+        BalanceLib.Balance active;
+        BalanceLib.Balance staged;
 
-        // Active balance of ethers and tokens.
-        int256 activeEtherBalance;
-        mapping(address => int256) activeTokenBalance;
+        TxHistoryLib.TxHistory txHistory;
+        FullDepositHistory[] fullDepositHistory;
+    }
 
-        // Staged balance of ethers and tokens.
-        int256 stagedEtherBalance;
-        mapping(address => int256) stagedTokenBalance;
-
-        DepositHistory[] depositsHistory;
+    struct FullDepositHistory {
+        uint listIndex;
+        int256 balance;
+        uint256 blockNumber;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => PerWalletInfo) private walletInfoMap;
+    mapping(address => Wallet) private walletMap;
     mapping(address => address) private addressTagMap;
 
     //
@@ -75,9 +64,9 @@ contract PartnerFund is Ownable, Beneficiary {
     event RegisterParnerEvent(address tag, uint256 fee);
     event ChangedFeeEvent(address tag, uint256 fee);
     event ChangedWalletEvent(address tag, address oldWallet, address newWallet);
-    event DepositEvent(address tag, int256 amount, address token); //token==0 for ethers
-    event StageEvent(address tag, address wallet, int256 amount, address token); //token==0 for ethers
-    event WithdrawEvent(address tag, address wallet, int256 amount, address token); //token==0 for ethers
+    event DepositEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
+    event StageEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
+    event WithdrawEvent(address tag, address to, int256 amount, address currencyCt, uint256 currencyId);
 
     //
     // Constructor
@@ -89,14 +78,14 @@ contract PartnerFund is Ownable, Beneficiary {
     // Partner relationship functions
     // -----------------------------------------------------------------------------------------------------------------
     function registerPartner(address tag, uint256 fee, bool canChangeAddress, bool ownerCanChangeAddress) public onlyOwner notNullTag(tag) {
-        require(!walletInfoMap[tag].isRegistered);
+        require(!walletMap[tag].isRegistered);
         require(fee > 0);
         require(canChangeAddress || ownerCanChangeAddress);
 
-        walletInfoMap[tag].isRegistered = true;
-        walletInfoMap[tag].ownerCanChangeAddress = ownerCanChangeAddress;
-        walletInfoMap[tag].canChangeAddress = canChangeAddress;
-        walletInfoMap[tag].fee = fee;
+        walletMap[tag].isRegistered = true;
+        walletMap[tag].ownerCanChangeAddress = ownerCanChangeAddress;
+        walletMap[tag].canChangeAddress = canChangeAddress;
+        walletMap[tag].fee = fee;
 
         //raise event
         emit RegisterParnerEvent(tag, fee);
@@ -105,14 +94,14 @@ contract PartnerFund is Ownable, Beneficiary {
     function changePartnerFee(address tag, uint256 fee) public onlyOwner isRegisteredTag(tag) {
         require(fee > 0);
 
-        walletInfoMap[tag].fee = fee;
+        walletMap[tag].fee = fee;
 
         //raise event
         emit ChangedFeeEvent(tag, fee);
     }
 
     function getPartnerFee(address tag) public view isRegisteredTag(tag) returns (uint256) {
-        return walletInfoMap[tag].fee;
+        return walletMap[tag].fee;
     }
 
     function setPartnerWallet(address tag, address newWallet) public isRegisteredTag(tag) {
@@ -120,7 +109,7 @@ contract PartnerFund is Ownable, Beneficiary {
 
         require(newWallet != owner);
 
-        oldWallet = walletInfoMap[tag].wallet;
+        oldWallet = walletMap[tag].wallet;
 
         //checks
         if (oldWallet == address(0)) {
@@ -129,11 +118,11 @@ contract PartnerFund is Ownable, Beneficiary {
         }
         else if (isOwner()) {
             //owner trying to change address, verify access
-            require(walletInfoMap[tag].ownerCanChangeAddress);
+            require(walletMap[tag].ownerCanChangeAddress);
         }
         else {
             //partner trying to change address, verify access
-            require(walletInfoMap[tag].canChangeAddress);
+            require(walletMap[tag].canChangeAddress);
 
             require(oldWallet != address(0) && msg.sender == oldWallet);
             //only the address owner can change it
@@ -143,7 +132,7 @@ contract PartnerFund is Ownable, Beneficiary {
         }
 
         //proceed with the change
-        walletInfoMap[tag].wallet = newWallet;
+        walletMap[tag].wallet = newWallet;
 
         if (oldWallet != address(0))
             addressTagMap[oldWallet] = 0x0;
@@ -155,7 +144,7 @@ contract PartnerFund is Ownable, Beneficiary {
     }
 
     function getPartnerAddress(address tag) public view returns (address) {
-        return walletInfoMap[tag].wallet;
+        return walletMap[tag].wallet;
     }
 
     //
@@ -164,160 +153,138 @@ contract PartnerFund is Ownable, Beneficiary {
     function() public payable {
         revert();
     }
-    /*
+
     function depositEthersTo(address tag) public isRegisteredTag(tag) payable {
         int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
 
-        walletInfoMap[tag].activeEtherBalance = walletInfoMap[tag].activeEtherBalance.add_nn(amount);
+        //add to per-wallet deposited balance
+        walletMap[tag].active.add(amount, address(0), 0);
+        walletMap[tag].txHistory.addDeposit(amount, address(0), 0);
 
-        walletInfoMap[tag].depositsEther.push(DepositInfo(amount, now, walletInfoMap[tag].activeEtherBalance, block.number));
-        walletInfoMap[tag].depositsHistory.push(DepositHistory(address(0), walletInfoMap[tag].depositsEther.length - 1));
+        //add full history
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount(), walletMap[tag].active.get(address(0), 0), block.number));
 
         //emit event
-        emit DepositEvent(tag, amount, address(0));
+        emit DepositEvent(tag, msg.sender, amount, address(0), 0);
     }
 
     //NOTE: 'wallet' must call ERC20.approve first
-    function depositTokensTo(address tag, int256 amount, address token) public isRegisteredTag(tag) {
-        require(token != address(0));
-        require(amount > 0);
+    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        depositTokensTo(partnerFromWallet(msg.sender), amount, currencyCt, currencyId, standard);
+    }
 
-        // Amount must be >0 so there's no problem with conversion to unsigned.
-        ERC20 erc20 = ERC20(token);
-        require(erc20.transferFrom(msg.sender, this, uint256(amount)));
+    function depositTokensTo(address tag, int256 amount, address currencyCt, uint256 currencyId, string standard) public isRegisteredTag(tag) {
+       require(amount.isNonZeroPositiveInt256());
 
-        walletInfoMap[tag].activeTokenBalance[token] = walletInfoMap[tag].activeTokenBalance[token].add_nn(amount);
+        //execute transfer
+        TransferController controller = getTransferController(currencyCt, standard);
+        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
 
-        walletInfoMap[tag].depositsToken[token].push(DepositInfo(amount, now, walletInfoMap[tag].activeTokenBalance[token], block.number));
-        walletInfoMap[tag].depositsHistory.push(DepositHistory(token, walletInfoMap[tag].depositsToken[token].length - 1));
+        //add to per-wallet deposited balance
+        walletMap[tag].active.add(amount, currencyCt, currencyId);
+        walletMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
+
+        //add full history
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount(), walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         //emit event
-        emit DepositEvent(tag, amount, token);
+        emit DepositEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 
-    function deposit(address tag, uint index) public view isRegisteredTag(tag) returns (int256 amount, address token, uint256 blockNumber) {
-        require(index < walletInfoMap[tag].depositsHistory.length);
+    //
+    // Deposit history retrieval functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function deposit(address tag, uint index) public view isRegisteredTag(tag) returns (int256 balance, address currencyCt, uint256 currencyId, uint256 blockNumber) {
+        require(index < walletMap[tag].fullDepositHistory.length);
 
-        DepositHistory storage dh = walletInfoMap[tag].depositsHistory[index];
-        //NOTE: Code duplication in order to keep compiler happy and avoid warnings
-        if (dh.currency == address(0)) {
-            DepositInfo[] storage di = walletInfoMap[tag].depositsEther;
-            amount = di[dh.listIndex].amount;
-            token = address(0);
-            blockNumber = di[dh.listIndex].block;
-        } else {
-            DepositInfo[] storage diT = walletInfoMap[tag].depositsToken[dh.currency];
-            amount = diT[dh.listIndex].amount;
-            token = dh.currency;
-            blockNumber = diT[dh.listIndex].block;
-        }
+        FullDepositHistory storage fdh = walletMap[tag].fullDepositHistory[index];
+        (int256 _amount, uint256 timestamp, address _currencyCt, uint256 _currencyId) = walletMap[tag].txHistory.deposit(fdh.listIndex);
+
+        balance = fdh.balance;
+        currencyCt = _currencyCt;
+        currencyId = _currencyId;
+        blockNumber = fdh.blockNumber;
     }
 
-    function depositFromAddress(address wallet, uint index) public view returns (int256 amount, address token, uint256 blockNumber) {
+    function depositFromAddress(address wallet, uint index) public view returns (int256 balance, address currencyCt, uint256 currencyId, uint256 blockNumber) {
         return deposit(partnerFromWallet(wallet), index);
     }
 
     function depositCount(address tag) public view isRegisteredTag(tag) returns (uint256) {
-        return walletInfoMap[tag].depositsHistory.length;
+        return walletMap[tag].fullDepositHistory.length;
     }
 
     function depositCountFromAddress(address wallet) public view returns (uint256) {
         return depositCount(partnerFromWallet(wallet));
     }
 
+
+    //
+    // Balance retrieval functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function activeBalance(address tag, address currencyCt, uint256 currencyId) public view isRegisteredTag(tag) returns (int256) {
+        return walletMap[tag].active.get(currencyCt, currencyId);
+    }
+
+    function activeBalanceFromAddress(address wallet, address currencyCt, uint256 currencyId) public view returns (int256) {
+        return activeBalance(partnerFromWallet(wallet), currencyCt, currencyId);
+    }
+
+    function stagedBalance(address tag, address currencyCt, uint256 currencyId) public view isRegisteredTag(tag) returns (int256) {
+        return walletMap[tag].staged.get(currencyCt, currencyId);
+    }
+
+    function stagedBalanceFromAddress(address wallet, address currencyCt, uint256 currencyId) public view returns (int256) {
+        return stagedBalance(partnerFromWallet(wallet), currencyCt, currencyId);
+    }
+
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(int256 amount, address token) public notOwner {
+    function stage(int256 amount, address currencyCt, uint256 currencyId) public notOwner {
         address tag = partnerFromWallet(msg.sender);
+
         require(amount.isPositiveInt256());
 
-        if (token == address(0)) {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[tag].activeEtherBalance);
-            require(amount > 0);
+        //clamp amount to move
+        amount = amount.clampMax(walletMap[tag].active.get(currencyCt, currencyId));
+        require(amount > 0);
 
-            walletInfoMap[tag].activeEtherBalance = walletInfoMap[tag].activeEtherBalance.sub_nn(amount);
-            walletInfoMap[tag].stagedEtherBalance = walletInfoMap[tag].stagedEtherBalance.add_nn(amount);
+        walletMap[msg.sender].active.sub(amount, currencyCt, currencyId);
+        walletMap[msg.sender].staged.add(amount, currencyCt, currencyId);
 
-            walletInfoMap[tag].depositsEther.push(DepositInfo(amount, now, walletInfoMap[tag].activeEtherBalance, block.number));
-            walletInfoMap[tag].depositsHistory.push(DepositHistory(address(0), walletInfoMap[tag].depositsEther.length - 1));
-        } else {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[tag].activeTokenBalance[token]);
-            require(amount > 0);
+        walletMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
 
-            walletInfoMap[tag].activeTokenBalance[token] = walletInfoMap[tag].activeTokenBalance[token].sub_nn(amount);
-            walletInfoMap[tag].stagedTokenBalance[token] = walletInfoMap[tag].stagedTokenBalance[token].add_nn(amount);
-
-            walletInfoMap[tag].depositsToken[token].push(DepositInfo(int256(amount), now, walletInfoMap[tag].activeTokenBalance[token], block.number));
-            walletInfoMap[tag].depositsHistory.push(DepositHistory(token, walletInfoMap[tag].depositsToken[token].length - 1));
-        }
+        //add full history
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount(), walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         //emit event
-        emit StageEvent(tag, msg.sender, amount, token);
-    }
-
-    //
-    // Balance functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function activeBalance(address tag, address token) public view isRegisteredTag(tag) returns (int256) {
-        if (token == address(0))
-            return walletInfoMap[tag].activeEtherBalance;
-        return walletInfoMap[tag].activeTokenBalance[token];
-    }
-
-    function activeBalanceFromAddress(address wallet, address token) public view returns (int256) {
-        return activeBalance(partnerFromWallet(wallet), token);
-    }
-
-    function stagedBalance(address tag, address token) public view isRegisteredTag(tag) returns (int256) {
-        if (token == address(0))
-            return walletInfoMap[tag].stagedEtherBalance;
-        return walletInfoMap[tag].stagedTokenBalance[token];
-    }
-
-    function stagedBalanceFromAddress(address wallet, address token) public view returns (int256) {
-        return stagedBalance(partnerFromWallet(wallet), token);
+        emit StageEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 
     //
     // Withdrawal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function withdrawEthers(int256 amount) public {
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
         address tag = partnerFromWallet(msg.sender);
 
-        if (amount > walletInfoMap[tag].stagedEtherBalance) {
-            amount = walletInfoMap[tag].stagedEtherBalance;
-        }
+        amount = amount.clampMax(walletMap[tag].staged.get(currencyCt, currencyId));
         require(amount > 0);
 
-        walletInfoMap[tag].stagedEtherBalance = walletInfoMap[tag].stagedEtherBalance.sub_nn(amount);
+        walletMap[tag].staged.sub(amount, currencyCt, currencyId);
 
         //execute transfer
-        msg.sender.transfer(uint256(amount));
-
-        //raise event
-        emit WithdrawEvent(tag, msg.sender, amount, address(0));
-    }
-
-    function withdrawTokens(int256 amount, address token) public {
-        address tag = partnerFromWallet(msg.sender);
-        require(token != address(0));
-
-        if (amount > walletInfoMap[tag].stagedTokenBalance[token]) {
-            amount = walletInfoMap[tag].stagedTokenBalance[token];
+        if (currencyCt == address(0)) {
+            msg.sender.transfer(uint256(amount));
         }
-        require(amount > 0);
-
-        walletInfoMap[tag].stagedTokenBalance[token] = walletInfoMap[tag].stagedTokenBalance[token].sub_nn(amount);
-
-        //execute transfer
-        ERC20 erc20_token = ERC20(token);
-        erc20_token.transfer(msg.sender, uint256(amount));
+        else {
+            TransferController controller = getTransferController(currencyCt, standard);
+            if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(amount), currencyCt, currencyId))
+                revert();
+        }
 
         //raise event
-        emit WithdrawEvent(tag, msg.sender, amount, token);
+        emit WithdrawEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 
     //
@@ -326,10 +293,10 @@ contract PartnerFund is Ownable, Beneficiary {
     function partnerFromWallet(address wallet) internal view returns (address) {
         address tag = addressTagMap[wallet];
         require(tag != 0);
-        require(walletInfoMap[tag].isRegistered);
+        require(walletMap[tag].isRegistered);
         return tag;
     }
-    */
+
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
@@ -340,7 +307,7 @@ contract PartnerFund is Ownable, Beneficiary {
 
     modifier isRegisteredTag(address tag) {
         require(tag != 0);
-        require(walletInfoMap[tag].isRegistered);
+        require(walletMap[tag].isRegistered);
         _;
     }
 }

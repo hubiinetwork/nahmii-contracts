@@ -58,10 +58,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // -----------------------------------------------------------------------------------------------------------------
     event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
-
     event StageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
     event UnstageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
-
     event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 amount, address currencyCt,
         uint256 currencyId);

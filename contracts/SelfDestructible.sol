@@ -13,7 +13,6 @@ pragma solidity ^0.4.24;
 @notice Contract that allows for self-destruction
 */
 contract SelfDestructible {
-
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
