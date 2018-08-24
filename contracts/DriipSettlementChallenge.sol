@@ -13,7 +13,7 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {Ownable} from "./Ownable.sol";
 import {Types} from "./Types.sol";
 import {Modifiable} from "./Modifiable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challengable} from "./Challengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {DriipSettlementChallenger} from "./DriipSettlementChallenger.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
@@ -22,7 +22,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 @title DriipSettlementChallenge
 @notice Where driip settlements are challenged
 */
-contract DriipSettlementChallenge is Ownable, Configurable, Validatable, SelfDestructible {
+contract DriipSettlementChallenge is Ownable, Challengable, Validatable, SelfDestructible {
     using SafeMathInt for int256;
 
     //
@@ -224,28 +224,40 @@ contract DriipSettlementChallenge is Ownable, Configurable, Validatable, SelfDes
 
     /// @notice Challenge the driip settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged driip
-    function challengeByOrder(Types.Order order) public {
+    function challengeByOrder(Types.Order order)
+    public
+    onlyOperationalModeNormal
+    {
         driipSettlementChallenger.challengeByOrder(order, msg.sender);
     }
 
     /// @notice Unchallenge driip settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
-    function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade) public {
+    function unchallengeOrderCandidateByTrade(Types.Order order, Types.Trade trade)
+    public
+    onlyOperationalModeNormal
+    {
         driipSettlementChallenger.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
     /// @notice Challenge the driip settlement by providing trade candidate
     /// @param trade The trade candidate that challenges the challenged driip
     /// @param wallet The wallet whose driip settlement is being challenged
-    function challengeByTrade(Types.Trade trade, address wallet) public {
+    function challengeByTrade(Types.Trade trade, address wallet)
+    public
+    onlyOperationalModeNormal
+    {
         driipSettlementChallenger.challengeByTrade(trade, wallet, msg.sender);
     }
 
     /// @notice Challenge the driip settlement by providing payment candidate
     /// @param payment The payment candidate that challenges the challenged driip
     /// @param wallet The wallet whose driip settlement is being challenged
-    function challengeByPayment(Types.Payment payment, address wallet) public {
+    function challengeByPayment(Types.Payment payment, address wallet)
+    public
+    onlyOperationalModeNormal
+    {
         driipSettlementChallenger.challengeByPayment(payment, wallet, msg.sender);
     }
 

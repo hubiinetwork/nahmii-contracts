@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {Types} from "./Types.sol";
@@ -20,7 +19,7 @@ import {Types} from "./Types.sol";
 @title FraudChallengeByOrder
 @notice Where order is challenged wrt signature error
 */
-contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
+contract FraudChallengeByOrder is Ownable, FraudChallengable, Validatable, SecurityBondable {
 
     //
     // Events
@@ -40,6 +39,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Configurable, Vali
     /// @param order Fraudulent order candidate
     function challenge(Types.Order order)
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlyExchangeSealedOrder(order)
     {

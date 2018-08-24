@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
@@ -21,7 +20,7 @@ import {Types} from "./Types.sol";
 @title FraudChallengeByPayment
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable, ClientFundable {
+contract FraudChallengeByPayment is Ownable, FraudChallengable, Validatable, SecurityBondable, ClientFundable {
 
     //
     // Events
@@ -41,6 +40,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
     /// @param payment Fraudulent payment candidate
     function challenge(Types.Payment payment)
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlyExchangeSealedPayment(payment)
     {

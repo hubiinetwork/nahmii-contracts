@@ -13,7 +13,7 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challengable} from "./Challengable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {Types} from "./Types.sol";
@@ -22,7 +22,7 @@ import {Types} from "./Types.sol";
 @title CancelOrdersChallenge
 @notice Where orders are cancelled and cancellations challenged
 */
-contract CancelOrdersChallenge is Ownable, Configurable, Validatable, SelfDestructible {
+contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -38,7 +38,7 @@ contract CancelOrdersChallenge is Ownable, Configurable, Validatable, SelfDestru
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event CancelOrdersEvent(Types.Order[] orders, address wallet);
-    event ChallengeCancelledOrderEvent(Types.Order order, Types.Trade trade, address wallet);
+    event ChallengeEvent(Types.Order order, Types.Trade trade, address wallet);
 
     //
     // Constructor
@@ -111,7 +111,7 @@ contract CancelOrdersChallenge is Ownable, Configurable, Validatable, SelfDestru
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
     /// @param wallet The concerned wallet
-    function challengeCancelledOrder(Types.Trade trade, address wallet)
+    function challenge(Types.Trade trade, address wallet)
     public
     onlySealedTrade(trade)
     {
@@ -130,7 +130,7 @@ contract CancelOrdersChallenge is Ownable, Configurable, Validatable, SelfDestru
         uint256 orderIndex = walletOrderExchangeHashIndexMap[wallet][orderExchangeHash];
         Types.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
 
-        emit ChallengeCancelledOrderEvent(order, trade, msg.sender);
+        emit ChallengeEvent(order, trade, msg.sender);
     }
 
     /// @notice Get current phase of a wallets cancelled order challenge

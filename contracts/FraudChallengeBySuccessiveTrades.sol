@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
@@ -20,7 +19,7 @@ import {Types} from "./Types.sol";
 @title FraudChallengeBySuccessiveTrades
 @notice Where driips are challenged wrt fraud by mismatch in successive trades
 */
-contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
+contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Validatable, ClientFundable {
 
     //
     // Events
@@ -49,6 +48,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Configu
         address currency
     )
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlySealedTrade(firstTrade)
     onlySealedTrade(lastTrade)
