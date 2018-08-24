@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
@@ -20,7 +19,7 @@ import {Types} from "./Types.sol";
 @title FraudChallengeByTradeOrderResiduals
 @notice Where driips are challenged wrt fraud by mismatch in trade order residuals
 */
-contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
+contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Validatable, ClientFundable {
 
     //
     // Events
@@ -49,6 +48,7 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Conf
         address currency
     )
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlySealedTrade(firstTrade)
     onlySealedTrade(lastTrade)

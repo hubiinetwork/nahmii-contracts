@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {Types} from "./Types.sol";
@@ -20,7 +19,7 @@ import {Types} from "./Types.sol";
 @title FraudChallengeByTrade
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
+contract FraudChallengeByTrade is Ownable, FraudChallengable, Validatable, ClientFundable {
 
     //
     // Events
@@ -40,6 +39,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Vali
     /// @param trade Fraudulent trade candidate
     function challenge(Types.Trade trade)
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlySealedTrade(trade)
     {
