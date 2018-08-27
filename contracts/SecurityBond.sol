@@ -213,7 +213,14 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         walletMap[msg.sender].txHistory.addWithdrawal(to_send_amount, currencyCt, currencyId);
 
         //execute transfer
-        msg.sender.transfer(uint256(to_send_amount));
+        if (currencyCt == address(0)) {
+            msg.sender.transfer(uint256(to_send_amount));
+        }
+        else {
+            TransferController controller = getTransferController(currencyCt, standard);
+            if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(to_send_amount), currencyCt, currencyId))
+                revert();
+        }
 
         //emit event
         emit WithdrawEvent(msg.sender, to_send_amount, currencyCt, currencyId);
