@@ -57,6 +57,8 @@ contract Configuration is Ownable, Servable {
 
     int256 constant public PARTS_PER = 1e18;
 
+    uint256 public confirmations;
+
     mapping(uint256 => DiscountableFee) blockNumberTradeMakerFeeMap;
     mapping(uint256 => DiscountableFee) blockNumberTradeTakerFeeMap;
     mapping(uint256 => DiscountableFee) blockNumberPaymentFeeMap;
@@ -87,7 +89,7 @@ contract Configuration is Ownable, Servable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetOperationalModeExitEvent();
-    event SetPartsPerEvent(int256 partsPer);
+    event SetConfirmationsEvent(uint256 oldConfirmations, uint256 newConfirmations);
     event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetTradeTakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetPaymentFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
@@ -107,6 +109,7 @@ contract Configuration is Ownable, Servable {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) Ownable(owner) public {
+        confirmations = 12;
         cancelOrderChallengeTimeout = 3 hours;
         driipSettlementChallengeTimeout = 5 hours;
     }
@@ -136,6 +139,21 @@ contract Configuration is Ownable, Servable {
         return PARTS_PER;
     }
 
+    /// @notice Return the number of confirmations
+    function getConfirmations() public view returns (uint256) {
+        return confirmations;
+    }
+
+    /// @notice Set the number of confirmations
+    /// @param newConfirmations The new confirmations value
+    function setConfirmations(uint256 newConfirmations) public onlyOwner {
+        if (confirmations != newConfirmations) {
+            uint256 oldConfirmations = confirmations;
+            confirmations = newConfirmations;
+            emit SetConfirmationsEvent(oldConfirmations, newConfirmations);
+        }
+    }
+
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
@@ -158,7 +176,7 @@ contract Configuration is Ownable, Servable {
     function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
     onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberTradeMakerFeeMap[blockNumber];
         setDiscountableFee(fee, tradeMakerFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -192,7 +210,7 @@ contract Configuration is Ownable, Servable {
     function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
     onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberTradeTakerFeeMap[blockNumber];
         setDiscountableFee(fee, tradeTakerFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -226,7 +244,7 @@ contract Configuration is Ownable, Servable {
     function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
     onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberPaymentFeeMap[blockNumber];
         setDiscountableFee(fee, paymentFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -267,7 +285,7 @@ contract Configuration is Ownable, Servable {
     function setCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
     onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = currencyBlockNumberPaymentFeeMap[currencyCt][currencyId][blockNumber];
         setDiscountableFee(fee, currencyPaymentFeeBlockNumbersMap[currencyCt][currencyId], blockNumber, nominal, discountTiers, discountValues);
@@ -300,7 +318,7 @@ contract Configuration is Ownable, Servable {
     function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal)
     public
     onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberTradeMakerMinimumFeeMap[blockNumber];
         setStaticFee(fee, tradeMakerMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -331,7 +349,7 @@ contract Configuration is Ownable, Servable {
     function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal)
     public
     onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberTradeTakerMinimumFeeMap[blockNumber];
         setStaticFee(fee, tradeTakerMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -362,7 +380,7 @@ contract Configuration is Ownable, Servable {
     function setPaymentMinimumFee(uint256 blockNumber, int256 nominal)
     public
     onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberPaymentMinimumFeeMap[blockNumber];
         setStaticFee(fee, paymentMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -400,7 +418,7 @@ contract Configuration is Ownable, Servable {
     function setCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal)
     public
     onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = currencyBlockNumberPaymentMinimumFeeMap[currencyCt][currencyId][blockNumber];
         setStaticFee(fee, currencyPaymentMinimumFeeBlockNumbersMap[currencyCt][currencyId], blockNumber, nominal);
@@ -559,8 +577,8 @@ contract Configuration is Ownable, Servable {
         _;
     }
 
-    modifier onlyLaterBlockNumber(uint256 blockNumber) {
-        require(blockNumber > block.number);
+    modifier onlyConfirmableBlockNumber(uint256 blockNumber) {
+        require(blockNumber > block.number + confirmations);
         _;
     }
 }

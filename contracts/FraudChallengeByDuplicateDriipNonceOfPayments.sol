@@ -11,20 +11,20 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByDuplicateDriipNonceOfPayments
 @notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
 */
-contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
+contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(Types.Payment payment1, Types.Payment payment2, address challenger);
+    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(StriimTypes.Payment payment1, StriimTypes.Payment payment2, address challenger);
 
     //
     // Constructor
@@ -40,10 +40,11 @@ contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChalleng
     /// @param payment1 First payment with duplicate driip nonce
     /// @param payment2 Second payment with duplicate driip nonce
     function challenge(
-        Types.Payment payment1,
-        Types.Payment payment2
+        StriimTypes.Payment payment1,
+        StriimTypes.Payment payment2
     )
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlySealedPayment(payment1)
     onlySealedPayment(payment2)

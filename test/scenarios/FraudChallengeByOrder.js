@@ -15,7 +15,7 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe('FraudChallengeByOrder', () => {
+    describe.only('FraudChallengeByOrder', () => {
         let web3FraudChallengeByOrder, ethersFraudChallengeByOrder;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3Configuration, ethersConfiguration;
@@ -29,10 +29,10 @@ module.exports = (glob) => {
             web3FraudChallengeByOrder = glob.web3FraudChallengeByOrder;
             ethersFraudChallengeByOrder = glob.ethersIoFraudChallengeByOrder;
 
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
-            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
+            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
@@ -261,14 +261,28 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await ethersFraudChallenge.reset(overrideOptions);
                 await ethersConfiguration.reset(overrideOptions);
+                await ethersFraudChallenge.reset(overrideOptions);
                 await ethersValidator.reset(overrideOptions);
                 await ethersSecurityBond.reset(overrideOptions);
 
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByOrder.interface.events.ChallengeByOrderEvent.topics
                 );
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                });
+
+                beforeEach(async () => {
+                    order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                });
+
+                it('should revert', async () => {
+                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
+                });
             });
 
             describe('if order is genuine', () => {

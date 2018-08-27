@@ -29,10 +29,10 @@ module.exports = (glob) => {
             web3FraudChallengeByTradeSucceedingPayment = glob.web3FraudChallengeByTradeSucceedingPayment;
             ethersFraudChallengeByTradeSucceedingPayment = glob.ethersIoFraudChallengeByTradeSucceedingPayment;
 
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
-            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
+            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
@@ -260,8 +260,8 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await ethersFraudChallenge.reset(overrideOptions);
                 await ethersConfiguration.reset(overrideOptions);
+                await ethersFraudChallenge.reset(overrideOptions);
                 await ethersValidator.reset(overrideOptions);
                 await ethersClientFund.reset(overrideOptions);
 
@@ -279,6 +279,18 @@ module.exports = (glob) => {
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByTradeSucceedingPayment.interface.events.ChallengeByTradeSucceedingPaymentEvent.topics
                 );
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                });
+
+                it('should revert', async () => {
+                    return ethersFraudChallengeByTradeSucceedingPayment.challenge(
+                        payment, trade, payment.sender.wallet, payment.currency, overrideOptions
+                    ).should.be.rejected;
+                });
             });
 
             describe('if trade and payment are genuine', () => {

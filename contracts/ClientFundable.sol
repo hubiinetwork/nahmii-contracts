@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {ClientFund} from "./ClientFund.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title ClientFundable

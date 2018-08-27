@@ -9,17 +9,16 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Modifiable} from "./Modifiable.sol";
-import {Servable} from "./Servable.sol";
-import {Types} from "./Types.sol";
 import {Ownable} from "./Ownable.sol";
+import {StriimChallenge} from "./StriimChallenge.sol";
+import {Servable} from "./Servable.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, Servable {
-
+contract FraudChallenge is Ownable, StriimChallenge, Servable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -35,13 +34,13 @@ contract FraudChallenge is Ownable, Servable {
     address[] public doubleSpenderWallets;
     mapping(address => bool) public doubleSpenderWalletsMap;
 
-    Types.Order[] public fraudulentOrders;
+    StriimTypes.Order[] public fraudulentOrders;
     mapping(bytes32 => bool) public fraudulentOrderExchangeHashMap;
 
-    Types.Trade[] public fraudulentTrades;
+    StriimTypes.Trade[] public fraudulentTrades;
     mapping(bytes32 => bool) public fraudulentTradeHashMap;
 
-    Types.Payment[] public fraudulentPayments;
+    StriimTypes.Payment[] public fraudulentPayments;
     mapping(bytes32 => bool) public fraudulentPaymentExchangeHashMap;
 
     //
@@ -49,9 +48,9 @@ contract FraudChallenge is Ownable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     event AddSeizedWalletEvent(address wallet);
     event AddDoubleSpenderWalletEvent(address wallet);
-    event AddFraudulentOrderEvent(Types.Order order);
-    event AddFraudulentTradeEvent(Types.Trade trade);
-    event AddFraudulentPaymentEvent(Types.Payment payment);
+    event AddFraudulentOrderEvent(StriimTypes.Order order);
+    event AddFraudulentTradeEvent(StriimTypes.Trade trade);
+    event AddFraudulentPaymentEvent(StriimTypes.Payment payment);
 
     //
     // Constructor
@@ -124,7 +123,7 @@ contract FraudChallenge is Ownable, Servable {
     }
 
     /// @notice Add given trade to store of fraudulent trades if not already present
-    function addFraudulentOrder(Types.Order order) public
+    function addFraudulentOrder(StriimTypes.Order order) public
     onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION)
     {
         if (!fraudulentOrderExchangeHashMap[order.seals.exchange.hash]) {
@@ -146,11 +145,13 @@ contract FraudChallenge is Ownable, Servable {
     }
 
     /// @notice Add given order to store of fraudulent orders if not already present
-    function addFraudulentTrade(Types.Trade trade) public
+    function addFraudulentTrade(StriimTypes.Trade trade) public
     onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
     {
         if (!fraudulentTradeHashMap[trade.seal.hash]) {
-            fraudulentTrades.push(trade);
+            // TODO Uncomment/solve
+//            fraudulentTrades.push(trade);
+            pushMemoryTradeToStorageArray(trade, fraudulentTrades);
             fraudulentTradeHashMap[trade.seal.hash] = true;
             emit AddFraudulentTradeEvent(trade);
         }
@@ -168,11 +169,13 @@ contract FraudChallenge is Ownable, Servable {
     }
 
     /// @notice Add given payment to store of fraudulent payments if not already present
-    function addFraudulentPayment(Types.Payment payment) public
+    function addFraudulentPayment(StriimTypes.Payment payment) public
     onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
     {
         if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
-            fraudulentPayments.push(payment);
+            // TODO Uncomment/solve
+//            fraudulentPayments.push(payment);
+            pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
             fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;
             emit AddFraudulentPaymentEvent(payment);
         }

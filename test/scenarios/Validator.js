@@ -114,7 +114,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe.skip('isGenuineTradeMakerFee()', () => {
+        describe('isGenuineTradeBuyerFee()', () => {
             let amountIntended, amountConjugate, trade;
 
             before(() => {
@@ -122,14 +122,12 @@ module.exports = function (glob) {
                 amountConjugate = amountIntended.div(utils.bigNumberify(1000));
             });
 
-            beforeEach(async () => {
-                await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
-                await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
-            });
-
-            describe('if trade maker fee is genuine', () => {
-                describe('if maker is buyer', () => {
+            describe('if trade buyer fee is genuine', () => {
+                describe('if buyer is maker', () => {
                     beforeEach(async () => {
+                        await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
+                        await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
+
                         const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
                             singleFees: {
@@ -140,14 +138,17 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeMakerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
                         result.should.be.true;
                     });
                 });
 
-                describe('if maker is seller', () => {
+                describe('if buyer is taker', () => {
                     beforeEach(async () => {
-                        const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
+                        await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
+
+                        const fee = await ethersConfiguration.getTradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
                                 liquidityRole: mocks.liquidityRoles.indexOf('Taker')
@@ -163,14 +164,69 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeMakerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
                         result.should.be.true;
                     });
                 });
             });
         });
 
+        describe('isGenuineTradeSellerFee()', () => {
+            let amountIntended, amountConjugate, trade;
 
+            before(() => {
+                amountIntended = utils.parseUnits('100', 18);
+                amountConjugate = amountIntended.div(utils.bigNumberify(1000));
+            });
+
+            describe('if trade buyer fee is genuine', () => {
+                describe('if buyer is maker', () => {
+                    beforeEach(async () => {
+                        await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
+                        await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
+
+                        const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        trade = await mocks.mockTrade(glob.owner, {
+                            singleFees: {
+                                intended: amountIntended.mul(fee).div(partsPer)
+                            },
+                            blockNumber: utils.bigNumberify(blockNumberAhead)
+                        });
+                    });
+
+                    it('should successfully validate', async () => {
+                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
+                        result.should.be.true;
+                    });
+                });
+
+                describe('if buyer is taker', () => {
+                    beforeEach(async () => {
+                        await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
+                        await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
+
+                        const fee = await ethersConfiguration.getTradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        trade = await mocks.mockTrade(glob.owner, {
+                            buyer: {
+                                liquidityRole: mocks.liquidityRoles.indexOf('Taker')
+                            },
+                            seller: {
+                                liquidityRole: mocks.liquidityRoles.indexOf('Maker')
+                            },
+                            singleFees: {
+                                conjugate: amountConjugate.mul(fee).div(partsPer)
+                            },
+                            blockNumber: utils.bigNumberify(blockNumberAhead)
+                        });
+                    });
+
+                    it('should successfully validate', async () => {
+                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
+                        result.should.be.true;
+                    });
+                });
+            });
+        });
 
         // TODO Implement corresponding tests in Validator.js
         // describe.skip('challengeByOrder()', () => {

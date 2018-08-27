@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 //import {CancelOrdersChallenge} from "../CancelOrdersChallenge.sol";
-import {Types} from "../Types.sol";
+import {StriimTypes} from "../StriimTypes.sol";
 
 /**
 @title MockedCancelOrdersChallenge
@@ -27,7 +27,7 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CancelOrdersEvent(Types.Order[] orders, address wallet);
+    event CancelOrdersEvent(StriimTypes.Order[] orders, address wallet);
     event CancelOrdersByHashEvent(bytes32[] orders, address wallet);
 
     //
@@ -45,7 +45,7 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
         cancelledOrderHashes.length = 0;
     }
 
-    function cancelOrders(Types.Order[] orders) public {
+    function cancelOrders(StriimTypes.Order[] orders) public {
         for (uint256 i = 0; i < orders.length; i++) {
             cancelledOrderHashes.push(orders[i].seals.exchange.hash);
             orderHashCancelledMap[orders[i].seals.exchange.hash] = true;

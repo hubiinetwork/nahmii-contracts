@@ -3,6 +3,7 @@ const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
+const MockedConfiguration = artifacts.require("MockedConfiguration");
 const MockedValidator = artifacts.require("MockedValidator");
 
 chai.use(sinonChai);
@@ -24,9 +25,9 @@ module.exports = (glob) => {
 
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
             ethersCancelOrdersChallengeOwner = glob.ethersIoCancelOrdersChallenge;
-            web3Configuration = glob.web3Configuration;
-            ethersConfiguration = glob.ethersIoConfiguration;
 
+            web3Configuration = await MockedConfiguration.new(glob.owner);
+            ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
@@ -226,7 +227,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeCancelledOrder()', () => {
+        describe('challenge()', () => {
             let overrideOptions, order, trade, topic, filter;
 
             before(async () => {
@@ -234,9 +235,10 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                ethersValidator.reset(overrideOptions);
+                await ethersValidator.reset(overrideOptions);
+                await ethersConfiguration.reset(overrideOptions);
 
-                topic = ethersCancelOrdersChallengeOwner.interface.events.ChallengeCancelledOrderEvent.topics[0];
+                topic = ethersCancelOrdersChallengeOwner.interface.events.ChallengeEvent.topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -268,7 +270,7 @@ module.exports = (glob) => {
                     });
 
                     it('should successfully accept the challenge candidate trade', async () => {
-                        await ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, order.wallet, overrideOptions);
+                        await ethersCancelOrdersChallengeOwner.challenge(trade, order.wallet, overrideOptions);
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(topic);
                     });
@@ -298,8 +300,18 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, order.wallet, overrideOptions).should.be.rejected;
+                        ethersCancelOrdersChallengeOwner.challenge(trade, order.wallet, overrideOptions).should.be.rejected;
                     });
+                });
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                });
+
+                it('should revert', async () => {
+                    ethersCancelOrdersChallengeOwner.challenge(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -309,7 +321,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersCancelOrdersChallengeOwner.challenge(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -321,7 +333,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersCancelOrdersChallengeOwner.challenge(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             })
         });

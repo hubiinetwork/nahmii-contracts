@@ -3,6 +3,7 @@ const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
+const MockedConfiguration = artifacts.require("MockedConfiguration");
 const MockedValidator = artifacts.require("MockedValidator");
 const MockedSecurityBond = artifacts.require("MockedSecurityBond");
 const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
@@ -32,9 +33,9 @@ module.exports = (glob) => {
             ethersDriipSettlementChallengeOwner = glob.ethersIoDriipSettlementChallenge;
             web3DriipSettlementChallenger = glob.web3DriipSettlementChallenger;
             ethersDriipSettlementChallenger = glob.ethersIoDriipSettlementChallenger;
-            web3Configuration = glob.web3Configuration;
-            ethersConfiguration = glob.ethersIoConfiguration;
 
+            web3Configuration = await MockedConfiguration.new(glob.owner);
+            ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
@@ -453,6 +454,7 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
+                await ethersConfiguration.reset(overrideOptions);
                 await ethersFraudChallenge.reset(overrideOptions);
                 await ethersValidator.reset(overrideOptions);
                 await ethersCancelOrdersChallenge.reset(overrideOptions);
@@ -464,6 +466,17 @@ module.exports = (glob) => {
                     fromBlock: blockNumber0,
                     topics: [topic]
                 };
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                    order = await mocks.mockOrder(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeOwner.challengeByOrder(order, overrideOptions).should.be.rejected;
+                });
             });
 
             describe('if order is not sealed', () => {
@@ -680,6 +693,7 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
+                await ethersConfiguration.reset(overrideOptions);
                 await ethersFraudChallenge.reset(overrideOptions)
                 await ethersSecurityBond.reset(overrideOptions);
 
@@ -690,6 +704,21 @@ module.exports = (glob) => {
                     fromBlock: blockNumber0,
                     topics: [topic]
                 };
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                    order = await mocks.mockOrder(glob.owner);
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {wallet: order.wallet}
+                    });
+                    order.seals.wallet.signature = order.seals.exchange.signature;
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeOwner.unchallengeOrderCandidateByTrade(order, trade, overrideOptions).should.be.rejected;
+                });
             });
 
             describe('if order is not signed by wallet', () => {
@@ -874,6 +903,7 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
+                await ethersConfiguration.reset(overrideOptions);
                 await ethersFraudChallenge.reset(overrideOptions);
                 await ethersCancelOrdersChallenge.reset(overrideOptions);
 
@@ -884,6 +914,17 @@ module.exports = (glob) => {
                     fromBlock: blockNumber0,
                     topics: [topic]
                 };
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                    candidateTrade = await mocks.mockTrade(glob.user_a);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeOwner.challengeByTrade(candidateTrade, candidateTrade.buyer.wallet, overrideOptions).should.be.rejected;
+                });
             });
 
             describe('if trade is not signed by exchange', () => {
@@ -1097,6 +1138,7 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
+                await ethersConfiguration.reset(overrideOptions);
                 await ethersFraudChallenge.reset(overrideOptions);
 
                 await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
@@ -1106,6 +1148,17 @@ module.exports = (glob) => {
                     fromBlock: blockNumber0,
                     topics: [topic]
                 };
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                    candidatePayment = await mocks.mockPayment(glob.user_a);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeOwner.challengeByPayment(candidatePayment, candidatePayment.sender.wallet, overrideOptions).should.be.rejected;
+                });
             });
 
             describe('if payment is not signed by exchange', () => {

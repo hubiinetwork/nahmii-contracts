@@ -11,20 +11,20 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByDuplicateDriipNonceOfTrades
 @notice Where driips are challenged wrt fraud by duplicate drip nonce of trades
 */
-contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
+contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfTradesEvent(Types.Trade trade1, Types.Trade trade2, address challenger);
+    event ChallengeByDuplicateDriipNonceOfTradesEvent(StriimTypes.Trade trade1, StriimTypes.Trade trade2, address challenger);
 
     //
     // Constructor
@@ -40,10 +40,11 @@ contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengab
     /// @param trade1 First trade with duplicate driip nonce
     /// @param trade2 Second trade with duplicate driip nonce
     function challenge(
-        Types.Trade trade1,
-        Types.Trade trade2
+        StriimTypes.Trade trade1,
+        StriimTypes.Trade trade2
     )
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlySealedTrade(trade1)
     onlySealedTrade(trade2)

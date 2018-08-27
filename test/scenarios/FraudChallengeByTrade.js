@@ -31,10 +31,10 @@ module.exports = (glob) => {
             web3FraudChallengeByTrade = glob.web3FraudChallengeByTrade;
             ethersFraudChallengeByTrade = glob.ethersIoFraudChallengeByTrade;
 
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
-            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
+            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
@@ -264,14 +264,28 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await ethersFraudChallenge.reset(overrideOptions);
                 await ethersConfiguration.reset(overrideOptions);
+                await ethersFraudChallenge.reset(overrideOptions);
                 await ethersValidator.reset(overrideOptions);
                 await ethersClientFund.reset(overrideOptions);
 
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByTrade.interface.events.ChallengeByTradeEvent.topics
                 );
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                });
+
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                });
+
+                it('should revert', async () => {
+                    return ethersFraudChallengeByTrade.challenge(trade, overrideOptions).should.be.rejected;
+                });
             });
 
             describe('if trade is genuine', () => {

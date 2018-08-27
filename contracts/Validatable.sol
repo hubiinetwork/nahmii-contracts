@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {Validator} from "./Validator.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title Validatable
@@ -52,27 +52,27 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyExchangeSealedOrder(Types.Order order) {
+    modifier onlyExchangeSealedOrder(StriimTypes.Order order) {
         require(validator.isGenuineOrderExchangeSeal(order, owner));
         _;
     }
 
-    modifier onlySealedOrder(Types.Order order) {
+    modifier onlySealedOrder(StriimTypes.Order order) {
         require(validator.isGenuineOrderSeals(order, owner));
         _;
     }
 
-    modifier onlySealedTrade(Types.Trade trade) {
+    modifier onlySealedTrade(StriimTypes.Trade trade) {
         require(validator.isGenuineTradeSeal(trade, owner));
         _;
     }
 
-    modifier onlyExchangeSealedPayment(Types.Payment payment) {
+    modifier onlyExchangeSealedPayment(StriimTypes.Payment payment) {
         require(validator.isGenuinePaymentExchangeSeal(payment, owner));
         _;
     }
 
-    modifier onlySealedPayment(Types.Payment payment) {
+    modifier onlySealedPayment(StriimTypes.Payment payment) {
         require(validator.isGenuinePaymentSeals(payment, owner));
         _;
     }

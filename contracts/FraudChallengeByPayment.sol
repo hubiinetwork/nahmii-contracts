@@ -11,21 +11,21 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByPayment
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable, ClientFundable {
+contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByPaymentEvent(StriimTypes.Payment payment, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -38,8 +38,9 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challenge(Types.Payment payment)
+    function challenge(StriimTypes.Payment payment)
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlyExchangeSealedPayment(payment)
     {
@@ -51,7 +52,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
         require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
-        bool genuineWalletSignature = Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+        bool genuineWalletSignature = StriimTypes.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
 
         // Genuineness affected by sender
         bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&
