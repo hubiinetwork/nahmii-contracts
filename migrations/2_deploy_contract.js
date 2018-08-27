@@ -64,7 +64,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(deployer, 'MonetaryTypes', MonetaryTypes, deployFilters, addresses, ownerAccount);
 
             await deployer.link(MonetaryTypes, [
-                Challenge, ClientFund, Configuration, DriipSettlementChallenger, Exchange, StriimTypes, TokenHolderRevenueFund, Validator
+                Challenge, ClientFund, Configuration, DriipSettlementChallenger, Exchange, StriimTypes, StriimChallenge, TokenHolderRevenueFund, Validator
             ]);
 
 			await execDeploy(deployer, 'SafeMathInt', SafeMathInt, deployFilters, addresses, ownerAccount);

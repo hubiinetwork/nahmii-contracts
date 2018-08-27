@@ -24,6 +24,7 @@ import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
+import {Beneficiary} from "./Beneficiary.sol";
 
 /**
 @title Exchange
@@ -224,7 +225,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
             // If wallet has previously settled fees with higher driip nonce then don't settle fees
             if (walletCurrencyTradeFeeNonce[wallet][trade.currencies.intended.ct][trade.currencies.intended.id] < trade.nonce) {
-                walletCurrencyTradeFeeNonce[wallet][trade.currencies.intended.ct][trade.currencies.intended.id] = trade.nonce);
+                walletCurrencyTradeFeeNonce[wallet][trade.currencies.intended.ct][trade.currencies.intended.id] = trade.nonce;
                 stageFiguresToBeneficiary(wallet, party.fees.net, tradesRevenueFund);
             }
 
@@ -236,7 +237,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             clientFund.seizeAllBalances(wallet, challenger);
         }
 
-        emit SettleDriipAsTradeEvent(trade, wallet);
+        emit SettleDriipAsTradeEvent(trade, wallet, result);
     }
 
     /// @notice Settle driip that is a payment

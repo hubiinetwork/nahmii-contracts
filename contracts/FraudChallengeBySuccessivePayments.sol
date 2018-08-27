@@ -11,15 +11,17 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
 import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeBySuccessivePayments
 @notice Where driips are challenged wrt fraud by mismatch in successive payments
 */
-contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Validatable, ClientFundable {
+contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable, SelfDestructible {
 
     //
     // Events

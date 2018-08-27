@@ -13,7 +13,7 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
-import {Challengable} from "./Challengable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {StriimTypes} from "./StriimTypes.sol";
@@ -22,7 +22,7 @@ import {StriimTypes} from "./StriimTypes.sol";
 @title CancelOrdersChallenge
 @notice Where orders are cancelled and cancellations challenged
 */
-contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestructible {
+contract CancelOrdersChallenge is Ownable, Challenge, Validatable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -88,7 +88,9 @@ contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestru
 
     /// @notice Cancel orders of msg.sender
     /// @param orders The orders to cancel
-    function cancelOrders(StriimTypes.Order[] orders) public
+    function cancelOrders(StriimTypes.Order[] orders)
+    public
+    onlyOperationalModeNormal
     {
         require(configuration != address(0));
 
@@ -113,6 +115,7 @@ contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestru
     /// @param wallet The concerned wallet
     function challenge(StriimTypes.Trade trade, address wallet)
     public
+    onlyOperationalModeNormal
     onlySealedTrade(trade)
     {
         require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
