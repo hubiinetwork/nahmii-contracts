@@ -16,7 +16,7 @@ The contracts are currently deployed to the **Ropsten** test network under the f
     "3": {
       "SafeMathInt": "0x5525f7f7f1054412db89ed6df17e87628138bd78",
       "SafeMathUint": "0x8300918385254f7dc3f38d34fe3805d751d5edc0",
-      "Types": "0xe392a30585dae6bf30b917a2a853ea4dde4ded2f",
+      "StriimTypes": "0xe392a30585dae6bf30b917a2a853ea4dde4ded2f",
       "ClientFund": "0x579b69e2c468a9526e5221251b7a2a25bfec0770",
       "CommunityVote": "0x94cca8c3ab335caa0256e7e300e8f6bdb454bbdb",
       "Configuration": "0x82554af29292863f89891448902795359cfa5d30",

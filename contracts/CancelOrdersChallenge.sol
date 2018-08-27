@@ -13,16 +13,16 @@ import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
 import {Modifiable} from "./Modifiable.sol";
-import {Challengable} from "./Challengable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
-import {Types} from "./Types.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title CancelOrdersChallenge
 @notice Where orders are cancelled and cancellations challenged
 */
-contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestructible {
+contract CancelOrdersChallenge is Ownable, Challenge, Validatable, SelfDestructible {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -30,15 +30,15 @@ contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestru
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => mapping(bytes32 => bool)) public walletOrderExchangeHashCancelledMap;
-    mapping(address => Types.Order[]) public walletOrderCancelledListMap;
+    mapping(address => StriimTypes.Order[]) public walletOrderCancelledListMap;
     mapping(address => mapping(bytes32 => uint256)) public walletOrderExchangeHashIndexMap;
     mapping(address => uint256) public walletOrderCancelledTimeoutMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CancelOrdersEvent(Types.Order[] orders, address wallet);
-    event ChallengeEvent(Types.Order order, Types.Trade trade, address wallet);
+    event CancelOrdersEvent(StriimTypes.Order[] orders, address wallet);
+    event ChallengeEvent(StriimTypes.Order order, StriimTypes.Trade trade, address wallet);
 
     //
     // Constructor
@@ -54,7 +54,7 @@ contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestru
     function getCancelledOrdersCount(address wallet) public view returns (uint256) {
         uint256 count = 0;
         for (uint256 i = 0; i < walletOrderCancelledListMap[wallet].length; i++) {
-            Types.Order storage order = walletOrderCancelledListMap[wallet][i];
+            StriimTypes.Order storage order = walletOrderCancelledListMap[wallet][i];
             if (walletOrderExchangeHashCancelledMap[wallet][order.seals.exchange.hash])
                 count++;
         }
@@ -71,12 +71,12 @@ contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestru
     /// @notice Get 10 cancelled orders for given wallet starting at given start index
     /// @param wallet The wallet for which to return the nonces of cancelled orders
     /// @param startIndex The start index from which to extract order nonces, used for pagination
-    function getCancelledOrders(address wallet, uint256 startIndex) public view returns (Types.Order[10]) {
-        Types.Order[10] memory returnOrders;
+    function getCancelledOrders(address wallet, uint256 startIndex) public view returns (StriimTypes.Order[10]) {
+        StriimTypes.Order[10] memory returnOrders;
         uint256 i = 0;
         uint256 j = startIndex;
         while (i < 10 && j < walletOrderCancelledListMap[wallet].length) {
-            Types.Order storage order = walletOrderCancelledListMap[wallet][j];
+            StriimTypes.Order storage order = walletOrderCancelledListMap[wallet][j];
             if (walletOrderExchangeHashCancelledMap[wallet][order.seals.exchange.hash]) {
                 returnOrders[i] = order;
                 i++;
@@ -88,7 +88,9 @@ contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestru
 
     /// @notice Cancel orders of msg.sender
     /// @param orders The orders to cancel
-    function cancelOrders(Types.Order[] orders) public
+    function cancelOrders(StriimTypes.Order[] orders)
+    public
+    onlyOperationalModeNormal
     {
         require(configuration != address(0));
 
@@ -111,8 +113,9 @@ contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestru
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
     /// @param wallet The concerned wallet
-    function challenge(Types.Trade trade, address wallet)
+    function challenge(StriimTypes.Trade trade, address wallet)
     public
+    onlyOperationalModeNormal
     onlySealedTrade(trade)
     {
         require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
@@ -128,19 +131,19 @@ contract CancelOrdersChallenge is Ownable, Challengable, Validatable, SelfDestru
         walletOrderExchangeHashCancelledMap[wallet][orderExchangeHash] = false;
 
         uint256 orderIndex = walletOrderExchangeHashIndexMap[wallet][orderExchangeHash];
-        Types.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
+        StriimTypes.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
 
         emit ChallengeEvent(order, trade, msg.sender);
     }
 
     /// @notice Get current phase of a wallets cancelled order challenge
     /// @param wallet The address of wallet for which the cancelled order challenge phase is returned
-    function challengePhase(address wallet) public view returns (Types.ChallengePhase) {
+    function challengePhase(address wallet) public view returns (StriimTypes.ChallengePhase) {
         if (0 == walletOrderCancelledListMap[wallet].length)
-            return Types.ChallengePhase.Closed;
+            return StriimTypes.ChallengePhase.Closed;
         if (block.timestamp < walletOrderCancelledTimeoutMap[wallet])
-            return Types.ChallengePhase.Dispute;
+            return StriimTypes.ChallengePhase.Dispute;
         else
-            return Types.ChallengePhase.Closed;
+            return StriimTypes.ChallengePhase.Closed;
     }
 }

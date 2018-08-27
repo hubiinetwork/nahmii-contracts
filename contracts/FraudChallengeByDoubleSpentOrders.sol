@@ -11,20 +11,22 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {Types} from "./Types.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByDoubleSpentOrders
 @notice Where driips are challenged wrt fraud by double spent orders
 */
-contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Validatable, SecurityBondable {
+contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable, SelfDestructible {
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDoubleSpentOrdersEvent(Types.Trade trade1, Types.Trade trade2, address challenger);
+    event ChallengeByDoubleSpentOrdersEvent(StriimTypes.Trade trade1, StriimTypes.Trade trade2, address challenger);
 
     //
     // Constructor
@@ -40,8 +42,8 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Valida
     /// @param trade1 First trade with double spent order
     /// @param trade2 Last trade with double spent order
     function challenge(
-        Types.Trade trade1,
-        Types.Trade trade2
+        StriimTypes.Trade trade1,
+        StriimTypes.Trade trade2
     )
     public
     onlyOperationalModeNormal

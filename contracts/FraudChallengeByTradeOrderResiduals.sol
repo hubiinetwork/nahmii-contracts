@@ -11,20 +11,22 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByTradeOrderResiduals
 @notice Where driips are challenged wrt fraud by mismatch in trade order residuals
 */
-contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Validatable, ClientFundable {
+contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable, SelfDestructible {
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeOrderResidualsEvent(Types.Trade firstTrade, Types.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeByTradeOrderResidualsEvent(StriimTypes.Trade firstTrade, StriimTypes.Trade lastTrade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -40,12 +42,14 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Vali
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
-    /// @param currency Address of concerned currency (0 if ETH)
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     function challenge(
-        Types.Trade firstTrade,
-        Types.Trade lastTrade,
+        StriimTypes.Trade firstTrade,
+        StriimTypes.Trade lastTrade,
         address wallet,
-        address currency
+        address currencyCt,
+        uint256 currencyId
     )
     public
     onlyOperationalModeNormal
@@ -57,18 +61,18 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Vali
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(Types.isTradeParty(firstTrade, wallet));
-        require(Types.isTradeParty(lastTrade, wallet));
-        require(currency == firstTrade.currencies.intended);
-        require(currency == lastTrade.currencies.intended);
+        require(StriimTypes.isTradeParty(firstTrade, wallet));
+        require(StriimTypes.isTradeParty(lastTrade, wallet));
+        require(currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id);
+        require(currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id);
 
-        Types.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
-        Types.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        StriimTypes.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
+        StriimTypes.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
         require(firstTradePartyRole == lastTradePartyRole);
 
-        if (Types.TradePartyRole.Buyer == firstTradePartyRole)
+        if (StriimTypes.TradePartyRole.Buyer == firstTradePartyRole)
             require(firstTrade.buyer.order.hashes.wallet == lastTrade.buyer.order.hashes.wallet);
-        else // Types.TradePartyRole.Seller == firstTradePartyRole
+        else // StriimTypes.TradePartyRole.Seller == firstTradePartyRole
             require(firstTrade.seller.order.hashes.wallet == lastTrade.seller.order.hashes.wallet);
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));

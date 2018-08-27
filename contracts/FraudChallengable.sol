@@ -9,7 +9,6 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Challengable} from "./Challengable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 
@@ -17,7 +16,7 @@ import {FraudChallenge} from "./FraudChallenge.sol";
 @title FraudChallengable
 @notice An ownable that has a fraud challenge property
 */
-contract FraudChallengable is Ownable, Challengable, SelfDestructible {
+contract FraudChallengable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

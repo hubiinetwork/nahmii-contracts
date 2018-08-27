@@ -11,20 +11,22 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {Types} from "./Types.sol";
+import {SelfDestructible} from "./SelfDestructible.sol";
+import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeByDuplicateDriipNonceOfTradeAndPayment
 @notice Where driips are challenged wrt fraud by duplicate drip nonce of trade and payment
 */
-contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudChallengable, Validatable, SecurityBondable {
+contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable, SelfDestructible {
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(Types.Trade trade, Types.Payment payment, address challenger);
+    event ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(StriimTypes.Trade trade, StriimTypes.Payment payment, address challenger);
 
     //
     // Constructor
@@ -40,8 +42,8 @@ contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudC
     /// @param trade Trade with duplicate driip nonce
     /// @param payment Payment with duplicate driip nonce
     function challenge(
-        Types.Trade trade,
-        Types.Payment payment
+        StriimTypes.Trade trade,
+        StriimTypes.Payment payment
     )
     public
     onlyOperationalModeNormal

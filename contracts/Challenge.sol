@@ -11,10 +11,10 @@ pragma solidity ^0.4.24;
 import {Configurable} from "./Configurable.sol";
 
 /**
-@title Challengable
+@title Challenge
 @notice A configurable with extra for challenges
 */
-contract Challengable is Configurable {
+contract Challenge is Configurable {
 
     //
     // Modifiers
