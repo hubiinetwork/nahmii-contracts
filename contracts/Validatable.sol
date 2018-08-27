@@ -32,15 +32,16 @@ contract Validatable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the validator contract
     /// @param newAddress The (address of) Validator contract instance
-    function changeValidator(Validator newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != validator) {
-            //set new validator
-            Validator oldAddress = validator;
-            validator = newAddress;
+    function changeValidator(Validator newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, validator)
+    {
+        //set new validator
+        Validator oldAddress = validator;
+        validator = newAddress;
 
-            //emit event
-            emit ChangeValidatorEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit ChangeValidatorEvent(oldAddress, newAddress);
     }
 
     //

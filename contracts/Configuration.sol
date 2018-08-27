@@ -9,9 +9,8 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 
@@ -19,7 +18,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @title Configuration
 @notice An oracle for configurations values
 */
-contract Configuration is Ownable, Servable, SelfDestructible {
+contract Configuration is Ownable, Servable {
     using SafeMathInt for int256;
 
     //

@@ -14,15 +14,13 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
 import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title FraudChallengeBySuccessiveTrades
 @notice Where driips are challenged wrt fraud by mismatch in successive trades
 */
-contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable, SelfDestructible {
-
+contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -31,7 +29,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challen
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

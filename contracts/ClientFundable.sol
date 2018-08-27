@@ -32,15 +32,16 @@ contract ClientFundable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the client fund contract
     /// @param newAddress The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newAddress) public onlyOwner notNullAddress(newAddress) {
-        if (newAddress != clientFund) {
-            //set new community vote
-            ClientFund oldAddress = clientFund;
-            clientFund = newAddress;
+    function changeClientFund(ClientFund newAddress) public onlyOwner
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, clientFund)
+    {
+        //set new community vote
+        ClientFund oldAddress = clientFund;
+        clientFund = newAddress;
 
-            //emit event
-            emit ChangeClientFundEvent(oldAddress, newAddress);
-        }
+        //emit event
+        emit ChangeClientFundEvent(oldAddress, newAddress);
     }
 
     //

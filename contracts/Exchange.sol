@@ -14,8 +14,6 @@ import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {StriimTypes} from "./StriimTypes.sol";
-import {ERC20} from "./ERC20.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
@@ -23,14 +21,13 @@ import {CommunityVotable} from "./CommunityVotable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 
 /**
 @title Exchange
 @notice The orchestrator of driip settlements
 */
-contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, SelfDestructible {
+contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 

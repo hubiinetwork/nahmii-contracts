@@ -9,16 +9,14 @@
 pragma solidity ^0.4.24;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
-import {Ownable} from "./Ownable.sol";
 import {ERC20} from "./ERC20.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Ownable} from "./Ownable.sol";
 
 /**
 @title Community vote
 @notice An oracle for relevant decisions made by the community.
 */
-contract CommunityVote is Ownable, SelfDestructible {
-
+contract CommunityVote is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
