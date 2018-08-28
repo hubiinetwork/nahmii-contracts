@@ -326,9 +326,8 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
 
         driipSettlementChallenge.resetWalletChallenge(order.wallet);
 
-        (int256 stageAmount, address stageCurrencyCt, /*uint256 stageCurrencyId*/) = configuration.getUnchallengeOrderCandidateByTradeStake();
-        // TODO Update call with stageCurrencyId argument
-        securityBond.stage(stageAmount, stageCurrencyCt, challenger);
+        (int256 stageAmount, address stageCurrencyCt, uint256 stageCurrencyId) = configuration.getUnchallengeOrderCandidateByTradeStake();
+        securityBond.stage(challenger, stageAmount, stageCurrencyCt, stageCurrencyId);
 
         return challenge;
     }
