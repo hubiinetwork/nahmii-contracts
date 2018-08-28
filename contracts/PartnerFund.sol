@@ -198,11 +198,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         require(index < walletMap[tag].fullDepositHistory.length);
 
         FullDepositHistory storage fdh = walletMap[tag].fullDepositHistory[index];
-        (int256 _amount, uint256 timestamp, address _currencyCt, uint256 _currencyId) = walletMap[tag].txHistory.deposit(fdh.listIndex);
+        (, , currencyCt, currencyId) = walletMap[tag].txHistory.deposit(fdh.listIndex);
 
         balance = fdh.balance;
-        currencyCt = _currencyCt;
-        currencyId = _currencyId;
         blockNumber = fdh.blockNumber;
     }
 

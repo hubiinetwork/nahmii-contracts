@@ -113,10 +113,10 @@ contract UnitTestHelpers is AccrualBeneficiary {
     //
     // Helpers for SecurityBond SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToStage_SECURITYBOND(address securityBond, int256 amount, address token, address wallet) public {
+    function callToStage_SECURITYBOND(address securityBond, address wallet, int256 amount, address currencyCt, uint256 currencyid) public {
         require(securityBond != address(0));
         SecurityBond sc = SecurityBond(securityBond);
-        sc.stage(amount, token, wallet);
+        sc.stage(wallet, amount, currencyCt, currencyid);
     }
 
     //

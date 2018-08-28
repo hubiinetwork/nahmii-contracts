@@ -39,15 +39,11 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
     /// trade order double spenditure
     /// @param trade1 First trade with double spent order
     /// @param trade2 Last trade with double spent order
-    function challenge(
-        StriimTypes.Trade trade1,
-        StriimTypes.Trade trade2
-    )
-    public
-    onlyOperationalModeNormal
-    validatorInitialized
-    onlySealedTrade(trade1)
-    onlySealedTrade(trade2)
+    function challenge(StriimTypes.Trade trade1, StriimTypes.Trade trade2) public
+        onlyOperationalModeNormal
+        validatorInitialized
+        onlySealedTrade(trade1)
+        onlySealedTrade(trade2)
     {
         require(configuration != address(0));
         require(fraudChallenge != address(0));
@@ -62,9 +58,8 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
         fraudChallenge.addFraudulentTrade(trade1);
         fraudChallenge.addFraudulentTrade(trade2);
 
-        (int256 stakeAmount, address stakeCurrencyCt, /*uint256 stakeCurrencyId*/) = configuration.getDoubleSpentOrderStake();
-        // TODO Update call with stageCurrencyId argument
-        securityBond.stage(stakeAmount, stakeCurrencyCt, msg.sender);
+        (int256 stakeAmount, address stakeCurrencyCt, uint256 stakeCurrencyId) = configuration.getDoubleSpentOrderStake();
+        securityBond.stage(msg.sender, stakeAmount, stakeCurrencyCt, stakeCurrencyId);
 
         if (doubleSpentBuyOrder) {
             fraudChallenge.addDoubleSpenderWallet(trade1.buyer.wallet);
