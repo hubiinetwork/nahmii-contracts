@@ -19,8 +19,6 @@ contract StriimChallenge is Challenge {
         StriimTypes.Trade[] storage stgTradeArr)
     internal
     {
-        //        StriimTypes.Trade storage stgTrade;
-        //        stgTradeArr.push(stgTrade);
         stgTradeArr.length = stgTradeArr.length + 1;
         StriimTypes.Trade storage stgTrade = stgTradeArr[stgTradeArr.length];
 
@@ -39,8 +37,6 @@ contract StriimChallenge is Challenge {
         StriimTypes.Payment[] storage stgPaymentArr)
     internal
     {
-        //        StriimTypes.Payment storage stgPayment;
-        //        stgPaymentArr.push(stgPayment);
         stgPaymentArr.length = stgPaymentArr.length + 1;
         StriimTypes.Payment storage stgPayment = stgPaymentArr[stgPaymentArr.length];
 
