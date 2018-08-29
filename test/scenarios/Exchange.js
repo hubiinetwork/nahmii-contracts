@@ -465,7 +465,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('settleDriipAsTrade()', () => {
+        describe.skip('settleDriipAsTrade()', () => {
             let trade, overrideOptions;
 
             before(async () => {
@@ -661,7 +661,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('settleDriipAsPayment()', () => {
+        describe.skip('settleDriipAsPayment()', () => {
             let payment, overrideOptions;
 
             before(async () => {
