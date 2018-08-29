@@ -10,24 +10,25 @@ pragma solidity ^0.4.24;
 
 import {AccrualBeneficiary} from "../AccrualBeneficiary.sol";
 import {SafeMathUint} from "../SafeMathUint.sol";
-import {ERC20} from "../ERC20.sol";
 import {ClientFund} from "../ClientFund.sol";
 import {RevenueFund} from "../RevenueFund.sol";
 import {SecurityBond} from "../SecurityBond.sol";
 import {TokenHolderRevenueFund} from "../TokenHolderRevenueFund.sol";
+import {TransferControllerManageable} from "../TransferControllerManageable.sol";
+import {TransferController} from "../TransferController.sol";
 
 /**
 @title UnitTestHelpers
 @notice A dummy SC where several functions are added to assist in unit testing.
 */
-contract UnitTestHelpers is AccrualBeneficiary {
+contract UnitTestHelpers is AccrualBeneficiary, TransferControllerManageable {
     using SafeMathUint for uint256;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event DepositEthersToWasCalled(address wallet);
-    event DepositErc20TokensToWasCalled(address wallet, int256 amount, address token);
+    event DepositTokensToWasCalled(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodWasCalled();
 
     //
@@ -44,6 +45,7 @@ contract UnitTestHelpers is AccrualBeneficiary {
         require(target.call.value(amount)());
     }
 
+    /*
     //
     // Helpers for testing ERC20
     // -----------------------------------------------------------------------------------------------------------------
@@ -52,15 +54,15 @@ contract UnitTestHelpers is AccrualBeneficiary {
         ERC20 tok = ERC20(token);
         tok.approve(spender, value);
     }
+    */
 
     //
     // Helper for ClientFunds SC
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Update to two-component currency descriptor
-    function callToUpdateSettledBalance_CLIENTFUND(address clientFund, address wallet, int256 amount, address token) public {
+    function callToUpdateSettledBalance_CLIENTFUND(address clientFund, address wallet, int256 amount, address currencyCt, uint256 currencyId) public {
         require(clientFund != address(0));
         ClientFund sc = ClientFund(clientFund);
-        sc.updateSettledBalance(wallet, amount, token, 0);
+        sc.updateSettledBalance(wallet, amount, currencyCt, currencyId);
     }
 
     //    function callToWithdrawFromDepositedBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
@@ -100,10 +102,11 @@ contract UnitTestHelpers is AccrualBeneficiary {
         emit DepositEthersToWasCalled(wallet);
     }
 
-    function depositErc20TokensTo(address wallet, int256 amount, address token) public {
-        ERC20 tok = ERC20(token);
-        tok.transferFrom(msg.sender, this, uint256(amount));
-        emit DepositErc20TokensToWasCalled(wallet, amount, token);
+    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        //execute transfer
+        TransferController controller = getTransferController(currencyCt, standard);
+        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
+        emit DepositTokensToWasCalled(wallet, amount, currencyCt, currencyId);
     }
 
     function closeAccrualPeriod() public {

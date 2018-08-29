@@ -5,16 +5,16 @@
  */
 
 const Migrations = artifacts.require("Migrations");
-
 const helpers = require('./helpers.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 
-module.exports = function (deployer, network, accounts) {
+module.exports = (deployer, network, accounts) => {
     let ownerAccount;
 
-    if (helpers.isTestNetwork(network))
+    if (helpers.isTestNetwork(network)) {
         ownerAccount = accounts[0];
+    }
     else {
         ownerAccount = helpers.getOwnerAccountFromArgs();
         const ownerAccountPassword = helpers.getPasswordFromArgs();
@@ -24,11 +24,13 @@ module.exports = function (deployer, network, accounts) {
     deployer.deploy(Migrations, {
         from: ownerAccount
     }).then(() => {
-        if (!helpers.isTestNetwork(network))
+        if (!helpers.isTestNetwork(network)) {
             helpers.lockAddress(web3, ownerAccount);
+        }
     }).catch((err) => {
-        if (!helpers.isTestNetwork(network))
+        if (!helpers.isTestNetwork(network)) {
             helpers.lockAddress(web3, ownerAccount);
+        }
         throw err;
     })
 };
