@@ -39,6 +39,11 @@ contract Ownable is Modifiable, SelfDestructible {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Return the address that is able to initiate self-destruction
+    function destructor() public view returns (address) {
+        return owner;
+    }
+
     /// @notice Change the owner of this contract
     /// @param newOwner The address of the new owner
     function changeOwner(address newOwner) public onlyOwner notNullOrThisAddress(newOwner) {

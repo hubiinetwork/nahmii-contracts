@@ -17,9 +17,9 @@ contract SelfDestructible {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function triggerDestroy() public {
-        require(msg.sender == owner());
-        selfdestruct(owner());
+        require(msg.sender == destructor());
+        selfdestruct(destructor());
     }
 
-    function owner() public view returns (address);
+    function destructor() public view returns (address);
 }
