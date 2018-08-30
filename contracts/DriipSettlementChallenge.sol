@@ -326,14 +326,6 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
         walletChallengeMap[wallet].challenger = address(0);
     }
 
-    function getWalletChallengeTrade(address wallet, uint256 driipIndex) public view onlyDriipSettlementChallenger returns (StriimTypes.Trade) {
-        return walletChallengedTradesMap[wallet][driipIndex];
-    }
-
-    function getWalletChallengePayment(address wallet, uint256 driipIndex) public view onlyDriipSettlementChallenger returns (StriimTypes.Payment) {
-        return walletChallengedPaymentsMap[wallet][driipIndex];
-    }
-
     function pushChallengeCandidateOrder(StriimTypes.Order order) public onlyDriipSettlementChallenger {
         challengeCandidateOrders.push(order);
     }
