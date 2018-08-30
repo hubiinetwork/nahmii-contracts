@@ -4,226 +4,377 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
+const SafeMathInt = artifacts.require('SafeMathInt');
+const SafeMathUint = artifacts.require('SafeMathUint');
 const BalanceLib = artifacts.require('BalanceLib');
-const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
+const InUseCurrencyLib = artifacts.require('InUseCurrencyLib');
+const TxHistoryLib = artifacts.require('TxHistoryLib');
+const MonetaryTypes = artifacts.require('MonetaryTypes');
+const StriimTypes = artifacts.require('StriimTypes');
 const Challenge = artifacts.require('Challenge');
+const ERC20TransferController = artifacts.require('ERC20TransferController');
+const ERC721TransferController = artifacts.require('ERC721TransferController');
+const TransferControllerManager = artifacts.require('TransferControllerManager');
 const ClientFund = artifacts.require('ClientFund');
 const CommunityVote = artifacts.require('CommunityVote');
 const Configuration = artifacts.require('Configuration');
 const Exchange = artifacts.require('Exchange');
+const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
 const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementChallenger = artifacts.require('DriipSettlementChallenger');
 const Hasher = artifacts.require('Hasher');
-const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDoubleSpentOrders');
-const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
-const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
-const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTrades');
+const Validator = artifacts.require('Validator');
 const FraudChallengeByOrder = artifacts.require('FraudChallengeByOrder');
+const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
 const FraudChallengeByPayment = artifacts.require('FraudChallengeByPayment');
-const FraudChallengeByPaymentSucceedingTrade = artifacts.require('FraudChallengeByPaymentSucceedingTrade');
 const FraudChallengeBySuccessiveTrades = artifacts.require('FraudChallengeBySuccessiveTrades');
 const FraudChallengeBySuccessivePayments = artifacts.require('FraudChallengeBySuccessivePayments');
-const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
-const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByTradeOrderResiduals');
+const FraudChallengeByPaymentSucceedingTrade = artifacts.require('FraudChallengeByPaymentSucceedingTrade');
 const FraudChallengeByTradeSucceedingPayment = artifacts.require('FraudChallengeByTradeSucceedingPayment');
+const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByTradeOrderResiduals');
+const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDoubleSpentOrders');
+const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTrades');
+const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
+const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
 const FraudChallenge = artifacts.require('FraudChallenge');
-const InUseCurrencyLib = artifacts.require('InUseCurrencyLib');
-const MonetaryTypes = artifacts.require('MonetaryTypes');
-const Ownable = artifacts.require('Ownable');
-const PartnerFund = artifacts.require('PartnerFund');
 const RevenueFund = artifacts.require('RevenueFund');
-const SafeMathInt = artifacts.require('SafeMathInt');
-const SafeMathUint = artifacts.require('SafeMathUint');
 const SecurityBond = artifacts.require('SecurityBond');
-const StriimChallenge = artifacts.require('StriimChallenge');
-const StriimTypes = artifacts.require('StriimTypes');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
-const TxHistoryLib = artifacts.require('TxHistoryLib');
-const Validator = artifacts.require('Validator');
+const PartnerFund = artifacts.require('PartnerFund');
 
-const fs = require('fs');
+//test smart contracts
+const StandardTokenEx = artifacts.require('StandardTokenEx');
+const RevenueToken = artifacts.require('RevenueToken');
+const UnitTestHelpers = artifacts.require('UnitTestHelpers');
+
 const path = require('path');
-
 const helpers = require('./helpers.js');
+const AddressStorage = require('../scripts/common/address_storage.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = (deployer, network, accounts) => {
-    let ownerAccount;
-
     deployer.then(async () => {
+        let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
+        let ownerAccount;
+        let instance, tx;
+
+        await addressStorage.load();
+
+        if (helpers.isResetArgPresent()) {
+            addressStorage.clear();
+        }
+
         if (helpers.isTestNetwork(network)) {
             ownerAccount = accounts[0];
         }
         else {
             ownerAccount = helpers.getOwnerAccountFromArgs();
-            const ownerAccountPassword = helpers.getPasswordFromArgs();
-            helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 7200); //120 minutes
+
+            if (web3.eth.personal)
+                web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
+            else
+                web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
         }
 
         try {
             const deployFilters = helpers.getFiltersFromArgs();
 
-            const addresses = {};
+            //deploy base libraries
+            await execDeploy(deployer, 'SafeMathInt', SafeMathInt, deployFilters, addressStorage, ownerAccount);
+            await execDeploy(deployer, 'SafeMathUint', SafeMathUint, deployFilters, addressStorage, ownerAccount);
+            await execDeploy(deployer, 'StriimTypes', StriimTypes, deployFilters, addressStorage, ownerAccount);
+            await execDeploy(deployer, 'MonetaryTypes', MonetaryTypes, deployFilters, addressStorage, ownerAccount);
+            await execDeploy(deployer, 'BalanceLib', BalanceLib, deployFilters, addressStorage, ownerAccount);
+            await execDeploy(deployer, 'InUseCurrencyLib', InUseCurrencyLib, deployFilters, addressStorage, ownerAccount);
+            await execDeploy(deployer, 'TxHistoryLib', TxHistoryLib, deployFilters, addressStorage, ownerAccount);
 
-            await execDeploy(deployer, 'MonetaryTypes', MonetaryTypes, deployFilters, addresses, ownerAccount);
-
+            //link dependencies
             await deployer.link(MonetaryTypes, [
-                ClientFund, Configuration, DriipSettlementChallenger, Exchange, StriimTypes, StriimChallenge, TokenHolderRevenueFund, Validator
+                Challenge, ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementChallenger, Exchange, StriimTypes, FraudChallenge, TokenHolderRevenueFund, Validator
             ]);
-
-            await execDeploy(deployer, 'SafeMathInt', SafeMathInt, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'SafeMathUint', SafeMathUint, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'StriimTypes', StriimTypes, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'BalanceLib', BalanceLib, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'TxHistoryLib', TxHistoryLib, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'InUseCurrencyLib', InUseCurrencyLib, deployFilters, addresses, ownerAccount);
-
             await deployer.link(SafeMathInt, [
-                ClientFund, CommunityVote, Configuration, Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-                FraudChallenge, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
+                BalanceLib, CancelOrdersChallenge, ClientFund, CommunityVote, Configuration, DriipSettlementChallenge, DriipSettlementChallenger,
+                Exchange, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathUint, [
-                Exchange, CancelOrdersChallenge, FraudChallenge, RevenueFund, TokenHolderRevenueFund
+                CancelOrdersChallenge, Exchange, RevenueFund, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(StriimTypes, [
-                Exchange, CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger,
-                FraudChallengeByOrder, FraudChallengeByTrade, FraudChallengeByPayment, FraudChallengeBySuccessiveTrades,
-                FraudChallengeBySuccessivePayments, FraudChallengeByPaymentSucceedingTrade, FraudChallengeByTradeSucceedingPayment,
-                FraudChallengeByTradeOrderResiduals, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfTrades,
-                FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallenge,
-                Hasher, StriimChallenge, Validator
+                CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementChallenger, Exchange, FraudChallenge,
+                FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
+                FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
+                FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
+                FraudChallengeByTradeSucceedingPayment, Hasher, Validator
             ]);
             await deployer.link(BalanceLib, [
-                ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
-            ]);
-            await deployer.link(TxHistoryLib, [
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
             await deployer.link(InUseCurrencyLib, [
                 ClientFund, RevenueFund, SecurityBond
             ]);
+            await deployer.link(TxHistoryLib, [
+                ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
+            ]);
 
-            await execDeploy(deployer, 'ClientFund', ClientFund, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'CommunityVote', CommunityVote, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'Configuration', Configuration, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'Exchange', Exchange, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'CancelOrdersChallenge', CancelOrdersChallenge, deployFilters, addresses, ownerAccount);
-            if (shouldDeploy('DriipSettlementChallenge', deployFilters)) {
-                let instance = await deployer.deploy(DriipSettlementChallenge, ownerAccount, {from: ownerAccount});
-                addresses.DriipSettlementChallenge = instance.address;
+            //deploy test tokens contracts if on a developer network
+            if (helpers.isTestNetwork(network)) {
+                await execDeploy(deployer, 'StandardTokenEx', StandardTokenEx, deployFilters, addressStorage, ownerAccount);
 
-                instance = await deployer.deploy(DriipSettlementChallenger, ownerAccount, {
-                    from: ownerAccount,
-                    overwrite: true
-                });
-                addresses.DriipSettlementChallenger = instance.address;
+                instance = await deployer.deploy(RevenueToken, { from: ownerAccount });
+                addressStorage.set('RevenueToken' , instance.address);
             }
-            await execDeploy(deployer, 'Hasher', Hasher, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'Validator', Validator, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByOrder', FraudChallengeByOrder, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByTrade', FraudChallengeByTrade, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByPayment', FraudChallengeByPayment, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeBySuccessiveTrades', FraudChallengeBySuccessiveTrades, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeBySuccessivePayments', FraudChallengeBySuccessivePayments, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByPaymentSucceedingTrade', FraudChallengeByPaymentSucceedingTrade, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByTradeSucceedingPayment', FraudChallengeByTradeSucceedingPayment, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByTradeOrderResiduals', FraudChallengeByTradeOrderResiduals, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByDoubleSpentOrders', FraudChallengeByDoubleSpentOrders, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfTrades', FraudChallengeByDuplicateDriipNonceOfTrades, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfPayments', FraudChallengeByDuplicateDriipNonceOfPayments, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'FraudChallenge', FraudChallenge, deployFilters, addresses, ownerAccount);
-            // TODO Comment back in RevenueFund and SecurityBond once they have been updated to support two-component currency descriptors
-            // if (shouldDeploy('RevenueFund', deployFilters)) {
-            // 	let instance = await deployer.deploy(RevenueFund, ownerAccount, { from: ownerAccount });
-            // 	addresses.RevenueFund1 = instance.address;
-            //
-            // 	instance = await deployer.deploy(RevenueFund, ownerAccount, { from: ownerAccount, overwrite: true });
-            // 	addresses.RevenueFund2 = instance.address;
-            // }
-            // await execDeploy(deployer, 'SecurityBond', SecurityBond, deployFilters, addresses, ownerAccount);
-            await execDeploy(deployer, 'TokenHolderRevenueFund', TokenHolderRevenueFund, deployFilters, addresses, ownerAccount);
-            // TODO Comment back in RevenueFund and SecurityBond once they have been updated to support two-component currency descriptors
-            // await execDeploy(deployer, 'PartnerFund', PartnerFund, deployFilters, addresses, ownerAccount);
+
+            //deploy transfer controllers
+            await execDeploy(deployer, 'ERC20TransferController', ERC20TransferController, deployFilters, addressStorage, ownerAccount);
+            await execDeploy(deployer, 'ERC721TransferController', ERC721TransferController, deployFilters, addressStorage, ownerAccount);
+            await execDeploy(deployer, 'TransferControllerManager', TransferControllerManager, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'Hasher', Hasher, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'Validator', Validator, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'ClientFund', ClientFund, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'CommunityVote', CommunityVote, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'Configuration', Configuration, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'Exchange', Exchange, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'CancelOrdersChallenge', CancelOrdersChallenge, deployFilters, addressStorage, ownerAccount);
+
+            if ((!addressStorage.get('DriipSettlementChallenge')) || (!addressStorage.get('DriipSettlementChallenger')) || shouldDeploy('DriipSettlementChallenge', deployFilters)) {
+                instance = await deployer.deploy(DriipSettlementChallenge, ownerAccount, { from: ownerAccount });
+                addressStorage.set('DriipSettlementChallenge' , instance.address);
+
+                instance = await deployer.deploy(DriipSettlementChallenger, ownerAccount, { from: ownerAccount, overwrite: true });
+                addressStorage.set('DriipSettlementChallenger', instance.address);
+            }
+
+            await execDeploy(deployer, 'FraudChallengeByOrder', FraudChallengeByOrder, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByTrade', FraudChallengeByTrade, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByPayment', FraudChallengeByPayment, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeBySuccessiveTrades', FraudChallengeBySuccessiveTrades, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeBySuccessivePayments', FraudChallengeBySuccessivePayments, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByPaymentSucceedingTrade', FraudChallengeByPaymentSucceedingTrade, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByTradeSucceedingPayment', FraudChallengeByTradeSucceedingPayment, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByTradeOrderResiduals', FraudChallengeByTradeOrderResiduals, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByDoubleSpentOrders', FraudChallengeByDoubleSpentOrders, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfTrades', FraudChallengeByDuplicateDriipNonceOfTrades, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfPayments', FraudChallengeByDuplicateDriipNonceOfPayments, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'FraudChallenge', FraudChallenge, deployFilters, addressStorage, ownerAccount);
+
+            if ((!addressStorage.get('RevenueFund')) || shouldDeploy('RevenueFund', deployFilters)) {
+                instance = await deployer.deploy(RevenueFund, ownerAccount, { from: ownerAccount });
+                addressStorage.set('RevenueFund1' , instance.address);
+
+                instance = await deployer.deploy(RevenueFund, ownerAccount, { from: ownerAccount, overwrite: true });
+                addressStorage.set('RevenueFund2' , instance.address);
+            }
+
+            await execDeploy(deployer, 'SecurityBond', SecurityBond, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'TokenHolderRevenueFund', TokenHolderRevenueFund, deployFilters, addressStorage, ownerAccount);
+
+            await execDeploy(deployer, 'PartnerFund', PartnerFund, deployFilters, addressStorage, ownerAccount);
+
+            //deploy test smart contracts if on a developer network
+            if (helpers.isTestNetwork(network)) {
+                await execDeploy(deployer, 'UnitTestHelpers', UnitTestHelpers, deployFilters, addressStorage, ownerAccount);
+            }
+
+            //configure smart contracts
+
+            //register transfer controllers
+            instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
+            tx = await instance.registerTransferController('erc20', addressStorage.get('ERC20TransferController'), { from: ownerAccount });
+            tx = await instance.registerTransferController('erc721', addressStorage.get('ERC721TransferController'), { from: ownerAccount });
+            //register currencies on developer network
+            if (helpers.isTestNetwork(network)) {
+                tx = await instance.registerCurrency(addressStorage.get('StandardTokenEx'), "erc20", { from: ownerAccount });
+            }
+
+            instance = await Validator.at(addressStorage.get('Validator'));
+            tx = await instance.changeHasher(addressStorage.get('Hasher'));
+
+            instance = await ClientFund.at(addressStorage.get('ClientFund'));
+            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            //Beneficiary, Benefactor, AuthorizableServable
+
+            instance = await Exchange.at(addressStorage.get('Exchange'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeCommunityVote(addressStorage.get('CommunityVote'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+
+            instance = await CancelOrdersChallenge.at(addressStorage.get('CancelOrdersChallenge'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+
+            if ((!addressStorage.get('DriipSettlementChallenge')) || (!addressStorage.get('DriipSettlementChallenger')) || shouldDeploy('DriipSettlementChallenge', deployFilters)) {
+                instance = await DriipSettlementChallenge.at(addressStorage.get('DriipSettlementChallenge'));
+                tx = await instance.changeValidator(addressStorage.get('Validator'));
+                tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+
+                instance = await DriipSettlementChallenger.at(addressStorage.get('DriipSettlementChallenger'));
+                tx = await instance.changeDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
+                tx = await instance.changeValidator(addressStorage.get('Validator'));
+                tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+                tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+                tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+                tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            }
+
+            instance = await FraudChallengeByOrder.at(addressStorage.get('FraudChallengeByOrder'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+
+            instance = await FraudChallengeByTrade.at(addressStorage.get('FraudChallengeByTrade'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+
+            instance = await FraudChallengeByPayment.at(addressStorage.get('FraudChallengeByPayment'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+
+            instance = await FraudChallengeBySuccessiveTrades.at(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+
+            instance = await FraudChallengeBySuccessivePayments.at(addressStorage.get('FraudChallengeBySuccessivePayments'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+
+            instance = await FraudChallengeByPaymentSucceedingTrade.at(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+
+            instance = await FraudChallengeByTradeSucceedingPayment.at(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+
+            instance = await FraudChallengeByTradeOrderResiduals.at(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+
+            instance = await FraudChallengeByDoubleSpentOrders.at(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+
+            instance = await FraudChallengeByDuplicateDriipNonceOfTrades.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+
+            instance = await FraudChallengeByDuplicateDriipNonceOfPayments.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+
+            instance = await FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+
+            //instance = await FraudChallenge.at(addressStorage.get('FraudChallenge'));
+
+            if ((!addressStorage.get('RevenueFund')) || shouldDeploy('RevenueFund', deployFilters)) {
+                instance = await RevenueFund.at(addressStorage.get('RevenueFund1'));
+                tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+
+                instance = await RevenueFund.at(addressStorage.get('RevenueFund2'));
+                tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            }
+
+            instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
+            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+
+            instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
+            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            if (helpers.isTestNetwork(network)) {
+                tx = await instance.changeRevenueToken(addressStorage.get('RevenueToken'));
+            }
+
+            instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
+            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+
+            //deploy test smart contracts if on a developer network
+            if (helpers.isTestNetwork(network)) {
+                instance = await UnitTestHelpers.at(addressStorage.get('UnitTestHelpers'));
+                tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            }
 
             console.log("Saving addresses...");
-            await updateAddresses(deployer, addresses, helpers.isResetArgPresent());
+            await addressStorage.save();
         }
         catch (err) {
-            if (!helpers.isTestNetwork(network))
-                helpers.lockAddress(web3, ownerAccount);
-
+            if (!helpers.isTestNetwork(network)) {
+                if (web3.eth.personal)
+                    web3.eth.personal.lockAccount(ownerAccount);
+                else
+                    web3.personal.lockAccount(ownerAccount);
+            }
             throw err;
         }
 
-        if (!helpers.isTestNetwork(network))
-            helpers.lockAddress(web3, ownerAccount);
+        if (!helpers.isTestNetwork(network)) {
+            if (web3.eth.personal)
+                web3.eth.personal.lockAccount(ownerAccount);
+            else
+                web3.personal.lockAccount(ownerAccount);
+        }
     });
 };
 
-async function loadAddressesFromFile(filename) {
-    var json;
+async function execDeploy(deployer, contractName, contract, deployFilters, addressStorage, ownerAccount)
+{
+    let instance, address = addressStorage.get(contractName);
 
-    try {
-        //No need to handle the error. If the file doesn't exist then we'll start afresh with a new object.
-        json = fs.readFileSync(filename, {encoding: 'utf8'});
-
-        json = JSON.parse(json);
+    if ((!address) || shouldDeploy(contractName, deployFilters)) {
+        instance = await deployer.deploy(contract, ownerAccount, { from: ownerAccount });
+        addressStorage.set(contractName, instance.address);
     }
-    catch (err) {
-        if (err.code !== 'ENOENT')
-            throw err;
-
-        json = {};
+    else {
+        instance = contract.at();
     }
-    if (typeof json.networks !== 'object') {
-        json.networks = {};
-    }
-    return json;
-}
-
-async function saveAddressesToFile(filename, json) {
-    var folder = filename.substr(0, filename.lastIndexOf(path.sep));
-
-    //write json file (by this time the build folder should exists)
-    try {
-        fs.mkdirSync(folder);
-    }
-    catch (err) {
-        if (err.code !== 'EEXIST')
-            throw err;
-    }
-
-    fs.writeFileSync(filename, json, 'utf8');
-}
-
-async function updateAddresses(deployer, addresses, doReset) {
-    var filename = deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json';
-
-    var json = await loadAddressesFromFile(filename);
-
-    if (doReset || typeof json.networks[deployer.network_id] !== 'object') {
-        json.networks[deployer.network_id] = {};
-    }
-
-    //update addresses
-    Object.keys(addresses).forEach(function (key) {
-        json.networks[deployer.network_id][key] = addresses[key];
-    });
-
-    //update timestamp
-    json.updatedAt = new Date().toISOString();
-
-    await saveAddressesToFile(filename, JSON.stringify(json, null, 2));
-}
-
-async function execDeploy(deployer, contractName, contract, deployFilters, addresses, ownerAccount) {
-    if (shouldDeploy(contractName, deployFilters)) {
-        await deployer.deploy(contract, ownerAccount, {from: ownerAccount});
-        let instance = await contract.deployed();
-        addresses[contractName] = instance.address;
-    }
+    return instance;
 }
 
 function shouldDeploy(contractName, deployFilters) {
