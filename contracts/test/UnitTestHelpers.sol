@@ -8,6 +8,7 @@
 
 pragma solidity ^0.4.24;
 
+import {Ownable} from "../Ownable.sol";
 import {AccrualBeneficiary} from "../AccrualBeneficiary.sol";
 import {SafeMathUint} from "../SafeMathUint.sol";
 import {ClientFund} from "../ClientFund.sol";
@@ -21,7 +22,7 @@ import {TransferController} from "../TransferController.sol";
 @title UnitTestHelpers
 @notice A dummy SC where several functions are added to assist in unit testing.
 */
-contract UnitTestHelpers is AccrualBeneficiary, TransferControllerManageable {
+contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManageable {
     using SafeMathUint for uint256;
 
     //
@@ -34,7 +35,7 @@ contract UnitTestHelpers is AccrualBeneficiary, TransferControllerManageable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor() public {
+    constructor(address _owner) public Ownable(_owner) {
     }
 
     function() public payable {

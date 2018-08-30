@@ -115,7 +115,7 @@ AddressStorage.prototype.get = function (key)
     if (typeof this.contents.networks[this.network] !== 'object' || typeof this.contents.networks[this.network][key] !== 'string') {
         return null;
     }
-    return this.contents.networks[this.network][key] = {};
+    return this.contents.networks[this.network][key];
 }
 
 module.exports = AddressStorage;
