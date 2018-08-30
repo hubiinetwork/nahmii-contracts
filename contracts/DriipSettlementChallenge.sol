@@ -10,11 +10,12 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
-import {DriipSettlementChallenger} from "./DriipSettlementChallenger.sol";
 import {StriimChallenge} from "./StriimChallenge.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {DriipSettlementChallenger} from "./DriipSettlementChallenger.sol";
+import {MonetaryTypes} from "./StriimTypes.sol";
 import {StriimTypes} from "./StriimTypes.sol";
 
 /**
@@ -29,14 +30,29 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     // -----------------------------------------------------------------------------------------------------------------
     enum ChallengeCandidateType {None, Order, Trade, Payment}
 
+    struct OptionalFigure {
+        int256 amount;
+        MonetaryTypes.Currency currency;
+        bool set;
+    }
+
     struct Challenge {
         uint256 nonce;
-        StriimTypes.DriipType driipType;
         uint256 timeout;
         StriimTypes.ChallengeResult result;
+
+        // Driip info
+        StriimTypes.DriipType driipType;
         uint256 driipIndex;
+
+        // Balances after amounts have been staged
+        OptionalFigure intendedTargetBalance;
+        OptionalFigure conjugateTargetBalance;
+
+        // Candidate info updated when calling any of the challenge functions
         ChallengeCandidateType candidateType;
         uint256 candidateIndex;
+
         address challenger;
     }
 
@@ -120,12 +136,17 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     /// @notice Start driip settlement challenge on driip of trade type
     /// @param trade The challenged driip
     /// @param wallet The relevant driip party
-    function startChallengeFromTrade(StriimTypes.Trade trade, address wallet)
+    /// @param intendedStageAmount Amount to be staged of intended currency
+    /// @param conjugateStageAmount Amount to be staged of conjugate currency
+    function startChallengeFromTrade(StriimTypes.Trade trade, address wallet, int256 intendedStageAmount,
+        int256 conjugateStageAmount)
     public
     validatorInitialized
     onlySealedTrade(trade)
     {
         require(configuration != address(0));
+        require(intendedStageAmount.isPositiveInt256());
+        require(conjugateStageAmount.isPositiveInt256());
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -137,20 +158,33 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
             block.timestamp >= walletChallengeMap[wallet].timeout
         );
 
-        // TODO Uncomment/solve
-//        walletChallengedTradesMap[wallet].push(trade);
+        (int256 intendedBalanceAmount, int256 conjugateBalanceAmount) =
+        (StriimTypes.isTradeBuyer(trade, wallet) ?
+        (trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current) :
+        (trade.seller.balances.intended.current, trade.seller.balances.conjugate.current));
+
+        require(intendedBalanceAmount >= intendedStageAmount);
+        require(conjugateBalanceAmount >= conjugateStageAmount);
+
         pushMemoryTradeToStorageArray(trade, walletChallengedTradesMap[wallet]);
 
-        Challenge memory challenge = Challenge(
-            trade.nonce,
-            StriimTypes.DriipType.Trade,
-            block.timestamp + configuration.getDriipSettlementChallengeTimeout(),
-            StriimTypes.ChallengeResult.Qualified,
-            walletChallengedTradesMap[wallet].length - 1,
-            ChallengeCandidateType.None,
-            0,
-            address(0)
-        );
+        OptionalFigure memory intendedTargetBalance = OptionalFigure(intendedBalanceAmount - intendedStageAmount, trade.currencies.intended, true);
+        OptionalFigure memory conjugateTargetBalance = OptionalFigure(conjugateBalanceAmount - conjugateStageAmount, trade.currencies.conjugate, true);
+
+        Challenge memory challenge;
+        challenge.nonce = trade.nonce;
+        challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
+        challenge.result = StriimTypes.ChallengeResult.Qualified;
+        challenge.driipType = StriimTypes.DriipType.Trade;
+        challenge.driipIndex = walletChallengedTradesMap[wallet].length - 1;
+        // TODO Remove
+        //        challenge.candidateType = ChallengeCandidateType.None;
+        //        challenge.candidateIndex = 0;
+        challenge.intendedTargetBalance = intendedTargetBalance;
+        challenge.conjugateTargetBalance = conjugateTargetBalance;
+        // TODO Remove
+        //        challenge.challenger = address(0):
+
         walletChallengeMap[wallet] = challenge;
 
         emit StartChallengeFromTradeEvent(trade, wallet);
@@ -159,12 +193,14 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     /// @notice Start driip settlement challenge on driip of payment type
     /// @param payment The challenged driip
     /// @param wallet The relevant driip party
-    function startChallengeFromPayment(StriimTypes.Payment payment, address wallet)
+    /// @param stageAmount Amount to be staged
+    function startChallengeFromPayment(StriimTypes.Payment payment, address wallet, int256 stageAmount)
     public
     validatorInitialized
     onlySealedPayment(payment)
     {
         require(configuration != address(0));
+        require(stageAmount.isPositiveInt256());
 
         if (msg.sender != owner)
             wallet = msg.sender;
@@ -172,24 +208,32 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
         require(isOwner() || StriimTypes.isPaymentParty(payment, wallet));
 
         require(
-            0 == walletChallengeMap[wallet].nonce ||
-            block.timestamp >= walletChallengeMap[wallet].timeout
+            0 == walletChallengeMap[wallet].nonce || block.timestamp >= walletChallengeMap[wallet].timeout
         );
 
-        // TODO Uncomment/solve
-//        walletChallengedPaymentsMap[wallet].push(payment);
+        int256 balanceAmount = (StriimTypes.isPaymentSender(payment, wallet) ?
+        payment.sender.balances.current :
+        payment.sender.balances.current);
+
+        require(balanceAmount >= stageAmount);
+
         pushMemoryPaymentToStorageArray(payment, walletChallengedPaymentsMap[wallet]);
 
-        Challenge memory challenge = Challenge(
-            payment.nonce,
-            StriimTypes.DriipType.Payment,
-            block.timestamp + configuration.getDriipSettlementChallengeTimeout(),
-            StriimTypes.ChallengeResult.Qualified,
-            walletChallengedPaymentsMap[wallet].length - 1,
-            ChallengeCandidateType.None,
-            0,
-            address(0)
-        );
+        OptionalFigure memory targetBalance = OptionalFigure(balanceAmount - stageAmount, payment.currency, true);
+
+        Challenge memory challenge;
+        challenge.nonce = payment.nonce;
+        challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
+        challenge.result = StriimTypes.ChallengeResult.Qualified;
+        challenge.driipType = StriimTypes.DriipType.Payment;
+        challenge.driipIndex = walletChallengedPaymentsMap[wallet].length - 1;
+        // TODO Remove
+        //        challenge.candidateType = ChallengeCandidateType.None;
+        //        challenge.candidateIndex = 0;
+        challenge.intendedTargetBalance = targetBalance;
+        // TODO Remove
+        //        challenge.challenger = address(0):
+
         walletChallengeMap[wallet] = challenge;
 
         emit StartChallengeFromPaymentEvent(payment, wallet);
@@ -299,8 +343,6 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     }
 
     function pushChallengeCandidateTrade(StriimTypes.Trade trade) public onlyDriipSettlementChallenger {
-        // TODO Uncomment/solve
-//        challengeCandidateTrades.push(trade);
         pushMemoryTradeToStorageArray(trade, challengeCandidateTrades);
     }
 
@@ -309,8 +351,6 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     }
 
     function pushChallengeCandidatePayment(StriimTypes.Payment payment) public onlyDriipSettlementChallenger {
-        // TODO Uncomment/solve
-//        challengeCandidatePayments.push(payment);
         pushMemoryPaymentToStorageArray(payment, challengeCandidatePayments);
     }
 
