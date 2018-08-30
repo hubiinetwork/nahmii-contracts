@@ -91,7 +91,7 @@ module.exports = (deployer, network, accounts) => {
 
             //link dependencies
             await deployer.link(MonetaryTypes, [
-                Challenge, ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementChallenger, Exchange, StriimTypes, FraudChallenge, TokenHolderRevenueFund, Validator
+                ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementChallenger, Exchange, StriimTypes, StriimChallenge, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathInt, [
                 BalanceLib, CancelOrdersChallenge, ClientFund, CommunityVote, Configuration, DriipSettlementChallenge, DriipSettlementChallenger,
