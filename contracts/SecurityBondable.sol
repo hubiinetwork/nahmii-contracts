@@ -24,7 +24,7 @@ contract SecurityBondable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SecurityBondChangedEvent(SecurityBond oldAddress, SecurityBond newAddress);
+    event ChangeSecurityBondEvent(SecurityBond oldAddress, SecurityBond newAddress);
 
     //
     // Functions
@@ -40,7 +40,7 @@ contract SecurityBondable is Ownable {
         securityBond = newAddress;
 
         //emit event
-        emit SecurityBondChangedEvent(oldAddress, newAddress);
+        emit ChangeSecurityBondEvent(oldAddress, newAddress);
     }
 
     //

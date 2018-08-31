@@ -12,6 +12,8 @@ exports.challengeCandidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
 exports.address0 = '0x0000000000000000000000000000000000000000';
 
+let globalNonce = 1;
+
 exports.mockOrder = async (exchange, params) => {
     const wallet = Wallet.createRandom();
 
