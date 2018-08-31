@@ -95,7 +95,7 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
     function challengeByOrder(StriimTypes.Order order, address challenger)
     public
     validatorInitialized
-    onlyController
+    onlyDriipSettlementChallenge
     onlySealedOrder(order)
     {
         require(driipSettlementChallenge != address(0));
@@ -115,7 +115,8 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
 
         // Buy order -> Conjugate currency and amount
         // Sell order -> Intended currency and amount
-        (int256 orderAmount, MonetaryTypes.Currency memory orderCurrency) = (StriimTypes.Intention.Sell == order.placement.intention ?
+        (int256 orderAmount, MonetaryTypes.Currency memory orderCurrency) =
+        (StriimTypes.Intention.Sell == order.placement.intention ?
         (order.placement.amount, order.placement.currencies.intended) :
         (order.placement.amount.div(order.placement.rate), order.placement.currencies.conjugate));
 
@@ -151,7 +152,7 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
     function unchallengeOrderCandidateByTrade(StriimTypes.Order order, StriimTypes.Trade trade, address challenger)
     public
     validatorInitialized
-    onlyController
+    onlyDriipSettlementChallenge
     onlySealedOrder(order)
     onlySealedTrade(trade)
     onlyTradeParty(trade, order.wallet)
@@ -185,7 +186,7 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
     function challengeByTrade(StriimTypes.Trade trade, address wallet, address challenger)
     public
     validatorInitialized
-    onlyController
+    onlyDriipSettlementChallenge
     onlySealedTrade(trade)
     onlyTradeParty(trade, wallet)
     {
@@ -212,10 +213,12 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
 
         // Wallet is buyer in (candidate) trade -> consider single conjugate transfer in (candidate) trade
         // Wallet is seller in (candidate) trade -> consider single intended transfer in (candidate) trade
-        StriimTypes.TradePartyRole tradePartyRole = (trade.buyer.wallet == wallet ?
+        StriimTypes.TradePartyRole tradePartyRole =
+        (trade.buyer.wallet == wallet ?
         StriimTypes.TradePartyRole.Buyer :
         StriimTypes.TradePartyRole.Seller);
-        (int256 singleTransfer, MonetaryTypes.Currency memory transferCurrency) = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ?
+        (int256 singleTransfer, MonetaryTypes.Currency memory transferCurrency) =
+        (StriimTypes.TradePartyRole.Buyer == tradePartyRole ?
         (trade.transfers.conjugate.single.abs(), trade.currencies.conjugate) :
         (trade.transfers.intended.single.abs(), trade.currencies.intended));
 
@@ -251,7 +254,7 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
     function challengeByPayment(StriimTypes.Payment payment, address wallet, address challenger)
     public
     validatorInitialized
-    onlyController
+    onlyDriipSettlementChallenge
     onlySealedPayment(payment)
     onlyPaymentSender(payment, wallet)
     {
@@ -368,7 +371,7 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
         _;
     }
 
-    modifier onlyController() {
+    modifier onlyDriipSettlementChallenge() {
         require(msg.sender == address(driipSettlementChallenge));
         _;
     }

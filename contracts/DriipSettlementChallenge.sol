@@ -136,8 +136,8 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     /// @notice Start driip settlement challenge on driip of trade type
     /// @param trade The challenged driip
     /// @param wallet The relevant driip party
-    /// @param intendedStageAmount Amount to be staged of intended currency
-    /// @param conjugateStageAmount Amount to be staged of conjugate currency
+    /// @param intendedStageAmount Amount of intended currency to be staged
+    /// @param conjugateStageAmount Amount of conjugate currency to be staged
     function startChallengeFromTrade(StriimTypes.Trade trade, address wallet, int256 intendedStageAmount,
         int256 conjugateStageAmount)
     public
@@ -177,13 +177,8 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
         challenge.result = StriimTypes.ChallengeResult.Qualified;
         challenge.driipType = StriimTypes.DriipType.Trade;
         challenge.driipIndex = walletChallengedTradesMap[wallet].length - 1;
-        // TODO Remove
-        //        challenge.candidateType = ChallengeCandidateType.None;
-        //        challenge.candidateIndex = 0;
         challenge.intendedTargetBalance = intendedTargetBalance;
         challenge.conjugateTargetBalance = conjugateTargetBalance;
-        // TODO Remove
-        //        challenge.challenger = address(0):
 
         walletChallengeMap[wallet] = challenge;
 
@@ -193,7 +188,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     /// @notice Start driip settlement challenge on driip of payment type
     /// @param payment The challenged driip
     /// @param wallet The relevant driip party
-    /// @param stageAmount Amount to be staged
+    /// @param stageAmount Amount of payment currency to be staged
     function startChallengeFromPayment(StriimTypes.Payment payment, address wallet, int256 stageAmount)
     public
     validatorInitialized
@@ -213,7 +208,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
 
         int256 balanceAmount = (StriimTypes.isPaymentSender(payment, wallet) ?
         payment.sender.balances.current :
-        payment.sender.balances.current);
+        payment.recipient.balances.current);
 
         require(balanceAmount >= stageAmount);
 
@@ -227,12 +222,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
         challenge.result = StriimTypes.ChallengeResult.Qualified;
         challenge.driipType = StriimTypes.DriipType.Payment;
         challenge.driipIndex = walletChallengedPaymentsMap[wallet].length - 1;
-        // TODO Remove
-        //        challenge.candidateType = ChallengeCandidateType.None;
-        //        challenge.candidateIndex = 0;
         challenge.intendedTargetBalance = targetBalance;
-        // TODO Remove
-        //        challenge.challenger = address(0):
 
         walletChallengeMap[wallet] = challenge;
 
