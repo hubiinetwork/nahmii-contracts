@@ -15,8 +15,9 @@ import {Validatable} from "./Validatable.sol";
 import {StriimChallenge} from "./StriimChallenge.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {DriipSettlementChallenger} from "./DriipSettlementChallenger.sol";
-import {MonetaryTypes} from "./StriimTypes.sol";
+import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {StriimTypes} from "./StriimTypes.sol";
+import {DriipSettlementChallengeTypes} from "./DriipSettlementChallengeTypes.sol";
 
 /**
 @title DriipSettlementChallenge
@@ -26,42 +27,11 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     using SafeMathInt for int256;
 
     //
-    // Types
-    // -----------------------------------------------------------------------------------------------------------------
-    enum ChallengeCandidateType {None, Order, Trade, Payment}
-
-    struct OptionalFigure {
-        int256 amount;
-        MonetaryTypes.Currency currency;
-        bool set;
-    }
-
-    struct Challenge {
-        uint256 nonce;
-        uint256 timeout;
-        StriimTypes.ChallengeStatus status;
-
-        // Driip info
-        StriimTypes.DriipType driipType;
-        uint256 driipIndex;
-
-        // Balances after amounts have been staged
-        OptionalFigure intendedTargetBalance;
-        OptionalFigure conjugateTargetBalance;
-
-        // Candidate info updated when calling any of the challenge functions
-        ChallengeCandidateType candidateType;
-        uint256 candidateIndex;
-
-        address challenger;
-    }
-
-    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementChallenger public driipSettlementChallenger;
 
-    mapping(address => Challenge) public walletChallengeMap;
+    mapping(address => DriipSettlementChallengeTypes.Challenge) public walletChallengeMap;
 
     mapping(address => StriimTypes.Trade[]) public walletChallengedTradesMap;
     mapping(address => StriimTypes.Payment[]) public walletChallengedPaymentsMap;
@@ -168,17 +138,16 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
 
         pushMemoryTradeToStorageArray(trade, walletChallengedTradesMap[wallet]);
 
-        OptionalFigure memory intendedTargetBalance = OptionalFigure(intendedBalanceAmount - intendedStageAmount, trade.currencies.intended, true);
-        OptionalFigure memory conjugateTargetBalance = OptionalFigure(conjugateBalanceAmount - conjugateStageAmount, trade.currencies.conjugate, true);
-
-        Challenge memory challenge;
+        DriipSettlementChallengeTypes.Challenge memory challenge;
         challenge.nonce = trade.nonce;
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
         challenge.status = StriimTypes.ChallengeStatus.Qualified;
         challenge.driipType = StriimTypes.DriipType.Trade;
         challenge.driipIndex = walletChallengedTradesMap[wallet].length - 1;
-        challenge.intendedTargetBalance = intendedTargetBalance;
-        challenge.conjugateTargetBalance = conjugateTargetBalance;
+        challenge.intendedStage = DriipSettlementChallengeTypes.OptionalFigure(intendedStageAmount, trade.currencies.intended, true);
+        challenge.conjugateStage = DriipSettlementChallengeTypes.OptionalFigure(intendedStageAmount, trade.currencies.intended, true);
+        challenge.intendedTargetBalance = DriipSettlementChallengeTypes.OptionalFigure(intendedBalanceAmount - intendedStageAmount, trade.currencies.intended, true);
+        challenge.conjugateTargetBalance = DriipSettlementChallengeTypes.OptionalFigure(conjugateBalanceAmount - conjugateStageAmount, trade.currencies.conjugate, true);
 
         walletChallengeMap[wallet] = challenge;
 
@@ -214,15 +183,14 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
 
         pushMemoryPaymentToStorageArray(payment, walletChallengedPaymentsMap[wallet]);
 
-        OptionalFigure memory targetBalance = OptionalFigure(balanceAmount - stageAmount, payment.currency, true);
-
-        Challenge memory challenge;
+        DriipSettlementChallengeTypes.Challenge memory challenge;
         challenge.nonce = payment.nonce;
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
         challenge.status = StriimTypes.ChallengeStatus.Qualified;
         challenge.driipType = StriimTypes.DriipType.Payment;
         challenge.driipIndex = walletChallengedPaymentsMap[wallet].length - 1;
-        challenge.intendedTargetBalance = targetBalance;
+        challenge.intendedStage = DriipSettlementChallengeTypes.OptionalFigure(stageAmount, payment.currency, true);
+        challenge.intendedTargetBalance = DriipSettlementChallengeTypes.OptionalFigure(balanceAmount - stageAmount, payment.currency, true);
 
         walletChallengeMap[wallet] = challenge;
 
@@ -301,17 +269,17 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     //
     // Helpers for DriipSettlementChallenger
     // -----------------------------------------------------------------------------------------------------------------
-    function getWalletChallenge(address wallet) public view onlyDriipSettlementChallenger returns (Challenge) {
+    function getWalletChallenge(address wallet) public view onlyDriipSettlementChallenger returns (DriipSettlementChallengeTypes.Challenge) {
         return walletChallengeMap[wallet];
     }
 
-    function setWalletChallenge(address wallet, Challenge challenge) public onlyDriipSettlementChallenger {
+    function setWalletChallenge(address wallet, DriipSettlementChallengeTypes.Challenge challenge) public onlyDriipSettlementChallenger {
         walletChallengeMap[wallet] = challenge;
     }
 
     function resetWalletChallenge(address wallet) public onlyDriipSettlementChallenger {
         walletChallengeMap[wallet].status = StriimTypes.ChallengeStatus.Qualified;
-        walletChallengeMap[wallet].candidateType = DriipSettlementChallenge.ChallengeCandidateType.None;
+        walletChallengeMap[wallet].candidateType = DriipSettlementChallengeTypes.ChallengeCandidateType.None;
         walletChallengeMap[wallet].candidateIndex = 0;
         walletChallengeMap[wallet].challenger = address(0);
     }

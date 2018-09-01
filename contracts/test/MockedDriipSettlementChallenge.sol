@@ -9,8 +9,9 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {DriipSettlementChallenge} from "../DriipSettlementChallenge.sol";
+//import {DriipSettlementChallenge} from "../DriipSettlementChallenge.sol";
 import {StriimTypes} from "../StriimTypes.sol";
+import {DriipSettlementChallengeTypes} from "../DriipSettlementChallengeTypes.sol";
 
 /**
 @title MockedDriipSettlementChallenge
@@ -21,7 +22,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => DriipSettlementChallenge.Challenge) walletChallengeMap;
+    mapping(address => DriipSettlementChallengeTypes.Challenge) walletChallengeMap;
 
     //
     // Functions
