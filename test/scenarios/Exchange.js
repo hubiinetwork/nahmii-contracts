@@ -564,10 +564,10 @@ module.exports = (glob) => {
                         trade = await mocks.mockTrade(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
+                        await ethersDriipSettlementChallenge.setDriipSettlementChallengeResult(
                             trade.buyer.wallet,
                             trade.nonce,
-                            mocks.challengeResults.indexOf('Qualified'),
+                            mocks.challengeStatuses.indexOf('Qualified'),
                             challenger,
                             overrideOptions
                         );
@@ -641,10 +641,10 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
+                    await ethersDriipSettlementChallenge.setDriipSettlementChallengeResult(
                         trade.buyer.wallet,
                         trade.nonce,
-                        mocks.challengeResults.indexOf('Disqualified'),
+                        mocks.challengeStatuses.indexOf('Disqualified'),
                         challenger,
                         overrideOptions
                     );
@@ -758,10 +758,10 @@ module.exports = (glob) => {
                         payment = await mocks.mockPayment(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
+                        await ethersDriipSettlementChallenge.setDriipSettlementChallengeResult(
                             payment.sender.wallet,
                             payment.nonce,
-                            mocks.challengeResults.indexOf('Qualified'),
+                            mocks.challengeStatuses.indexOf('Qualified'),
                             challenger,
                             overrideOptions
                         );
@@ -823,10 +823,10 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    await ethersDriipSettlementChallenge.setDriipSettlementChallengeStatus(
+                    await ethersDriipSettlementChallenge.setDriipSettlementChallengeResult(
                         payment.sender.wallet,
                         payment.nonce,
-                        mocks.challengeResults.indexOf('Disqualified'),
+                        mocks.challengeStatuses.indexOf('Disqualified'),
                         challenger,
                         overrideOptions
                     );

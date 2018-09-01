@@ -55,9 +55,9 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SettleDriipAsTradeEvent(StriimTypes.Trade trade, address wallet,
-        StriimTypes.ChallengeResult challengeResult);
+        StriimTypes.ChallengeStatus challengeStatus);
     event SettleDriipAsPaymentEvent(StriimTypes.Payment payment, address wallet,
-        StriimTypes.ChallengeResult challengeResult);
+        StriimTypes.ChallengeStatus challengeStatus);
     event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
         DriipSettlementChallenge newDriipSettlementChallenge);
@@ -181,9 +181,9 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         require(StriimTypes.isTradeParty(trade, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        (StriimTypes.ChallengeResult result, address challenger) = driipSettlementChallenge.driipSettlementChallengeStatus(wallet, trade.nonce);
+        (StriimTypes.ChallengeStatus status, address challenger) = driipSettlementChallenge.driipSettlementChallengeResult(wallet, trade.nonce);
 
-        if (StriimTypes.ChallengeResult.Qualified == result) {
+        if (StriimTypes.ChallengeStatus.Qualified == status) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < maxDriipNonce));
@@ -229,12 +229,12 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             if (trade.nonce > maxDriipNonce)
                 maxDriipNonce = trade.nonce;
 
-        } else if (StriimTypes.ChallengeResult.Disqualified == result) {
+        } else if (StriimTypes.ChallengeStatus.Disqualified == status) {
             addToSeizedWallets(wallet);
             clientFund.seizeAllBalances(wallet, challenger);
         }
 
-        emit SettleDriipAsTradeEvent(trade, wallet, result);
+        emit SettleDriipAsTradeEvent(trade, wallet, status);
     }
 
     /// @notice Settle driip that is a payment
@@ -258,10 +258,10 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         require(StriimTypes.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        (StriimTypes.ChallengeResult result, address challenger) =
-        driipSettlementChallenge.driipSettlementChallengeStatus(wallet, payment.nonce);
+        (StriimTypes.ChallengeStatus status, address challenger) =
+        driipSettlementChallenge.driipSettlementChallengeResult(wallet, payment.nonce);
 
-        if (StriimTypes.ChallengeResult.Qualified == result) {
+        if (StriimTypes.ChallengeStatus.Qualified == status) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (payment.nonce < maxDriipNonce));
@@ -312,12 +312,12 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
                 maxDriipNonce = payment.nonce;
 
         }
-        else if (StriimTypes.ChallengeResult.Disqualified == result) {
+        else if (StriimTypes.ChallengeStatus.Disqualified == status) {
             addToSeizedWallets(wallet);
             clientFund.seizeAllBalances(wallet, challenger);
         }
 
-        emit SettleDriipAsPaymentEvent(payment, wallet, result);
+        emit SettleDriipAsPaymentEvent(payment, wallet, status);
     }
 
     function getSettlementRoleFromTrade(StriimTypes.Trade trade, address wallet)

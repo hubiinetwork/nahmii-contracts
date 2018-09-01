@@ -7,7 +7,7 @@ exports.intentions = ['Buy', 'Sell'];
 exports.driipTypes = ['Trade', 'Payment'];
 exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
-exports.challengeResults = ['Unknown', 'Qualified', 'Disqualified'];
+exports.challengeStatuses = ['Unknown', 'Qualified', 'Disqualified'];
 exports.challengeCandidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
 exports.address0 = '0x0000000000000000000000000000000000000000';

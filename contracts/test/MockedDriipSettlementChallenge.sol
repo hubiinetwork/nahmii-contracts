@@ -29,17 +29,17 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
     constructor(/*address owner*/) public /*DriipSettlementChallenge(owner)*/{
     }
 
-    function setDriipSettlementChallengeStatus(address wallet, uint256 nonce, StriimTypes.ChallengeResult result, address challenger) public {
+    function setDriipSettlementChallengeResult(address wallet, uint256 nonce, StriimTypes.ChallengeStatus status, address challenger) public {
         walletChallengeMap[wallet].nonce = nonce;
-        walletChallengeMap[wallet].result = result;
+        walletChallengeMap[wallet].status = status;
         walletChallengeMap[wallet].challenger = challenger;
     }
 
-    function driipSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (StriimTypes.ChallengeResult, address) {
+    function driipSettlementChallengeResult(address wallet, uint256 nonce) public view returns (StriimTypes.ChallengeStatus, address) {
         if ((0 == walletChallengeMap[wallet].nonce) ||
             (nonce != walletChallengeMap[wallet].nonce))
-            return (StriimTypes.ChallengeResult.Unknown, address(0));
+            return (StriimTypes.ChallengeStatus.Unknown, address(0));
         else
-            return (walletChallengeMap[wallet].result, walletChallengeMap[wallet].challenger);
+            return (walletChallengeMap[wallet].status, walletChallengeMap[wallet].challenger);
     }
 }

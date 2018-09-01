@@ -39,7 +39,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     struct Challenge {
         uint256 nonce;
         uint256 timeout;
-        StriimTypes.ChallengeResult result;
+        StriimTypes.ChallengeStatus status;
 
         // Driip info
         StriimTypes.DriipType driipType;
@@ -174,7 +174,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
         Challenge memory challenge;
         challenge.nonce = trade.nonce;
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
-        challenge.result = StriimTypes.ChallengeResult.Qualified;
+        challenge.status = StriimTypes.ChallengeStatus.Qualified;
         challenge.driipType = StriimTypes.DriipType.Trade;
         challenge.driipIndex = walletChallengedTradesMap[wallet].length - 1;
         challenge.intendedTargetBalance = intendedTargetBalance;
@@ -219,7 +219,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
         Challenge memory challenge;
         challenge.nonce = payment.nonce;
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
-        challenge.result = StriimTypes.ChallengeResult.Qualified;
+        challenge.status = StriimTypes.ChallengeStatus.Qualified;
         challenge.driipType = StriimTypes.DriipType.Payment;
         challenge.driipIndex = walletChallengedPaymentsMap[wallet].length - 1;
         challenge.intendedTargetBalance = targetBalance;
@@ -245,14 +245,14 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     /// @notice Get driip settlement challenge result and challenger (wallet) of given (challenge) wallet
     /// @param wallet The wallet whose challenge status will be returned
     /// @param nonce The nonce of the challenged driip
-    function driipSettlementChallengeStatus(address wallet, uint256 nonce) public view returns (StriimTypes.ChallengeResult, address) {
+    function driipSettlementChallengeResult(address wallet, uint256 nonce) public view returns (StriimTypes.ChallengeStatus, address) {
         if (msg.sender != owner)
             wallet = msg.sender;
         if ((0 == walletChallengeMap[wallet].nonce) ||
             (nonce != walletChallengeMap[wallet].nonce))
-            return (StriimTypes.ChallengeResult.Unknown, address(0));
+            return (StriimTypes.ChallengeStatus.Unknown, address(0));
         else
-            return (walletChallengeMap[wallet].result, walletChallengeMap[wallet].challenger);
+            return (walletChallengeMap[wallet].status, walletChallengeMap[wallet].challenger);
     }
 
     //
@@ -310,7 +310,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     }
 
     function resetWalletChallenge(address wallet) public onlyDriipSettlementChallenger {
-        walletChallengeMap[wallet].result = StriimTypes.ChallengeResult.Qualified;
+        walletChallengeMap[wallet].status = StriimTypes.ChallengeStatus.Qualified;
         walletChallengeMap[wallet].candidateType = DriipSettlementChallenge.ChallengeCandidateType.None;
         walletChallengeMap[wallet].candidateIndex = 0;
         walletChallengeMap[wallet].challenger = address(0);

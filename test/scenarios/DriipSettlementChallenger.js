@@ -11,7 +11,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe('DriipSettlementChallenger', () => {
+    describe.only('DriipSettlementChallenger', () => {
         let web3DriipSettlementChallenger, ethersDriipSettlementChallenger;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;

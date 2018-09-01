@@ -14,7 +14,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe('DriipSettlementChallenge', () => {
+    describe.only('DriipSettlementChallenge', () => {
         let web3DriipSettlementChallenge, ethersDriipSettlementChallengeOwner;
         let web3DriipSettlementChallenger, ethersDriipSettlementChallenger;
         let web3Configuration, ethersConfiguration;
@@ -518,12 +518,12 @@ module.exports = (glob) => {
             });
         });
 
-        describe('driipSettlementChallengeStatus()', () => {
+        describe('driipSettlementChallengeResult()', () => {
             describe('if no driip settlement challenge has been started for given wallet', () => {
                 it('should return (Unknown, address(0))', async () => {
                     const address = Wallet.createRandom().address;
-                    const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengeStatus(address, 0);
-                    result[0].should.equal(mocks.challengeResults.indexOf('Unknown'));
+                    const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengeResult(address, 0);
+                    result[0].should.equal(mocks.challengeStatuses.indexOf('Unknown'));
                     result[1].should.equal('0x0000000000000000000000000000000000000000');
                 });
             });
@@ -544,8 +544,8 @@ module.exports = (glob) => {
                 });
 
                 it('should return challenged driip challenge result', async () => {
-                    const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengeStatus(trade.buyer.wallet, trade.nonce);
-                    result[0].should.equal(mocks.challengeResults.indexOf('Qualified'));
+                    const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengeResult(trade.buyer.wallet, trade.nonce);
+                    result[0].should.equal(mocks.challengeStatuses.indexOf('Qualified'));
                     result[1].should.equal('0x0000000000000000000000000000000000000000');
                 });
             });
@@ -727,7 +727,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidateOrdersCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(trade.buyer.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
@@ -795,7 +795,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidateOrdersCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(payment.sender.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_b));
@@ -1008,7 +1008,7 @@ module.exports = (glob) => {
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
                     const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(trade.buyer.wallet);
-                    driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Qualified'));
+                    driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
                     driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('None'));
                     driipSettlementChallenge.candidateIndex.eq(0).should.be.true;
                     driipSettlementChallenge.challenger.should.equal(mocks.address0);
@@ -1194,7 +1194,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidateTradesCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(candidateTrade.buyer.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
@@ -1273,7 +1273,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidateTradesCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(candidateTrade.buyer.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
@@ -1447,7 +1447,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidatePaymentsCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(candidatePayment.sender.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
@@ -1524,7 +1524,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidatePaymentsCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(candidatePayment.sender.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));

@@ -134,7 +134,7 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
 
         // Update challenge
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
-        challenge.result = StriimTypes.ChallengeResult.Disqualified;
+        challenge.status = StriimTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementChallenge.ChallengeCandidateType.Order;
         challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidateOrdersLength() - 1;
         challenge.challenger = challenger;
@@ -235,7 +235,7 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
         driipSettlementChallenge.pushChallengeCandidateTrade(trade);
 
         // Update challenge
-        challenge.result = StriimTypes.ChallengeResult.Disqualified;
+        challenge.status = StriimTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementChallenge.ChallengeCandidateType.Trade;
         challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidateTradesLength() - 1;
         challenge.challenger = challenger;
@@ -283,7 +283,7 @@ contract DriipSettlementChallenger is Ownable, Configurable, Validatable, Securi
         driipSettlementChallenge.pushChallengeCandidatePayment(payment);
 
         // Update challenge
-        challenge.result = StriimTypes.ChallengeResult.Disqualified;
+        challenge.status = StriimTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementChallenge.ChallengeCandidateType.Payment;
         challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidatePaymentsLength() - 1;
         challenge.challenger = challenger;
