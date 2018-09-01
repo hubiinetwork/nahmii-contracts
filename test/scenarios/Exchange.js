@@ -564,7 +564,7 @@ module.exports = (glob) => {
                         trade = await mocks.mockTrade(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDriipSettlementChallenge.setDriipSettlementChallengeResult(
+                        await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                             trade.buyer.wallet,
                             trade.nonce,
                             mocks.challengeStatuses.indexOf('Qualified'),
@@ -641,7 +641,7 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    await ethersDriipSettlementChallenge.setDriipSettlementChallengeResult(
+                    await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                         trade.buyer.wallet,
                         trade.nonce,
                         mocks.challengeStatuses.indexOf('Disqualified'),
@@ -758,7 +758,7 @@ module.exports = (glob) => {
                         payment = await mocks.mockPayment(glob.owner, {
                             blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                         });
-                        await ethersDriipSettlementChallenge.setDriipSettlementChallengeResult(
+                        await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                             payment.sender.wallet,
                             payment.nonce,
                             mocks.challengeStatuses.indexOf('Qualified'),
@@ -823,7 +823,7 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {
                         blockNumber: utils.bigNumberify(await provider.getBlockNumber())
                     });
-                    await ethersDriipSettlementChallenge.setDriipSettlementChallengeResult(
+                    await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                         payment.sender.wallet,
                         payment.nonce,
                         mocks.challengeStatuses.indexOf('Disqualified'),

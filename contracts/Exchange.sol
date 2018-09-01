@@ -9,11 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {StriimTypes} from "./StriimTypes.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
@@ -22,6 +18,11 @@ import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 import {Beneficiary} from "./Beneficiary.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
+import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {StriimTypes} from "./StriimTypes.sol";
+import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 
 /**
 @title Exchange
@@ -181,9 +182,9 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         require(StriimTypes.isTradeParty(trade, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        (StriimTypes.ChallengeStatus status, address challenger) = driipSettlementChallenge.driipSettlementChallengeResult(wallet, trade.nonce);
+        require(driipSettlementChallenge.getChallengeNonce(wallet) == trade.nonce);
 
-        if (StriimTypes.ChallengeStatus.Qualified == status) {
+        if (driipSettlementChallenge.getChallengeStatus(wallet) == StriimTypes.ChallengeStatus.Qualified) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < maxDriipNonce));
@@ -229,12 +230,12 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             if (trade.nonce > maxDriipNonce)
                 maxDriipNonce = trade.nonce;
 
-        } else if (StriimTypes.ChallengeStatus.Disqualified == status) {
+        } else if (driipSettlementChallenge.getChallengeStatus(wallet) == StriimTypes.ChallengeStatus.Disqualified) {
             addToSeizedWallets(wallet);
-            clientFund.seizeAllBalances(wallet, challenger);
+            clientFund.seizeAllBalances(wallet, driipSettlementChallenge.getChallengeChallenger(wallet));
         }
 
-        emit SettleDriipAsTradeEvent(trade, wallet, status);
+        emit SettleDriipAsTradeEvent(trade, wallet, driipSettlementChallenge.getChallengeStatus(wallet));
     }
 
     /// @notice Settle driip that is a payment
@@ -258,10 +259,9 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         require(StriimTypes.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        (StriimTypes.ChallengeStatus status, address challenger) =
-        driipSettlementChallenge.driipSettlementChallengeResult(wallet, payment.nonce);
+        require(driipSettlementChallenge.getChallengeNonce(wallet) == payment.nonce);
 
-        if (StriimTypes.ChallengeStatus.Qualified == status) {
+        if (driipSettlementChallenge.getChallengeStatus(wallet) == StriimTypes.ChallengeStatus.Qualified) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (payment.nonce < maxDriipNonce));
@@ -311,13 +311,12 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             if (payment.nonce > maxDriipNonce)
                 maxDriipNonce = payment.nonce;
 
-        }
-        else if (StriimTypes.ChallengeStatus.Disqualified == status) {
+        } else if (driipSettlementChallenge.getChallengeStatus(wallet) == StriimTypes.ChallengeStatus.Disqualified) {
             addToSeizedWallets(wallet);
-            clientFund.seizeAllBalances(wallet, challenger);
+            clientFund.seizeAllBalances(wallet, driipSettlementChallenge.getChallengeChallenger(wallet));
         }
 
-        emit SettleDriipAsPaymentEvent(payment, wallet, status);
+        emit SettleDriipAsPaymentEvent(payment, wallet, driipSettlementChallenge.getChallengeStatus(wallet));
     }
 
     function getSettlementRoleFromTrade(StriimTypes.Trade trade, address wallet)

@@ -11,8 +11,8 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('DriipSettlementChallenger', () => {
-        let web3DriipSettlementChallenger, ethersDriipSettlementChallenger;
+    describe.only('DriipSettlementDispute', () => {
+        let web3DriipSettlementDispute, ethersDriipSettlementDispute;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
@@ -25,8 +25,8 @@ module.exports = (glob) => {
         before(async () => {
             provider = glob.signer_owner.provider;
 
-            web3DriipSettlementChallenger = glob.web3DriipSettlementChallenger;
-            ethersDriipSettlementChallenger = glob.ethersIoDriipSettlementChallenger;
+            web3DriipSettlementDispute = glob.web3DriipSettlementDispute;
+            ethersDriipSettlementDispute = glob.ethersIoDriipSettlementDispute;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
             web3DriipSettlementChallenge = glob.web3DriipSettlementChallenge;
@@ -43,12 +43,12 @@ module.exports = (glob) => {
 
             await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(1000, mocks.address0, utils.bigNumberify(0));
 
-            await ethersDriipSettlementChallenger.changeDriipSettlementChallenge(ethersDriipSettlementChallenge.address);
-            await ethersDriipSettlementChallenger.changeFraudChallenge(ethersFraudChallenge.address);
-            await ethersDriipSettlementChallenger.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
-            await ethersDriipSettlementChallenger.changeConfiguration(ethersConfiguration.address);
-            await ethersDriipSettlementChallenger.changeValidator(ethersValidator.address);
-            await ethersDriipSettlementChallenger.changeSecurityBond(ethersSecurityBond.address);
+            await ethersDriipSettlementDispute.changeDriipSettlementChallenge(ethersDriipSettlementChallenge.address);
+            await ethersDriipSettlementDispute.changeFraudChallenge(ethersFraudChallenge.address);
+            await ethersDriipSettlementDispute.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
+            await ethersDriipSettlementDispute.changeConfiguration(ethersConfiguration.address);
+            await ethersDriipSettlementDispute.changeValidator(ethersValidator.address);
+            await ethersDriipSettlementDispute.changeSecurityBond(ethersSecurityBond.address);
         });
 
         beforeEach(async () => {
@@ -64,14 +64,14 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3DriipSettlementChallenger.owner.call();
+                const owner = await web3DriipSettlementDispute.owner.call();
                 owner.should.equal(glob.owner);
             });
         });
 
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
-                const configuration = await ethersDriipSettlementChallenger.configuration();
+                const configuration = await ethersDriipSettlementDispute.configuration();
                 configuration.should.equal(utils.getAddress(ethersConfiguration.address));
             });
         });
@@ -87,32 +87,32 @@ module.exports = (glob) => {
                 let configuration;
 
                 beforeEach(async () => {
-                    configuration = await web3DriipSettlementChallenger.configuration.call();
+                    configuration = await web3DriipSettlementDispute.configuration.call();
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlementChallenger.changeConfiguration(configuration);
+                    await web3DriipSettlementDispute.changeConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallenger.changeConfiguration(address);
+                    const result = await web3DriipSettlementDispute.changeConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeConfigurationEvent');
-                    const configuration = await web3DriipSettlementChallenger.configuration();
+                    const configuration = await web3DriipSettlementDispute.configuration();
                     utils.getAddress(configuration).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenger.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementDispute.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('validator()', () => {
             it('should equal value initialized', async () => {
-                const validator = await ethersDriipSettlementChallenger.validator();
+                const validator = await ethersDriipSettlementDispute.validator();
                 validator.should.equal(utils.getAddress(ethersValidator.address));
             });
         });
@@ -128,32 +128,32 @@ module.exports = (glob) => {
                 let validator;
 
                 beforeEach(async () => {
-                    validator = await web3DriipSettlementChallenger.validator.call();
+                    validator = await web3DriipSettlementDispute.validator.call();
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlementChallenger.changeValidator(validator);
+                    await web3DriipSettlementDispute.changeValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallenger.changeValidator(address);
+                    const result = await web3DriipSettlementDispute.changeValidator(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeValidatorEvent');
-                    const validator = await web3DriipSettlementChallenger.validator();
+                    const validator = await web3DriipSettlementDispute.validator();
                     utils.getAddress(validator).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenger.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementDispute.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('securityBond()', () => {
             it('should equal value initialized', async () => {
-                const securityBond = await ethersDriipSettlementChallenger.securityBond();
+                const securityBond = await ethersDriipSettlementDispute.securityBond();
                 securityBond.should.equal(utils.getAddress(ethersSecurityBond.address));
             });
         });
@@ -169,32 +169,32 @@ module.exports = (glob) => {
                 let securityBond;
 
                 beforeEach(async () => {
-                    securityBond = await web3DriipSettlementChallenger.securityBond.call();
+                    securityBond = await web3DriipSettlementDispute.securityBond.call();
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlementChallenger.changeSecurityBond(securityBond);
+                    await web3DriipSettlementDispute.changeSecurityBond(securityBond);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallenger.changeSecurityBond(address);
+                    const result = await web3DriipSettlementDispute.changeSecurityBond(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeSecurityBondEvent');
-                    const securityBond = await web3DriipSettlementChallenger.securityBond();
+                    const securityBond = await web3DriipSettlementDispute.securityBond();
                     utils.getAddress(securityBond).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenger.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementDispute.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('driipSettlementChallenge()', () => {
             it('should equal value initialized', async () => {
-                const driipSettlementChallenge = await ethersDriipSettlementChallenger.driipSettlementChallenge();
+                const driipSettlementChallenge = await ethersDriipSettlementDispute.driipSettlementChallenge();
                 driipSettlementChallenge.should.equal(utils.getAddress(ethersDriipSettlementChallenge.address));
             });
         });
@@ -210,32 +210,32 @@ module.exports = (glob) => {
                 let driipSettlementChallenge;
 
                 beforeEach(async () => {
-                    driipSettlementChallenge = await web3DriipSettlementChallenger.driipSettlementChallenge.call();
+                    driipSettlementChallenge = await web3DriipSettlementDispute.driipSettlementChallenge.call();
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlementChallenger.changeDriipSettlementChallenge(driipSettlementChallenge);
+                    await web3DriipSettlementDispute.changeDriipSettlementChallenge(driipSettlementChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallenger.changeDriipSettlementChallenge(address);
+                    const result = await web3DriipSettlementDispute.changeDriipSettlementChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeDriipSettlementChallengeEvent');
-                    const driipSettlementChallenge = await web3DriipSettlementChallenger.driipSettlementChallenge();
+                    const driipSettlementChallenge = await web3DriipSettlementDispute.driipSettlementChallenge();
                     utils.getAddress(driipSettlementChallenge).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenger.changeDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementDispute.changeDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('fraudChallenge()', () => {
             it('should equal value initialized', async () => {
-                const fraudChallenge = await ethersDriipSettlementChallenger.fraudChallenge();
+                const fraudChallenge = await ethersDriipSettlementDispute.fraudChallenge();
                 fraudChallenge.should.equal(utils.getAddress(ethersFraudChallenge.address));
             });
         });
@@ -251,32 +251,32 @@ module.exports = (glob) => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
-                    fraudChallenge = await web3DriipSettlementChallenger.fraudChallenge.call();
+                    fraudChallenge = await web3DriipSettlementDispute.fraudChallenge.call();
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlementChallenger.changeFraudChallenge(fraudChallenge);
+                    await web3DriipSettlementDispute.changeFraudChallenge(fraudChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallenger.changeFraudChallenge(address);
+                    const result = await web3DriipSettlementDispute.changeFraudChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeFraudChallengeEvent');
-                    const fraudChallenge = await web3DriipSettlementChallenger.fraudChallenge();
+                    const fraudChallenge = await web3DriipSettlementDispute.fraudChallenge();
                     utils.getAddress(fraudChallenge).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenger.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementDispute.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('cancelOrdersChallenge()', () => {
             it('should equal value initialized', async () => {
-                const cancelOrdersChallenge = await ethersDriipSettlementChallenger.cancelOrdersChallenge();
+                const cancelOrdersChallenge = await ethersDriipSettlementDispute.cancelOrdersChallenge();
                 cancelOrdersChallenge.should.equal(utils.getAddress(ethersCancelOrdersChallenge.address));
             });
         });
@@ -292,25 +292,25 @@ module.exports = (glob) => {
                 let cancelOrdersChallenge;
 
                 beforeEach(async () => {
-                    cancelOrdersChallenge = await web3DriipSettlementChallenger.cancelOrdersChallenge.call();
+                    cancelOrdersChallenge = await web3DriipSettlementDispute.cancelOrdersChallenge.call();
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlementChallenger.changeCancelOrdersChallenge(cancelOrdersChallenge);
+                    await web3DriipSettlementDispute.changeCancelOrdersChallenge(cancelOrdersChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallenger.changeCancelOrdersChallenge(address);
+                    const result = await web3DriipSettlementDispute.changeCancelOrdersChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeCancelOrdersChallengeEvent');
-                    const cancelOrdersChallenge = await web3DriipSettlementChallenger.cancelOrdersChallenge();
+                    const cancelOrdersChallenge = await web3DriipSettlementDispute.cancelOrdersChallenge();
                     utils.getAddress(cancelOrdersChallenge).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenger.changeCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementDispute.changeCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

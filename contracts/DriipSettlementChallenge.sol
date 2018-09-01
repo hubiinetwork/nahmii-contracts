@@ -14,10 +14,10 @@ import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {StriimChallenge} from "./StriimChallenge.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
-import {DriipSettlementChallenger} from "./DriipSettlementChallenger.sol";
+import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {StriimTypes} from "./StriimTypes.sol";
-import {DriipSettlementChallengeTypes} from "./DriipSettlementChallengeTypes.sol";
+import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 
 /**
 @title DriipSettlementChallenge
@@ -29,9 +29,9 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    DriipSettlementChallenger public driipSettlementChallenger;
+    DriipSettlementDispute public driipSettlementDispute;
 
-    mapping(address => DriipSettlementChallengeTypes.Challenge) public walletChallengeMap;
+    mapping(address => DriipSettlementTypes.Challenge) public walletChallengeMap;
 
     mapping(address => StriimTypes.Trade[]) public walletChallengedTradesMap;
     mapping(address => StriimTypes.Payment[]) public walletChallengedPaymentsMap;
@@ -43,7 +43,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeDriipSettlementChallengerEvent(DriipSettlementChallenger oldDriipSettlementChallenger, DriipSettlementChallenger newDriipSettlementChallenger);
+    event ChangeDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute, DriipSettlementDispute newDriipSettlementDispute);
     event StartChallengeFromTradeEvent(StriimTypes.Trade trade, address wallet);
     event StartChallengeFromPaymentEvent(StriimTypes.Payment payment, address wallet);
 
@@ -57,15 +57,15 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the driip settlement challenger contract
-    /// @param newDriipSettlementChallenger The (address of) DriipSettlementChallenger contract instance
-    function changeDriipSettlementChallenger(DriipSettlementChallenger newDriipSettlementChallenger)
+    /// @param newDriipSettlementDispute The (address of) DriipSettlementDispute contract instance
+    function changeDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute)
     public
     onlyOwner
-    notNullAddress(newDriipSettlementChallenger)
+    notNullAddress(newDriipSettlementDispute)
     {
-        DriipSettlementChallenger oldDriipSettlementChallenger = driipSettlementChallenger;
-        driipSettlementChallenger = newDriipSettlementChallenger;
-        emit ChangeDriipSettlementChallengerEvent(oldDriipSettlementChallenger, driipSettlementChallenger);
+        DriipSettlementDispute oldDriipSettlementDispute = driipSettlementDispute;
+        driipSettlementDispute = newDriipSettlementDispute;
+        emit ChangeDriipSettlementDisputeEvent(oldDriipSettlementDispute, driipSettlementDispute);
     }
 
     /// @notice Get the number of current and past driip settlement challenges from trade for given wallet
@@ -138,16 +138,16 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
 
         pushMemoryTradeToStorageArray(trade, walletChallengedTradesMap[wallet]);
 
-        DriipSettlementChallengeTypes.Challenge memory challenge;
+        DriipSettlementTypes.Challenge memory challenge;
         challenge.nonce = trade.nonce;
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
         challenge.status = StriimTypes.ChallengeStatus.Qualified;
         challenge.driipType = StriimTypes.DriipType.Trade;
         challenge.driipIndex = walletChallengedTradesMap[wallet].length - 1;
-        challenge.intendedStage = DriipSettlementChallengeTypes.OptionalFigure(intendedStageAmount, trade.currencies.intended, true);
-        challenge.conjugateStage = DriipSettlementChallengeTypes.OptionalFigure(intendedStageAmount, trade.currencies.intended, true);
-        challenge.intendedTargetBalance = DriipSettlementChallengeTypes.OptionalFigure(intendedBalanceAmount - intendedStageAmount, trade.currencies.intended, true);
-        challenge.conjugateTargetBalance = DriipSettlementChallengeTypes.OptionalFigure(conjugateBalanceAmount - conjugateStageAmount, trade.currencies.conjugate, true);
+        challenge.intendedStage = DriipSettlementTypes.OptionalFigure(intendedStageAmount, trade.currencies.intended, true);
+        challenge.conjugateStage = DriipSettlementTypes.OptionalFigure(conjugateStageAmount, trade.currencies.conjugate, true);
+        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(intendedBalanceAmount - intendedStageAmount, trade.currencies.intended, true);
+        challenge.conjugateTargetBalance = DriipSettlementTypes.OptionalFigure(conjugateBalanceAmount - conjugateStageAmount, trade.currencies.conjugate, true);
 
         walletChallengeMap[wallet] = challenge;
 
@@ -183,14 +183,14 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
 
         pushMemoryPaymentToStorageArray(payment, walletChallengedPaymentsMap[wallet]);
 
-        DriipSettlementChallengeTypes.Challenge memory challenge;
+        DriipSettlementTypes.Challenge memory challenge;
         challenge.nonce = payment.nonce;
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
         challenge.status = StriimTypes.ChallengeStatus.Qualified;
         challenge.driipType = StriimTypes.DriipType.Payment;
         challenge.driipIndex = walletChallengedPaymentsMap[wallet].length - 1;
-        challenge.intendedStage = DriipSettlementChallengeTypes.OptionalFigure(stageAmount, payment.currency, true);
-        challenge.intendedTargetBalance = DriipSettlementChallengeTypes.OptionalFigure(balanceAmount - stageAmount, payment.currency, true);
+        challenge.intendedStage = DriipSettlementTypes.OptionalFigure(stageAmount, payment.currency, true);
+        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(balanceAmount - stageAmount, payment.currency, true);
 
         walletChallengeMap[wallet] = challenge;
 
@@ -199,7 +199,11 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
 
     /// @notice Get driip settlement challenge phase of given wallet
     /// @param wallet The wallet whose challenge phase will be returned
-    function driipSettlementChallengePhase(address wallet) public view returns (uint, StriimTypes.ChallengePhase) {
+    function getPhase(address wallet)
+    public
+    view
+    returns (uint, StriimTypes.ChallengePhase)
+    {
         if (msg.sender != owner)
             wallet = msg.sender;
         if (0 == walletChallengeMap[wallet].nonce)
@@ -210,21 +214,48 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
             return (walletChallengeMap[wallet].nonce, StriimTypes.ChallengePhase.Closed);
     }
 
-    /// @notice Get driip settlement challenge result and challenger (wallet) of given (challenge) wallet
-    /// @param wallet The wallet whose challenge status will be returned
-    /// @param nonce The nonce of the challenged driip
-    function driipSettlementChallengeResult(address wallet, uint256 nonce) public view returns (StriimTypes.ChallengeStatus, address) {
-        if (msg.sender != owner)
-            wallet = msg.sender;
-        if ((0 == walletChallengeMap[wallet].nonce) ||
-            (nonce != walletChallengeMap[wallet].nonce))
-            return (StriimTypes.ChallengeStatus.Unknown, address(0));
-        else
-            return (walletChallengeMap[wallet].status, walletChallengeMap[wallet].challenger);
+    function getChallengeNonce(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletChallengeMap[wallet].nonce;
+    }
+
+    function getChallengeStatus(address wallet)
+    public
+    view
+    returns (StriimTypes.ChallengeStatus)
+    {
+        return walletChallengeMap[wallet].status;
+    }
+
+    function getChallengeIntendedStage(address wallet)
+    public
+    view
+    returns (DriipSettlementTypes.OptionalFigure)
+    {
+        return walletChallengeMap[wallet].intendedStage;
+    }
+
+    function getChallengeConjugateStage(address wallet)
+    public
+    view
+    returns (DriipSettlementTypes.OptionalFigure)
+    {
+        return walletChallengeMap[wallet].conjugateStage;
+    }
+
+    function getChallengeChallenger(address wallet)
+    public
+    view
+    returns (address)
+    {
+        return walletChallengeMap[wallet].challenger;
     }
 
     //
-    // Functions implemented in DriipSettlementChallenger
+    // Functions implemented in DriipSettlementDispute
     // -----------------------------------------------------------------------------------------------------------------
 
     /// @notice Challenge the driip settlement by providing order candidate
@@ -233,7 +264,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     public
     onlyOperationalModeNormal
     {
-        driipSettlementChallenger.challengeByOrder(order, msg.sender);
+        driipSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
     /// @notice Unchallenge driip settlement by providing trade that shows that challenge order candidate has been filled
@@ -243,7 +274,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     public
     onlyOperationalModeNormal
     {
-        driipSettlementChallenger.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+        driipSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
     /// @notice Challenge the driip settlement by providing trade candidate
@@ -253,7 +284,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     public
     onlyOperationalModeNormal
     {
-        driipSettlementChallenger.challengeByTrade(trade, wallet, msg.sender);
+        driipSettlementDispute.challengeByTrade(trade, wallet, msg.sender);
     }
 
     /// @notice Challenge the driip settlement by providing payment candidate
@@ -263,56 +294,56 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
     public
     onlyOperationalModeNormal
     {
-        driipSettlementChallenger.challengeByPayment(payment, wallet, msg.sender);
+        driipSettlementDispute.challengeByPayment(payment, wallet, msg.sender);
     }
 
     //
-    // Helpers for DriipSettlementChallenger
+    // Helpers for DriipSettlementDispute
     // -----------------------------------------------------------------------------------------------------------------
-    function getWalletChallenge(address wallet) public view onlyDriipSettlementChallenger returns (DriipSettlementChallengeTypes.Challenge) {
+    function getWalletChallenge(address wallet) public view onlyDriipSettlementDispute returns (DriipSettlementTypes.Challenge) {
         return walletChallengeMap[wallet];
     }
 
-    function setWalletChallenge(address wallet, DriipSettlementChallengeTypes.Challenge challenge) public onlyDriipSettlementChallenger {
+    function setWalletChallenge(address wallet, DriipSettlementTypes.Challenge challenge) public onlyDriipSettlementDispute {
         walletChallengeMap[wallet] = challenge;
     }
 
-    function resetWalletChallenge(address wallet) public onlyDriipSettlementChallenger {
+    function resetWalletChallenge(address wallet) public onlyDriipSettlementDispute {
         walletChallengeMap[wallet].status = StriimTypes.ChallengeStatus.Qualified;
-        walletChallengeMap[wallet].candidateType = DriipSettlementChallengeTypes.ChallengeCandidateType.None;
+        walletChallengeMap[wallet].candidateType = DriipSettlementTypes.ChallengeCandidateType.None;
         walletChallengeMap[wallet].candidateIndex = 0;
         walletChallengeMap[wallet].challenger = address(0);
     }
 
-    function pushChallengeCandidateOrder(StriimTypes.Order order) public onlyDriipSettlementChallenger {
+    function pushChallengeCandidateOrder(StriimTypes.Order order) public onlyDriipSettlementDispute {
         challengeCandidateOrders.push(order);
     }
 
-    function getChallengeCandidateOrdersLength() public view onlyDriipSettlementChallenger returns (uint256) {
+    function getChallengeCandidateOrdersLength() public view onlyDriipSettlementDispute returns (uint256) {
         return challengeCandidateOrders.length;
     }
 
-    function pushChallengeCandidateTrade(StriimTypes.Trade trade) public onlyDriipSettlementChallenger {
+    function pushChallengeCandidateTrade(StriimTypes.Trade trade) public onlyDriipSettlementDispute {
         pushMemoryTradeToStorageArray(trade, challengeCandidateTrades);
     }
 
-    function getChallengeCandidateTradesLength() public view onlyDriipSettlementChallenger returns (uint256) {
+    function getChallengeCandidateTradesLength() public view onlyDriipSettlementDispute returns (uint256) {
         return challengeCandidateTrades.length;
     }
 
-    function pushChallengeCandidatePayment(StriimTypes.Payment payment) public onlyDriipSettlementChallenger {
+    function pushChallengeCandidatePayment(StriimTypes.Payment payment) public onlyDriipSettlementDispute {
         pushMemoryPaymentToStorageArray(payment, challengeCandidatePayments);
     }
 
-    function getChallengeCandidatePaymentsLength() public view onlyDriipSettlementChallenger returns (uint256) {
+    function getChallengeCandidatePaymentsLength() public view onlyDriipSettlementDispute returns (uint256) {
         return challengeCandidatePayments.length;
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyDriipSettlementChallenger() {
-        require(msg.sender == address(driipSettlementChallenger));
+    modifier onlyDriipSettlementDispute() {
+        require(msg.sender == address(driipSettlementDispute));
         _;
     }
 }

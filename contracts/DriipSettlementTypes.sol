@@ -13,10 +13,10 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {StriimTypes} from "./StriimTypes.sol";
 
 /**
- * @title     DriipSettlementChallengeTypes
+ * @title     DriipSettlementTypes
  * @dev       Types for driip settlement challenge
  */
-library DriipSettlementChallengeTypes {
+library DriipSettlementTypes {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------

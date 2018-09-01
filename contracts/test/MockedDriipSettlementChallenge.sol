@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 //import {DriipSettlementChallenge} from "../DriipSettlementChallenge.sol";
 import {StriimTypes} from "../StriimTypes.sol";
-import {DriipSettlementChallengeTypes} from "../DriipSettlementChallengeTypes.sol";
+import {DriipSettlementTypes} from "../DriipSettlementTypes.sol";
 
 /**
 @title MockedDriipSettlementChallenge
@@ -22,7 +22,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => DriipSettlementChallengeTypes.Challenge) walletChallengeMap;
+    mapping(address => DriipSettlementTypes.Challenge) public walletChallengeMap;
 
     //
     // Functions
@@ -30,17 +30,9 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
     constructor(/*address owner*/) public /*DriipSettlementChallenge(owner)*/{
     }
 
-    function setDriipSettlementChallengeResult(address wallet, uint256 nonce, StriimTypes.ChallengeStatus status, address challenger) public {
+    function updateDriipSettlementChallenge(address wallet, uint256 nonce, StriimTypes.ChallengeStatus status, address challenger) public {
         walletChallengeMap[wallet].nonce = nonce;
         walletChallengeMap[wallet].status = status;
         walletChallengeMap[wallet].challenger = challenger;
-    }
-
-    function driipSettlementChallengeResult(address wallet, uint256 nonce) public view returns (StriimTypes.ChallengeStatus, address) {
-        if ((0 == walletChallengeMap[wallet].nonce) ||
-            (nonce != walletChallengeMap[wallet].nonce))
-            return (StriimTypes.ChallengeStatus.Unknown, address(0));
-        else
-            return (walletChallengeMap[wallet].status, walletChallengeMap[wallet].challenger);
     }
 }
