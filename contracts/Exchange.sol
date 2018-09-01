@@ -195,15 +195,15 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             getSettlement(trade.nonce, StriimTypes.DriipType.Trade) :
             createSettlementFromTrade(trade, wallet);
 
-            StriimTypes.SettlementRole settlementRole = getSettlementRoleFromTrade(trade, wallet);
+            DriipSettlementTypes.SettlementRole settlementRole = getSettlementRoleFromTrade(trade, wallet);
 
             // (If exists settlement of nonce then) Require that wallet has not already settled
             require(
-                (StriimTypes.SettlementRole.Origin == settlementRole && address(0) == settlement.origin) ||
-                (StriimTypes.SettlementRole.Target == settlementRole && address(0) == settlement.target)
+                (DriipSettlementTypes.SettlementRole.Origin == settlementRole && address(0) == settlement.origin) ||
+                (DriipSettlementTypes.SettlementRole.Target == settlementRole && address(0) == settlement.target)
             );
 
-            if (StriimTypes.SettlementRole.Origin == settlementRole)
+            if (DriipSettlementTypes.SettlementRole.Origin == settlementRole)
                 settlement.origin = wallet;
             else
                 settlement.target = wallet;
@@ -272,15 +272,15 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             getSettlement(payment.nonce, StriimTypes.DriipType.Payment) :
             createSettlementFromPayment(payment, wallet);
 
-            StriimTypes.SettlementRole settlementRole = getSettlementRoleFromPayment(payment, wallet);
+            DriipSettlementTypes.SettlementRole settlementRole = getSettlementRoleFromPayment(payment, wallet);
 
             // (If exists settlement of nonce then) Require that wallet has not already settled
             require(
-                (StriimTypes.SettlementRole.Origin == settlementRole && address(0) == settlement.origin) ||
-                (StriimTypes.SettlementRole.Target == settlementRole && address(0) == settlement.target)
+                (DriipSettlementTypes.SettlementRole.Origin == settlementRole && address(0) == settlement.origin) ||
+                (DriipSettlementTypes.SettlementRole.Target == settlementRole && address(0) == settlement.target)
             );
 
-            if (StriimTypes.SettlementRole.Origin == settlementRole)
+            if (DriipSettlementTypes.SettlementRole.Origin == settlementRole)
                 settlement.origin = wallet;
             else
                 settlement.target = wallet;
@@ -322,21 +322,21 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     function getSettlementRoleFromTrade(StriimTypes.Trade trade, address wallet)
     private
     pure
-    returns (StriimTypes.SettlementRole)
+    returns (DriipSettlementTypes.SettlementRole)
     {
         return (wallet == trade.seller.wallet ?
-        StriimTypes.SettlementRole.Origin :
-        StriimTypes.SettlementRole.Target);
+        DriipSettlementTypes.SettlementRole.Origin :
+        DriipSettlementTypes.SettlementRole.Target);
     }
 
     function getSettlementRoleFromPayment(StriimTypes.Payment payment, address wallet)
     private
     pure
-    returns (StriimTypes.SettlementRole)
+    returns (DriipSettlementTypes.SettlementRole)
     {
         return (wallet == payment.sender.wallet ?
-        StriimTypes.SettlementRole.Origin :
-        StriimTypes.SettlementRole.Target);
+        DriipSettlementTypes.SettlementRole.Origin :
+        DriipSettlementTypes.SettlementRole.Target);
     }
 
     function hasSettlement(uint256 nonce) private view returns (bool) {

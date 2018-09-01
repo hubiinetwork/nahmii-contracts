@@ -25,7 +25,6 @@ library StriimTypes {
     enum TradePartyRole {Buyer, Seller}
     enum PaymentPartyRole {Sender, Recipient}
     enum ChallengePhase {Dispute, Closed}
-    enum SettlementRole {Origin, Target}
 
     //
     // Structures

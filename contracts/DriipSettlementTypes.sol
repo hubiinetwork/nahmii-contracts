@@ -22,6 +22,7 @@ library DriipSettlementTypes {
     // -----------------------------------------------------------------------------------------------------------------
     enum ChallengeStatus {Unknown, Qualified, Disqualified}
     enum ChallengeCandidateType {None, Order, Trade, Payment}
+    enum SettlementRole {Origin, Target}
 
     struct OptionalFigure {
         int256 amount;
