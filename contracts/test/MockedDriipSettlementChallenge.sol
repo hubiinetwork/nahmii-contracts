@@ -30,7 +30,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
     constructor(/*address owner*/) public /*DriipSettlementChallenge(owner)*/{
     }
 
-    function updateDriipSettlementChallenge(address wallet, uint256 nonce, StriimTypes.ChallengeStatus status, address challenger) public {
+    function updateDriipSettlementChallenge(address wallet, uint256 nonce, DriipSettlementTypes.ChallengeStatus status, address challenger) public {
         walletChallengeMap[wallet].nonce = nonce;
         walletChallengeMap[wallet].status = status;
         walletChallengeMap[wallet].challenger = challenger;

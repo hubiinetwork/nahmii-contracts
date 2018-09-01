@@ -20,6 +20,7 @@ library DriipSettlementTypes {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
+    enum ChallengeStatus {Unknown, Qualified, Disqualified}
     enum ChallengeCandidateType {None, Order, Trade, Payment}
 
     struct OptionalFigure {
@@ -31,7 +32,7 @@ library DriipSettlementTypes {
     struct Challenge {
         uint256 nonce;
         uint256 timeout;
-        StriimTypes.ChallengeStatus status;
+        ChallengeStatus status;
 
         // Driip info
         StriimTypes.DriipType driipType;
@@ -52,8 +53,4 @@ library DriipSettlementTypes {
         // Address of wallet that successfully challenged
         address challenger;
     }
-
-    //
-    // Functions
-    // -----------------------------------------------------------------------------------------------------------------
 }

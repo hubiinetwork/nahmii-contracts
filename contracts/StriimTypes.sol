@@ -24,8 +24,7 @@ library StriimTypes {
     enum Intention {Buy, Sell}
     enum TradePartyRole {Buyer, Seller}
     enum PaymentPartyRole {Sender, Recipient}
-    enum ChallengePhase {Dispute, Closed} // TODO Consider moving to DriipSettlementTypes
-    enum ChallengeStatus {Unknown, Qualified, Disqualified} // TODO Consider moving to DriipSettlementTypes
+    enum ChallengePhase {Dispute, Closed}
     enum SettlementRole {Origin, Target}
 
     //

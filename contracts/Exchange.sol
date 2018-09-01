@@ -56,9 +56,9 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SettleDriipAsTradeEvent(StriimTypes.Trade trade, address wallet,
-        StriimTypes.ChallengeStatus challengeStatus);
+        DriipSettlementTypes.ChallengeStatus challengeStatus);
     event SettleDriipAsPaymentEvent(StriimTypes.Payment payment, address wallet,
-        StriimTypes.ChallengeStatus challengeStatus);
+        DriipSettlementTypes.ChallengeStatus challengeStatus);
     event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
         DriipSettlementChallenge newDriipSettlementChallenge);
@@ -184,7 +184,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
         require(driipSettlementChallenge.getChallengeNonce(wallet) == trade.nonce);
 
-        if (driipSettlementChallenge.getChallengeStatus(wallet) == StriimTypes.ChallengeStatus.Qualified) {
+        if (driipSettlementChallenge.getChallengeStatus(wallet) == DriipSettlementTypes.ChallengeStatus.Qualified) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (trade.nonce < maxDriipNonce));
@@ -230,7 +230,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             if (trade.nonce > maxDriipNonce)
                 maxDriipNonce = trade.nonce;
 
-        } else if (driipSettlementChallenge.getChallengeStatus(wallet) == StriimTypes.ChallengeStatus.Disqualified) {
+        } else if (driipSettlementChallenge.getChallengeStatus(wallet) == DriipSettlementTypes.ChallengeStatus.Disqualified) {
             addToSeizedWallets(wallet);
             clientFund.seizeAllBalances(wallet, driipSettlementChallenge.getChallengeChallenger(wallet));
         }
@@ -261,7 +261,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
 
         require(driipSettlementChallenge.getChallengeNonce(wallet) == payment.nonce);
 
-        if (driipSettlementChallenge.getChallengeStatus(wallet) == StriimTypes.ChallengeStatus.Qualified) {
+        if (driipSettlementChallenge.getChallengeStatus(wallet) == DriipSettlementTypes.ChallengeStatus.Qualified) {
 
             require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
                 || (payment.nonce < maxDriipNonce));
@@ -311,7 +311,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             if (payment.nonce > maxDriipNonce)
                 maxDriipNonce = payment.nonce;
 
-        } else if (driipSettlementChallenge.getChallengeStatus(wallet) == StriimTypes.ChallengeStatus.Disqualified) {
+        } else if (driipSettlementChallenge.getChallengeStatus(wallet) == DriipSettlementTypes.ChallengeStatus.Disqualified) {
             addToSeizedWallets(wallet);
             clientFund.seizeAllBalances(wallet, driipSettlementChallenge.getChallengeChallenger(wallet));
         }
