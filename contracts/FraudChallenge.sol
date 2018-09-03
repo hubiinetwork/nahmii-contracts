@@ -149,8 +149,6 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
     onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
     {
         if (!fraudulentTradeHashMap[trade.seal.hash]) {
-            // TODO Uncomment/solve
-//            fraudulentTrades.push(trade);
             pushMemoryTradeToStorageArray(trade, fraudulentTrades);
             fraudulentTradeHashMap[trade.seal.hash] = true;
             emit AddFraudulentTradeEvent(trade);
@@ -173,8 +171,6 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
     onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
     {
         if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
-            // TODO Uncomment/solve
-//            fraudulentPayments.push(payment);
             pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
             fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;
             emit AddFraudulentPaymentEvent(payment);

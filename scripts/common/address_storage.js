@@ -9,8 +9,7 @@ const assert = require('assert');
 
 // -----------------------------------------------------------------------------------------------------------------
 
-function AddressStorage(filename, network)
-{
+function AddressStorage(filename, network) {
     assert.ok(typeof filename === 'string' && filename.length, "Invalid filename");
     assert.ok(typeof network === 'string' && network.length, "Invalid network name");
 
@@ -22,8 +21,7 @@ function AddressStorage(filename, network)
     };
 }
 
-AddressStorage.prototype.load = function ()
-{
+AddressStorage.prototype.load = function () {
     var self = this;
 
     return new Promise((resolve, reject) => {
@@ -31,7 +29,7 @@ AddressStorage.prototype.load = function ()
 
         try {
             //No need to handle the error. If the file doesn't exist then we'll start afresh with a new object.
-            newContents = fs.readFileSync(self.filename, { encoding: 'utf8' });
+            newContents = fs.readFileSync(self.filename, {encoding: 'utf8'});
             newContents = JSON.parse(newContents);
         }
         catch (err) {
@@ -41,17 +39,15 @@ AddressStorage.prototype.load = function ()
             }
             newContents = {};
         }
-        if (typeof newContents.networks !== 'object') {
+        if (typeof newContents.networks !== 'object')
             newContents.networks = {};
-        }
 
         self.contents = newContents;
         resolve();
     });
-}
+};
 
-AddressStorage.prototype.save = function ()
-{
+AddressStorage.prototype.save = function () {
     var self = this;
 
     return new Promise((resolve, reject) => {
@@ -77,45 +73,37 @@ AddressStorage.prototype.save = function ()
                 reject(err);
         });
     });
-}
+};
 
-AddressStorage.prototype.clear = function ()
-{
-    if (typeof this.contents.networks[this.network] !== 'undefined') {
+AddressStorage.prototype.clear = function () {
+    if (typeof this.contents.networks[this.network] !== 'undefined')
         delete this.contents.networks[this.network];
-    }
-}
+};
 
-AddressStorage.prototype.set = function (key, address)
-{
+AddressStorage.prototype.set = function (key, address) {
     assert.ok(typeof key === 'string' && key.length, "Invalid key");
     if (address) {
 
-        if (address.substr(0, 2).toLowerCase() != '0x') {
+        if (address.substr(0, 2).toLowerCase() != '0x')
             address = "0x" + address;
-        }
         assert.ok(/^[0-9a-f]{40}$/i.test(address.substr(2)), "Invalid address");
 
-        if (typeof this.contents.networks[this.network] !== 'object') {
+        if (typeof this.contents.networks[this.network] !== 'object')
             this.contents.networks[this.network] = {};
-        }
         this.contents.networks[this.network][key] = address;
     }
     else {
-        if (typeof this.contents.networks[this.network] === 'object') {
+        if (typeof this.contents.networks[this.network] === 'object')
             delete this.contents.networks[this.network][key];
-        }
     }
-}
+};
 
-AddressStorage.prototype.get = function (key)
-{
+AddressStorage.prototype.get = function (key) {
     assert.ok(typeof key === 'string' && key.length, "Invalid key");
 
-    if (typeof this.contents.networks[this.network] !== 'object' || typeof this.contents.networks[this.network][key] !== 'string') {
+    if (typeof this.contents.networks[this.network] !== 'object' || typeof this.contents.networks[this.network][key] !== 'string')
         return null;
-    }
     return this.contents.networks[this.network][key];
-}
+};
 
 module.exports = AddressStorage;

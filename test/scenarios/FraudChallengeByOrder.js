@@ -15,7 +15,7 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe.only('FraudChallengeByOrder', () => {
+    describe('FraudChallengeByOrder', () => {
         let web3FraudChallengeByOrder, ethersFraudChallengeByOrder;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3Configuration, ethersConfiguration;

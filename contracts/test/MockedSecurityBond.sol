@@ -7,9 +7,11 @@
  */
 
 pragma solidity ^0.4.24;
+
 pragma experimental ABIEncoderV2;
 
 //import {SecurityBond} from "../SecurityBond.sol";
+import {MonetaryTypes} from "../MonetaryTypes.sol";
 
 /**
 @title MockedSecurityBond
@@ -22,8 +24,7 @@ contract MockedSecurityBond /*is SecurityBond*/ {
     // -----------------------------------------------------------------------------------------------------------------
     struct Stage {
         address wallet;
-        address currency;
-        int256 amount;
+        MonetaryTypes.Figure figure;
     }
 
     //
@@ -34,7 +35,7 @@ contract MockedSecurityBond /*is SecurityBond*/ {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event StageEvent(address from, int256 amount, address token); //token==0 for ethers
+    event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
 
     //
     // Constructor
@@ -53,8 +54,8 @@ contract MockedSecurityBond /*is SecurityBond*/ {
         return stages.length;
     }
 
-    function stage(int256 amount, address token, address wallet) public {
-        stages.push(Stage(wallet, token, amount));
-        emit StageEvent(msg.sender, amount, token);
+    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId) public {
+        stages.push(Stage(wallet, MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId))));
+        emit StageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 }

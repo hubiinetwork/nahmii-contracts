@@ -7,16 +7,18 @@ exports.intentions = ['Buy', 'Sell'];
 exports.driipTypes = ['Trade', 'Payment'];
 exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
-exports.challengeResults = ['Unknown', 'Qualified', 'Disqualified'];
+exports.challengeStatuses = ['Unknown', 'Qualified', 'Disqualified'];
 exports.challengeCandidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
 exports.address0 = '0x0000000000000000000000000000000000000000';
+
+let globalNonce = 1;
 
 exports.mockOrder = async (exchange, params) => {
     const wallet = Wallet.createRandom();
 
     const order = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
+        nonce: utils.bigNumberify(globalNonce++),
         wallet: wallet.address,
         placement: {
             intention: exports.intentions.indexOf('Buy'),
@@ -53,7 +55,7 @@ exports.mockOrder = async (exchange, params) => {
 
 exports.mockTrade = async (exchange, params) => {
     const trade = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
+        nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
         currencies: {
             intended: {
@@ -179,7 +181,7 @@ exports.mockPayment = async (exchange, params) => {
     const recipientWallet = Wallet.createRandom();
 
     const payment = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
+        nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
         currency: {
             ct: '0x0000000000000000000000000000000000000001',

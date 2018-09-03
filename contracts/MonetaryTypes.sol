@@ -27,6 +27,9 @@ library MonetaryTypes {
         Currency currency;
     }
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     function getFigureByCurrency(Figure[] figures, Currency currency)
     public
     pure

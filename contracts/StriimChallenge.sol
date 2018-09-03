@@ -19,8 +19,8 @@ contract StriimChallenge is Challenge {
         StriimTypes.Trade[] storage stgTradeArr)
     internal
     {
-        stgTradeArr.length = stgTradeArr.length + 1;
-        StriimTypes.Trade storage stgTrade = stgTradeArr[stgTradeArr.length];
+        stgTradeArr.length += 1;
+        StriimTypes.Trade storage stgTrade = stgTradeArr[stgTradeArr.length - 1];
 
         stgTrade.nonce = memTrade.nonce;
         stgTrade.amount = memTrade.amount;
@@ -37,8 +37,8 @@ contract StriimChallenge is Challenge {
         StriimTypes.Payment[] storage stgPaymentArr)
     internal
     {
-        stgPaymentArr.length = stgPaymentArr.length + 1;
-        StriimTypes.Payment storage stgPayment = stgPaymentArr[stgPaymentArr.length];
+        stgPaymentArr.length += 1;
+        StriimTypes.Payment storage stgPayment = stgPaymentArr[stgPaymentArr.length - 1];
 
         stgPayment.nonce = memPayment.nonce;
         stgPayment.amount = memPayment.amount;

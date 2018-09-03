@@ -16,7 +16,7 @@ chai.should();
 module.exports = (glob) => {
     describe('DriipSettlementChallenge', () => {
         let web3DriipSettlementChallenge, ethersDriipSettlementChallengeOwner;
-        let web3DriipSettlementChallenger, ethersDriipSettlementChallenger;
+        let web3DriipSettlementDispute, ethersDriipSettlementDispute;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
@@ -31,8 +31,8 @@ module.exports = (glob) => {
 
             web3DriipSettlementChallenge = glob.web3DriipSettlementChallenge;
             ethersDriipSettlementChallengeOwner = glob.ethersIoDriipSettlementChallenge;
-            web3DriipSettlementChallenger = glob.web3DriipSettlementChallenger;
-            ethersDriipSettlementChallenger = glob.ethersIoDriipSettlementChallenger;
+            web3DriipSettlementDispute = glob.web3DriipSettlementDispute;
+            ethersDriipSettlementDispute = glob.ethersIoDriipSettlementDispute;
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
@@ -48,18 +48,18 @@ module.exports = (glob) => {
             ethersDriipSettlementChallengeUserA = ethersDriipSettlementChallengeOwner.connect(glob.signer_a);
             ethersDriipSettlementChallengeUserB = ethersDriipSettlementChallengeOwner.connect(glob.signer_b);
 
-            await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(1000, mocks.address0, utils.bigNumberify(0));
+            await ethersConfiguration.setUnchallengeOrderCandidateByTradeStake(utils.bigNumberify(1000), mocks.address0, utils.bigNumberify(0));
 
             await ethersDriipSettlementChallengeOwner.changeConfiguration(ethersConfiguration.address);
             await ethersDriipSettlementChallengeOwner.changeValidator(ethersValidator.address);
-            await ethersDriipSettlementChallengeOwner.changeDriipSettlementChallenger(ethersDriipSettlementChallenger.address);
+            await ethersDriipSettlementChallengeOwner.changeDriipSettlementDispute(ethersDriipSettlementDispute.address);
 
-            await ethersDriipSettlementChallenger.changeDriipSettlementChallenge(ethersDriipSettlementChallengeOwner.address);
-            await ethersDriipSettlementChallenger.changeFraudChallenge(ethersFraudChallenge.address);
-            await ethersDriipSettlementChallenger.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
-            await ethersDriipSettlementChallenger.changeConfiguration(ethersConfiguration.address);
-            await ethersDriipSettlementChallenger.changeValidator(ethersValidator.address);
-            await ethersDriipSettlementChallenger.changeSecurityBond(ethersSecurityBond.address);
+            await ethersDriipSettlementDispute.changeDriipSettlementChallenge(ethersDriipSettlementChallengeOwner.address);
+            await ethersDriipSettlementDispute.changeFraudChallenge(ethersFraudChallenge.address);
+            await ethersDriipSettlementDispute.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
+            await ethersDriipSettlementDispute.changeConfiguration(ethersConfiguration.address);
+            await ethersDriipSettlementDispute.changeValidator(ethersValidator.address);
+            await ethersDriipSettlementDispute.changeSecurityBond(ethersSecurityBond.address);
         });
 
         beforeEach(async () => {
@@ -162,14 +162,47 @@ module.exports = (glob) => {
             });
         });
 
-        describe('driipSettlementChallenger()', () => {
+        describe('driipSettlementDispute()', () => {
             it('should equal value initialized', async () => {
-                const driipSettlementChallenger = await ethersDriipSettlementChallengeOwner.driipSettlementChallenger();
-                driipSettlementChallenger.should.equal(utils.getAddress(ethersDriipSettlementChallenger.address));
+                const driipSettlementDispute = await ethersDriipSettlementChallengeOwner.driipSettlementDispute();
+                driipSettlementDispute.should.equal(utils.getAddress(ethersDriipSettlementDispute.address));
             });
         });
 
-        describe('changeDriipSettlementChallenger()', () => {
+        describe('walletChallengeMap()', () => {
+            describe('if no driip settlement challenge has been started for given wallet', () => {
+                it('should return challenge with default values', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await ethersDriipSettlementChallengeOwner.walletChallengeMap(address);
+                    result.status.should.equal(mocks.challengeStatuses.indexOf('Unknown'));
+                    result.nonce.eq(utils.bigNumberify(0)).should.be.true;
+                });
+            });
+
+            describe('if driip settlement challenge has been started for given wallet', () => {
+                let overrideOptions, trade;
+
+                before(async () => {
+                    overrideOptions = {gasLimit: 2e6};
+                });
+
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
+                });
+
+                it('should return challenged driip challenge result', async () => {
+                    const result = await ethersDriipSettlementChallengeOwner.walletChallengeMap(trade.buyer.wallet);
+                    result.status.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
+                    result.nonce.eq(trade.nonce).should.be.true;
+                });
+            });
+        });
+
+        describe('changeDriipSettlementDispute()', () => {
             let address;
 
             before(() => {
@@ -177,28 +210,28 @@ module.exports = (glob) => {
             });
 
             describe('if called with owner as sender', () => {
-                let driipSettlementChallenger;
+                let driipSettlementDispute;
 
                 beforeEach(async () => {
-                    driipSettlementChallenger = await web3DriipSettlementChallenge.driipSettlementChallenger.call();
+                    driipSettlementDispute = await web3DriipSettlementChallenge.driipSettlementDispute.call();
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlementChallenge.changeDriipSettlementChallenger(driipSettlementChallenger);
+                    await web3DriipSettlementChallenge.changeDriipSettlementDispute(driipSettlementDispute);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallenge.changeDriipSettlementChallenger(address);
+                    const result = await web3DriipSettlementChallenge.changeDriipSettlementDispute(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDriipSettlementChallengerEvent');
-                    const driipSettlementChallenger = await web3DriipSettlementChallenge.driipSettlementChallenger();
-                    utils.getAddress(driipSettlementChallenger).should.equal(address);
+                    result.logs[0].event.should.equal('ChangeDriipSettlementDisputeEvent');
+                    const driipSettlementDispute = await web3DriipSettlementChallenge.driipSettlementDispute();
+                    utils.getAddress(driipSettlementDispute).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenge.changeDriipSettlementChallenger(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementChallenge.changeDriipSettlementDispute(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -257,13 +290,33 @@ module.exports = (glob) => {
                 };
             });
 
-            describe('if there is no ongoing driip settlement challenge and caller is owner or trade party', () => {
+            describe('if caller is buyer party with no ongoing driip settlement challenge', () => {
                 beforeEach(async () => {
                     trade = await mocks.mockTrade(glob.owner);
                 });
 
                 it('should operate successfully', async () => {
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
+                    const count = await ethersDriipSettlementChallengeOwner.walletChallengedTradesCount(trade.buyer.wallet);
+                    count.toNumber().should.equal(1);
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if caller is seller party with no ongoing driip settlement challenge', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner);
+                });
+
+                it('should operate successfully', async () => {
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
                     const count = await ethersDriipSettlementChallengeOwner.walletChallengedTradesCount(trade.buyer.wallet);
                     count.toNumber().should.equal(1);
                     const logs = await provider.getLogs(filter);
@@ -278,7 +331,36 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if staging more of intended currency than allowed by balance', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current.mul(2),
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if staging more of conjugate currency than allowed by balance', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current.mul(2), overrideOptions
+                    ).should.be.rejected;
                 });
             });
 
@@ -288,18 +370,27 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeUserA.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlementChallengeUserA.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    ).should.be.rejected;
                 });
             });
 
             describe('if called before an ongoing driip settlement challenge has expired', () => {
                 beforeEach(async () => {
                     trade = await mocks.mockTrade(glob.owner);
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    ).should.be.rejected;
                 });
             });
         });
@@ -321,14 +412,32 @@ module.exports = (glob) => {
                 };
             });
 
-            describe('if there is no ongoing driip settlement challenge and caller is owner or payment party', () => {
+            describe('if caller is sender party with no ongoing driip settlement challenge', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner);
                 });
 
                 it('should operate successfully', async () => {
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                        payment, payment.sender.wallet, payment.sender.balances.current, overrideOptions
+                    );
                     const count = await ethersDriipSettlementChallengeOwner.walletChallengedPaymentsCount(payment.sender.wallet);
+                    count.toNumber().should.equal(1);
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if caller is recipient party with no ongoing driip settlement challenge', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner);
+                });
+
+                it('should operate successfully', async () => {
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                        payment, payment.recipient.wallet, payment.recipient.balances.current, overrideOptions
+                    );
+                    const count = await ethersDriipSettlementChallengeOwner.walletChallengedPaymentsCount(payment.recipient.wallet);
                     count.toNumber().should.equal(1);
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -342,7 +451,21 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                        payment, payment.sender.wallet, payment.sender.balances.current, overrideOptions
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if staging more than allowed by balance', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                        payment, payment.sender.wallet, payment.sender.balances.current.mul(2), overrideOptions
+                    ).should.be.rejected;
                 });
             });
 
@@ -352,27 +475,33 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeUserA.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlementChallengeUserA.startChallengeFromPayment(
+                        payment, payment.sender.wallet, payment.sender.balances.current, overrideOptions
+                    ).should.be.rejected;
                 });
             });
 
             describe('if called before an ongoing driip settlement challenge has expired', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner);
-                    ethersDriipSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
+                    ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                        payment, payment.sender.wallet, payment.sender.balances.current, overrideOptions
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                        payment, payment.sender.wallet, payment.sender.balances.current, overrideOptions
+                    ).should.be.rejected;
                 });
             });
         });
 
-        describe('driipSettlementChallengePhase()', () => {
+        describe('getPhase()', () => {
             describe('if no driip settlement challenge has been started for given wallet', () => {
                 it('should return 0 and Closed', async () => {
                     const address = Wallet.createRandom().address;
-                    const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengePhase(address);
+                    const result = await ethersDriipSettlementChallengeOwner.getPhase(address);
                     result[0].eq(utils.bigNumberify(0)).should.be.true;
                     result[1].should.equal(mocks.challengePhases.indexOf('Closed'));
                 });
@@ -391,11 +520,14 @@ module.exports = (glob) => {
 
                 describe('if driip settlement challenge is ongoing for given wallet', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions)
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                            trade.buyer.balances.conjugate.current, overrideOptions
+                        );
                     });
 
                     it('should return challenged driip nonce and Dispute', async () => {
-                        const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengePhase(trade.buyer.wallet);
+                        const result = await ethersDriipSettlementChallengeOwner.getPhase(trade.buyer.wallet);
                         result[0].eq(trade.nonce).should.be.true;
                         result[1].should.equal(mocks.challengePhases.indexOf('Dispute'));
                     });
@@ -404,11 +536,14 @@ module.exports = (glob) => {
                 describe('if driip settlement challenge has completed for given wallet', () => {
                     beforeEach(async () => {
                         await ethersConfiguration.setDriipSettlementChallengeTimeout(0);
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions)
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                            trade.buyer.balances.conjugate.current, overrideOptions
+                        );
                     });
 
                     it('should return challenged driip nonce and Closed', async () => {
-                        const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengePhase(trade.buyer.wallet);
+                        const result = await ethersDriipSettlementChallengeOwner.getPhase(trade.buyer.wallet);
                         result[0].eq(trade.nonce).should.be.true;
                         result[1].should.equal(mocks.challengePhases.indexOf('Closed'));
                     });
@@ -416,13 +551,12 @@ module.exports = (glob) => {
             });
         });
 
-        describe('driipSettlementChallengeStatus()', () => {
+        describe('getChallengeNonce()', () => {
             describe('if no driip settlement challenge has been started for given wallet', () => {
-                it('should return (Unknown, address(0))', async () => {
+                it('should return nonce default value', async () => {
                     const address = Wallet.createRandom().address;
-                    const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengeStatus(address, 0);
-                    result[0].should.equal(mocks.challengeResults.indexOf('Unknown'));
-                    result[1].should.equal('0x0000000000000000000000000000000000000000');
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengeNonce(address);
+                    result.eq(utils.bigNumberify(0)).should.be.true;
                 });
             });
 
@@ -435,14 +569,129 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions)
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
                 });
 
-                it('should return challenged driip challenge result', async () => {
-                    const result = await ethersDriipSettlementChallengeOwner.driipSettlementChallengeStatus(trade.buyer.wallet, trade.nonce);
-                    result[0].should.equal(mocks.challengeResults.indexOf('Qualified'));
-                    result[1].should.equal('0x0000000000000000000000000000000000000000');
+                it('should return nonce of ongoing challenge', async () => {
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengeNonce(trade.buyer.wallet);
+                    result.eq(trade.nonce).should.be.true;
                 });
+            });
+        });
+
+        describe('getChallengeStatus()', () => {
+            describe('if no driip settlement challenge has been started for given wallet', () => {
+                it('should return challenge status default value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengeStatus(address);
+                    result.should.equal(mocks.challengeStatuses.indexOf('Unknown'));
+                });
+            });
+
+            describe('if driip settlement challenge has been started for given wallet', () => {
+                let overrideOptions, trade;
+
+                before(async () => {
+                    overrideOptions = {gasLimit: 2e6};
+                });
+
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
+                });
+
+                it('should return status of ongoing challenge', async () => {
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengeStatus(trade.buyer.wallet);
+                    result.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
+                });
+            });
+        });
+
+        describe('getChallengeIntendedStage()', () => {
+            describe('if no driip settlement challenge has been started for given wallet', () => {
+                it('should return intended stage default value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengeIntendedStage(address);
+                    result.amount.eq(utils.bigNumberify(0)).should.be.true;
+                    result.currency.ct.should.equal(mocks.address0);
+                    result.currency.id.eq(utils.bigNumberify(0)).should.be.true;
+                    result.set.should.be.false;
+                });
+            });
+
+            describe('if driip settlement challenge has been started for given wallet', () => {
+                let overrideOptions, trade;
+
+                before(async () => {
+                    overrideOptions = {gasLimit: 2e6};
+                });
+
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
+                });
+
+                it('should return intended stage of ongoing challenge', async () => {
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengeIntendedStage(trade.buyer.wallet);
+                    result.amount.eq(trade.buyer.balances.intended.current).should.be.true;
+                    result.currency.ct.should.equal(trade.currencies.intended.ct);
+                    result.currency.id.eq(trade.currencies.intended.id).should.be.true;
+                    result.set.should.be.true;
+                });
+            });
+        });
+
+        describe('getChallengeConjugateStage()', () => {
+            describe('if no driip settlement challenge has been started for given wallet', () => {
+                it('should return conjugate stage default value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengeConjugateStage(address);
+                    result.amount.eq(utils.bigNumberify(0)).should.be.true;
+                    result.currency.ct.should.equal(mocks.address0);
+                    result.currency.id.eq(utils.bigNumberify(0)).should.be.true;
+                    result.set.should.be.false;
+                });
+            });
+
+            describe('if driip settlement challenge has been started for given wallet', () => {
+                let overrideOptions, trade;
+
+                before(async () => {
+                    overrideOptions = {gasLimit: 2e6};
+                });
+
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
+                });
+
+                it('should return conjugate stage of ongoing challenge', async () => {
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengeConjugateStage(trade.buyer.wallet);
+                    result.amount.eq(trade.buyer.balances.conjugate.current).should.be.true;
+                    result.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                    result.currency.id.eq(trade.currencies.conjugate.id).should.be.true;
+                    result.set.should.be.true;
+                });
+            });
+        });
+
+        describe('getChallengeChallenger()', () => {
+            it('should return nonce default value', async () => {
+                const address = Wallet.createRandom().address;
+                const result = await ethersDriipSettlementChallengeOwner.getChallengeChallenger(address);
+                result.should.equal(mocks.address0);
             });
         });
 
@@ -461,7 +710,7 @@ module.exports = (glob) => {
 
                 await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
 
-                topic = ethersDriipSettlementChallenger.interface.events['ChallengeByOrderEvent'].topics[0];
+                topic = ethersDriipSettlementDispute.interface.events['ChallengeByOrderEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -535,7 +784,10 @@ module.exports = (glob) => {
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                     await ethersConfiguration.setDriipSettlementChallengeTimeout(0);
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, order.wallet, overrideOptions);
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
                 });
 
                 it('should revert', async () => {
@@ -551,7 +803,10 @@ module.exports = (glob) => {
                         order = await mocks.mockOrder(glob.owner, {
                             placement: {
                                 currencies: {
-                                    conjugate: '0x0000000000000000000000000000000000000003'
+                                    conjugate: {
+                                        ct: '0x0000000000000000000000000000000000000003',
+                                        id: utils.bigNumberify(0)
+                                    }
                                 }
                             },
                             blockNumber: utils.bigNumberify(blockNumber20)
@@ -560,7 +815,10 @@ module.exports = (glob) => {
                             buyer: {wallet: order.wallet},
                             blockNumber: utils.bigNumberify(blockNumber10)
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                            trade.buyer.balances.conjugate.current, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -577,7 +835,11 @@ module.exports = (glob) => {
                             buyer: {wallet: order.wallet},
                             blockNumber: utils.bigNumberify(blockNumber10)
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            trade, trade.buyer.wallet, 0,
+                            0, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -592,17 +854,15 @@ module.exports = (glob) => {
                         });
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
-                                wallet: order.wallet,
-                                balances: {
-                                    conjugate: {
-                                        current: utils.bigNumberify(0)
-                                    }
-                                }
+                                wallet: order.wallet
                             },
                             blockNumber: utils.bigNumberify(blockNumber10)
                         });
 
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                            trade.buyer.balances.conjugate.current, overrideOptions
+                        );
                     });
 
                     it('should disqualify challenged driip, update challenge with challenger and emit event', async () => {
@@ -611,7 +871,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidateOrdersCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(trade.buyer.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
@@ -628,7 +888,9 @@ module.exports = (glob) => {
                         payment = await mocks.mockPayment(glob.owner, {
                             sender: {wallet: order.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            payment, payment.sender.wallet, payment.sender.balances.current, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -640,10 +902,12 @@ module.exports = (glob) => {
                     beforeEach(async () => {
                         order = await mocks.mockOrder(glob.owner, {wallet: glob.user_c});
                         payment = await mocks.mockPayment(glob.owner, {
-                            currency: '0x0000000000000000000000000000000000000002',
+                            currency: order.placement.currencies.conjugate,
                             sender: {wallet: order.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            payment, payment.sender.wallet, 0, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -658,16 +922,15 @@ module.exports = (glob) => {
                             blockNumber: utils.bigNumberify(blockNumber10)
                         });
                         payment = await mocks.mockPayment(glob.owner, {
-                            currency: '0x0000000000000000000000000000000000000002',
+                            currency: order.placement.currencies.conjugate,
                             sender: {
-                                wallet: order.wallet,
-                                balances: {
-                                    current: utils.bigNumberify(0)
-                                }
+                                wallet: order.wallet
                             },
                             blockNumber: utils.bigNumberify(blockNumber20)
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(payment, payment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            payment, payment.sender.wallet, payment.sender.balances.current, overrideOptions
+                        );
                     });
 
                     it('should disqualify challenged driip and emit event', async () => {
@@ -676,7 +939,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidateOrdersCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(payment.sender.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_b));
@@ -694,12 +957,12 @@ module.exports = (glob) => {
 
             beforeEach(async () => {
                 await ethersConfiguration.reset(overrideOptions);
-                await ethersFraudChallenge.reset(overrideOptions)
+                await ethersFraudChallenge.reset(overrideOptions);
                 await ethersSecurityBond.reset(overrideOptions);
 
                 await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
 
-                topic = ethersDriipSettlementChallenger.interface.events['UnchallengeOrderCandidateByTradeEvent'].topics[0];
+                topic = ethersDriipSettlementDispute.interface.events['UnchallengeOrderCandidateByTradeEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -835,7 +1098,10 @@ module.exports = (glob) => {
                         buyer: {wallet: order.wallet}
                     });
 
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
                     await ethersDriipSettlementChallengeOwner.challengeByTrade(tradeCandidate, tradeCandidate.buyer.wallet, overrideOptions);
                 });
 
@@ -844,7 +1110,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if order is one of of orders filled in trade', () => {
+            describe('if challenge order is one of of orders filled in trade', () => {
                 let unchallengeTradeCandidate;
 
                 beforeEach(async () => {
@@ -874,7 +1140,10 @@ module.exports = (glob) => {
                         blockNumber: utils.bigNumberify(blockNumber30)
                     });
 
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(trade, trade.buyer.wallet, overrideOptions);
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, overrideOptions
+                    );
                     await ethersDriipSettlementChallengeOwner.challengeByOrder(order, overrideOptions);
                 });
 
@@ -883,14 +1152,15 @@ module.exports = (glob) => {
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
                     const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(trade.buyer.wallet);
-                    driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Qualified'));
+                    driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
                     driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('None'));
                     driipSettlementChallenge.candidateIndex.eq(0).should.be.true;
                     driipSettlementChallenge.challenger.should.equal(mocks.address0);
                     const stage = await ethersSecurityBond.stages(0);
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(1000).should.be.true;
+                    stage.figure.currency.ct.should.equal(mocks.address0);
+                    stage.figure.currency.id.eq(utils.bigNumberify(0)).should.be.true;
+                    stage.figure.amount.eq(1000).should.be.true;
                 });
             })
         });
@@ -909,7 +1179,7 @@ module.exports = (glob) => {
 
                 await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
 
-                topic = ethersDriipSettlementChallenger.interface.events['ChallengeByTradeEvent'].topics[0];
+                topic = ethersDriipSettlementDispute.interface.events['ChallengeByTradeEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -963,7 +1233,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     candidateTrade = await mocks.mockTrade(glob.owner);
                     await ethersCancelOrdersChallenge.cancelOrdersByHash([candidateTrade.buyer.order.hashes.exchange], overrideOptions);
-                })
+                });
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeOwner.challengeByTrade(candidateTrade, candidateTrade.buyer.wallet, overrideOptions).should.be.rejected;
@@ -989,7 +1259,10 @@ module.exports = (glob) => {
                         buyer: {wallet: challengedTrade.buyer.wallet}
                     });
                     await ethersConfiguration.setDriipSettlementChallengeTimeout(0);
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(challengedTrade, challengedTrade.buyer.wallet, overrideOptions);
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        challengedTrade, challengedTrade.buyer.wallet, challengedTrade.buyer.balances.intended.current,
+                        challengedTrade.buyer.balances.conjugate.current, overrideOptions
+                    );
                 });
 
                 it('should revert', async () => {
@@ -1005,11 +1278,17 @@ module.exports = (glob) => {
                         challengedTrade = await mocks.mockTrade(glob.owner);
                         candidateTrade = await mocks.mockTrade(glob.owner, {
                             currencies: {
-                                conjugate: '0x0000000000000000000000000000000000000003'
+                                conjugate: {
+                                    ct: '0x0000000000000000000000000000000000000003',
+                                    id: 0
+                                }
                             },
                             buyer: {wallet: challengedTrade.buyer.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(challengedTrade, challengedTrade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            challengedTrade, challengedTrade.buyer.wallet, challengedTrade.buyer.balances.intended.current,
+                            challengedTrade.buyer.balances.conjugate.current, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -1023,7 +1302,9 @@ module.exports = (glob) => {
                         candidateTrade = await mocks.mockTrade(glob.owner, {
                             buyer: {wallet: challengedTrade.buyer.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(challengedTrade, challengedTrade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            challengedTrade, challengedTrade.buyer.wallet, 0, 0, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -1045,7 +1326,10 @@ module.exports = (glob) => {
                         candidateTrade = await mocks.mockTrade(glob.owner, {
                             buyer: {wallet: challengedTrade.buyer.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(challengedTrade, challengedTrade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            challengedTrade, challengedTrade.buyer.wallet, challengedTrade.buyer.balances.intended.current,
+                            challengedTrade.buyer.balances.conjugate.current, overrideOptions
+                        );
                     });
 
                     it('should disqualify challenged driip, update challenge with challenger and emit event', async () => {
@@ -1054,7 +1338,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidateTradesCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(candidateTrade.buyer.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
@@ -1073,7 +1357,10 @@ module.exports = (glob) => {
                         candidateTrade = await mocks.mockTrade(glob.owner, {
                             buyer: {wallet: challengedPayment.sender.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(challengedPayment, challengedPayment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            challengedPayment, challengedPayment.sender.wallet,
+                            challengedPayment.sender.balances.current, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -1084,13 +1371,17 @@ module.exports = (glob) => {
                 describe('if candidate trade\'s considered single transfer is within limit of challenged payment\'s balance', () => {
                     beforeEach(async () => {
                         challengedPayment = await mocks.mockPayment(glob.owner, {
-                            currency: '0x0000000000000000000000000000000000000002',
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000002'
+                            },
                             sender: {wallet: glob.user_c}
                         });
                         candidateTrade = await mocks.mockTrade(glob.owner, {
                             buyer: {wallet: challengedPayment.sender.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(challengedPayment, challengedPayment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            challengedPayment, challengedPayment.sender.wallet, 0, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -1101,7 +1392,9 @@ module.exports = (glob) => {
                 describe('if candidate trade\'s considered single transfer is beyond limit of challenged payment\'s balance', () => {
                     beforeEach(async () => {
                         challengedPayment = await mocks.mockPayment(glob.owner, {
-                            currency: '0x0000000000000000000000000000000000000002',
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000002'
+                            },
                             sender: {
                                 wallet: glob.user_d,
                                 balances: {
@@ -1112,7 +1405,10 @@ module.exports = (glob) => {
                         candidateTrade = await mocks.mockTrade(glob.owner, {
                             buyer: {wallet: challengedPayment.sender.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(challengedPayment, challengedPayment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            challengedPayment, challengedPayment.sender.wallet,
+                            challengedPayment.sender.balances.current, overrideOptions
+                        );
                     });
 
                     it('should disqualify challenged driip, update challenge with challenger and emit event', async () => {
@@ -1121,7 +1417,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidateTradesCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(candidateTrade.buyer.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
@@ -1143,7 +1439,7 @@ module.exports = (glob) => {
 
                 await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
 
-                topic = ethersDriipSettlementChallenger.interface.events['ChallengeByPaymentEvent'].topics[0];
+                topic = ethersDriipSettlementDispute.interface.events['ChallengeByPaymentEvent'].topics[0];
                 filter = {
                     fromBlock: blockNumber0,
                     topics: [topic]
@@ -1213,7 +1509,10 @@ module.exports = (glob) => {
                         sender: {wallet: challengedTrade.buyer.wallet}
                     });
                     await ethersConfiguration.setDriipSettlementChallengeTimeout(0);
-                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(challengedTrade, challengedTrade.buyer.wallet, overrideOptions);
+                    await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                        challengedTrade, challengedTrade.buyer.wallet, challengedTrade.buyer.balances.intended.current,
+                        challengedTrade.buyer.balances.conjugate.current, overrideOptions
+                    );
                 });
 
                 it('should revert', async () => {
@@ -1230,10 +1529,16 @@ module.exports = (glob) => {
                             buyer: {wallet: glob.user_b}
                         });
                         candidatePayment = await mocks.mockPayment(glob.owner, {
-                            currency: '0x0000000000000000000000000000000000000003',
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000003',
+                                id: 0
+                            },
                             sender: {wallet: challengedTrade.buyer.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(challengedTrade, challengedTrade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            challengedTrade, challengedTrade.buyer.wallet, challengedTrade.buyer.balances.intended.current,
+                            challengedTrade.buyer.balances.conjugate.current, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -1249,7 +1554,9 @@ module.exports = (glob) => {
                         candidatePayment = await mocks.mockPayment(glob.owner, {
                             sender: {wallet: challengedTrade.buyer.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(challengedTrade, challengedTrade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            challengedTrade, challengedTrade.buyer.wallet, 0, 0, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -1272,7 +1579,10 @@ module.exports = (glob) => {
                         candidatePayment = await mocks.mockPayment(glob.owner, {
                             sender: {wallet: challengedTrade.buyer.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(challengedTrade, challengedTrade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
+                            challengedTrade, challengedTrade.buyer.wallet, challengedTrade.buyer.balances.intended.current,
+                            challengedTrade.buyer.balances.conjugate.current, overrideOptions
+                        );
                     });
 
                     it('should disqualify challenged driip, update challenge with challenger and emit event', async () => {
@@ -1281,7 +1591,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidatePaymentsCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(candidatePayment.sender.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));
@@ -1298,10 +1608,16 @@ module.exports = (glob) => {
                             sender: {wallet: glob.user_b}
                         });
                         candidatePayment = await mocks.mockPayment(glob.owner, {
-                            currency: '0x0000000000000000000000000000000000000002',
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000002',
+                                id: 0
+                            },
                             sender: {wallet: challengedPayment.sender.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(challengedPayment, challengedPayment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            challengedPayment, challengedPayment.sender.wallet,
+                            challengedPayment.sender.balances.current, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -1317,7 +1633,9 @@ module.exports = (glob) => {
                         candidatePayment = await mocks.mockPayment(glob.owner, {
                             sender: {wallet: challengedPayment.sender.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(challengedPayment, challengedPayment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            challengedPayment, challengedPayment.sender.wallet, 0, overrideOptions
+                        );
                     });
 
                     it('should revert', async () => {
@@ -1338,7 +1656,10 @@ module.exports = (glob) => {
                         candidatePayment = await mocks.mockPayment(glob.owner, {
                             sender: {wallet: challengedPayment.sender.wallet}
                         });
-                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(challengedPayment, challengedPayment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlementChallengeOwner.startChallengeFromPayment(
+                            challengedPayment, challengedPayment.sender.wallet,
+                            challengedPayment.sender.balances.current, overrideOptions
+                        );
                     });
 
                     it('should disqualify challenged driip, update challenge with challenger and emit event', async () => {
@@ -1347,7 +1668,7 @@ module.exports = (glob) => {
                         logs[logs.length - 1].topics[0].should.equal(topic);
                         const candidatesCount = await ethersDriipSettlementChallengeOwner.challengeCandidatePaymentsCount();
                         const driipSettlementChallenge = await ethersDriipSettlementChallengeOwner.walletChallengeMap(candidatePayment.sender.wallet);
-                        driipSettlementChallenge.result.should.equal(mocks.challengeResults.indexOf('Disqualified'));
+                        driipSettlementChallenge.status.should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
                         driipSettlementChallenge.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
                         driipSettlementChallenge.candidateIndex.eq(candidatesCount.sub(1)).should.be.true;
                         driipSettlementChallenge.challenger.should.equal(utils.getAddress(glob.user_a));

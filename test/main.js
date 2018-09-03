@@ -16,7 +16,7 @@ const Configuration = artifacts.require("Configuration");
 const Exchange = artifacts.require("Exchange");
 const CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
 const DriipSettlementChallenge = artifacts.require("DriipSettlementChallenge");
-const DriipSettlementChallenger = artifacts.require("DriipSettlementChallenger");
+const DriipSettlementDispute = artifacts.require("DriipSettlementDispute");
 const FraudChallenge = artifacts.require("FraudChallenge");
 const FraudChallengeByOrder = artifacts.require("FraudChallengeByOrder");
 const FraudChallengeByTrade = artifacts.require("FraudChallengeByTrade");
@@ -244,11 +244,11 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate DriipSettlementChallenger contract", async () => {
+    before("Preflight: Instantiate DriipSettlementDispute contract", async () => {
         try {
-            glob.web3DriipSettlementChallenger = await DriipSettlementChallenger.deployed();
-            assert.notEqual(glob.web3DriipSettlementChallenger, null);
-            glob.ethersIoDriipSettlementChallenger = new ethers.Contract(glob.web3DriipSettlementChallenger.address, DriipSettlementChallenger.abi, glob.signer_owner);
+            glob.web3DriipSettlementDispute = await DriipSettlementDispute.deployed();
+            assert.notEqual(glob.web3DriipSettlementDispute, null);
+            glob.ethersIoDriipSettlementDispute = new ethers.Contract(glob.web3DriipSettlementDispute.address, DriipSettlementDispute.abi, glob.signer_owner);
         }
         catch (err) {
             assert(false, 'Failed to instantiate DriipSettlementChallenge contract address. [Error: ' + err.toString() + ']');
@@ -510,7 +510,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/Exchange')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DriipSettlementChallenge')(glob);
-    require('./scenarios/DriipSettlementChallenger')(glob);
+    require('./scenarios/DriipSettlementDispute')(glob);
     require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
     require('./scenarios/FraudChallengeByTrade')(glob);
