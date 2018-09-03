@@ -17,65 +17,59 @@ library BalanceLib {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Balance {
-        mapping(address => mapping(uint256 => int256)) currencies;
+        mapping(address => mapping(uint256 => int256)) figures;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function get(Balance storage self, address currency, uint256 currencyId) internal view returns (int256) {
-        if (currency == address(0)) {
+    function get(Balance storage self, address currencyCt, uint256 currencyId) internal view returns (int256) {
+        if (currencyCt == address(0))
             require(currencyId == 0);
-        }
-        return self.currencies[currency][currencyId];
+        return self.figures[currencyCt][currencyId];
     }
 
-    function set(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
-        if (currency == address(0)) {
+    function set(Balance storage self, int256 amount, address currencyCt, uint256 currencyId) internal {
+        if (currencyCt == address(0))
             require(currencyId == 0);
-        }
-        self.currencies[currency][currencyId] = amount;
+        self.figures[currencyCt][currencyId] = amount;
     }
 
     //----
 
-    function add(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
-        if (currency == address(0)) {
+    function add(Balance storage self, int256 amount, address currencyCt, uint256 currencyId) internal {
+        if (currencyCt == address(0))
             require(currencyId == 0);
-        }
-        self.currencies[currency][currencyId] = self.currencies[currency][currencyId].add_nn(amount);
+        self.figures[currencyCt][currencyId] = self.figures[currencyCt][currencyId].add_nn(amount);
     }
 
-    function sub(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
-        if (currency == address(0)) {
+    function sub(Balance storage self, int256 amount, address currencyCt, uint256 currencyId) internal {
+        if (currencyCt == address(0))
             require(currencyId == 0);
-        }
-        self.currencies[currency][currencyId] = self.currencies[currency][currencyId].sub_nn(amount);
+        self.figures[currencyCt][currencyId] = self.figures[currencyCt][currencyId].sub_nn(amount);
     }
 
-    function transfer(Balance storage _from, Balance storage _to, int256 amount, address currency, uint256 currencyId) internal {
-        sub(_from, amount, currency, currencyId);
-        add(_to, amount, currency, currencyId);
+    function transfer(Balance storage _from, Balance storage _to, int256 amount, address currencyCt, uint256 currencyId) internal {
+        sub(_from, amount, currencyCt, currencyId);
+        add(_to, amount, currencyCt, currencyId);
     }
 
     //----
 
-    function add_allow_neg(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
-        if (currency == address(0)) {
+    function add_allow_neg(Balance storage self, int256 amount, address currencyCt, uint256 currencyId) internal {
+        if (currencyCt == address(0))
             require(currencyId == 0);
-        }
-        self.currencies[currency][currencyId] = self.currencies[currency][currencyId].add(amount);
+        self.figures[currencyCt][currencyId] = self.figures[currencyCt][currencyId].add(amount);
     }
 
-    function sub_allow_neg(Balance storage self, int256 amount, address currency, uint256 currencyId) internal {
-        if (currency == address(0)) {
+    function sub_allow_neg(Balance storage self, int256 amount, address currencyCt, uint256 currencyId) internal {
+        if (currencyCt == address(0))
             require(currencyId == 0);
-        }
-        self.currencies[currency][currencyId] = self.currencies[currency][currencyId].sub(amount);
+        self.figures[currencyCt][currencyId] = self.figures[currencyCt][currencyId].sub(amount);
     }
 
-    function transfer_allow_neg(Balance storage _from, Balance storage _to, int256 amount, address currency, uint256 currencyId) internal {
-        sub_allow_neg(_from, amount, currency, currencyId);
-        add_allow_neg(_to, amount, currency, currencyId);
+    function transfer_allow_neg(Balance storage _from, Balance storage _to, int256 amount, address currencyCt, uint256 currencyId) internal {
+        sub_allow_neg(_from, amount, currencyCt, currencyId);
+        add_allow_neg(_to, amount, currencyCt, currencyId);
     }
 }
