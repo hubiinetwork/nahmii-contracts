@@ -18,7 +18,7 @@ exports.mockOrder = async (exchange, params) => {
     const wallet = Wallet.createRandom();
 
     const order = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
+        nonce: utils.bigNumberify(globalNonce++),
         wallet: wallet.address,
         placement: {
             intention: exports.intentions.indexOf('Buy'),
@@ -55,7 +55,7 @@ exports.mockOrder = async (exchange, params) => {
 
 exports.mockTrade = async (exchange, params) => {
     const trade = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
+        nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
         currencies: {
             intended: {
@@ -181,7 +181,7 @@ exports.mockPayment = async (exchange, params) => {
     const recipientWallet = Wallet.createRandom();
 
     const payment = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
+        nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
         currency: {
             ct: '0x0000000000000000000000000000000000000001',

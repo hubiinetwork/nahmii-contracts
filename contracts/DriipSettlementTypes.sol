@@ -31,11 +31,12 @@ library DriipSettlementTypes {
     }
 
     struct Challenge {
-        uint256 nonce;
+        uint256 nonce; // TODO Consider removal of nonce in place of exchange' hash
         uint256 timeout;
         ChallengeStatus status;
 
         // Driip info
+        //        bytes32 driipExchangeHash; // TODO Add exchange' hash
         StriimTypes.DriipType driipType;
         uint256 driipIndex;
 

@@ -142,6 +142,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
         challenge.nonce = trade.nonce;
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
         challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
+        //        challenge.driipExchangeHash = trade.seal.hash;
         challenge.driipType = StriimTypes.DriipType.Trade;
         challenge.driipIndex = walletChallengedTradesMap[wallet].length - 1;
         challenge.intendedStage = DriipSettlementTypes.OptionalFigure(intendedStageAmount, trade.currencies.intended, true);
@@ -187,6 +188,7 @@ contract DriipSettlementChallenge is Ownable, StriimChallenge, Validatable {
         challenge.nonce = payment.nonce;
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
         challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
+        //        challenge.driipExchangeHash = payment.seals.exchange.hash;
         challenge.driipType = StriimTypes.DriipType.Payment;
         challenge.driipIndex = walletChallengedPaymentsMap[wallet].length - 1;
         challenge.intendedStage = DriipSettlementTypes.OptionalFigure(stageAmount, payment.currency, true);
