@@ -76,7 +76,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     }
 
     //
-    // Deposit functions
+    // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
         depositEthersTo(msg.sender);
@@ -134,9 +134,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         return walletMap[wallet].txHistory.depositCount();
     }
 
-    //
-    // Balance retrieval functions
-    // -----------------------------------------------------------------------------------------------------------------
     function depositedBalance(address wallet, address currencyCt, uint256 currencyId)
     public
     view
@@ -164,9 +161,25 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         return walletMap[wallet].staged.get(currencyCt, currencyId);
     }
 
-    //
-    // Staging functions
-    // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Update the settled balance by the difference between provided amount and deposited on-chain balance
+    /// @param wallet Concerned wallet
+    /// @param amount The off-chain balance amount
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    public
+    onlyRegisteredActiveService
+    notNullAddress(wallet)
+    {
+        require(isAuthorizedServiceForWallet(msg.sender, wallet));
+        require(amount.isPositiveInt256());
+
+        int256 settledBalanceAmount = amount.sub(walletMap[wallet].deposited.get(currencyCt, currencyId));
+        walletMap[wallet].settled.set(settledBalanceAmount, currencyCt, currencyId);
+
+        emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
+    }
+
     function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
     onlyRegisteredActiveService
@@ -205,25 +218,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    /// @notice Update the settled balance by the difference between provided amount and deposited on-chain balance
-    /// @param wallet Concerned wallet
-    /// @param amount The off-chain balance amount
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
-    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
-    public
-    onlyRegisteredActiveService
-    notNullAddress(wallet)
-    {
-        require(isAuthorizedServiceForWallet(msg.sender, wallet));
-        require(amount.isPositiveInt256());
-
-        int256 settledBalanceAmount = amount.sub(walletMap[wallet].deposited.get(currencyCt, currencyId));
-        walletMap[wallet].settled.set(settledBalanceAmount, currencyCt, currencyId);
-
-        emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
-    }
-
     function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
     public
     notOwner
@@ -249,9 +243,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit StageToBeneficiaryUntargetedEvent(sourceWallet, beneficiary, amount, currencyCt, currencyId);
     }
 
-    //
-    // Seizing function
-    // -----------------------------------------------------------------------------------------------------------------
     function seizeAllBalances(address sourceWallet, address targetWallet)
     public
     onlyRegisteredActiveService
@@ -285,9 +276,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
     }
 
-    //
-    // Withdrawal functions
-    // -----------------------------------------------------------------------------------------------------------------
     function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
         require(amount.isNonZeroPositiveInt256());
 
@@ -312,7 +300,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId, standard);
     }
 
-    function withdrawal(address wallet, uint index) public view onlyOwner
+    function withdrawal(address wallet, uint index)
+    public
+    view
+    onlyOwner
     returns (int256 amount, uint256 timestamp, address token, uint256 id)
     {
         return walletMap[wallet].txHistory.withdrawal(index);
