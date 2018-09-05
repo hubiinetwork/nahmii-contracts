@@ -37,7 +37,7 @@ const TestAuthorizableServable = artifacts.require("TestAuthorizableServable");
 const TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
 const PartnerFund = artifacts.require("PartnerFund");
 const ERC20Token = artifacts.require("StandardTokenEx");
-// const UnitTestHelpers = artifacts.require("UnitTestHelpers");
+const UnitTestHelpers = artifacts.require("UnitTestHelpers");
 
 //augmented sendTransaction using promises
 Helpers.augmentWeb3(web3);
@@ -111,28 +111,28 @@ contract('Smart contract checks', function () {
         }
     });
 
-    // before("Preflight: Deploy several unit test helper contracts for validation tests", async () => {
-    //     try {
-    //         glob.web3UnitTestHelpers_SUCCESS_TESTS = await UnitTestHelpers.new();
-    //         assert.notEqual(glob.web3UnitTestHelpers_SUCCESS_TESTS, null);
-    //         glob.ethersUnitTestHelpers_SUCCESS_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
-    //
-    //         glob.web3UnitTestHelpers_FAIL_TESTS = await UnitTestHelpers.new();
-    //         assert.notEqual(glob.web3UnitTestHelpers_FAIL_TESTS, null);
-    //         glob.ethersUnitTestHelpers_FAIL_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_FAIL_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
-    //
-    //         glob.web3UnitTestHelpers_MISC_1 = await UnitTestHelpers.new();
-    //         assert.notEqual(glob.web3UnitTestHelpers_MISC_1, null);
-    //         glob.web3UnitTestHelpers_MISC_1 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_1.address, UnitTestHelpers.abi, glob.signer_owner);
-    //
-    //         glob.web3UnitTestHelpers_MISC_2 = await UnitTestHelpers.new();
-    //         assert.notEqual(glob.web3UnitTestHelpers_MISC_2, null);
-    //         glob.web3UnitTestHelpers_MISC_2 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_2.address, UnitTestHelpers.abi, glob.signer_owner);
-    //     }
-    //     catch (err) {
-    //         assert(false, 'Failed to create an instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
-    //     }
-    // });
+    before("Preflight: Deploy several unit test helper contracts for validation tests", async () => {
+        try {
+            glob.web3UnitTestHelpers_SUCCESS_TESTS = await UnitTestHelpers.new(glob.owner);
+            assert.notEqual(glob.web3UnitTestHelpers_SUCCESS_TESTS, null);
+            glob.ethersUnitTestHelpers_SUCCESS_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
+
+            glob.web3UnitTestHelpers_FAIL_TESTS = await UnitTestHelpers.new(glob.owner);
+            assert.notEqual(glob.web3UnitTestHelpers_FAIL_TESTS, null);
+            glob.ethersUnitTestHelpers_FAIL_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_FAIL_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
+
+            glob.web3UnitTestHelpers_MISC_1 = await UnitTestHelpers.new(glob.owner);
+            assert.notEqual(glob.web3UnitTestHelpers_MISC_1, null);
+            glob.web3UnitTestHelpers_MISC_1 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_1.address, UnitTestHelpers.abi, glob.signer_owner);
+
+            glob.web3UnitTestHelpers_MISC_2 = await UnitTestHelpers.new(glob.owner);
+            assert.notEqual(glob.web3UnitTestHelpers_MISC_2, null);
+            glob.web3UnitTestHelpers_MISC_2 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_2.address, UnitTestHelpers.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to create an instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
+        }
+    });
 
     before("Preflight: Instantiate Servable contract", async () => {
         try {
@@ -442,51 +442,51 @@ contract('Smart contract checks', function () {
     //     }
     // });
 
-    // before("Preflight: Distribute test ethers", async () => {
-    //     try {
-    //         await web3.eth.sendTransactionPromise({
-    //             from: glob.owner,
-    //             to: glob.web3UnitTestHelpers_SUCCESS_TESTS.address,
-    //             value: web3.toWei('10', "ether")
-    //         });
-    //         await web3.eth.sendTransactionPromise({
-    //             from: glob.owner,
-    //             to: glob.web3UnitTestHelpers_FAIL_TESTS.address,
-    //             value: web3.toWei('10', "ether")
-    //         });
-    //         await web3.eth.sendTransactionPromise({
-    //             from: glob.owner,
-    //             to: glob.web3UnitTestHelpers_MISC_1.address,
-    //             value: web3.toWei('10', "ether")
-    //         });
-    //         await web3.eth.sendTransactionPromise({
-    //             from: glob.owner,
-    //             to: glob.web3UnitTestHelpers_MISC_2.address,
-    //             value: web3.toWei('10', "ether")
-    //         });
-    //     }
-    //     catch (err) {
-    //         assert(false, 'Cannot distribute money to smart contracts. [Error: ' + err.toString() + ']');
-    //     }
-    // });
+    before("Preflight: Distribute test ethers", async () => {
+        try {
+            await web3.eth.sendTransactionPromise({
+                from: glob.owner,
+                to: glob.web3UnitTestHelpers_SUCCESS_TESTS.address,
+                value: web3.toWei('10', "ether")
+            });
+            await web3.eth.sendTransactionPromise({
+                from: glob.owner,
+                to: glob.web3UnitTestHelpers_FAIL_TESTS.address,
+                value: web3.toWei('10', "ether")
+            });
+            await web3.eth.sendTransactionPromise({
+                from: glob.owner,
+                to: glob.web3UnitTestHelpers_MISC_1.address,
+                value: web3.toWei('10', "ether")
+            });
+            await web3.eth.sendTransactionPromise({
+                from: glob.owner,
+                to: glob.web3UnitTestHelpers_MISC_2.address,
+                value: web3.toWei('10', "ether")
+            });
+        }
+        catch (err) {
+            assert(false, 'Cannot distribute money to smart contracts. [Error: ' + err.toString() + ']');
+        }
+    });
 
-    // before("Preflight: Distribute test tokens", async() => {
-    // 	try {
-    // 		await glob.web3Erc20.testMint(glob.owner, 100);
-    // 		await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
-    // 		await glob.web3Erc20.testMint(glob.user_b, initialTokensForAll);
-    // 		await glob.web3Erc20.testMint(glob.user_c, initialTokensForAll);
-    // 		await glob.web3Erc20.testMint(glob.user_d, initialTokensForAll);
-    // 		await glob.web3Erc20.testMint(glob.user_e, initialTokensForAll);
-    // 		await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
-    // 		await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
-    // 		await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_1.address, initialTokensForAll);
-    // 		await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_2.address, initialTokensForAll);
-    // 	}
-    // 	catch (err) {
-    // 		assert(false, 'Cannot assign tokens for users and smart contracts. [Error: ' + err.toString() + ']');
-    // 	}
-    // });
+    before("Preflight: Distribute test tokens", async () => {
+        try {
+            await glob.web3Erc20.testMint(glob.owner, 100);
+            await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
+            await glob.web3Erc20.testMint(glob.user_b, initialTokensForAll);
+            await glob.web3Erc20.testMint(glob.user_c, initialTokensForAll);
+            await glob.web3Erc20.testMint(glob.user_d, initialTokensForAll);
+            await glob.web3Erc20.testMint(glob.user_e, initialTokensForAll);
+            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
+            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
+            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_1.address, initialTokensForAll);
+            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_2.address, initialTokensForAll);
+        }
+        catch (err) {
+            assert(false, 'Cannot assign tokens for users and smart contracts. [Error: ' + err.toString() + ']');
+        }
+    });
 
     //-------------------------------------------------------------------------
     // Tests start here
@@ -502,7 +502,7 @@ contract('Smart contract checks', function () {
     //
     //-------------------------------------------------------------------------
 
-    require('./scenarios/ClientFund')(glob);
+    require('./scenarios/ClientFund2')(glob);
     require('./scenarios/Hasher')(glob);
     require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
