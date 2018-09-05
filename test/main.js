@@ -30,6 +30,7 @@ const FraudChallengeByDoubleSpentOrders = artifacts.require("FraudChallengeByDou
 const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTrades");
 const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require("FraudChallengeByDuplicateDriipNonceOfPayments");
 const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTradeAndPayment");
+const TransferControllerManager = artifacts.require('TransferControllerManager');
 const RevenueFund = artifacts.require("RevenueFund");
 const SecurityBond = artifacts.require("SecurityBond");
 const TestServable = artifacts.require("TestServable");
@@ -37,6 +38,7 @@ const TestAuthorizableServable = artifacts.require("TestAuthorizableServable");
 const TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
 const PartnerFund = artifacts.require("PartnerFund");
 const ERC20Token = artifacts.require("StandardTokenEx");
+const RevenueToken = artifacts.require("RevenueToken");
 const UnitTestHelpers = artifacts.require("UnitTestHelpers");
 
 //augmented sendTransaction using promises
@@ -99,12 +101,16 @@ contract('Smart contract checks', function () {
         assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_i), "ether") >= minRequiredEthersPerUser);
     });
 
-    before("Preflight: Instantiate test token", async () => {
+    before("Preflight: Instantiate and register test token in transfer controller manager", async () => {
         try {
             glob.web3Erc20 = await ERC20Token.new();
             assert.notEqual(glob.web3Erc20, null);
+            console.log("Sample ERC20 token deployed at address: " + glob.web3Erc20.address);
 
             glob.web3Erc20.totalSupply = initialTokensSupply;
+
+            let instance = await TransferControllerManager.deployed();
+            await instance.registerCurrency(glob.web3Erc20.address, "erc20", { from: glob.owner });
         }
         catch (err) {
             assert(false, 'Failed to instantiate ERC20Token instance. [Error: ' + err.toString() + ']');
@@ -113,21 +119,27 @@ contract('Smart contract checks', function () {
 
     before("Preflight: Deploy several unit test helper contracts for validation tests", async () => {
         try {
+            let instance = await TransferControllerManager.deployed();
+
             glob.web3UnitTestHelpers_SUCCESS_TESTS = await UnitTestHelpers.new(glob.owner);
             assert.notEqual(glob.web3UnitTestHelpers_SUCCESS_TESTS, null);
             glob.ethersUnitTestHelpers_SUCCESS_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
+            await glob.web3UnitTestHelpers_SUCCESS_TESTS.changeTransferControllerManager(instance.address);
 
             glob.web3UnitTestHelpers_FAIL_TESTS = await UnitTestHelpers.new(glob.owner);
             assert.notEqual(glob.web3UnitTestHelpers_FAIL_TESTS, null);
             glob.ethersUnitTestHelpers_FAIL_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_FAIL_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
+            await glob.ethersUnitTestHelpers_FAIL_TESTS.changeTransferControllerManager(instance.address);
 
             glob.web3UnitTestHelpers_MISC_1 = await UnitTestHelpers.new(glob.owner);
             assert.notEqual(glob.web3UnitTestHelpers_MISC_1, null);
             glob.web3UnitTestHelpers_MISC_1 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_1.address, UnitTestHelpers.abi, glob.signer_owner);
+            await glob.web3UnitTestHelpers_MISC_1.changeTransferControllerManager(instance.address);
 
             glob.web3UnitTestHelpers_MISC_2 = await UnitTestHelpers.new(glob.owner);
             assert.notEqual(glob.web3UnitTestHelpers_MISC_2, null);
             glob.web3UnitTestHelpers_MISC_2 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_2.address, UnitTestHelpers.abi, glob.signer_owner);
+            await glob.web3UnitTestHelpers_MISC_2.changeTransferControllerManager(instance.address);
         }
         catch (err) {
             assert(false, 'Failed to create an instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
@@ -398,49 +410,54 @@ contract('Smart contract checks', function () {
         }
     });
 
-    // before("Preflight: Instantiate RevenueFund contract", async () => {
-    //     try {
-    //         glob.web3RevenueFund = await RevenueFund.deployed();
-    //         assert.notEqual(glob.web3RevenueFund, null);
-    //         glob.ethersIoRevenueFund = new ethers.Contract(glob.web3RevenueFund.address, RevenueFund.abi, glob.signer_owner);
-    //     }
-    //     catch (err) {
-    //         assert(false, 'Failed to instantiate RevenueFund contract address. [Error: ' + err.toString() + ']');
-    //     }
-    // });
+    before("Preflight: Instantiate RevenueFund contract", async () => {
+        try {
+            glob.web3RevenueFund = await RevenueFund.deployed();
+            assert.notEqual(glob.web3RevenueFund, null);
+            glob.ethersIoRevenueFund = new ethers.Contract(glob.web3RevenueFund.address, RevenueFund.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate RevenueFund contract address. [Error: ' + err.toString() + ']');
+        }
+    });
 
-    // before("Preflight: Instantiate SecurityBond contract", async () => {
-    //     try {
-    //         glob.web3SecurityBond = await SecurityBond.deployed();
-    //         assert.notEqual(glob.web3SecurityBond, null);
-    //         glob.ethersIoSecurityBond = new ethers.Contract(glob.web3SecurityBond.address, SecurityBond.abi, glob.signer_owner);
-    //     }
-    //     catch (err) {
-    //         assert(false, 'Failed to instantiate SecurityBond contract address. [Error: ' + err.toString() + ']');
-    //     }
-    // });
+    before("Preflight: Instantiate SecurityBond contract", async () => {
+        try {
+            glob.web3SecurityBond = await SecurityBond.deployed();
+            assert.notEqual(glob.web3SecurityBond, null);
+            glob.ethersIoSecurityBond = new ethers.Contract(glob.web3SecurityBond.address, SecurityBond.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate SecurityBond contract address. [Error: ' + err.toString() + ']');
+        }
+    });
 
     before("Preflight: Instantiate TokenHolderRevenueFund contract", async () => {
         try {
             glob.web3TokenHolderRevenueFund = await TokenHolderRevenueFund.deployed();
             assert.notEqual(glob.web3TokenHolderRevenueFund, null);
             glob.ethersIoTokenHolderRevenueFund = new ethers.Contract(glob.web3TokenHolderRevenueFund.address, TokenHolderRevenueFund.abi, glob.signer_owner);
+
+            glob.web3RevenueToken = await RevenueToken.new();
+            assert.notEqual(glob.web3RevenueToken, null);
+            console.log("Sample RevenueToken deployed at address: " + glob.web3RevenueToken.address);
+            glob.web3TokenHolderRevenueFund.changeRevenueToken(glob.web3RevenueToken.address);
         }
         catch (err) {
             assert(false, 'Failed to instantiate TokenHolderRevenueFund contract address. [Error: ' + err.toString() + ']');
         }
     });
 
-    // before("Preflight: Instantiate PartnerFund contract", async () => {
-    //     try {
-    //         glob.web3PartnerFund = await PartnerFund.deployed();
-    //         assert.notEqual(glob.web3PartnerFund, null);
-    //         glob.ethersIoPartnerFund = new ethers.Contract(glob.web3PartnerFund.address, PartnerFund.abi, glob.signer_owner);
-    //     }
-    //     catch (err) {
-    //         assert(false, 'Failed to instantiate PartnerFund contract address. [Error: ' + err.toString() + ']');
-    //     }
-    // });
+    before("Preflight: Instantiate PartnerFund contract", async () => {
+        try {
+            glob.web3PartnerFund = await PartnerFund.deployed();
+            assert.notEqual(glob.web3PartnerFund, null);
+            glob.ethersIoPartnerFund = new ethers.Contract(glob.web3PartnerFund.address, PartnerFund.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate PartnerFund contract address. [Error: ' + err.toString() + ']');
+        }
+    });
 
     before("Preflight: Distribute test ethers", async () => {
         try {
@@ -470,7 +487,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Distribute test tokens", async () => {
+    before("Preflight: Distribute test tokens", async() => {
         try {
             await glob.web3Erc20.testMint(glob.owner, 100);
             await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);

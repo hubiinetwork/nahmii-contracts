@@ -91,7 +91,9 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
-        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
+        if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)) {
+            revert();
+        }
 
         //add to balances
         periodAccrual.add(amount, currencyCt, currencyId);
@@ -155,7 +157,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                         else {
                             //execute transfer
                             TransferController controller = getTransferController(currency.ct, "");
-                            if (!address(controller).delegatecall(controller.APPROVE_SIGNATURE, beneficiaryAddress, uint256(transferable), currency.ct, currency.id))
+                            if (!address(controller).delegatecall(controller.getApproveSignature(), beneficiaryAddress, uint256(transferable), currency.ct, currency.id))
                                 revert();
 
                             //transfer funds to the beneficiary

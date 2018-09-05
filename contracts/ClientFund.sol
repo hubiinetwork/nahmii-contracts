@@ -105,7 +105,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
 
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
-        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
+        require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
         //add to per-wallet deposited balance
         walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
@@ -285,8 +285,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
 
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(amount), currencyCt, currencyId))
-                revert();
+            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId), "uff");
         }
 
         //emit event
@@ -332,11 +331,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         else {
             //execute transfer
             TransferController controller = getTransferController(currencyCt, "");
-            if (!address(controller).delegatecall(controller.APPROVE_SIGNATURE, beneficiary, uint256(amount), currencyCt, currencyId))
-                revert();
+            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amountCopy), currencyCt, currencyId));
 
             //transfer funds to the beneficiary
-            beneficiary.depositTokensTo(destWallet, amount, currencyCt, currencyId, "");
+            beneficiary.depositTokensTo(destWallet, amountCopy, currencyCt, currencyId, "");
         }
     }
 
