@@ -44,11 +44,6 @@ const TransferControllerManager = artifacts.require('TransferControllerManager')
 const TxHistoryLib = artifacts.require('TxHistoryLib');
 const Validator = artifacts.require('Validator');
 
-//test smart contracts
-const StandardTokenEx = artifacts.require('StandardTokenEx');
-const RevenueToken = artifacts.require('RevenueToken');
-const UnitTestHelpers = artifacts.require('UnitTestHelpers');
-
 const path = require('path');
 const helpers = require('./helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
@@ -123,14 +118,6 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementChallenge, DriipSettlementDispute, Exchange
             ]);
 
-            //deploy test tokens contracts if on a developer network
-            if (helpers.isTestNetwork(network)) {
-                await execDeploy(deployer, 'StandardTokenEx', '', StandardTokenEx, deployFilters, addressStorage, ownerAccount);
-
-                instance = await deployer.deploy(RevenueToken, {from: ownerAccount});
-                addressStorage.set('RevenueToken', instance.address);
-            }
-
             //deploy transfer controllers
             await execDeploy(deployer, 'ERC20TransferController', '', ERC20TransferController, deployFilters, addressStorage, ownerAccount);
 
@@ -192,20 +179,12 @@ module.exports = (deployer, network, accounts) => {
 
             await execDeploy(deployer, 'PartnerFund', '', PartnerFund, deployFilters, addressStorage, ownerAccount);
 
-            //deploy test smart contracts if on a developer network
-            if (helpers.isTestNetwork(network))
-                await execDeploy(deployer, 'UnitTestHelpers', '', UnitTestHelpers, deployFilters, addressStorage, ownerAccount);
-
             //configure smart contracts
 
             //register transfer controllers
             instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
-            tx = await instance.registerTransferController('erc20', addressStorage.get('ERC20TransferController'), {from: ownerAccount});
-            tx = await instance.registerTransferController('erc721', addressStorage.get('ERC721TransferController'), {from: ownerAccount});
-
-            //register currencies on developer network
-            if (helpers.isTestNetwork(network))
-                tx = await instance.registerCurrency(addressStorage.get('StandardTokenEx'), "erc20", {from: ownerAccount});
+            tx = await instance.registerTransferController('erc20', addressStorage.get('ERC20TransferController'), { from: ownerAccount });
+            tx = await instance.registerTransferController('erc721', addressStorage.get('ERC721TransferController'), { from: ownerAccount });
 
             instance = await Validator.at(addressStorage.get('Validator'));
             tx = await instance.changeHasher(addressStorage.get('Hasher'));
@@ -323,17 +302,9 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            if (helpers.isTestNetwork(network))
-                tx = await instance.changeRevenueToken(addressStorage.get('RevenueToken'));
 
             instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
-
-            //deploy test smart contracts if on a developer network
-            if (helpers.isTestNetwork(network)) {
-                instance = await UnitTestHelpers.at(addressStorage.get('UnitTestHelpers'));
-                tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            }
 
             console.log("Saving addresses...");
             await addressStorage.save();

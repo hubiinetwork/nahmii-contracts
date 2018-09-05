@@ -8,6 +8,7 @@
 
 pragma solidity ^0.4.24;
 
+// TODO Replace DepositOrWithdrawal.timestamp by DepositOrWithdrawal.blockNumber
 library TxHistoryLib {
     //
     // Structures

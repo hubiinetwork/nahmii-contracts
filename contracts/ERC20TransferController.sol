@@ -24,7 +24,9 @@ contract ERC20TransferController is TransferController {
         return true;
     }
 
+    /// @notice MUST be called with DELEGATECALL
     function receive(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public {
+        require(msg.sender != address(0));
         require(amount > 0);
         require(currencyId == 0);
 
@@ -36,7 +38,6 @@ contract ERC20TransferController is TransferController {
 
     /// @notice MUST be called with DELEGATECALL
     function approve(address to, uint256 amount, address currencyCt, uint256 currencyId) public {
-        require(msg.sender != address(0));
         require(amount > 0);
         require(currencyId == 0);
 
@@ -44,16 +45,15 @@ contract ERC20TransferController is TransferController {
     }
 
     /// @notice MUST be called with DELEGATECALL
-    function send(address to, uint256 amount, address currencyCt, uint256 currencyId) public {
-        require(msg.sender != address(0));
+    function send(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public {
         require(amount > 0);
         require(currencyId == 0);
 
-        require(ERC20(currencyCt).approve(to, amount));
-        require(ERC20(currencyCt).transferFrom(msg.sender, to, amount));
+        require(ERC20(currencyCt).approve(from, amount));
+        require(ERC20(currencyCt).transferFrom(from, to, amount));
 
         //raise event
-        emit CurrencyTransferred(msg.sender, to, amount, currencyCt, 0);
+        emit CurrencyTransferred(from, to, amount, currencyCt, 0);
     }
 }
 

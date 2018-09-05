@@ -3,7 +3,7 @@ var Helpers = require('../helpers');
 module.exports = function (glob) {
     var testCounter = Helpers.TestCounter();
 
-    describe("ClientFund", function () {
+    describe.only("ClientFund", function () {
         it(testCounter.next() + ": MUST SUCCEED [payable]: add 2.5 Ethers to user A deposited balance", async () => {
             try {
                 await web3.eth.sendTransactionPromise({
@@ -44,7 +44,7 @@ module.exports = function (glob) {
                 assert(false, 'This test must succeed. Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
             }
             try {
-                await glob.web3ClientFund.depositTokens(glob.web3Erc20.address, 10, {from: glob.user_a});
+              await glob.web3ClientFund.depositTokens(10, glob.web3Erc20.address, 0, "", {from: glob.user_a});
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -55,7 +55,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called without prior approval of client fund to act on behalf of token holder", async () => {
             try {
-                await glob.web3ClientFund.depositTokens(glob.web3Erc20.address, 5, {from: glob.owner});
+                await glob.web3ClientFund.depositTokens(5, glob.web3Erc20.address, 0, "", {from: glob.owner});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -67,7 +67,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with zero address", async () => {
             try {
-                await glob.web3ClientFund.depositTokens(0, 5, {from: glob.user_a});
+                await glob.web3ClientFund.depositTokens(5, 0, 0, "", {from: glob.user_a});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -79,7 +79,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with zero amount", async () => {
             try {
-                await glob.web3ClientFund.depositTokens(glob.web3Erc20.address, 0, {from: glob.user_a});
+                await glob.web3ClientFund.depositTokens(0, glob.web3Erc20.address, 0, "", {from: glob.user_a});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -97,7 +97,7 @@ module.exports = function (glob) {
                 assert(false, 'Error: ERC20 failed to approve token transfer.');
             }
             try {
-                await glob.web3ClientFund.depositTokens(glob.web3Erc20.address, 9999, {from: glob.user_a});
+                await glob.web3ClientFund.depositTokens(9999, glob.web3Erc20.address, 0, "", {from: glob.user_a});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -126,18 +126,6 @@ module.exports = function (glob) {
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [depositCount]: Cannot be called from non-owner address", async () => {
-            try {
-                await glob.web3ClientFund.depositCount(glob.user_a, {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
             }
         });
 
@@ -193,7 +181,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [depositedBalance]: 2.5 ETH for User A", async () => {
             try {
-                let balance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
+                let balance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0, 0);
                 assert.equal(balance, web3.toWei(2.5, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
             }
             catch (err) {
@@ -205,7 +193,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [depositedBalance]: 10 tokens for User A", async () => {
             try {
-                let balance = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address);
+                let balance = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
                 assert.equal(balance, 10, 'Wrong balance [' + balance.toString() + ' tokens].');
             }
             catch (err) {
@@ -217,7 +205,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [depositedBalance]: 0 tokens for User B", async () => {
             try {
-                let balance = await glob.web3ClientFund.depositedBalance(glob.user_b, glob.web3Erc20.address);
+                let balance = await glob.web3ClientFund.depositedBalance(glob.user_b, glob.web3Erc20.address, 0);
                 assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
             }
             catch (err) {
@@ -229,7 +217,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 ETH for User A", async () => {
             try {
-                let balance = await glob.web3ClientFund.stagedBalance(glob.user_a, 0);
+                let balance = await glob.web3ClientFund.stagedBalance(glob.user_a, 0, 0);
                 assert.equal(balance, web3.toWei(0, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
             }
             catch (err) {
@@ -241,7 +229,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 tokens for User A", async () => {
             try {
-                let balance = await glob.web3ClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address);
+                let balance = await glob.web3ClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
                 assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
             }
             catch (err) {
@@ -253,7 +241,7 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 tokens for User B", async () => {
             try {
-                let balance = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address);
+                let balance = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address, 0);
                 assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
             }
             catch (err) {
@@ -359,11 +347,11 @@ module.exports = function (glob) {
             try {
                 await Helpers.sleep(5000);
 
-                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0);
+                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0, 0);
 
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToUpdateSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_d, web3.toWei(0.2, 'ether'), 0);
+                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToUpdateSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_d, web3.toWei(0.2, 'ether'), 0, 0);
 
-                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0);
+                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0, 0);
 
                 assert.equal(newSettledBalance.sub(oldSettledBalance), web3.toWei(0.2, 'ether'), 'Wrong settled balance [Diff ' + web3.fromWei(newSettledBalance.sub(oldSettledBalance), 'ether') + ' ethers].');
             }
@@ -388,11 +376,11 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [updateSettledBalance]: User A uses UnitTestHelpers_SUCCESS as a service to update settled balance of User D to 6 tokens", async () => {
             try {
-                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
+                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address, 0);
 
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToUpdateSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_d, 6, glob.web3Erc20.address);
+                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToUpdateSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_d, 6, glob.web3Erc20.address, 0);
 
-                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
+                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address, 0);
 
                 assert.equal(newSettledBalance.sub(oldSettledBalance), 6, 'Wrong settled balance [Diff ' + newSettledBalance.sub(oldSettledBalance).toString() + ' tokens].');
             }
@@ -525,13 +513,13 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [stage]: User D wants to stage 0.2 ETH", async () => {
             try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0);
-                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0);
+                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
+                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0, 0);
 
-                let result = await glob.web3ClientFund.stage(web3.toWei(0.2, 'ether'), 0, {from: glob.user_d});
+                let result = await glob.web3ClientFund.stage(web3.toWei(0.2, 'ether'), 0, 0, {from: glob.user_d});
 
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0);
-                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0);
+                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
+                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0, 0);
 
                 assert.equal(oldSettledBalance.sub(newSettledBalance), web3.toWei(0.2, 'ether'), 'Wrong settled balance [Diff ' + web3.fromWei(oldSettledBalance.add(newSettledBalance), 'ether') + ' ethers].');
                 assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.2, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
@@ -545,12 +533,12 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [stage]: User D wants to stage 3 tokens", async () => {
             try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
-                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
+                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
+                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address, 0);
 
-                let result = await glob.web3ClientFund.stage(3, glob.web3Erc20.address, {from: glob.user_d});
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
-                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
+                let result = await glob.web3ClientFund.stage(3, glob.web3Erc20.address, 0, {from: glob.user_d});
+                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
+                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address, 0);
 
                 assert.equal(oldSettledBalance.sub(newSettledBalance), 3, 'Wrong settled balance [Diff ' + oldSettledBalance.add(newSettledBalance).toString() + ' tokens].');
                 assert.equal(newStagedBalance.sub(oldStagedBalance), 3, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
@@ -562,18 +550,18 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [withdrawEthers]: User D wants to withdraw 0.1 ETH", async () => {
+        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User D wants to withdraw 0.1 ETH", async () => {
             try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0);
+                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
                 let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
 
-                let result = await glob.web3ClientFund.withdrawEthers(web3.toWei(0.1, 'ether'), {from: glob.user_d});
+                let result = await glob.web3ClientFund.withdraw(web3.toWei(0.1, 'ether'), 0, 0, "", {from: glob.user_d});
 
                 let tx = web3.eth.getTransaction(result.tx);
                 let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
                 totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
 
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0);
+                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
                 let newEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
 
                 assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0.1, 'ether'), 'Wrong user D balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
@@ -586,14 +574,14 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [withdrawTokens]: User D wants to withdraw 2 tokens", async () => {
+        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User D wants to withdraw 2 tokens", async () => {
             try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
+                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
                 let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.user_d);
 
-                let result = await glob.web3ClientFund.withdrawTokens(2, glob.web3Erc20.address, {from: glob.user_d});
+                let result = await glob.web3ClientFund.withdraw(2, glob.web3Erc20.address, 0, "", {from: glob.user_d});
 
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
+                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
                 let newTokensBalance = await glob.web3Erc20.balanceOf(glob.user_d);
 
                 assert.equal(newTokensBalance.sub(oldTokensBalance), 2, 'Wrong user D balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
@@ -606,9 +594,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [withdrawEthers]: User D now wants to withdraw 0.5 ETH", async () => {
+        it(testCounter.next() + ": MUST FAIL [withdraw]: User D now wants to withdraw 0.5 ETH", async () => {
             try {
-                await glob.web3ClientFund.withdrawEthers(web3.toWei(0.5, 'ether'), {from: glob.user_d});
+                await glob.web3ClientFund.withdraw(web3.toWei(0.5, 'ether'), 0, 0, "", {from: glob.user_d});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -618,9 +606,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [withdrawTokens]: User D now wants to withdraw 20 tokens", async () => {
+        it(testCounter.next() + ": MUST FAIL [withdraw]: User D now wants to withdraw 20 tokens", async () => {
             try {
-                await glob.web3ClientFund.withdrawTokens(20, glob.web3Erc20.address, {from: glob.user_d});
+                await glob.web3ClientFund.withdraw(20, glob.web3Erc20.address, 0, "", {from: glob.user_d});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -632,13 +620,13 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [unstage]: User D wants to unstage 0.1 ETH", async () => {
             try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0);
-                let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, 0);
+                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
+                let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, 0, 0);
 
-                let result = await glob.web3ClientFund.unstage(web3.toWei(0.1, 'ether'), 0, {from: glob.user_d});
+                let result = await glob.web3ClientFund.unstage(web3.toWei(0.1, 'ether'), 0, 0, {from: glob.user_d});
 
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0);
-                let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, 0);
+                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
+                let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, 0, 0);
 
                 assert.equal(newDepositedBalance.sub(oldDepositedBalance), web3.toWei(0.1, 'ether'), 'Wrong deposited balance [Diff ' + web3.fromWei(newDepositedBalance.add(oldDepositedBalance), 'ether') + ' ethers].');
                 assert.equal(oldStagedBalance.sub(newStagedBalance), web3.toWei(0.1, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(oldStagedBalance.sub(newStagedBalance), 'ether') + ' ethers].');
@@ -652,13 +640,13 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [unstage]: User D wants to unstage 1 token", async () => {
             try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
-                let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, glob.web3Erc20.address);
+                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
+                let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, glob.web3Erc20.address, 0);
 
-                let result = await glob.web3ClientFund.unstage(1, glob.web3Erc20.address, {from: glob.user_d});
+                let result = await glob.web3ClientFund.unstage(1, glob.web3Erc20.address, 0, {from: glob.user_d});
 
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address);
-                let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, glob.web3Erc20.address);
+                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
+                let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, glob.web3Erc20.address, 0);
 
                 assert.equal(newDepositedBalance.sub(oldDepositedBalance), 1, 'Wrong deposited balance [Diff ' + newDepositedBalance.add(oldDepositedBalance).toString() + ' tokens].');
                 assert.equal(oldStagedBalance.sub(newStagedBalance), 1, 'Wrong staged balance [Diff ' + oldStagedBalance.sub(newStagedBalance).toString() + ' tokens].');
@@ -670,9 +658,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [withdrawEthers]: User A wants to withdraw 0.1 ETH", async () => {
+        it(testCounter.next() + ": MUST FAIL [withdraw]: User A wants to withdraw 0.1 ETH", async () => {
             try {
-                await glob.web3ClientFund.withdrawEthers(web3.toWei(0.1, 'ether'), {from: glob.user_a});
+                await glob.web3ClientFund.withdraw(web3.toWei(0.1, 'ether'), 0, 0, "", {from: glob.user_a});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -682,9 +670,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [withdrawTokens]: User A wants to withdraw 10 tokens", async () => {
+        it(testCounter.next() + ": MUST FAIL [withdraw]: User A wants to withdraw 10 tokens", async () => {
             try {
-                await glob.web3ClientFund.withdrawTokens(10, glob.web3Erc20.address, {from: glob.user_a});
+                await glob.web3ClientFund.withdraw(10, glob.web3Erc20.address, 0, "", {from: glob.user_a});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -708,23 +696,23 @@ module.exports = function (glob) {
 
         it(testCounter.next() + ": MUST SUCCEED [seizeAllBalances]: Seize User A funds into User B account", async () => {
             try {
-                let oldDepositedEthersBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
-                let oldSettledEthersBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, 0);
-                let oldStagedEthersBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, 0);
+                let oldDepositedEthersBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, 0, 0);
+                let oldSettledEthersBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, 0, 0);
+                let oldStagedEthersBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, 0, 0);
 
-                let oldDepositedTokensBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address);
-                let oldSettledTokensBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, glob.web3Erc20.address);
-                let oldStagedTokensBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address);
+                let oldDepositedTokensBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                let oldSettledTokensBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                let oldStagedTokensBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address, 0);
 
                 await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToSeizeAllBalances_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_b);
 
-                let newDepositedEthersBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
-                let newSettledEthersBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, 0);
-                let newStagedEthersBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, 0);
+                let newDepositedEthersBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, 0, 0);
+                let newSettledEthersBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, 0, 0);
+                let newStagedEthersBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, 0, 0);
 
-                let newDepositedTokensBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address);
-                let newSettledTokensBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, glob.web3Erc20.address);
-                let newStagedTokensBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address);
+                let newDepositedTokensBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                let newSettledTokensBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                let newStagedTokensBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address, 0);
 
                 assert.equal(newDepositedEthersBalance_UserA, web3.toWei(0, 'ether'), 'Wrong deposited balance [Diff ' + web3.fromWei(newDepositedEthersBalance_UserA, 'ether') + ' ethers].');
                 assert.equal(newSettledEthersBalance_UserA, web3.toWei(0, 'ether'), 'Wrong settled balance [Diff ' + web3.fromWei(newSettledEthersBalance_UserA, 'ether') + ' ethers].');
