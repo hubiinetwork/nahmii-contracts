@@ -96,11 +96,15 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit DepositEvent(wallet, amount, address(0), 0, "");
     }
 
-    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         depositTokensTo(msg.sender, amount, currencyCt, currencyId, standard);
     }
 
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
@@ -118,7 +122,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit DepositEvent(wallet, amount, currencyCt, currencyId, standard);
     }
 
-    function deposit(address wallet, uint index) public view
+    function deposit(address wallet, uint index)
+    public
+    view
     returns (int256 amount, uint256 timestamp, address currencyCt, uint256 currencyId)
     {
         return walletMap[wallet].txHistory.deposit(index);
@@ -132,7 +138,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // Balance retrieval functions
     // -----------------------------------------------------------------------------------------------------------------
     function depositedBalance(address wallet, address currencyCt, uint256 currencyId)
-    public view
+    public
+    view
     notNullAddress(wallet)
     returns (int256)
     {
@@ -140,7 +147,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     }
 
     function settledBalance(address wallet, address currencyCt, uint256 currencyId)
-    public view
+    public
+    view
     notNullAddress(wallet)
     returns (int256)
     {
@@ -148,7 +156,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     }
 
     function stagedBalance(address wallet, address currencyCt, uint256 currencyId)
-    public view
+    public
+    view
     notNullAddress(wallet)
     returns (int256)
     {
@@ -158,7 +167,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId) public onlyRegisteredActiveService {
+    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    public
+    onlyRegisteredActiveService
+    {
         require(isAuthorizedServiceForWallet(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
@@ -175,7 +187,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit StageEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function unstage(int256 amount, address currencyCt, uint256 currencyId) public notOwner {
+    function unstage(int256 amount, address currencyCt, uint256 currencyId)
+    public
+    notOwner
+    {
         require(amount.isNonZeroPositiveInt256());
 
         //clamp amount to move
@@ -210,7 +225,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     }
 
     function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
-    public notOwner
+    public
+    notOwner
     {
         stageToBeneficiaryPrivate(msg.sender, msg.sender, beneficiary, amount, currencyCt, currencyId);
 
@@ -219,7 +235,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     }
 
     function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId) public onlyRegisteredActiveService
+        address currencyCt, uint256 currencyId)
+    public
+    onlyRegisteredActiveService
     notNullAddress(sourceWallet)
     notNullAddress(beneficiary)
     {
@@ -234,7 +252,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Seizing function
     // -----------------------------------------------------------------------------------------------------------------
-    function seizeAllBalances(address sourceWallet, address targetWallet) public onlyRegisteredActiveService
+    function seizeAllBalances(address sourceWallet, address targetWallet)
+    public
+    onlyRegisteredActiveService
     notNullAddress(sourceWallet)
     notNullAddress(targetWallet)
     {
@@ -306,7 +326,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
-        int256 amount, address currencyCt, uint256 currencyId) private
+        int256 amount, address currencyCt, uint256 currencyId)
+    private
     {
         require(amount.isNonZeroPositiveInt256());
         require(isRegisteredBeneficiary(beneficiary));
@@ -323,7 +344,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         transferToBeneficiaryPrivate(destWallet, beneficiary, amount, currencyCt, currencyId);
     }
 
-    function transferToBeneficiaryPrivate(address destWallet, Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId) private {
+    function transferToBeneficiaryPrivate(address destWallet, Beneficiary beneficiary,
+        int256 amount, address currencyCt, uint256 currencyId)
+    private {
         //transfer funds to the beneficiary
         if (currencyCt == address(0) && currencyId == 0)
             beneficiary.depositEthersTo.value(uint256(amount))(destWallet);
@@ -338,7 +361,11 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         }
     }
 
-    function sumAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private view returns (int256){
+    function sumAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId)
+    private
+    view
+    returns (int256)
+    {
         return walletMap[wallet].deposited.get(currencyCt, currencyId)
         .add(walletMap[wallet].settled.get(currencyCt, currencyId))
         .add(walletMap[wallet].staged.get(currencyCt, currencyId));
