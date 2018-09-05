@@ -162,7 +162,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].txHistory.addDeposit(amount, address(0), 0);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount(), walletMap[tag].active.get(address(0), 0), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(address(0), 0), block.number));
 
         //emit event
         emit DepositEvent(tag, msg.sender, amount, address(0), 0);
@@ -178,16 +178,14 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
-        if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)) {
-            revert();
-        }
+        require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
         //add to per-wallet deposited balance
         walletMap[tag].active.add(amount, currencyCt, currencyId);
         walletMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount(), walletMap[tag].active.get(currencyCt, currencyId), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         //emit event
         emit DepositEvent(tag, msg.sender, amount, currencyCt, currencyId);
@@ -248,15 +246,16 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         //clamp amount to move
         amount = amount.clampMax(walletMap[tag].active.get(currencyCt, currencyId));
-        require(amount > 0);
+        if (amount <= 0)
+            return;
 
-        walletMap[msg.sender].active.sub(amount, currencyCt, currencyId);
-        walletMap[msg.sender].staged.add(amount, currencyCt, currencyId);
+        walletMap[tag].active.sub(amount, currencyCt, currencyId);
+        walletMap[tag].staged.add(amount, currencyCt, currencyId);
 
         walletMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount(), walletMap[tag].active.get(currencyCt, currencyId), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         //emit event
         emit StageEvent(tag, msg.sender, amount, currencyCt, currencyId);
@@ -269,7 +268,8 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         address tag = partnerFromWallet(msg.sender);
 
         amount = amount.clampMax(walletMap[tag].staged.get(currencyCt, currencyId));
-        require(amount > 0);
+        if (amount <= 0)
+            return;
 
         walletMap[tag].staged.sub(amount, currencyCt, currencyId);
 
@@ -279,8 +279,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         }
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            if (!address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId))
-                revert();
+            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
         }
 
         //raise event
