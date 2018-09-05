@@ -105,7 +105,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
 
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
-        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
+        require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
         //add to per-wallet deposited balance
         walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
@@ -162,6 +162,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         int256 amountCopy;
         int256 deposited;
         int256 settled;
+        int256 toMove;
 
         require(amount.isPositiveInt256());
 
@@ -176,11 +177,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         amountCopy = amount;
 
         //first move from settled to staged if settled balance is positive
-        if (settled > 0) {
-            walletMap[msg.sender].settled.sub_allow_neg(settled, currencyCt, currencyId);
-            walletMap[msg.sender].staged.add(settled, currencyCt, currencyId);
+        toMove = amount.clampMax(settled);
+        if (toMove > 0) {
+            walletMap[msg.sender].settled.sub_allow_neg(toMove, currencyCt, currencyId);
+            walletMap[msg.sender].staged.add(toMove, currencyCt, currencyId);
 
-            amount = amount.sub(settled);
+            amount = amount.sub(toMove);
         }
 
         //move the remaining from deposited to staged
@@ -214,7 +216,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         require(isAuthorizedServiceForWallet(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
-        walletMap[msg.sender].settled.sub_allow_neg(amount, currencyCt, currencyId);
+        walletMap[wallet].settled.add_allow_neg(amount, currencyCt, currencyId); //Jens: should be add or sub?
 
         emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
     }
@@ -294,8 +296,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         }
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(amount), currencyCt, currencyId))
-                revert();
+            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId), "uff");
         }
 
         //emit event
@@ -318,6 +319,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
         int256 amount, address currencyCt, uint256 currencyId) private
     {
+        int256 amountCopy;
+
         require(amount.isPositiveInt256());
         require(isRegisteredBeneficiary(beneficiary));
 
@@ -326,28 +329,32 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         if (amount <= 0)
             return;
 
+        amountCopy = amount; //Jens: here all the amount is moved to the beneficiary, right?
+
         //first move from settled to staged if settled balance is positive
-        if (walletMap[sourceWallet].settled.get(currencyCt, currencyId) > 0) {
-            walletMap[sourceWallet].settled.sub_allow_neg(walletMap[sourceWallet].settled.get(currencyCt, currencyId), currencyCt, currencyId);
-            amount = amount.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId));
+        amount = amount.clampMax(walletMap[sourceWallet].settled.get(currencyCt, currencyId));
+        if (amount > 0) {
+            walletMap[sourceWallet].settled.sub_allow_neg(amount, currencyCt, currencyId);
+
+            amount = amountCopy.sub(amount);
         }
 
         //move the remaining from deposited to staged
-        if (amount > 0)
+        if (amount > 0) {
             walletMap[sourceWallet].deposited.sub(amount, currencyCt, currencyId);
+        }
 
         //transfer funds to the beneficiary
         if (currencyCt == address(0)) {
-            beneficiary.depositEthersTo.value(uint256(amount))(destWallet);
+            beneficiary.depositEthersTo.value(uint256(amountCopy))(destWallet);
         }
         else {
             //execute transfer
             TransferController controller = getTransferController(currencyCt, "");
-            if (!address(controller).delegatecall(controller.APPROVE_SIGNATURE, beneficiary, uint256(amount), currencyCt, currencyId))
-                revert();
+            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amountCopy), currencyCt, currencyId));
 
             //transfer funds to the beneficiary
-            beneficiary.depositTokensTo(destWallet, amount, currencyCt, currencyId, "");
+            beneficiary.depositTokensTo(destWallet, amountCopy, currencyCt, currencyId, "");
         }
     }
 

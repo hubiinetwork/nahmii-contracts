@@ -131,7 +131,9 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
-        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
+        if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)) {
+            revert();
+        }
 
         //add to balances
         periodAccrual.add(amount, currencyCt, currencyId);
@@ -266,7 +268,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         }
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            if (!address(controller).delegatecall(controller.SEND_SIGNATURE, msg.sender, uint256(amount), currencyCt, currencyId)) {
+            if (!address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId)) {
                 revert();
             }
         }
