@@ -331,10 +331,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         else {
             //execute transfer
             TransferController controller = getTransferController(currencyCt, "");
-            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amountCopy), currencyCt, currencyId));
+            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 
             //transfer funds to the beneficiary
-            beneficiary.depositTokensTo(destWallet, amountCopy, currencyCt, currencyId, "");
+            beneficiary.depositTokensTo(destWallet, amount, currencyCt, currencyId, "");
         }
     }
 
