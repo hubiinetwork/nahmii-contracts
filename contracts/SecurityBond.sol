@@ -114,9 +114,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
 
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
-        if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)) {
-            revert();
-        }
+        require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
         //add to per-wallet deposited balance
         active.add(amount, currencyCt, currencyId);
@@ -126,9 +124,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         emit DepositEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function deposit(address wallet, uint index) public view
-        returns (int256 amount, uint256 timestamp, address token, uint256 id)
-    {
+    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address currencyCt, uint256 currencyId) {
         return walletMap[wallet].txHistory.deposit(index);
     }
 
@@ -220,8 +216,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         }
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            if (!address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(to_send_amount), currencyCt, currencyId))
-                revert();
+            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(to_send_amount), currencyCt, currencyId));
         }
 
         //emit event

@@ -194,7 +194,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Deposit history retrieval functions
     // -----------------------------------------------------------------------------------------------------------------
-    function deposit(address tag, uint index) public view isRegisteredTag(tag) returns (int256 balance, address currencyCt, uint256 currencyId, uint256 blockNumber) {
+    function deposit(address tag, uint index) public view isRegisteredTag(tag) returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId) {
         require(index < walletMap[tag].fullDepositHistory.length);
 
         FullDepositHistory storage fdh = walletMap[tag].fullDepositHistory[index];
@@ -204,7 +204,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         blockNumber = fdh.blockNumber;
     }
 
-    function depositFromAddress(address wallet, uint index) public view returns (int256 balance, address currencyCt, uint256 currencyId, uint256 blockNumber) {
+    function depositFromAddress(address wallet, uint index) public view returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId) {
         return deposit(partnerFromWallet(wallet), index);
     }
 
