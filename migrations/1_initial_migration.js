@@ -4,7 +4,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-const Migrations = artifacts.require("Migrations");
+const Migrations = artifacts.require('Migrations');
 const helpers = require('./helpers.js');
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -12,24 +12,32 @@ const helpers = require('./helpers.js');
 module.exports = (deployer, network, accounts) => {
     let ownerAccount;
 
-    if (helpers.isTestNetwork(network)) {
+    if (helpers.isTestNetwork(network))
         ownerAccount = accounts[0];
-    }
     else {
         ownerAccount = helpers.getOwnerAccountFromArgs();
-        const ownerAccountPassword = helpers.getPasswordFromArgs();
-        helpers.unlockAddress(web3, ownerAccount, ownerAccountPassword, 7200); //120 minutes
+
+        if (web3.eth.personal)
+            web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
+        else
+            web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
     }
 
     deployer.deploy(Migrations, {
         from: ownerAccount
     }).then(() => {
         if (!helpers.isTestNetwork(network)) {
-            helpers.lockAddress(web3, ownerAccount);
+            if (web3.eth.personal)
+                web3.eth.personal.lockAccount(ownerAccount);
+            else
+                web3.personal.lockAccount(ownerAccount);
         }
     }).catch((err) => {
         if (!helpers.isTestNetwork(network)) {
-            helpers.lockAddress(web3, ownerAccount);
+            if (web3.eth.personal)
+                web3.eth.personal.lockAccount(ownerAccount);
+            else
+                web3.personal.lockAccount(ownerAccount);
         }
         throw err;
     })
