@@ -519,7 +519,7 @@ contract('Smart contract checks', function () {
     //
     //-------------------------------------------------------------------------
 
-    require('./scenarios/ClientFund2')(glob);
+    require('./scenarios/ClientFund')(glob);
     require('./scenarios/Hasher')(glob);
     require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
