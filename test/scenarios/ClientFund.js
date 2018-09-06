@@ -1,733 +1,1325 @@
-var Helpers = require('../helpers');
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+const {Wallet, Contract, utils} = require('ethers');
+const mocks = require('../mocks');
+
+const MockedClientFundService = artifacts.require('MockedClientFundService');
+const MockedBeneficiary = artifacts.require('MockedBeneficiary');
+
+chai.use(chaiAsPromised);
+chai.should();
 
 module.exports = function (glob) {
-    var testCounter = Helpers.TestCounter();
+    describe('ClientFund', function () {
+        let ethersClientFundUserA;
+        let web3MockedClientFundAuthorizedService, ethersMockedClientFundAuthorizedService;
+        let web3MockedClientFundUnauthorizedService, ethersMockedClientFundUnauthorizedService;
+        let web3MockedBeneficiary, ethersBeneficiary;
+        let depositIndexEther = -1, depositIndexERC20 = -1;
+        const singleDepositEther = 5, singleDepositERC20 = 10;
 
-    describe.only("ClientFund", function () {
-        it(testCounter.next() + ": MUST SUCCEED [payable]: add 2.5 Ethers to user A deposited balance", async () => {
-            try {
+        before(async () => {
+            ethersClientFundUserA = glob.ethersIoClientFund.connect(glob.signer_a);
+
+            web3MockedClientFundAuthorizedService = await MockedClientFundService.new(glob.owner);
+            ethersMockedClientFundAuthorizedService = new Contract(web3MockedClientFundAuthorizedService.address, MockedClientFundService.abi, glob.signer_owner);
+            web3MockedClientFundUnauthorizedService = await MockedClientFundService.new(glob.owner);
+            ethersMockedClientFundUnauthorizedService = new Contract(web3MockedClientFundUnauthorizedService.address, MockedClientFundService.abi, glob.signer_owner);
+            web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
+            ethersBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
+
+            // Fully wire the mocked authorized service
+            await glob.ethersIoClientFund.registerService(web3MockedClientFundAuthorizedService.address);
+            await glob.web3ClientFund.authorizeRegisteredService(web3MockedClientFundAuthorizedService.address, {from: glob.user_a});
+            await ethersMockedClientFundAuthorizedService.changeClientFund(glob.web3ClientFund.address);
+
+            // Partially wire the mocked unauthorized service
+            await ethersMockedClientFundUnauthorizedService.changeClientFund(glob.web3ClientFund.address);
+
+            // Register beneficiary
+            await glob.ethersIoClientFund.registerBeneficiary(web3MockedBeneficiary.address);
+        });
+
+        describe('depositCount()', () => {
+            it('should return initial value', async () => {
+                const address = Wallet.createRandom().address;
+                const result = await glob.ethersIoClientFund.depositCount(address);
+                result.should.deep.equal(utils.bigNumberify(0));
+            });
+        });
+
+        describe('depositedBalance()', () => {
+            describe('called with null wallet address', () => {
+                it('should revert', async () => {
+                    glob.ethersIoClientFund.depositedBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.depositedBalance(address, mocks.address0, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.depositedBalance(address, glob.web3Erc20.address, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+        });
+
+        describe('stagedBalance()', () => {
+            describe('called with null wallet address', () => {
+                it('should revert', async () => {
+                    glob.ethersIoClientFund.stagedBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.stagedBalance(address, mocks.address0, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.stagedBalance(address, glob.web3Erc20.address, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+        });
+
+        describe('settledBalance()', () => {
+            describe('called with null wallet address', () => {
+                it('should revert', async () => {
+                    glob.ethersIoClientFund.settledBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.settledBalance(address, mocks.address0, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.settledBalance(address, glob.web3Erc20.address, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+        });
+
+        describe('fallback function', () => {
+            let depositCountBefore, depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore;
+
+            before(async () => {
+                depositCountBefore = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+            });
+
+            it('should add deposit and increment deposited balance', async () => {
                 await web3.eth.sendTransactionPromise({
                     from: glob.user_a,
                     to: glob.web3ClientFund.address,
-                    value: web3.toWei(2.5, 'ether'),
+                    value: web3.toWei(singleDepositEther, 'ether'),
                     gas: glob.gasLimit
                 });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+
+                const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositCount.should.deep.equal(depositCountBefore.add(1));
+                depositIndexEther = depositCountBefore.toNumber();
+
+                const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                depositedBalance.should.deep.equal(depositedBalanceBefore.add(utils.parseEther(singleDepositEther.toString())));
+                const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                settledBalance.should.deep.equal(settledBalanceBefore);
+                const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                stagedBalance.should.deep.equal(stagedBalanceBefore);
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('depositEthersTo()', () => {
+            let depositCountBefore, depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore;
 
-        it(testCounter.next() + ": MUST SUCCEED [payable]: add 6.5 Ethers to user B deposited balance", async () => {
-            try {
-                await web3.eth.sendTransactionPromise({
-                    from: glob.user_b,
-                    to: glob.web3ClientFund.address,
-                    value: web3.toWei(6.5, 'ether'),
-                    gas: glob.gasLimit
+            before(async () => {
+                depositCountBefore = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+            });
+
+            it('should add deposit and increment deposited balance', async () => {
+                await glob.web3ClientFund.depositEthersTo(
+                    glob.user_a,
+                    {
+                        from: glob.user_a,
+                        value: web3.toWei(singleDepositEther, 'ether'),
+                        gas: glob.gasLimit
+                    }
+                );
+
+                const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositCount.should.deep.equal(depositCountBefore.add(1));
+                depositIndexEther = depositCountBefore.toNumber();
+
+                const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                depositedBalance.should.deep.equal(depositedBalanceBefore.add(utils.parseEther(singleDepositEther.toString())));
+                const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                settledBalance.should.deep.equal(settledBalanceBefore);
+                const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                stagedBalance.should.deep.equal(stagedBalanceBefore);
+            });
+        });
+
+        describe('depositTokens()', () => {
+            let depositCountBefore, depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore;
+
+            beforeEach(async () => {
+                depositCountBefore = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+            });
+
+            describe('of ERC20 token', () => {
+                describe('if called with zero amount', () => {
+                    it('should revert', async () => {
+                        glob.web3ClientFund.depositTokens(0, glob.web3Erc20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
                 });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+
+                describe('if called with zero ERC20 contract address', () => {
+                    it('should revert', async () => {
+                        glob.web3ClientFund.depositTokens(singleDepositEther, 0, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called without prior approval', () => {
+                    it('should revert', async () => {
+                        glob.web3ClientFund.depositTokens(singleDepositERC20, glob.web3Erc20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with excessive amount', () => {
+                    beforeEach(async () => {
+                        await glob.web3Erc20.approve(glob.web3ClientFund.address, 0, {
+                            from: glob.user_a,
+                            gas: glob.gasLimit
+                        });
+                        await glob.web3Erc20.approve(glob.web3ClientFund.address, 9999, {
+                            from: glob.user_a,
+                            gas: glob.gasLimit
+                        });
+                    });
+
+                    it('should revert', async () => {
+                        glob.web3ClientFund.depositTokens(9999, glob.web3Erc20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with prior approval and supported amount', () => {
+                    beforeEach(async () => {
+                        await glob.web3Erc20.approve(glob.web3ClientFund.address, 0, {
+                            from: glob.user_a,
+                            gas: glob.gasLimit
+                        });
+                        await glob.web3Erc20.approve(glob.web3ClientFund.address, singleDepositERC20, {
+                            from: glob.user_a,
+                            gas: glob.gasLimit
+                        });
+                    });
+
+                    it('should add deposit and increment deposited balance of ', async () => {
+                        await glob.web3ClientFund.depositTokens(singleDepositERC20, glob.web3Erc20.address, 0, '', {from: glob.user_a});
+
+                        const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                        depositCount.should.deep.equal(utils.bigNumberify(depositCountBefore.add(1)));
+                        depositIndexERC20 = depositCountBefore.toNumber();
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.should.deep.equal(depositedBalanceBefore.add(singleDepositERC20));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.should.deep.equal(settledBalanceBefore);
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        stagedBalance.should.deep.equal(stagedBalanceBefore);
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('depositTokensTo()', () => {
+            let depositCountBefore, depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore;
 
-        it(testCounter.next() + ": MUST SUCCEED [depositTokens]: 10 tokens added to A deposited balance", async () => {
-            try {
-                await glob.web3Erc20.approve(glob.web3ClientFund.address, 10, {from: glob.user_a});
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
-            }
-            try {
-              await glob.web3ClientFund.depositTokens(10, glob.web3Erc20.address, 0, "", {from: glob.user_a});
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            beforeEach(async () => {
+                depositCountBefore = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+            });
+
+            describe('of ERC20 token', () => {
+                describe('if called with zero amount', () => {
+                    it('should revert', async () => {
+                        glob.web3ClientFund.depositTokensTo(glob.user_a, 0, glob.web3Erc20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with zero ERC20 contract address', () => {
+                    it('should revert', async () => {
+                        glob.web3ClientFund.depositTokensTo(glob.user_a, singleDepositERC20, 0, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called without prior approval', () => {
+                    it('should revert', async () => {
+                        glob.web3ClientFund.depositTokensTo(glob.user_a, singleDepositERC20, glob.web3Erc20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with excessive amount', () => {
+                    beforeEach(async () => {
+                        await glob.web3Erc20.approve(glob.web3ClientFund.address, 0, {
+                            from: glob.user_a,
+                            gas: glob.gasLimit
+                        });
+                        await glob.web3Erc20.approve(glob.web3ClientFund.address, 9999, {
+                            from: glob.user_a,
+                            gas: glob.gasLimit
+                        });
+                    });
+
+                    it('should revert', async () => {
+                        glob.web3ClientFund.depositTokensTo(glob.user_a, 9999, glob.web3Erc20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with prior approval and supported amount', () => {
+                    beforeEach(async () => {
+                        await glob.web3Erc20.approve(glob.web3ClientFund.address, 0, {
+                            from: glob.user_a,
+                            gas: glob.gasLimit
+                        });
+                        await glob.web3Erc20.approve(glob.web3ClientFund.address, singleDepositERC20, {
+                            from: glob.user_a,
+                            gas: glob.gasLimit
+                        });
+                    });
+
+                    it('should add deposit and increment deposited balance', async () => {
+                        await glob.web3ClientFund.depositTokensTo(glob.user_a, singleDepositERC20, glob.web3Erc20.address, 0, '', {from: glob.user_a});
+
+                        const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                        depositCount.should.deep.equal(utils.bigNumberify(depositCountBefore.add(1)));
+                        depositIndexERC20 = depositCountBefore.toNumber();
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.should.deep.equal(depositedBalanceBefore.add(singleDepositERC20));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.should.deep.equal(settledBalanceBefore);
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        stagedBalance.should.deep.equal(stagedBalanceBefore);
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('deposit()', () => {
+            describe('of Ether', () => {
+                it('should return deposit', async () => {
+                    depositIndexEther.should.be.greaterThan(-1);
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called without prior approval of client fund to act on behalf of token holder", async () => {
-            try {
-                await glob.web3ClientFund.depositTokens(5, glob.web3Erc20.address, 0, "", {from: glob.owner});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                    const deposit = await glob.ethersIoClientFund.deposit(glob.user_a, depositIndexEther);
+                    deposit.amount.should.deep.equal(utils.parseEther(singleDepositEther.toString()));
+                    // TODO Compare to block number when deposit[1].timestamp has been replaced
+                    deposit.currencyCt.should.equal(mocks.address0);
+                    deposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return deposit', async () => {
+                    depositIndexERC20.should.be.greaterThan(-1);
+
+                    const deposit = await glob.ethersIoClientFund.deposit(glob.user_a, depositIndexERC20);
+                    deposit.amount.should.deep.equal(utils.bigNumberify(singleDepositERC20));
+                    // TODO Compare to block number when deposit[1].timestamp has been replaced
+                    deposit.currencyCt.should.equal(utils.getAddress(glob.web3Erc20.address));
+                    deposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('updateSettledBalance()', () => {
+            describe('by sender other than registered active service', () => {
+                it('should revert', async () => {
+                    glob.ethersIoClientFund.updateSettledBalance(Wallet.createRandom().address, 1, Wallet.createRandom().address, 0)
+                        .should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with zero address", async () => {
-            try {
-                await glob.web3ClientFund.depositTokens(5, 0, 0, "", {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            describe('called with null wallet address', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundUnauthorizedService.updateSettledBalanceInClientFund(mocks.address0, utils.parseEther('1'), mocks.address0, 0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('called by unauthorized service', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundUnauthorizedService.updateSettledBalanceInClientFund(glob.user_a, utils.parseEther('1'), mocks.address0, 0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('called with negative amount', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundAuthorizedService.updateSettledBalanceInClientFund(glob.user_a, utils.parseEther('-1'), mocks.address0, 0)
+                        .should.be.rejected;
+                });
+            });
+
+            // TODO Update with conditional top-up of deposited balance
+            describe('of Ether', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, updateAmount;
+                // let requiredDepositedBalanceBefore;
+
+                before(async () => {
+                    // requiredDepositedBalanceBefore = utils.parseEther('10');
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                    // if (depositedBalanceBefore.lt(requiredDepositedBalanceBefore)) {
+                    //     await ethersClientFundUserA.depositEthersTo(glob.user_a, {
+                    //         value: requiredDepositedBalanceBefore.sub(depositedBalanceBefore),
+                    //         gasLimit: 1e6
+                    //     });
+                    //     depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                    // }
+
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                    updateAmount = utils.parseEther('1');
+                });
+
+                it('should successfully update settled balance of Ether', async () => {
+                    await ethersMockedClientFundAuthorizedService.updateSettledBalanceInClientFund(glob.user_a, updateAmount, mocks.address0, 0);
+
+                    const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                    utils.formatEther(settledBalance).should.equal(utils.formatEther(updateAmount.sub(depositedBalanceBefore)));
+                    const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                    utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceBefore));
+                    const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                    utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceBefore));
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, updateAmount;
+
+                before(async () => {
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    updateAmount = utils.bigNumberify(5);
+                });
+
+                it('should successfully update settled balance of ERC20 token', async () => {
+                    await ethersMockedClientFundAuthorizedService.updateSettledBalanceInClientFund(glob.user_a, updateAmount, glob.web3Erc20.address, 0);
+
+                    const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    settledBalance.toString().should.equal(updateAmount.sub(depositedBalanceBefore).toString());
+                    const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    depositedBalance.toString().should.equal(depositedBalanceBefore.toString());
+                    const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    stagedBalance.toString().should.equal(stagedBalanceBefore.toString());
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        // TODO Unskip and assure sufficient deposits in client fund
+        describe('stage()', () => {
+            describe('by sender other than registered active service', () => {
+                it('should revert', async () => {
+                    glob.ethersIoClientFund.stage(Wallet.createRandom().address, 1, Wallet.createRandom().address, 0)
+                        .should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with zero amount", async () => {
-            try {
-                await glob.web3ClientFund.depositTokens(0, glob.web3Erc20.address, 0, "", {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            describe('called by unauthorized service', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundUnauthorizedService.stageInClientFund(glob.user_a, utils.parseEther('1'), mocks.address0, 0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('called with negative amount', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundAuthorizedService.stageInClientFund(glob.user_a, utils.parseEther('-1'), mocks.address0, 0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, stageAmount,
+                    depositedBalanceAfter, settledBalanceAfter, stagedBalanceAfter;
+
+                beforeEach(async () => {
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                });
+
+                describe('of amount less than or equal to deposited + settled balances', () => {
+                    beforeEach(async () => {
+                        stageAmount = depositedBalanceBefore.add(settledBalanceBefore).div(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? 0 : stageAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? stageAmount : settledBalanceBefore
+                        );
+                        stagedBalanceAfter = stagedBalanceBefore.add(stageAmount);
+                    });
+
+                    it('should successfully stage the provided amount of Ether', async () => {
+                        await ethersMockedClientFundAuthorizedService.stageInClientFund(glob.user_a, stageAmount, mocks.address0, 0);
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceAfter));
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceAfter));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(settledBalance).should.equal(utils.formatEther(settledBalanceAfter));
+                    });
+                });
+
+                describe('of amount greater than deposited + settled balances', () => {
+                    let stagedAmount;
+
+                    beforeEach(async () => {
+                        stagedAmount = depositedBalanceBefore.add(settledBalanceBefore);
+                        stageAmount = stagedAmount.mul(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? 0 : stagedAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? stagedAmount : settledBalanceBefore
+                        );
+                        stagedBalanceAfter = stagedBalanceBefore.add(stagedAmount);
+                    });
+
+                    it('should successfully stage the deposited + settled amount of Ether', async () => {
+                        await ethersMockedClientFundAuthorizedService.stageInClientFund(glob.user_a, stageAmount, mocks.address0, 0);
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceAfter));
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceAfter));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(settledBalance).should.equal(utils.formatEther(settledBalanceAfter));
+                    });
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, stageAmount,
+                    depositedBalanceAfter, settledBalanceAfter, stagedBalanceAfter;
+
+                beforeEach(async () => {
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                });
+
+                describe('of amount less than or equal to deposited + settled balances', () => {
+                    beforeEach(async () => {
+                        stageAmount = depositedBalanceBefore.add(settledBalanceBefore).div(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? 0 : stageAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? stageAmount : settledBalanceBefore
+                        );
+                        stagedBalanceAfter = stagedBalanceBefore.add(stageAmount);
+                    });
+
+                    it('should successfully stage the provided amount of ERC20 token', async () => {
+                        await ethersMockedClientFundAuthorizedService.stageInClientFund(glob.user_a, stageAmount, glob.web3Erc20.address, 0);
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.toString().should.equal(settledBalanceAfter.toString());
+                    });
+                });
+
+                describe('of amount greater than deposited + settled balances', () => {
+                    let stagedAmount;
+
+                    beforeEach(async () => {
+                        stagedAmount = depositedBalanceBefore.add(settledBalanceBefore);
+                        stageAmount = stagedAmount.mul(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? 0 : stagedAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? stagedAmount : settledBalanceBefore
+                        );
+                        stagedBalanceAfter = stagedBalanceBefore.add(stagedAmount);
+                    });
+
+                    it('should successfully stage the deposited + settled amount of ERC20 token', async () => {
+                        await ethersMockedClientFundAuthorizedService.stageInClientFund(glob.user_a, stageAmount, glob.web3Erc20.address, 0);
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.toString().should.equal(settledBalanceAfter.toString());
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        // TODO Unskip and assure sufficient deposits in client fund
+        describe.skip('unstage()', () => {
+            describe('called by owner', () => {
+                it('should revert', async () => {
+                    glob.web3ClientFund.unstage(web3.toWei(1), mocks.address0, 0, {from: glob.owner})
+                        .should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: User does not have enough tokens to deposit.", async () => {
-            try {
-                await glob.web3Erc20.approve(glob.web3ClientFund.address, 9999, {from: glob.user_a});
-            }
-            catch (err) {
-                assert(false, 'Error: ERC20 failed to approve token transfer.');
-            }
-            try {
-                await glob.web3ClientFund.depositTokens(9999, glob.web3Erc20.address, 0, "", {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            describe('of Ether', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, unstageAmount,
+                    depositedBalanceAfter, stagedBalanceAfter;
+
+                beforeEach(async () => {
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                });
+
+                describe('of amount less than or equal to deposited + settled balances', () => {
+                    beforeEach(async () => {
+                        unstageAmount = stagedBalanceBefore.div(2);
+                        depositedBalanceAfter = depositedBalanceBefore.add(unstageAmount);
+                        stagedBalanceAfter = stagedBalanceBefore.sub(unstageAmount);
+                    });
+
+                    it('should successfully unstage the provided amount of Ether', async () => {
+                        await glob.web3ClientFund.unstage(web3.toWei(utils.formatEther(unstageAmount)), mocks.address0, 0, {from: glob.user_a});
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceAfter));
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceAfter));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(settledBalance).should.equal(utils.formatEther(settledBalanceBefore));
+                    });
+                });
+
+                describe('of amount greater than deposited + settled balances', () => {
+                    let unstagedAmount;
+
+                    beforeEach(async () => {
+                        unstagedAmount = stagedBalanceBefore;
+                        unstageAmount = unstagedAmount.mul(2);
+                        depositedBalanceAfter = depositedBalanceBefore.add(unstagedAmount);
+                        stagedBalanceAfter = stagedBalanceBefore.sub(unstagedAmount);
+                    });
+
+                    it('should successfully unstage the staged amount of Ether', async () => {
+                        await glob.web3ClientFund.unstage(web3.toWei(utils.formatEther(unstageAmount), 'ether'), mocks.address0, 0, {from: glob.user_a});
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceAfter));
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceAfter));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(settledBalance).should.equal(utils.formatEther(settledBalanceBefore));
+                    });
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, unstageAmount,
+                    depositedBalanceAfter, stagedBalanceAfter;
+
+                beforeEach(async () => {
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                });
+
+                describe('of amount less than or equal to deposited + settled balances', () => {
+                    beforeEach(async () => {
+                        unstageAmount = stagedBalanceBefore.div(2);
+                        depositedBalanceAfter = depositedBalanceBefore.add(unstageAmount);
+                        stagedBalanceAfter = stagedBalanceBefore.sub(unstageAmount);
+                    });
+
+                    it('should successfully unstage the provided amount of ERC20 token', async () => {
+                        await glob.web3ClientFund.unstage(web3.toBigNumber(unstageAmount.toString()), glob.web3Erc20.address, 0, {from: glob.user_a});
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.toString().should.equal(settledBalanceBefore.toString());
+                    });
+                });
+
+                describe('of amount greater than deposited + settled balances', () => {
+                    let unstagedAmount;
+
+                    beforeEach(async () => {
+                        unstagedAmount = stagedBalanceBefore;
+                        unstageAmount = unstagedAmount.mul(2);
+                        depositedBalanceAfter = depositedBalanceBefore.add(unstagedAmount);
+                        stagedBalanceAfter = stagedBalanceBefore.sub(unstagedAmount);
+                    });
+
+                    it('should successfully unstage the staged amount of ERC20 token', async () => {
+                        await glob.web3ClientFund.unstage(web3.toBigNumber(unstageAmount.toString()), glob.web3Erc20.address, 0, {from: glob.user_a});
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.toString().should.equal(settledBalanceBefore.toString());
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        // TODO Unskip and assure sufficient deposits in client fund
+        describe.skip('stageToBeneficiary()', () => {
+            let overrideOptions;
 
-        it(testCounter.next() + ": MUST SUCCEED [depositCount]: User A should have 2 deposits", async () => {
-            try {
-                let count = await glob.web3ClientFund.depositCount(glob.user_a);
-                assert.equal(count, 2, 'This test must succeed. Error: Deposit count: ' + count.toString());
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            before(() => {
+                overrideOptions = {gasLimit: 1e6};
+            });
+
+            describe('of negative amount', () => {
+                it('should revert', async () => {
+                    glob.web3ClientFund.stageToBeneficiary(
+                        web3MockedBeneficiary.address, web3.toWei(-1, 'ether'), mocks.address0, 0,
+                        {
+                            from: glob.user_a
+                        }
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('to unregistered beneficiary', () => {
+                it('should revert', async () => {
+                    glob.web3ClientFund.stageToBeneficiary(
+                        Wallet.createRandom().address, web3.toWei(1, 'ether'), mocks.address0, 0,
+                        {
+                            from: glob.user_a
+                        }
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, stageAmount,
+                    depositedBalanceAfter, settledBalanceAfter;
+
+                beforeEach(async () => {
+                    await ethersBeneficiary.reset(overrideOptions);
+
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                });
+
+                describe('of amount less than or equal to deposited + settled balances', () => {
+                    beforeEach(async () => {
+                        stageAmount = depositedBalanceBefore.add(settledBalanceBefore).div(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? 0 : stageAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? stageAmount : settledBalanceBefore
+                        );
+                    });
+
+                    it('should successfully stage the provided amount of Ether', async () => {
+                        await glob.web3ClientFund.stageToBeneficiary(
+                            web3MockedBeneficiary.address, web3.toWei(utils.formatEther(stageAmount), 'ether'), mocks.address0, 0,
+                            {
+                                from: glob.user_a
+                            }
+                        );
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceAfter));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(settledBalance).should.equal(utils.formatEther(settledBalanceAfter));
+
+                        const beneficiaryDeposit = await ethersBeneficiary.getDeposit(0);
+                        beneficiaryDeposit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        utils.formatEther(beneficiaryDeposit.amount).should.equal(utils.formatEther(stageAmount));
+                        beneficiaryDeposit.currencyCt.should.equal(mocks.address0);
+                        beneficiaryDeposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                        beneficiaryDeposit.standard.should.equal('ether');
+                    });
+                });
+
+                describe('of amount greater than deposited + settled balances', () => {
+                    let stagedAmount;
+
+                    beforeEach(async () => {
+                        stagedAmount = depositedBalanceBefore.add(settledBalanceBefore);
+                        stageAmount = stagedAmount.mul(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? 0 : stagedAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? stagedAmount : settledBalanceBefore
+                        );
+                    });
+
+                    it('should successfully stage the deposited + settled amount of Ether', async () => {
+                        await glob.web3ClientFund.stageToBeneficiary(
+                            web3MockedBeneficiary.address, web3.toWei(utils.formatEther(stageAmount), 'ether'), mocks.address0, 0,
+                            {
+                                from: glob.user_a
+                            }
+                        );
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceAfter));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(settledBalance).should.equal(utils.formatEther(settledBalanceAfter));
+
+                        const beneficiaryDeposit = await ethersBeneficiary.getDeposit(0);
+                        beneficiaryDeposit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        utils.formatEther(beneficiaryDeposit.amount).should.equal(utils.formatEther(stagedAmount));
+                        beneficiaryDeposit.currencyCt.should.equal(mocks.address0);
+                        beneficiaryDeposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                        beneficiaryDeposit.standard.should.equal('ether');
+                    });
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, stageAmount,
+                    depositedBalanceAfter, settledBalanceAfter;
+
+                beforeEach(async () => {
+                    await ethersBeneficiary.reset(overrideOptions);
+
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                });
+
+                describe('of amount less than or equal to deposited + settled balances', () => {
+                    beforeEach(async () => {
+                        stageAmount = depositedBalanceBefore.add(settledBalanceBefore).div(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? 0 : stageAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? stageAmount : settledBalanceBefore
+                        );
+                    });
+
+                    it('should successfully stage the provided amount of ERC20 token', async () => {
+                        await glob.web3ClientFund.stageToBeneficiary(
+                            web3MockedBeneficiary.address, web3.toBigNumber(stageAmount.toString()), glob.web3Erc20.address, 0,
+                            {
+                                from: glob.user_a,
+                                gas: 1e6
+                            }
+                        );
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.toString().should.equal(settledBalanceAfter.toString());
+
+                        const beneficiaryDeposit = await ethersBeneficiary.getDeposit(0);
+                        beneficiaryDeposit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        beneficiaryDeposit.amount.toString().should.equal(stageAmount.toString());
+                        beneficiaryDeposit.currencyCt.should.equal(utils.getAddress(glob.web3Erc20.address));
+                        beneficiaryDeposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                        beneficiaryDeposit.standard.should.equal('');
+                    });
+                });
+
+                describe.skip('of amount greater than deposited + settled balances', () => {
+                    let stagedAmount;
+
+                    beforeEach(async () => {
+                        stagedAmount = depositedBalanceBefore.add(settledBalanceBefore).div(2).mul(2);
+                        stageAmount = stagedAmount.mul(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? 0 : stagedAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? stagedAmount : settledBalanceBefore
+                        );
+                    });
+
+                    it('should successfully stage the deposited + settled amount of ERC20 token', async () => {
+                        await glob.web3ClientFund.stageToBeneficiary(
+                            web3MockedBeneficiary.address, web3.toBigNumber(stageAmount.toString()), glob.web3Erc20.address, 0,
+                            {
+                                from: glob.user_a,
+                                gas: 1e6
+                            }
+                        );
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.toString().should.equal(settledBalanceAfter.toString());
+
+                        const beneficiaryDeposit = await ethersBeneficiary.getDeposit(0);
+                        beneficiaryDeposit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        beneficiaryDeposit.amount.toString().should.equal(stagedAmount.toString());
+                        beneficiaryDeposit.currencyCt.should.equal(utils.getAddress(glob.web3Erc20.address));
+                        beneficiaryDeposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                        beneficiaryDeposit.standard.should.equal('');
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        // TODO Unskip and assure sufficient deposits in client fund
+        describe.skip('stageToBeneficiaryUntargeted()', () => {
+            let overrideOptions;
 
-        it(testCounter.next() + ": MUST SUCCEED [depositCount]: User B should have 1 deposit", async () => {
-            try {
-                let count = await glob.web3ClientFund.depositCount(glob.user_b);
-                assert.equal(count, 1, 'This test must succeed. Error: Deposit count: ' + count.toString());
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            before(() => {
+                overrideOptions = {gasLimit: 2e6};
+            });
+
+            describe('called by unauthorized service', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundUnauthorizedService.stageToBeneficiaryUntargetedInClientFund(
+                        glob.user_a, web3MockedBeneficiary.address, utils.parseEther('1'), mocks.address0, 0
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('to unregistered beneficiary', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundAuthorizedService.stageToBeneficiaryUntargetedInClientFund(
+                        glob.user_a, Wallet.createRandom().address, utils.parseEther('1'), mocks.address0, 0
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('of negative amount', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundAuthorizedService.stageToBeneficiaryUntargetedInClientFund(
+                        glob.user_a, web3MockedBeneficiary.address, utils.parseEther('-1'), mocks.address0, 0
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, stageAmount,
+                    depositedBalanceAfter, settledBalanceAfter, stagedBalanceAfter;
+
+                beforeEach(async () => {
+                    await ethersBeneficiary.reset(overrideOptions);
+
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                });
+
+                describe('of amount less than or equal to deposited + settled balances', () => {
+                    beforeEach(async () => {
+                        stageAmount = depositedBalanceBefore.add(settledBalanceBefore).div(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? 0 : stageAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? stageAmount : settledBalanceBefore
+                        );
+                        stagedBalanceAfter = stagedBalanceBefore.add(stageAmount);
+                    });
+
+                    it('should successfully stage the provided amount of Ether', async () => {
+                        await ethersMockedClientFundAuthorizedService.stageToBeneficiaryUntargetedInClientFund(
+                            glob.user_a, web3MockedBeneficiary.address, stageAmount, mocks.address0, 0, {gasLimit: 3e6}
+                        );
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceAfter));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(settledBalance).should.equal(utils.formatEther(settledBalanceAfter));
+
+                        const beneficiaryDeposit = await ethersBeneficiary.getDeposit(0);
+                        beneficiaryDeposit.wallet.should.equal(mocks.address0);
+                        utils.formatEther(beneficiaryDeposit.amount).should.equal(utils.formatEther(stageAmount));
+                        beneficiaryDeposit.currencyCt.should.equal(mocks.address0);
+                        beneficiaryDeposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                        beneficiaryDeposit.standard.should.equal('ether');
+                    });
+                });
+
+                describe('of amount greater than deposited + settled balances', () => {
+                    let stagedAmount;
+
+                    beforeEach(async () => {
+                        stagedAmount = depositedBalanceBefore.add(settledBalanceBefore);
+                        stageAmount = stagedAmount.mul(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? 0 : stagedAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? stagedAmount : settledBalanceBefore
+                        );
+                        stagedBalanceAfter = stagedBalanceBefore.add(stagedAmount);
+                    });
+
+                    it('should successfully stage the deposited + settled amount of Ether', async () => {
+                        await ethersMockedClientFundAuthorizedService.stageToBeneficiaryUntargetedInClientFund(
+                            glob.user_a, web3MockedBeneficiary.address, stageAmount, mocks.address0, 0, {gasLimit: 3e6}
+                        );
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(depositedBalance).should.equal(utils.formatEther(depositedBalanceAfter));
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(settledBalance).should.equal(utils.formatEther(settledBalanceAfter));
+
+                        const beneficiaryDeposit = await ethersBeneficiary.getDeposit(0);
+                        beneficiaryDeposit.wallet.should.equal(mocks.address0);
+                        utils.formatEther(beneficiaryDeposit.amount).should.equal(utils.formatEther(stagedAmount));
+                        beneficiaryDeposit.currencyCt.should.equal(mocks.address0);
+                        beneficiaryDeposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                        beneficiaryDeposit.standard.should.equal('ether');
+                    });
+                });
+            });
+
+            describe.skip('of ERC20 token', () => {
+                let depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore, stageAmount,
+                    depositedBalanceAfter, settledBalanceAfter, stagedBalanceAfter;
+
+                beforeEach(async () => {
+                    await ethersBeneficiary.reset(overrideOptions);
+
+                    depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                });
+
+                describe('of amount less than or equal to deposited + settled balances', () => {
+                    beforeEach(async () => {
+                        stageAmount = depositedBalanceBefore.add(settledBalanceBefore).div(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? 0 : stageAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stageAmount) ? stageAmount : settledBalanceBefore
+                        );
+                        stagedBalanceAfter = stagedBalanceBefore.add(stageAmount);
+                    });
+
+                    it('should successfully stage the provided amount of ERC20 token', async () => {
+                        await ethersMockedClientFundAuthorizedService.stageToBeneficiaryUntargetedInClientFund(
+                            glob.user_a, web3MockedBeneficiary.address, stageAmount, glob.web3Erc20.address, 0, {gasLimit: 3e6}
+                        );
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.toString().should.equal(settledBalanceAfter.toString());
+
+                        const beneficiaryDeposit = await ethersBeneficiary.getDeposit(0);
+                        beneficiaryDeposit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        beneficiaryDeposit.amount.toString().should.equal(stageAmount.toString());
+                        beneficiaryDeposit.currencyCt.should.equal(glob.web3Erc20.address);
+                        beneficiaryDeposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                        beneficiaryDeposit.standard.should.equal('ether');
+                    });
+                });
+
+                describe('of amount greater than deposited + settled balances', () => {
+                    let stagedAmount;
+
+                    beforeEach(async () => {
+                        stagedAmount = depositedBalanceBefore.add(settledBalanceBefore);
+                        stageAmount = stagedAmount.mul(2);
+                        depositedBalanceAfter = depositedBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? 0 : stagedAmount.sub(settledBalanceBefore)
+                        );
+                        settledBalanceAfter = settledBalanceBefore.sub(
+                            settledBalanceBefore.gt(stagedAmount) ? stagedAmount : settledBalanceBefore
+                        );
+                        stagedBalanceAfter = stagedBalanceBefore.add(stagedAmount);
+                    });
+
+                    it('should successfully stage the deposited + settled amount of ERC20 token', async () => {
+                        await ethersMockedClientFundAuthorizedService.stageToBeneficiaryUntargetedInClientFund(
+                            glob.user_a, web3MockedBeneficiary.address, stageAmount, glob.web3Erc20.address, 0, {gasLimit: 3e6}
+                        );
+
+                        const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+                        const settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        settledBalance.toString().should.equal(settledBalanceAfter.toString());
+
+                        const beneficiaryDeposit = await ethersBeneficiary.getDeposit(0);
+                        beneficiaryDeposit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        beneficiaryDeposit.amount.toString().should.equal(stagedAmount.toString());
+                        beneficiaryDeposit.currencyCt.should.equal(glob.web3Erc20.address);
+                        beneficiaryDeposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                        beneficiaryDeposit.standard.should.equal('ether');
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        // TODO Unskip and assure sufficient deposits in client fund
+        describe.skip('seizeAllBalances()', () => {
+            let userABalanceOfEtherBefore, userBBalanceOfEtherBefore;
+            let userABalanceOfErc20Before, userBBalanceOfErc20Before;
+            let depositedBalance, settledBalance, stagedBalance;
 
-        it(testCounter.next() + ": MUST SUCCEED [deposit]: User B should have 6.5 ETH at index 0", async () => {
-            try {
-                let args = await glob.web3ClientFund.deposit(glob.user_b, 0);
-                const _amount = args[0];
-                const _timestamp = args[1];
-                const _token = args[2];
+            before(async () => {
+                depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                userABalanceOfEtherBefore = depositedBalance.add(settledBalance).add(stagedBalance);
 
-                assert.equal(_token, 0, "Unexpected token deposit.");
-                assert.equal(_amount, web3.toWei(6.5, 'ether'), "Unexpected ether deposit amount.");
-                assert.notEqual(_timestamp, 0, "Timestamp cannot be null.");
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_b, mocks.address0, 0);
+                settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_b, mocks.address0, 0);
+                stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_b, mocks.address0, 0);
+                userBBalanceOfEtherBefore = depositedBalance.add(settledBalance).add(stagedBalance);
+
+                depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                userABalanceOfErc20Before = depositedBalance.add(settledBalance).add(stagedBalance);
+
+                depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_b, glob.web3Erc20.address, 0);
+                settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_b, glob.web3Erc20.address, 0);
+                stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address, 0);
+                userBBalanceOfErc20Before = depositedBalance.add(settledBalance).add(stagedBalance);
+            });
+
+            describe('called by unauthorized service', () => {
+                it('should revert', async () => {
+                    ethersMockedClientFundUnauthorizedService.seizeAllBalancesInClientFund(
+                        glob.user_a, glob.user_b
+                    ).should.be.rejected;
+                });
+            });
+
+            it('should successfully transfer the full set of balances of Ether and ERC20 token', async () => {
+                await ethersMockedClientFundAuthorizedService.seizeAllBalancesInClientFund(
+                    glob.user_a, glob.user_b, {gasLimit: 3e6}
+                );
+
+                depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
+                settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
+                stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                const userABalanceOfEtherAfter = depositedBalance.add(settledBalance).add(stagedBalance);
+                utils.formatEther(userABalanceOfEtherAfter).should.equal(utils.formatEther('0'));
+
+                depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_b, mocks.address0, 0);
+                settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_b, mocks.address0, 0);
+                stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_b, mocks.address0, 0);
+                const userBBalanceOfEtherAfter = depositedBalance.add(settledBalance).add(stagedBalance);
+                utils.formatEther(userBBalanceOfEtherAfter).should.equal(
+                    utils.formatEther(userBBalanceOfEtherBefore.add(userABalanceOfEtherBefore))
+                );
+
+                depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
+                stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                const userABalanceOfErc20After = depositedBalance.add(settledBalance).add(stagedBalance);
+                userABalanceOfErc20After.toString().should.equal('0');
+
+                depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_b, glob.web3Erc20.address, 0);
+                settledBalance = await glob.ethersIoClientFund.settledBalance(glob.user_b, glob.web3Erc20.address, 0);
+                stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address, 0);
+                const userBBalanceOfErc20After = depositedBalance.add(settledBalance).add(stagedBalance);
+                userBBalanceOfErc20After.toString().should.equal(
+                    userBBalanceOfErc20Before.add(userABalanceOfErc20Before).toString()
+                );
+            });
         });
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [deposit]: Invalid index deposit 1 for user B.", async () => {
-            try {
-                await glob.web3ClientFund.deposit(glob.user_b, 1);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [deposit]: User A should have 10 tokens at index 1", async () => {
-            try {
-                let args = await glob.web3ClientFund.deposit(glob.user_a, 1);
-                const _amount = args[0];
-                const _timestamp = args[1];
-                const _token = args[2];
-
-                assert.equal(_token, glob.web3Erc20.address, "Unexpected ether or other token deposit.");
-                assert.equal(_amount, 10, "Unexpeced token deposit amount.");
-                assert.notEqual(_timestamp, 0, "Timestamp cannot be null.");
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [depositedBalance]: 2.5 ETH for User A", async () => {
-            try {
-                let balance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0, 0);
-                assert.equal(balance, web3.toWei(2.5, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [depositedBalance]: 10 tokens for User A", async () => {
-            try {
-                let balance = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
-                assert.equal(balance, 10, 'Wrong balance [' + balance.toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [depositedBalance]: 0 tokens for User B", async () => {
-            try {
-                let balance = await glob.web3ClientFund.depositedBalance(glob.user_b, glob.web3Erc20.address, 0);
-                assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 ETH for User A", async () => {
-            try {
-                let balance = await glob.web3ClientFund.stagedBalance(glob.user_a, 0, 0);
-                assert.equal(balance, web3.toWei(0, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 tokens for User A", async () => {
-            try {
-                let balance = await glob.web3ClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
-                assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 tokens for User B", async () => {
-            try {
-                let balance = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address, 0);
-                assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [setServiceActivationTimeout]: Set the service activation timeout to 5 seconds", async () => {
-            try {
-                await glob.web3ClientFund.setServiceActivationTimeout(5);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [setServiceActivationTimeout]: Non-owner trying to set the service activation timeout", async () => {
-            try {
-                await glob.web3ClientFund.setServiceActivationTimeout(30, {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [registerService]: Register ClientFund SC as a service", async () => {
-            try {
-                await glob.web3ClientFund.registerService(glob.web3ClientFund.address);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [registerService]: Register UnitTestHelpers_FAIL SC as a service from non-owner", async () => {
-            try {
-                await glob.web3ClientFund.registerService(glob.web3UnitTestHelpers_FAIL_TESTS.address, {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [registerService]: Register UnitTestHelpers_SUCCESS SC as a service", async () => {
-            try {
-                await glob.web3ClientFund.registerService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [registerService]: Register UnitTestHelpers_FAIL SC as a service", async () => {
-            try {
-                await glob.web3ClientFund.registerService(glob.web3UnitTestHelpers_FAIL_TESTS.address);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [unauthorizeRegisteredService]: Unauthorize UnitTestHelpers_FAIL as a service for User A", async () => {
-            try {
-                await glob.web3ClientFund.unauthorizeRegisteredService(glob.web3UnitTestHelpers_FAIL_TESTS.address, {from: glob.user_a});
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST FAIL [transferFromDepositedToSettledBalance]: User A uses UnitTestHelpers_SUCCESS as a service to send 0.2 ETH to User D but before timeout", async() => {
-        // 	try {
-        // 		await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToTransferFromDepositedToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.2, 'ether'), 0);
-        // 		assert(false, 'This test must fail.');
-        // 	}
-        // 	catch (err) {
-        // 		assert(err.toString().includes('revert'), err.toString());
-        // 	}
-        // });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [updateSettledBalance]: User A uses UnitTestHelpers_SUCCESS as a service to update settled balance of User D to 0.2 ETH", async () => {
-            try {
-                await Helpers.sleep(5000);
-
-                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToUpdateSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_d, web3.toWei(0.2, 'ether'), 0, 0);
-
-                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0, 0);
-
-                assert.equal(newSettledBalance.sub(oldSettledBalance), web3.toWei(0.2, 'ether'), 'Wrong settled balance [Diff ' + web3.fromWei(newSettledBalance.sub(oldSettledBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST FAIL [transferFromDepositedToSettledBalance]: User A disabled UnitTestHelpers_FAIL as a service to send 0.2 ETH to User D", async() => {
-        // 	try {
-        // 		await glob.web3UnitTestHelpers_FAIL_TESTS.callToTransferFromDepositedToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.2, 'ether'), 0);
-        // 		assert(false, 'This test must fail.');
-        // 	}
-        // 	catch (err) {
-        // 		assert(err.toString().includes('revert'), err.toString());
-        // 	}
-        // });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [updateSettledBalance]: User A uses UnitTestHelpers_SUCCESS as a service to update settled balance of User D to 6 tokens", async () => {
-            try {
-                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToUpdateSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_d, 6, glob.web3Erc20.address, 0);
-
-                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address, 0);
-
-                assert.equal(newSettledBalance.sub(oldSettledBalance), 6, 'Wrong settled balance [Diff ' + newSettledBalance.sub(oldSettledBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST FAIL [transferFromDepositedToSettledBalance]: User A disabled UnitTestHelpers_FAIL as a service to send 6 tokens to User D", async() => {
-        // 	try {
-        // 		await glob.web3UnitTestHelpers_FAIL_TESTS.callToTransferFromDepositedToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, 6, glob.web3Erc20.address);
-        // 		assert(false, 'This test must fail.');
-        // 	}
-        // 	catch (err) {
-        // 		assert(err.toString().includes('revert'), err.toString());
-        // 	}
-        // });
-
-        //------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST SUCCEED [withdrawFromDepositedBalance]: User A uses UnitTestHelpers_SUCCESS as a service to withdraw 0.3 ETH to User D", async() => {
-        // 	try {
-        // 		let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
-        // 		let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
-        //
-        // 		await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToWithdrawFromDepositedBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.3, 'ether'), 0);
-        //
-        // 		let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_a, 0);
-        // 		let newEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
-        //
-        // 		assert.equal(newEthersBalance.sub(oldEthersBalance), web3.toWei(0.3, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newEthersBalance.sub(oldEthersBalance), 'ether') + ' ethers].');
-        // 		assert.equal(newDepositedBalance.sub(oldDepositedBalance), web3.toWei(-0.3, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newDepositedBalance.sub(oldDepositedBalance), 'ether') + ' ethers].');
-        // 	}
-        // 	catch (err) {
-        // 		assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-        // 	}
-        // });
-
-        //-------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST FAIL [withdrawFromDepositedBalance]: User A disabled unit test helper SC as a service to withdraw 0.3 ETH to User D", async() => {
-        // 	try {
-        // 		await glob.web3UnitTestHelpers_FAIL_TESTS.callToWithdrawFromDepositedBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_d, web3.toWei(0.3, 'ether'), 0);
-        // 		assert(false, 'This test must fail.');
-        // 	}
-        // 	catch (err) {
-        // 		assert(err.toString().includes('revert'), err.toString());
-        // 	}
-        // });
-
-        //------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST SUCCEED [depositEthersToSettledBalance]: UnitTestHelpers_SUCCESS deposits 0.4 ETH to User C", async() => {
-        // 	try {
-        // 		let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_c, 0);
-        // 		let oldEthersBalance = await web3.eth.getBalancePromise(glob.web3ClientFund.address);
-        //
-        // 		await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToDepositEthersToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_c, { value: web3.toWei(0.4, 'ether') });
-        //
-        // 		let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_c, 0);
-        // 		let newEthersBalance = await web3.eth.getBalancePromise(glob.web3ClientFund.address);
-        //
-        // 		assert.equal(newEthersBalance.sub(oldEthersBalance), web3.toWei(0.4, 'ether'), 'Wrong SC balance [Diff ' + web3.fromWei(newEthersBalance.sub(oldEthersBalance), 'ether') + ' ethers].');
-        // 		assert.equal(newSettledBalance.sub(oldSettledBalance), web3.toWei(0.4, 'ether'), 'Wrong settled balance [Diff ' + web3.fromWei(newSettledBalance.sub(oldSettledBalance), 'ether') + ' ethers].');
-        // 	}
-        // 	catch (err) {
-        // 		assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-        // 	}
-        // });
-
-        //-------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST FAIL [depositEthersToSettledBalance]: UnitTestHelpers_FAIL deposits 0.4 ETH to User A", async() => {
-        // 	try {
-        // 		await glob.web3UnitTestHelpers_FAIL_TESTS.callToDepositEthersToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, { value: web3.toWei(0.4, 'ether') });
-        // 		assert(false, 'This test must fail.');
-        // 	}
-        // 	catch (err) {
-        // 		assert(err.toString().includes('revert'), err.toString());
-        // 	}
-        // });
-
-        //------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST SUCCEED [depositTokensToSettledBalance]: UnitTestHelpers_SUCCESS deposits 4 tokens to User D", async() => {
-        // 	try {
-        // 		await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToApprove_ERC20(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
-        // 	}
-        // 	catch (err) {
-        // 		assert(false, 'Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
-        // 	}
-        // 	try {
-        // 		let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
-        // 		let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
-        //
-        // 		await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToDepositTokensToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_d, glob.web3Erc20.address, 4);
-        //
-        // 		let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address);
-        // 		let newTokensBalance = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
-        //
-        // 		assert.equal(newTokensBalance.sub(oldTokensBalance), -4, 'Wrong SC balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
-        // 		assert.equal(newSettledBalance.sub(oldSettledBalance), 4, 'Wrong balance [Diff ' + newSettledBalance.sub(oldSettledBalance).toString() + ' tokens].');
-        // 	}
-        // 	catch (err) {
-        // 		assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-        // 	}
-        // });
-
-        //-------------------------------------------------------------------------
-
-        // it(testCounter.next() + ": MUST FAIL [depositTokensToSettledBalance]: UnitTestHelpers_FAIL deposits 4 tokens to User A", async() => {
-        // 	try {
-        // 		await glob.web3UnitTestHelpers_FAIL_TESTS.callToApprove_ERC20(glob.web3Erc20.address, glob.web3ClientFund.address, 4);
-        // 	}
-        // 	catch (err) {
-        // 		assert(false, 'Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
-        // 	}
-        // 	try {
-        // 		await glob.web3UnitTestHelpers_FAIL_TESTS.callToDepositTokensToSettledBalance_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.web3Erc20.address, 4);
-        // 		assert(false, 'This test must fail.');
-        // 	}
-        // 	catch (err) {
-        // 		assert(err.toString().includes('revert'), err.toString());
-        // 	}
-        // });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stage]: User D wants to stage 0.2 ETH", async () => {
-            try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
-                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0, 0);
-
-                let result = await glob.web3ClientFund.stage(web3.toWei(0.2, 'ether'), 0, 0, {from: glob.user_d});
-
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
-                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, 0, 0);
-
-                assert.equal(oldSettledBalance.sub(newSettledBalance), web3.toWei(0.2, 'ether'), 'Wrong settled balance [Diff ' + web3.fromWei(oldSettledBalance.add(newSettledBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.2, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stage]: User D wants to stage 3 tokens", async () => {
-            try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
-                let oldSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address, 0);
-
-                let result = await glob.web3ClientFund.stage(3, glob.web3Erc20.address, 0, {from: glob.user_d});
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
-                let newSettledBalance = await glob.web3ClientFund.settledBalance(glob.user_d, glob.web3Erc20.address, 0);
-
-                assert.equal(oldSettledBalance.sub(newSettledBalance), 3, 'Wrong settled balance [Diff ' + oldSettledBalance.add(newSettledBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), 3, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User D wants to withdraw 0.1 ETH", async () => {
-            try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
-
-                let result = await glob.web3ClientFund.withdraw(web3.toWei(0.1, 'ether'), 0, 0, "", {from: glob.user_d});
-
-                let tx = web3.eth.getTransaction(result.tx);
-                let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
-                totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
-
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
-                let newEthersBalance = await web3.eth.getBalancePromise(glob.user_d);
-
-                assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0.1, 'ether'), 'Wrong user D balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
-                assert.equal(oldStagedBalance.sub(newStagedBalance), web3.toWei(0.1, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(oldStagedBalance.sub(newStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User D wants to withdraw 2 tokens", async () => {
-            try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
-                let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.user_d);
-
-                let result = await glob.web3ClientFund.withdraw(2, glob.web3Erc20.address, 0, "", {from: glob.user_d});
-
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
-                let newTokensBalance = await glob.web3Erc20.balanceOf(glob.user_d);
-
-                assert.equal(newTokensBalance.sub(oldTokensBalance), 2, 'Wrong user D balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
-                assert.equal(oldStagedBalance.sub(newStagedBalance), 2, 'Wrong staged balance [Diff ' + oldStagedBalance.sub(newStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [withdraw]: User D now wants to withdraw 0.5 ETH", async () => {
-            try {
-                await glob.web3ClientFund.withdraw(web3.toWei(0.5, 'ether'), 0, 0, "", {from: glob.user_d});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [withdraw]: User D now wants to withdraw 20 tokens", async () => {
-            try {
-                await glob.web3ClientFund.withdraw(20, glob.web3Erc20.address, 0, "", {from: glob.user_d});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [unstage]: User D wants to unstage 0.1 ETH", async () => {
-            try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
-                let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, 0, 0);
-
-                let result = await glob.web3ClientFund.unstage(web3.toWei(0.1, 'ether'), 0, 0, {from: glob.user_d});
-
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, 0, 0);
-                let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, 0, 0);
-
-                assert.equal(newDepositedBalance.sub(oldDepositedBalance), web3.toWei(0.1, 'ether'), 'Wrong deposited balance [Diff ' + web3.fromWei(newDepositedBalance.add(oldDepositedBalance), 'ether') + ' ethers].');
-                assert.equal(oldStagedBalance.sub(newStagedBalance), web3.toWei(0.1, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(oldStagedBalance.sub(newStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [unstage]: User D wants to unstage 1 token", async () => {
-            try {
-                let oldStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
-                let oldDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, glob.web3Erc20.address, 0);
-
-                let result = await glob.web3ClientFund.unstage(1, glob.web3Erc20.address, 0, {from: glob.user_d});
-
-                let newStagedBalance = await glob.web3ClientFund.stagedBalance(glob.user_d, glob.web3Erc20.address, 0);
-                let newDepositedBalance = await glob.web3ClientFund.depositedBalance(glob.user_d, glob.web3Erc20.address, 0);
-
-                assert.equal(newDepositedBalance.sub(oldDepositedBalance), 1, 'Wrong deposited balance [Diff ' + newDepositedBalance.add(oldDepositedBalance).toString() + ' tokens].');
-                assert.equal(oldStagedBalance.sub(newStagedBalance), 1, 'Wrong staged balance [Diff ' + oldStagedBalance.sub(newStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [withdraw]: User A wants to withdraw 0.1 ETH", async () => {
-            try {
-                await glob.web3ClientFund.withdraw(web3.toWei(0.1, 'ether'), 0, 0, "", {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [withdraw]: User A wants to withdraw 10 tokens", async () => {
-            try {
-                await glob.web3ClientFund.withdraw(10, glob.web3Erc20.address, 0, "", {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [seizeAllBalances]: Call from a non-registered service", async () => {
-            try {
-                await glob.web3ClientFund.seizeAllBalances(glob.user_a, glob.user_b, {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [seizeAllBalances]: Seize User A funds into User B account", async () => {
-            try {
-                let oldDepositedEthersBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, 0, 0);
-                let oldSettledEthersBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, 0, 0);
-                let oldStagedEthersBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, 0, 0);
-
-                let oldDepositedTokensBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
-                let oldSettledTokensBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
-                let oldStagedTokensBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToSeizeAllBalances_CLIENTFUND(glob.web3ClientFund.address, glob.user_a, glob.user_b);
-
-                let newDepositedEthersBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, 0, 0);
-                let newSettledEthersBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, 0, 0);
-                let newStagedEthersBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, 0, 0);
-
-                let newDepositedTokensBalance_UserA = await glob.web3ClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
-                let newSettledTokensBalance_UserA = await glob.web3ClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
-                let newStagedTokensBalance_UserB = await glob.web3ClientFund.stagedBalance(glob.user_b, glob.web3Erc20.address, 0);
-
-                assert.equal(newDepositedEthersBalance_UserA, web3.toWei(0, 'ether'), 'Wrong deposited balance [Diff ' + web3.fromWei(newDepositedEthersBalance_UserA, 'ether') + ' ethers].');
-                assert.equal(newSettledEthersBalance_UserA, web3.toWei(0, 'ether'), 'Wrong settled balance [Diff ' + web3.fromWei(newSettledEthersBalance_UserA, 'ether') + ' ethers].');
-                assert.equal(newDepositedTokensBalance_UserA, 0, 'Wrong deposited balance [Diff ' + newDepositedTokensBalance_UserA.toString() + ' tokens].');
-                assert.equal(newSettledTokensBalance_UserA, 0, 'Wrong settled balance [Diff ' + newDepositedTokensBalance_UserA.toString() + ' tokens].');
-
-                assert.equal(oldStagedEthersBalance_UserB.add(oldDepositedEthersBalance_UserA).add(oldSettledEthersBalance_UserA), newStagedEthersBalance_UserB.toString(),
-                    'Wrong staged balance [Diff ' + web3.fromWei(newStagedEthersBalance_UserB.sub(oldStagedEthersBalance_UserB.add(oldDepositedEthersBalance_UserA).add(oldSettledEthersBalance_UserA)), 'ether') + ' ethers].');
-
-                assert.equal(oldStagedTokensBalance_UserB.add(oldDepositedTokensBalance_UserA).add(oldSettledTokensBalance_UserA), newStagedTokensBalance_UserB.toString(),
-                    'Wrong staged balance [Diff ' + newStagedTokensBalance_UserB.sub(oldStagedTokensBalance_UserB.add(oldDepositedTokensBalance_UserA).add(oldSettledTokensBalance_UserA).toString()) + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+        // TODO Unskip
+        describe('withdraw()', () => {
+            describe('of Ether', () => {
+                let stagedBalanceBefore, stagedBalanceAfter, withdrawalAmount, accountBalanceBefore,
+                    accountBalanceAfter;
+
+                beforeEach(async () => {
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+
+                    // const accountBalance = await web3.eth.getBalance(glob.user_a);
+                    // accountBalanceBefore = utils.bigNumberify(accountBalance.toString());
+                });
+
+                describe('of amount less than or equal to staged balance', () => {
+                    beforeEach(async () => {
+                        withdrawalAmount = stagedBalanceBefore.div(2);
+                        stagedBalanceAfter = stagedBalanceBefore.sub(withdrawalAmount);
+                        // accountBalanceAfter = accountBalanceBefore.add(withdrawalAmount);
+                    });
+
+                    it('should successfully withdraw the provided amount of Ether', async () => {
+                        await glob.web3ClientFund.withdraw(web3.toWei(utils.formatEther(withdrawalAmount)), mocks.address0, 0, '', {from: glob.user_a});
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceAfter));
+                        // const accountBalance = await web3.eth.getBalance(glob.user_a);
+                        // utils.formatEther(utils.bigNumberify(accountBalance.toString())).should.equal(utils.formatEther(accountBalanceAfter))
+                    });
+                });
+
+                describe('of amount greater than staged balance', () => {
+                    let withdrawnAmount;
+
+                    beforeEach(async () => {
+                        withdrawnAmount = stagedBalanceBefore;
+                        withdrawalAmount = withdrawnAmount.mul(2);
+                        stagedBalanceAfter = stagedBalanceBefore.sub(withdrawnAmount);
+                        // accountBalanceAfter = accountBalanceBefore.add(withdrawnAmount);
+                    });
+
+                    it('should successfully withdraw the staged amount of Ether', async () => {
+                        await glob.web3ClientFund.withdraw(web3.toWei(utils.formatEther(withdrawalAmount)), mocks.address0, 0, '', {from: glob.user_a});
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
+                        utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceAfter));
+                        // const accountBalance = await web3.eth.getBalance(glob.user_a);
+                        // utils.formatEther(utils.bigNumberify(accountBalance.toString())).should.equal(utils.formatEther(accountBalanceAfter))
+                    });
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                let stagedBalanceBefore, stagedBalanceAfter, withdrawalAmount, accountBalanceBefore,
+                    accountBalanceAfter;
+
+                beforeEach(async () => {
+                    stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+
+                    // const accountBalance = await web3.eth.getBalance(glob.user_a);
+                    // accountBalanceBefore = utils.bigNumberify(accountBalance.toString());
+                });
+
+                describe('of amount less than or equal to staged balance', () => {
+                    beforeEach(async () => {
+                        withdrawalAmount = stagedBalanceBefore.div(2);
+                        stagedBalanceAfter = stagedBalanceBefore.sub(withdrawalAmount);
+                        // accountBalanceAfter = accountBalanceBefore.add(withdrawalAmount);
+                    });
+
+                    it('should successfully withdraw the provided amount of Ether', async () => {
+                        await glob.web3ClientFund.withdraw(web3.toWei(utils.formatEther(withdrawalAmount)), glob.web3Erc20.address, 0, '', {from: glob.user_a});
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
+                        // const accountBalance = await web3.eth.getBalance(glob.user_a);
+                        // utils.formatEther(utils.bigNumberify(accountBalance.toString())).should.equal(utils.formatEther(accountBalanceAfter))
+                    });
+                });
+
+                describe('of amount greater than staged balance', () => {
+                    let withdrawnAmount;
+
+                    beforeEach(async () => {
+                        withdrawnAmount = stagedBalanceBefore;
+                        withdrawalAmount = withdrawnAmount.mul(2);
+                        stagedBalanceAfter = stagedBalanceBefore.sub(withdrawnAmount);
+                        // accountBalanceAfter = accountBalanceBefore.add(withdrawnAmount);
+                    });
+
+                    it('should successfully withdraw the staged amount of Ether', async () => {
+                        await glob.web3ClientFund.withdraw(web3.toWei(utils.formatEther(withdrawalAmount)), glob.web3Erc20.address, 0, '', {from: glob.user_a});
+
+                        const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+                        stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
+                        // const accountBalance = await web3.eth.getBalance(glob.user_a);
+                        // utils.formatEther(utils.bigNumberify(accountBalance.toString())).should.equal(utils.formatEther(accountBalanceAfter))
+                    });
+                });
+            });
+
+            // describe('of ERC20 token', () => {
+            //     let depositedBalanceBefore, stagedBalanceBefore, unstageAmount,
+            //         depositedBalanceAfter, stagedBalanceAfter;
+            //
+            //     beforeEach(async () => {
+            //         depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+            //         stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+            //     });
+            //
+            //     describe('of amount less than or equal to deposited + settled balances', () => {
+            //         beforeEach(async () => {
+            //             unstageAmount = stagedBalanceBefore.div(2);
+            //             depositedBalanceAfter = depositedBalanceBefore.add(unstageAmount);
+            //             stagedBalanceAfter = stagedBalanceBefore.sub(unstageAmount);
+            //         });
+            //
+            //         it('should successfully unstage the provided amount of ERC20 token', async () => {
+            //             await glob.web3ClientFund.unstage(Number(unstageAmount.toString()), glob.web3Erc20.address, 0, {from: glob.user_a});
+            //
+            //             const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+            //             stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
+            //             const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+            //             depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+            //         });
+            //     });
+            //
+            //     describe('of amount greater than deposited + settled balances', () => {
+            //         let unstagedAmount;
+            //
+            //         beforeEach(async () => {
+            //             unstagedAmount = stagedBalanceBefore;
+            //             unstageAmount = unstagedAmount.mul(2);
+            //             depositedBalanceAfter = depositedBalanceBefore.add(unstagedAmount);
+            //             stagedBalanceAfter = stagedBalanceBefore.sub(unstagedAmount);
+            //         });
+            //
+            //         it('should successfully unstage the staged amount of ERC20 token', async () => {
+            //             await glob.web3ClientFund.unstage(Number(unstageAmount.toString()), glob.web3Erc20.address, 0, {from: glob.user_a});
+            //
+            //             const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
+            //             stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
+            //             const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
+            //             depositedBalance.toString().should.equal(depositedBalanceAfter.toString());
+            //         });
+            //     });
+            // });
         });
     });
 };

@@ -14,13 +14,6 @@ pragma solidity ^0.4.24;
 */
 contract TransferController {
     //
-    // Constants (not used because of compiler issue)
-    // -----------------------------------------------------------------------------------------------------------------
-    //bytes4 public constant APPROVE_SIGNATURE = bytes4(keccak256("approve(address,uint256,address,uint256)"));
-    //bytes4 public constant SEND_SIGNATURE = bytes4(keccak256("send(address,uint256,address,uint256)"));
-    //bytes4 public constant RECEIVE_SIGNATURE = bytes4(keccak256("receive(address,address,uint256,address,uint256)"));
-
-    //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event CurrencyTransferred(address from, address to, uint256 amount, address currencyCt, uint256 currencyId);
@@ -42,18 +35,15 @@ contract TransferController {
 
     //----------------------------------------
 
-    /// @notice KEEP as `view` because `pure` raises revert
-    function getApproveSignature() public view returns (bytes4) {
+    function getApproveSignature() public pure returns (bytes4) {
         return bytes4(keccak256("approve(address,uint256,address,uint256)"));
     }
 
-    /// @notice KEEP as `view` because `pure` raises revert
-    function getSendSignature() public view returns (bytes4) {
+    function getSendSignature() public pure returns (bytes4) {
         return bytes4(keccak256("send(address,address,uint256,address,uint256)"));
     }
 
-    /// @notice KEEP as `view` because `pure` raises revert
-    function getReceiveSignature() public view returns (bytes4) {
+    function getReceiveSignature() public pure returns (bytes4) {
         return bytes4(keccak256("receive(address,address,uint256,address,uint256)"));
     }
 }
