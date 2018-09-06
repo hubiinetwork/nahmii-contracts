@@ -29,7 +29,7 @@ module.exports = function (glob) {
         });
 
         beforeEach(async () => {
-            blockNumberAhead = await provider.getBlockNumber() + 10;
+            blockNumberAhead = await provider.getBlockNumber() + 15;
         });
 
         describe('configuration()', () => {
@@ -115,11 +115,10 @@ module.exports = function (glob) {
         });
 
         describe('isGenuineTradeBuyerFee()', () => {
-            let amountIntended, amountConjugate, trade;
+            let amountIntended, trade;
 
             before(() => {
                 amountIntended = utils.parseUnits('100', 18);
-                amountConjugate = amountIntended.div(utils.bigNumberify(1000));
             });
 
             describe('if trade buyer fee is genuine', () => {
@@ -130,8 +129,16 @@ module.exports = function (glob) {
 
                         const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
-                            singleFees: {
-                                intended: amountIntended.mul(fee).div(partsPer)
+                            buyer: {
+                                fees: {
+                                    single: {
+                                        amount: amountIntended.mul(fee).div(partsPer),
+                                        currency: {
+                                            ct: '0x0000000000000000000000000000000000000001',
+                                            id: utils.bigNumberify(0)
+                                        }
+                                    }
+                                }
                             },
                             blockNumber: utils.bigNumberify(blockNumberAhead)
                         });
@@ -151,13 +158,19 @@ module.exports = function (glob) {
                         const fee = await ethersConfiguration.getTradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
-                                liquidityRole: mocks.liquidityRoles.indexOf('Taker')
+                                liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
+                                fees: {
+                                    single: {
+                                        amount: amountIntended.mul(fee).div(partsPer),
+                                        currency: {
+                                            ct: '0x0000000000000000000000000000000000000001',
+                                            id: utils.bigNumberify(0)
+                                        }
+                                    }
+                                }
                             },
                             seller: {
                                 liquidityRole: mocks.liquidityRoles.indexOf('Maker')
-                            },
-                            singleFees: {
-                                conjugate: amountConjugate.mul(fee).div(partsPer)
                             },
                             blockNumber: utils.bigNumberify(blockNumberAhead)
                         });
@@ -179,28 +192,36 @@ module.exports = function (glob) {
                 amountConjugate = amountIntended.div(utils.bigNumberify(1000));
             });
 
-            describe('if trade buyer fee is genuine', () => {
-                describe('if buyer is maker', () => {
+            describe('if trade seller fee is genuine', () => {
+                describe('if seller is maker', () => {
                     beforeEach(async () => {
                         await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
                         await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
 
                         const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
-                            singleFees: {
-                                intended: amountIntended.mul(fee).div(partsPer)
+                            seller: {
+                                fees: {
+                                    single: {
+                                        amount: amountConjugate.mul(fee).div(partsPer),
+                                        currency: {
+                                            ct: '0x0000000000000000000000000000000000000002',
+                                            id: utils.bigNumberify(0)
+                                        }
+                                    }
+                                }
                             },
                             blockNumber: utils.bigNumberify(blockNumberAhead)
                         });
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeSellerFee(trade);
                         result.should.be.true;
                     });
                 });
 
-                describe('if buyer is taker', () => {
+                describe('if seller is taker', () => {
                     beforeEach(async () => {
                         await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
                         await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
@@ -211,17 +232,23 @@ module.exports = function (glob) {
                                 liquidityRole: mocks.liquidityRoles.indexOf('Taker')
                             },
                             seller: {
-                                liquidityRole: mocks.liquidityRoles.indexOf('Maker')
-                            },
-                            singleFees: {
-                                conjugate: amountConjugate.mul(fee).div(partsPer)
+                                liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
+                                fees: {
+                                    single: {
+                                        amount: amountConjugate.mul(fee).div(partsPer),
+                                        currency: {
+                                            ct: '0x0000000000000000000000000000000000000002',
+                                            id: utils.bigNumberify(0)
+                                        }
+                                    }
+                                }
                             },
                             blockNumber: utils.bigNumberify(blockNumberAhead)
                         });
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeSellerFee(trade);
                         result.should.be.true;
                     });
                 });

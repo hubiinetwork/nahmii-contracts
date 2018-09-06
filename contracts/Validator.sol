@@ -54,13 +54,13 @@ contract Validator is Ownable, Configurable, Hashable {
         int256 feePartsPer = configuration.getPartsPer();
         int256 discountTier = int256(trade.seller.rollingVolume);
         if (StriimTypes.LiquidityRole.Maker == trade.seller.liquidityRole) {
-            return (trade.seller.fees.single.amount <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.seller.fees.single.amount == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.seller.fees.single.amount >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.getTradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
+            && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
         } else {// StriimTypes.LiquidityRole.Taker == trade.seller.liquidityRole
-            return (trade.seller.fees.single.amount <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.seller.fees.single.amount == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.seller.fees.single.amount >= trade.amount.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.getTradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
+            && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
         }
     }
 
