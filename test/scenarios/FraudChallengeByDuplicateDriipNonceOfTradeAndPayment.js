@@ -3,7 +3,6 @@ const sinonChai = require("sinon-chai");
 const chaiAsPromised = require("chai-as-promised");
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const cryptography = require('omphalos-commons').util.cryptography;
 const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
 const MockedConfiguration = artifacts.require("MockedConfiguration");
 const MockedValidator = artifacts.require("MockedValidator");
@@ -23,6 +22,7 @@ module.exports = (glob) => {
         let web3SecurityBond, ethersSecurityBond;
         let web3Validator, ethersValidator;
         let blockNumber0, blockNumber10, blockNumber20;
+
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -44,7 +44,18 @@ module.exports = (glob) => {
             await ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.changeValidator(ethersValidator.address);
             await ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.changeSecurityBond(ethersSecurityBond.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address);
+            await ethersConfiguration.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address, 'operational_mode', {gasLimit: 1e6}
+            );
+
+            await ethersFraudChallenge.registerService(ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address);
+            await ethersFraudChallenge.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address, 'add_fraudulent_trade', {gasLimit: 1e6}
+            );
+            await ethersFraudChallenge.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address, 'add_fraudulent_payment', {gasLimit: 1e6}
+            );
         });
 
         beforeEach(async () => {
@@ -350,6 +361,7 @@ module.exports = (glob) => {
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                     payment = await mocks.mockPayment(glob.owner, {
+                        nonce: trade.nonce,
                         sender: {
                             wallet: glob.user_c
                         },
@@ -377,8 +389,9 @@ module.exports = (glob) => {
                     fraudulentPaymentsCount.eq(1).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    stage.figure.currency.ct.should.equal(mocks.address0);
+                    stage.figure.currency.id.should.deep.equal(utils.bigNumberify(0));
+                    stage.figure.amount.eq(utils.bigNumberify(1000)).should.be.true;
                     logs.should.have.lengthOf(1);
                 });
             });

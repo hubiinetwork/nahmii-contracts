@@ -44,7 +44,8 @@ module.exports = (glob) => {
             await ethersFraudChallengeByDoubleSpentOrders.changeValidator(ethersValidator.address);
             await ethersFraudChallengeByDoubleSpentOrders.changeSecurityBond(ethersSecurityBond.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeByDoubleSpentOrders.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeByDoubleSpentOrders.address);
+            await ethersConfiguration.enableServiceAction(ethersFraudChallengeByDoubleSpentOrders.address, 'operational_mode');
         });
 
         beforeEach(async () => {

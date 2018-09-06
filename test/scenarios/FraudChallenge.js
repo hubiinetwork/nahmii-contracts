@@ -10,7 +10,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('FraudChallenge', () => {
+    describe('FraudChallenge', () => {
         let web3FraudChallenge, ethersFraudChallengeOwner;
         let ethersFraudChallengeUserA, ethersFraudChallengeUserB;
 
