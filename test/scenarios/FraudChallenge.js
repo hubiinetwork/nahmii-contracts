@@ -64,9 +64,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as registered action service', () => {
+            describe('if called as registered service action', () => {
                 before(async () => {
-                    await ethersFraudChallengeOwner.registerServiceAction(glob.user_a, 'add_seized_wallet');
+                    await ethersFraudChallengeOwner.registerService(glob.user_a);
+                    await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_seized_wallet', {gasLimit: 1e6});
                 });
 
                 it('should add seized wallet', async () => {
@@ -76,7 +77,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither owner nor registered action service', () => {
+            describe('if called as neither owner nor registered service action', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addSeizedWallet(wallet).should.be.rejected;
                 });
@@ -119,9 +120,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as registered action service', () => {
+            describe('if called as registered service action', () => {
                 before(async () => {
-                    await ethersFraudChallengeOwner.registerServiceAction(glob.user_a, 'add_double_spender_wallet');
+                    await ethersFraudChallengeOwner.registerService(glob.user_a);
+                    await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_double_spender_wallet', {gasLimit: 1e6});
                 });
 
                 it('should add double spender wallet', async () => {
@@ -131,7 +133,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither owner nor registered action service', () => {
+            describe('if called as neither owner nor registered service action', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addDoubleSpenderWallet(wallet).should.be.rejected;
                 });
@@ -178,9 +180,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as registered action service', () => {
+            describe('if called as registered service action', () => {
                 before(async () => {
-                    await ethersFraudChallengeOwner.registerServiceAction(glob.user_a, 'add_fraudulent_order');
+                    await ethersFraudChallengeOwner.registerService(glob.user_a);
+                    await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_fraudulent_order', {gasLimit: 1e6});
                 });
 
                 it('should add fraudulent order', async () => {
@@ -190,7 +193,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither owner nor registered action service', () => {
+            describe('if called as neither owner nor registered service action', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addFraudulentOrder(order, overrideOptions).should.be.rejected;
                 });
@@ -237,9 +240,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as registered action service', () => {
+            describe('if called as registered service action', () => {
                 before(async () => {
-                    await ethersFraudChallengeOwner.registerServiceAction(glob.user_a, 'add_fraudulent_trade');
+                    await ethersFraudChallengeOwner.registerService(glob.user_a);
+                    await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_fraudulent_trade', {gasLimit: 1e6});
                 });
 
                 it('should add fraudulent trade', async () => {
@@ -249,7 +253,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither owner nor registered action service', () => {
+            describe('if called as neither owner nor registered service action', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addFraudulentTrade(trade, overrideOptions).should.be.rejected;
                 });
@@ -296,9 +300,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as registered action service', () => {
+            describe('if called as registered service action', () => {
                 before(async () => {
-                    await ethersFraudChallengeOwner.registerServiceAction(glob.user_a, 'add_fraudulent_payment');
+                    await ethersFraudChallengeOwner.registerService(glob.user_a);
+                    await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_fraudulent_payment', {gasLimit: 1e6});
                 });
 
                 it('should add fraudulent payment', async () => {
@@ -308,7 +313,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither owner nor registered action service', () => {
+            describe('if called as neither owner nor registered service action', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addFraudulentPayment(payment, overrideOptions).should.be.rejected;
                 });

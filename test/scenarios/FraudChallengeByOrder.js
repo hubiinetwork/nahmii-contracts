@@ -15,7 +15,7 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe('FraudChallengeByOrder', () => {
+    describe.only('FraudChallengeByOrder', () => {
         let web3FraudChallengeByOrder, ethersFraudChallengeByOrder;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3Configuration, ethersConfiguration;
@@ -43,7 +43,8 @@ module.exports = (glob) => {
             await ethersFraudChallengeByOrder.changeValidator(ethersValidator.address);
             await ethersFraudChallengeByOrder.changeSecurityBond(ethersSecurityBond.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeByOrder.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeByOrder.address);
+            await ethersConfiguration.enableServiceAction(ethersFraudChallengeByOrder.address, 'operational_mode');
         });
 
         beforeEach(async () => {
@@ -338,8 +339,9 @@ module.exports = (glob) => {
                     fraudulentOrdersCount.eq(1).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    stage.figure.currency.ct.should.equal(mocks.address0);
+                    stage.figure.currency.id.should.deep.equal(utils.bigNumberify(0));
+                    stage.figure.amount.eq(utils.bigNumberify(1000)).should.be.true;
                     logs.should.have.lengthOf(1);
                 });
             });

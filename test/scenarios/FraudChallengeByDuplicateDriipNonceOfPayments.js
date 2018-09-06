@@ -44,7 +44,15 @@ module.exports = (glob) => {
             await ethersFraudChallengeByDuplicateDriipNonceOfPayments.changeValidator(ethersValidator.address);
             await ethersFraudChallengeByDuplicateDriipNonceOfPayments.changeSecurityBond(ethersSecurityBond.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfPayments.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfPayments.address);
+            await ethersConfiguration.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfPayments.address, 'operational_mode', {gasLimit: 1e6}
+            );
+
+            await ethersFraudChallenge.registerService(ethersFraudChallengeByDuplicateDriipNonceOfPayments.address);
+            await ethersFraudChallenge.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfPayments.address, 'add_fraudulent_payment', {gasLimit: 1e6}
+            );
         });
 
         beforeEach(async () => {
@@ -369,6 +377,7 @@ module.exports = (glob) => {
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                     payment2 = await mocks.mockPayment(glob.owner, {
+                        nonce: payment1.nonce,
                         sender: {
                             wallet: glob.user_c
                         },
@@ -394,8 +403,9 @@ module.exports = (glob) => {
                     fraudulentPaymentsCount.eq(2).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    stage.figure.currency.ct.should.equal(mocks.address0);
+                    stage.figure.currency.id.should.deep.equal(utils.bigNumberify(0));
+                    stage.figure.amount.eq(utils.bigNumberify(1000)).should.be.true;
                     logs.should.have.lengthOf(1);
                 });
             });

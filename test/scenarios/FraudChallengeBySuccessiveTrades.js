@@ -43,7 +43,8 @@ module.exports = (glob) => {
             await ethersFraudChallengeBySuccessiveTrades.changeValidator(ethersValidator.address);
             await ethersFraudChallengeBySuccessiveTrades.changeClientFund(ethersClientFund.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeBySuccessiveTrades.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeBySuccessiveTrades.address);
+            await ethersConfiguration.enableServiceAction(ethersFraudChallengeBySuccessiveTrades.address, 'operational_mode');
         });
 
         beforeEach(async () => {

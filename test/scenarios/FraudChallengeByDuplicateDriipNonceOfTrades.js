@@ -44,7 +44,15 @@ module.exports = (glob) => {
             await ethersFraudChallengeByDuplicateDriipNonceOfTrades.changeValidator(ethersValidator.address);
             await ethersFraudChallengeByDuplicateDriipNonceOfTrades.changeSecurityBond(ethersSecurityBond.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfTrades.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfTrades.address);
+            await ethersConfiguration.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfTrades.address, 'operational_mode', {gasLimit: 1e6}
+            );
+
+            await ethersFraudChallenge.registerService(ethersFraudChallengeByDuplicateDriipNonceOfTrades.address);
+            await ethersFraudChallenge.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfTrades.address, 'add_fraudulent_trade', {gasLimit: 1e6}
+            );
         });
 
         beforeEach(async () => {
@@ -365,6 +373,7 @@ module.exports = (glob) => {
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                     trade2 = await mocks.mockTrade(glob.owner, {
+                        nonce: trade1.nonce,
                         buyer: {
                             wallet: glob.user_c
                         },
@@ -390,8 +399,9 @@ module.exports = (glob) => {
                     fraudulentTradesCount.eq(2).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    stage.figure.currency.ct.should.equal(mocks.address0);
+                    stage.figure.currency.id.should.deep.equal(utils.bigNumberify(0));
+                    stage.figure.amount.eq(utils.bigNumberify(1000)).should.be.true;
                     logs.should.have.lengthOf(1);
                 });
             });
