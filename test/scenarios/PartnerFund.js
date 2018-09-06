@@ -284,9 +284,9 @@ module.exports = function (glob) {
             try {
                 let args = await glob.web3PartnerFund.deposit(userATag, 0);
                 const _amount = args[0];
-                const _currencyCt = args[1];
-                const _currencyId = args[2];
-                const _blocknum = args[3];
+                const _blocknum = args[1];
+                const _currencyCt = args[2];
+                const _currencyId = args[3];
 
                 assert.equal(_currencyCt, 0, "Unexpected token deposit.");
                 assert.equal(_currencyId, 0, "Unexpected token deposit.");
@@ -316,9 +316,9 @@ module.exports = function (glob) {
             try {
                 let args = await glob.web3PartnerFund.deposit(userATag, 1);
                 const _amount = args[0];
-                const _currencyCt = args[1];
-                const _currencyId = args[2];
-                const _blocknum = args[3];
+                const _blocknum = args[1];
+                const _currencyCt = args[2];
+                const _currencyId = args[3];
 
                 assert.equal(_currencyCt, glob.web3Erc20.address, "Unexpected ether or other token deposit.");
                 assert.equal(_currencyId, 0, "Unexpected NFT token deposit.");
