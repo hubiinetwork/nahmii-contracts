@@ -39,10 +39,10 @@ contract AccrualBenefactor is Benefactor {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function registerBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
-        return registerBeneficiary(beneficiary, PARTS_PER);
+        return registerFractionalBeneficiary(beneficiary, PARTS_PER);
     }
 
-    function registerBeneficiary(address beneficiary, uint256 fraction) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function registerFractionalBeneficiary(address beneficiary, uint256 fraction) public onlyOwner notNullAddress(beneficiary) returns (bool) {
         require(fraction > 0);
         require(totalBeneficiaryFraction.add(fraction) <= PARTS_PER);
 
