@@ -181,7 +181,31 @@ module.exports = (deployer, network, accounts) => {
 
             //configure smart contracts
 
-            const configuration = Configuration.at(addressStorage.get('Configuration'));
+            instance = Configuration.at(addressStorage.get('Configuration'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTrade'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByPayment'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessivePayments'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeSucceedingPayment'), 'operational_mode');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'), 'operational_mode');
 
             //register transfer controllers
             instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
@@ -229,6 +253,41 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.changeDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
             tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
             tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+
+            instance = await FraudChallenge.at(addressStorage.get('FraudChallenge'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), 'add_fraudulent_order');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTrade'), 'add_fraudulent_trade');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTrade'), 'add_seized_wallet');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByPayment'), 'add_fraudulent_payment');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByPayment'), 'add_seized_wallet');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), 'add_fraudulent_trade');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), 'add_seized_wallet');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), 'add_fraudulent_trade');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), 'add_double_spender_wallet');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'), 'add_fraudulent_trade');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'), 'add_fraudulent_payment');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), 'add_fraudulent_trade');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), 'add_fraudulent_payment');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), 'add_fraudulent_trade');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), 'add_seized_wallet');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessivePayments'), 'add_fraudulent_payment');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessivePayments'), 'add_seized_wallet');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeSucceedingPayment'), 'add_fraudulent_trade');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeSucceedingPayment'), 'add_seized_wallet');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'), 'add_fraudulent_payment');
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'), 'add_seized_wallet');
 
             instance = await FraudChallengeByOrder.at(addressStorage.get('FraudChallengeByOrder'));
             tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
@@ -303,7 +362,7 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.changeValidator(addressStorage.get('Validator'));
             tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
 
-            const partsPer = await configuration.getPartsPer();
+            const partsPer = await Configuration.at(addressStorage.get('Configuration')).getPartsPer();
 
             instance = await RevenueFund.at(addressStorage.get('TradesRevenueFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
@@ -317,6 +376,20 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), 'stage');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByPayment'), 'stage');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), 'stage');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'), 'stage');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'), 'stage');
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
+            tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), 'stage');
+            tx = await instance.registerService(addressStorage.get('DriipSettlementDispute'));
+            tx = await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'stage');
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));

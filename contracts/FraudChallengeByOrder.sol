@@ -57,7 +57,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validat
         fraudChallenge.addFraudulentOrder(order);
 
         (int256 stakeAmount, address stakeCurrencyCt, uint256 stakeCurrencyId) = configuration.getFalseWalletSignatureStake();
-       securityBond.stage(msg.sender, stakeAmount, stakeCurrencyCt, stakeCurrencyId);
+        securityBond.stage(msg.sender, stakeAmount, stakeCurrencyCt, stakeCurrencyId);
 
         emit ChallengeByOrderEvent(order, msg.sender);
     }
