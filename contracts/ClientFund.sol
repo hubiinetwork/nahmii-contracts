@@ -335,6 +335,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         transferToBeneficiaryPrivate(destWallet, beneficiary, amount, currencyCt, currencyId);
     }
 
+    // TODO Update this function with 'standard' parameter as in deposits and withdrawals
     function transferToBeneficiaryPrivate(address destWallet, Beneficiary beneficiary,
         int256 amount, address currencyCt, uint256 currencyId)
     private {
