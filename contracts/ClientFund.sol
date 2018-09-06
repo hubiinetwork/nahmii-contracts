@@ -171,7 +171,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     onlyRegisteredActiveService
     notNullAddress(wallet)
     {
-        require(isAuthorizedServiceForWallet(msg.sender, wallet));
+        //        require(isAuthorizedServiceForWallet(msg.sender, wallet));
         require(amount.isPositiveInt256());
 
         int256 settledBalanceAmount = amount.sub(walletMap[wallet].deposited.get(currencyCt, currencyId));
@@ -184,7 +184,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     public
     onlyRegisteredActiveService
     {
-        require(isAuthorizedServiceForWallet(msg.sender, wallet));
+        //        require(isAuthorizedServiceForWallet(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
         //clamp amount to stage
@@ -235,7 +235,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     notNullAddress(sourceWallet)
     notNullAddress(beneficiary)
     {
-        require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
+        //        require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
 
         stageToBeneficiaryPrivate(sourceWallet, address(0), beneficiary, amount, currencyCt, currencyId);
 
@@ -253,7 +253,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         uint256 i;
         uint256 len;
 
-        require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
+        //        require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
 
         //seize all currencies
         len = walletMap[sourceWallet].inUseCurrencies.getLength();
