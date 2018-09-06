@@ -3,7 +3,7 @@ var Helpers = require('../helpers');
 module.exports = function (glob) {
     var testCounter = Helpers.TestCounter();
 
-    describe.only("SecurityBond", function () {
+    describe("SecurityBond", function () {
         it(testCounter.next() + ": MUST FAIL [payable]: cannot be called with 0 ethers", async() => {
             try {
                 await web3.eth.sendTransactionPromise({
@@ -530,7 +530,7 @@ module.exports = function (glob) {
         it(testCounter.next() + ": MUST SUCCEED [withdraw]: Owner wants to withdraw 1.0 ETH before timeout but will get 0", async() => {
             try {
                 let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.owner, 0);
+                let oldEthersBalance = await web3.eth.getBalancePromise(glob.owner);
 
                 let result = await glob.web3SecurityBond.withdraw(web3.toWei(1.0, 'ether'), 0, 0, "", { from: glob.owner });
 
