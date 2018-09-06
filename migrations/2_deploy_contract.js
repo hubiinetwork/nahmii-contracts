@@ -194,8 +194,14 @@ module.exports = (deployer, network, accounts) => {
             instance = await ClientFund.at(addressStorage.get('ClientFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerService(addressStorage.get('Exchange'));
-            // TODO Activate exchange for all wallets
-            //Beneficiary, Benefactor, AuthorizableServable
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
+            tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+            // TODO Whitelist all ClientFundable contracts in ClientFund
 
             instance = await Exchange.at(addressStorage.get('Exchange'));
             tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
