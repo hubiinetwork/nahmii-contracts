@@ -6,7 +6,7 @@ module.exports = function (glob) {
 
 	var testCounter = Helpers.TestCounter();
 
-	describe("TokenHolderRevenueFund", function () {
+	describe.skip("TokenHolderRevenueFund", function () {
 		it(testCounter.next() + ": MUST SUCCEED [payable]: UnitTestHelpers_MISC_1 'collaborates' with 0.6 Ethers", async() => {
 			try {
 				let oldPeriodAccrualBalance = await glob.web3TokenHolderRevenueFund.periodAccrualBalance(0);
