@@ -6,7 +6,7 @@ chai.should();
 module.exports = function (glob) {
     var testCounter = Helpers.TestCounter();
 
-    describe("RevenueFund", function () {
+    describe.skip("RevenueFund", function () {
         it(testCounter.next() + ": MUST SUCCEED [payable]: UnitTestHelpers_MISC_1 'collaborates' with 1.2 Ethers", async () => {
             try {
                 let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
