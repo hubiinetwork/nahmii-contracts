@@ -14,46 +14,57 @@ The contracts are currently deployed to the **Ropsten** test network under the f
 {
   "networks": {
     "3": {
-      "SafeMathInt": "0x5525f7f7f1054412db89ed6df17e87628138bd78",
-      "SafeMathUint": "0x8300918385254f7dc3f38d34fe3805d751d5edc0",
-      "StriimTypes": "0xe392a30585dae6bf30b917a2a853ea4dde4ded2f",
-      "ClientFund": "0x579b69e2c468a9526e5221251b7a2a25bfec0770",
-      "CommunityVote": "0x94cca8c3ab335caa0256e7e300e8f6bdb454bbdb",
-      "Configuration": "0x82554af29292863f89891448902795359cfa5d30",
-      "Exchange": "0x8ceb6c0003058c6ee0a04902d94c68bfe43c49a4",
-      "CancelOrdersChallenge": "0x2722b7559f6630c49eb25fd469bb3349ef45c10d",
-      "DriipSettlementChallenge": "0xe358229cad715a2e24fd4cb6bfb04156d4456df9",
-      "DriipSettlementChallenger": "0xc3703ee27ad5ae29ea9f4c43849b1f75a63da511",
-      "Hasher": "0x848bc08382e460e68622528cb4e27a56226b10a5",
-      "Validator": "0xc612b1288483496e3b426118b12cbc242de09a27",
-      "FraudChallengeByOrder": "0x9e25b3df7fff57a8d9c81749b25f976b6277c07e",
-      "FraudChallengeByTrade": "0x7e1a30522506dc946bcbc36d7cb17fbc08af44e6",
-      "FraudChallengeByPayment": "0xaadf806edcbda69d745a0fbaa03c80ea26ab0198",
-      "FraudChallengeBySuccessiveTrades": "0x0b6a5f0be3857b6026b4f32179dd40ffae14bfd5",
-      "FraudChallengeBySuccessivePayments": "0x8f39617924f67fb4e7f02499c9b84b703d5b2701",
-      "FraudChallengeByPaymentSucceedingTrade": "0x0c13ddf93f59799860e140ba34ac2a3fd6a1fe10",
-      "FraudChallengeByTradeSucceedingPayment": "0x57796cc45593859cbe9bc668d085f26c0199b9ad",
-      "FraudChallengeByTradeOrderResiduals": "0x6473a8a967060469db26e1b5156ffd9273d63635",
-      "FraudChallengeByDoubleSpentOrders": "0x299b1f864e19600dd4ea66c62db968f6dd1473cc",
-      "FraudChallengeByDuplicateDriipNonceOfTrades": "0x6063916a1f2a27c6b8578ef0207d3c91adec9514",
-      "FraudChallengeByDuplicateDriipNonceOfPayments": "0xa3ed6e905c03eb7b2e0ebfcce7781be799d24fbf",
-      "FraudChallengeByDuplicateDriipNonceOfTradeAndPayment": "0x44ad0e73e88db3a66631a87849d29ed77f82a433",
-      "FraudChallenge": "0xf3e96de4c3ff22230ff113ddd41f7840896b341e",
-      "ReserveFund1": "0x93ae06b5b10b8a778651e67a853fea4635ed6d0d",
-      "ReserveFund2": "0xf12834163448d64f75f157a2e911b9999b333757",
-      "RevenueFund1": "0x8c308762918a331cc7479a2d4638108b8dfd7844",
-      "RevenueFund2": "0xde70cf1735737c4aa79272e3d10d93523de4e5ad",
-      "SecurityBond": "0x7eeb15a4c902365a8157ccdc4d0aa6f725b641e2",
-      "TokenHolderRevenueFund": "0x3d53bdcd6fc5bc851c63c47f6f1199eee09dc8ba"
+      "MonetaryTypes": "0x9f61ed0a41ddc36aeef1273e3d95cd04cdb44bf3",
+      "SafeMathInt": "0x3401cd2cedd4e1ca4dd9d33e0884faf0bdcaae58",
+      "SafeMathUint": "0x6b44ae0be05eee69d7923367a5c129ce5b1acff8",
+      "StriimTypes": "0xaa6c9d5eec5142ec8a0ee672704cb4ca4a6bc8a7",
+      "BalanceLib": "0x4a4e69ee1179d9354675e7ee92fb9ac3afca8311",
+      "InUseCurrencyLib": "0xcfc1d6e710f4b74fbb3740af4302f96bd9917ed2",
+      "TxHistoryLib": "0x49b8219d52fa4f13328f2f7c81d27f4b7466aabe",
+      "DriipSettlementTypes": "0xa1ba9193129f45023ece1b5beaa0528b177d9210",
+      "ERC20TransferController": "0x6d5a28c6574044c8ba1ff60158649aa872044848",
+      "ERC721TransferController": "0x12ca7bab76f87dd61be500bee7c6d0ddd7036884",
+      "TransferControllerManager": "0x38149b3a491e3abd6ea639ee6f7fc5ea6180384f",
+      "Hasher": "0xd64fc8c5d35d13120aa7ed07361fc53cacedd851",
+      "Validator": "0xfc9ccffe13a0202d32cce4d6be4ba327301c17fb",
+      "ClientFund": "0x1fe59c223fa4e9781237f0f49a15ca598069cc30",
+      "CommunityVote": "0x09372f0f0d107dfe14583850147b2de291facb66",
+      "Configuration": "0x53b9157a1dee3654a3204d03af0e5cc78a8fb392",
+      "Exchange": "0x9662cfa18e13ded518fa65e25e2d0e0c12d94293",
+      "CancelOrdersChallenge": "0x73465d2248286fd460a24745c5f922a4e2300846",
+      "DriipSettlementChallenge": "0x2be31fef66da0bdb1baada163a458305a4dac255",
+      "DriipSettlementDispute": "0x4fc329a5f2371c47bf8a6b512823b17813b06fdd",
+      "FraudChallengeByOrder": "0x22260c6c2988ebfd14d065360173ecc1a118c825",
+      "FraudChallengeByTrade": "0x5ccbc863751ad8a8b1db9d78a104ea8127cdef73",
+      "FraudChallengeByPayment": "0xe4ece8b1414ec9139197b916ef9adb8b82cdc2a6",
+      "FraudChallengeBySuccessiveTrades": "0xfcfbf8055fb092ad152fddfca8612653e1deeb84",
+      "FraudChallengeBySuccessivePayments": "0x9b394c93a2fac400b49e3eb1011527c3c754c8eb",
+      "FraudChallengeByPaymentSucceedingTrade": "0x19bfa98cb7e0efa251d778e8656a4c59eebfe793",
+      "FraudChallengeByTradeSucceedingPayment": "0x6572d251e565e9a65aa79db3a3628255c04291e2",
+      "FraudChallengeByTradeOrderResiduals": "0x179a4476ff9a6c0beea191ab3bb4756067fc5719",
+      "FraudChallengeByDoubleSpentOrders": "0x0d6266f7efd29207d4e55f1e1975636337ac8e89",
+      "FraudChallengeByDuplicateDriipNonceOfTrades": "0x6a19626a1f42a3206b7c39282206eaf7ce506aa2",
+      "FraudChallengeByDuplicateDriipNonceOfPayments": "0x0a77d71272001b164236a6c27253b611f082c509",
+      "FraudChallengeByDuplicateDriipNonceOfTradeAndPayment": "0xdba714580f594f6f08e1046263f6001c61e340cc",
+      "FraudChallenge": "0xa85352ba7312c8a299a2efc21e42bf149a7c3729",
+      "TradesRevenueFund": "0x4bb9ecc5e36e1567639d463f3db8e2a513f6dbfc",
+      "PaymentsRevenueFund": "0x13eed2a35c6f49189e6e4622faeb7ee0c5c49e41",
+      "SecurityBond": "0xf8c9c5b8cdd5997ed7a9c245f7be63a48960ce9c",
+      "TokenHolderRevenueFund": "0xb4125eadccd3e699b4d0a9508f3409e67a79b551",
+      "PartnerFund": "0x35c634a0b6eb7ddff3b5b9f63b9af6064686ec42"
     }
   },
-  "updatedAt": "2018-06-22T13:09:53.484Z"
+  "updatedAt": "2018-09-06T23:02:36.070Z"
 }
 ```
 
 ## Tests
 
-Developers should be using `truffle develop` followed by `truffle test` to run the included tests of the contracts. (`npm test` is currently unavailable.)
+In order to run the included tests there are a couple of alternatives readily available.
+
+[Truffle Develop](https://truffleframework.com/docs/truffle/getting-started/using-truffle-develop-and-the-console) may be spawned by `truffle develop`. Running command `test` in its REPL will initiate a run of all tests.
+
+Alternatively the standard `npm test` may be run. This command triggers execution of script `run_tests.js` which spawns an instance of [Ganache CLI](https://github.com/trufflesuite/ganache-cli) to run its tests on.
 
 ## Bytecode Verification
 
