@@ -370,9 +370,15 @@ module.exports = (glob) => {
             describe('if payment currencies differ', () => {
                 beforeEach(async () => {
                     lastPayment = await mocks.mockPayment(glob.owner, {
-                        currency: Wallet.createRandom().address,
-                        sender: {wallet: glob.user_a},
-                        recipient: {wallet: glob.user_b},
+                        currency: {
+                            ct: Wallet.createRandom().address
+                        },
+                        sender: {
+                            wallet: glob.user_a
+                        },
+                        recipient: {
+                            wallet: glob.user_b
+                        },
                         blockNumber: utils.bigNumberify(blockNumber20)
                     });
                 });

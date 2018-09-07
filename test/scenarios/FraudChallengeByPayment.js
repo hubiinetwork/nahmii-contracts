@@ -386,8 +386,9 @@ module.exports = (glob) => {
                     fraudulentPaymentsCount.eq(1).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    stage.figure.currency.ct.should.equal(mocks.address0);
+                    stage.figure.currency.id.should.deep.equal(utils.bigNumberify(0));
+                    stage.figure.amount.eq(utils.bigNumberify(1000)).should.be.true;
                     logs.should.have.lengthOf(1);
                 });
             });
