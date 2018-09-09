@@ -1,6 +1,6 @@
 {
   "name": "omphalos-exchange-smart-contracts",
-  "version": "1.0.0",
+  "version": "1.0.0-ropsten.3",
   "description": "Smart Contracts for Hubii Omphalos",
   "main": "truffle.js",
   "directories": {
