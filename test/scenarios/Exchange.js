@@ -406,24 +406,46 @@ module.exports = (glob) => {
 
         describe('settlementsCount()', () => {
             it('should equal value initialized', async () => {
-                const count = await ethersExchange.seizedWalletsCount();
+                const count = await ethersExchange.settlementsCount();
                 count.toNumber().should.equal(0);
             })
         });
 
-        describe('walletSettlementsCount()', () => {
+        describe('hasSettlementByNonce()', () => {
+            it('should equal value initialized', async () => {
+                const result = await ethersExchange.hasSettlementByNonce(1);
+                result.should.equal(false);
+            })
+        });
+
+        describe('settlementByNonce()', () => {
+            it('should revert', async () => {
+                ethersExchange.settlementByNonce(1).should.be.rejected;
+            })
+        });
+
+        describe('settlementsCountByWallet()', () => {
             it('should equal value initialized', async () => {
                 const address = Wallet.createRandom().address;
-                const count = await ethersExchange.walletSettlementsCount(address);
+                const count = await ethersExchange.settlementsCountByWallet(address);
                 count.toNumber().should.equal(0);
             })
         });
 
-        describe('walletSettlement', () => {
-            describe('if index is out of bounds', () => {
+        describe('settlementByWalletAndIndex', () => {
+            describe('if no matching settlement exists', () => {
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
-                    ethersExchange.walletSettlement(address, 0).should.be.rejected;
+                    ethersExchange.settlementByWalletAndIndex(address, 1).should.be.rejected;
+                })
+            });
+        });
+
+        describe('settlementByWalletAndNonce', () => {
+            describe('if no matching settlement exists', () => {
+                it('should revert', async () => {
+                    const address = Wallet.createRandom().address;
+                    ethersExchange.settlementByWalletAndNonce(address, 1).should.be.rejected;
                 })
             });
         });
@@ -609,16 +631,24 @@ module.exports = (glob) => {
                         updateConjugateSettledBalance[2].should.equal(trade.currencies.conjugate.ct);
                         updateConjugateSettledBalance[3].should.deep.equal(trade.currencies.conjugate.id);
 
-                        const nBuyerSettlements = await ethersExchange.walletSettlementsCount(trade.buyer.wallet);
-                        const buyerSettlement = await ethersExchange.walletSettlement(trade.buyer.wallet, nBuyerSettlements.sub(1));
-                        buyerSettlement.nonce.should.deep.equal(trade.nonce);
-                        buyerSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
-                        buyerSettlement.origin.should.equal(mocks.address0);
-                        buyerSettlement.target.should.equal(trade.buyer.wallet);
+                        const nBuyerSettlements = await ethersExchange.settlementsCountByWallet(trade.buyer.wallet);
+                        const buyerSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(trade.buyer.wallet, nBuyerSettlements.sub(1));
+                        buyerSettlementByIndex.nonce.should.deep.equal(trade.nonce);
+                        buyerSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                        buyerSettlementByIndex.origin.wallet.should.equal(trade.seller.wallet);
+                        buyerSettlementByIndex.origin.done.should.be.false;
+                        buyerSettlementByIndex.target.wallet.should.equal(trade.buyer.wallet);
+                        buyerSettlementByIndex.target.done.should.be.true;
 
-                        const nSellerSettlements = await ethersExchange.walletSettlementsCount(trade.seller.wallet);
-                        const sellerSettlement = await ethersExchange.walletSettlement(trade.seller.wallet, nSellerSettlements.sub(1));
-                        sellerSettlement.should.deep.equal(buyerSettlement);
+                        const buyerSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(trade.buyer.wallet, trade.buyer.nonce);
+                        buyerSettlementByNonce.should.deep.equal(buyerSettlementByIndex);
+
+                        const nSellerSettlements = await ethersExchange.settlementsCountByWallet(trade.seller.wallet);
+                        const sellerSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(trade.seller.wallet, nSellerSettlements.sub(1));
+                        sellerSettlementByIndex.should.deep.equal(buyerSettlementByIndex);
+
+                        const sellerSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(trade.seller.wallet, trade.seller.nonce);
+                        sellerSettlementByNonce.should.deep.equal(sellerSettlementByIndex);
                     });
                 });
 
@@ -820,16 +850,24 @@ module.exports = (glob) => {
                         updateSettledBalance[2].should.equal(payment.currency.ct);
                         updateSettledBalance[3].should.deep.equal(payment.currency.id);
 
-                        const nSenderSettlements = await ethersExchange.walletSettlementsCount(payment.sender.wallet);
-                        const senderSettlement = await ethersExchange.walletSettlement(payment.sender.wallet, nSenderSettlements.sub(1));
-                        senderSettlement.nonce.should.deep.equal(payment.nonce);
-                        senderSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
-                        senderSettlement.origin.should.equal(payment.sender.wallet);
-                        senderSettlement.target.should.equal(mocks.address0);
+                        const nSenderSettlements = await ethersExchange.settlementsCountByWallet(payment.sender.wallet);
+                        const senderSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(payment.sender.wallet, nSenderSettlements.sub(1));
+                        senderSettlementByIndex.nonce.should.deep.equal(payment.nonce);
+                        senderSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
+                        senderSettlementByIndex.origin.wallet.should.equal(payment.sender.wallet);
+                        senderSettlementByIndex.origin.done.should.be.true;
+                        senderSettlementByIndex.target.wallet.should.equal(payment.recipient.wallet);
+                        senderSettlementByIndex.target.done.should.be.false;
 
-                        const nRecipientSettlements = await ethersExchange.walletSettlementsCount(payment.recipient.wallet);
-                        const recipientSettlement = await ethersExchange.walletSettlement(payment.recipient.wallet, nRecipientSettlements.sub(1));
-                        recipientSettlement.should.deep.equal(senderSettlement);
+                        const senderSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(payment.sender.wallet, payment.sender.nonce);
+                        senderSettlementByNonce.should.deep.equal(senderSettlementByIndex);
+
+                        const nRecipientSettlements = await ethersExchange.settlementsCountByWallet(payment.recipient.wallet);
+                        const recipientSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(payment.recipient.wallet, nRecipientSettlements.sub(1));
+                        recipientSettlementByIndex.should.deep.equal(senderSettlementByIndex);
+
+                        const recipientSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(payment.recipient.wallet, payment.recipient.nonce);
+                        recipientSettlementByNonce.should.deep.equal(recipientSettlementByIndex);
                     });
                 });
 
