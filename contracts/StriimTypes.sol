@@ -177,11 +177,17 @@ library StriimTypes {
         uint256 blockNumber;
     }
 
+    struct SettlementParty {
+        uint256 nonce;
+        address wallet;
+        bool done;
+    }
+
     struct Settlement {
         uint256 nonce;
         DriipType driipType;
-        address origin;
-        address target;
+        SettlementParty origin;
+        SettlementParty target;
     }
 
     //
