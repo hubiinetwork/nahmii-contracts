@@ -32,7 +32,7 @@ contract AuthorizableServable is Servable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function authorizeRegisteredService(address service) public notOwner notNullOrThisAddress(service) {
+    function authorizeRegisteredService(address service) public notDeployer notNullOrThisAddress(service) {
         require(msg.sender != service);
 
         //ensure service is registered
@@ -45,7 +45,7 @@ contract AuthorizableServable is Servable {
         emit AuthorizeRegisteredServiceEvent(msg.sender, service);
     }
 
-    function authorizeRegisteredServiceAction(address service, string action) public notOwner notNullOrThisAddress(service) {
+    function authorizeRegisteredServiceAction(address service, string action) public notDeployer notNullOrThisAddress(service) {
         require(msg.sender != service);
 
         bytes32 actionHash = hashString(action);
@@ -61,7 +61,7 @@ contract AuthorizableServable is Servable {
         emit AuthorizeRegisteredServiceActionEvent(msg.sender, service, action);
     }
 
-    function unauthorizeRegisteredService(address service) public notOwner notNullOrThisAddress(service) {
+    function unauthorizeRegisteredService(address service) public notDeployer notNullOrThisAddress(service) {
         require(msg.sender != service);
 
         //ensure service is registered
@@ -74,7 +74,7 @@ contract AuthorizableServable is Servable {
         emit UnauthorizeRegisteredServiceEvent(msg.sender, service);
     }
 
-    function unauthorizeRegisteredServiceAction(address service, string action) public notOwner notNullOrThisAddress(service) {
+    function unauthorizeRegisteredServiceAction(address service, string action) public notDeployer notNullOrThisAddress(service) {
         require(msg.sender != service);
 
         bytes32 actionHash = hashString(action);

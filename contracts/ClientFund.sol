@@ -200,10 +200,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit StageEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function unstage(int256 amount, address currencyCt, uint256 currencyId)
-    public
-    notOwner
-    {
+    function unstage(int256 amount, address currencyCt, uint256 currencyId) public notDeployer {
         require(amount.isNonZeroPositiveInt256());
 
         //clamp amount to move
@@ -218,22 +215,17 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
-    public
-    notOwner
-    {
+    function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId) public notDeployer {
         stageToBeneficiaryPrivate(msg.sender, msg.sender, beneficiary, amount, currencyCt, currencyId);
 
         //emit event
         emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
     }
 
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId)
-    public
-    onlyRegisteredActiveService
-    notNullAddress(sourceWallet)
-    notNullAddress(beneficiary)
+    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId) public
+        onlyRegisteredActiveService
+        notNullAddress(sourceWallet)
+        notNullAddress(beneficiary)
     {
         //        require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
 
@@ -300,16 +292,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId, standard);
     }
 
-    function withdrawal(address wallet, uint index)
-    public
-    view
-    onlyOwner
-    returns (int256 amount, uint256 timestamp, address token, uint256 id)
+    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id)
     {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
-    function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
+    function withdrawalCount(address wallet) public view returns (uint256) {
         return walletMap[wallet].txHistory.withdrawalCount();
     }
 
@@ -318,7 +306,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // -----------------------------------------------------------------------------------------------------------------
     function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
         int256 amount, address currencyCt, uint256 currencyId)
-    private
+        private
     {
         require(amount.isNonZeroPositiveInt256());
         require(isRegisteredBeneficiary(beneficiary));
