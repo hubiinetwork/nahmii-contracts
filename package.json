@@ -1,6 +1,6 @@
 {
   "name": "omphalos-exchange-smart-contracts",
-  "version": "1.0.0-ropsten.3",
+  "version": "1.0.0-pre.3",
   "description": "Smart Contracts for Hubii Omphalos",
   "main": "truffle.js",
   "directories": {
@@ -17,6 +17,10 @@
   },
   "author": "Hubii",
   "license": "Commercial",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hubiinetwork/striim-contracts.git"
+  },
   "dependencies": {
     "async": "^2.6.0",
     "augmented-keccak256": "git+https://github.com/CoinFabrik/augmented-keccak256.git",
