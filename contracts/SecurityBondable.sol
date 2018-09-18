@@ -31,7 +31,7 @@ contract SecurityBondable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the security bond contract
     /// @param newAddress The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newAddress) public onlyOwner
+    function changeSecurityBond(SecurityBond newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, securityBond)
     {

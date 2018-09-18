@@ -54,7 +54,7 @@ contract RevenueToken is ERC20, Ownable {
     //
     // Token settings
     // -----------------------------------------------------------------------------------------------------------------
-    function setTokenInformation(string newName, string newSymbol) public onlyOwner {
+    function setTokenInformation(string newName, string newSymbol) public onlyDeployer {
         require(bytes(newName).length > 0);
         require(bytes(newSymbol).length > 0 && bytes(newSymbol).length < 5);
 
@@ -208,7 +208,7 @@ contract RevenueToken is ERC20, Ownable {
      * @param _amount The amount of tokens to mint.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mint(address _to, uint256 _amount) onlyOwner public returns (bool) {
+    function mint(address _to, uint256 _amount) onlyDeployer public returns (bool) {
         totalSupply = totalSupply.add(_amount);
         balances[_to] = balances[_to].add(_amount);
 
@@ -291,11 +291,11 @@ contract RevenueToken is ERC20, Ownable {
     //5. Done
 
     //A cheaper alternative is to monitor all Transfer events and store them in a database.
-    function startHoldersEnum() onlyOwner public {
+    function startHoldersEnum() onlyDeployer public {
         holderEnumIndex = 0;
     }
 
-    function holdersEnum() onlyOwner public returns (address[]) {
+    function holdersEnum() onlyDeployer public returns (address[]) {
         address[] memory _holders = new address[](1024);
         uint256 counter = 0;
 

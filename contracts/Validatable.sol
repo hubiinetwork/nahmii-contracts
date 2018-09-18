@@ -32,7 +32,7 @@ contract Validatable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the validator contract
     /// @param newAddress The (address of) Validator contract instance
-    function changeValidator(Validator newAddress) public onlyOwner
+    function changeValidator(Validator newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, validator)
     {
@@ -53,27 +53,27 @@ contract Validatable is Ownable {
     }
 
     modifier onlyExchangeSealedOrder(StriimTypes.Order order) {
-        require(validator.isGenuineOrderExchangeSeal(order, owner));
+        require(validator.isGenuineOrderExchangeSeal(order, deployer));
         _;
     }
 
     modifier onlySealedOrder(StriimTypes.Order order) {
-        require(validator.isGenuineOrderSeals(order, owner));
+        require(validator.isGenuineOrderSeals(order, deployer));
         _;
     }
 
     modifier onlySealedTrade(StriimTypes.Trade trade) {
-        require(validator.isGenuineTradeSeal(trade, owner));
+        require(validator.isGenuineTradeSeal(trade, deployer));
         _;
     }
 
     modifier onlyExchangeSealedPayment(StriimTypes.Payment payment) {
-        require(validator.isGenuinePaymentExchangeSeal(payment, owner));
+        require(validator.isGenuinePaymentExchangeSeal(payment, deployer));
         _;
     }
 
     modifier onlySealedPayment(StriimTypes.Payment payment) {
-        require(validator.isGenuinePaymentSeals(payment, owner));
+        require(validator.isGenuinePaymentSeals(payment, deployer));
         _;
     }
 }
