@@ -489,6 +489,15 @@ module.exports = (glob) => {
             });
         });
 
+        describe('walletCurrencyMaxDriipNonce()', () => {
+            it('should equal value initialized', async () => {
+                const maxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                    Wallet.createRandom().address, Wallet.createRandom().address, 0
+                );
+                maxDriipNonce.should.deep.equal(utils.bigNumberify(0));
+            });
+        });
+
         describe('settleDriipAsTrade()', () => {
             let trade, overrideOptions;
 
@@ -649,6 +658,26 @@ module.exports = (glob) => {
 
                         const sellerSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(trade.seller.wallet, trade.seller.nonce);
                         sellerSettlementByNonce.should.deep.equal(sellerSettlementByIndex);
+
+                        const buyerIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            trade.buyer.wallet, trade.currencies.intended.ct, trade.currencies.intended.id
+                        );
+                        buyerIntendedMaxDriipNonce.should.deep.equal(trade.nonce);
+
+                        const buyerConjugateMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                        );
+                        buyerConjugateMaxDriipNonce.should.deep.equal(trade.nonce);
+
+                        const sellerIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            trade.seller.wallet, trade.currencies.intended.ct, trade.currencies.intended.id
+                        );
+                        sellerIntendedMaxDriipNonce.should.not.deep.equal(trade.nonce);
+
+                        const sellerConjugateMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            trade.seller.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                        );
+                        sellerConjugateMaxDriipNonce.should.not.deep.equal(trade.nonce);
                     });
                 });
 
@@ -868,6 +897,16 @@ module.exports = (glob) => {
 
                         const recipientSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(payment.recipient.wallet, payment.recipient.nonce);
                         recipientSettlementByNonce.should.deep.equal(recipientSettlementByIndex);
+
+                        const senderIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            payment.sender.wallet, payment.currency.ct, payment.currency.id
+                        );
+                        senderIntendedMaxDriipNonce.should.deep.equal(payment.nonce);
+
+                        const recipientIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            payment.recipient.wallet, payment.currency.ct, payment.currency.id
+                        );
+                        recipientIntendedMaxDriipNonce.should.not.deep.equal(payment.nonce);
                     });
                 });
 
