@@ -1,4 +1,4 @@
-    module.exports = {
+module.exports = {
     networks: {
         development: {
             host: "localhost",
@@ -54,5 +54,8 @@
             enabled: true,
             runs: 0
         }
+    },
+    mocha: {
+        reporter: process.env.MOCHA_REPORTER || 'spec'
     }
 };
