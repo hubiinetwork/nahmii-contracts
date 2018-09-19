@@ -54,10 +54,9 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
     /// @notice Change the driip settlement challenge contract
     /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
-    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge)
-    public
-    onlyOwner
-    notNullAddress(newDriipSettlementChallenge)
+    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
+        onlyDeployer
+        notNullAddress(newDriipSettlementChallenge)
     {
         DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
         driipSettlementChallenge = newDriipSettlementChallenge;
@@ -66,10 +65,9 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
     /// @notice Change the fraud challenge contract
     /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge)
-    public
-    onlyOwner
-    notNullAddress(newFraudChallenge)
+    function changeFraudChallenge(FraudChallenge newFraudChallenge) public
+        onlyDeployer
+        notNullAddress(newFraudChallenge)
     {
         FraudChallenge oldFraudChallenge = fraudChallenge;
         fraudChallenge = newFraudChallenge;
@@ -78,10 +76,9 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
     /// @notice Change the cancel orders challenge contract
     /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
-    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
-    public
-    onlyOwner
-    notNullAddress(newCancelOrdersChallenge)
+    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge) public
+        onlyDeployer
+        notNullAddress(newCancelOrdersChallenge)
     {
         CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
         cancelOrdersChallenge = newCancelOrdersChallenge;
@@ -93,11 +90,10 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     /// @param challenger The address of the challenger
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
-    function challengeByOrder(StriimTypes.Order order, address challenger)
-    public
-    validatorInitialized
-    onlyDriipSettlementChallenge
-    onlySealedOrder(order)
+    function challengeByOrder(StriimTypes.Order order, address challenger) public
+        validatorInitialized
+        onlyDriipSettlementChallenge
+        onlySealedOrder(order)
     {
         require(driipSettlementChallenge != address(0));
         require(fraudChallenge != address(0));

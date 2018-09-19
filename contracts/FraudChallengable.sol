@@ -31,7 +31,7 @@ contract FraudChallengable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the fraudChallenge contract
     /// @param newAddress The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newAddress) public onlyOwner
+    function changeFraudChallenge(FraudChallenge newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, fraudChallenge)
     {
