@@ -29,14 +29,6 @@ contract AccesorManageable is Ownable {
     event ChangeAccesorManagerEvent(address oldAccesor, address newAccesor);
 
     //
-    // Constructor
-    // -----------------------------------------------------------------------------------------------------------------
-    constructor(address manager) internal {
-        require(manager != address(0));
-        accesorManager = AccesorManager(manager);
-    }
-
-    //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the accesor manager of this contract
@@ -52,30 +44,40 @@ contract AccesorManageable is Ownable {
         }
     }
 
-    function validateSigner(bytes32 hash, StriimTypes.Signature signature) public view {
+    function isSignedByRegisteredSigner(bytes32 hash, StriimTypes.Signature signature) public view returns (bool) {
+        require(accesorManager != address(0));
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
-        require(accesorManager.isSigner(ecrecover(prefixedHash, signature.v, signature.r, signature.s)));
+        return accesorManager.isSigner(ecrecover(prefixedHash, signature.v, signature.r, signature.s));
     }
 
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
+    modifier accessorManagerInitialized() {
+        require(accesorManager != address(0));
+        _;
+    }
+
     modifier onlyOperator() {
+        require(accesorManager != address(0));
         require(accesorManager.isOperator(msg.sender));
         _;
     }
 
     modifier notOperator() {
+        require(accesorManager != address(0));
         require(!accesorManager.isOperator(msg.sender));
         _;
     }
 
     modifier onlyOwnerOrOperator() {
+        require(accesorManager != address(0));
         require(accesorManager.isOwnerOrOperator(msg.sender));
         _;
     }
 
     modifier notOwnerOrOperator() {
+        require(accesorManager != address(0));
         require(!accesorManager.isOwnerOrOperator(msg.sender));
         _;
     }

@@ -9,6 +9,7 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "../Ownable.sol";
+import {AccesorManageable} from "../AccesorManageable.sol";
 import {ClientFundable} from "../ClientFundable.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
@@ -16,12 +17,12 @@ import {Beneficiary} from "../Beneficiary.sol";
 @title MockedClientFundService
 @notice Mocked implementation of service contract that interacts with ClientFund
 */
-contract MockedClientFundService is Ownable, ClientFundable {
+contract MockedClientFundService is Ownable, AccesorManageable, ClientFundable {
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) public Ownable(owner) {
+    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) {
     }
 
     //

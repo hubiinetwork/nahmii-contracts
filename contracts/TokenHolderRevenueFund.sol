@@ -11,6 +11,7 @@ pragma solidity ^0.4.24;
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {Ownable} from "./Ownable.sol";
+import {AccesorManageable} from "./AccesorManageable.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {RevenueToken} from "./RevenueToken.sol";
@@ -25,7 +26,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Fund that manages the revenue earned by revenue token holders.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
+contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -82,7 +83,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) Servable() public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -202,7 +203,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         emit CloseAccrualPeriodEvent();
     }
 
-    function claimAccrual(address currencyCt, uint256 currencyId) public {
+    function claimAccrual(address currencyCt, uint256 currencyId) public {/*
         int256 balance;
         int256 amount;
         int256 fraction;
@@ -243,7 +244,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         // Store upper bound as the last claimed accrual block number for currency
         claimAccrualBlockNumbers.push(bn_up);
-
+*/
         //raise event
         emit ClaimAccrualEvent(msg.sender, currencyCt, currencyId);
     }

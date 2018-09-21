@@ -25,7 +25,7 @@ contract AccesorManager is Ownable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeOperatorEvent(address oldOperator, address newOperator);
-    event RegisteredSignerEvent(address signer);
+    event RegisterSignerEvent(address signer);
 
     //
     // Constructor
@@ -57,7 +57,7 @@ contract AccesorManager is Ownable {
             signersMap[newSigner] = true;
 
             //emit event
-            emit RegisteredSignerEvent(newSigner);
+            emit RegisterSignerEvent(newSigner);
         }
     }
 

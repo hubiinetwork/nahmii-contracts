@@ -11,6 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {Ownable} from "./Ownable.sol";
+import {AccesorManageable} from "./AccesorManageable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
@@ -23,7 +24,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice XXXX
 */
 // TODO Update to two-component currency descriptor
-contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
+contract PartnerFund is Ownable, AccesorManageable, Beneficiary, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -71,7 +72,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
     }
 
     //
