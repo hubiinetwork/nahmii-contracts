@@ -30,7 +30,7 @@ contract Benefactor is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function registerBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         if (beneficiariesMap[beneficiary] > 0)
             return false;
 
@@ -43,7 +43,7 @@ contract Benefactor is Ownable {
         return true;
     }
 
-    function deregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function deregisterBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         if (beneficiariesMap[beneficiary] == 0)
             return false;
 

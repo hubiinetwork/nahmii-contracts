@@ -122,7 +122,7 @@ contract RevenueFund is Ownable, AccesorManageable, AccrualBeneficiary, AccrualB
     //
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyOwner {
+    function closeAccrualPeriod() public onlyDeployer {
         uint256 currency_idx;
         uint256 idx;
         int256 remaining;
@@ -191,8 +191,8 @@ contract RevenueFund is Ownable, AccesorManageable, AccrualBeneficiary, AccrualB
     //
     // Service functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyOwner notNullAddress(service) notThisAddress(service) {
-        require(service != owner);
+    function registerService(address service) public onlyDeployer notNullAddress(service) notThisAddress(service) {
+        require(service != deployer);
 
         //ensure service is not already registered
         require(registeredServicesMap[service] == false);
@@ -204,7 +204,7 @@ contract RevenueFund is Ownable, AccesorManageable, AccrualBeneficiary, AccrualB
         emit RegisterServiceEvent(service);
     }
 
-    function deregisterService(address service) public onlyOwner notNullAddress(service) {
+    function deregisterService(address service) public onlyDeployer notNullAddress(service) {
         //ensure service is registered
         require(registeredServicesMap[service] != false);
 
@@ -218,8 +218,8 @@ contract RevenueFund is Ownable, AccesorManageable, AccrualBeneficiary, AccrualB
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyOwnerOrService() {
-        require(msg.sender == owner || registeredServicesMap[msg.sender]);
+    modifier onlyDeployerOrService() {
+        require(isDeployer() || registeredServicesMap[msg.sender]);
         _;
     }
 }

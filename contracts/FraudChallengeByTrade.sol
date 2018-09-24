@@ -38,22 +38,21 @@ contract FraudChallengeByTrade is Ownable, AccesorManageable, FraudChallengable,
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(StriimTypes.Trade trade)
-    public
-    onlyOperationalModeNormal
-    validatorInitialized
-    onlySealedTrade(trade)
+    function challenge(StriimTypes.Trade trade) public
+        onlyOperationalModeNormal
+        validatorInitialized
+        onlySealedTrade(trade)
     {
         require(fraudChallenge != address(0));
         require(configuration != address(0));
         require(clientFund != address(0));
 
         // Genuineness affected by buyer
-        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade, owner)
+        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade, deployer)
         && validator.isGenuineTradeBuyerFee(trade);
 
         // Genuineness affected by seller
-        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade, owner)
+        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade, deployer)
         && validator.isGenuineTradeSellerFee(trade);
 
         require(!genuineBuyerAndFee || !genuineSellerAndFee);

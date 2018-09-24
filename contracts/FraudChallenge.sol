@@ -77,9 +77,7 @@ contract FraudChallenge is Ownable, AccesorManageable, StriimChallenge, Servable
 
     /// @notice Add given wallet to store of seized wallets if not already present
     /// @param wallet The seized wallet
-    function addSeizedWallet(address wallet) public
-    onlyOwnerOrEnabledServiceAction(ADD_SEIZED_WALLET_ACTION)
-    {
+    function addSeizedWallet(address wallet) public onlyDeployerOrEnabledServiceAction(ADD_SEIZED_WALLET_ACTION) {
         if (!seizedWalletsMap[wallet]) {
             seizedWallets.push(wallet);
             seizedWalletsMap[wallet] = true;
@@ -102,9 +100,7 @@ contract FraudChallenge is Ownable, AccesorManageable, StriimChallenge, Servable
 
     /// @notice Add given wallets to store of double spender wallets if not already present
     /// @param wallet The first wallet to add
-    function addDoubleSpenderWallet(address wallet) public
-    onlyOwnerOrEnabledServiceAction(ADD_DOUBLE_SPENDER_WALLET_ACTION)
-    {
+    function addDoubleSpenderWallet(address wallet) public onlyDeployerOrEnabledServiceAction(ADD_DOUBLE_SPENDER_WALLET_ACTION) {
         if (!doubleSpenderWalletsMap[wallet]) {
             doubleSpenderWallets.push(wallet);
             doubleSpenderWalletsMap[wallet] = true;
@@ -124,9 +120,7 @@ contract FraudChallenge is Ownable, AccesorManageable, StriimChallenge, Servable
     }
 
     /// @notice Add given trade to store of fraudulent trades if not already present
-    function addFraudulentOrder(StriimTypes.Order order) public
-    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION)
-    {
+    function addFraudulentOrder(StriimTypes.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
         if (!fraudulentOrderExchangeHashMap[order.seals.exchange.hash]) {
             fraudulentOrders.push(order);
             fraudulentOrderExchangeHashMap[order.seals.exchange.hash] = true;
@@ -146,9 +140,7 @@ contract FraudChallenge is Ownable, AccesorManageable, StriimChallenge, Servable
     }
 
     /// @notice Add given order to store of fraudulent orders if not already present
-    function addFraudulentTrade(StriimTypes.Trade trade) public
-    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
-    {
+    function addFraudulentTrade(StriimTypes.Trade trade) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION) {
         if (!fraudulentTradeHashMap[trade.seal.hash]) {
             pushMemoryTradeToStorageArray(trade, fraudulentTrades);
             fraudulentTradeHashMap[trade.seal.hash] = true;
@@ -168,9 +160,7 @@ contract FraudChallenge is Ownable, AccesorManageable, StriimChallenge, Servable
     }
 
     /// @notice Add given payment to store of fraudulent payments if not already present
-    function addFraudulentPayment(StriimTypes.Payment payment) public
-    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
-    {
+    function addFraudulentPayment(StriimTypes.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
         if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
             pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
             fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;

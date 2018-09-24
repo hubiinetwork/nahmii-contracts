@@ -78,7 +78,7 @@ contract PartnerFund is Ownable, AccesorManageable, Beneficiary, TransferControl
     //
     // Partner relationship functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerPartner(address tag, uint256 fee, bool canChangeAddress, bool ownerCanChangeAddress) public onlyOwner notNullTag(tag) {
+    function registerPartner(address tag, uint256 fee, bool canChangeAddress, bool ownerCanChangeAddress) public onlyDeployer notNullTag(tag) {
         require(!walletMap[tag].isRegistered);
         require(fee > 0);
         require(canChangeAddress || ownerCanChangeAddress);
@@ -92,7 +92,7 @@ contract PartnerFund is Ownable, AccesorManageable, Beneficiary, TransferControl
         emit RegisterParnerEvent(tag, fee);
     }
 
-    function changePartnerFee(address tag, uint256 fee) public onlyOwner isRegisteredTag(tag) {
+    function changePartnerFee(address tag, uint256 fee) public onlyDeployer isRegisteredTag(tag) {
         require(fee > 0);
 
         walletMap[tag].fee = fee;
@@ -108,16 +108,16 @@ contract PartnerFund is Ownable, AccesorManageable, Beneficiary, TransferControl
     function setPartnerWallet(address tag, address newWallet) public isRegisteredTag(tag) {
         address oldWallet;
 
-        require(newWallet != owner);
+        require(newWallet != deployer);
 
         oldWallet = walletMap[tag].wallet;
 
         //checks
         if (oldWallet == address(0)) {
             //if address not set, owner is the only allowed to change it
-            require(isOwner());
+            require(isDeployer());
         }
-        else if (isOwner()) {
+        else if (isDeployer()) {
             //owner trying to change address, verify access
             require(walletMap[tag].ownerCanChangeAddress);
         }
@@ -240,7 +240,7 @@ contract PartnerFund is Ownable, AccesorManageable, Beneficiary, TransferControl
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(int256 amount, address currencyCt, uint256 currencyId) public notOwner {
+    function stage(int256 amount, address currencyCt, uint256 currencyId) public notDeployer {
         address tag = partnerFromWallet(msg.sender);
 
         require(amount.isPositiveInt256());

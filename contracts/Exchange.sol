@@ -78,10 +78,9 @@ contract Exchange is Ownable, AccesorManageable, Configurable, Validatable, Clie
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the fraud challenge contract
     /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge)
-    public
-    onlyOwner
-    notNullAddress(newFraudChallenge)
+    function changeFraudChallenge(FraudChallenge newFraudChallenge) public
+        onlyDeployer 
+        notNullAddress(newFraudChallenge)
     {
         FraudChallenge oldFraudChallenge = fraudChallenge;
         fraudChallenge = newFraudChallenge;
@@ -90,10 +89,9 @@ contract Exchange is Ownable, AccesorManageable, Configurable, Validatable, Clie
 
     /// @notice Change the driip settlement challenge contract
     /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
-    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge)
-    public
-    onlyOwner
-    notNullAddress(newDriipSettlementChallenge)
+    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
+        onlyDeployer
+        notNullAddress(newDriipSettlementChallenge)
     {
         DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
         driipSettlementChallenge = newDriipSettlementChallenge;
@@ -102,10 +100,9 @@ contract Exchange is Ownable, AccesorManageable, Configurable, Validatable, Clie
 
     /// @notice Change the trades revenue fund contract
     /// @param newTradesRevenueFund The (address of) trades RevenueFund contract instance
-    function changeTradesRevenueFund(RevenueFund newTradesRevenueFund)
-    public
-    onlyOwner
-    notNullAddress(newTradesRevenueFund)
+    function changeTradesRevenueFund(RevenueFund newTradesRevenueFund) public
+        onlyDeployer
+        notNullAddress(newTradesRevenueFund)
     {
         RevenueFund oldTradesRevenueFund = tradesRevenueFund;
         tradesRevenueFund = newTradesRevenueFund;
@@ -114,10 +111,9 @@ contract Exchange is Ownable, AccesorManageable, Configurable, Validatable, Clie
 
     /// @notice Change the payments revenue fund contract
     /// @param newPaymentsRevenueFund The (address of) payments RevenueFund contract instance
-    function changePaymentsRevenueFund(RevenueFund newPaymentsRevenueFund)
-    public
-    onlyOwner
-    notNullAddress(newPaymentsRevenueFund)
+    function changePaymentsRevenueFund(RevenueFund newPaymentsRevenueFund) public
+        onlyDeployer
+        notNullAddress(newPaymentsRevenueFund)
     {
         RevenueFund oldPaymentsRevenueFund = paymentsRevenueFund;
         paymentsRevenueFund = newPaymentsRevenueFund;
@@ -203,7 +199,7 @@ contract Exchange is Ownable, AccesorManageable, Configurable, Validatable, Clie
         require(configuration != address(0));
         require(clientFund != address(0));
 
-        if (msg.sender != owner)
+        if (msg.sender != deployer)
             wallet = msg.sender;
 
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
@@ -296,7 +292,7 @@ contract Exchange is Ownable, AccesorManageable, Configurable, Validatable, Clie
         require(configuration != address(0));
         require(clientFund != address(0));
 
-        if (msg.sender != owner)
+        if (msg.sender != deployer)
             wallet = msg.sender;
 
         require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));

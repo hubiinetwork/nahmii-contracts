@@ -58,10 +58,9 @@ contract DriipSettlementChallenge is Ownable, AccesorManageable, StriimChallenge
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the driip settlement challenger contract
     /// @param newDriipSettlementDispute The (address of) DriipSettlementDispute contract instance
-    function changeDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute)
-    public
-    onlyOwner
-    notNullAddress(newDriipSettlementDispute)
+    function changeDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute) public
+        onlyDeployer
+        notNullAddress(newDriipSettlementDispute)
     {
         DriipSettlementDispute oldDriipSettlementDispute = driipSettlementDispute;
         driipSettlementDispute = newDriipSettlementDispute;
@@ -108,20 +107,19 @@ contract DriipSettlementChallenge is Ownable, AccesorManageable, StriimChallenge
     /// @param wallet The relevant driip party
     /// @param intendedStageAmount Amount of intended currency to be staged
     /// @param conjugateStageAmount Amount of conjugate currency to be staged
-    function startChallengeFromTrade(StriimTypes.Trade trade, address wallet, int256 intendedStageAmount,
-        int256 conjugateStageAmount)
-    public
-    validatorInitialized
-    onlySealedTrade(trade)
+    function startChallengeFromTrade(StriimTypes.Trade trade, address wallet, int256 intendedStageAmount, int256 conjugateStageAmount)
+        public
+        validatorInitialized
+        onlySealedTrade(trade)
     {
         require(configuration != address(0));
         require(intendedStageAmount.isPositiveInt256());
         require(conjugateStageAmount.isPositiveInt256());
 
-        if (msg.sender != owner)
+        if (msg.sender != deployer)
             wallet = msg.sender;
 
-        require(isOwner() || StriimTypes.isTradeParty(trade, wallet));
+        require(isDeployer() || StriimTypes.isTradeParty(trade, wallet));
 
         require(
             0 == walletChallengeMap[wallet].nonce ||
@@ -159,18 +157,17 @@ contract DriipSettlementChallenge is Ownable, AccesorManageable, StriimChallenge
     /// @param payment The challenged driip
     /// @param wallet The relevant driip party
     /// @param stageAmount Amount of payment currency to be staged
-    function startChallengeFromPayment(StriimTypes.Payment payment, address wallet, int256 stageAmount)
-    public
-    validatorInitialized
-    onlySealedPayment(payment)
+    function startChallengeFromPayment(StriimTypes.Payment payment, address wallet, int256 stageAmount) public
+        validatorInitialized
+        onlySealedPayment(payment)
     {
         require(configuration != address(0));
         require(stageAmount.isPositiveInt256());
 
-        if (msg.sender != owner)
+        if (msg.sender != deployer)
             wallet = msg.sender;
 
-        require(isOwner() || StriimTypes.isPaymentParty(payment, wallet));
+        require(isDeployer() || StriimTypes.isPaymentParty(payment, wallet));
 
         require(
             0 == walletChallengeMap[wallet].nonce || block.timestamp >= walletChallengeMap[wallet].timeout
@@ -201,12 +198,8 @@ contract DriipSettlementChallenge is Ownable, AccesorManageable, StriimChallenge
 
     /// @notice Get driip settlement challenge phase of given wallet
     /// @param wallet The wallet whose challenge phase will be returned
-    function getPhase(address wallet)
-    public
-    view
-    returns (uint, StriimTypes.ChallengePhase)
-    {
-        if (msg.sender != owner)
+    function getPhase(address wallet) public view returns (uint, StriimTypes.ChallengePhase) {
+        if (msg.sender != deployer)
             wallet = msg.sender;
         if (0 == walletChallengeMap[wallet].nonce)
             return (0, StriimTypes.ChallengePhase.Closed);
@@ -216,11 +209,7 @@ contract DriipSettlementChallenge is Ownable, AccesorManageable, StriimChallenge
             return (walletChallengeMap[wallet].nonce, StriimTypes.ChallengePhase.Closed);
     }
 
-    function getChallengeNonce(address wallet)
-    public
-    view
-    returns (uint256)
-    {
+    function getChallengeNonce(address wallet) public view returns (uint256) {
         return walletChallengeMap[wallet].nonce;
     }
 

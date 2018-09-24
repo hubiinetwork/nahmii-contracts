@@ -31,7 +31,7 @@ contract Configurable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
     /// @param newAddress The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newAddress) public onlyOwner
+    function changeConfiguration(Configuration newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, configuration)
     {

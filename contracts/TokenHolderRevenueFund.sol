@@ -92,7 +92,7 @@ contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiar
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the revenue token contract
     /// @param newRevenueToken The (address of) RevenueToken contract instance
-    function changeRevenueToken(RevenueToken newRevenueToken) public onlyOwner notNullAddress(newRevenueToken) {
+    function changeRevenueToken(RevenueToken newRevenueToken) public onlyDeployer notNullAddress(newRevenueToken) {
         if (newRevenueToken != revenueToken) {
             //set new revenue token
             RevenueToken oldRevenueToken = revenueToken;
@@ -186,7 +186,7 @@ contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiar
     //
     // Accrual functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyOwnerOrEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
+    function closeAccrualPeriod() public onlyDeployerOrEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
         uint256 i;
         uint256 len;
 
@@ -253,7 +253,7 @@ contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiar
     //
     // Withdrawal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard) public notOwner {
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard) public notDeployer {
         require(amount.isNonZeroPositiveInt256());
 
         amount = amount.clampMax(walletMap[msg.sender].staged.get(currencyCt, currencyId));
@@ -279,11 +279,11 @@ contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiar
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    function withdrawal(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token, uint256 id) {
+    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
-    function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
+    function withdrawalCount(address wallet) public view returns (uint256) {
         return walletMap[wallet].txHistory.withdrawalCount();
     }
 

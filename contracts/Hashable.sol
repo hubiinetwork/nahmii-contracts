@@ -32,7 +32,7 @@ contract Hashable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the hasher contract
     /// @param newAddress The (address of) Hasher contract instance
-    function changeHasher(Hasher newAddress) public onlyOwner
+    function changeHasher(Hasher newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, hasher)
     {

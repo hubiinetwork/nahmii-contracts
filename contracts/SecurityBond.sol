@@ -83,7 +83,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setWithdrawalTimeout(uint256 timeoutInSeconds) public onlyOwner {
+    function setWithdrawalTimeout(uint256 timeoutInSeconds) public onlyDeployer {
         withdrawalTimeout = timeoutInSeconds;
     }
 
@@ -148,7 +148,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId) public notNullAddress(wallet) onlyOwnerOrEnabledServiceAction(STAGE_ACTION) {
+    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId) public notNullAddress(wallet) onlyDeployerOrEnabledServiceAction(STAGE_ACTION) {
         uint256 start_time;
 
         require(amount.isPositiveInt256());
@@ -163,7 +163,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         walletMap[wallet].staged.add(amount, currencyCt, currencyId);
 
         //add substage info
-        start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0);
+        start_time = block.timestamp + ((wallet == deployer) ? withdrawalTimeout : 0);
         walletMap[wallet].subStaged[currencyCt][currencyId].list.push(SubStageItem(amount, start_time));
 
         //emit event
@@ -223,13 +223,12 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         emit WithdrawEvent(msg.sender, to_send_amount, currencyCt, currencyId);
     }
 
-    function withdrawal(address wallet, uint index) public view onlyOwner
-        returns (int256 amount, uint256 timestamp, address token, uint256 id)
+    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id)
     {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
-    function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
+    function withdrawalCount(address wallet) public view returns (uint256) {
         return walletMap[wallet].txHistory.withdrawalCount();
     }
 
