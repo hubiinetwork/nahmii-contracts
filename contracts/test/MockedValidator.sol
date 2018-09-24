@@ -67,7 +67,7 @@ contract MockedValidator is Ownable, AccesorManageable /*, Validator*/ {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) /*Validator(owner)*/ {
+    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) /*Validator(owner)*/ public {
         reset();
     }
 

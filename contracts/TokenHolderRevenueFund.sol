@@ -7,6 +7,7 @@
  */
 
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
@@ -83,7 +84,7 @@ contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiar
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
     }
 
     //
@@ -203,7 +204,7 @@ contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiar
         emit CloseAccrualPeriodEvent();
     }
 
-    function claimAccrual(address currencyCt, uint256 currencyId) public {/*
+    function claimAccrual(address currencyCt, uint256 currencyId) public {
         int256 balance;
         int256 amount;
         int256 fraction;
@@ -244,7 +245,7 @@ contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiar
 
         // Store upper bound as the last claimed accrual block number for currency
         claimAccrualBlockNumbers.push(bn_up);
-*/
+
         //raise event
         emit ClaimAccrualEvent(msg.sender, currencyCt, currencyId);
     }

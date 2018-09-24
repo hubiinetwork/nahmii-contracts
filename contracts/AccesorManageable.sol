@@ -29,6 +29,15 @@ contract AccesorManageable is Ownable {
     event ChangeAccesorManagerEvent(address oldAccesor, address newAccesor);
 
     //
+    // Constructor
+    // -----------------------------------------------------------------------------------------------------------------
+    constructor(address manager) public {
+        require(manager != address(0));
+        accesorManager = AccesorManager(manager);
+    }
+    
+
+    //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the accesor manager of this contract
