@@ -14,6 +14,7 @@ import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {Ownable} from "./Ownable.sol";
+import {AccesorManageable} from "./AccesorManageable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
@@ -26,7 +27,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
+contract ClientFund is Ownable, AccesorManageable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
@@ -71,7 +72,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) Beneficiary() Benefactor() public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) Beneficiary() Benefactor() public {
         serviceActivationTimeout = 1 weeks;
     }
 
@@ -235,11 +236,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit StageToBeneficiaryUntargetedEvent(sourceWallet, beneficiary, amount, currencyCt, currencyId);
     }
 
-    function seizeAllBalances(address sourceWallet, address targetWallet)
-    public
-    onlyRegisteredActiveService
-    notNullAddress(sourceWallet)
-    notNullAddress(targetWallet)
+    function seizeAllBalances(address sourceWallet, address targetWallet) public
+        onlyRegisteredActiveService
+        notNullAddress(sourceWallet)
+        notNullAddress(targetWallet)
     {
         int256 amount;
         uint256 i;
@@ -292,8 +292,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId, standard);
     }
 
-    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id)
-    {
+    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 

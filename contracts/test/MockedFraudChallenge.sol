@@ -36,7 +36,7 @@ contract MockedFraudChallenge is FraudChallenge {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) public FraudChallenge(owner) {
+    constructor(address owner, address accessManager) public FraudChallenge(owner, accessManager) {
     }
 
     //

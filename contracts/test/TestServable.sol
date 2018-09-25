@@ -10,16 +10,17 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../Ownable.sol";
+import {AccesorManageable} from "../AccesorManageable.sol";
 import {Servable} from "../Servable.sol";
 
 /**
 @title TestServable
 @notice A test contract that extends Servable
 */
-contract TestServable is Ownable, Servable {
+contract TestServable is Ownable, AccesorManageable, Servable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
     }
 }
