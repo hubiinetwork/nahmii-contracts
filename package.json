@@ -7,8 +7,9 @@
     "test": "test"
   },
   "scripts": {
-    "build": "truffle compile --all",
-    "test": "node run_tests.js",
+    "build": "truffle compile",
+    "build:all": "truffle compile --all",
+    "test": "concurrently -s first --kill-others 'ganache-cli >/dev/null' 'truffle compile && truffle test'",
     "deploy": "npm run deploy:test",
     "deploy:test": "truffle migrate --network testnet",
     "deploy:main": "truffle migrate --network mainnet",
@@ -33,6 +34,7 @@
     "bluebird": "^3.5.1",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
+    "concurrently": "^4.0.1",
     "ethereumjs-util": "^5.2.0",
     "mocha-teamcity-reporter": "^2.5.0",
     "sinon": "^5.0.1",
