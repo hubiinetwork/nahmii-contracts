@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {Ownable} from "./Ownable.sol";
-import {AccesorManageable} from "./AccesorManageable.sol";
+import {AccessorManageable} from "./AccessorManageable.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {RevenueToken} from "./RevenueToken.sol";
@@ -27,7 +27,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Fund that manages the revenue earned by revenue token holders.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiary, Servable, TransferControllerManageable {
+contract TokenHolderRevenueFund is Ownable, AccessorManageable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -84,7 +84,7 @@ contract TokenHolderRevenueFund is Ownable, AccesorManageable, AccrualBeneficiar
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
     }
 
     //

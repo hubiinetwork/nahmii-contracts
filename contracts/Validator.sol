@@ -16,20 +16,20 @@ import {StriimTypes} from "./StriimTypes.sol";
 import {Configurable} from "./Configurable.sol";
 import {Hashable} from "./Hashable.sol";
 import {Ownable} from "./Ownable.sol";
-import {AccesorManageable} from "./AccesorManageable.sol";
+import {AccessorManageable} from "./AccessorManageable.sol";
 
 /**
 @title Validatable
 @notice An ownable that validates valuable types (order, trade, payment)
 */
-contract Validator is Ownable, AccesorManageable, Configurable, Hashable {
+contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
     }
 
     //

@@ -60,7 +60,7 @@ contract Ownable is Modifiable, SelfDestructible {
     /// @notice Change the operator of this contract
     /// @param newOperator The address of the new operator
     function changeOperator(address newOperator) public onlyDeployer notNullOrThisAddress(newOperator) {
-        if (newOperator != deployer) {
+        if (newOperator != operator) {
             //set new operator
             address oldOperator = operator;
             operator = newOperator;

@@ -43,11 +43,11 @@ module.exports = (glob) => {
             ethersRevenueFund = new Contract(web3RevenueFund.address, MockedRevenueFund.abi, glob.signer_owner);
             web3CommunityVote = await MockedCommunityVote.new(/*glob.owner*/);
             ethersCommunityVote = new Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner, glob.web3AccesorManager.address);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner, glob.web3AccessorManager.address);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3DriipSettlementChallenge = await MockedDriipSettlementChallenge.new(/*glob.owner*/);
             ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, MockedDriipSettlementChallenge.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner, glob.web3AccesorManager.address);
+            web3Validator = await MockedValidator.new(glob.owner, glob.web3AccessorManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
             await ethersConfiguration.setConfirmations(utils.bigNumberify(0));

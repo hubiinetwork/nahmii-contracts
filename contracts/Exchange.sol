@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccesorManageable} from "./AccesorManageable.sol";
+import {AccessorManageable} from "./AccessorManageable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
@@ -29,7 +29,7 @@ import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 @title Exchange
 @notice The orchestrator of driip settlements
 */
-contract Exchange is Ownable, AccesorManageable, Configurable, Validatable, ClientFundable, CommunityVotable {
+contract Exchange is Ownable, AccessorManageable, Configurable, Validatable, ClientFundable, CommunityVotable {
     using SafeMathInt for int256;
     using SafeMathUint for uint256;
 
@@ -70,7 +70,7 @@ contract Exchange is Ownable, AccesorManageable, Configurable, Validatable, Clie
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
     }
 
     //

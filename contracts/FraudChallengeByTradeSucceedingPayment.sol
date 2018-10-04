@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccesorManageable} from "./AccesorManageable.sol";
+import {AccessorManageable} from "./AccessorManageable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
@@ -21,7 +21,7 @@ import {StriimTypes} from "./StriimTypes.sol";
 @title FraudChallengeByTradeSucceedingPayment
 @notice Where driips are challenged wrt fraud by mismatch in trade succeeding payment
 */
-contract FraudChallengeByTradeSucceedingPayment is Ownable, AccesorManageable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeByTradeSucceedingPayment is Ownable, AccessorManageable, FraudChallengable, Challenge, Validatable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, AccesorManageable, F
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
     }
 
     //
