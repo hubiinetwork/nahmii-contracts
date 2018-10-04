@@ -35,7 +35,7 @@ contract AccessorManageable is Ownable {
         require(manager != address(0));
         accessorManager = AccessorManager(manager);
     }
-    
+
 
     //
     // Functions
@@ -67,27 +67,28 @@ contract AccessorManageable is Ownable {
         _;
     }
 
-    modifier onlyOperator() {
-        require(accessorManager != address(0));
-        require(accessorManager.isOperator(msg.sender));
-        _;
-    }
-
-    modifier notOperator() {
-        require(accessorManager != address(0));
-        require(!accessorManager.isOperator(msg.sender));
-        _;
-    }
-
-    modifier onlyDeployerOrOperator() {
-        require(accessorManager != address(0));
-        require(accessorManager.isDeployerOrOperator(msg.sender));
-        _;
-    }
-
-    modifier notOwnerOrOperator() {
-        require(accessorManager != address(0));
-        require(!accessorManager.isDeployerOrOperator(msg.sender));
-        _;
-    }
+    // TODO Figure out why these modifiers act differently than the ones in Ownable
+    //    modifier onlyOperator() {
+    //        require(accessorManager != address(0));
+    //        require(accessorManager.isOperator(msg.sender));
+    //        _;
+    //    }
+    //
+    //    modifier notOperator() {
+    //        require(accessorManager != address(0));
+    //        require(!accessorManager.isOperator(msg.sender));
+    //        _;
+    //    }
+    //
+    //    modifier onlyDeployerOrOperator() {
+    //        require(accessorManager != address(0));
+    //        require(accessorManager.isDeployerOrOperator(msg.sender));
+    //        _;
+    //    }
+    //
+    //    modifier notOwnerOrOperator() {
+    //        require(accessorManager != address(0));
+    //        require(!accessorManager.isDeployerOrOperator(msg.sender));
+    //        _;
+    //    }
 }
