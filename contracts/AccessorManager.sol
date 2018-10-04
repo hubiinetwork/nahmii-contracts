@@ -18,7 +18,6 @@ contract AccessorManager is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public operator;
     mapping (address => bool) public signersMap;
 
     //
@@ -35,19 +34,6 @@ contract AccessorManager is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the operator of this contract
-    /// @param newOperator The address of the new operator
-    function changeOperator(address newOperator) public onlyOwner notNullOrThisAddress(newOperator) {
-        if (newOperator != owner) {
-            //set new operator
-            address oldOperator = operator;
-            operator = newOperator;
-
-            //emit event
-            emit ChangeOperatorEvent(oldOperator, newOperator);
-        }
-    }
-
     /// @notice Registers a signer
     /// @param newSigner The address of the signer to register
     function registerSigner(address newSigner) public onlyDeployer notNullOrThisAddress(newSigner) {
