@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 //import {DriipSettlementChallenge} from "../DriipSettlementChallenge.sol";
-import {StriimTypes} from "../StriimTypes.sol";
+import {NahmiiTypes} from "../NahmiiTypes.sol";
 import {DriipSettlementTypes} from "../DriipSettlementTypes.sol";
 
 /**

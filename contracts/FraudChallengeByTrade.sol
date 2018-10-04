@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -15,7 +15,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title FraudChallengeByTrade
@@ -25,7 +25,7 @@ contract FraudChallengeByTrade is Ownable, AccessorManageable, FraudChallengable
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(StriimTypes.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -38,7 +38,7 @@ contract FraudChallengeByTrade is Ownable, AccessorManageable, FraudChallengable
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(StriimTypes.Trade trade) public
+    function challenge(NahmiiTypes.Trade trade) public
         onlyOperationalModeNormal
         validatorInitialized
         onlySealedTrade(trade)

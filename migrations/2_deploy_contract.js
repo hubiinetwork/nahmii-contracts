@@ -1,5 +1,5 @@
 /*!
- * Hubii Striim
+ * Hubii Nahmii
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -37,8 +37,8 @@ const RevenueFund = artifacts.require('RevenueFund');
 const SafeMathInt = artifacts.require('SafeMathInt');
 const SafeMathUint = artifacts.require('SafeMathUint');
 const SecurityBond = artifacts.require('SecurityBond');
-const StriimChallenge = artifacts.require('StriimChallenge');
-const StriimTypes = artifacts.require('StriimTypes');
+const NahmiiChallenge = artifacts.require('NahmiiChallenge');
+const NahmiiTypes = artifacts.require('NahmiiTypes');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
@@ -84,13 +84,13 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'MonetaryTypes', '', MonetaryTypes);
 
             await deployer.link(MonetaryTypes, [
-                ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementDispute, Exchange, StriimTypes, StriimChallenge, TokenHolderRevenueFund, Validator
+                ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementDispute, Exchange, NahmiiTypes, NahmiiChallenge, TokenHolderRevenueFund, Validator
             ]);
 
             //deploy base libraries
             await execDeploy(ctl, 'SafeMathInt', '', SafeMathInt);
             await execDeploy(ctl, 'SafeMathUint', '', SafeMathUint);
-            await execDeploy(ctl, 'StriimTypes', '', StriimTypes);
+            await execDeploy(ctl, 'NahmiiTypes', '', NahmiiTypes);
             await execDeploy(ctl, 'BalanceLib', '', BalanceLib);
             await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
             await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
@@ -104,12 +104,12 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(SafeMathUint, [
                 CancelOrdersChallenge, Exchange, RevenueFund, TokenHolderRevenueFund, Validator
             ]);
-            await deployer.link(StriimTypes, [
+            await deployer.link(NahmiiTypes, [
                 CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, Exchange, FraudChallenge,
                 FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
                 FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
-                FraudChallengeByTradeSucceedingPayment, Hasher, StriimChallenge, Validator
+                FraudChallengeByTradeSucceedingPayment, Hasher, NahmiiChallenge, Validator
             ]);
             await deployer.link(BalanceLib, [
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund

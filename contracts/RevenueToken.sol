@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -39,7 +39,7 @@ contract RevenueToken is ERC20, Ownable {
     mapping(address => uint256[]) balanceBlockNumbers;
     mapping(address => mapping(address => uint256)) private allowed;
 
-    string public name = "Striim";
+    string public name = "Nahmii";
     string public symbol = "SII";
     uint8 public constant decimals = 15;
 

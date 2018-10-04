@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {Validator} from "./Validator.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title Validatable
@@ -52,27 +52,27 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyExchangeSealedOrder(StriimTypes.Order order) {
+    modifier onlyExchangeSealedOrder(NahmiiTypes.Order order) {
         require(validator.isGenuineOrderExchangeSeal(order, deployer));
         _;
     }
 
-    modifier onlySealedOrder(StriimTypes.Order order) {
+    modifier onlySealedOrder(NahmiiTypes.Order order) {
         require(validator.isGenuineOrderSeals(order, deployer));
         _;
     }
 
-    modifier onlySealedTrade(StriimTypes.Trade trade) {
+    modifier onlySealedTrade(NahmiiTypes.Trade trade) {
         require(validator.isGenuineTradeSeal(trade, deployer));
         _;
     }
 
-    modifier onlyExchangeSealedPayment(StriimTypes.Payment payment) {
+    modifier onlyExchangeSealedPayment(NahmiiTypes.Payment payment) {
         require(validator.isGenuinePaymentExchangeSeal(payment, deployer));
         _;
     }
 
-    modifier onlySealedPayment(StriimTypes.Payment payment) {
+    modifier onlySealedPayment(NahmiiTypes.Payment payment) {
         require(validator.isGenuinePaymentSeals(payment, deployer));
         _;
     }

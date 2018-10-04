@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
  * @title     DriipSettlementTypes
@@ -37,7 +37,7 @@ library DriipSettlementTypes {
 
         // Driip info
         //        bytes32 driipExchangeHash; // TODO Add exchange' hash
-        StriimTypes.DriipType driipType;
+        NahmiiTypes.DriipType driipType;
         uint256 driipIndex;
 
         // Stage info

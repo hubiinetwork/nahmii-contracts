@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {Configurable} from "./Configurable.sol";
 import {Hashable} from "./Hashable.sol";
 import {Ownable} from "./Ownable.sol";
@@ -36,14 +36,14 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeBuyerFee(StriimTypes.Trade trade) public view returns (bool) {
+    function isGenuineTradeBuyerFee(NahmiiTypes.Trade trade) public view returns (bool) {
         int256 feePartsPer = configuration.getPartsPer();
         int256 discountTier = int256(trade.buyer.rollingVolume);
-        if (StriimTypes.LiquidityRole.Maker == trade.buyer.liquidityRole) {
+        if (NahmiiTypes.LiquidityRole.Maker == trade.buyer.liquidityRole) {
             return (trade.buyer.fees.single.amount <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
             && (trade.buyer.fees.single.amount == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.buyer.fees.single.amount >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
-        } else {// StriimTypes.LiquidityRole.Taker == trade.buyer.liquidityRole
+        } else {// NahmiiTypes.LiquidityRole.Taker == trade.buyer.liquidityRole
             return (trade.buyer.fees.single.amount <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
             && (trade.buyer.fees.single.amount == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.buyer.fees.single.amount >= trade.amount.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
@@ -51,14 +51,14 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeSellerFee(StriimTypes.Trade trade) public view returns (bool) {
+    function isGenuineTradeSellerFee(NahmiiTypes.Trade trade) public view returns (bool) {
         int256 feePartsPer = configuration.getPartsPer();
         int256 discountTier = int256(trade.seller.rollingVolume);
-        if (StriimTypes.LiquidityRole.Maker == trade.seller.liquidityRole) {
+        if (NahmiiTypes.LiquidityRole.Maker == trade.seller.liquidityRole) {
             return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.getTradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
             && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
-        } else {// StriimTypes.LiquidityRole.Taker == trade.seller.liquidityRole
+        } else {// NahmiiTypes.LiquidityRole.Taker == trade.seller.liquidityRole
             return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.getTradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
             && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
             && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
@@ -66,7 +66,7 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeBuyer(StriimTypes.Trade trade, address exchange) public pure returns (bool) {
+    function isGenuineTradeBuyer(NahmiiTypes.Trade trade, address exchange) public pure returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (trade.buyer.wallet != exchange)
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.buyer.fees.single.amount))
@@ -77,7 +77,7 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeSeller(StriimTypes.Trade trade, address exchange) public pure returns (bool) {
+    function isGenuineTradeSeller(NahmiiTypes.Trade trade, address exchange) public pure returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (trade.seller.wallet != exchange)
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))
@@ -87,61 +87,61 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
         && (trade.seller.order.residuals.previous >= trade.seller.order.residuals.current);
     }
 
-    function isGenuineOrderWalletHash(StriimTypes.Order order) public view returns (bool) {
+    function isGenuineOrderWalletHash(NahmiiTypes.Order order) public view returns (bool) {
         return hasher.hashOrderAsWallet(order) == order.seals.wallet.hash;
     }
 
-    function isGenuineOrderExchangeHash(StriimTypes.Order order) public view returns (bool) {
+    function isGenuineOrderExchangeHash(NahmiiTypes.Order order) public view returns (bool) {
         return hasher.hashOrderAsExchange(order) == order.seals.exchange.hash;
     }
 
-    function isGenuineOrderWalletSeal(StriimTypes.Order order) public view returns (bool) {
+    function isGenuineOrderWalletSeal(NahmiiTypes.Order order) public view returns (bool) {
         return isGenuineOrderWalletHash(order)
-        && StriimTypes.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
+        && NahmiiTypes.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
     }
 
-    function isGenuineOrderExchangeSeal(StriimTypes.Order order, address exchange) public view returns (bool) {
+    function isGenuineOrderExchangeSeal(NahmiiTypes.Order order, address exchange) public view returns (bool) {
         return isGenuineOrderExchangeHash(order)
-        && StriimTypes.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, exchange);
+        && NahmiiTypes.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, exchange);
     }
 
-    function isGenuineOrderSeals(StriimTypes.Order order, address exchange) public view returns (bool) {
+    function isGenuineOrderSeals(NahmiiTypes.Order order, address exchange) public view returns (bool) {
         return isGenuineOrderWalletSeal(order) && isGenuineOrderExchangeSeal(order, exchange);
     }
 
-    function isGenuineTradeHash(StriimTypes.Trade trade) public view returns (bool) {
+    function isGenuineTradeHash(NahmiiTypes.Trade trade) public view returns (bool) {
         return hasher.hashTrade(trade) == trade.seal.hash;
     }
 
-    function isGenuineTradeSeal(StriimTypes.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeSeal(NahmiiTypes.Trade trade, address exchange) public view returns (bool) {
         return isGenuineTradeHash(trade)
-        && StriimTypes.isGenuineSignature(trade.seal.hash, trade.seal.signature, exchange);
+        && NahmiiTypes.isGenuineSignature(trade.seal.hash, trade.seal.signature, exchange);
     }
 
-    function isGenuinePaymentWalletHash(StriimTypes.Payment payment) public view returns (bool) {
+    function isGenuinePaymentWalletHash(NahmiiTypes.Payment payment) public view returns (bool) {
         return hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash;
     }
 
-    function isGenuinePaymentExchangeHash(StriimTypes.Payment payment) public view returns (bool) {
+    function isGenuinePaymentExchangeHash(NahmiiTypes.Payment payment) public view returns (bool) {
         return hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash;
     }
 
-    function isGenuinePaymentWalletSeal(StriimTypes.Payment payment) public view returns (bool) {
+    function isGenuinePaymentWalletSeal(NahmiiTypes.Payment payment) public view returns (bool) {
         return isGenuinePaymentWalletHash(payment)
-        && StriimTypes.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+        && NahmiiTypes.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
     }
 
-    function isGenuinePaymentExchangeSeal(StriimTypes.Payment payment, address exchange) public view returns (bool) {
+    function isGenuinePaymentExchangeSeal(NahmiiTypes.Payment payment, address exchange) public view returns (bool) {
         return isGenuinePaymentExchangeHash(payment)
-        && StriimTypes.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, exchange);
+        && NahmiiTypes.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, exchange);
     }
 
-    function isGenuinePaymentSeals(StriimTypes.Payment payment, address exchange) public view returns (bool) {
+    function isGenuinePaymentSeals(NahmiiTypes.Payment payment, address exchange) public view returns (bool) {
         return isGenuinePaymentWalletSeal(payment) && isGenuinePaymentExchangeSeal(payment, exchange);
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuinePaymentFee(StriimTypes.Payment payment) public view returns (bool) {
+    function isGenuinePaymentFee(NahmiiTypes.Payment payment) public view returns (bool) {
         int256 feePartsPer = int256(configuration.getPartsPer());
         return (payment.sender.fees.single.amount <= payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, 0)).div(feePartsPer))
         && (payment.sender.fees.single.amount == payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, payment.amount)).div(feePartsPer))
@@ -149,182 +149,182 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuinePaymentSender(StriimTypes.Payment payment) public pure returns (bool) {
+    function isGenuinePaymentSender(NahmiiTypes.Payment payment) public pure returns (bool) {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.sender.fees.single.amount));
     }
 
-    function isGenuinePaymentRecipient(StriimTypes.Payment payment) public pure returns (bool) {
+    function isGenuinePaymentRecipient(NahmiiTypes.Payment payment) public pure returns (bool) {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.recipient.balances.current == payment.recipient.balances.previous.add(payment.transfers.single));
     }
 
     function isSuccessiveTradesPartyNonces(
-        StriimTypes.Trade firstTrade,
-        StriimTypes.TradePartyRole firstTradePartyRole,
-        StriimTypes.Trade lastTrade,
-        StriimTypes.TradePartyRole lastTradePartyRole
+        NahmiiTypes.Trade firstTrade,
+        NahmiiTypes.TradePartyRole firstTradePartyRole,
+        NahmiiTypes.Trade lastTrade,
+        NahmiiTypes.TradePartyRole lastTradePartyRole
     )
     public
     pure returns (bool)
     {
-        uint256 firstNonce = (StriimTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.nonce : firstTrade.seller.nonce);
-        uint256 lastNonce = (StriimTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.nonce : lastTrade.seller.nonce);
+        uint256 firstNonce = (NahmiiTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.nonce : firstTrade.seller.nonce);
+        uint256 lastNonce = (NahmiiTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.nonce : lastTrade.seller.nonce);
         return lastNonce == firstNonce.add(1);
     }
 
     function isSuccessivePaymentsPartyNonces(
-        StriimTypes.Payment firstPayment,
-        StriimTypes.PaymentPartyRole firstPaymentPartyRole,
-        StriimTypes.Payment lastPayment,
-        StriimTypes.PaymentPartyRole lastPaymentPartyRole
+        NahmiiTypes.Payment firstPayment,
+        NahmiiTypes.PaymentPartyRole firstPaymentPartyRole,
+        NahmiiTypes.Payment lastPayment,
+        NahmiiTypes.PaymentPartyRole lastPaymentPartyRole
     )
     public
     pure returns (bool)
     {
-        uint256 firstNonce = (StriimTypes.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.nonce : firstPayment.recipient.nonce);
-        uint256 lastNonce = (StriimTypes.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.nonce : lastPayment.recipient.nonce);
+        uint256 firstNonce = (NahmiiTypes.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.nonce : firstPayment.recipient.nonce);
+        uint256 lastNonce = (NahmiiTypes.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.nonce : lastPayment.recipient.nonce);
         return lastNonce == firstNonce.add(1);
     }
 
     function isSuccessiveTradePaymentPartyNonces(
-        StriimTypes.Trade trade,
-        StriimTypes.TradePartyRole tradePartyRole,
-        StriimTypes.Payment payment,
-        StriimTypes.PaymentPartyRole paymentPartyRole
+        NahmiiTypes.Trade trade,
+        NahmiiTypes.TradePartyRole tradePartyRole,
+        NahmiiTypes.Payment payment,
+        NahmiiTypes.PaymentPartyRole paymentPartyRole
     )
     public
     pure returns (bool)
     {
-        uint256 firstNonce = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
-        uint256 lastNonce = (StriimTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
+        uint256 firstNonce = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
+        uint256 lastNonce = (NahmiiTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
         return lastNonce == firstNonce.add(1);
     }
 
     function isSuccessivePaymentTradePartyNonces(
-        StriimTypes.Payment payment,
-        StriimTypes.PaymentPartyRole paymentPartyRole,
-        StriimTypes.Trade trade,
-        StriimTypes.TradePartyRole tradePartyRole
+        NahmiiTypes.Payment payment,
+        NahmiiTypes.PaymentPartyRole paymentPartyRole,
+        NahmiiTypes.Trade trade,
+        NahmiiTypes.TradePartyRole tradePartyRole
     )
     public
     pure returns (bool)
     {
-        uint256 firstNonce = (StriimTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
-        uint256 lastNonce = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
+        uint256 firstNonce = (NahmiiTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
+        uint256 lastNonce = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
         return lastNonce == firstNonce.add(1);
     }
 
     function isGenuineSuccessiveTradesBalances(
-        StriimTypes.Trade firstTrade,
-        StriimTypes.TradePartyRole firstTradePartyRole,
-        StriimTypes.CurrencyRole firstTradeCurrencyRole,
-        StriimTypes.Trade lastTrade,
-        StriimTypes.TradePartyRole lastTradePartyRole,
-        StriimTypes.CurrencyRole lastTradeCurrencyRole
+        NahmiiTypes.Trade firstTrade,
+        NahmiiTypes.TradePartyRole firstTradePartyRole,
+        NahmiiTypes.CurrencyRole firstTradeCurrencyRole,
+        NahmiiTypes.Trade lastTrade,
+        NahmiiTypes.TradePartyRole lastTradePartyRole,
+        NahmiiTypes.CurrencyRole lastTradeCurrencyRole
     )
     public
     pure
     returns (bool)
     {
-        StriimTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (StriimTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.balances : firstTrade.seller.balances);
-        StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == firstTradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        NahmiiTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (NahmiiTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.balances : firstTrade.seller.balances);
+        NahmiiTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (NahmiiTypes.CurrencyRole.Intended == firstTradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
-        StriimTypes.IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (StriimTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
-        StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == lastTradeCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
+        NahmiiTypes.IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (NahmiiTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
+        NahmiiTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypes.CurrencyRole.Intended == lastTradeCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
     function isGenuineSuccessivePaymentsBalances(
-        StriimTypes.Payment firstPayment,
-        StriimTypes.PaymentPartyRole firstPaymentPartyRole,
-        StriimTypes.Payment lastPayment,
-        StriimTypes.PaymentPartyRole lastPaymentPartyRole
+        NahmiiTypes.Payment firstPayment,
+        NahmiiTypes.PaymentPartyRole firstPaymentPartyRole,
+        NahmiiTypes.Payment lastPayment,
+        NahmiiTypes.PaymentPartyRole lastPaymentPartyRole
     )
     public
     pure
     returns (bool)
     {
-        StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.balances : firstPayment.recipient.balances);
-        StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances : lastPayment.recipient.balances);
+        NahmiiTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (NahmiiTypes.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.balances : firstPayment.recipient.balances);
+        NahmiiTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypes.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances : lastPayment.recipient.balances);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
     function isGenuineSuccessiveTradePaymentBalances(
-        StriimTypes.Trade trade,
-        StriimTypes.TradePartyRole tradePartyRole,
-        StriimTypes.CurrencyRole tradeCurrencyRole,
-        StriimTypes.Payment payment,
-        StriimTypes.PaymentPartyRole paymentPartyRole
+        NahmiiTypes.Trade trade,
+        NahmiiTypes.TradePartyRole tradePartyRole,
+        NahmiiTypes.CurrencyRole tradeCurrencyRole,
+        NahmiiTypes.Payment payment,
+        NahmiiTypes.PaymentPartyRole paymentPartyRole
     )
     public
     pure
     returns (bool)
     {
-        StriimTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
-        StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        NahmiiTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
+        NahmiiTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (NahmiiTypes.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
-        StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
+        NahmiiTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
     function isGenuineSuccessivePaymentTradeBalances(
-        StriimTypes.Payment payment,
-        StriimTypes.PaymentPartyRole paymentPartyRole,
-        StriimTypes.Trade trade,
-        StriimTypes.TradePartyRole tradePartyRole,
-        StriimTypes.CurrencyRole tradeCurrencyRole
+        NahmiiTypes.Payment payment,
+        NahmiiTypes.PaymentPartyRole paymentPartyRole,
+        NahmiiTypes.Trade trade,
+        NahmiiTypes.TradePartyRole tradePartyRole,
+        NahmiiTypes.CurrencyRole tradeCurrencyRole
     )
     public
     pure
     returns (bool)
     {
-        StriimTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (StriimTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
+        NahmiiTypes.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (NahmiiTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
-        StriimTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
-        StriimTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (StriimTypes.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        NahmiiTypes.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
+        NahmiiTypes.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypes.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
     function isGenuineSuccessiveTradesNetFees(
-        StriimTypes.Trade firstTrade,
-        StriimTypes.TradePartyRole firstTradePartyRole,
-        StriimTypes.Trade lastTrade,
-        StriimTypes.TradePartyRole lastTradePartyRole
+        NahmiiTypes.Trade firstTrade,
+        NahmiiTypes.TradePartyRole firstTradePartyRole,
+        NahmiiTypes.Trade lastTrade,
+        NahmiiTypes.TradePartyRole lastTradePartyRole
     )
     public
     pure
     returns (bool)
     {
         MonetaryTypes.Figure memory lastSingleFee;
-        if (StriimTypes.TradePartyRole.Buyer == lastTradePartyRole)
+        if (NahmiiTypes.TradePartyRole.Buyer == lastTradePartyRole)
             lastSingleFee = lastTrade.buyer.fees.single;
-        else if (StriimTypes.TradePartyRole.Seller == lastTradePartyRole)
+        else if (NahmiiTypes.TradePartyRole.Seller == lastTradePartyRole)
             lastSingleFee = lastTrade.seller.fees.single;
 
-        MonetaryTypes.Figure[] memory firstNetFees = (StriimTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.net : firstTrade.seller.fees.net);
+        MonetaryTypes.Figure[] memory firstNetFees = (NahmiiTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.net : firstTrade.seller.fees.net);
         MonetaryTypes.Figure memory firstNetFee = MonetaryTypes.getFigureByCurrency(firstNetFees, lastSingleFee.currency);
 
-        MonetaryTypes.Figure[] memory lastNetFees = (StriimTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.net : lastTrade.seller.fees.net);
+        MonetaryTypes.Figure[] memory lastNetFees = (NahmiiTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.net : lastTrade.seller.fees.net);
         MonetaryTypes.Figure memory lastNetFee = MonetaryTypes.getFigureByCurrency(lastNetFees, lastSingleFee.currency);
 
         return lastNetFee.amount == firstNetFee.amount.add(lastSingleFee.amount);
     }
 
     function isGenuineSuccessiveTradeOrderResiduals(
-        StriimTypes.Trade firstTrade,
-        StriimTypes.Trade lastTrade,
-        StriimTypes.TradePartyRole tradePartyRole
+        NahmiiTypes.Trade firstTrade,
+        NahmiiTypes.Trade lastTrade,
+        NahmiiTypes.TradePartyRole tradePartyRole
     )
     public
     pure
     returns (bool)
     {
-        (int256 firstCurrentResiduals, int256 lastPreviousResiduals) = (StriimTypes.TradePartyRole.Buyer == tradePartyRole) ?
+        (int256 firstCurrentResiduals, int256 lastPreviousResiduals) = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole) ?
         (firstTrade.buyer.order.residuals.current, lastTrade.buyer.order.residuals.previous) :
     (firstTrade.seller.order.residuals.current, lastTrade.seller.order.residuals.previous);
 
@@ -332,8 +332,8 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     function isGenuineSuccessivePaymentsNetFees(
-        StriimTypes.Payment firstPayment,
-        StriimTypes.Payment lastPayment
+        NahmiiTypes.Payment firstPayment,
+        NahmiiTypes.Payment lastPayment
     )
     public
     pure
@@ -345,15 +345,15 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     function isGenuineSuccessiveTradePaymentNetFees(
-        StriimTypes.Trade trade,
-        StriimTypes.TradePartyRole tradePartyRole,
-        StriimTypes.Payment payment
+        NahmiiTypes.Trade trade,
+        NahmiiTypes.TradePartyRole tradePartyRole,
+        NahmiiTypes.Payment payment
     )
     public
     pure
     returns (bool)
     {
-        MonetaryTypes.Figure[] memory firstNetFees = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.net : trade.seller.fees.net);
+        MonetaryTypes.Figure[] memory firstNetFees = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.net : trade.seller.fees.net);
         MonetaryTypes.Figure memory firstNetFee = MonetaryTypes.getFigureByCurrency(firstNetFees, payment.sender.fees.single.currency);
 
         MonetaryTypes.Figure memory lastNetFee = MonetaryTypes.getFigureByCurrency(payment.sender.fees.net, payment.sender.fees.single.currency);
@@ -362,25 +362,25 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     function isGenuineSuccessivePaymentTradeNetFees(
-        StriimTypes.Payment payment,
-        StriimTypes.PaymentPartyRole paymentPartyRole,
-        StriimTypes.Trade trade,
-        StriimTypes.TradePartyRole tradePartyRole
+        NahmiiTypes.Payment payment,
+        NahmiiTypes.PaymentPartyRole paymentPartyRole,
+        NahmiiTypes.Trade trade,
+        NahmiiTypes.TradePartyRole tradePartyRole
     )
     public
     pure
     returns (bool)
     {
         MonetaryTypes.Figure memory lastSingleFee;
-        if (StriimTypes.TradePartyRole.Buyer == tradePartyRole)
+        if (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole)
             lastSingleFee = trade.buyer.fees.single;
-        else if (StriimTypes.TradePartyRole.Seller == tradePartyRole)
+        else if (NahmiiTypes.TradePartyRole.Seller == tradePartyRole)
             lastSingleFee = trade.seller.fees.single;
 
-        MonetaryTypes.Figure[] memory firstNetFees = (StriimTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.net : payment.recipient.fees.net);
+        MonetaryTypes.Figure[] memory firstNetFees = (NahmiiTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.net : payment.recipient.fees.net);
         MonetaryTypes.Figure memory firstNetFee = MonetaryTypes.getFigureByCurrency(firstNetFees, lastSingleFee.currency);
 
-        MonetaryTypes.Figure[] memory lastNetFees = (StriimTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.net : trade.seller.fees.net);
+        MonetaryTypes.Figure[] memory lastNetFees = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.net : trade.seller.fees.net);
         MonetaryTypes.Figure memory lastNetFee = MonetaryTypes.getFigureByCurrency(lastNetFees, lastSingleFee.currency);
 
         return lastNetFee.amount == firstNetFee.amount.add(lastSingleFee.amount);
