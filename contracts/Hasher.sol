@@ -10,18 +10,18 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccesorManageable} from "./AccesorManageable.sol";
+import {AccessorManageable} from "./AccessorManageable.sol";
 import {StriimTypes} from "./StriimTypes.sol";
 
 /**
 @title Hasher
 @notice Contract that hashes types in StriimTypes contract
 */
-contract Hasher is Ownable, AccesorManageable {
+contract Hasher is Ownable, AccessorManageable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
     }
 
     //

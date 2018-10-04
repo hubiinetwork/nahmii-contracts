@@ -6,12 +6,6 @@ module.exports = {
             network_id: "*",
             gas: 6500000
         },
-        mainnet: {
-            host: "ethereum.hubii.com",
-            port: 8545,
-            network_id: "1",
-            gas: 6500000
-        },
         develop: {
             host: "localhost",
             port: 9545,
@@ -30,22 +24,22 @@ module.exports = {
             network_id: "*",
             gas: 6500000
         },
-        "ganache-cli-for-test": {
-            host: "localhost",
-            port: 8456,
-            network_id: "*",
-            gas: 6500000
-        },
-        "hubii-ropsten": {
+        ropsten: {
             host: "geth-ropsten.ethereum",
             port: 80,
             network_id: "*",
             gas: 6500000
         },
-        "hubii-rinkeby": {
+        rinkeby: {
             host: "geth-rinkeby.ethereum",
             port: 80,
             network_id: "*",
+            gas: 6500000
+        },
+        mainnet: {
+            host: "ethereum.hubii.com",
+            port: 8545,
+            network_id: "1",
             gas: 6500000
         }
     },

@@ -9,7 +9,7 @@ const Helpers = require('./helpers');
 const w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 
 const ClientFund = artifacts.require("ClientFund");
-const AccesorManager = artifacts.require("AccesorManager");
+const AccessorManager = artifacts.require("AccessorManager");
 const CommunityVote = artifacts.require("CommunityVote");
 const Hasher = artifacts.require("Hasher");
 const Validator = artifacts.require("Validator");
@@ -147,19 +147,19 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate AccesorManager contract", async () => {
+    before("Preflight: Instantiate AccessorManager contract", async () => {
         try {
-            glob.web3AccesorManager = await AccesorManager.deployed();
-            assert.notEqual(glob.web3AccesorManager, null);
+            glob.web3AccessorManager = await AccessorManager.deployed();
+            assert.notEqual(glob.web3AccessorManager, null);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate AccesorManager contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate AccessorManager contract address. [Error: ' + err.toString() + ']');
         }
     });
 
     before("Preflight: Instantiate Servable contract", async () => {
         try {
-            glob.web3Servable = await TestServable.new(glob.owner, glob.web3AccesorManager.address);
+            glob.web3Servable = await TestServable.new(glob.owner, glob.web3AccessorManager.address);
             assert.notEqual(glob.web3Servable, null);
             glob.ethersIoServable = new ethers.Contract(glob.web3Servable.address, TestServable.abi, glob.signer_owner);
         }
@@ -170,7 +170,7 @@ contract('Smart contract checks', function () {
 
     before("Preflight: Instantiate AuthorizableServable contract", async () => {
         try {
-            glob.web3AuthorizableServable = await TestAuthorizableServable.new(glob.owner, glob.web3AccesorManager.address);
+            glob.web3AuthorizableServable = await TestAuthorizableServable.new(glob.owner, glob.web3AccessorManager.address);
             assert.notEqual(glob.web3AuthorizableServable, null);
             glob.ethersIoAuthorizableServable = new ethers.Contract(glob.web3AuthorizableServable.address, TestAuthorizableServable.abi, glob.signer_owner);
         }

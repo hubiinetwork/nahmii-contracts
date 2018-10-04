@@ -14,7 +14,7 @@ import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {Ownable} from "./Ownable.sol";
-import {AccesorManageable} from "./AccesorManageable.sol";
+import {AccessorManageable} from "./AccessorManageable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
@@ -27,7 +27,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract ClientFund is Ownable, AccesorManageable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
+contract ClientFund is Ownable, AccessorManageable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
@@ -72,7 +72,7 @@ contract ClientFund is Ownable, AccesorManageable, Beneficiary, Benefactor, Auth
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) Beneficiary() Benefactor() public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) Beneficiary() Benefactor() public {
         serviceActivationTimeout = 1 weeks;
     }
 

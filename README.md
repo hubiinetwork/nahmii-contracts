@@ -64,7 +64,7 @@ In order to run the included tests there are a couple of alternatives readily av
 
 [Truffle Develop](https://truffleframework.com/docs/truffle/getting-started/using-truffle-develop-and-the-console) may be spawned by `truffle develop`. Running command `test` in its REPL will initiate a run of all tests.
 
-Alternatively the standard `npm test` may be run. This command triggers execution of script `run_tests.js` which spawns an instance of [Ganache CLI](https://github.com/trufflesuite/ganache-cli) to run its tests on.
+Alternatively the standard `npm test` may be run. This command spawns an instance of [ganache-cli](https://github.com/trufflesuite/ganache-cli) on which smart contracts are deployed and tests executed against.
 
 ## Bytecode Verification
 

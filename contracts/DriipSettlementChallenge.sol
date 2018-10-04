@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccesorManageable} from "./AccesorManageable.sol";
+import {AccessorManageable} from "./AccessorManageable.sol";
 import {Validatable} from "./Validatable.sol";
 import {StriimChallenge} from "./StriimChallenge.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
@@ -23,7 +23,7 @@ import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 @title DriipSettlementChallenge
 @notice Where driip settlements are challenged
 */
-contract DriipSettlementChallenge is Ownable, AccesorManageable, StriimChallenge, Validatable {
+contract DriipSettlementChallenge is Ownable, AccessorManageable, StriimChallenge, Validatable {
     using SafeMathInt for int256;
 
     //
@@ -50,7 +50,7 @@ contract DriipSettlementChallenge is Ownable, AccesorManageable, StriimChallenge
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
     }
 
     //

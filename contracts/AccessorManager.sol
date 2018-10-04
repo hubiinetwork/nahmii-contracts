@@ -11,20 +11,18 @@ pragma solidity ^0.4.24;
 import {Ownable} from "./Ownable.sol";
 
 /**
-@title AccesorManager
+@title AccessorManager
 @notice A contract to control who can execute some specific actions
 */
-contract AccesorManager is Ownable {
+contract AccessorManager is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public operator;
     mapping (address => bool) public signersMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeOperatorEvent(address oldOperator, address newOperator);
     event RegisterSignerEvent(address signer);
 
     //
@@ -36,23 +34,10 @@ contract AccesorManager is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the operator of this contract
-    /// @param newOperator The address of the new operator
-    function changeOperator(address newOperator) public onlyOwner notNullOrThisAddress(newOperator) {
-        if (newOperator != owner) {
-            //set new operator
-            address oldOperator = operator;
-            operator = newOperator;
-
-            //emit event
-            emit ChangeOperatorEvent(oldOperator, newOperator);
-        }
-    }
-
     /// @notice Registers a signer
     /// @param newSigner The address of the signer to register
-    function registerSigner(address newSigner) public onlyOwner notNullOrThisAddress(newSigner) {
-        if (newSigner != owner && (!signersMap[newSigner])) {
+    function registerSigner(address newSigner) public onlyDeployer notNullOrThisAddress(newSigner) {
+        if (newSigner != deployer && (!signersMap[newSigner])) {
             //set new operator
             signersMap[newSigner] = true;
 
@@ -65,8 +50,8 @@ contract AccesorManager is Ownable {
         return (who == operator);
     }
 
-    function isOwnerOrOperator(address who) public view returns (bool) {
-        return (who == owner || who == operator);
+    function isDeployerOrOperator(address who) public view returns (bool) {
+        return (who == deployer || who == operator);
     }
 
     function isSigner(address who) public view returns (bool) {

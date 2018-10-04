@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccesorManageable} from "./AccesorManageable.sol";
+import {AccessorManageable} from "./AccessorManageable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
@@ -26,7 +26,7 @@ import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 @title DriipSettlementDispute
 @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
-contract DriipSettlementDispute is Ownable, AccesorManageable, Configurable, Validatable, SecurityBondable {
+contract DriipSettlementDispute is Ownable, AccessorManageable, Configurable, Validatable, SecurityBondable {
     using SafeMathInt for int256;
 
     //
@@ -50,7 +50,7 @@ contract DriipSettlementDispute is Ownable, AccesorManageable, Configurable, Val
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
     }
 
     /// @notice Change the driip settlement challenge contract

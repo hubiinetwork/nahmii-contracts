@@ -10,30 +10,30 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccesorManager} from "./AccesorManager.sol";
+import {AccessorManager} from "./AccessorManager.sol";
 import {StriimTypes} from "./StriimTypes.sol";
 
 /**
-@title AccesorManageable
+@title AccessorManageable
 @notice A contract to interface ACL
 */
-contract AccesorManageable is Ownable {
+contract AccessorManageable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    AccesorManager public accesorManager;
+    AccessorManager public accessorManager;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeAccesorManagerEvent(address oldAccesor, address newAccesor);
+    event ChangeAccessorManagerEvent(address oldAccesor, address newAccesor);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address manager) public {
         require(manager != address(0));
-        accesorManager = AccesorManager(manager);
+        accessorManager = AccessorManager(manager);
     }
     
 
@@ -42,52 +42,52 @@ contract AccesorManageable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the accesor manager of this contract
     /// @param newAccesor The address of the new accesor
-    function changeAccesorManager(address newAccesor) public onlyOwner notNullOrThisAddress(newAccesor) {
-        if (newAccesor != address(accesorManager)) {
+    function changeAccessorManager(address newAccesor) public onlyDeployer notNullOrThisAddress(newAccesor) {
+        if (newAccesor != address(accessorManager)) {
             //set new accessor
-            address oldAccesor = address(accesorManager);
-            accesorManager = AccesorManager(newAccesor);
+            address oldAccesor = address(accessorManager);
+            accessorManager = AccessorManager(newAccesor);
 
             //emit event
-            emit ChangeAccesorManagerEvent(oldAccesor, newAccesor);
+            emit ChangeAccessorManagerEvent(oldAccesor, newAccesor);
         }
     }
 
     function isSignedByRegisteredSigner(bytes32 hash, StriimTypes.Signature signature) public view returns (bool) {
-        require(accesorManager != address(0));
+        require(accessorManager != address(0));
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
-        return accesorManager.isSigner(ecrecover(prefixedHash, signature.v, signature.r, signature.s));
+        return accessorManager.isSigner(ecrecover(prefixedHash, signature.v, signature.r, signature.s));
     }
 
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier accessorManagerInitialized() {
-        require(accesorManager != address(0));
+        require(accessorManager != address(0));
         _;
     }
 
     modifier onlyOperator() {
-        require(accesorManager != address(0));
-        require(accesorManager.isOperator(msg.sender));
+        require(accessorManager != address(0));
+        require(accessorManager.isOperator(msg.sender));
         _;
     }
 
     modifier notOperator() {
-        require(accesorManager != address(0));
-        require(!accesorManager.isOperator(msg.sender));
+        require(accessorManager != address(0));
+        require(!accessorManager.isOperator(msg.sender));
         _;
     }
 
-    modifier onlyOwnerOrOperator() {
-        require(accesorManager != address(0));
-        require(accesorManager.isOwnerOrOperator(msg.sender));
+    modifier onlyDeployerOrOperator() {
+        require(accessorManager != address(0));
+        require(accessorManager.isDeployerOrOperator(msg.sender));
         _;
     }
 
     modifier notOwnerOrOperator() {
-        require(accesorManager != address(0));
-        require(!accesorManager.isOwnerOrOperator(msg.sender));
+        require(accessorManager != address(0));
+        require(!accessorManager.isDeployerOrOperator(msg.sender));
         _;
     }
 }

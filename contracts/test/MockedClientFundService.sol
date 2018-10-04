@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../Ownable.sol";
-import {AccesorManageable} from "../AccesorManageable.sol";
+import {AccessorManageable} from "../AccessorManageable.sol";
 import {ClientFundable} from "../ClientFundable.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
@@ -18,12 +18,12 @@ import {Beneficiary} from "../Beneficiary.sol";
 @title MockedClientFundService
 @notice Mocked implementation of service contract that interacts with ClientFund
 */
-contract MockedClientFundService is Ownable, AccesorManageable, ClientFundable {
+contract MockedClientFundService is Ownable, AccessorManageable, ClientFundable {
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccesorManageable(accessorManager) public {
+    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
     }
 
     //

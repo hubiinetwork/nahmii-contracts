@@ -6,7 +6,7 @@
 
 const BalanceLib = artifacts.require('BalanceLib');
 const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
-const AccesorManager = artifacts.require('AccesorManager');
+const AccessorManager = artifacts.require('AccessorManager');
 const ClientFund = artifacts.require('ClientFund');
 const CommunityVote = artifacts.require('CommunityVote');
 const Configuration = artifacts.require('Configuration');
@@ -132,7 +132,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'TransferControllerManager', '', TransferControllerManager);
 
             //deploy accessor manager
-            await execDeploy(ctl, 'AccesorManager', '', AccesorManager);
+            await execDeploy(ctl, 'AccessorManager', '', AccessorManager);
 
             //deploy other contracts
             ctl.usesAccessManager = true;
@@ -442,9 +442,9 @@ async function execDeploy(ctl, contractName, instanceName, contract) {
         let instance;
 
         if (ctl.usesAccessManager) {
-            let accesorManager = ctl.addressStorage.get('AccesorManager');
+            let accessorManager = ctl.addressStorage.get('AccessorManager');
 
-            instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, accesorManager, { from: ctl.ownerAccount });
+            instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, accessorManager, { from: ctl.ownerAccount });
         }
         else {
             instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, { from: ctl.ownerAccount });
