@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,15 +11,15 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {AccessorManageable} from "./AccessorManageable.sol";
-import {StriimChallenge} from "./StriimChallenge.sol";
+import {NahmiiChallenge} from "./NahmiiChallenge.sol";
 import {Servable} from "./Servable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, AccessorManageable, StriimChallenge, Servable {
+contract FraudChallenge is Ownable, AccessorManageable, NahmiiChallenge, Servable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -35,13 +35,13 @@ contract FraudChallenge is Ownable, AccessorManageable, StriimChallenge, Servabl
     address[] public doubleSpenderWallets;
     mapping(address => bool) public doubleSpenderWalletsMap;
 
-    StriimTypes.Order[] public fraudulentOrders;
+    NahmiiTypes.Order[] public fraudulentOrders;
     mapping(bytes32 => bool) public fraudulentOrderExchangeHashMap;
 
-    StriimTypes.Trade[] public fraudulentTrades;
+    NahmiiTypes.Trade[] public fraudulentTrades;
     mapping(bytes32 => bool) public fraudulentTradeHashMap;
 
-    StriimTypes.Payment[] public fraudulentPayments;
+    NahmiiTypes.Payment[] public fraudulentPayments;
     mapping(bytes32 => bool) public fraudulentPaymentExchangeHashMap;
 
     //
@@ -49,9 +49,9 @@ contract FraudChallenge is Ownable, AccessorManageable, StriimChallenge, Servabl
     // -----------------------------------------------------------------------------------------------------------------
     event AddSeizedWalletEvent(address wallet);
     event AddDoubleSpenderWalletEvent(address wallet);
-    event AddFraudulentOrderEvent(StriimTypes.Order order);
-    event AddFraudulentTradeEvent(StriimTypes.Trade trade);
-    event AddFraudulentPaymentEvent(StriimTypes.Payment payment);
+    event AddFraudulentOrderEvent(NahmiiTypes.Order order);
+    event AddFraudulentTradeEvent(NahmiiTypes.Trade trade);
+    event AddFraudulentPaymentEvent(NahmiiTypes.Payment payment);
 
     //
     // Constructor
@@ -120,7 +120,7 @@ contract FraudChallenge is Ownable, AccessorManageable, StriimChallenge, Servabl
     }
 
     /// @notice Add given trade to store of fraudulent trades if not already present
-    function addFraudulentOrder(StriimTypes.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
+    function addFraudulentOrder(NahmiiTypes.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
         if (!fraudulentOrderExchangeHashMap[order.seals.exchange.hash]) {
             fraudulentOrders.push(order);
             fraudulentOrderExchangeHashMap[order.seals.exchange.hash] = true;
@@ -140,7 +140,7 @@ contract FraudChallenge is Ownable, AccessorManageable, StriimChallenge, Servabl
     }
 
     /// @notice Add given order to store of fraudulent orders if not already present
-    function addFraudulentTrade(StriimTypes.Trade trade) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION) {
+    function addFraudulentTrade(NahmiiTypes.Trade trade) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION) {
         if (!fraudulentTradeHashMap[trade.seal.hash]) {
             pushMemoryTradeToStorageArray(trade, fraudulentTrades);
             fraudulentTradeHashMap[trade.seal.hash] = true;
@@ -160,7 +160,7 @@ contract FraudChallenge is Ownable, AccessorManageable, StriimChallenge, Servabl
     }
 
     /// @notice Add given payment to store of fraudulent payments if not already present
-    function addFraudulentPayment(StriimTypes.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
+    function addFraudulentPayment(NahmiiTypes.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
         if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
             pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
             fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;

@@ -20,7 +20,7 @@
   "license": "Commercial",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hubiinetwork/striim-contracts.git"
+    "url": "git+https://github.com/hubiinetwork/nahmii-contracts.git"
   },
   "dependencies": {
     "async": "^2.6.0",

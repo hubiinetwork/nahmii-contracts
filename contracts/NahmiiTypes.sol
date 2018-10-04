@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,10 +11,10 @@ pragma solidity ^0.4.24;
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 
 /**
- * @title     StriimTypes
+ * @title     NahmiiTypes
  * @dev       Data types of order, trade, payment and more
  */
-library StriimTypes {
+library NahmiiTypes {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
@@ -193,36 +193,36 @@ library StriimTypes {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function isTradeParty(StriimTypes.Trade trade, address wallet) internal pure returns (bool) {
+    function isTradeParty(NahmiiTypes.Trade trade, address wallet) internal pure returns (bool) {
         return wallet == trade.buyer.wallet || wallet == trade.seller.wallet;
     }
 
-    function isTradeBuyer(StriimTypes.Trade trade, address wallet) internal pure returns (bool) {
+    function isTradeBuyer(NahmiiTypes.Trade trade, address wallet) internal pure returns (bool) {
         return wallet == trade.buyer.wallet;
     }
 
-    function isTradeSeller(StriimTypes.Trade trade, address wallet) internal pure returns (bool) {
+    function isTradeSeller(NahmiiTypes.Trade trade, address wallet) internal pure returns (bool) {
         return wallet == trade.seller.wallet;
     }
 
-    function isPaymentParty(StriimTypes.Payment payment, address wallet) internal pure returns (bool) {
+    function isPaymentParty(NahmiiTypes.Payment payment, address wallet) internal pure returns (bool) {
         return wallet == payment.sender.wallet || wallet == payment.recipient.wallet;
     }
 
-    function isPaymentSender(StriimTypes.Payment payment, address wallet) internal pure returns (bool) {
+    function isPaymentSender(NahmiiTypes.Payment payment, address wallet) internal pure returns (bool) {
         return wallet == payment.sender.wallet;
     }
 
-    function isPaymentRecipient(StriimTypes.Payment payment, address wallet) internal pure returns (bool) {
+    function isPaymentRecipient(NahmiiTypes.Payment payment, address wallet) internal pure returns (bool) {
         return wallet == payment.recipient.wallet;
     }
 
-    function isTradeOrder(StriimTypes.Trade trade, StriimTypes.Order order) internal pure returns (bool) {
+    function isTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order) internal pure returns (bool) {
         return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
         trade.seller.order.hashes.exchange == order.seals.exchange.hash);
     }
 
-    function isGenuineSignature(bytes32 hash, StriimTypes.Signature signature, address signer) internal pure returns (bool) {
+    function isGenuineSignature(bytes32 hash, NahmiiTypes.Signature signature, address signer) internal pure returns (bool) {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
         return ecrecover(prefixedHash, signature.v, signature.r, signature.s) == signer;

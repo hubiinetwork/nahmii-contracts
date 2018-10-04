@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -15,7 +15,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title FraudChallengeByTradeOrderResiduals
@@ -25,7 +25,7 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, AccessorManageable, Fra
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeOrderResidualsEvent(StriimTypes.Trade firstTrade, StriimTypes.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeByTradeOrderResidualsEvent(NahmiiTypes.Trade firstTrade, NahmiiTypes.Trade lastTrade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -44,8 +44,8 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, AccessorManageable, Fra
     /// @param currencyCt Concerned currency contract address (address(0) == ETH)
     /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     function challenge(
-        StriimTypes.Trade firstTrade,
-        StriimTypes.Trade lastTrade,
+        NahmiiTypes.Trade firstTrade,
+        NahmiiTypes.Trade lastTrade,
         address wallet,
         address currencyCt,
         uint256 currencyId
@@ -60,18 +60,18 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, AccessorManageable, Fra
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(StriimTypes.isTradeParty(firstTrade, wallet));
-        require(StriimTypes.isTradeParty(lastTrade, wallet));
+        require(NahmiiTypes.isTradeParty(firstTrade, wallet));
+        require(NahmiiTypes.isTradeParty(lastTrade, wallet));
         require(currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id);
         require(currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id);
 
-        StriimTypes.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
-        StriimTypes.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? StriimTypes.TradePartyRole.Buyer : StriimTypes.TradePartyRole.Seller);
+        NahmiiTypes.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? NahmiiTypes.TradePartyRole.Buyer : NahmiiTypes.TradePartyRole.Seller);
+        NahmiiTypes.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? NahmiiTypes.TradePartyRole.Buyer : NahmiiTypes.TradePartyRole.Seller);
         require(firstTradePartyRole == lastTradePartyRole);
 
-        if (StriimTypes.TradePartyRole.Buyer == firstTradePartyRole)
+        if (NahmiiTypes.TradePartyRole.Buyer == firstTradePartyRole)
             require(firstTrade.buyer.order.hashes.wallet == lastTrade.buyer.order.hashes.wallet);
-        else // StriimTypes.TradePartyRole.Seller == firstTradePartyRole
+        else // NahmiiTypes.TradePartyRole.Seller == firstTradePartyRole
             require(firstTrade.seller.order.hashes.wallet == lastTrade.seller.order.hashes.wallet);
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));

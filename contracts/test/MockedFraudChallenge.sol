@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {FraudChallenge} from "../FraudChallenge.sol";
-import {StriimTypes} from "../StriimTypes.sol";
+import {NahmiiTypes} from "../NahmiiTypes.sol";
 
 /**
 @title MockedFraudChallenge
@@ -53,17 +53,17 @@ contract MockedFraudChallenge is FraudChallenge {
         fraudulentPaymentExchangeHash = false;
     }
 
-    function addFraudulentOrder(StriimTypes.Order order) public {
+    function addFraudulentOrder(NahmiiTypes.Order order) public {
         fraudulentOrders.push(order);
         emit AddFraudulentOrderEvent(order);
     }
 
-    function addFraudulentTrade(StriimTypes.Trade trade) public {
+    function addFraudulentTrade(NahmiiTypes.Trade trade) public {
         pushMemoryTradeToStorageArray(trade, fraudulentTrades);
         emit AddFraudulentTradeEvent(trade);
     }
 
-    function addFraudulentPayment(StriimTypes.Payment payment) public {
+    function addFraudulentPayment(NahmiiTypes.Payment payment) public {
         pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
         emit AddFraudulentPaymentEvent(payment);
     }

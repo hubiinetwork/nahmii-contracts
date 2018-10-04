@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -15,7 +15,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title FraudChallengeBySuccessivePayments
@@ -25,7 +25,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, AccessorManageable, Frau
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeBySuccessivePaymentsEvent(StriimTypes.Payment firstPayment, StriimTypes.Payment lastPayment, address challenger, address seizedWallet);
+    event ChallengeBySuccessivePaymentsEvent(NahmiiTypes.Payment firstPayment, NahmiiTypes.Payment lastPayment, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -42,8 +42,8 @@ contract FraudChallengeBySuccessivePayments is Ownable, AccessorManageable, Frau
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
     function challenge(
-        StriimTypes.Payment firstPayment,
-        StriimTypes.Payment lastPayment,
+        NahmiiTypes.Payment firstPayment,
+        NahmiiTypes.Payment lastPayment,
         address wallet
     )
     public
@@ -56,12 +56,12 @@ contract FraudChallengeBySuccessivePayments is Ownable, AccessorManageable, Frau
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(StriimTypes.isPaymentParty(firstPayment, wallet));
-        require(StriimTypes.isPaymentParty(lastPayment, wallet));
+        require(NahmiiTypes.isPaymentParty(firstPayment, wallet));
+        require(NahmiiTypes.isPaymentParty(lastPayment, wallet));
         require(firstPayment.currency.ct == lastPayment.currency.ct && firstPayment.currency.id == lastPayment.currency.id);
 
-        StriimTypes.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
-        StriimTypes.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? StriimTypes.PaymentPartyRole.Sender : StriimTypes.PaymentPartyRole.Recipient);
+        NahmiiTypes.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? NahmiiTypes.PaymentPartyRole.Sender : NahmiiTypes.PaymentPartyRole.Recipient);
+        NahmiiTypes.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? NahmiiTypes.PaymentPartyRole.Sender : NahmiiTypes.PaymentPartyRole.Recipient);
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 

@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,16 +11,16 @@ pragma experimental ABIEncoderV2;
 
 import {Challenge} from "./Challenge.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
-contract StriimChallenge is Challenge {
+contract NahmiiChallenge is Challenge {
 
-    function pushMemoryTradeToStorageArray(StriimTypes.Trade memTrade,
-        StriimTypes.Trade[] storage stgTradeArr)
+    function pushMemoryTradeToStorageArray(NahmiiTypes.Trade memTrade,
+        NahmiiTypes.Trade[] storage stgTradeArr)
     internal
     {
         stgTradeArr.length += 1;
-        StriimTypes.Trade storage stgTrade = stgTradeArr[stgTradeArr.length - 1];
+        NahmiiTypes.Trade storage stgTrade = stgTradeArr[stgTradeArr.length - 1];
 
         stgTrade.nonce = memTrade.nonce;
         stgTrade.amount = memTrade.amount;
@@ -33,12 +33,12 @@ contract StriimChallenge is Challenge {
         stgTrade.blockNumber = memTrade.blockNumber;
     }
 
-    function pushMemoryPaymentToStorageArray(StriimTypes.Payment memPayment,
-        StriimTypes.Payment[] storage stgPaymentArr)
+    function pushMemoryPaymentToStorageArray(NahmiiTypes.Payment memPayment,
+        NahmiiTypes.Payment[] storage stgPaymentArr)
     internal
     {
         stgPaymentArr.length += 1;
-        StriimTypes.Payment storage stgPayment = stgPaymentArr[stgPaymentArr.length - 1];
+        NahmiiTypes.Payment storage stgPayment = stgPaymentArr[stgPaymentArr.length - 1];
 
         stgPayment.nonce = memPayment.nonce;
         stgPayment.amount = memPayment.amount;
@@ -50,7 +50,7 @@ contract StriimChallenge is Challenge {
         stgPayment.blockNumber = memPayment.blockNumber;
     }
 
-    function copyTradeParty(StriimTypes.TradeParty storage stgTradeParty, StriimTypes.TradeParty memTradeParty)
+    function copyTradeParty(NahmiiTypes.TradeParty storage stgTradeParty, NahmiiTypes.TradeParty memTradeParty)
     private
     {
         stgTradeParty.nonce = memTradeParty.nonce;
@@ -62,8 +62,8 @@ contract StriimChallenge is Challenge {
         copySingleFigureNetFigures(stgTradeParty.fees, memTradeParty.fees);
     }
 
-    function copyPaymentSenderParty(StriimTypes.PaymentSenderParty storage stgPaymentParty,
-        StriimTypes.PaymentSenderParty memPaymentParty)
+    function copyPaymentSenderParty(NahmiiTypes.PaymentSenderParty storage stgPaymentParty,
+        NahmiiTypes.PaymentSenderParty memPaymentParty)
     private
     {
         stgPaymentParty.nonce = memPaymentParty.nonce;
@@ -72,8 +72,8 @@ contract StriimChallenge is Challenge {
         copySingleFigureNetFigures(stgPaymentParty.fees, memPaymentParty.fees);
     }
 
-    function copyPaymentRecipientParty(StriimTypes.PaymentRecipientParty storage stgPaymentParty,
-        StriimTypes.PaymentRecipientParty memPaymentParty)
+    function copyPaymentRecipientParty(NahmiiTypes.PaymentRecipientParty storage stgPaymentParty,
+        NahmiiTypes.PaymentRecipientParty memPaymentParty)
     private
     {
         stgPaymentParty.nonce = memPaymentParty.nonce;
@@ -82,8 +82,8 @@ contract StriimChallenge is Challenge {
         copyFigureArray(stgPaymentParty.fees.net, memPaymentParty.fees.net);
     }
 
-    function copySingleFigureNetFigures(StriimTypes.SingleFigureNetFigures storage stgSingleFigureNetFigures,
-        StriimTypes.SingleFigureNetFigures memSingleFigureNetFigures)
+    function copySingleFigureNetFigures(NahmiiTypes.SingleFigureNetFigures storage stgSingleFigureNetFigures,
+        NahmiiTypes.SingleFigureNetFigures memSingleFigureNetFigures)
     private
     {
         stgSingleFigureNetFigures.single = memSingleFigureNetFigures.single;

@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {AccessorManager} from "./AccessorManager.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title AccessorManageable
@@ -53,7 +53,7 @@ contract AccessorManageable is Ownable {
         }
     }
 
-    function isSignedByRegisteredSigner(bytes32 hash, StriimTypes.Signature signature) public view returns (bool) {
+    function isSignedByRegisteredSigner(bytes32 hash, NahmiiTypes.Signature signature) public view returns (bool) {
         require(accessorManager != address(0));
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
