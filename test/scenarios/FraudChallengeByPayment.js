@@ -386,7 +386,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                     payment.seals.wallet.signature = await mocks.createWeb3Signer(glob.user_a)(payment.seals.wallet.hash);
-                    payment.seals.exchange.hash = mocks.hashPaymentAsExchange(payment);
+                    payment.seals.exchange.hash = mocks.hashPaymentAsOperator(payment);
                     payment.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment.seals.exchange.hash);
                 });
 

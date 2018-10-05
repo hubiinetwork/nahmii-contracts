@@ -339,7 +339,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                     order.seals.wallet.signature = await mocks.createWeb3Signer(glob.user_a)(order.seals.wallet.hash);
-                    order.seals.exchange.hash = mocks.hashOrderAsExchange(order);
+                    order.seals.exchange.hash = mocks.hashOrderAsOperator(order);
                     order.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(order.seals.exchange.hash);
                 });
 

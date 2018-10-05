@@ -14,7 +14,7 @@ exports.address0 = '0x0000000000000000000000000000000000000000';
 
 let globalNonce = 1;
 
-exports.mockOrder = async (exchange, params) => {
+exports.mockOrder = async (operator, params) => {
     const wallet = Wallet.createRandom();
 
     const order = exports.mergeDeep({
@@ -42,7 +42,7 @@ exports.mockOrder = async (exchange, params) => {
         blockNumber: utils.bigNumberify(0)
     }, params);
 
-    const exchangeSigner = exports.createWeb3Signer(exchange);
+    const operatorSigner = exports.createWeb3Signer(operator);
 
     const walletSigner = (
         order.wallet === wallet.address ?
@@ -50,10 +50,10 @@ exports.mockOrder = async (exchange, params) => {
             exports.createWeb3Signer(order.wallet)
     );
 
-    return await exports.augmentOrderSeals(order, exchangeSigner, walletSigner);
+    return await exports.augmentOrderSeals(order, operatorSigner, walletSigner);
 };
 
-exports.mockTrade = async (exchange, params) => {
+exports.mockTrade = async (operator, params) => {
     const trade = exports.mergeDeep({
         nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
@@ -171,12 +171,12 @@ exports.mockTrade = async (exchange, params) => {
         blockNumber: utils.bigNumberify(0)
     }, params);
 
-    const exchangeSigner = exports.createWeb3Signer(exchange);
+    const operatorSigner = exports.createWeb3Signer(operator);
 
-    return await exports.augmentTradeSeal(trade, exchangeSigner);
+    return await exports.augmentTradeSeal(trade, operatorSigner);
 };
 
-exports.mockPayment = async (exchange, params) => {
+exports.mockPayment = async (operator, params) => {
     const senderWallet = Wallet.createRandom();
     const recipientWallet = Wallet.createRandom();
 
@@ -239,7 +239,7 @@ exports.mockPayment = async (exchange, params) => {
         blockNumber: utils.bigNumberify(0)
     }, params);
 
-    const exchangeSigner = exports.createWeb3Signer(exchange);
+    const operatorSigner = exports.createWeb3Signer(operator);
 
     const walletSigner = (
         payment.sender.wallet === senderWallet.address ?
@@ -247,7 +247,7 @@ exports.mockPayment = async (exchange, params) => {
             exports.createWeb3Signer(payment.sender.wallet)
     );
 
-    return await exports.augmentPaymentSeals(payment, exchangeSigner, walletSigner);
+    return await exports.augmentPaymentSeals(payment, operatorSigner, walletSigner);
 };
 
 exports.mergeDeep = (target, sender) => {
@@ -292,24 +292,24 @@ exports.augmentOrderSeals = async (order, exchangeSign, walletSign) => {
             signature: await walletSign(walletHash)
         },
     };
-    const exchangeHash = exports.hashOrderAsExchange(order);
+    const operatorHash = exports.hashOrderAsOperator(order);
     order.seals.exchange = {
-        hash: exchangeHash,
-        signature: await exchangeSign(exchangeHash)
+        hash: operatorHash,
+        signature: await operatorSign(operatorHash)
     };
     return order;
 };
 
-exports.augmentTradeSeal = async (trade, exchangeSign) => {
+exports.augmentTradeSeal = async (trade, operatorSign) => {
     const hash = exports.hashTrade(trade);
     trade.seal = {
         hash: hash,
-        signature: await exchangeSign(hash)
+        signature: await operatorSign(hash)
     };
     return trade;
 };
 
-exports.augmentPaymentSeals = async (payment, exchangeSign, walletSign) => {
+exports.augmentPaymentSeals = async (payment, operatorSign, walletSign) => {
     const walletHash = exports.hashPaymentAsWallet(payment);
     payment.seals = {
         wallet: {
@@ -317,10 +317,10 @@ exports.augmentPaymentSeals = async (payment, exchangeSign, walletSign) => {
             signature: await walletSign(walletHash)
         }
     };
-    const exchangeHash = exports.hashPaymentAsExchange(payment);
+    const operatorHash = exports.hashPaymentAsOperator(payment);
     payment.seals.exchange = {
-        hash: exchangeHash,
-        signature: await exchangeSign(exchangeHash)
+        hash: operatorHash,
+        signature: await operatorSign(operatorHash)
     };
     return payment;
 };
@@ -342,7 +342,7 @@ exports.hashOrderAsWallet = (order) => {
     return cryptography.hash(globalHash, placementHash);
 };
 
-exports.hashOrderAsExchange = (order) => {
+exports.hashOrderAsOperator = (order) => {
     const walletSignatureHash = cryptography.hash(
         {type: 'uint8', value: order.seals.wallet.signature.v},
         order.seals.wallet.signature.r,
@@ -432,7 +432,7 @@ exports.hashPaymentAsWallet = (payment) => {
     return cryptography.hash(amountCurrencyHash, senderHash, recipientHash);
 };
 
-exports.hashPaymentAsExchange = (payment) => {
+exports.hashPaymentAsOperator = (payment) => {
     const walletSignatureHash = cryptography.hash(
         {type: 'uint8', value: payment.seals.wallet.signature.v},
         payment.seals.wallet.signature.r,
@@ -448,14 +448,14 @@ exports.hashPaymentAsExchange = (payment) => {
         payment.sender.fees.single.amount,
         payment.sender.fees.single.currency.ct,
         payment.sender.fees.single.currency.id
-        // TODO Consider adding dynamic size 'payment.sender.fees.net' to exchange hash
+        // TODO Consider adding dynamic size 'payment.sender.fees.net' to operator hash
         // payment.sender.fees.net
     );
     const recipientHash = cryptography.hash(
         payment.recipient.nonce,
         payment.recipient.balances.current,
         payment.recipient.balances.previous
-        // TODO Consider adding dynamic size 'payment.recipient.fees.net' to exchange hash
+        // TODO Consider adding dynamic size 'payment.recipient.fees.net' to operator hash
         // payment.recipient.fees.net
     );
     const transfersHash = cryptography.hash(

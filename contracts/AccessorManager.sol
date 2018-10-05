@@ -18,7 +18,7 @@ contract AccessorManager is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping (address => bool) public signersMap;
+    mapping(address => bool) public signersMap;
 
     //
     // Events
@@ -28,7 +28,8 @@ contract AccessorManager is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
+        registerSigner(deployer);
     }
 
     //
@@ -38,23 +39,18 @@ contract AccessorManager is Ownable {
     /// @param newSigner The address of the signer to register
     function registerSigner(address newSigner) public onlyDeployer notNullOrThisAddress(newSigner) {
         if (newSigner != deployer && (!signersMap[newSigner])) {
-            //set new operator
+            // Set new operator
             signersMap[newSigner] = true;
 
-            //emit event
+            // Emit event
             emit RegisterSignerEvent(newSigner);
         }
     }
 
-    function isOperator(address who) public view returns (bool) {
-        return (who == operator);
-    }
-
-    function isDeployerOrOperator(address who) public view returns (bool) {
-        return (who == deployer || who == operator);
-    }
-
-    function isSigner(address who) public view returns (bool) {
-        return signersMap[who];
+    /// @notice Gauge whether an address is registered signer
+    /// @param _address The concerned address
+    /// @return true if address is registered signer, else false
+    function isSigner(address _address) public view returns (bool) {
+        return signersMap[_address];
     }
 }

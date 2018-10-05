@@ -368,11 +368,6 @@ contract DriipSettlementDispute is Ownable, AccessorManageable, Configurable, Va
         _;
     }
 
-    modifier signedBy(bytes32 hash, NahmiiTypes.Signature signature, address signer) {
-        require(NahmiiTypes.isGenuineSignature(hash, signature, signer));
-        _;
-    }
-
     modifier onlyDriipSettlementChallenge() {
         require(msg.sender == address(driipSettlementChallenge));
         _;

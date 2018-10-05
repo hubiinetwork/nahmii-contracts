@@ -70,8 +70,13 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
+                (await web3Exchange.address.call()).should.have.lengthOf(42);
+            });
+        });
+
+        describe('deployer()', () => {
+            it('should equal value initialized', async () => {
                 (await web3Exchange.deployer.call()).should.equal(glob.owner);
-                (await web3Exchange.operator.call()).should.equal(glob.owner);
             });
         });
 
@@ -95,6 +100,12 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     web3Exchange.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
+            });
+        });
+
+        describe('operator()', () => {
+            it('should equal value initialized', async () => {
+                (await web3Exchange.operator.call()).should.equal(glob.owner);
             });
         });
 

@@ -367,11 +367,11 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment1.seals.wallet.hash = cryptography.hash('some payment');
                     payment1.seals.wallet.signature = await mocks.createWeb3Signer(payment1.sender.wallet)(payment1.seals.wallet.hash);
-                    payment1.seals.exchange.hash = mocks.hashPaymentAsExchange(payment1);
+                    payment1.seals.exchange.hash = mocks.hashPaymentAsOperator(payment1);
                     payment1.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment1.seals.exchange.hash);
                     payment2.seals.wallet.hash = cryptography.hash('some payment');
                     payment2.seals.wallet.signature = await mocks.createWeb3Signer(payment2.sender.wallet)(payment2.seals.wallet.hash);
-                    payment2.seals.exchange.hash = mocks.hashPaymentAsExchange(payment2);
+                    payment2.seals.exchange.hash = mocks.hashPaymentAsOperator(payment2);
                     payment2.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment2.seals.exchange.hash);
                 });
 

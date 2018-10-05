@@ -34,7 +34,7 @@ contract Hasher is Ownable, AccessorManageable {
         return keccak256(abi.encodePacked(globalHash, placementHash));
     }
 
-    function hashOrderAsExchange(NahmiiTypes.Order order) public pure returns (bytes32) {
+    function hashOrderAsOperator(NahmiiTypes.Order order) public pure returns (bytes32) {
         bytes32 walletSignatureHash = hashSignature(order.seals.wallet.signature);
         bytes32 placementResidualsHash = hashOrderPlacementResidualsData(order);
 
@@ -58,7 +58,7 @@ contract Hasher is Ownable, AccessorManageable {
         return keccak256(abi.encodePacked(amountCurrencyHash, senderHash, recipientHash));
     }
 
-    function hashPaymentAsExchange(NahmiiTypes.Payment payment) public pure returns (bytes32) {
+    function hashPaymentAsOperator(NahmiiTypes.Payment payment) public pure returns (bytes32) {
         bytes32 walletSignatureHash = hashSignature(payment.seals.wallet.signature);
         bytes32 nonceHash = hashPaymentNonce(payment);
         bytes32 senderHash = hashPaymentSenderDataAsExchange(payment);

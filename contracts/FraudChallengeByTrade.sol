@@ -48,11 +48,11 @@ contract FraudChallengeByTrade is Ownable, AccessorManageable, FraudChallengable
         require(clientFund != address(0));
 
         // Genuineness affected by buyer
-        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade, deployer)
+        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade)
         && validator.isGenuineTradeBuyerFee(trade);
 
         // Genuineness affected by seller
-        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade, deployer)
+        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade)
         && validator.isGenuineTradeSellerFee(trade);
 
         require(!genuineBuyerAndFee || !genuineSellerAndFee);

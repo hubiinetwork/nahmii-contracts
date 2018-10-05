@@ -221,10 +221,4 @@ library NahmiiTypes {
         return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
         trade.seller.order.hashes.exchange == order.seals.exchange.hash);
     }
-
-    function isGenuineSignature(bytes32 hash, NahmiiTypes.Signature signature, address signer) internal pure returns (bool) {
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
-        return ecrecover(prefixedHash, signature.v, signature.r, signature.s) == signer;
-    }
 }

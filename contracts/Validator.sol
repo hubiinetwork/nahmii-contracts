@@ -66,9 +66,9 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeBuyer(NahmiiTypes.Trade trade, address exchange) public pure returns (bool) {
+    function isGenuineTradeBuyer(NahmiiTypes.Trade trade) public view returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
-        && (trade.buyer.wallet != exchange)
+        && (!accessorManager.isSigner(trade.buyer.wallet))
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.buyer.fees.single.amount))
         && (trade.buyer.balances.conjugate.current == trade.buyer.balances.conjugate.previous.sub(trade.transfers.conjugate.single))
         && (trade.buyer.order.amount >= trade.buyer.order.residuals.current)
@@ -77,9 +77,9 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeSeller(NahmiiTypes.Trade trade, address exchange) public pure returns (bool) {
+    function isGenuineTradeSeller(NahmiiTypes.Trade trade) public view returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
-        && (trade.seller.wallet != exchange)
+        && (!accessorManager.isSigner(trade.seller.wallet))
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))
         && (trade.seller.balances.conjugate.current == trade.seller.balances.conjugate.previous.add(trade.transfers.conjugate.single).sub(trade.seller.fees.single.amount))
         && (trade.seller.order.amount >= trade.seller.order.residuals.current)
@@ -91,53 +91,69 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
         return hasher.hashOrderAsWallet(order) == order.seals.wallet.hash;
     }
 
-    function isGenuineOrderExchangeHash(NahmiiTypes.Order order) public view returns (bool) {
-        return hasher.hashOrderAsExchange(order) == order.seals.exchange.hash;
+    function isGenuineOrderOperatorHash(NahmiiTypes.Order order) public view returns (bool) {
+        return hasher.hashOrderAsOperator(order) == order.seals.exchange.hash;
+    }
+
+    function isGenuineOperatorSignature(bytes32 hash, NahmiiTypes.Signature signature)
+    public
+    view
+    returns (bool)
+    {
+        return isSignedByRegisteredSigner(hash, signature.v, signature.r, signature.s);
+    }
+
+    function isGenuineWalletSignature(bytes32 hash, NahmiiTypes.Signature signature, address wallet)
+    public
+    view
+    returns (bool)
+    {
+        return isSignedBy(hash, signature.v, signature.r, signature.s, wallet);
     }
 
     function isGenuineOrderWalletSeal(NahmiiTypes.Order order) public view returns (bool) {
         return isGenuineOrderWalletHash(order)
-        && NahmiiTypes.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
+        && isGenuineWalletSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
     }
 
-    function isGenuineOrderExchangeSeal(NahmiiTypes.Order order, address exchange) public view returns (bool) {
-        return isGenuineOrderExchangeHash(order)
-        && NahmiiTypes.isGenuineSignature(order.seals.exchange.hash, order.seals.exchange.signature, exchange);
+    function isGenuineOrderOperatorSeal(NahmiiTypes.Order order) public view returns (bool) {
+        return isGenuineOrderOperatorHash(order)
+        && isGenuineOperatorSignature(order.seals.exchange.hash, order.seals.exchange.signature);
     }
 
-    function isGenuineOrderSeals(NahmiiTypes.Order order, address exchange) public view returns (bool) {
-        return isGenuineOrderWalletSeal(order) && isGenuineOrderExchangeSeal(order, exchange);
+    function isGenuineOrderSeals(NahmiiTypes.Order order) public view returns (bool) {
+        return isGenuineOrderWalletSeal(order) && isGenuineOrderOperatorSeal(order);
     }
 
     function isGenuineTradeHash(NahmiiTypes.Trade trade) public view returns (bool) {
         return hasher.hashTrade(trade) == trade.seal.hash;
     }
 
-    function isGenuineTradeSeal(NahmiiTypes.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeSeal(NahmiiTypes.Trade trade) public view returns (bool) {
         return isGenuineTradeHash(trade)
-        && NahmiiTypes.isGenuineSignature(trade.seal.hash, trade.seal.signature, exchange);
+        && isGenuineOperatorSignature(trade.seal.hash, trade.seal.signature);
     }
 
     function isGenuinePaymentWalletHash(NahmiiTypes.Payment payment) public view returns (bool) {
         return hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash;
     }
 
-    function isGenuinePaymentExchangeHash(NahmiiTypes.Payment payment) public view returns (bool) {
-        return hasher.hashPaymentAsExchange(payment) == payment.seals.exchange.hash;
+    function isGenuinePaymentOperatorHash(NahmiiTypes.Payment payment) public view returns (bool) {
+        return hasher.hashPaymentAsOperator(payment) == payment.seals.exchange.hash;
     }
 
     function isGenuinePaymentWalletSeal(NahmiiTypes.Payment payment) public view returns (bool) {
         return isGenuinePaymentWalletHash(payment)
-        && NahmiiTypes.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+        && isGenuineWalletSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+    }
+    
+    function isGenuinePaymentOperatorSeal(NahmiiTypes.Payment payment) public view returns (bool) {
+        return isGenuinePaymentOperatorHash(payment)
+        && isGenuineOperatorSignature(payment.seals.exchange.hash, payment.seals.exchange.signature);
     }
 
-    function isGenuinePaymentExchangeSeal(NahmiiTypes.Payment payment, address exchange) public view returns (bool) {
-        return isGenuinePaymentExchangeHash(payment)
-        && NahmiiTypes.isGenuineSignature(payment.seals.exchange.hash, payment.seals.exchange.signature, exchange);
-    }
-
-    function isGenuinePaymentSeals(NahmiiTypes.Payment payment, address exchange) public view returns (bool) {
-        return isGenuinePaymentWalletSeal(payment) && isGenuinePaymentExchangeSeal(payment, exchange);
+    function isGenuinePaymentSeals(NahmiiTypes.Payment payment) public view returns (bool) {
+        return isGenuinePaymentWalletSeal(payment) && isGenuinePaymentOperatorSeal(payment);
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.

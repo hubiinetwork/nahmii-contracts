@@ -94,7 +94,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i].wallet);
-            require(validator.isGenuineOrderSeals(orders[i], deployer));
+            require(validator.isGenuineOrderSeals(orders[i]));
         }
 
         for (uint256 j = 0; j < orders.length; j++) {

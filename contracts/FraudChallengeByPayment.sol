@@ -43,7 +43,7 @@ contract FraudChallengeByPayment is Ownable, AccessorManageable, FraudChallengab
     public
     onlyOperationalModeNormal
     validatorInitialized
-    onlyExchangeSealedPayment(payment)
+    onlyOperatorSealedPayment(payment)
     {
         require(fraudChallenge != address(0));
         require(configuration != address(0));
@@ -53,7 +53,9 @@ contract FraudChallengeByPayment is Ownable, AccessorManageable, FraudChallengab
         require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
-        bool genuineWalletSignature = NahmiiTypes.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+        bool genuineWalletSignature = validator.isGenuineWalletSignature(
+            payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet
+        );
 
         // Genuineness affected by sender
         bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&

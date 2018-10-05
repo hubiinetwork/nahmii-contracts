@@ -1575,7 +1575,7 @@ module.exports = function (glob) {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             const signAsWallet = mocks.createWeb3Signer(glob.user_a);
         //             payment.seals.wallet.signature = await signAsWallet(payment.seals.wallet.hash);
-        //             payment.seals.exchange.hash = mocks.hashPaymentAsExchange(payment);
+        //             payment.seals.exchange.hash = mocks.hashPaymentAsOperator(payment);
         //             const signAsExchange = mocks.createWeb3Signer(glob.owner);
         //             payment.seals.exchange.signature = await signAsExchange(payment.seals.exchange.hash);
         //         });
