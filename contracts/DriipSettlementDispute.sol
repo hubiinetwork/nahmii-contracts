@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -15,7 +15,7 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
@@ -41,10 +41,10 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge, DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
-    event ChallengeByOrderEvent(StriimTypes.Order order, uint256 nonce, StriimTypes.DriipType driipType, address reporter);
-    event ChallengeByTradeEvent(StriimTypes.Trade trade, address wallet, uint256 nonce, StriimTypes.DriipType driipType, address reporter);
-    event ChallengeByPaymentEvent(StriimTypes.Payment payment, address wallet, uint256 nonce, StriimTypes.DriipType driipType, address reporter);
-    event UnchallengeOrderCandidateByTradeEvent(StriimTypes.Order order, StriimTypes.Trade trade, uint256 nonce, StriimTypes.DriipType driipType, address reporter);
+    event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
+    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
+    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
+    event UnchallengeOrderCandidateByTradeEvent(NahmiiTypes.Order order, NahmiiTypes.Trade trade, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
 
     //
     // Constructor
@@ -54,9 +54,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
     /// @notice Change the driip settlement challenge contract
     /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
-    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge)
-    public
-    onlyOwner
+    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
+    onlyDeployer
     notNullAddress(newDriipSettlementChallenge)
     {
         DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
@@ -66,9 +65,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
     /// @notice Change the fraud challenge contract
     /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge)
-    public
-    onlyOwner
+    function changeFraudChallenge(FraudChallenge newFraudChallenge) public
+    onlyDeployer
     notNullAddress(newFraudChallenge)
     {
         FraudChallenge oldFraudChallenge = fraudChallenge;
@@ -78,9 +76,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
     /// @notice Change the cancel orders challenge contract
     /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
-    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
-    public
-    onlyOwner
+    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge) public
+    onlyDeployer
     notNullAddress(newCancelOrdersChallenge)
     {
         CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
@@ -93,8 +90,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     /// @param challenger The address of the challenger
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
-    function challengeByOrder(StriimTypes.Order order, address challenger)
-    public
+    function challengeByOrder(NahmiiTypes.Order order, address challenger) public
     validatorInitialized
     onlyDriipSettlementChallenge
     onlySealedOrder(order)
@@ -117,7 +113,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Buy order -> Conjugate currency and amount
         // Sell order -> Intended currency and amount
         (int256 orderAmount, MonetaryTypes.Currency memory orderCurrency) =
-        (StriimTypes.Intention.Sell == order.placement.intention ?
+        (NahmiiTypes.Intention.Sell == order.placement.intention ?
         (order.placement.amount, order.placement.currencies.intended) :
         (order.placement.amount.div(order.placement.rate), order.placement.currencies.conjugate));
 
@@ -151,7 +147,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
     /// @param unchallenger The address of the unchallenger
-    function unchallengeOrderCandidateByTrade(StriimTypes.Order order, StriimTypes.Trade trade, address unchallenger)
+    function unchallengeOrderCandidateByTrade(NahmiiTypes.Order order, NahmiiTypes.Trade trade, address unchallenger)
     public
     validatorInitialized
     onlyDriipSettlementChallenge
@@ -185,7 +181,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     /// @param wallet The wallet whose driip settlement is being challenged
     /// @dev If wallet is buyer in (candidate) trade consider single _conjugate_ transfer in (candidate) trade. Else
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
-    function challengeByTrade(StriimTypes.Trade trade, address wallet, address challenger)
+    function challengeByTrade(NahmiiTypes.Trade trade, address wallet, address challenger)
     public
     validatorInitialized
     onlyDriipSettlementChallenge
@@ -215,12 +211,12 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
         // Wallet is buyer in (candidate) trade -> consider single conjugate transfer in (candidate) trade
         // Wallet is seller in (candidate) trade -> consider single intended transfer in (candidate) trade
-        StriimTypes.TradePartyRole tradePartyRole =
+        NahmiiTypes.TradePartyRole tradePartyRole =
         (trade.buyer.wallet == wallet ?
-        StriimTypes.TradePartyRole.Buyer :
-        StriimTypes.TradePartyRole.Seller);
+        NahmiiTypes.TradePartyRole.Buyer :
+        NahmiiTypes.TradePartyRole.Seller);
         (int256 singleTransfer, MonetaryTypes.Currency memory transferCurrency) =
-        (StriimTypes.TradePartyRole.Buyer == tradePartyRole ?
+        (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ?
         (trade.transfers.conjugate.single.abs(), trade.currencies.conjugate) :
         (trade.transfers.intended.single.abs(), trade.currencies.intended));
 
@@ -253,7 +249,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     /// @param payment The payment candidate that challenges the challenged driip
     /// @param wallet The wallet whose driip settlement is being challenged
     /// @dev If wallet is recipient in (candidate) payment there is nothing here to challenge
-    function challengeByPayment(StriimTypes.Payment payment, address wallet, address challenger)
+    function challengeByPayment(NahmiiTypes.Payment payment, address wallet, address challenger)
     public
     validatorInitialized
     onlyDriipSettlementChallenge
@@ -321,7 +317,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
     /// @param challenger The wallet that challenges
-    function unchallengeOrderCandidate(StriimTypes.Order order, StriimTypes.Trade trade, address challenger)
+    function unchallengeOrderCandidate(NahmiiTypes.Order order, NahmiiTypes.Trade trade, address challenger)
     private
     returns (DriipSettlementTypes.Challenge)
     {
@@ -334,7 +330,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(challenge.candidateType == DriipSettlementTypes.ChallengeCandidateType.Order);
 
         // Get challenge and require that its exchange has matches the one of order
-        StriimTypes.Order memory challengeOrder = driipSettlementChallenge.getChallengeCandidateOrder(challenge.candidateIndex);
+        NahmiiTypes.Order memory challengeOrder = driipSettlementChallenge.getChallengeCandidateOrder(challenge.candidateIndex);
         require(challengeOrder.seals.exchange.hash == order.seals.exchange.hash);
 
         // Require that challenge order's exchange hash matches any or the exchange hash of any of the trade
@@ -356,23 +352,18 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyTradeParty(StriimTypes.Trade trade, address wallet) {
-        require(StriimTypes.isTradeParty(trade, wallet));
+    modifier onlyTradeParty(NahmiiTypes.Trade trade, address wallet) {
+        require(NahmiiTypes.isTradeParty(trade, wallet));
         _;
     }
 
-    modifier onlyTradeOrder(StriimTypes.Trade trade, StriimTypes.Order order) {
-        require(StriimTypes.isTradeOrder(trade, order));
+    modifier onlyTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order) {
+        require(NahmiiTypes.isTradeOrder(trade, order));
         _;
     }
 
-    modifier onlyPaymentSender(StriimTypes.Payment payment, address wallet) {
-        require(StriimTypes.isPaymentSender(payment, wallet));
-        _;
-    }
-
-    modifier signedBy(bytes32 hash, StriimTypes.Signature signature, address signer) {
-        require(StriimTypes.isGenuineSignature(hash, signature, signer));
+    modifier onlyPaymentSender(NahmiiTypes.Payment payment, address wallet) {
+        require(NahmiiTypes.isPaymentSender(payment, wallet));
         _;
     }
 

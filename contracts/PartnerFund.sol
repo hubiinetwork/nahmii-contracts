@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -22,7 +22,6 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @title PartnerFund
 @notice XXXX
 */
-// TODO Update to two-component currency descriptor
 contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
@@ -77,7 +76,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Partner relationship functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerPartner(address tag, uint256 fee, bool canChangeAddress, bool ownerCanChangeAddress) public onlyOwner notNullTag(tag) {
+    function registerPartner(address tag, uint256 fee, bool canChangeAddress, bool ownerCanChangeAddress) public onlyDeployer notNullTag(tag) {
         require(!walletMap[tag].isRegistered);
         require(fee > 0);
         require(canChangeAddress || ownerCanChangeAddress);
@@ -91,7 +90,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit RegisterParnerEvent(tag, fee);
     }
 
-    function changePartnerFee(address tag, uint256 fee) public onlyOwner isRegisteredTag(tag) {
+    function changePartnerFee(address tag, uint256 fee) public onlyDeployer isRegisteredTag(tag) {
         require(fee > 0);
 
         walletMap[tag].fee = fee;
@@ -107,16 +106,16 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     function setPartnerWallet(address tag, address newWallet) public isRegisteredTag(tag) {
         address oldWallet;
 
-        require(newWallet != owner);
+        require(newWallet != deployer);
 
         oldWallet = walletMap[tag].wallet;
 
         //checks
         if (oldWallet == address(0)) {
             //if address not set, owner is the only allowed to change it
-            require(isOwner());
+            require(isDeployer());
         }
-        else if (isOwner()) {
+        else if (isDeployer()) {
             //owner trying to change address, verify access
             require(walletMap[tag].ownerCanChangeAddress);
         }
@@ -174,7 +173,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     }
 
     function depositTokensTo(address tag, int256 amount, address currencyCt, uint256 currencyId, string standard) public isRegisteredTag(tag) {
-       require(amount.isNonZeroPositiveInt256());
+        require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
@@ -198,7 +197,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         require(index < walletMap[tag].fullDepositHistory.length);
 
         FullDepositHistory storage fdh = walletMap[tag].fullDepositHistory[index];
-        (, , currencyCt, currencyId) = walletMap[tag].txHistory.deposit(fdh.listIndex);
+        (,, currencyCt, currencyId) = walletMap[tag].txHistory.deposit(fdh.listIndex);
 
         balance = fdh.balance;
         blockNumber = fdh.blockNumber;
@@ -239,7 +238,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(int256 amount, address currencyCt, uint256 currencyId) public notOwner {
+    function stage(int256 amount, address currencyCt, uint256 currencyId) public notDeployer {
         address tag = partnerFromWallet(msg.sender);
 
         require(amount.isPositiveInt256());

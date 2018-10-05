@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -32,7 +32,7 @@ contract TransferControllerManageable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the currency manager contract
     /// @param newAddress The (address of) TransferControllerManager contract instance
-    function changeTransferControllerManager(TransferControllerManager newAddress) public onlyOwner
+    function changeTransferControllerManager(TransferControllerManager newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, transferControllerManager)
     {

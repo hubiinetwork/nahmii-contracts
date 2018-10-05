@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -25,11 +25,11 @@ contract Migrations is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setCompleted(uint completed) public onlyOwner {
+    function setCompleted(uint completed) public onlyDeployer {
         last_completed_migration = completed;
     }
 
-    function upgrade(address newAddress) public onlyOwner {
+    function upgrade(address newAddress) public onlyDeployer {
         Migrations upgraded = Migrations(newAddress);
         upgraded.setCompleted(last_completed_migration);
     }

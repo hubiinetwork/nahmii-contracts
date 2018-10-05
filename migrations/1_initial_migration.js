@@ -1,5 +1,5 @@
 /*!
- * Hubii Striim
+ * Hubii Nahmii
  *
  * Copyright (C) 2017-2018 Hubii AS
  */

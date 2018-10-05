@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title FraudChallengeByTrade
@@ -24,7 +24,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validat
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(StriimTypes.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -37,8 +37,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validat
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(StriimTypes.Trade trade)
-    public
+    function challenge(NahmiiTypes.Trade trade) public
     onlyOperationalModeNormal
     validatorInitialized
     onlySealedTrade(trade)
@@ -48,11 +47,11 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validat
         require(clientFund != address(0));
 
         // Genuineness affected by buyer
-        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade, owner)
+        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade)
         && validator.isGenuineTradeBuyerFee(trade);
 
         // Genuineness affected by seller
-        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade, owner)
+        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade)
         && validator.isGenuineTradeSellerFee(trade);
 
         require(!genuineBuyerAndFee || !genuineSellerAndFee);

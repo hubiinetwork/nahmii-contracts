@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -46,7 +46,7 @@ contract Servable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the service activation timeout
     /// @param timeoutInSeconds The set timeout in unit of seconds
-    function setServiceActivationTimeout(uint256 timeoutInSeconds) public onlyOwner {
+    function setServiceActivationTimeout(uint256 timeoutInSeconds) public onlyDeployer {
         serviceActivationTimeout = timeoutInSeconds;
 
         //emit event
@@ -55,7 +55,7 @@ contract Servable is Ownable {
 
     /// @notice Register a service contract whose activation is immediate
     /// @param service The address of the registered service contract
-    function registerService(address service) public onlyOwner notNullOrThisAddress(service) {
+    function registerService(address service) public onlyDeployer notNullOrThisAddress(service) {
         registerServicePrivate(service, 0);
 
         //emit event
@@ -64,7 +64,7 @@ contract Servable is Ownable {
 
     /// @notice Register a service contract whose activation is deferred by the service activation timeout
     /// @param service The address of the registered service contract
-    function registerServiceDeferred(address service) public onlyOwner notNullOrThisAddress(service) {
+    function registerServiceDeferred(address service) public onlyDeployer notNullOrThisAddress(service) {
         registerServicePrivate(service, serviceActivationTimeout);
 
         //emit event
@@ -73,7 +73,7 @@ contract Servable is Ownable {
 
     /// @notice Deregister a service contract
     /// @param service The address of the deregistered service contract
-    function deregisterService(address service) public onlyOwner notNullOrThisAddress(service) {
+    function deregisterService(address service) public onlyDeployer notNullOrThisAddress(service) {
         require(registeredServicesMap[service].registered);
 
         registeredServicesMap[service].registered = false;
@@ -85,7 +85,7 @@ contract Servable is Ownable {
     /// @notice Enable a named action in an already registered service contract
     /// @param service The address of the registered service contract
     /// @param action The name of the enabled action
-    function enableServiceAction(address service, string action) public onlyOwner notNullOrThisAddress(service) {
+    function enableServiceAction(address service, string action) public onlyDeployer notNullOrThisAddress(service) {
         require(registeredServicesMap[service].registered);
     
         bytes32 actionHash = hashString(action);
@@ -102,7 +102,7 @@ contract Servable is Ownable {
     /// @notice Enable a named action in a service contract
     /// @param service The address of the service contract
     /// @param action The name of the disabled action
-    function disableServiceAction(address service, string action) public onlyOwner notNullOrThisAddress(service) {
+    function disableServiceAction(address service, string action) public onlyDeployer notNullOrThisAddress(service) {
         bytes32 actionHash = hashString(action);
 
         require(registeredServicesMap[service].actionsEnabledMap[actionHash]);
@@ -163,8 +163,8 @@ contract Servable is Ownable {
         _;
     }
 
-    modifier onlyOwnerOrEnabledServiceAction(string action) {
-        require(msg.sender == owner || isEnabledServiceAction(msg.sender, action));
+    modifier onlyDeployerOrEnabledServiceAction(string action) {
+        require(isDeployer() || isEnabledServiceAction(msg.sender, action));
         _;
     }
 }

@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -31,13 +31,13 @@ contract CommunityVotable is Ownable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Disable future updates of community vote contract
-    function disableUpdateOfCommunityVote() public onlyOwner {
+    function disableUpdateOfCommunityVote() public onlyDeployer {
         communityVoteUpdateDisabled = true;
     }
 
     /// @notice Change the community vote contract
     /// @param newAddress The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newAddress) public onlyOwner
+    function changeCommunityVote(CommunityVote newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, communityVote)
     {

@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {ClientFund} from "./ClientFund.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title ClientFundable
@@ -32,7 +32,7 @@ contract ClientFundable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the client fund contract
     /// @param newAddress The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newAddress) public onlyOwner
+    function changeClientFund(ClientFund newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, clientFund)
     {

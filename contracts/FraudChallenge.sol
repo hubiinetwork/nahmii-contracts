@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,15 +10,15 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {StriimChallenge} from "./StriimChallenge.sol";
+import {NahmiiChallenge} from "./NahmiiChallenge.sol";
 import {Servable} from "./Servable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, StriimChallenge, Servable {
+contract FraudChallenge is Ownable, NahmiiChallenge, Servable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -34,13 +34,13 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
     address[] public doubleSpenderWallets;
     mapping(address => bool) public doubleSpenderWalletsMap;
 
-    StriimTypes.Order[] public fraudulentOrders;
+    NahmiiTypes.Order[] public fraudulentOrders;
     mapping(bytes32 => bool) public fraudulentOrderExchangeHashMap;
 
-    StriimTypes.Trade[] public fraudulentTrades;
+    NahmiiTypes.Trade[] public fraudulentTrades;
     mapping(bytes32 => bool) public fraudulentTradeHashMap;
 
-    StriimTypes.Payment[] public fraudulentPayments;
+    NahmiiTypes.Payment[] public fraudulentPayments;
     mapping(bytes32 => bool) public fraudulentPaymentExchangeHashMap;
 
     //
@@ -48,9 +48,9 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     event AddSeizedWalletEvent(address wallet);
     event AddDoubleSpenderWalletEvent(address wallet);
-    event AddFraudulentOrderEvent(StriimTypes.Order order);
-    event AddFraudulentTradeEvent(StriimTypes.Trade trade);
-    event AddFraudulentPaymentEvent(StriimTypes.Payment payment);
+    event AddFraudulentOrderEvent(NahmiiTypes.Order order);
+    event AddFraudulentTradeEvent(NahmiiTypes.Trade trade);
+    event AddFraudulentPaymentEvent(NahmiiTypes.Payment payment);
 
     //
     // Constructor
@@ -76,9 +76,7 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
 
     /// @notice Add given wallet to store of seized wallets if not already present
     /// @param wallet The seized wallet
-    function addSeizedWallet(address wallet) public
-    onlyOwnerOrEnabledServiceAction(ADD_SEIZED_WALLET_ACTION)
-    {
+    function addSeizedWallet(address wallet) public onlyDeployerOrEnabledServiceAction(ADD_SEIZED_WALLET_ACTION) {
         if (!seizedWalletsMap[wallet]) {
             seizedWallets.push(wallet);
             seizedWalletsMap[wallet] = true;
@@ -101,9 +99,7 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
 
     /// @notice Add given wallets to store of double spender wallets if not already present
     /// @param wallet The first wallet to add
-    function addDoubleSpenderWallet(address wallet) public
-    onlyOwnerOrEnabledServiceAction(ADD_DOUBLE_SPENDER_WALLET_ACTION)
-    {
+    function addDoubleSpenderWallet(address wallet) public onlyDeployerOrEnabledServiceAction(ADD_DOUBLE_SPENDER_WALLET_ACTION) {
         if (!doubleSpenderWalletsMap[wallet]) {
             doubleSpenderWallets.push(wallet);
             doubleSpenderWalletsMap[wallet] = true;
@@ -123,9 +119,7 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
     }
 
     /// @notice Add given trade to store of fraudulent trades if not already present
-    function addFraudulentOrder(StriimTypes.Order order) public
-    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION)
-    {
+    function addFraudulentOrder(NahmiiTypes.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
         if (!fraudulentOrderExchangeHashMap[order.seals.exchange.hash]) {
             fraudulentOrders.push(order);
             fraudulentOrderExchangeHashMap[order.seals.exchange.hash] = true;
@@ -145,9 +139,7 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
     }
 
     /// @notice Add given order to store of fraudulent orders if not already present
-    function addFraudulentTrade(StriimTypes.Trade trade) public
-    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
-    {
+    function addFraudulentTrade(NahmiiTypes.Trade trade) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION) {
         if (!fraudulentTradeHashMap[trade.seal.hash]) {
             pushMemoryTradeToStorageArray(trade, fraudulentTrades);
             fraudulentTradeHashMap[trade.seal.hash] = true;
@@ -167,9 +159,7 @@ contract FraudChallenge is Ownable, StriimChallenge, Servable {
     }
 
     /// @notice Add given payment to store of fraudulent payments if not already present
-    function addFraudulentPayment(StriimTypes.Payment payment) public
-    onlyOwnerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
-    {
+    function addFraudulentPayment(NahmiiTypes.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
         if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
             pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
             fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;

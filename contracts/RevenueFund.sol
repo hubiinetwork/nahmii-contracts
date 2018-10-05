@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -9,12 +9,12 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {AccrualBenefactor} from "./AccrualBenefactor.sol";
-import {Ownable} from "./Ownable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
+import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathUint} from "./SafeMathUint.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
@@ -27,7 +27,6 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
  accrual beneficiaries. There will likely be 2 instances of this smart contract, one for revenue from trades
  and one for revenue from payments.
 */
-// TODO Update to two-component currency descriptor
 contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
@@ -121,7 +120,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyOwner {
+    function closeAccrualPeriod() public onlyDeployer {
         uint256 currency_idx;
         uint256 idx;
         int256 remaining;
@@ -190,8 +189,8 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Service functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyOwner notNullAddress(service) notThisAddress(service) {
-        require(service != owner);
+    function registerService(address service) public onlyDeployer notNullAddress(service) notThisAddress(service) {
+        require(service != deployer);
 
         //ensure service is not already registered
         require(registeredServicesMap[service] == false);
@@ -203,7 +202,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         emit RegisterServiceEvent(service);
     }
 
-    function deregisterService(address service) public onlyOwner notNullAddress(service) {
+    function deregisterService(address service) public onlyDeployer notNullAddress(service) {
         //ensure service is registered
         require(registeredServicesMap[service] != false);
 
@@ -217,8 +216,8 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyOwnerOrService() {
-        require(msg.sender == owner || registeredServicesMap[msg.sender]);
+    modifier onlyDeployerOrService() {
+        require(isDeployer() || registeredServicesMap[msg.sender]);
         _;
     }
 }

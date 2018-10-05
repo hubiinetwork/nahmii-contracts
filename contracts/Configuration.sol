@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -119,7 +119,7 @@ contract Configuration is Ownable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set operational mode to Exit
     /// @dev Once operational mode is set to Exit it may not be set back to Normal
-    function setOperationalModeExit() public onlyOwnerOrEnabledServiceAction(OPERATIONAL_MODE_ACTION) {
+    function setOperationalModeExit() public onlyDeployerOrEnabledServiceAction(OPERATIONAL_MODE_ACTION) {
         operationalMode = OperationalMode.Exit;
         emit SetOperationalModeExitEvent();
     }
@@ -146,7 +146,7 @@ contract Configuration is Ownable, Servable {
 
     /// @notice Set the number of confirmations
     /// @param newConfirmations The new confirmations value
-    function setConfirmations(uint256 newConfirmations) public onlyOwner {
+    function setConfirmations(uint256 newConfirmations) public onlyDeployer {
         if (confirmations != newConfirmations) {
             uint256 oldConfirmations = confirmations;
             confirmations = newConfirmations;
@@ -173,10 +173,8 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
-    public
-    onlyOwner
-    onlyConfirmableBlockNumber(blockNumber)
+    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
+        onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberTradeMakerFeeMap[blockNumber];
         setDiscountableFee(fee, tradeMakerFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -207,10 +205,8 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
-    public
-    onlyOwner
-    onlyConfirmableBlockNumber(blockNumber)
+    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
+        onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberTradeTakerFeeMap[blockNumber];
         setDiscountableFee(fee, tradeTakerFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -241,10 +237,8 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
-    public
-    onlyOwner
-    onlyConfirmableBlockNumber(blockNumber)
+    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
+        onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberPaymentFeeMap[blockNumber];
         setDiscountableFee(fee, paymentFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -282,10 +276,8 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
-    public
-    onlyOwner
-    onlyConfirmableBlockNumber(blockNumber)
+    function setCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
+        onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = currencyBlockNumberPaymentFeeMap[currencyCt][currencyId][blockNumber];
         setDiscountableFee(fee, currencyPaymentFeeBlockNumbersMap[currencyCt][currencyId], blockNumber, nominal, discountTiers, discountValues);
@@ -315,10 +307,8 @@ contract Configuration is Ownable, Servable {
     /// @notice Set trade maker minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal)
-    public
-    onlyOwner
-    onlyConfirmableBlockNumber(blockNumber)
+    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
+        onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberTradeMakerMinimumFeeMap[blockNumber];
         setStaticFee(fee, tradeMakerMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -346,10 +336,8 @@ contract Configuration is Ownable, Servable {
     /// @notice Set trade taker minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal)
-    public
-    onlyOwner
-    onlyConfirmableBlockNumber(blockNumber)
+    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
+        onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberTradeTakerMinimumFeeMap[blockNumber];
         setStaticFee(fee, tradeTakerMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -377,10 +365,8 @@ contract Configuration is Ownable, Servable {
     /// @notice Set payment minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal)
-    public
-    onlyOwner
-    onlyConfirmableBlockNumber(blockNumber)
+    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
+        onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberPaymentMinimumFeeMap[blockNumber];
         setStaticFee(fee, paymentMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -415,10 +401,8 @@ contract Configuration is Ownable, Servable {
     /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal)
-    public
-    onlyOwner
-    onlyConfirmableBlockNumber(blockNumber)
+    function setCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal) public onlyDeployer
+        onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = currencyBlockNumberPaymentMinimumFeeMap[currencyCt][currencyId][blockNumber];
         setStaticFee(fee, currencyPaymentMinimumFeeBlockNumbersMap[currencyCt][currencyId], blockNumber, nominal);
@@ -434,7 +418,7 @@ contract Configuration is Ownable, Servable {
 
     /// @notice Set timeout of cancel order challenge
     /// @param timeout Timeout duration
-    function setCancelOrderChallengeTimeout(uint256 timeout) public onlyOwner {
+    function setCancelOrderChallengeTimeout(uint256 timeout) public onlyDeployer {
         cancelOrderChallengeTimeout = timeout;
         emit SetCancelOrderChallengeTimeout(timeout);
     }
@@ -446,7 +430,7 @@ contract Configuration is Ownable, Servable {
 
     /// @notice Set timeout of driip challenge
     /// @param timeout Timeout duration
-    function setDriipSettlementChallengeTimeout(uint256 timeout) public onlyOwner {
+    function setDriipSettlementChallengeTimeout(uint256 timeout) public onlyDeployer {
         driipSettlementChallengeTimeout = timeout;
         emit SetDriipSettlementChallengeTimeout(timeout);
     }
@@ -461,7 +445,7 @@ contract Configuration is Ownable, Servable {
     /// @param amount Amount gained
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID of currency gained (0 for ETH and ERC20)
-    function setUnchallengeOrderCandidateByTradeStake(int256 amount, address currencyCt, uint256 currencyId) public onlyOwner {
+    function setUnchallengeOrderCandidateByTradeStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
         unchallengeOrderCandidateByTradeStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
         emit SetUnchallengeDriipSettlementOrderByTradeStakeEvent(amount, currencyCt, currencyId);
     }
@@ -477,7 +461,7 @@ contract Configuration is Ownable, Servable {
     /// @param amount Amount gained
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID of currency gained (0 for ETH and ERC20)
-    function setFalseWalletSignatureStake(int256 amount, address currencyCt, uint256 currencyId) public onlyOwner {
+    function setFalseWalletSignatureStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
         falseWalletSignatureStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
         emit SetFalseWalletSignatureStakeEvent(amount, currencyCt, currencyId);
     }
@@ -493,7 +477,7 @@ contract Configuration is Ownable, Servable {
     /// @param amount Amount gained
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID of currency gained (0 for ETH and ERC20)
-    function setDuplicateDriipNonceStake(int256 amount, address currencyCt, uint256 currencyId) public onlyOwner {
+    function setDuplicateDriipNonceStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
         duplicateDriipNonceStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
         emit SetDuplicateDriipNonceStakeEvent(amount, currencyCt, currencyId);
     }
@@ -509,7 +493,7 @@ contract Configuration is Ownable, Servable {
     /// @param amount Amount gained
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID of currency gained (0 for ETH and ERC20)
-    function setDoubleSpentOrderStake(int256 amount, address currencyCt, uint256 currencyId) public onlyOwner {
+    function setDoubleSpentOrderStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
         doubleSpentOrderStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
         emit SetDoubleSpentOrderStakeEvent(amount, currencyCt, currencyId);
     }
@@ -524,7 +508,8 @@ contract Configuration is Ownable, Servable {
     // Internal functions
     // -----------------------------------------------------------------------------------------------------------------
     function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,
-        uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) internal onlyOwner {
+        uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) internal onlyDeployer
+    {
         require(discountTiers.length == discountValues.length);
 
         feeBlockNumbers.push(blockNumber);
@@ -546,9 +531,7 @@ contract Configuration is Ownable, Servable {
             return fee.nominal;
     }
 
-    function setStaticFee(StaticFee storage fee, uint256[] storage feeBlockNumbers,
-        uint256 blockNumber, int256 nominal) internal onlyOwner {
-
+    function setStaticFee(StaticFee storage fee, uint256[] storage feeBlockNumbers, uint256 blockNumber, int256 nominal) internal onlyDeployer {
         feeBlockNumbers.push(blockNumber);
 
         fee.blockNumber = blockNumber;

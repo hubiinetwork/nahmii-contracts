@@ -9,6 +9,7 @@ const Helpers = require('./helpers');
 const w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 
 const ClientFund = artifacts.require("ClientFund");
+const AccessorManager = artifacts.require("AccessorManager");
 const CommunityVote = artifacts.require("CommunityVote");
 const Hasher = artifacts.require("Hasher");
 const Validator = artifacts.require("Validator");
@@ -143,6 +144,17 @@ contract('Smart contract checks', function () {
         }
         catch (err) {
             assert(false, 'Failed to create an instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before("Preflight: Instantiate AccessorManager contract", async () => {
+        try {
+            glob.web3AccessorManager = await AccessorManager.deployed();
+            assert.notEqual(glob.web3AccessorManager, null);
+            glob.ethersIoAccessorManager = new ethers.Contract(glob.web3AccessorManager.address, AccessorManager.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate AccessorManager contract address. [Error: ' + err.toString() + ']');
         }
     });
 

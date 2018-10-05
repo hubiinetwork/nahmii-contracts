@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {Validator} from "./Validator.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title Validatable
@@ -32,9 +32,9 @@ contract Validatable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the validator contract
     /// @param newAddress The (address of) Validator contract instance
-    function changeValidator(Validator newAddress) public onlyOwner
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, validator)
+    function changeValidator(Validator newAddress) public onlyDeployer
+    notNullAddress(newAddress)
+    notSameAddresses(newAddress, validator)
     {
         //set new validator
         Validator oldAddress = validator;
@@ -52,28 +52,28 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyExchangeSealedOrder(StriimTypes.Order order) {
-        require(validator.isGenuineOrderExchangeSeal(order, owner));
+    modifier onlyOperatorSealedOrder(NahmiiTypes.Order order) {
+        require(validator.isGenuineOrderOperatorSeal(order));
         _;
     }
 
-    modifier onlySealedOrder(StriimTypes.Order order) {
-        require(validator.isGenuineOrderSeals(order, owner));
+    modifier onlySealedOrder(NahmiiTypes.Order order) {
+        require(validator.isGenuineOrderSeals(order));
         _;
     }
 
-    modifier onlySealedTrade(StriimTypes.Trade trade) {
-        require(validator.isGenuineTradeSeal(trade, owner));
+    modifier onlySealedTrade(NahmiiTypes.Trade trade) {
+        require(validator.isGenuineTradeSeal(trade));
         _;
     }
 
-    modifier onlyExchangeSealedPayment(StriimTypes.Payment payment) {
-        require(validator.isGenuinePaymentExchangeSeal(payment, owner));
+    modifier onlyOperatorSealedPayment(NahmiiTypes.Payment payment) {
+        require(validator.isGenuinePaymentOperatorSeal(payment));
         _;
     }
 
-    modifier onlySealedPayment(StriimTypes.Payment payment) {
-        require(validator.isGenuinePaymentSeals(payment, owner));
+    modifier onlySealedPayment(NahmiiTypes.Payment payment) {
+        require(validator.isGenuinePaymentSeals(payment));
         _;
     }
 }

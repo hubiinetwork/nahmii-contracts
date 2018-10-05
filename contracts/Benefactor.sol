@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -30,7 +30,7 @@ contract Benefactor is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function registerBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         if (beneficiariesMap[beneficiary] > 0)
             return false;
 
@@ -43,7 +43,7 @@ contract Benefactor is Ownable {
         return true;
     }
 
-    function deregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function deregisterBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         if (beneficiariesMap[beneficiary] == 0)
             return false;
 

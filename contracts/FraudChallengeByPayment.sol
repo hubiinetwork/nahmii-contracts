@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -15,7 +15,7 @@ import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title FraudChallengeByPayment
@@ -25,7 +25,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Valid
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentEvent(StriimTypes.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -38,11 +38,11 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Valid
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challenge(StriimTypes.Payment payment)
+    function challenge(NahmiiTypes.Payment payment)
     public
     onlyOperationalModeNormal
     validatorInitialized
-    onlyExchangeSealedPayment(payment)
+    onlyOperatorSealedPayment(payment)
     {
         require(fraudChallenge != address(0));
         require(configuration != address(0));
@@ -52,7 +52,9 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Valid
         require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
-        bool genuineWalletSignature = StriimTypes.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+        bool genuineWalletSignature = validator.isGenuineWalletSignature(
+            payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet
+        );
 
         // Genuineness affected by sender
         bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&

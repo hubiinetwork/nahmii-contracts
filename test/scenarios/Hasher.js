@@ -37,7 +37,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe('hashPaymentAsExchange()', () => {
+        describe('hashPaymentAsOperator()', () => {
             let payment;
 
             before(async () => {
@@ -45,7 +45,7 @@ module.exports = function (glob) {
             });
 
             it('should calculate identical hash', async () => {
-                const result = await ethersHasher.hashPaymentAsExchange(payment);
+                const result = await ethersHasher.hashPaymentAsOperator(payment);
                 result.should.equal(payment.seals.exchange.hash);
             });
         });
@@ -63,7 +63,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe('hashOrderAsExchange()', () => {
+        describe('hashOrderAsOperator()', () => {
             let order;
 
             before(async () => {
@@ -71,7 +71,7 @@ module.exports = function (glob) {
             });
 
             it('should calculate identical hash', async () => {
-                const result = await ethersHasher.hashOrderAsExchange(order);
+                const result = await ethersHasher.hashOrderAsOperator(order);
                 result.should.equal(order.seals.exchange.hash);
             });
         });

@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {StriimTypes} from "./StriimTypes.sol";
+import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title FraudChallengeByDuplicateDriipNonceOfPayments
@@ -24,7 +24,7 @@ contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChalleng
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(StriimTypes.Payment payment1, StriimTypes.Payment payment2, address challenger);
+    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(NahmiiTypes.Payment payment1, NahmiiTypes.Payment payment2, address challenger);
 
     //
     // Constructor
@@ -40,8 +40,8 @@ contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChalleng
     /// @param payment1 First payment with duplicate driip nonce
     /// @param payment2 Second payment with duplicate driip nonce
     function challenge(
-        StriimTypes.Payment payment1,
-        StriimTypes.Payment payment2
+        NahmiiTypes.Payment payment1,
+        NahmiiTypes.Payment payment2
     )
     public
     onlyOperationalModeNormal

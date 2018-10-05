@@ -47,7 +47,7 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3DriipSettlementChallenge = await MockedDriipSettlementChallenge.new(/*glob.owner*/);
             ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, MockedDriipSettlementChallenge.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner);
+            web3Validator = await MockedValidator.new(glob.owner, glob.web3AccessorManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
             await ethersConfiguration.setConfirmations(utils.bigNumberify(0));
@@ -70,37 +70,71 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3Exchange.owner.call();
-                owner.should.equal(glob.owner);
+                (await web3Exchange.address).should.have.lengthOf(42);
             });
         });
 
-        describe('changeOwner()', () => {
-            describe('if called with (current) owner as sender', () => {
+        describe('deployer()', () => {
+            it('should equal value initialized', async () => {
+                (await web3Exchange.deployer.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('changeDeployer()', () => {
+            describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3Exchange.changeOwner(glob.owner, {from: glob.user_a});
+                    await web3Exchange.changeDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3Exchange.changeOwner(glob.user_a);
+                    const result = await web3Exchange.changeDeployer(glob.user_a);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOwnerEvent');
-                    const owner = await web3Exchange.owner.call();
-                    owner.should.equal(glob.user_a);
+                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+
+                    (await web3Exchange.deployer.call()).should.equal(glob.user_a);
                 });
             });
 
-            describe('if called with sender that is not (current) owner', () => {
+            describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3Exchange.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3Exchange.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('operator()', () => {
+            it('should equal value initialized', async () => {
+                (await web3Exchange.operator.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('changeOperator()', () => {
+            describe('if called with (current) operator as sender', () => {
+                afterEach(async () => {
+                    await web3Exchange.changeOperator(glob.owner, {from: glob.user_a});
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Exchange.changeOperator(glob.user_a);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+
+                    (await web3Exchange.operator.call()).should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called with sender that is not (current) operator', () => {
+                it('should revert', async () => {
+                    web3Exchange.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
-                const configuration = await ethersExchange.configuration();
-                configuration.should.equal(utils.getAddress(ethersConfiguration.address));
+                (await ethersExchange.configuration.call()).should.equal(utils.getAddress(ethersConfiguration.address));
             });
         });
 
@@ -111,7 +145,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -124,14 +158,15 @@ module.exports = (glob) => {
 
                 it('should set new value and emit event', async () => {
                     const result = await web3Exchange.changeConfiguration(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeConfigurationEvent');
-                    const configuration = await web3Exchange.configuration();
-                    utils.getAddress(configuration).should.equal(address);
+
+                    utils.getAddress(await web3Exchange.configuration.call()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3Exchange.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -140,8 +175,7 @@ module.exports = (glob) => {
 
         describe('validator()', () => {
             it('should equal value initialized', async () => {
-                const validator = await ethersExchange.validator();
-                validator.should.equal(utils.getAddress(ethersValidator.address));
+                (await ethersExchange.validator()).should.equal(utils.getAddress(ethersValidator.address));
             });
         });
 
@@ -152,7 +186,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -165,14 +199,15 @@ module.exports = (glob) => {
 
                 it('should set new value and emit event', async () => {
                     const result = await web3Exchange.changeValidator(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeValidatorEvent');
-                    const validator = await web3Exchange.validator();
-                    utils.getAddress(validator).should.equal(address);
+
+                    utils.getAddress(await web3Exchange.validator.call()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3Exchange.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -181,8 +216,7 @@ module.exports = (glob) => {
 
         describe('driipSettlementChallenge()', () => {
             it('should equal value initialized', async () => {
-                const driipSettlementChallenge = await ethersExchange.driipSettlementChallenge();
-                driipSettlementChallenge.should.equal(utils.getAddress(ethersDriipSettlementChallenge.address));
+                (await ethersExchange.driipSettlementChallenge()).should.equal(utils.getAddress(ethersDriipSettlementChallenge.address));
             });
         });
 
@@ -193,7 +227,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let driipSettlementChallenge;
 
                 beforeEach(async () => {
@@ -206,14 +240,15 @@ module.exports = (glob) => {
 
                 it('should set new value and emit event', async () => {
                     const result = await web3Exchange.changeDriipSettlementChallenge(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeDriipSettlementChallengeEvent');
-                    const driipSettlementChallenge = await web3Exchange.driipSettlementChallenge();
-                    utils.getAddress(driipSettlementChallenge).should.equal(address);
+
+                    utils.getAddress(await web3Exchange.driipSettlementChallenge.call()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3Exchange.changeDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -227,7 +262,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let clientFund;
 
                 beforeEach(async () => {
@@ -240,14 +275,14 @@ module.exports = (glob) => {
 
                 it('should set new value and emit event', async () => {
                     const result = await web3Exchange.changeClientFund(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeClientFundEvent');
-                    const clientFund = await web3Exchange.clientFund();
-                    utils.getAddress(clientFund).should.equal(address);
+                    utils.getAddress(await web3Exchange.clientFund.call()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3Exchange.changeClientFund(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -261,7 +296,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let tradesRevenueFund;
 
                 beforeEach(async () => {
@@ -274,14 +309,15 @@ module.exports = (glob) => {
 
                 it('should set new value and emit event', async () => {
                     const result = await web3Exchange.changeTradesRevenueFund(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeTradesRevenueFundEvent');
-                    const revenueFund = await web3Exchange.tradesRevenueFund();
-                    utils.getAddress(revenueFund).should.equal(address);
+
+                    utils.getAddress(await web3Exchange.tradesRevenueFund.call()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3Exchange.changeTradesRevenueFund(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -295,7 +331,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let paymentsRevenueFund;
 
                 beforeEach(async () => {
@@ -310,12 +346,12 @@ module.exports = (glob) => {
                     const result = await web3Exchange.changePaymentsRevenueFund(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangePaymentsRevenueFundEvent');
-                    const revenueFund = await web3Exchange.paymentsRevenueFund();
-                    utils.getAddress(revenueFund).should.equal(address);
+
+                    utils.getAddress(await web3Exchange.paymentsRevenueFund.call()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3Exchange.changePaymentsRevenueFund(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -336,7 +372,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let communityVote;
 
                 beforeEach(async () => {
@@ -349,14 +385,15 @@ module.exports = (glob) => {
 
                 it('should set new value and emit event', async () => {
                     const result = await web3Exchange.changeCommunityVote(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeCommunityVoteEvent');
-                    const communityVote = await web3Exchange.communityVote();
-                    utils.getAddress(communityVote).should.equal(address);
+
+                    utils.getAddress(await web3Exchange.communityVote.call()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3Exchange.changeCommunityVote(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -364,13 +401,13 @@ module.exports = (glob) => {
         });
 
         describe('disableUpdateOfCommunityVote()', () => {
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3Exchange.disableUpdateOfCommunityVote({from: glob.user_a}).should.be.rejected;
                 });
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let address;
 
                 before(async () => {
@@ -386,15 +423,13 @@ module.exports = (glob) => {
 
         describe('isSeizedWallet()', () => {
             it('should equal value initialized', async () => {
-                const result = await ethersExchange.isSeizedWallet(glob.user_a);
-                result.should.be.false;
+                (await ethersExchange.isSeizedWallet(glob.user_a)).should.be.false;
             });
         });
 
         describe('seizedWalletsCount()', () => {
             it('should equal value initialized', async () => {
-                const count = await ethersExchange.seizedWalletsCount();
-                count.toNumber().should.equal(0);
+                (await ethersExchange.seizedWalletsCount()).toNumber().should.equal(0);
             })
         });
 
@@ -406,32 +441,50 @@ module.exports = (glob) => {
 
         describe('settlementsCount()', () => {
             it('should equal value initialized', async () => {
-                const count = await ethersExchange.seizedWalletsCount();
-                count.toNumber().should.equal(0);
+                (await ethersExchange.settlementsCount()).toNumber().should.equal(0);
             })
         });
 
-        describe('walletSettlementsCount()', () => {
+        describe('hasSettlementByNonce()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersExchange.hasSettlementByNonce(1)).should.equal(false);
+            })
+        });
+
+        describe('settlementByNonce()', () => {
+            it('should revert', async () => {
+                ethersExchange.settlementByNonce(1).should.be.rejected;
+            })
+        });
+
+        describe('settlementsCountByWallet()', () => {
             it('should equal value initialized', async () => {
                 const address = Wallet.createRandom().address;
-                const count = await ethersExchange.walletSettlementsCount(address);
-                count.toNumber().should.equal(0);
+                (await ethersExchange.settlementsCountByWallet(address)).toNumber().should.equal(0);
             })
         });
 
-        describe('walletSettlement', () => {
-            describe('if index is out of bounds', () => {
+        describe('settlementByWalletAndIndex', () => {
+            describe('if no matching settlement exists', () => {
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
-                    ethersExchange.walletSettlement(address, 0).should.be.rejected;
+                    ethersExchange.settlementByWalletAndIndex(address, 1).should.be.rejected;
+                })
+            });
+        });
+
+        describe('settlementByWalletAndNonce', () => {
+            describe('if no matching settlement exists', () => {
+                it('should revert', async () => {
+                    const address = Wallet.createRandom().address;
+                    ethersExchange.settlementByWalletAndNonce(address, 1).should.be.rejected;
                 })
             });
         });
 
         describe('maxDriipNonce()', () => {
             it('should equal value initialized', async () => {
-                const maxDriipNonce = await ethersExchange.maxDriipNonce();
-                maxDriipNonce.should.deep.equal(utils.bigNumberify(0));
+                (await ethersExchange.maxDriipNonce()).should.deep.equal(utils.bigNumberify(0));
             });
         });
 
@@ -446,8 +499,7 @@ module.exports = (glob) => {
 
                 it('should not update maxDriipNonce property', async () => {
                     await ethersExchange.updateMaxDriipNonce();
-                    const result = await ethersExchange.maxDriipNonce();
-                    result.should.deep.equal(maxDriipNonce);
+                    (await ethersExchange.maxDriipNonce()).should.deep.equal(maxDriipNonce);
                 });
             });
 
@@ -461,9 +513,17 @@ module.exports = (glob) => {
 
                 it('should update maxDriipNonce property', async () => {
                     await ethersExchange.updateMaxDriipNonce();
-                    const result = await ethersExchange.maxDriipNonce();
-                    result.should.deep.equal(maxDriipNonce);
+                    (await ethersExchange.maxDriipNonce()).should.deep.equal(maxDriipNonce);
                 });
+            });
+        });
+
+        describe('walletCurrencyMaxDriipNonce()', () => {
+            it('should equal value initialized', async () => {
+                const maxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                    Wallet.createRandom().address, Wallet.createRandom().address, 0
+                );
+                maxDriipNonce.should.deep.equal(utils.bigNumberify(0));
             });
         });
 
@@ -493,7 +553,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    await ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersExchange.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -609,16 +669,44 @@ module.exports = (glob) => {
                         updateConjugateSettledBalance[2].should.equal(trade.currencies.conjugate.ct);
                         updateConjugateSettledBalance[3].should.deep.equal(trade.currencies.conjugate.id);
 
-                        const nBuyerSettlements = await ethersExchange.walletSettlementsCount(trade.buyer.wallet);
-                        const buyerSettlement = await ethersExchange.walletSettlement(trade.buyer.wallet, nBuyerSettlements.sub(1));
-                        buyerSettlement.nonce.should.deep.equal(trade.nonce);
-                        buyerSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
-                        buyerSettlement.origin.should.equal(mocks.address0);
-                        buyerSettlement.target.should.equal(trade.buyer.wallet);
+                        const nBuyerSettlements = await ethersExchange.settlementsCountByWallet(trade.buyer.wallet);
+                        const buyerSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(trade.buyer.wallet, nBuyerSettlements.sub(1));
+                        buyerSettlementByIndex.nonce.should.deep.equal(trade.nonce);
+                        buyerSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                        buyerSettlementByIndex.origin.wallet.should.equal(trade.seller.wallet);
+                        buyerSettlementByIndex.origin.done.should.be.false;
+                        buyerSettlementByIndex.target.wallet.should.equal(trade.buyer.wallet);
+                        buyerSettlementByIndex.target.done.should.be.true;
 
-                        const nSellerSettlements = await ethersExchange.walletSettlementsCount(trade.seller.wallet);
-                        const sellerSettlement = await ethersExchange.walletSettlement(trade.seller.wallet, nSellerSettlements.sub(1));
-                        sellerSettlement.should.deep.equal(buyerSettlement);
+                        const buyerSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(trade.buyer.wallet, trade.buyer.nonce);
+                        buyerSettlementByNonce.should.deep.equal(buyerSettlementByIndex);
+
+                        const nSellerSettlements = await ethersExchange.settlementsCountByWallet(trade.seller.wallet);
+                        const sellerSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(trade.seller.wallet, nSellerSettlements.sub(1));
+                        sellerSettlementByIndex.should.deep.equal(buyerSettlementByIndex);
+
+                        const sellerSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(trade.seller.wallet, trade.seller.nonce);
+                        sellerSettlementByNonce.should.deep.equal(sellerSettlementByIndex);
+
+                        const buyerIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            trade.buyer.wallet, trade.currencies.intended.ct, trade.currencies.intended.id
+                        );
+                        buyerIntendedMaxDriipNonce.should.deep.equal(trade.nonce);
+
+                        const buyerConjugateMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                        );
+                        buyerConjugateMaxDriipNonce.should.deep.equal(trade.nonce);
+
+                        const sellerIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            trade.seller.wallet, trade.currencies.intended.ct, trade.currencies.intended.id
+                        );
+                        sellerIntendedMaxDriipNonce.should.not.deep.equal(trade.nonce);
+
+                        const sellerConjugateMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            trade.seller.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                        );
+                        sellerConjugateMaxDriipNonce.should.not.deep.equal(trade.nonce);
                     });
                 });
 
@@ -710,7 +798,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    await ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -725,7 +813,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    await ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersExchange.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -820,16 +908,34 @@ module.exports = (glob) => {
                         updateSettledBalance[2].should.equal(payment.currency.ct);
                         updateSettledBalance[3].should.deep.equal(payment.currency.id);
 
-                        const nSenderSettlements = await ethersExchange.walletSettlementsCount(payment.sender.wallet);
-                        const senderSettlement = await ethersExchange.walletSettlement(payment.sender.wallet, nSenderSettlements.sub(1));
-                        senderSettlement.nonce.should.deep.equal(payment.nonce);
-                        senderSettlement.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
-                        senderSettlement.origin.should.equal(payment.sender.wallet);
-                        senderSettlement.target.should.equal(mocks.address0);
+                        const nSenderSettlements = await ethersExchange.settlementsCountByWallet(payment.sender.wallet);
+                        const senderSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(payment.sender.wallet, nSenderSettlements.sub(1));
+                        senderSettlementByIndex.nonce.should.deep.equal(payment.nonce);
+                        senderSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
+                        senderSettlementByIndex.origin.wallet.should.equal(payment.sender.wallet);
+                        senderSettlementByIndex.origin.done.should.be.true;
+                        senderSettlementByIndex.target.wallet.should.equal(payment.recipient.wallet);
+                        senderSettlementByIndex.target.done.should.be.false;
 
-                        const nRecipientSettlements = await ethersExchange.walletSettlementsCount(payment.recipient.wallet);
-                        const recipientSettlement = await ethersExchange.walletSettlement(payment.recipient.wallet, nRecipientSettlements.sub(1));
-                        recipientSettlement.should.deep.equal(senderSettlement);
+                        const senderSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(payment.sender.wallet, payment.sender.nonce);
+                        senderSettlementByNonce.should.deep.equal(senderSettlementByIndex);
+
+                        const nRecipientSettlements = await ethersExchange.settlementsCountByWallet(payment.recipient.wallet);
+                        const recipientSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(payment.recipient.wallet, nRecipientSettlements.sub(1));
+                        recipientSettlementByIndex.should.deep.equal(senderSettlementByIndex);
+
+                        const recipientSettlementByNonce = await ethersExchange.settlementByWalletAndNonce(payment.recipient.wallet, payment.recipient.nonce);
+                        recipientSettlementByNonce.should.deep.equal(recipientSettlementByIndex);
+
+                        const senderIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            payment.sender.wallet, payment.currency.ct, payment.currency.id
+                        );
+                        senderIntendedMaxDriipNonce.should.deep.equal(payment.nonce);
+
+                        const recipientIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
+                            payment.recipient.wallet, payment.currency.ct, payment.currency.id
+                        );
+                        recipientIntendedMaxDriipNonce.should.not.deep.equal(payment.nonce);
                     });
                 });
 

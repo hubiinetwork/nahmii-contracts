@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -19,21 +19,21 @@ contract Ownable is Modifiable, SelfDestructible {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address public owner;
+    address public deployer;
+    address public operator;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeOwnerEvent(address oldOwner, address newOwner);
+    event ChangeDeployerEvent(address oldDeployer, address newDeployer);
+    event ChangeOperatorEvent(address oldOperator, address newOperator);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) internal {
-        require(_owner != address(0));
-        require(_owner != address(this));
-
-        owner = _owner;
+    constructor(address _deployer) internal notNullOrThisAddress(_deployer) {
+        deployer = _deployer;
+        operator = _deployer;
     }
 
     //
@@ -41,35 +41,91 @@ contract Ownable is Modifiable, SelfDestructible {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Return the address that is able to initiate self-destruction
     function destructor() public view returns (address) {
-        return owner;
+        return deployer;
     }
 
-    /// @notice Change the owner of this contract
-    /// @param newOwner The address of the new owner
-    function changeOwner(address newOwner) public onlyOwner notNullOrThisAddress(newOwner) {
-        if (newOwner != owner) {
-            //set new owner
-            address oldOwner = owner;
-            owner = newOwner;
+    /// @notice Change the deployer of this contract
+    /// @param newDeployer The address of the new deployer
+    function changeDeployer(address newDeployer)
+    public
+    onlyDeployer
+    notNullOrThisAddress(newDeployer)
+    {
+        if (newDeployer != deployer) {
+            // Set new deployer
+            address oldDeployer = deployer;
+            deployer = newDeployer;
 
-            //emit event
-            emit ChangeOwnerEvent(oldOwner, newOwner);
+            // Emit event
+            emit ChangeDeployerEvent(oldDeployer, newDeployer);
         }
     }
 
-    function isOwner() internal view returns (bool) {
-        return msg.sender == owner;
+    /// @notice Change the operator of this contract
+    /// @param newOperator The address of the new operator
+    function changeOperator(address newOperator)
+    public
+    onlyOperator
+    notNullOrThisAddress(newOperator)
+    {
+        if (newOperator != operator) {
+            // Set new operator
+            address oldOperator = operator;
+            operator = newOperator;
+
+            // Emit event
+            emit ChangeOperatorEvent(oldOperator, newOperator);
+        }
+    }
+
+    /// @notice Gauge whether message sender is deployer or not
+    /// @return true if msg.sender is deployer, else false
+    function isDeployer() internal view returns (bool) {
+        return msg.sender == deployer;
+    }
+
+    /// @notice Gauge whether message sender is operator or not
+    /// @return true if msg.sender is operator, else false
+    function isOperator() internal view returns (bool) {
+        return msg.sender == operator;
+    }
+
+    /// @notice Gauge whether message sender is operator or deployer on the one hand, or none of these on these on
+    /// on the other hand
+    /// @return true if msg.sender is operator, else false
+    function isDeployerOrOperator() internal view returns (bool) {
+        return isDeployer() || isOperator();
     }
 
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyOwner() {
-        require(isOwner());
+    modifier onlyDeployer() {
+        require(isDeployer());
         _;
     }
 
-    modifier notOwner() {
-        require(!isOwner());
+    modifier notDeployer() {
+        require(!isDeployer());
+        _;
+    }
+
+    modifier onlyOperator() {
+        require(isOperator());
+        _;
+    }
+
+    modifier notOperator() {
+        require(!isOperator());
+        _;
+    }
+
+    modifier onlyDeployerOrOperator() {
+        require(isDeployerOrOperator());
+        _;
+    }
+
+    modifier notDeployerOrOperator() {
+        require(!isDeployerOrOperator());
         _;
     }
 }

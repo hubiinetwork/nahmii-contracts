@@ -1,12 +1,13 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../Ownable.sol";
 import {ClientFundable} from "../ClientFundable.sol";
@@ -21,7 +22,7 @@ contract MockedClientFundService is Ownable, ClientFundable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) public Ownable(owner) {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

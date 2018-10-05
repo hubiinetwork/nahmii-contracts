@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 //import {CancelOrdersChallenge} from "../CancelOrdersChallenge.sol";
-import {StriimTypes} from "../StriimTypes.sol";
+import {NahmiiTypes} from "../NahmiiTypes.sol";
 
 /**
 @title MockedCancelOrdersChallenge
@@ -27,7 +27,7 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CancelOrdersEvent(StriimTypes.Order[] orders, address wallet);
+    event CancelOrdersEvent(NahmiiTypes.Order[] orders, address wallet);
     event CancelOrdersByHashEvent(bytes32[] orders, address wallet);
 
     //
@@ -45,7 +45,7 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
         cancelledOrderHashes.length = 0;
     }
 
-    function cancelOrders(StriimTypes.Order[] orders) public {
+    function cancelOrders(NahmiiTypes.Order[] orders) public {
         for (uint256 i = 0; i < orders.length; i++) {
             cancelledOrderHashes.push(orders[i].seals.exchange.hash);
             orderHashCancelledMap[orders[i].seals.exchange.hash] = true;

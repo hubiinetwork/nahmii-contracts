@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -38,11 +38,11 @@ contract AccrualBenefactor is Benefactor {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function registerBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         return registerFractionalBeneficiary(beneficiary, PARTS_PER);
     }
 
-    function registerFractionalBeneficiary(address beneficiary, uint256 fraction) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function registerFractionalBeneficiary(address beneficiary, uint256 fraction) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         require(fraction > 0);
         require(totalBeneficiaryFraction.add(fraction) <= PARTS_PER);
 
@@ -58,7 +58,7 @@ contract AccrualBenefactor is Benefactor {
         return true;
     }
 
-    function deregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function deregisterBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         if (!super.deregisterBeneficiary(beneficiary))
             return false;
 

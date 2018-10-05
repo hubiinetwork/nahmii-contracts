@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -31,7 +31,7 @@ contract SecurityBondable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the security bond contract
     /// @param newAddress The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newAddress) public onlyOwner
+    function changeSecurityBond(SecurityBond newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, securityBond)
     {
