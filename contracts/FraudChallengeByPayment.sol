@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
@@ -22,7 +21,7 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
 @title FraudChallengeByPayment
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByPayment is Ownable, AccessorManageable, FraudChallengable, Challenge, Validatable, SecurityBondable, ClientFundable {
+contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -31,7 +30,7 @@ contract FraudChallengeByPayment is Ownable, AccessorManageable, FraudChallengab
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -43,7 +42,7 @@ contract FraudChallengeByPayment is Ownable, AccessorManageable, FraudChallengab
     public
     onlyOperationalModeNormal
     validatorInitialized
-    onlyExchangeSealedPayment(payment)
+    onlyOperatorSealedPayment(payment)
     {
         require(fraudChallenge != address(0));
         require(configuration != address(0));
@@ -53,7 +52,9 @@ contract FraudChallengeByPayment is Ownable, AccessorManageable, FraudChallengab
         require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
-        bool genuineWalletSignature = NahmiiTypes.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+        bool genuineWalletSignature = validator.isGenuineWalletSignature(
+            payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet
+        );
 
         // Genuineness affected by sender
         bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&

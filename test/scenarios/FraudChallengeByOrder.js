@@ -31,7 +31,7 @@ module.exports = (glob) => {
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner, glob.web3AccessorManager.address);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3AccessorManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
@@ -315,7 +315,7 @@ module.exports = (glob) => {
 
             describe('if order is not sealed by exchange', () => {
                 beforeEach(async () => {
-                    ethersValidator.setGenuineOrderExchangeSeal(false);
+                    ethersValidator.setGenuineOrderOperatorSeal(false);
                     order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
@@ -337,10 +337,8 @@ module.exports = (glob) => {
 
             describe('if order wallet signature is fraudulent', () => {
                 beforeEach(async () => {
+                    ethersValidator.setGenuineWalletSignature(false);
                     order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                    order.seals.wallet.signature = await mocks.createWeb3Signer(glob.user_a)(order.seals.wallet.hash);
-                    order.seals.exchange.hash = mocks.hashOrderAsExchange(order);
-                    order.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(order.seals.exchange.hash);
                 });
 
                 it('should set operational mode exit, store fraudulent order and seize buyer\'s funds', async () => {

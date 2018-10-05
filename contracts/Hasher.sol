@@ -10,18 +10,17 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title Hasher
 @notice Contract that hashes types in NahmiiTypes contract
 */
-contract Hasher is Ownable, AccessorManageable {
+contract Hasher is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -34,7 +33,7 @@ contract Hasher is Ownable, AccessorManageable {
         return keccak256(abi.encodePacked(globalHash, placementHash));
     }
 
-    function hashOrderAsExchange(NahmiiTypes.Order order) public pure returns (bytes32) {
+    function hashOrderAsOperator(NahmiiTypes.Order order) public pure returns (bytes32) {
         bytes32 walletSignatureHash = hashSignature(order.seals.wallet.signature);
         bytes32 placementResidualsHash = hashOrderPlacementResidualsData(order);
 
@@ -58,7 +57,7 @@ contract Hasher is Ownable, AccessorManageable {
         return keccak256(abi.encodePacked(amountCurrencyHash, senderHash, recipientHash));
     }
 
-    function hashPaymentAsExchange(NahmiiTypes.Payment payment) public pure returns (bytes32) {
+    function hashPaymentAsOperator(NahmiiTypes.Payment payment) public pure returns (bytes32) {
         bytes32 walletSignatureHash = hashSignature(payment.seals.wallet.signature);
         bytes32 nonceHash = hashPaymentNonce(payment);
         bytes32 senderHash = hashPaymentSenderDataAsExchange(payment);

@@ -32,7 +32,7 @@ module.exports = (glob) => {
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner, glob.web3AccessorManager.address);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3AccessorManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
@@ -367,11 +367,11 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment1.seals.wallet.hash = cryptography.hash('some payment');
                     payment1.seals.wallet.signature = await mocks.createWeb3Signer(payment1.sender.wallet)(payment1.seals.wallet.hash);
-                    payment1.seals.exchange.hash = mocks.hashPaymentAsExchange(payment1);
+                    payment1.seals.exchange.hash = mocks.hashPaymentAsOperator(payment1);
                     payment1.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment1.seals.exchange.hash);
                     payment2.seals.wallet.hash = cryptography.hash('some payment');
                     payment2.seals.wallet.signature = await mocks.createWeb3Signer(payment2.sender.wallet)(payment2.seals.wallet.hash);
-                    payment2.seals.exchange.hash = mocks.hashPaymentAsExchange(payment2);
+                    payment2.seals.exchange.hash = mocks.hashPaymentAsOperator(payment2);
                     payment2.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment2.seals.exchange.hash);
                 });
 

@@ -26,7 +26,7 @@ contract AccessorManageable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeAccessorManagerEvent(address oldAccesor, address newAccesor);
+    event ChangeAccessorManagerEvent(address oldAccessor, address newAccessor);
 
     //
     // Constructor
@@ -40,24 +40,67 @@ contract AccessorManageable is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the accesor manager of this contract
-    /// @param newAccesor The address of the new accesor
-    function changeAccessorManager(address newAccesor) public onlyDeployer notNullOrThisAddress(newAccesor) {
-        if (newAccesor != address(accessorManager)) {
+    /// @notice Change the accessor manager of this contract
+    /// @param newAccessor The address of the new accessor
+    function changeAccessorManager(address newAccessor)
+    public
+    onlyDeployer
+    notNullOrThisAddress(newAccessor)
+    {
+        if (newAccessor != address(accessorManager)) {
             //set new accessor
-            address oldAccesor = address(accessorManager);
-            accessorManager = AccessorManager(newAccesor);
+            address oldAccessor = address(accessorManager);
+            accessorManager = AccessorManager(newAccessor);
 
             //emit event
-            emit ChangeAccessorManagerEvent(oldAccesor, newAccesor);
+            emit ChangeAccessorManagerEvent(oldAccessor, newAccessor);
         }
     }
 
-    function isSignedByRegisteredSigner(bytes32 hash, NahmiiTypes.Signature signature) public view returns (bool) {
-        require(accessorManager != address(0));
+    /// @notice Prefix input hash and do ecrecover on prefixed hash
+    /// @param hash The hash message that was signed
+    /// @param v The v property of the ECDSA signature
+    /// @param r The r property of the ECDSA signature
+    /// @param s The s property of the ECDSA signature
+    /// @return The address recovered
+    function ethrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s)
+    public
+    pure
+    returns (address)
+    {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
-        return accessorManager.isSigner(ecrecover(prefixedHash, signature.v, signature.r, signature.s));
+        return ecrecover(prefixedHash, v, r, s);
+    }
+
+    /// @notice Gauge whether a signature of a hash has been signed by a registered signer
+    /// @param hash The hash message that was signed
+    /// @param v The v property of the ECDSA signature
+    /// @param r The r property of the ECDSA signature
+    /// @param s The s property of the ECDSA signature
+    /// @return true if the recovered signer is one of the registered signers, else false
+    function isSignedByRegisteredSigner(bytes32 hash, uint8 v, bytes32 r, bytes32 s)
+    public
+    view
+    returns (bool)
+    {
+        require(accessorManager != address(0));
+        return accessorManager.isSigner(ethrecover(hash, v, r, s));
+    }
+
+    /// @notice Gauge whether a signature of a hash has been signed by the claimed signer
+    /// @param hash The hash message that was signed
+    /// @param v The v property of the ECDSA signature
+    /// @param r The r property of the ECDSA signature
+    /// @param s The s property of the ECDSA signature
+    /// @param signer The claimed signer
+    /// @return true if the recovered signer equals the input signer, else false
+    function isSignedBy(bytes32 hash, uint8 v, bytes32 r, bytes32 s, address signer)
+    public
+    pure
+    returns (bool)
+    {
+        return signer == ethrecover(hash, v, r, s);
     }
 
     // Modifiers
@@ -66,29 +109,4 @@ contract AccessorManageable is Ownable {
         require(accessorManager != address(0));
         _;
     }
-
-    // TODO Figure out why these modifiers act differently than the ones in Ownable
-    //    modifier onlyOperator() {
-    //        require(accessorManager != address(0));
-    //        require(accessorManager.isOperator(msg.sender));
-    //        _;
-    //    }
-    //
-    //    modifier notOperator() {
-    //        require(accessorManager != address(0));
-    //        require(!accessorManager.isOperator(msg.sender));
-    //        _;
-    //    }
-    //
-    //    modifier onlyDeployerOrOperator() {
-    //        require(accessorManager != address(0));
-    //        require(accessorManager.isDeployerOrOperator(msg.sender));
-    //        _;
-    //    }
-    //
-    //    modifier notOwnerOrOperator() {
-    //        require(accessorManager != address(0));
-    //        require(!accessorManager.isDeployerOrOperator(msg.sender));
-    //        _;
-    //    }
 }

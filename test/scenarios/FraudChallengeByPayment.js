@@ -33,7 +33,7 @@ module.exports = (glob) => {
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner, glob.web3AccessorManager.address);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3AccessorManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
@@ -362,7 +362,7 @@ module.exports = (glob) => {
 
             describe('if payment is not sealed by exchange', () => {
                 beforeEach(async () => {
-                    ethersValidator.setGenuinePaymentExchangeSeal(false);
+                    ethersValidator.setGenuinePaymentOperatorSeal(false);
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
@@ -384,10 +384,8 @@ module.exports = (glob) => {
 
             describe('if payment wallet signature is fraudulent', () => {
                 beforeEach(async () => {
+                    await ethersValidator.setGenuineWalletSignature(false);
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                    payment.seals.wallet.signature = await mocks.createWeb3Signer(glob.user_a)(payment.seals.wallet.hash);
-                    payment.seals.exchange.hash = mocks.hashPaymentAsExchange(payment);
-                    payment.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment.seals.exchange.hash);
                 });
 
                 it('should set operational mode exit, store fraudulent payment and stage in security bond', async () => {

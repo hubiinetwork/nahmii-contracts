@@ -29,7 +29,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
     // -----------------------------------------------------------------------------------------------------------------
     bool orderWalletHash;
     bool orderWalletSeal;
-    bool orderExchangeSeal;
+    bool orderOperatorSeal;
     bool orderSeals;
     bool tradeBuyerFee;
     bool tradeSellerFee;
@@ -41,7 +41,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
     bool paymentRecipient;
     bool paymentWalletHash;
     bool paymentWalletSeal;
-    bool paymentExchangeSeal;
+    bool paymentOperatorSeal;
     bool[] paymentSeals;
     bool successiveTradesPartyNonces;
     bool successiveTradesBalances;
@@ -56,6 +56,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
     bool successivePaymentTradeBalances;
     bool successivePaymentTradeNetFees;
     bool successiveTradeOrderResiduals;
+    bool walletSignature;
 
     uint256 tradeSealsIndex;
     uint256 paymentSealsIndex;
@@ -77,7 +78,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
     function reset() public {
         orderWalletHash = true;
         orderWalletSeal = true;
-        orderExchangeSeal = true;
+        orderOperatorSeal = true;
         orderSeals = true;
         tradeBuyerFee = true;
         tradeSellerFee = true;
@@ -90,7 +91,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         paymentRecipient = true;
         paymentWalletHash = true;
         paymentWalletSeal = true;
-        paymentExchangeSeal = true;
+        paymentOperatorSeal = true;
         paymentSeals.length = 0;
         paymentSeals.push(true);
         successiveTradesPartyNonces = true;
@@ -106,6 +107,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         successivePaymentTradeBalances = true;
         successivePaymentTradeNetFees = true;
         successiveTradeOrderResiduals = true;
+        walletSignature = true;
 
         tradeSealsIndex = 1;
         paymentSealsIndex = 1;
@@ -131,25 +133,23 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         return orderWalletSeal;
     }
 
-    function setGenuineOrderExchangeSeal(bool genuine) public {
-        orderExchangeSeal = genuine;
+    function setGenuineOrderOperatorSeal(bool genuine) public {
+        orderOperatorSeal = genuine;
     }
 
-    function isGenuineOrderExchangeSeal(NahmiiTypes.Order order, address exchange) public view returns (bool) {
+    function isGenuineOrderOperatorSeal(NahmiiTypes.Order order) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(order.nonce == order.nonce);
-        require(exchange == exchange);
-        return orderExchangeSeal;
+        return orderOperatorSeal;
     }
 
     function setGenuineOrderSeals(bool genuine) public {
         orderSeals = genuine;
     }
 
-    function isGenuineOrderSeals(NahmiiTypes.Order order, address exchange) public view returns (bool) {
+    function isGenuineOrderSeals(NahmiiTypes.Order order) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(order.nonce == order.nonce);
-        require(exchange == exchange);
         return orderSeals;
     }
 
@@ -177,10 +177,9 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         tradeBuyer = genuine;
     }
 
-    function isGenuineTradeBuyer(NahmiiTypes.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeBuyer(NahmiiTypes.Trade trade) public view returns (bool) {
         // To silence unused function parameter compiler warnings
         require(trade.nonce == trade.nonce);
-        require(exchange == exchange);
         return tradeBuyer;
     }
 
@@ -188,10 +187,9 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         tradeSeller = genuine;
     }
 
-    function isGenuineTradeSeller(NahmiiTypes.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeSeller(NahmiiTypes.Trade trade) public view returns (bool) {
         // To silence unused function parameter compiler warnings
         require(trade.nonce == trade.nonce);
-        require(exchange == exchange);
         return tradeSeller;
     }
 
@@ -199,10 +197,9 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         tradeSeals.push(genuine);
     }
 
-    function isGenuineTradeSeal(NahmiiTypes.Trade trade, address exchange) public returns (bool) {
+    function isGenuineTradeSeal(NahmiiTypes.Trade trade) public returns (bool) {
         // To silence unused function parameter compiler warnings
         require(trade.nonce == trade.nonce);
-        require(exchange == exchange);
         if (tradeSeals.length == 1)
             return tradeSeals[0];
         else {
@@ -261,25 +258,23 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         return paymentWalletSeal;
     }
 
-    function setGenuinePaymentExchangeSeal(bool genuine) public {
-        paymentExchangeSeal = genuine;
+    function setGenuinePaymentOperatorSeal(bool genuine) public {
+        paymentOperatorSeal = genuine;
     }
 
-    function isGenuinePaymentExchangeSeal(NahmiiTypes.Payment payment, address exchange) public view returns (bool) {
+    function isGenuinePaymentOperatorSeal(NahmiiTypes.Payment payment) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(payment.nonce == payment.nonce);
-        require(exchange == exchange);
-        return paymentExchangeSeal;
+        return paymentOperatorSeal;
     }
 
     function setGenuinePaymentSeals(bool genuine) public {
         paymentSeals.push(genuine);
     }
 
-    function isGenuinePaymentSeals(NahmiiTypes.Payment payment, address exchange) public returns (bool) {
+    function isGenuinePaymentSeals(NahmiiTypes.Payment payment) public returns (bool) {
         // To silence unused function parameter compiler warnings
         require(payment.nonce == payment.nonce);
-        require(exchange == exchange);
         if (paymentSeals.length == 1)
             return paymentSeals[0];
         else {
@@ -572,5 +567,25 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         require(lastTrade.nonce == lastTrade.nonce);
         require(tradePartyRole == tradePartyRole);
         return successiveTradeOrderResiduals;
+    }
+
+    function setGenuineWalletSignature(bool genuine) public {
+        walletSignature = genuine;
+    }
+
+    function isGenuineWalletSignature(
+        bytes32 hash,
+        NahmiiTypes.Signature signature,
+        address wallet
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(hash == hash);
+        require(signature.v == signature.v);
+        require(wallet == wallet);
+        return walletSignature;
     }
 }

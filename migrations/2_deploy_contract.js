@@ -77,8 +77,7 @@ module.exports = (deployer, network, accounts) => {
                 deployer: deployer,
                 deployFilters: helpers.getFiltersFromArgs(),
                 addressStorage: addressStorage,
-                ownerAccount: ownerAccount,
-                usesAccessManager: false
+                ownerAccount: ownerAccount
             };
 
             await execDeploy(ctl, 'MonetaryTypes', '', MonetaryTypes);
@@ -135,25 +134,20 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'AccessorManager', '', AccessorManager);
 
             //deploy other contracts
-            ctl.usesAccessManager = true;
             await execDeploy(ctl, 'Hasher', '', Hasher);
 
-            await execDeploy(ctl, 'Validator', '', Validator);
+            await execDeploy(ctl, 'Validator', '', Validator, true);
 
             await execDeploy(ctl, 'ClientFund', '', ClientFund);
 
-            ctl.usesAccessManager = false;
             await execDeploy(ctl, 'CommunityVote', '', CommunityVote);
 
             await execDeploy(ctl, 'Configuration', '', Configuration);
 
-            ctl.usesAccessManager = true;
             await execDeploy(ctl, 'Exchange', '', Exchange);
 
-            ctl.usesAccessManager = false;
             await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
 
-            ctl.usesAccessManager = true;
             await execDeploy(ctl, 'DriipSettlementChallenge', '', DriipSettlementChallenge);
 
             await execDeploy(ctl, 'DriipSettlementDispute', '', DriipSettlementDispute);
@@ -188,10 +182,8 @@ module.exports = (deployer, network, accounts) => {
 
             await execDeploy(ctl, 'RevenueFund', 'PaymentsRevenueFund', RevenueFund);
 
-            ctl.usesAccessManager = false;
             await execDeploy(ctl, 'SecurityBond', '', SecurityBond);
 
-            ctl.usesAccessManager = true;
             await execDeploy(ctl, 'TokenHolderRevenueFund', '', TokenHolderRevenueFund);
 
             await execDeploy(ctl, 'PartnerFund', '', PartnerFund);
@@ -435,20 +427,19 @@ module.exports = (deployer, network, accounts) => {
     });
 };
 
-async function execDeploy(ctl, contractName, instanceName, contract) {
+async function execDeploy(ctl, contractName, instanceName, contract, usesAccessManager) {
     let address = ctl.addressStorage.get(instanceName || contractName);
 
     if ((!address) || shouldDeploy(contractName, ctl.deployFilters)) {
         let instance;
 
-        if (ctl.usesAccessManager) {
+        if (usesAccessManager) {
             let accessorManager = ctl.addressStorage.get('AccessorManager');
 
-            instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, accessorManager, { from: ctl.ownerAccount });
-        }
-        else {
-            instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, { from: ctl.ownerAccount });
-        }
+            instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, accessorManager, {from: ctl.ownerAccount});
+        } else
+            instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, {from: ctl.ownerAccount});
+
         ctl.addressStorage.set(instanceName || contractName, instance.address);
     }
 }

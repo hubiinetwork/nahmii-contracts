@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {Validatable} from "./Validatable.sol";
 import {NahmiiChallenge} from "./NahmiiChallenge.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
@@ -23,7 +22,7 @@ import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 @title DriipSettlementChallenge
 @notice Where driip settlements are challenged
 */
-contract DriipSettlementChallenge is Ownable, AccessorManageable, NahmiiChallenge, Validatable {
+contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     using SafeMathInt for int256;
 
     //
@@ -50,7 +49,7 @@ contract DriipSettlementChallenge is Ownable, AccessorManageable, NahmiiChalleng
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -59,8 +58,8 @@ contract DriipSettlementChallenge is Ownable, AccessorManageable, NahmiiChalleng
     /// @notice Change the driip settlement challenger contract
     /// @param newDriipSettlementDispute The (address of) DriipSettlementDispute contract instance
     function changeDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute) public
-        onlyDeployer
-        notNullAddress(newDriipSettlementDispute)
+    onlyDeployer
+    notNullAddress(newDriipSettlementDispute)
     {
         DriipSettlementDispute oldDriipSettlementDispute = driipSettlementDispute;
         driipSettlementDispute = newDriipSettlementDispute;
@@ -108,9 +107,9 @@ contract DriipSettlementChallenge is Ownable, AccessorManageable, NahmiiChalleng
     /// @param intendedStageAmount Amount of intended currency to be staged
     /// @param conjugateStageAmount Amount of conjugate currency to be staged
     function startChallengeFromTrade(NahmiiTypes.Trade trade, address wallet, int256 intendedStageAmount, int256 conjugateStageAmount)
-        public
-        validatorInitialized
-        onlySealedTrade(trade)
+    public
+    validatorInitialized
+    onlySealedTrade(trade)
     {
         require(configuration != address(0));
         require(intendedStageAmount.isPositiveInt256());
@@ -158,8 +157,8 @@ contract DriipSettlementChallenge is Ownable, AccessorManageable, NahmiiChalleng
     /// @param wallet The relevant driip party
     /// @param stageAmount Amount of payment currency to be staged
     function startChallengeFromPayment(NahmiiTypes.Payment payment, address wallet, int256 stageAmount) public
-        validatorInitialized
-        onlySealedPayment(payment)
+    validatorInitialized
+    onlySealedPayment(payment)
     {
         require(configuration != address(0));
         require(stageAmount.isPositiveInt256());

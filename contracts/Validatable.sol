@@ -33,8 +33,8 @@ contract Validatable is Ownable {
     /// @notice Change the validator contract
     /// @param newAddress The (address of) Validator contract instance
     function changeValidator(Validator newAddress) public onlyDeployer
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, validator)
+    notNullAddress(newAddress)
+    notSameAddresses(newAddress, validator)
     {
         //set new validator
         Validator oldAddress = validator;
@@ -52,28 +52,28 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyExchangeSealedOrder(NahmiiTypes.Order order) {
-        require(validator.isGenuineOrderExchangeSeal(order, deployer));
+    modifier onlyOperatorSealedOrder(NahmiiTypes.Order order) {
+        require(validator.isGenuineOrderOperatorSeal(order));
         _;
     }
 
     modifier onlySealedOrder(NahmiiTypes.Order order) {
-        require(validator.isGenuineOrderSeals(order, deployer));
+        require(validator.isGenuineOrderSeals(order));
         _;
     }
 
     modifier onlySealedTrade(NahmiiTypes.Trade trade) {
-        require(validator.isGenuineTradeSeal(trade, deployer));
+        require(validator.isGenuineTradeSeal(trade));
         _;
     }
 
-    modifier onlyExchangeSealedPayment(NahmiiTypes.Payment payment) {
-        require(validator.isGenuinePaymentExchangeSeal(payment, deployer));
+    modifier onlyOperatorSealedPayment(NahmiiTypes.Payment payment) {
+        require(validator.isGenuinePaymentOperatorSeal(payment));
         _;
     }
 
     modifier onlySealedPayment(NahmiiTypes.Payment payment) {
-        require(validator.isGenuinePaymentSeals(payment, deployer));
+        require(validator.isGenuinePaymentSeals(payment));
         _;
     }
 }

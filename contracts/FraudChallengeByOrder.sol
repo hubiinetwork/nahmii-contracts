@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
@@ -21,7 +20,7 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
 @title FraudChallengeByOrder
 @notice Where order is challenged wrt signature error
 */
-contract FraudChallengeByOrder is Ownable, AccessorManageable, FraudChallengable, Challenge, Validatable, SecurityBondable {
+contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeByOrder is Ownable, AccessorManageable, FraudChallengable
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -42,7 +41,7 @@ contract FraudChallengeByOrder is Ownable, AccessorManageable, FraudChallengable
     public
     onlyOperationalModeNormal
     validatorInitialized
-    onlyExchangeSealedOrder(order)
+    onlyOperatorSealedOrder(order)
     {
         require(fraudChallenge != address(0));
         require(configuration != address(0));
@@ -51,7 +50,9 @@ contract FraudChallengeByOrder is Ownable, AccessorManageable, FraudChallengable
         require(validator.isGenuineOrderWalletHash(order));
 
         // Genuineness affected by wallet not having signed the payment
-        bool genuineWalletSignature = NahmiiTypes.isGenuineSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
+        bool genuineWalletSignature = validator.isGenuineWalletSignature(
+            order.seals.wallet.hash, order.seals.wallet.signature, order.wallet
+        );
         require(!genuineWalletSignature);
 
         configuration.setOperationalModeExit();
