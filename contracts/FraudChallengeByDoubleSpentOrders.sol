@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
@@ -21,7 +20,7 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
 @title FraudChallengeByDoubleSpentOrders
 @notice Where driips are challenged wrt fraud by double spent orders
 */
-contract FraudChallengeByDoubleSpentOrders is Ownable, AccessorManageable, FraudChallengable, Challenge, Validatable, SecurityBondable {
+contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, AccessorManageable, Fraud
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -40,11 +39,12 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, AccessorManageable, Fraud
     /// trade order double spenditure
     /// @param trade1 First trade with double spent order
     /// @param trade2 Last trade with double spent order
-    function challenge(NahmiiTypes.Trade trade1, NahmiiTypes.Trade trade2) public
-        onlyOperationalModeNormal
-        validatorInitialized
-        onlySealedTrade(trade1)
-        onlySealedTrade(trade2)
+    function challenge(NahmiiTypes.Trade trade1, NahmiiTypes.Trade trade2)
+    public
+    onlyOperationalModeNormal
+    validatorInitialized
+    onlySealedTrade(trade1)
+    onlySealedTrade(trade2)
     {
         require(configuration != address(0));
         require(fraudChallenge != address(0));

@@ -105,7 +105,7 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
 
     function isGenuineWalletSignature(bytes32 hash, NahmiiTypes.Signature signature, address wallet)
     public
-    view
+    pure
     returns (bool)
     {
         return isSignedBy(hash, signature.v, signature.r, signature.s, wallet);

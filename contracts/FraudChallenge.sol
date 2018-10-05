@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {NahmiiChallenge} from "./NahmiiChallenge.sol";
 import {Servable} from "./Servable.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
@@ -19,7 +18,7 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, AccessorManageable, NahmiiChallenge, Servable {
+contract FraudChallenge is Ownable, NahmiiChallenge, Servable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -56,7 +55,7 @@ contract FraudChallenge is Ownable, AccessorManageable, NahmiiChallenge, Servabl
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

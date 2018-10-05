@@ -10,18 +10,17 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
 @title Hasher
 @notice Contract that hashes types in NahmiiTypes contract
 */
-contract Hasher is Ownable, AccessorManageable {
+contract Hasher is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //

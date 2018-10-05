@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
@@ -26,7 +25,7 @@ import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 @title DriipSettlementDispute
 @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
-contract DriipSettlementDispute is Ownable, AccessorManageable, Configurable, Validatable, SecurityBondable {
+contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable {
     using SafeMathInt for int256;
 
     //
@@ -50,14 +49,14 @@ contract DriipSettlementDispute is Ownable, AccessorManageable, Configurable, Va
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     /// @notice Change the driip settlement challenge contract
     /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
     function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
-        onlyDeployer
-        notNullAddress(newDriipSettlementChallenge)
+    onlyDeployer
+    notNullAddress(newDriipSettlementChallenge)
     {
         DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
         driipSettlementChallenge = newDriipSettlementChallenge;
@@ -67,8 +66,8 @@ contract DriipSettlementDispute is Ownable, AccessorManageable, Configurable, Va
     /// @notice Change the fraud challenge contract
     /// @param newFraudChallenge The (address of) FraudChallenge contract instance
     function changeFraudChallenge(FraudChallenge newFraudChallenge) public
-        onlyDeployer
-        notNullAddress(newFraudChallenge)
+    onlyDeployer
+    notNullAddress(newFraudChallenge)
     {
         FraudChallenge oldFraudChallenge = fraudChallenge;
         fraudChallenge = newFraudChallenge;
@@ -78,8 +77,8 @@ contract DriipSettlementDispute is Ownable, AccessorManageable, Configurable, Va
     /// @notice Change the cancel orders challenge contract
     /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
     function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge) public
-        onlyDeployer
-        notNullAddress(newCancelOrdersChallenge)
+    onlyDeployer
+    notNullAddress(newCancelOrdersChallenge)
     {
         CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
         cancelOrdersChallenge = newCancelOrdersChallenge;
@@ -92,9 +91,9 @@ contract DriipSettlementDispute is Ownable, AccessorManageable, Configurable, Va
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
     function challengeByOrder(NahmiiTypes.Order order, address challenger) public
-        validatorInitialized
-        onlyDriipSettlementChallenge
-        onlySealedOrder(order)
+    validatorInitialized
+    onlyDriipSettlementChallenge
+    onlySealedOrder(order)
     {
         require(driipSettlementChallenge != address(0));
         require(fraudChallenge != address(0));

@@ -284,7 +284,12 @@ exports.createWeb3Signer = (address) => {
     };
 };
 
-exports.augmentOrderSeals = async (order, exchangeSign, walletSign) => {
+exports.web3Sign = async (address, hash) => {
+    const sig = await web3.eth.sign(address, hash);
+    return exports.rpcToStdSig(sig);
+};
+
+exports.augmentOrderSeals = async (order, operatorSign, walletSign) => {
     const walletHash = exports.hashOrderAsWallet(order);
     order.seals = {
         wallet: {

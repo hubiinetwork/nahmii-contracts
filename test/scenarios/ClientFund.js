@@ -21,9 +21,9 @@ module.exports = function (glob) {
         before(async () => {
             ethersClientFundUserA = glob.ethersIoClientFund.connect(glob.signer_a);
 
-            web3MockedClientFundAuthorizedService = await MockedClientFundService.new(glob.owner, glob.web3AccessorManager.address);
+            web3MockedClientFundAuthorizedService = await MockedClientFundService.new(glob.owner);
             ethersMockedClientFundAuthorizedService = new Contract(web3MockedClientFundAuthorizedService.address, MockedClientFundService.abi, glob.signer_owner);
-            web3MockedClientFundUnauthorizedService = await MockedClientFundService.new(glob.owner, glob.web3AccessorManager.address);
+            web3MockedClientFundUnauthorizedService = await MockedClientFundService.new(glob.owner);
             ethersMockedClientFundUnauthorizedService = new Contract(web3MockedClientFundUnauthorizedService.address, MockedClientFundService.abi, glob.signer_owner);
             web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
             ethersBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);

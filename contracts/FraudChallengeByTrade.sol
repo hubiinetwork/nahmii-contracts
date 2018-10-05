@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
@@ -21,7 +20,7 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
 @title FraudChallengeByTrade
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByTrade is Ownable, AccessorManageable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ contract FraudChallengeByTrade is Ownable, AccessorManageable, FraudChallengable
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -39,9 +38,9 @@ contract FraudChallengeByTrade is Ownable, AccessorManageable, FraudChallengable
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
     function challenge(NahmiiTypes.Trade trade) public
-        onlyOperationalModeNormal
-        validatorInitialized
-        onlySealedTrade(trade)
+    onlyOperationalModeNormal
+    validatorInitialized
+    onlySealedTrade(trade)
     {
         require(fraudChallenge != address(0));
         require(configuration != address(0));

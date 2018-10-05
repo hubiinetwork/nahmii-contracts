@@ -38,7 +38,7 @@ contract AccessorManager is Ownable {
     /// @notice Registers a signer
     /// @param newSigner The address of the signer to register
     function registerSigner(address newSigner) public onlyDeployer notNullOrThisAddress(newSigner) {
-        if (newSigner != deployer && (!signersMap[newSigner])) {
+        if (!signersMap[newSigner]) {
             // Set new operator
             signersMap[newSigner] = true;
 

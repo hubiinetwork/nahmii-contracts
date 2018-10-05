@@ -14,7 +14,6 @@ import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
@@ -27,7 +26,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract ClientFund is Ownable, AccessorManageable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
+contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
@@ -72,7 +71,7 @@ contract ClientFund is Ownable, AccessorManageable, Beneficiary, Benefactor, Aut
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) Beneficiary() Benefactor() public {
+    constructor(address owner) Ownable(owner) Beneficiary() Benefactor() public {
         serviceActivationTimeout = 1 weeks;
     }
 
@@ -224,9 +223,9 @@ contract ClientFund is Ownable, AccessorManageable, Beneficiary, Benefactor, Aut
     }
 
     function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId) public
-        onlyRegisteredActiveService
-        notNullAddress(sourceWallet)
-        notNullAddress(beneficiary)
+    onlyRegisteredActiveService
+    notNullAddress(sourceWallet)
+    notNullAddress(beneficiary)
     {
         //        require(isAuthorizedServiceForWallet(msg.sender, sourceWallet));
 
@@ -237,9 +236,9 @@ contract ClientFund is Ownable, AccessorManageable, Beneficiary, Benefactor, Aut
     }
 
     function seizeAllBalances(address sourceWallet, address targetWallet) public
-        onlyRegisteredActiveService
-        notNullAddress(sourceWallet)
-        notNullAddress(targetWallet)
+    onlyRegisteredActiveService
+    notNullAddress(sourceWallet)
+    notNullAddress(targetWallet)
     {
         int256 amount;
         uint256 i;
@@ -305,7 +304,7 @@ contract ClientFund is Ownable, AccessorManageable, Beneficiary, Benefactor, Aut
     // -----------------------------------------------------------------------------------------------------------------
     function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
         int256 amount, address currencyCt, uint256 currencyId)
-        private
+    private
     {
         require(amount.isNonZeroPositiveInt256());
         require(isRegisteredBeneficiary(beneficiary));

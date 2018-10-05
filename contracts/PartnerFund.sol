@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
@@ -23,8 +22,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @title PartnerFund
 @notice XXXX
 */
-// TODO Update to two-component currency descriptor
-contract PartnerFund is Ownable, AccessorManageable, Beneficiary, TransferControllerManageable {
+contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -72,7 +70,7 @@ contract PartnerFund is Ownable, AccessorManageable, Beneficiary, TransferContro
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -175,7 +173,7 @@ contract PartnerFund is Ownable, AccessorManageable, Beneficiary, TransferContro
     }
 
     function depositTokensTo(address tag, int256 amount, address currencyCt, uint256 currencyId, string standard) public isRegisteredTag(tag) {
-       require(amount.isNonZeroPositiveInt256());
+        require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
@@ -199,7 +197,7 @@ contract PartnerFund is Ownable, AccessorManageable, Beneficiary, TransferContro
         require(index < walletMap[tag].fullDepositHistory.length);
 
         FullDepositHistory storage fdh = walletMap[tag].fullDepositHistory[index];
-        (, , currencyCt, currencyId) = walletMap[tag].txHistory.deposit(fdh.listIndex);
+        (,, currencyCt, currencyId) = walletMap[tag].txHistory.deposit(fdh.listIndex);
 
         balance = fdh.balance;
         blockNumber = fdh.blockNumber;

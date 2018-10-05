@@ -1,5 +1,6 @@
 const chai = require('chai');
 const {Wallet, utils} = require('ethers');
+const cryptography = require('omphalos-commons').util.cryptography;
 const mocks = require('../mocks');
 
 chai.should();
@@ -10,6 +11,7 @@ module.exports = function (glob) {
         let blockNumberAhead;
         let ethersHasher;
         let web3Configuration, ethersConfiguration;
+        let web3AccessorManager, ethersAccessorManager;
         let web3Validator, ethersValidator;
         let partsPer;
 
@@ -19,9 +21,12 @@ module.exports = function (glob) {
             ethersHasher = glob.ethersIoHasher;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
+            web3AccessorManager = glob.web3AccessorManager;
+            ethersAccessorManager = glob.ethersIoAccessorManager;
             web3Validator = glob.web3Validator;
             ethersValidator = glob.ethersIoValidator;
 
+            await ethersValidator.changeAccessorManager(ethersAccessorManager.address);
             await ethersValidator.changeConfiguration(ethersConfiguration.address);
             await ethersValidator.changeHasher(ethersHasher.address);
 
@@ -30,6 +35,140 @@ module.exports = function (glob) {
 
         beforeEach(async () => {
             blockNumberAhead = await provider.getBlockNumber() + 15;
+        });
+
+        describe('deployer()', () => {
+            it('should equal value initialized', async () => {
+                (await web3Validator.deployer.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('changeDeployer()', () => {
+            describe('if called with (current) deployer as sender', () => {
+                afterEach(async () => {
+                    await web3Validator.changeDeployer(glob.owner, {from: glob.user_a});
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Validator.changeDeployer(glob.user_a);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+
+                    (await web3Validator.deployer.call()).should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called with sender that is not (current) deployer', () => {
+                it('should revert', async () => {
+                    web3Validator.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('operator()', () => {
+            it('should equal value initialized', async () => {
+                (await web3Validator.operator.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('changeOperator()', () => {
+            describe('if called with (current) operator as sender', () => {
+                afterEach(async () => {
+                    await web3Validator.changeOperator(glob.owner, {from: glob.user_a});
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Validator.changeOperator(glob.user_a);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+
+                    (await web3Validator.operator.call()).should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called with sender that is not (current) operator', () => {
+                it('should revert', async () => {
+                    web3Validator.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('ethrecover()', () => {
+            let hash, signature;
+
+            beforeEach(async () => {
+                hash = cryptography.hash('some message');
+                signature = await mocks.web3Sign(glob.user_a, hash);
+            });
+
+            describe('if called with proper hash and signature', () => {
+                it('should return proper address', async () => {
+                    (await ethersValidator.ethrecover(hash, signature.v, signature.r, signature.s))
+                        .should.equal(utils.getAddress(glob.user_a));
+                });
+            });
+
+            describe('if called with improper hash and signature', () => {
+                it('should return improper address', async () => {
+                    (await ethersValidator.ethrecover(hash, signature.v, signature.s, signature.r))
+                        .should.not.equal(glob.user_a);
+                });
+            });
+        });
+
+        describe('isSignedByRegisteredSigner()', () => {
+            let hash, signature;
+
+            beforeEach(async () => {
+                hash = cryptography.hash('some message');
+            });
+
+            describe('if called with signature from registered signer', () => {
+                beforeEach(async () => {
+                    signature = await mocks.web3Sign(glob.owner, hash);
+                });
+
+                it('should return true', async () => {
+                    (await ethersValidator.isSignedByRegisteredSigner(hash, signature.v, signature.r, signature.s))
+                        .should.be.true;
+                });
+            });
+
+            describe('if called with signature from registered signer', () => {
+                beforeEach(async () => {
+                    signature = await mocks.web3Sign(glob.user_a, hash);
+                });
+
+                it('should return true', async () => {
+                    (await ethersValidator.isSignedByRegisteredSigner(hash, signature.v, signature.r, signature.s))
+                        .should.be.false;
+                });
+            });
+        });
+
+        describe('isSignedBy()', () => {
+            let hash, signature;
+
+            beforeEach(async () => {
+                hash = cryptography.hash('some message');
+                signature = await mocks.web3Sign(glob.owner, hash);
+            });
+
+            describe('if called with signer wallet', () => {
+                it('should return true', async () => {
+                    (await ethersValidator.isSignedBy(hash, signature.v, signature.r, signature.s, glob.owner))
+                        .should.be.true;
+                });
+            });
+
+            describe('if called with non-signer wallet', () => {
+                it('should return true', async () => {
+                    (await ethersValidator.isSignedBy(hash, signature.v, signature.r, signature.s, glob.user_a))
+                        .should.be.false;
+                });
+            });
         });
 
         describe('configuration()', () => {

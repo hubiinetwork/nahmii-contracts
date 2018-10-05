@@ -97,7 +97,7 @@ contract AccessorManageable is Ownable {
     /// @return true if the recovered signer equals the input signer, else false
     function isSignedBy(bytes32 hash, uint8 v, bytes32 r, bytes32 s, address signer)
     public
-    view
+    pure
     returns (bool)
     {
         return signer == ethrecover(hash, v, r, s);

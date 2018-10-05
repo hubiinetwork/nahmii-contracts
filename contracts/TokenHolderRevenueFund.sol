@@ -9,14 +9,13 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
+import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
-import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
+import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {SafeMathInt} from "./SafeMathInt.sol";
 import {SafeMathUint} from "./SafeMathUint.sol";
 import {RevenueToken} from "./RevenueToken.sol";
-import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
@@ -27,7 +26,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice Fund that manages the revenue earned by revenue token holders.
 @dev Asset descriptor combo (currencyCt == 0x0, currencyId == 0) corresponds to ethers
 */
-contract TokenHolderRevenueFund is Ownable, AccessorManageable, AccrualBeneficiary, Servable, TransferControllerManageable {
+contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathInt for int256;
@@ -84,7 +83,7 @@ contract TokenHolderRevenueFund is Ownable, AccessorManageable, AccrualBeneficia
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
