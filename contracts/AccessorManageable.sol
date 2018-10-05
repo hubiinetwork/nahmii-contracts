@@ -26,7 +26,7 @@ contract AccessorManageable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeAccessorManagerEvent(address oldAccesor, address newAccesor);
+    event ChangeAccessorManagerEvent(address oldAccessor, address newAccessor);
 
     //
     // Constructor
@@ -40,16 +40,16 @@ contract AccessorManageable is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the accesor manager of this contract
-    /// @param newAccesor The address of the new accesor
-    function changeAccessorManager(address newAccesor) public onlyDeployer notNullOrThisAddress(newAccesor) {
-        if (newAccesor != address(accessorManager)) {
+    /// @notice Change the accessor manager of this contract
+    /// @param newAccessor The address of the new accessor
+    function changeAccessorManager(address newAccessor) public onlyDeployer notNullOrThisAddress(newAccessor) {
+        if (newAccessor != address(accessorManager)) {
             //set new accessor
-            address oldAccesor = address(accessorManager);
-            accessorManager = AccessorManager(newAccesor);
+            address oldAccessor = address(accessorManager);
+            accessorManager = AccessorManager(newAccessor);
 
             //emit event
-            emit ChangeAccessorManagerEvent(oldAccesor, newAccesor);
+            emit ChangeAccessorManagerEvent(oldAccessor, newAccessor);
         }
     }
 
@@ -66,29 +66,4 @@ contract AccessorManageable is Ownable {
         require(accessorManager != address(0));
         _;
     }
-
-    // TODO Figure out why these modifiers act differently than the ones in Ownable
-    //    modifier onlyOperator() {
-    //        require(accessorManager != address(0));
-    //        require(accessorManager.isOperator(msg.sender));
-    //        _;
-    //    }
-    //
-    //    modifier notOperator() {
-    //        require(accessorManager != address(0));
-    //        require(!accessorManager.isOperator(msg.sender));
-    //        _;
-    //    }
-    //
-    //    modifier onlyDeployerOrOperator() {
-    //        require(accessorManager != address(0));
-    //        require(accessorManager.isDeployerOrOperator(msg.sender));
-    //        _;
-    //    }
-    //
-    //    modifier notOwnerOrOperator() {
-    //        require(accessorManager != address(0));
-    //        require(!accessorManager.isDeployerOrOperator(msg.sender));
-    //        _;
-    //    }
 }
