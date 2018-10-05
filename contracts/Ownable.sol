@@ -46,38 +46,53 @@ contract Ownable is Modifiable, SelfDestructible {
 
     /// @notice Change the deployer of this contract
     /// @param newDeployer The address of the new deployer
-    function changeDeployer(address newDeployer) public onlyDeployer notNullOrThisAddress(newDeployer) {
+    function changeDeployer(address newDeployer)
+    public
+    onlyDeployer
+    notNullOrThisAddress(newDeployer)
+    {
         if (newDeployer != deployer) {
-            //set new deployer
+            // Set new deployer
             address oldDeployer = deployer;
             deployer = newDeployer;
 
-            //emit event
+            // Emit event
             emit ChangeDeployerEvent(oldDeployer, newDeployer);
         }
     }
 
     /// @notice Change the operator of this contract
     /// @param newOperator The address of the new operator
-    function changeOperator(address newOperator) public onlyDeployer notNullOrThisAddress(newOperator) {
+    function changeOperator(address newOperator)
+    public
+    onlyOperator
+    notNullOrThisAddress(newOperator)
+    {
         if (newOperator != operator) {
-            //set new operator
+            // Set new operator
             address oldOperator = operator;
             operator = newOperator;
 
-            //emit event
+            // Emit event
             emit ChangeOperatorEvent(oldOperator, newOperator);
         }
     }
 
+    /// @notice Gauge whether message sender is deployer or not
+    /// @return true if msg.sender is deployer, else false
     function isDeployer() internal view returns (bool) {
         return msg.sender == deployer;
     }
 
+    /// @notice Gauge whether message sender is operator or not
+    /// @return true if msg.sender is operator, else false
     function isOperator() internal view returns (bool) {
         return msg.sender == operator;
     }
 
+    /// @notice Gauge whether message sender is operator or deployer on the one hand, or none of these on these on
+    /// on the other hand
+    /// @return true if msg.sender is operator, else false
     function isDeployerOrOperator() internal view returns (bool) {
         return isDeployer() || isOperator();
     }

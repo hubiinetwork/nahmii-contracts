@@ -64,8 +64,8 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3DriipSettlementDispute.owner.call();
-                owner.should.equal(glob.owner);
+                (await web3DriipSettlementDispute.deployer.call()).should.equal(glob.owner);
+                (await web3DriipSettlementDispute.operator.call()).should.equal(glob.owner);
             });
         });
 
@@ -83,7 +83,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -103,7 +103,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementDispute.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -124,7 +124,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -144,7 +144,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementDispute.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -165,7 +165,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let securityBond;
 
                 beforeEach(async () => {
@@ -185,7 +185,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementDispute.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -206,7 +206,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let driipSettlementChallenge;
 
                 beforeEach(async () => {
@@ -226,7 +226,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementDispute.changeDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -247,7 +247,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
@@ -267,7 +267,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementDispute.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -288,7 +288,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let cancelOrdersChallenge;
 
                 beforeEach(async () => {
@@ -308,7 +308,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementDispute.changeCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });

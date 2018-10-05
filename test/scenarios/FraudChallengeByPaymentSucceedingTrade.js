@@ -55,36 +55,53 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3FraudChallengeByPaymentSucceedingTrade.owner.call();
-                owner.should.equal(glob.owner);
+                (await web3FraudChallengeByPaymentSucceedingTrade.deployer.call()).should.equal(glob.owner);
+                (await web3FraudChallengeByPaymentSucceedingTrade.operator.call()).should.equal(glob.owner);
             });
         });
 
-        describe('owner()', () => {
-            it('should equal value initialized', async () => {
-                const owner = await ethersFraudChallengeByPaymentSucceedingTrade.owner();
-                owner.should.equal(utils.getAddress(glob.owner));
-            });
-        });
-
-        describe('changeOwner()', () => {
-            describe('if called with (current) owner as sender', () => {
+        describe('changeDeployer()', () => {
+            describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByPaymentSucceedingTrade.changeOwner(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByPaymentSucceedingTrade.changeDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeOwner(glob.user_a);
+                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeDeployer(glob.user_a);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOwnerEvent');
-                    const owner = await web3FraudChallengeByPaymentSucceedingTrade.owner.call();
-                    owner.should.equal(glob.user_a);
+                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+
+                    (await web3FraudChallengeByPaymentSucceedingTrade.deployer.call()).should.equal(glob.user_a);
                 });
             });
 
-            describe('if called with sender that is not (current) owner', () => {
+            describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByPaymentSucceedingTrade.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByPaymentSucceedingTrade.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('changeOperator()', () => {
+            describe('if called with (current) operator as sender', () => {
+                afterEach(async () => {
+                    await web3FraudChallengeByPaymentSucceedingTrade.changeOperator(glob.owner, {from: glob.user_a});
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeOperator(glob.user_a);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+
+                    (await web3FraudChallengeByPaymentSucceedingTrade.operator.call()).should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called with sender that is not (current) operator', () => {
+                it('should revert', async () => {
+                    web3FraudChallengeByPaymentSucceedingTrade.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -103,7 +120,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
@@ -123,7 +140,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByPaymentSucceedingTrade.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -144,7 +161,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -164,7 +181,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByPaymentSucceedingTrade.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -185,7 +202,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -205,7 +222,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByPaymentSucceedingTrade.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -226,7 +243,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let clientFund;
 
                 beforeEach(async () => {
@@ -246,7 +263,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByPaymentSucceedingTrade.changeClientFund(address, {from: glob.user_a}).should.be.rejected;
                 });

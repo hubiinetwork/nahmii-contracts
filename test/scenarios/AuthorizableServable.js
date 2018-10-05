@@ -17,8 +17,8 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3AuthorizableServable.owner.call();
-                owner.should.equal(glob.owner);
+                (await web3AuthorizableServable.deployer.call()).should.equal(glob.owner);
+                (await web3AuthorizableServable.operator.call()).should.equal(glob.owner);
             });
         });
 

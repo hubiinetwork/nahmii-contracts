@@ -18,8 +18,8 @@ module.exports = (glob) => {
         
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3Servable.owner.call();
-                owner.should.equal(glob.owner);
+                (await web3Servable.deployer.call()).should.equal(glob.owner);
+                (await web3Servable.operator.call()).should.equal(glob.owner);
             });
         });
 

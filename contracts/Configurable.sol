@@ -24,23 +24,25 @@ contract Configurable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeConfigurationEvent(Configuration oldAddress, Configuration newAddress);
+    event ChangeConfigurationEvent(Configuration oldConfiguration, Configuration newConfiguration);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the configuration contract
-    /// @param newAddress The (address of) Configuration contract instance
-    function changeConfiguration(Configuration newAddress) public onlyDeployer
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, configuration)
+    /// @param newConfiguration The (address of) Configuration contract instance
+    function changeConfiguration(Configuration newConfiguration)
+    public
+    onlyDeployer
+    notNullAddress(newConfiguration)
+    notSameAddresses(newConfiguration, configuration)
     {
         //set new configuration
-        Configuration oldAddress = configuration;
-        configuration = newAddress;
+        Configuration oldConfiguration = configuration;
+        configuration = newConfiguration;
 
         //emit event
-        emit ChangeConfigurationEvent(oldAddress, newAddress);
+        emit ChangeConfigurationEvent(oldConfiguration, newConfiguration);
     }
 
     //
