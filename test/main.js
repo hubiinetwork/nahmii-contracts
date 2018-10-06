@@ -8,39 +8,39 @@ const ethers = require('ethers');
 const Helpers = require('./helpers');
 const w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 
-const ClientFund = artifacts.require("ClientFund");
-const AccessorManager = artifacts.require("AccessorManager");
-const CommunityVote = artifacts.require("CommunityVote");
-const Hasher = artifacts.require("Hasher");
-const Validator = artifacts.require("Validator");
-const Configuration = artifacts.require("Configuration");
-const Exchange = artifacts.require("Exchange");
-const CancelOrdersChallenge = artifacts.require("CancelOrdersChallenge");
-const DriipSettlementChallenge = artifacts.require("DriipSettlementChallenge");
-const DriipSettlementDispute = artifacts.require("DriipSettlementDispute");
-const FraudChallenge = artifacts.require("FraudChallenge");
-const FraudChallengeByOrder = artifacts.require("FraudChallengeByOrder");
-const FraudChallengeByTrade = artifacts.require("FraudChallengeByTrade");
-const FraudChallengeByPayment = artifacts.require("FraudChallengeByPayment");
-const FraudChallengeBySuccessiveTrades = artifacts.require("FraudChallengeBySuccessiveTrades");
-const FraudChallengeBySuccessivePayments = artifacts.require("FraudChallengeBySuccessivePayments");
-const FraudChallengeByPaymentSucceedingTrade = artifacts.require("FraudChallengeByPaymentSucceedingTrade");
-const FraudChallengeByTradeSucceedingPayment = artifacts.require("FraudChallengeByTradeSucceedingPayment");
-const FraudChallengeByTradeOrderResiduals = artifacts.require("FraudChallengeByTradeOrderResiduals");
-const FraudChallengeByDoubleSpentOrders = artifacts.require("FraudChallengeByDoubleSpentOrders");
-const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTrades");
-const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require("FraudChallengeByDuplicateDriipNonceOfPayments");
-const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require("FraudChallengeByDuplicateDriipNonceOfTradeAndPayment");
+const ClientFund = artifacts.require('ClientFund');
+const AccessorManager = artifacts.require('AccessorManager');
+const CommunityVote = artifacts.require('CommunityVote');
+const Hasher = artifacts.require('Hasher');
+const Validator = artifacts.require('Validator');
+const Configuration = artifacts.require('Configuration');
+const Exchange = artifacts.require('Exchange');
+const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
+const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
+const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
+const FraudChallenge = artifacts.require('FraudChallenge');
+const FraudChallengeByOrder = artifacts.require('FraudChallengeByOrder');
+const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
+const FraudChallengeByPayment = artifacts.require('FraudChallengeByPayment');
+const FraudChallengeBySuccessiveTrades = artifacts.require('FraudChallengeBySuccessiveTrades');
+const FraudChallengeBySuccessivePayments = artifacts.require('FraudChallengeBySuccessivePayments');
+const FraudChallengeByPaymentSucceedingTrade = artifacts.require('FraudChallengeByPaymentSucceedingTrade');
+const FraudChallengeByTradeSucceedingPayment = artifacts.require('FraudChallengeByTradeSucceedingPayment');
+const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByTradeOrderResiduals');
+const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDoubleSpentOrders');
+const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTrades');
+const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
+const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
-const RevenueFund = artifacts.require("RevenueFund");
-const SecurityBond = artifacts.require("SecurityBond");
-const TestServable = artifacts.require("TestServable");
-const TestAuthorizableServable = artifacts.require("TestAuthorizableServable");
-const TokenHolderRevenueFund = artifacts.require("TokenHolderRevenueFund");
-const PartnerFund = artifacts.require("PartnerFund");
-const ERC20Token = artifacts.require("StandardTokenEx");
-const RevenueToken = artifacts.require("RevenueToken");
-const UnitTestHelpers = artifacts.require("UnitTestHelpers");
+const RevenueFund = artifacts.require('RevenueFund');
+const SecurityBond = artifacts.require('SecurityBond');
+const TestServable = artifacts.require('TestServable');
+const TestAuthorizableServable = artifacts.require('TestAuthorizableServable');
+const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
+const PartnerFund = artifacts.require('PartnerFund');
+const ERC20Token = artifacts.require('StandardTokenEx');
+const RevenueToken = artifacts.require('RevenueToken');
+const UnitTestHelpers = artifacts.require('UnitTestHelpers');
 
 //augmented sendTransaction using promises
 Helpers.augmentWeb3(web3);
@@ -80,7 +80,7 @@ contract('Smart contract checks', function () {
     // Preflight stage
     //-------------------------------------------------------------------------
 
-    before("Preflight: Check available account addresses and balances", async () => {
+    before('Preflight: Check available account addresses and balances', async () => {
         assert.notEqual(glob.user_a, null);
         assert.notEqual(glob.user_b, null);
         assert.notEqual(glob.user_c, null);
@@ -91,34 +91,34 @@ contract('Smart contract checks', function () {
         assert.notEqual(glob.user_h, null);
         assert.notEqual(glob.user_i, null);
 
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_a), "ether") >= minRequiredEthersPerUser);
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_b), "ether") >= minRequiredEthersPerUser);
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_c), "ether") >= minRequiredEthersPerUser);
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_d), "ether") >= minRequiredEthersPerUser);
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_e), "ether") >= minRequiredEthersPerUser);
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_f), "ether") >= minRequiredEthersPerUser);
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_g), "ether") >= minRequiredEthersPerUser);
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_h), "ether") >= minRequiredEthersPerUser);
-        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_i), "ether") >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_a), 'ether') >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_b), 'ether') >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_c), 'ether') >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_d), 'ether') >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_e), 'ether') >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_f), 'ether') >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_g), 'ether') >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_h), 'ether') >= minRequiredEthersPerUser);
+        assert.ok(web3.fromWei(web3.eth.getBalance(glob.user_i), 'ether') >= minRequiredEthersPerUser);
     });
 
-    before("Preflight: Instantiate and register test token in transfer controller manager", async () => {
+    before('Preflight: Instantiate and register test token in transfer controller manager', async () => {
         try {
             glob.web3Erc20 = await ERC20Token.new();
             assert.notEqual(glob.web3Erc20, null);
-            console.log("Sample ERC20 token deployed at address: " + glob.web3Erc20.address);
+            console.log('Sample ERC20 token deployed at address: ' + glob.web3Erc20.address);
 
             glob.web3Erc20.totalSupply = initialTokensSupply;
 
             let instance = await TransferControllerManager.deployed();
-            await instance.registerCurrency(glob.web3Erc20.address, "erc20", { from: glob.owner });
+            await instance.registerCurrency(glob.web3Erc20.address, 'ERC20', { from: glob.owner });
         }
         catch (err) {
             assert(false, 'Failed to instantiate ERC20Token instance. [Error: ' + err.toString() + ']');
         }
     });
 
-    before("Preflight: Deploy several unit test helper contracts for validation tests", async () => {
+    before('Preflight: Deploy several unit test helper contracts for validation tests', async () => {
         try {
             let instance = await TransferControllerManager.deployed();
 
@@ -147,7 +147,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate AccessorManager contract", async () => {
+    before('Preflight: Instantiate AccessorManager contract', async () => {
         try {
             glob.web3AccessorManager = await AccessorManager.deployed();
             assert.notEqual(glob.web3AccessorManager, null);
@@ -158,7 +158,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate Servable contract", async () => {
+    before('Preflight: Instantiate Servable contract', async () => {
         try {
             glob.web3Servable = await TestServable.new(glob.owner);
             assert.notEqual(glob.web3Servable, null);
@@ -169,7 +169,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate AuthorizableServable contract", async () => {
+    before('Preflight: Instantiate AuthorizableServable contract', async () => {
         try {
             glob.web3AuthorizableServable = await TestAuthorizableServable.new(glob.owner);
             assert.notEqual(glob.web3AuthorizableServable, null);
@@ -180,7 +180,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate ClientFund contract", async () => {
+    before('Preflight: Instantiate ClientFund contract', async () => {
         try {
             glob.web3ClientFund = await ClientFund.deployed();
             assert.notEqual(glob.web3ClientFund, null);
@@ -191,7 +191,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate Hasher contract", async () => {
+    before('Preflight: Instantiate Hasher contract', async () => {
         try {
             glob.web3Hasher = await Hasher.deployed();
             assert.notEqual(glob.web3Hasher, null);
@@ -202,7 +202,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate Validator contract", async () => {
+    before('Preflight: Instantiate Validator contract', async () => {
         try {
             glob.web3Validator = await Validator.deployed();
             assert.notEqual(glob.web3Validator, null);
@@ -213,7 +213,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate CommunityVote contract", async () => {
+    before('Preflight: Instantiate CommunityVote contract', async () => {
         try {
             glob.web3CommunityVote = await CommunityVote.deployed();
             assert.notEqual(glob.web3CommunityVote, null);
@@ -224,7 +224,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate Configuration contract", async () => {
+    before('Preflight: Instantiate Configuration contract', async () => {
         try {
             glob.web3Configuration = await Configuration.deployed();
             assert.notEqual(glob.web3Configuration, null);
@@ -235,7 +235,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate Exchange contract", async () => {
+    before('Preflight: Instantiate Exchange contract', async () => {
         try {
             glob.web3Exchange = await Exchange.deployed();
             assert.notEqual(glob.web3Exchange, null);
@@ -246,7 +246,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate CancelOrdersChallenge contract", async () => {
+    before('Preflight: Instantiate CancelOrdersChallenge contract', async () => {
         try {
             glob.web3CancelOrdersChallenge = await CancelOrdersChallenge.deployed();
             assert.notEqual(glob.web3CancelOrdersChallenge, null);
@@ -257,7 +257,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate DriipSettlementChallenge contract", async () => {
+    before('Preflight: Instantiate DriipSettlementChallenge contract', async () => {
         try {
             glob.web3DriipSettlementChallenge = await DriipSettlementChallenge.deployed();
             assert.notEqual(glob.web3DriipSettlementChallenge, null);
@@ -268,7 +268,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate DriipSettlementDispute contract", async () => {
+    before('Preflight: Instantiate DriipSettlementDispute contract', async () => {
         try {
             glob.web3DriipSettlementDispute = await DriipSettlementDispute.deployed();
             assert.notEqual(glob.web3DriipSettlementDispute, null);
@@ -279,7 +279,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallenge contract", async () => {
+    before('Preflight: Instantiate FraudChallenge contract', async () => {
         try {
             glob.web3FraudChallenge = await FraudChallenge.deployed();
             assert.notEqual(glob.web3FraudChallenge, null);
@@ -290,7 +290,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByOrder contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByOrder contract', async () => {
         try {
             glob.web3FraudChallengeByOrder = await FraudChallengeByOrder.deployed();
             assert.notEqual(glob.web3FraudChallengeByOrder, null);
@@ -301,7 +301,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByTrade contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByTrade contract', async () => {
         try {
             glob.web3FraudChallengeByTrade = await FraudChallengeByTrade.deployed();
             assert.notEqual(glob.web3FraudChallengeByTrade, null);
@@ -312,7 +312,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByPayment contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByPayment contract', async () => {
         try {
             glob.web3FraudChallengeByPayment = await FraudChallengeByPayment.deployed();
             assert.notEqual(glob.web3FraudChallengeByPayment, null);
@@ -323,7 +323,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeBySuccessiveTrades contract", async () => {
+    before('Preflight: Instantiate FraudChallengeBySuccessiveTrades contract', async () => {
         try {
             glob.web3FraudChallengeBySuccessiveTrades = await FraudChallengeBySuccessiveTrades.deployed();
             assert.notEqual(glob.web3FraudChallengeBySuccessiveTrades, null);
@@ -334,7 +334,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeBySuccessivePayments contract", async () => {
+    before('Preflight: Instantiate FraudChallengeBySuccessivePayments contract', async () => {
         try {
             glob.web3FraudChallengeBySuccessivePayments = await FraudChallengeBySuccessivePayments.deployed();
             assert.notEqual(glob.web3FraudChallengeBySuccessivePayments, null);
@@ -345,7 +345,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByPaymentSucceedingTrade contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByPaymentSucceedingTrade contract', async () => {
         try {
             glob.web3FraudChallengeByPaymentSucceedingTrade = await FraudChallengeByPaymentSucceedingTrade.deployed();
             assert.notEqual(glob.web3FraudChallengeByPaymentSucceedingTrade, null);
@@ -356,7 +356,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByTradeSucceedingPayment contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByTradeSucceedingPayment contract', async () => {
         try {
             glob.web3FraudChallengeByTradeSucceedingPayment = await FraudChallengeByTradeSucceedingPayment.deployed();
             assert.notEqual(glob.web3FraudChallengeByTradeSucceedingPayment, null);
@@ -367,7 +367,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByTradeOrderResiduals contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByTradeOrderResiduals contract', async () => {
         try {
             glob.web3FraudChallengeByTradeOrderResiduals = await FraudChallengeByTradeOrderResiduals.deployed();
             assert.notEqual(glob.web3FraudChallengeByTradeOrderResiduals, null);
@@ -378,7 +378,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByDoubleSpentOrders contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByDoubleSpentOrders contract', async () => {
         try {
             glob.web3FraudChallengeByDoubleSpentOrders = await FraudChallengeByDoubleSpentOrders.deployed();
             assert.notEqual(glob.web3FraudChallengeByDoubleSpentOrders, null);
@@ -389,7 +389,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfTrades contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfTrades contract', async () => {
         try {
             glob.web3FraudChallengeByDuplicateDriipNonceOfTrades = await FraudChallengeByDuplicateDriipNonceOfTrades.deployed();
             assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfTrades, null);
@@ -400,7 +400,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfPayments contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfPayments contract', async () => {
         try {
             glob.web3FraudChallengeByDuplicateDriipNonceOfPayments = await FraudChallengeByDuplicateDriipNonceOfPayments.deployed();
             assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfPayments, null);
@@ -411,7 +411,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfTradeAndPayment contract", async () => {
+    before('Preflight: Instantiate FraudChallengeByDuplicateDriipNonceOfTradeAndPayment contract', async () => {
         try {
             glob.web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = await FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.deployed();
             assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, null);
@@ -422,7 +422,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate RevenueFund contract", async () => {
+    before('Preflight: Instantiate RevenueFund contract', async () => {
         try {
             glob.web3RevenueFund = await RevenueFund.deployed();
             assert.notEqual(glob.web3RevenueFund, null);
@@ -433,7 +433,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate SecurityBond contract", async () => {
+    before('Preflight: Instantiate SecurityBond contract', async () => {
         try {
             glob.web3SecurityBond = await SecurityBond.deployed();
             assert.notEqual(glob.web3SecurityBond, null);
@@ -444,7 +444,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate TokenHolderRevenueFund contract", async () => {
+    before('Preflight: Instantiate TokenHolderRevenueFund contract', async () => {
         try {
             glob.web3TokenHolderRevenueFund = await TokenHolderRevenueFund.deployed();
             assert.notEqual(glob.web3TokenHolderRevenueFund, null);
@@ -452,7 +452,7 @@ contract('Smart contract checks', function () {
 
             glob.web3RevenueToken = await RevenueToken.new();
             assert.notEqual(glob.web3RevenueToken, null);
-            console.log("Sample RevenueToken deployed at address: " + glob.web3RevenueToken.address);
+            console.log('Sample RevenueToken deployed at address: ' + glob.web3RevenueToken.address);
             glob.web3TokenHolderRevenueFund.changeRevenueToken(glob.web3RevenueToken.address);
         }
         catch (err) {
@@ -460,7 +460,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Instantiate PartnerFund contract", async () => {
+    before('Preflight: Instantiate PartnerFund contract', async () => {
         try {
             glob.web3PartnerFund = await PartnerFund.deployed();
             assert.notEqual(glob.web3PartnerFund, null);
@@ -471,27 +471,27 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Distribute test ethers", async () => {
+    before('Preflight: Distribute test ethers', async () => {
         try {
             await web3.eth.sendTransactionPromise({
                 from: glob.owner,
                 to: glob.web3UnitTestHelpers_SUCCESS_TESTS.address,
-                value: web3.toWei('10', "ether")
+                value: web3.toWei('10', 'ether')
             });
             await web3.eth.sendTransactionPromise({
                 from: glob.owner,
                 to: glob.web3UnitTestHelpers_FAIL_TESTS.address,
-                value: web3.toWei('10', "ether")
+                value: web3.toWei('10', 'ether')
             });
             await web3.eth.sendTransactionPromise({
                 from: glob.owner,
                 to: glob.web3UnitTestHelpers_MISC_1.address,
-                value: web3.toWei('10', "ether")
+                value: web3.toWei('10', 'ether')
             });
             await web3.eth.sendTransactionPromise({
                 from: glob.owner,
                 to: glob.web3UnitTestHelpers_MISC_2.address,
-                value: web3.toWei('10', "ether")
+                value: web3.toWei('10', 'ether')
             });
         }
         catch (err) {
@@ -499,7 +499,7 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before("Preflight: Distribute test tokens", async() => {
+    before('Preflight: Distribute test tokens', async() => {
         try {
             await glob.web3Erc20.testMint(glob.owner, 100);
             await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
