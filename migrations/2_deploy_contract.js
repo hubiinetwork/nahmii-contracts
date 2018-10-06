@@ -217,8 +217,8 @@ module.exports = (deployer, network, accounts) => {
 
             //register transfer controllers
             instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
-            tx = await instance.registerTransferController('erc20', addressStorage.get('ERC20TransferController'), {from: ownerAccount});
-            tx = await instance.registerTransferController('erc721', addressStorage.get('ERC721TransferController'), {from: ownerAccount});
+            tx = await instance.registerTransferController('ERC20', addressStorage.get('ERC20TransferController'), {from: ownerAccount});
+            tx = await instance.registerTransferController('ERC721', addressStorage.get('ERC721TransferController'), {from: ownerAccount});
 
             instance = await Validator.at(addressStorage.get('Validator'));
             tx = await instance.changeHasher(addressStorage.get('Hasher'));
