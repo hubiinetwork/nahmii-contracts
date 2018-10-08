@@ -10,6 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 //import {DriipSettlementChallenge} from "../DriipSettlementChallenge.sol";
+import {MonetaryTypes} from "../MonetaryTypes.sol";
 import {NahmiiTypes} from "../NahmiiTypes.sol";
 import {DriipSettlementTypes} from "../DriipSettlementTypes.sol";
 
@@ -41,11 +42,9 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
         walletChallengeMap[wallet].intendedStage.amount = intendedAmount;
         walletChallengeMap[wallet].intendedStage.currency.ct = intendedCurrencyCt;
         walletChallengeMap[wallet].intendedStage.currency.id = intendedCurrencyId;
-        walletChallengeMap[wallet].intendedStage.set = 0 != intendedAmount;
         walletChallengeMap[wallet].conjugateStage.amount = conjugateAmount;
         walletChallengeMap[wallet].conjugateStage.currency.ct = conjugateCurrencyCt;
         walletChallengeMap[wallet].conjugateStage.currency.id = conjugateCurrencyId;
-        walletChallengeMap[wallet].conjugateStage.set = 0 != conjugateAmount;
         walletChallengeMap[wallet].challenger = challenger;
     }
 
@@ -68,7 +67,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
     function getChallengeIntendedStage(address wallet)
     public
     view
-    returns (DriipSettlementTypes.OptionalFigure)
+    returns (MonetaryTypes.Figure)
     {
         return walletChallengeMap[wallet].intendedStage;
     }
@@ -76,7 +75,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
     function getChallengeConjugateStage(address wallet)
     public
     view
-    returns (DriipSettlementTypes.OptionalFigure)
+    returns (MonetaryTypes.Figure)
     {
         return walletChallengeMap[wallet].conjugateStage;
     }

@@ -25,8 +25,7 @@ library DriipSettlementTypes {
     enum SettlementRole {Origin, Target}
 
     struct OptionalFigure {
-        int256 amount;
-        MonetaryTypes.Currency currency;
+        MonetaryTypes.Figure figure;
         bool set;
     }
 
@@ -41,8 +40,8 @@ library DriipSettlementTypes {
         uint256 driipIndex;
 
         // Stage info
-        OptionalFigure intendedStage;
-        OptionalFigure conjugateStage;
+        MonetaryTypes.Figure intendedStage;
+        MonetaryTypes.Figure conjugateStage;
 
         // Balances after amounts have been staged
         OptionalFigure intendedTargetBalance;

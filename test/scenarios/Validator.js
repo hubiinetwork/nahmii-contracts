@@ -473,7 +473,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -499,7 +499,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -531,7 +531,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -563,7 +563,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -595,7 +595,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -627,7 +627,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -659,7 +659,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -687,7 +687,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -715,7 +715,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -743,7 +743,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -770,7 +770,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -802,7 +802,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -834,7 +834,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -866,7 +866,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -898,7 +898,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -930,7 +930,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -958,7 +958,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -986,7 +986,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1014,7 +1014,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1098,7 +1098,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1124,7 +1124,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1156,7 +1156,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1188,7 +1188,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1220,7 +1220,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1252,7 +1252,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1284,7 +1284,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1312,7 +1312,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1340,7 +1340,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1368,7 +1368,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1395,7 +1395,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1427,7 +1427,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1459,7 +1459,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1491,7 +1491,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1523,7 +1523,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1555,7 +1555,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1583,7 +1583,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1611,7 +1611,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1639,7 +1639,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1754,7 +1754,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1784,7 +1784,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1810,7 +1810,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1836,7 +1836,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1862,7 +1862,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1892,7 +1892,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2172,7 +2172,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2264,7 +2264,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2441,7 +2441,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastPayment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2491,7 +2491,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastPayment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2645,7 +2645,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2695,7 +2695,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2975,7 +2975,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -3067,7 +3067,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -3450,7 +3450,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });

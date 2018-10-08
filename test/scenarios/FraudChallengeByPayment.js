@@ -429,7 +429,7 @@ module.exports = (glob) => {
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(payment.sender.wallet);
                     seizure.source.should.equal(payment.sender.wallet);
-                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    seizure.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -455,7 +455,7 @@ module.exports = (glob) => {
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(payment.sender.wallet);
                     seizure.source.should.equal(payment.sender.wallet);
-                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    seizure.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -481,7 +481,7 @@ module.exports = (glob) => {
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(payment.recipient.wallet);
                     seizure.source.should.equal(payment.recipient.wallet);
-                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    seizure.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });

@@ -301,15 +301,15 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     pure
     returns (int256)
     {
-        int256 amount = - 1;
+        int256 amount = -1;
         if (challenge.intendedTargetBalance.set &&
-        currency.ct == challenge.intendedTargetBalance.currency.ct &&
-        currency.id == challenge.intendedTargetBalance.currency.id)
-            amount = challenge.intendedTargetBalance.amount;
+        currency.ct == challenge.intendedTargetBalance.figure.currency.ct &&
+        currency.id == challenge.intendedTargetBalance.figure.currency.id)
+            amount = challenge.intendedTargetBalance.figure.amount;
         else if (challenge.conjugateTargetBalance.set &&
-        currency.ct == challenge.conjugateTargetBalance.currency.ct &&
-        currency.id == challenge.conjugateTargetBalance.currency.id)
-            amount = challenge.conjugateTargetBalance.amount;
+        currency.ct == challenge.conjugateTargetBalance.figure.currency.ct &&
+        currency.id == challenge.conjugateTargetBalance.figure.currency.id)
+            amount = challenge.conjugateTargetBalance.figure.amount;
         return amount;
     }
 

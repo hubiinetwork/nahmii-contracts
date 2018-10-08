@@ -1,18 +1,21 @@
 const chai = require('chai');
-const sinonChai = require("sinon-chai");
-const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require('sinon-chai');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const MockedConfiguration = artifacts.require("MockedConfiguration");
-const MockedClientFund = artifacts.require("MockedClientFund");
-const MockedRevenueFund = artifacts.require("MockedRevenueFund");
-const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
-const MockedDriipSettlementChallenge = artifacts.require("MockedDriipSettlementChallenge");
-const MockedCommunityVote = artifacts.require("MockedCommunityVote");
-const MockedValidator = artifacts.require("MockedValidator");
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedClientFund = artifacts.require('MockedClientFund');
+const MockedRevenueFund = artifacts.require('MockedRevenueFund');
+const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
+const MockedDriipSettlementChallenge = artifacts.require('MockedDriipSettlementChallenge');
+const MockedCommunityVote = artifacts.require('MockedCommunityVote');
+const MockedValidator = artifacts.require('MockedValidator');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 let provider;
@@ -652,22 +655,26 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(2);
+                        const stageFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersExchange.interface.events.StageFeeEvent.topics[0]
+                        ));
+                        stageFeeEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersExchange.interface.events.SettleDriipAsTradeEvent.topics[0]
                         ));
                         settleDriipEvents.should.have.lengthOf(1);
 
-                        const updateIntendedSettledBalance = await ethersClientFund.getUpdateSettledBalance(0);
+                        const updateIntendedSettledBalance = await ethersClientFund._settledBalanceUpdates(0);
                         updateIntendedSettledBalance[0].should.equal(trade.buyer.wallet);
-                        updateIntendedSettledBalance[1].should.deep.equal(trade.buyer.balances.intended.current);
+                        updateIntendedSettledBalance[1]._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                         updateIntendedSettledBalance[2].should.equal(trade.currencies.intended.ct);
-                        updateIntendedSettledBalance[3].should.deep.equal(trade.currencies.intended.id);
+                        updateIntendedSettledBalance[3]._bn.should.deep.equal(trade.currencies.intended.id._bn);
 
-                        const updateConjugateSettledBalance = await ethersClientFund.getUpdateSettledBalance(1);
+                        const updateConjugateSettledBalance = await ethersClientFund._settledBalanceUpdates(1);
                         updateConjugateSettledBalance[0].should.equal(trade.buyer.wallet);
-                        updateConjugateSettledBalance[1].should.deep.equal(trade.buyer.balances.conjugate.current);
+                        updateConjugateSettledBalance[1]._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                         updateConjugateSettledBalance[2].should.equal(trade.currencies.conjugate.ct);
-                        updateConjugateSettledBalance[3].should.deep.equal(trade.currencies.conjugate.id);
+                        updateConjugateSettledBalance[3]._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
 
                         const nBuyerSettlements = await ethersExchange.settlementsCountByWallet(trade.buyer.wallet);
                         const buyerSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(trade.buyer.wallet, nBuyerSettlements.sub(1));
@@ -769,7 +776,7 @@ module.exports = (glob) => {
                     seized.should.be.true;
                     const seizure = await ethersClientFund.seizures(0);
                     seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.destination.should.equal(utils.getAddress(challenger));
+                    seizure.target.should.equal(utils.getAddress(challenger));
                 });
             });
         });
@@ -897,16 +904,20 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(1);
+                        const stageFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersExchange.interface.events.StageFeeEvent.topics[0]
+                        ));
+                        stageFeeEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersExchange.interface.events.SettleDriipAsPaymentEvent.topics[0]
                         ));
                         settleDriipEvents.should.have.lengthOf(1);
 
-                        const updateSettledBalance = await ethersClientFund.getUpdateSettledBalance(0);
-                        updateSettledBalance[0].should.equal(payment.sender.wallet);
-                        updateSettledBalance[1].should.deep.equal(payment.sender.balances.current);
-                        updateSettledBalance[2].should.equal(payment.currency.ct);
-                        updateSettledBalance[3].should.deep.equal(payment.currency.id);
+                        const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
+                        settledBalanceUpdate[0].should.equal(payment.sender.wallet);
+                        settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current._bn);
+                        settledBalanceUpdate[2].should.equal(payment.currency.ct);
+                        settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
 
                         const nSenderSettlements = await ethersExchange.settlementsCountByWallet(payment.sender.wallet);
                         const senderSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(payment.sender.wallet, nSenderSettlements.sub(1));
@@ -998,7 +1009,7 @@ module.exports = (glob) => {
                     seized.should.be.true;
                     const seizure = await ethersClientFund.seizures(0);
                     seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-                    seizure.destination.should.equal(utils.getAddress(challenger));
+                    seizure.target.should.equal(utils.getAddress(challenger));
                 });
             });
         });

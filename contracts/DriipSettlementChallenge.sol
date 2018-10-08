@@ -142,10 +142,10 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
         //        challenge.driipExchangeHash = trade.seal.hash;
         challenge.driipType = NahmiiTypes.DriipType.Trade;
         challenge.driipIndex = walletChallengedTradesMap[wallet].length - 1;
-        challenge.intendedStage = DriipSettlementTypes.OptionalFigure(intendedStageAmount, trade.currencies.intended, true);
-        challenge.conjugateStage = DriipSettlementTypes.OptionalFigure(conjugateStageAmount, trade.currencies.conjugate, true);
-        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(intendedBalanceAmount - intendedStageAmount, trade.currencies.intended, true);
-        challenge.conjugateTargetBalance = DriipSettlementTypes.OptionalFigure(conjugateBalanceAmount - conjugateStageAmount, trade.currencies.conjugate, true);
+        challenge.intendedStage = MonetaryTypes.Figure(intendedStageAmount, trade.currencies.intended);
+        challenge.conjugateStage = MonetaryTypes.Figure(conjugateStageAmount, trade.currencies.conjugate);
+        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(intendedBalanceAmount - intendedStageAmount, trade.currencies.intended), true);
+        challenge.conjugateTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(conjugateBalanceAmount - conjugateStageAmount, trade.currencies.conjugate), true);
 
         walletChallengeMap[wallet] = challenge;
 
@@ -187,8 +187,8 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
         //        challenge.driipExchangeHash = payment.seals.exchange.hash;
         challenge.driipType = NahmiiTypes.DriipType.Payment;
         challenge.driipIndex = walletChallengedPaymentsMap[wallet].length - 1;
-        challenge.intendedStage = DriipSettlementTypes.OptionalFigure(stageAmount, payment.currency, true);
-        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(balanceAmount - stageAmount, payment.currency, true);
+        challenge.intendedStage = MonetaryTypes.Figure(stageAmount, payment.currency);
+        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(balanceAmount - stageAmount, payment.currency), true);
 
         walletChallengeMap[wallet] = challenge;
 
@@ -223,7 +223,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     function getChallengeIntendedStage(address wallet)
     public
     view
-    returns (DriipSettlementTypes.OptionalFigure)
+    returns (MonetaryTypes.Figure)
     {
         return walletChallengeMap[wallet].intendedStage;
     }
@@ -231,7 +231,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     function getChallengeConjugateStage(address wallet)
     public
     view
-    returns (DriipSettlementTypes.OptionalFigure)
+    returns (MonetaryTypes.Figure)
     {
         return walletChallengeMap[wallet].conjugateStage;
     }
