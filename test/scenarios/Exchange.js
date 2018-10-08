@@ -655,10 +655,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(2);
-                        const stageFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersExchange.interface.events.StageFeeEvent.topics[0]
+                        const stageNetFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersExchange.interface.events.StageNetFeeEvent.topics[0]
                         ));
-                        stageFeeEvents.should.have.lengthOf(1);
+                        stageNetFeeEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersExchange.interface.events.SettleDriipAsTradeEvent.topics[0]
                         ));
@@ -904,10 +904,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(1);
-                        const stageFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersExchange.interface.events.StageFeeEvent.topics[0]
+                        const stageNetFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersExchange.interface.events.StageNetFeeEvent.topics[0]
                         ));
-                        stageFeeEvents.should.have.lengthOf(1);
+                        stageNetFeeEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersExchange.interface.events.SettleDriipAsPaymentEvent.topics[0]
                         ));

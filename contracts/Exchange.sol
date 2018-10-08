@@ -64,7 +64,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event StageFeeEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event StageNetFeeEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
 
     //
     // Constructor
@@ -462,7 +462,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
                     fees[i].currency.ct, fees[i].currency.id);
 
                 // Emit event
-                emit StageFeeEvent(wallet, fees[i].amount, fees[i].currency.ct, fees[i].currency.id);
+                emit StageNetFeeEvent(wallet, fees[i].amount, fees[i].currency.ct, fees[i].currency.id);
             }
         }
     }
