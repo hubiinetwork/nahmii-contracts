@@ -127,4 +127,21 @@ contract MockedClientFund /*is ClientFund*/ {
             )
         );
     }
+
+    function _stagesCount() public view returns (uint256) {
+        return stages.length;
+    }
+
+    function _stages(uint256 index)
+    public
+    view
+    returns (address, address, int256, address, uint256) {
+        return (
+        stages[index].sourceWallet,
+        stages[index].targetWallet,
+        stages[index].figure.amount,
+        stages[index].figure.currency.ct,
+        stages[index].figure.currency.id
+        );
+    }
 }
