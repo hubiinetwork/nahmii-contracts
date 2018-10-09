@@ -50,7 +50,9 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     mapping(address => uint256[]) public walletSettlementIndices;
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxDriipNonce;
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletFeeNonce;
+
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyFeeNonce;
+    mapping(address => mapping(address => mapping(uint256 => int256))) public walletCurrencyFeeCharged;
 
     //
     // Events
@@ -64,7 +66,8 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event StageNetFeeEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event StageNetFeeEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount, address currencyCt,
+        uint256 currencyId);
 
     //
     // Constructor
@@ -454,15 +457,22 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         // For each fee figure...
         for (uint256 i = 0; i < fees.length; i++) {
             // If wallet has previously settled fee of the concerned currency with higher driip nonce then don't settle again
-            if (walletFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] < nonce) {
-                walletFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] = nonce;
+            if (walletCurrencyFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] < nonce) {
+                walletCurrencyFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] = nonce;
 
-                // Stage fee to beneficiary
-                clientFund.stageToBeneficiaryUntargeted(wallet, beneficiary, fees[i].amount,
+                // Stage delta of fee to beneficiary
+                clientFund.stageToBeneficiaryUntargeted(wallet, beneficiary,
+                    fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
                     fees[i].currency.ct, fees[i].currency.id);
 
+                // Update fee charged
+                walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id] = fees[i].amount;
+
                 // Emit event
-                emit StageNetFeeEvent(wallet, fees[i].amount, fees[i].currency.ct, fees[i].currency.id);
+                emit StageNetFeeEvent(wallet,
+                    fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
+                    walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
+                    fees[i].currency.ct, fees[i].currency.id);
             }
         }
     }

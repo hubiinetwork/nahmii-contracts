@@ -668,7 +668,7 @@ module.exports = (glob) => {
                         updateIntendedSettledBalance[0].should.equal(trade.buyer.wallet);
                         updateIntendedSettledBalance[1]._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                         updateIntendedSettledBalance[2].should.equal(trade.currencies.intended.ct);
-                        updateIntendedSettledBalance[3]._bn.should.deep.equal(trade.currencies.intended.id._bn);
+                        updateIntendedSettledBalance[3]._bn.should.eq.BN(trade.currencies.intended.id._bn);
 
                         const updateConjugateSettledBalance = await ethersClientFund._settledBalanceUpdates(1);
                         updateConjugateSettledBalance[0].should.equal(trade.buyer.wallet);
@@ -676,9 +676,33 @@ module.exports = (glob) => {
                         updateConjugateSettledBalance[2].should.equal(trade.currencies.conjugate.ct);
                         updateConjugateSettledBalance[3]._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
 
+                        const stagesCount = await ethersClientFund._stagesCount();
+                        stagesCount._bn.should.eq.BN(3);
+
+                        const intendedHoldingStage = await ethersClientFund._stages(0);
+                        intendedHoldingStage[0].should.equal(trade.buyer.wallet);
+                        intendedHoldingStage[1].should.equal(mocks.address0);
+                        intendedHoldingStage[2]._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                        intendedHoldingStage[3].should.equal(trade.currencies.intended.ct);
+                        intendedHoldingStage[4]._bn.should.eq.BN(trade.currencies.intended.id._bn);
+
+                        const conjugateHoldingStage = await ethersClientFund._stages(1);
+                        conjugateHoldingStage[0].should.equal(trade.buyer.wallet);
+                        conjugateHoldingStage[1].should.equal(mocks.address0);
+                        conjugateHoldingStage[2]._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
+                        conjugateHoldingStage[3].should.equal(trade.currencies.conjugate.ct);
+                        conjugateHoldingStage[4]._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+
+                        const netFeeStage = await ethersClientFund._stages(2);
+                        netFeeStage[0].should.equal(trade.buyer.wallet);
+                        netFeeStage[1].should.equal(utils.getAddress(ethersRevenueFund.address));
+                        netFeeStage[2]._bn.should.eq.BN(trade.buyer.fees.net[0].amount._bn);
+                        netFeeStage[3].should.equal(trade.buyer.fees.net[0].currency.ct);
+                        netFeeStage[4]._bn.should.eq.BN(trade.buyer.fees.net[0].currency.id._bn);
+
                         const nBuyerSettlements = await ethersExchange.settlementsCountByWallet(trade.buyer.wallet);
                         const buyerSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(trade.buyer.wallet, nBuyerSettlements.sub(1));
-                        buyerSettlementByIndex.nonce.should.deep.equal(trade.nonce);
+                        buyerSettlementByIndex.nonce._bn.should.eq.BN(trade.nonce._bn);
                         buyerSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
                         buyerSettlementByIndex.origin.wallet.should.equal(trade.seller.wallet);
                         buyerSettlementByIndex.origin.done.should.be.false;
@@ -698,22 +722,22 @@ module.exports = (glob) => {
                         const buyerIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
                             trade.buyer.wallet, trade.currencies.intended.ct, trade.currencies.intended.id
                         );
-                        buyerIntendedMaxDriipNonce.should.deep.equal(trade.nonce);
+                        buyerIntendedMaxDriipNonce._bn.should.eq.BN(trade.nonce._bn);
 
                         const buyerConjugateMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
                             trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
                         );
-                        buyerConjugateMaxDriipNonce.should.deep.equal(trade.nonce);
+                        buyerConjugateMaxDriipNonce._bn.should.eq.BN(trade.nonce._bn);
 
                         const sellerIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
                             trade.seller.wallet, trade.currencies.intended.ct, trade.currencies.intended.id
                         );
-                        sellerIntendedMaxDriipNonce.should.not.deep.equal(trade.nonce);
+                        sellerIntendedMaxDriipNonce._bn.should.not.eq.BN(trade.nonce._bn);
 
                         const sellerConjugateMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
                             trade.seller.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
                         );
-                        sellerConjugateMaxDriipNonce.should.not.deep.equal(trade.nonce);
+                        sellerConjugateMaxDriipNonce._bn.should.not.eq.BN(trade.nonce._bn);
                     });
                 });
 
@@ -919,9 +943,26 @@ module.exports = (glob) => {
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
 
+                        const stagesCount = await ethersClientFund._stagesCount();
+                        stagesCount._bn.should.eq.BN(2);
+
+                        const holdingStage = await ethersClientFund._stages(0);
+                        holdingStage[0].should.equal(payment.sender.wallet);
+                        holdingStage[1].should.equal(mocks.address0);
+                        holdingStage[2]._bn.should.eq.BN(payment.sender.balances.current._bn);
+                        holdingStage[3].should.equal(payment.currency.ct);
+                        holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
+
+                        const netFeeStage = await ethersClientFund._stages(1);
+                        netFeeStage[0].should.equal(payment.sender.wallet);
+                        netFeeStage[1].should.equal(utils.getAddress(ethersRevenueFund.address));
+                        netFeeStage[2]._bn.should.eq.BN(payment.sender.fees.net[0].amount._bn);
+                        netFeeStage[3].should.equal(payment.sender.fees.net[0].currency.ct);
+                        netFeeStage[4]._bn.should.eq.BN(payment.sender.fees.net[0].currency.id._bn);
+
                         const nSenderSettlements = await ethersExchange.settlementsCountByWallet(payment.sender.wallet);
                         const senderSettlementByIndex = await ethersExchange.settlementByWalletAndIndex(payment.sender.wallet, nSenderSettlements.sub(1));
-                        senderSettlementByIndex.nonce.should.deep.equal(payment.nonce);
+                        senderSettlementByIndex.nonce._bn.should.eq.BN(payment.nonce._bn);
                         senderSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
                         senderSettlementByIndex.origin.wallet.should.equal(payment.sender.wallet);
                         senderSettlementByIndex.origin.done.should.be.true;
@@ -941,12 +982,12 @@ module.exports = (glob) => {
                         const senderIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
                             payment.sender.wallet, payment.currency.ct, payment.currency.id
                         );
-                        senderIntendedMaxDriipNonce.should.deep.equal(payment.nonce);
+                        senderIntendedMaxDriipNonce._bn.should.eq.BN(payment.nonce._bn);
 
                         const recipientIntendedMaxDriipNonce = await ethersExchange.walletCurrencyMaxDriipNonce(
                             payment.recipient.wallet, payment.currency.ct, payment.currency.id
                         );
-                        recipientIntendedMaxDriipNonce.should.not.deep.equal(payment.nonce);
+                        recipientIntendedMaxDriipNonce._bn.should.not.eq.BN(payment.nonce._bn);
                     });
                 });
 
