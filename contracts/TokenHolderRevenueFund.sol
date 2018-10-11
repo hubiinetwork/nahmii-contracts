@@ -97,7 +97,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             RevenueToken oldRevenueToken = revenueToken;
             revenueToken = newRevenueToken;
 
-            //emit event
+            // Emit event
             emit ChangeRevenueTokenEvent(oldRevenueToken, newRevenueToken);
         }
     }
@@ -119,7 +119,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         //add deposit info
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
-        //emit event
+        // Emit event
         emit DepositEvent(wallet, amount, address(0), 0);
     }
 
@@ -154,7 +154,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         //add deposit info
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
-        //emit event
+        // Emit event
         emit DepositEvent(wallet, amount, currencyCt, currencyId);
     }
 
@@ -274,7 +274,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             }
         }
 
-        //emit event
+        // Emit event
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId);
     }
 

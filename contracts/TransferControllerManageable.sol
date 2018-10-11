@@ -40,10 +40,11 @@ contract TransferControllerManageable is Ownable {
         TransferControllerManager oldAddress = transferControllerManager;
         transferControllerManager = newAddress;
 
-        //emit event
+        // Emit event
         emit ChangeTransferControllerManagerEvent(oldAddress, newAddress);
     }
 
+    /// @notice Get the transfer controller of the given currency contract address and standard
     function getTransferController(address currencyCt, string standard) internal view transferControllerManagerInitialized returns(TransferController) {
         return transferControllerManager.getTransferController(currencyCt, standard);
     }

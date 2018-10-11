@@ -39,7 +39,7 @@ contract SecurityBondable is Ownable {
         SecurityBond oldAddress = securityBond;
         securityBond = newAddress;
 
-        //emit event
+        // Emit event
         emit ChangeSecurityBondEvent(oldAddress, newAddress);
     }
 

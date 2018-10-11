@@ -40,7 +40,7 @@ contract Validatable is Ownable {
         Validator oldAddress = validator;
         validator = newAddress;
 
-        //emit event
+        // Emit event
         emit ChangeValidatorEvent(oldAddress, newAddress);
     }
 

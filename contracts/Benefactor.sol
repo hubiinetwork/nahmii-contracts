@@ -30,7 +30,14 @@ contract Benefactor is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
+    /// @notice Register the given beneficiary
+    /// @param beneficiary Address of beneficiary to be registered
+    function registerBeneficiary(address beneficiary)
+    public
+    onlyDeployer
+    notNullAddress(beneficiary)
+    returns (bool)
+    {
         if (beneficiariesMap[beneficiary] > 0)
             return false;
 
@@ -43,7 +50,14 @@ contract Benefactor is Ownable {
         return true;
     }
 
-    function deregisterBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
+    /// @notice Deregister the given beneficiary
+    /// @param beneficiary Address of beneficiary to be deregistered
+    function deregisterBeneficiary(address beneficiary)
+    public
+    onlyDeployer
+    notNullAddress(beneficiary)
+    returns (bool)
+    {
         if (beneficiariesMap[beneficiary] == 0)
             return false;
 
@@ -69,7 +83,14 @@ contract Benefactor is Ownable {
         return true;
     }
 
-    function isRegisteredBeneficiary(address beneficiary) public view returns (bool) {
+    /// @notice Gauge whether the given address is the one of a registered beneficiary
+    /// @param beneficiary Address of beneficiary
+    /// @return true if beneficiary is registered, else false
+    function isRegisteredBeneficiary(address beneficiary)
+    public
+    view
+    returns (bool)
+    {
         return beneficiariesMap[beneficiary] > 0;
     }
 }

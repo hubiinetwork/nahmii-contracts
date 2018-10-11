@@ -20,6 +20,8 @@ contract AuthorizableServable is Servable {
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => mapping(address => bool)) private serviceWalletUnauthorizedMap;
     mapping(address => mapping(bytes32 => mapping(address => bool))) private serviceActionWalletUnauthorizedMap;
+    mapping(address => mapping(bytes32 => mapping(address => bool))) private serviceActionWalletTouchedMap;
+    mapping(address => mapping(address => bytes32[])) private serviceWalletActionList;
 
     //
     // Events
@@ -32,63 +34,87 @@ contract AuthorizableServable is Servable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Authorize the given registered service by enabling all of actions
+    /// @dev The service must be registered already
+    /// @param service The address of the concerned registered service
     function authorizeRegisteredService(address service) public notDeployer notNullOrThisAddress(service) {
         require(msg.sender != service);
 
-        //ensure service is registered
+        // Ensure service is registered
         require(registeredServicesMap[service].registered);
 
-        //enable all actions for given wallet
+        // Enable all actions for given wallet
         serviceWalletUnauthorizedMap[service][msg.sender] = false;
 
-        //emit event
+        // Emit event
         emit AuthorizeRegisteredServiceEvent(msg.sender, service);
     }
 
+    /// @notice Authorize the given registered service action
+    /// @dev The service must be registered already
+    /// @param service The address of the concerned registered service
+    /// @param action The concerned service action
     function authorizeRegisteredServiceAction(address service, string action) public notDeployerOrOperator notNullOrThisAddress(service) {
         require(msg.sender != service);
 
         bytes32 actionHash = hashString(action);
 
-        //ensure service action is registered
+        // Ensure service action is registered
         require(registeredServicesMap[service].registered && registeredServicesMap[service].actionsEnabledMap[actionHash]);
 
-        //enable service action for given wallet
+        // Enable service action for given wallet
         serviceWalletUnauthorizedMap[service][msg.sender] = true;
         serviceActionWalletUnauthorizedMap[service][actionHash][msg.sender] = false;
+        if (!serviceActionWalletTouchedMap[service][actionHash][msg.sender]) {
+            serviceActionWalletTouchedMap[service][actionHash][msg.sender] = true;
+            serviceWalletActionList[service][msg.sender].push(actionHash);
+        }
 
-        //emit event
+        // Emit event
         emit AuthorizeRegisteredServiceActionEvent(msg.sender, service, action);
     }
 
+    /// @notice Unauthorize the given registered service by enabling all of actions
+    /// @dev The service must be registered already
+    /// @param service The address of the concerned registered service
     function unauthorizeRegisteredService(address service) public notDeployer notNullOrThisAddress(service) {
         require(msg.sender != service);
 
-        //ensure service is registered
+        // Ensure service is registered
         require(registeredServicesMap[service].registered);
 
-        //enable all actions for given wallet
+        // Disable all actions for given wallet
         serviceWalletUnauthorizedMap[service][msg.sender] = true;
+        for (uint256 i = 0; i < serviceWalletActionList[service][msg.sender].length; i++)
+            serviceActionWalletUnauthorizedMap[service][serviceWalletActionList[service][msg.sender][i]][msg.sender] = true;
 
-        //emit event
+        // Emit event
         emit UnauthorizeRegisteredServiceEvent(msg.sender, service);
     }
 
+    /// @notice Unauthorize the given registered service action
+    /// @dev The service must be registered already
+    /// @param service The address of the concerned registered service
+    /// @param action The concerned service action
     function unauthorizeRegisteredServiceAction(address service, string action) public notDeployerOrOperator notNullOrThisAddress(service) {
         require(msg.sender != service);
 
         bytes32 actionHash = hashString(action);
 
-        //ensure service action is registered
+        // Ensure service is registered and action eanbled
         require(registeredServicesMap[service].registered && registeredServicesMap[service].actionsEnabledMap[actionHash]);
 
-        //disable service action for given wallet
+        // Disable service action for given wallet
         serviceActionWalletUnauthorizedMap[service][actionHash][msg.sender] = true;
 
-        //emit event
+        // Emit event
         emit UnauthorizeRegisteredServiceActionEvent(msg.sender, service, action);
     }
 
+    /// @notice Gauge whether the given service is authorized for the given wallet
+    /// @param service The address of the concerned registered service
+    /// @param wallet The address of the concerned wallet
+    /// @return true if service is authorized for the given wallet, else false
     function isAuthorizedServiceForWallet(address service, address wallet) public view returns (bool) {
         if (service == wallet)
             return false;
@@ -96,6 +122,11 @@ contract AuthorizableServable is Servable {
         return isRegisteredActiveService(service) && !serviceWalletUnauthorizedMap[service][wallet];
     }
 
+    /// @notice Gauge whether the given service action is authorized for the given wallet
+    /// @param service The address of the concerned registered service
+    /// @param action The concerned service action
+    /// @param wallet The address of the concerned wallet
+    /// @return true if service action is authorized for the given wallet, else false
     function isAuthorizedServiceActionForWallet(address service, string action, address wallet) public view returns (bool) {
         if (service == wallet)
             return false;
