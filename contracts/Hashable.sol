@@ -40,7 +40,7 @@ contract Hashable is Ownable {
         Hasher oldAddress = hasher;
         hasher = newAddress;
 
-        //emit event
+        // Emit event
         emit ChangeHasherEvent(oldAddress, newAddress);
     }
 

@@ -40,7 +40,7 @@ contract ClientFundable is Ownable {
         ClientFund oldAddress = clientFund;
         clientFund = newAddress;
 
-        //emit event
+        // Emit event
         emit ChangeClientFundEvent(oldAddress, newAddress);
     }
 

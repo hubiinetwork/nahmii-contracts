@@ -47,7 +47,7 @@ contract CommunityVotable is Ownable {
         CommunityVote oldAddress = communityVote;
         communityVote = newAddress;
 
-        //emit event
+        // Emit event
         emit ChangeCommunityVoteEvent(oldAddress, newAddress);
     }
 

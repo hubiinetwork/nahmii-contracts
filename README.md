@@ -14,6 +14,10 @@ In order to run the included tests there are a couple of alternatives readily av
 
 Alternatively the standard `npm test` may be run. This command spawns an instance of [ganache-cli](https://github.com/trufflesuite/ganache-cli) on which smart contracts are deployed and tests executed against.
 
+## Documentation
+
+Directory [./docs](./docs) contains a number of documentation files generated from Solidity contracts NatSpec comments using [soldoc](https://github.com/tsuberim/soldoc]). Note that as soldoc has yet to support methods whose parameter or return value is a `struct` type the documentation is incomplete and defines parameter/return value as type `tuple` when a `struct` type instance is expected.  
+
 ## Bytecode Verification
 
 Etherscan code verification is currently not possible as their code verification tool does not support ABI coder v2. In a support ticket correspondence we were told that support for ABI coder v2 is on their agenda. 

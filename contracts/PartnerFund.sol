@@ -163,7 +163,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         //add full history
         walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(address(0), 0), block.number));
 
-        //emit event
+        // Emit event
         emit DepositEvent(tag, msg.sender, amount, address(0), 0);
     }
 
@@ -186,7 +186,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         //add full history
         walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
-        //emit event
+        // Emit event
         emit DepositEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 
@@ -256,7 +256,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         //add full history
         walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
-        //emit event
+        // Emit event
         emit StageEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 

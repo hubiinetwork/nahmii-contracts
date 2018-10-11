@@ -39,7 +39,7 @@ contract FraudChallengable is Ownable {
         FraudChallenge oldAddress = fraudChallenge;
         fraudChallenge = newAddress;
 
-        //emit event
+        // Emit event
         emit ChangeFraudChallengeEvent(oldAddress, newAddress);
     }
 
