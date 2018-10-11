@@ -66,7 +66,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Chall
 
         require(
             !validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole) ||
-        !validator.isGenuineSuccessivePaymentsNetFees(firstPayment, lastPayment)
+        !validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)
         );
 
         configuration.setOperationalModeExit();

@@ -74,7 +74,7 @@ contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, C
 
         require(
             !validator.isGenuineSuccessiveTradePaymentBalances(trade, tradePartyRole, tradeCurrencyRole, payment, paymentPartyRole) ||
-        !validator.isGenuineSuccessiveTradePaymentNetFees(trade, tradePartyRole, payment)
+        !validator.isGenuineSuccessiveTradePaymentTotalFees(trade, tradePartyRole, payment)
         );
 
         configuration.setOperationalModeExit();

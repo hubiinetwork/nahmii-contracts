@@ -34,13 +34,13 @@ library NahmiiTypes {
         MonetaryTypes.Currency conjugate;
     }
 
-    struct SingleFigureNetFigures {
+    struct SingleFigureTotalFigures {
         MonetaryTypes.Figure single;
-        MonetaryTypes.Figure[] net;
+        MonetaryTypes.Figure[] total;
     }
 
-    struct NetFigures {
-        MonetaryTypes.Figure[] net;
+    struct TotalFigures {
+        MonetaryTypes.Figure[] total;
     }
 
     struct CurrentPreviousInt256 {
@@ -48,9 +48,9 @@ library NahmiiTypes {
         int256 previous;
     }
 
-    struct SingleNetInt256 {
+    struct SingleTotalInt256 {
         int256 single;
-        int256 net;
+        int256 total;
     }
 
     struct IntendedConjugateCurrentPreviousInt256 {
@@ -58,9 +58,9 @@ library NahmiiTypes {
         CurrentPreviousInt256 conjugate;
     }
 
-    struct IntendedConjugateSingleNetInt256 {
-        SingleNetInt256 intended;
-        SingleNetInt256 conjugate;
+    struct IntendedConjugateSingleTotalInt256 {
+        SingleTotalInt256 intended;
+        SingleTotalInt256 conjugate;
     }
 
     struct WalletExchangeHashes {
@@ -102,7 +102,7 @@ library NahmiiTypes {
 
         IntendedConjugateCurrentPreviousInt256 balances;
 
-        SingleFigureNetFigures fees;
+        SingleFigureTotalFigures fees;
     }
 
     struct Trade {
@@ -117,7 +117,7 @@ library NahmiiTypes {
 
         // Positive intended transfer is always in direction from seller to buyer
         // Positive conjugate transfer is always in direction from buyer to seller
-        IntendedConjugateSingleNetInt256 transfers;
+        IntendedConjugateSingleTotalInt256 transfers;
 
         Seal seal;
         uint256 blockNumber;
@@ -129,7 +129,7 @@ library NahmiiTypes {
 
         CurrentPreviousInt256 balances;
 
-        SingleFigureNetFigures fees;
+        SingleFigureTotalFigures fees;
     }
 
     struct PaymentRecipientParty {
@@ -138,7 +138,7 @@ library NahmiiTypes {
 
         CurrentPreviousInt256 balances;
 
-        NetFigures fees;
+        TotalFigures fees;
     }
 
     struct Payment {
@@ -151,7 +151,7 @@ library NahmiiTypes {
         PaymentRecipientParty recipient;
 
         // Positive transfer is always in direction from sender to recipient
-        SingleNetInt256 transfers;
+        SingleTotalInt256 transfers;
 
         WalletExchangeSeal seals;
         uint256 blockNumber;

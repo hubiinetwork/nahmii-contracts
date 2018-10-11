@@ -18,7 +18,7 @@ Params:
 1. **owner** *of type `address`*
 
 ## Events
-### StageNetFeeEvent(address,int256,int256,address,uint256)
+### StageTotalFeeEvent(address,int256,int256,address,uint256)
 
 
 **Execution cost**: No bound available

@@ -132,8 +132,8 @@ contract Hasher is Ownable {
                 trade.buyer.fees.single.amount,
                 trade.buyer.fees.single.currency.ct,
                 trade.buyer.fees.single.currency.id
-            // TODO Consider adding dynamic size 'trade.buyer.fees.net' to hash
-            // trade.buyer.fees.net
+            // TODO Consider adding dynamic size 'trade.buyer.fees.total' to hash
+            // trade.buyer.fees.total
             ));
     }
 
@@ -156,17 +156,17 @@ contract Hasher is Ownable {
                 trade.seller.fees.single.amount,
                 trade.seller.fees.single.currency.ct,
                 trade.seller.fees.single.currency.id
-            // TODO Consider adding dynamic size 'trade.seller.fees.net' to hash
-            // trade.seller.fees.net
+            // TODO Consider adding dynamic size 'trade.seller.fees.total' to hash
+            // trade.seller.fees.total
             ));
     }
 
     function hashTradeTransfersData(NahmiiTypes.Trade trade) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 trade.transfers.intended.single,
-                trade.transfers.intended.net,
+                trade.transfers.intended.total,
                 trade.transfers.conjugate.single,
-                trade.transfers.conjugate.net
+                trade.transfers.conjugate.total
             ));
     }
 
@@ -208,7 +208,7 @@ contract Hasher is Ownable {
     function hashPaymentTransfersData(NahmiiTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 payment.transfers.single,
-                payment.transfers.net
+                payment.transfers.total
             ));
     }
 

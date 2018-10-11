@@ -59,7 +59,7 @@ contract NahmiiChallenge is Challenge {
         stgTradeParty.liquidityRole = memTradeParty.liquidityRole;
         stgTradeParty.order = memTradeParty.order;
         stgTradeParty.balances = memTradeParty.balances;
-        copySingleFigureNetFigures(stgTradeParty.fees, memTradeParty.fees);
+        copySingleFigureTotalFigures(stgTradeParty.fees, memTradeParty.fees);
     }
 
     function copyPaymentSenderParty(NahmiiTypes.PaymentSenderParty storage stgPaymentParty,
@@ -69,7 +69,7 @@ contract NahmiiChallenge is Challenge {
         stgPaymentParty.nonce = memPaymentParty.nonce;
         stgPaymentParty.wallet = memPaymentParty.wallet;
         stgPaymentParty.balances = memPaymentParty.balances;
-        copySingleFigureNetFigures(stgPaymentParty.fees, memPaymentParty.fees);
+        copySingleFigureTotalFigures(stgPaymentParty.fees, memPaymentParty.fees);
     }
 
     function copyPaymentRecipientParty(NahmiiTypes.PaymentRecipientParty storage stgPaymentParty,
@@ -79,15 +79,15 @@ contract NahmiiChallenge is Challenge {
         stgPaymentParty.nonce = memPaymentParty.nonce;
         stgPaymentParty.wallet = memPaymentParty.wallet;
         stgPaymentParty.balances = memPaymentParty.balances;
-        copyFigureArray(stgPaymentParty.fees.net, memPaymentParty.fees.net);
+        copyFigureArray(stgPaymentParty.fees.total, memPaymentParty.fees.total);
     }
 
-    function copySingleFigureNetFigures(NahmiiTypes.SingleFigureNetFigures storage stgSingleFigureNetFigures,
-        NahmiiTypes.SingleFigureNetFigures memSingleFigureNetFigures)
+    function copySingleFigureTotalFigures(NahmiiTypes.SingleFigureTotalFigures storage stgSingleFigureTotalFigures,
+        NahmiiTypes.SingleFigureTotalFigures memSingleFigureTotalFigures)
     private
     {
-        stgSingleFigureNetFigures.single = memSingleFigureNetFigures.single;
-        copyFigureArray(stgSingleFigureNetFigures.net, memSingleFigureNetFigures.net);
+        stgSingleFigureTotalFigures.single = memSingleFigureTotalFigures.single;
+        copyFigureArray(stgSingleFigureTotalFigures.total, memSingleFigureTotalFigures.total);
     }
 
     function copyFigureArray(MonetaryTypes.Figure[] storage stgFigureArr, MonetaryTypes.Figure[] memFigureArr)
