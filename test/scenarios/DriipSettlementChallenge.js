@@ -500,13 +500,13 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getPhase()', () => {
+        describe('getChallengePhase()', () => {
             describe('if no driip settlement challenge has been started for given wallet', () => {
                 it('should return 0 and Closed', async () => {
                     const address = Wallet.createRandom().address;
-                    const result = await ethersDriipSettlementChallengeOwner.getPhase(address);
-                    result[0].eq(utils.bigNumberify(0)).should.be.true;
-                    result[1].should.equal(mocks.challengePhases.indexOf('Closed'));
+                    const result = await ethersDriipSettlementChallengeOwner.getChallengePhase(address);
+                    result[0].should.equal(mocks.challengePhases.indexOf('Closed'));
+                    result[1].eq(utils.bigNumberify(0)).should.be.true;
                 });
             });
 
@@ -530,9 +530,9 @@ module.exports = (glob) => {
                     });
 
                     it('should return challenged driip nonce and Dispute', async () => {
-                        const result = await ethersDriipSettlementChallengeOwner.getPhase(trade.buyer.wallet);
-                        result[0].eq(trade.nonce).should.be.true;
-                        result[1].should.equal(mocks.challengePhases.indexOf('Dispute'));
+                        const result = await ethersDriipSettlementChallengeOwner.getChallengePhase(trade.buyer.wallet);
+                        result[0].should.equal(mocks.challengePhases.indexOf('Dispute'));
+                        result[1].eq(trade.nonce).should.be.true;
                     });
                 });
 
@@ -546,9 +546,9 @@ module.exports = (glob) => {
                     });
 
                     it('should return challenged driip nonce and Closed', async () => {
-                        const result = await ethersDriipSettlementChallengeOwner.getPhase(trade.buyer.wallet);
-                        result[0].eq(trade.nonce).should.be.true;
-                        result[1].should.equal(mocks.challengePhases.indexOf('Closed'));
+                        const result = await ethersDriipSettlementChallengeOwner.getChallengePhase(trade.buyer.wallet);
+                        result[0].should.equal(mocks.challengePhases.indexOf('Closed'));
+                        result[1].eq(trade.nonce).should.be.true;
                     });
                 });
             });

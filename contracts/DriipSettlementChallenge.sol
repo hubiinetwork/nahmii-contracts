@@ -228,16 +228,16 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
 
     /// @notice Get driip settlement challenge phase of given wallet
     /// @param wallet The concerned wallet
-    /// @return The challenge phase
-    function getPhase(address wallet) public view returns (uint, NahmiiTypes.ChallengePhase) {
+    /// @return The challenge phase and nonce
+    function getChallengePhase(address wallet) public view returns (NahmiiTypes.ChallengePhase, uint) {
         if (msg.sender != deployer)
             wallet = msg.sender;
         if (0 == walletChallengeMap[wallet].nonce)
-            return (0, NahmiiTypes.ChallengePhase.Closed);
+            return (NahmiiTypes.ChallengePhase.Closed, 0);
         else if (block.timestamp < walletChallengeMap[wallet].timeout)
-            return (walletChallengeMap[wallet].nonce, NahmiiTypes.ChallengePhase.Dispute);
+            return (NahmiiTypes.ChallengePhase.Dispute, walletChallengeMap[wallet].nonce);
         else
-            return (walletChallengeMap[wallet].nonce, NahmiiTypes.ChallengePhase.Closed);
+            return (NahmiiTypes.ChallengePhase.Closed, walletChallengeMap[wallet].nonce);
     }
 
     /// @notice Get the challenge nonce of the given wallet
@@ -393,7 +393,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
 
     /// @notice Push to store the given challenge candidate trade
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param order The challenge candidate trade to push
+    /// @param trade The challenge candidate trade to push
     function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
     public
     onlyDriipSettlementDispute
@@ -413,7 +413,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
 
     /// @notice Push to store the given challenge candidate payment
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param order The challenge candidate payment to push
+    /// @param payment The challenge candidate payment to push
     function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
     public
     onlyDriipSettlementDispute
