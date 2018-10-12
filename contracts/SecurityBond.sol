@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {Ownable} from "./Ownable.sol";
@@ -29,7 +29,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
-    using SafeMathInt for int256;
+    using SafeMathIntLib for int256;
 
     //
     // Constants
@@ -95,7 +95,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     }
 
     function depositEthersTo(address wallet) public payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         //add to active balance
         active.add(amount, address(0), 0);

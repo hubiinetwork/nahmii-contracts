@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Servable} from "./Servable.sol";
 import {Ownable} from "./Ownable.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 
 /**
@@ -19,7 +19,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 @notice An oracle for configurations values
 */
 contract Configuration is Ownable, Servable {
-    using SafeMathInt for int256;
+    using SafeMathIntLib for int256;
 
     //
     // Constants

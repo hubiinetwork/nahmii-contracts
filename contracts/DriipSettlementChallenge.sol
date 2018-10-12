@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Validatable} from "./Validatable.sol";
 import {NahmiiChallenge} from "./NahmiiChallenge.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
@@ -23,7 +23,7 @@ import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 @notice Where driip settlements are challenged
 */
 contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
-    using SafeMathInt for int256;
+    using SafeMathIntLib for int256;
 
     //
     // Variables
@@ -89,45 +89,15 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
         return walletChallengedPaymentsMap[wallet].length;
     }
 
-    /// @notice Get the number of challenge candidate orders
-    /// @return The number of challenge candidate orders
-    function challengeCandidateOrdersCount()
-    public
-    view
-    returns (uint256)
-    {
-        return challengeCandidateOrders.length;
-    }
-
     /// @notice Get the challenge candidate order at the given index
     /// @param index The index of challenge order candidate
     /// @return The challenge candidate order
-    function getChallengeCandidateOrder(uint256 index)
+    function challengeCandidateOrder(uint256 index)
     public
     view
     returns (NahmiiTypes.Order)
     {
         return challengeCandidateOrders[index];
-    }
-
-    /// @notice Get the number of challenge candidate trades
-    /// @return The number of challenge candidate trades
-    function challengeCandidateTradesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return challengeCandidateTrades.length;
-    }
-
-    /// @notice Get the number of challenge candidate payments
-    /// @return The number of challenge candidate payments
-    function challengeCandidatePaymentsCount()
-    public
-    view
-    returns (uint256)
-    {
-        return challengeCandidatePayments.length;
     }
 
     /// @notice Start driip settlement challenge on driip of trade type
@@ -229,7 +199,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     /// @notice Get driip settlement challenge phase of given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge phase and nonce
-    function getChallengePhase(address wallet) public view returns (NahmiiTypes.ChallengePhase, uint) {
+    function challengePhase(address wallet) public view returns (NahmiiTypes.ChallengePhase, uint) {
         if (msg.sender != deployer)
             wallet = msg.sender;
         if (0 == walletChallengeMap[wallet].nonce)
@@ -243,7 +213,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     /// @notice Get the challenge nonce of the given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge nonce
-    function getChallengeNonce(address wallet)
+    function challengeNonce(address wallet)
     public
     view
     returns (uint256)
@@ -254,7 +224,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     /// @notice Get the challenge status of the given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge status
-    function getChallengeStatus(address wallet)
+    function challengeStatus(address wallet)
     public
     view
     returns (DriipSettlementTypes.ChallengeStatus)
@@ -266,7 +236,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     /// the given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge intended stage
-    function getChallengeIntendedStage(address wallet)
+    function challengeIntendedStage(address wallet)
     public
     view
     returns (MonetaryTypes.Figure)
@@ -278,7 +248,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     /// the given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge conjugate stage
-    function getChallengeConjugateStage(address wallet)
+    function challengeConjugateStage(address wallet)
     public
     view
     returns (MonetaryTypes.Figure)
@@ -289,7 +259,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     /// @notice Get the challenger of the given wallet's challenge
     /// @param wallet The concerned wallet
     /// @return The challenger of the challenge
-    function getChallengeChallenger(address wallet)
+    function challengeChallenger(address wallet)
     public
     view
     returns (address)
@@ -339,7 +309,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
     /// @notice Get the challenge of the given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge of the wallet
-    function getWalletChallenge(address wallet)
+    function walletChallenge(address wallet)
     public
     view
     returns (DriipSettlementTypes.Challenge)
@@ -383,7 +353,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
 
     /// @notice Get the count of challenge candidate orders
     /// @return The count of challenge candidate orders
-    function getChallengeCandidateOrdersLength()
+    function challengeCandidateOrdersCount()
     public
     view
     returns (uint256)
@@ -403,7 +373,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
 
     /// @notice Get the count of challenge candidate trades
     /// @return The count of challenge candidate trades
-    function getChallengeCandidateTradesLength()
+    function challengeCandidateTradesCount()
     public
     view
     returns (uint256)
@@ -423,7 +393,7 @@ contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
 
     /// @notice Get the count of challenge candidate payments
     /// @return The count of challenge candidate payments
-    function getChallengeCandidatePaymentsLength()
+    function challengeCandidatePaymentsCount()
     public
     view
     returns (uint256)

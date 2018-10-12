@@ -8,14 +8,14 @@ pragma solidity ^0.4.24;
  */
 
 import {ERC20} from "../ERC20.sol";
-import {SafeMathUint} from "../SafeMathUint.sol";
+import {SafeMathUintLib} from "../SafeMathUintLib.sol";
 
 /**
  * @title Standard token
  * @notice Basic implementation of the EIP20 standard token (also known as ERC20 token).
  */
 contract StandardTokenEx is ERC20 {
-    using SafeMathUint for uint;
+    using SafeMathUintLib for uint;
 
     uint private total_supply;
     mapping(address => uint) private balances;

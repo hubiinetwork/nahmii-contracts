@@ -9,8 +9,8 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {Ownable} from "./Ownable.sol";
@@ -21,8 +21,8 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
 @notice Where orders are cancelled and cancellations challenged
 */
 contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
-    using SafeMathInt for int256;
-    using SafeMathUint for uint256;
+    using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
 
     //
     // Variables

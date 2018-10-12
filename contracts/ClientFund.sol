@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
@@ -29,7 +29,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
-    using SafeMathInt for int256;
+    using SafeMathIntLib for int256;
 
     //
     // Structures
@@ -84,7 +84,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @notice Deposit ethers to the given wallet's deposited balance
     /// @param wallet The address of the concerned wallet
     function depositEthersTo(address wallet) public payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         // Add to per-wallet deposited balance
         walletMap[wallet].deposited.add(amount, address(0), 0);

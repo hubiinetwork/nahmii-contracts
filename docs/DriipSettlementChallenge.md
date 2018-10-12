@@ -3,11 +3,11 @@
 > DriipSettlementChallenge
 
 
-**Execution cost**: less than 46271 gas
+**Execution cost**: less than 46262 gas
 
-**Deployment cost**: less than 4443200 gas
+**Deployment cost**: less than 4436600 gas
 
-**Combined cost**: less than 4489471 gas
+**Combined cost**: less than 4482862 gas
 
 ## Constructor
 
@@ -103,7 +103,33 @@ Params:
 
 
 ## Methods
-### challengeByOrder(tuple)
+### challengeCandidateOrder(uint256)
+>
+>Get the challenge candidate order at the given index
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **index** *of type `uint256`*
+
+    > The index of challenge order candidate
+
+
+Returns:
+
+> The challenge candidate order
+
+1. **output_0** *of type `tuple`*
+
+--- 
+### changeOperator(address)
+>
+>Change the operator of this contract
 
 
 **Execution cost**: No bound available
@@ -111,13 +137,16 @@ Params:
 
 Params:
 
-1. **order** *of type `tuple`*
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
 
 
 --- 
-### getChallengePhase(address)
+### challengeStatus(address)
 >
->Get driip settlement challenge phase of given wallet
+>Get the challenge status of the given wallet
 
 
 **Execution cost**: No bound available
@@ -134,52 +163,9 @@ Params:
 
 Returns:
 
-> The challenge phase and nonce
+> The challenge status
 
 1. **output_0** *of type `uint8`*
-2. **output_1** *of type `uint256`*
-
---- 
-### challengeCandidatePayments(uint256)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `uint256`*
-
-Returns:
-
-
-1. **nonce** *of type `uint256`*
-2. **amount** *of type `int256`*
-3. **currency** *of type `tuple`*
-4. **sender** *of type `tuple`*
-5. **recipient** *of type `tuple`*
-6. **transfers** *of type `tuple`*
-7. **seals** *of type `tuple`*
-8. **blockNumber** *of type `uint256`*
-
---- 
-### changeValidator(address)
->
->Change the validator contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) Validator contract instance
-
-
 
 --- 
 ### challengeCandidateOrders(uint256)
@@ -204,6 +190,55 @@ Returns:
 5. **blockNumber** *of type `uint256`*
 
 --- 
+### challengeNonce(address)
+>
+>Get the challenge nonce of the given wallet
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The concerned wallet
+
+
+Returns:
+
+> The challenge nonce
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### challengePhase(address)
+>
+>Get driip settlement challenge phase of given wallet
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The concerned wallet
+
+
+Returns:
+
+> The challenge phase and nonce
+
+1. **output_0** *of type `uint8`*
+2. **output_1** *of type `uint256`*
+
+--- 
 ### changeDeployer(address)
 >
 >Change the deployer of this contract
@@ -221,22 +256,9 @@ Params:
 
 
 --- 
-### deployer()
-
-
-**Execution cost**: less than 1534 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### driipSettlementDispute()
+### challengeConjugateStage(address)
+>
+>Get the conjugate stage, i.e. the amount of conjugate currency that is suggested staged, of the given wallet
 
 
 **Execution cost**: No bound available
@@ -244,11 +266,18 @@ Returns:
 **Attributes**: constant
 
 
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The concerned wallet
+
 
 Returns:
 
+> The challenge conjugate stage
 
-1. **output_0** *of type `address`*
+1. **output_0** *of type `tuple`*
 
 --- 
 ### challengeCandidateTrades(uint256)
@@ -277,320 +306,7 @@ Returns:
 9. **blockNumber** *of type `uint256`*
 
 --- 
-### getChallengeChallenger(address)
->
->Get the challenger of the given wallet's challenge
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-    > The concerned wallet
-
-
-Returns:
-
-> The challenger of the challenge
-
-1. **output_0** *of type `address`*
-
---- 
-### getChallengeCandidatePaymentsLength()
->
->Get the count of challenge candidate payments
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-> The count of challenge candidate payments
-
-1. **output_0** *of type `uint256`*
-
---- 
-### challengeCandidatePaymentsCount()
->
->Get the number of challenge candidate payments
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-> The number of challenge candidate payments
-
-1. **output_0** *of type `uint256`*
-
---- 
-### getChallengeCandidateTradesLength()
->
->Get the count of challenge candidate trades
-
-
-**Execution cost**: less than 1252 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-> The count of challenge candidate trades
-
-1. **output_0** *of type `uint256`*
-
---- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 984 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### challengeByTrade(tuple,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-2. **wallet** *of type `address`*
-
-
---- 
-### getChallengeCandidateOrder(uint256)
->
->Get the challenge candidate order at the given index
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **index** *of type `uint256`*
-
-    > The index of challenge order candidate
-
-
-Returns:
-
-> The challenge candidate order
-
-1. **output_0** *of type `tuple`*
-
---- 
-### getChallengeCandidateOrdersLength()
->
->Get the count of challenge candidate orders
-
-
-**Execution cost**: less than 1230 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-> The count of challenge candidate orders
-
-1. **output_0** *of type `uint256`*
-
---- 
-### challengeCandidateTradesCount()
->
->Get the number of challenge candidate trades
-
-
-**Execution cost**: less than 1208 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-> The number of challenge candidate trades
-
-1. **output_0** *of type `uint256`*
-
---- 
-### changeDriipSettlementDispute(address)
->
->Change the driip settlement challenger contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDriipSettlementDispute** *of type `address`*
-
-    > The (address of) DriipSettlementDispute contract instance
-
-
-
---- 
-### challengeCandidateOrdersCount()
->
->Get the number of challenge candidate orders
-
-
-**Execution cost**: less than 1186 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-> The number of challenge candidate orders
-
-1. **output_0** *of type `uint256`*
-
---- 
-### configuration()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### challengeByPayment(tuple,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-2. **wallet** *of type `address`*
-
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### getChallengeNonce(address)
->
->Get the challenge nonce of the given wallet
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-    > The concerned wallet
-
-
-Returns:
-
-> The challenge nonce
-
-1. **output_0** *of type `uint256`*
-
---- 
-### getChallengeConjugateStage(address)
->
->Get the conjugate stage, i.e. the amount of conjugate currency that is suggested staged, of the given wallet
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-    > The concerned wallet
-
-
-Returns:
-
-> The challenge conjugate stage
-
-1. **output_0** *of type `tuple`*
-
---- 
-### changeConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
-
-
-
---- 
-### getChallengeIntendedStage(address)
+### challengeIntendedStage(address)
 >
 >Get the intended stage, i.e. the amount of intended currency that is suggested staged, of the given wallet
 
@@ -614,14 +330,50 @@ Returns:
 1. **output_0** *of type `tuple`*
 
 --- 
-### resetWalletChallenge(address)
+### challengeCandidatePaymentsCount()
 >
->Reset the challenge of the given wallet
->
-> This function can only be called by this contract's dispute instance
+>Get the count of challenge candidate payments
 
 
-**Execution cost**: less than 66797 gas
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+> The count of challenge candidate payments
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### challengeCandidateTradesCount()
+>
+>Get the count of challenge candidate trades
+
+
+**Execution cost**: less than 1142 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+> The count of challenge candidate trades
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### challengeChallenger(address)
+>
+>Get the challenger of the given wallet's challenge
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
 
 
 Params:
@@ -631,6 +383,150 @@ Params:
     > The concerned wallet
 
 
+Returns:
+
+> The challenger of the challenge
+
+1. **output_0** *of type `address`*
+
+--- 
+### challengeByTrade(tuple,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **wallet** *of type `address`*
+
+
+--- 
+### challengeCandidateOrdersCount()
+>
+>Get the count of challenge candidate orders
+
+
+**Execution cost**: less than 1098 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+> The count of challenge candidate orders
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### challengeByPayment(tuple,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+2. **wallet** *of type `address`*
+
+
+--- 
+### changeDriipSettlementDispute(address)
+>
+>Change the driip settlement challenger contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDriipSettlementDispute** *of type `address`*
+
+    > The (address of) DriipSettlementDispute contract instance
+
+
+
+--- 
+### changeConfiguration(address)
+>
+>Change the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### challengeCandidatePayments(uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `uint256`*
+
+Returns:
+
+
+1. **nonce** *of type `uint256`*
+2. **amount** *of type `int256`*
+3. **currency** *of type `tuple`*
+4. **sender** *of type `tuple`*
+5. **recipient** *of type `tuple`*
+6. **transfers** *of type `tuple`*
+7. **seals** *of type `tuple`*
+8. **blockNumber** *of type `uint256`*
+
+--- 
+### challengeByOrder(tuple)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **order** *of type `tuple`*
+
+
+--- 
+### walletChallenge(address)
+>
+>Get the challenge of the given wallet
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The concerned wallet
+
+
+Returns:
+
+> The challenge of the wallet
+
+1. **output_0** *of type `tuple`*
 
 --- 
 ### startChallengeFromTrade(tuple,address,int256,int256)
@@ -661,6 +557,23 @@ Params:
 
 
 --- 
+### changeValidator(address)
+>
+>Change the validator contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) Validator contract instance
+
+
+
+--- 
 ### pushChallengeCandidatePayment(tuple)
 
 
@@ -676,7 +589,7 @@ Params:
 ### operator()
 
 
-**Execution cost**: less than 1050 gas
+**Execution cost**: less than 1006 gas
 
 **Attributes**: constant
 
@@ -688,64 +601,21 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### getWalletChallenge(address)
+### destructor()
 >
->Get the challenge of the given wallet
+>Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 962 gas
 
 **Attributes**: constant
 
 
-Params:
-
-1. **wallet** *of type `address`*
-
-    > The concerned wallet
-
 
 Returns:
 
-> The challenge of the wallet
 
-1. **output_0** *of type `tuple`*
-
---- 
-### pushChallengeCandidateTrade(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-
---- 
-### getChallengeStatus(address)
->
->Get the challenge status of the given wallet
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-    > The concerned wallet
-
-
-Returns:
-
-> The challenge status
-
-1. **output_0** *of type `uint8`*
+1. **output_0** *of type `address`*
 
 --- 
 ### startChallengeFromPayment(tuple,address,int256)
@@ -762,6 +632,67 @@ Params:
 
 
 --- 
+### pushChallengeCandidateTrade(tuple)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+
+--- 
+### resetWalletChallenge(address)
+>
+>Reset the challenge of the given wallet
+>
+> This function can only be called by this contract's dispute instance
+
+
+**Execution cost**: less than 66797 gas
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The concerned wallet
+
+
+
+--- 
+### driipSettlementDispute()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### configuration()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
 ### pushChallengeCandidateOrder(tuple)
 
 
@@ -772,6 +703,21 @@ Params:
 
 1. **order** *of type `tuple`*
 
+
+--- 
+### deployer()
+
+
+**Execution cost**: less than 1424 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
 
 --- 
 ### triggerDestroy()

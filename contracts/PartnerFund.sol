@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {Ownable} from "./Ownable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
@@ -25,7 +25,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
-    using SafeMathInt for int256;
+    using SafeMathIntLib for int256;
 
     //
     // Structures
@@ -154,7 +154,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     }
 
     function depositEthersTo(address tag) public isRegisteredTag(tag) payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         //add to per-wallet deposited balance
         walletMap[tag].active.add(amount, address(0), 0);

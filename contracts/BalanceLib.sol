@@ -8,10 +8,10 @@
 
 pragma solidity ^0.4.24;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 library BalanceLib {
-    using SafeMathInt for int256;
+    using SafeMathIntLib for int256;
 
     //
     // Structures

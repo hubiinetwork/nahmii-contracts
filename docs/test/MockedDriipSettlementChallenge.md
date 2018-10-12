@@ -17,7 +17,7 @@
 
 
 ## Methods
-### getChallengeChallenger(address)
+### challengeChallenger(address)
 
 
 **Execution cost**: No bound available
@@ -35,7 +35,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### getChallengeConjugateStage(address)
+### challengeConjugateStage(address)
 
 
 **Execution cost**: No bound available
@@ -53,7 +53,7 @@ Returns:
 1. **output_0** *of type `tuple`*
 
 --- 
-### getChallengeIntendedStage(address)
+### challengeIntendedStage(address)
 
 
 **Execution cost**: No bound available
@@ -71,10 +71,10 @@ Returns:
 1. **output_0** *of type `tuple`*
 
 --- 
-### getChallengeNonce(address)
+### challengeNonce(address)
 
 
-**Execution cost**: less than 907 gas
+**Execution cost**: less than 885 gas
 
 **Attributes**: constant
 
@@ -89,7 +89,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### getChallengeStatus(address)
+### challengeStatus(address)
 
 
 **Execution cost**: No bound available

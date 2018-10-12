@@ -13,8 +13,8 @@ import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {RevenueToken} from "./RevenueToken.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
@@ -29,8 +29,8 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
-    using SafeMathInt for int256;
-    using SafeMathUint for uint256;
+    using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
 
     //
     // Constants
@@ -110,7 +110,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     }
 
     function depositEthersTo(address wallet) public payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         //add to balances
         periodAccrual.add(amount, address(0), 0);

@@ -13,7 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
@@ -26,7 +26,7 @@ import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
 contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable {
-    using SafeMathInt for int256;
+    using SafeMathIntLib for int256;
 
     //
     // Variables
@@ -104,7 +104,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
 
         // Get challenge and require that it is ongoing
-        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(order.wallet);
+        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(order.wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -133,7 +133,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Order;
-        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidateOrdersLength() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidateOrdersCount() - 1;
         challenge.challenger = challenger;
 
         // Update stored challenge
@@ -203,7 +203,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
 
         // Get challenge and require that it is ongoing
-        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(wallet);
+        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -235,7 +235,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Update challenge
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Trade;
-        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidateTradesLength() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidateTradesCount() - 1;
         challenge.challenger = challenger;
 
         // Update stored challenge
@@ -263,7 +263,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
 
         // Get challenge and require that it is ongoing
-        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(wallet);
+        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(wallet);
         require(
             0 < challenge.nonce && block.timestamp < challenge.timeout
         );
@@ -283,7 +283,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Update challenge
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Payment;
-        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidatePaymentsLength() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidatePaymentsCount() - 1;
         challenge.challenger = challenger;
 
         // Update stored challenge
@@ -322,7 +322,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     returns (DriipSettlementTypes.Challenge)
     {
         // Get challenge and require that it is ongoing and that its candidate type is order
-        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(order.wallet);
+        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(order.wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -330,7 +330,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(challenge.candidateType == DriipSettlementTypes.ChallengeCandidateType.Order);
 
         // Get challenge and require that its exchange has matches the one of order
-        NahmiiTypes.Order memory challengeOrder = driipSettlementChallenge.getChallengeCandidateOrder(challenge.candidateIndex);
+        NahmiiTypes.Order memory challengeOrder = driipSettlementChallenge.challengeCandidateOrder(challenge.candidateIndex);
         require(challengeOrder.seals.exchange.hash == order.seals.exchange.hash);
 
         // Require that challenge order's exchange hash matches any or the exchange hash of any of the trade

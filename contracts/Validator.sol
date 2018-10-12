@@ -9,8 +9,8 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {Configurable} from "./Configurable.sol";
@@ -23,8 +23,8 @@ import {AccessorManageable} from "./AccessorManageable.sol";
 @notice An ownable that validates valuable types (order, trade, payment)
 */
 contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
-    using SafeMathInt for int256;
-    using SafeMathUint for uint256;
+    using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
 
     //
     // Constructor

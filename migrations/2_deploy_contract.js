@@ -34,8 +34,8 @@ const InUseCurrencyLib = artifacts.require('InUseCurrencyLib');
 const MonetaryTypes = artifacts.require('MonetaryTypes');
 const PartnerFund = artifacts.require('PartnerFund');
 const RevenueFund = artifacts.require('RevenueFund');
-const SafeMathInt = artifacts.require('SafeMathInt');
-const SafeMathUint = artifacts.require('SafeMathUint');
+const SafeMathIntLib = artifacts.require('SafeMathIntLib');
+const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
 const NahmiiChallenge = artifacts.require('NahmiiChallenge');
 const NahmiiTypes = artifacts.require('NahmiiTypes');
@@ -87,8 +87,8 @@ module.exports = (deployer, network, accounts) => {
             ]);
 
             //deploy base libraries
-            await execDeploy(ctl, 'SafeMathInt', '', SafeMathInt);
-            await execDeploy(ctl, 'SafeMathUint', '', SafeMathUint);
+            await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
+            await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
             await execDeploy(ctl, 'NahmiiTypes', '', NahmiiTypes);
             await execDeploy(ctl, 'BalanceLib', '', BalanceLib);
             await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
@@ -96,11 +96,11 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'DriipSettlementTypes', '', DriipSettlementTypes);
 
             //link dependencies
-            await deployer.link(SafeMathInt, [
+            await deployer.link(SafeMathIntLib, [
                 BalanceLib, CancelOrdersChallenge, ClientFund, CommunityVote, Configuration, DriipSettlementChallenge, DriipSettlementDispute,
                 Exchange, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
-            await deployer.link(SafeMathUint, [
+            await deployer.link(SafeMathUintLib, [
                 CancelOrdersChallenge, Exchange, RevenueFund, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(NahmiiTypes, [
