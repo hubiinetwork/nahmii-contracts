@@ -471,9 +471,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not genuine successive net fees', () => {
+            describe('if not genuine successive total fees', () => {
                 beforeEach(async () => {
-                    await ethersValidator.setGenuineSuccessiveTradePaymentNetFees(false);
+                    await ethersValidator.setGenuineSuccessiveTradePaymentTotalFees(false);
                 });
 
                 it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {

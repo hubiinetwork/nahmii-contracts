@@ -45,16 +45,16 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
     bool[] paymentSeals;
     bool successiveTradesPartyNonces;
     bool successiveTradesBalances;
-    bool successiveTradesNetFees;
+    bool successiveTradesTotalFees;
     bool successivePaymentsPartyNonces;
     bool successivePaymentsBalances;
-    bool successivePaymentsNetFees;
+    bool successivePaymentsTotalFees;
     bool successiveTradePaymentPartyNonces;
     bool successiveTradePaymentBalances;
-    bool successiveTradePaymentNetFees;
+    bool successiveTradePaymentTotalFees;
     bool successivePaymentTradePartyNonces;
     bool successivePaymentTradeBalances;
-    bool successivePaymentTradeNetFees;
+    bool successivePaymentTradeTotalFees;
     bool successiveTradeOrderResiduals;
     bool walletSignature;
 
@@ -96,16 +96,16 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         paymentSeals.push(true);
         successiveTradesPartyNonces = true;
         successiveTradesBalances = true;
-        successiveTradesNetFees = true;
+        successiveTradesTotalFees = true;
         successivePaymentsPartyNonces = true;
         successivePaymentsBalances = true;
-        successivePaymentsNetFees = true;
+        successivePaymentsTotalFees = true;
         successiveTradePaymentPartyNonces = true;
         successiveTradePaymentBalances = true;
-        successiveTradePaymentNetFees = true;
+        successiveTradePaymentTotalFees = true;
         successivePaymentTradePartyNonces = true;
         successivePaymentTradeBalances = true;
-        successivePaymentTradeNetFees = true;
+        successivePaymentTradeTotalFees = true;
         successiveTradeOrderResiduals = true;
         walletSignature = true;
 
@@ -331,11 +331,11 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         return successiveTradesBalances;
     }
 
-    function setGenuineSuccessiveTradesNetFees(bool genuine) public {
-        successiveTradesNetFees = genuine;
+    function setGenuineSuccessiveTradesTotalFees(bool genuine) public {
+        successiveTradesTotalFees = genuine;
     }
 
-    function isGenuineSuccessiveTradesNetFees(
+    function isGenuineSuccessiveTradesTotalFees(
         NahmiiTypes.Trade firstTrade,
         NahmiiTypes.TradePartyRole firstTradePartyRole,
         NahmiiTypes.Trade lastTrade,
@@ -350,7 +350,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         require(firstTradePartyRole == firstTradePartyRole);
         require(lastTrade.nonce == lastTrade.nonce);
         require(lastTradePartyRole == lastTradePartyRole);
-        return successiveTradesNetFees;
+        return successiveTradesTotalFees;
     }
 
     function setSuccessivePaymentsPartyNonces(bool genuine) public {
@@ -397,11 +397,11 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         return successivePaymentsBalances;
     }
 
-    function setGenuineSuccessivePaymentsNetFees(bool genuine) public {
-        successivePaymentsNetFees = genuine;
+    function setGenuineSuccessivePaymentsTotalFees(bool genuine) public {
+        successivePaymentsTotalFees = genuine;
     }
 
-    function isGenuineSuccessivePaymentsNetFees(
+    function isGenuineSuccessivePaymentsTotalFees(
         NahmiiTypes.Payment firstPayment,
         NahmiiTypes.Payment lastPayment
     )
@@ -412,7 +412,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         // To silence unused function parameter compiler warning
         require(firstPayment.nonce == firstPayment.nonce);
         require(lastPayment.nonce == lastPayment.nonce);
-        return successivePaymentsNetFees;
+        return successivePaymentsTotalFees;
     }
 
     function setSuccessiveTradePaymentPartyNonces(bool genuine) public {
@@ -461,11 +461,11 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         return successiveTradePaymentBalances;
     }
 
-    function setGenuineSuccessiveTradePaymentNetFees(bool genuine) public {
-        successiveTradePaymentNetFees = genuine;
+    function setGenuineSuccessiveTradePaymentTotalFees(bool genuine) public {
+        successiveTradePaymentTotalFees = genuine;
     }
 
-    function isGenuineSuccessiveTradePaymentNetFees(
+    function isGenuineSuccessiveTradePaymentTotalFees(
         NahmiiTypes.Trade trade,
         NahmiiTypes.TradePartyRole tradePartyRole,
         NahmiiTypes.Payment payment
@@ -478,7 +478,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         require(trade.nonce == trade.nonce);
         require(tradePartyRole == tradePartyRole);
         require(payment.nonce == payment.nonce);
-        return successiveTradePaymentNetFees;
+        return successiveTradePaymentTotalFees;
     }
 
     function setSuccessivePaymentTradePartyNonces(bool genuine) public {
@@ -527,11 +527,11 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         return successivePaymentTradeBalances;
     }
 
-    function setGenuineSuccessivePaymentTradeNetFees(bool genuine) public {
-        successivePaymentTradeNetFees = genuine;
+    function setGenuineSuccessivePaymentTradeTotalFees(bool genuine) public {
+        successivePaymentTradeTotalFees = genuine;
     }
 
-    function isGenuineSuccessivePaymentTradeNetFees(
+    function isGenuineSuccessivePaymentTradeTotalFees(
         NahmiiTypes.Payment payment,
         NahmiiTypes.PaymentPartyRole paymentPartyRole,
         NahmiiTypes.Trade trade,
@@ -546,7 +546,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
         require(paymentPartyRole == paymentPartyRole);
         require(trade.nonce == trade.nonce);
         require(tradePartyRole == tradePartyRole);
-        return successivePaymentTradeNetFees;
+        return successivePaymentTradeTotalFees;
     }
 
     function setGenuineSuccessiveTradeOrderResiduals(bool genuine) public {

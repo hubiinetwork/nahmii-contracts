@@ -66,7 +66,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event StageNetFeeEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount, address currencyCt,
+    event StageTotalFeeEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount, address currencyCt,
         uint256 currencyId);
 
     //
@@ -271,7 +271,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             }
 
             // Stage fees to revenue fund
-            stageFees(wallet, party.fees.net, tradesRevenueFund, trade.nonce);
+            stageFees(wallet, party.fees.total, tradesRevenueFund, trade.nonce);
 
             // If payment nonce is beyond max driip nonce then update max driip nonce
             if (trade.nonce > maxDriipNonce)
@@ -342,13 +342,13 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             else
                 settlement.target.done = true;
 
-            MonetaryTypes.Figure[] memory netFees;
+            MonetaryTypes.Figure[] memory totalFees;
             int256 currentBalance;
             if (NahmiiTypes.isPaymentSender(payment, wallet)) {
-                netFees = payment.sender.fees.net;
+                totalFees = payment.sender.fees.total;
                 currentBalance = payment.sender.balances.current;
             } else {
-                netFees = payment.recipient.fees.net;
+                totalFees = payment.recipient.fees.total;
                 currentBalance = payment.recipient.balances.current;
             }
 
@@ -368,7 +368,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
             }
 
             // Stage fees to revenue fund
-            stageFees(wallet, netFees, paymentsRevenueFund, payment.nonce);
+            stageFees(wallet, totalFees, paymentsRevenueFund, payment.nonce);
 
             // If payment nonce is beyond max driip nonce then update max driip nonce
             if (payment.nonce > maxDriipNonce)
@@ -469,7 +469,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
                 walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id] = fees[i].amount;
 
                 // Emit event
-                emit StageNetFeeEvent(wallet,
+                emit StageTotalFeeEvent(wallet,
                     fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
                     walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
                     fees[i].currency.ct, fees[i].currency.id);
