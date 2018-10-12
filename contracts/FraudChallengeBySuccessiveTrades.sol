@@ -76,7 +76,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challen
 
         require(
             !validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstTradeCurrencyRole, lastTrade, lastTradePartyRole, lastTradeCurrencyRole) ||
-        !validator.isGenuineSuccessiveTradesNetFees(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole)
+        !validator.isGenuineSuccessiveTradesTotalFees(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole)
         );
 
         configuration.setOperationalModeExit();

@@ -464,14 +464,14 @@ module.exports = (glob) => {
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
                     seizure.source.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    seizure.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
 
-            describe('if not genuine successive trades\' net fees', () => {
+            describe('if not genuine successive trades\' total fees', () => {
                 beforeEach(async () => {
-                    await ethersValidator.setGenuineSuccessiveTradesNetFees(false);
+                    await ethersValidator.setGenuineSuccessiveTradesTotalFees(false);
                 });
 
                 it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
@@ -492,7 +492,7 @@ module.exports = (glob) => {
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
                     seizure.source.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    seizure.destination.should.equal(utils.getAddress(glob.owner));
+                    seizure.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });

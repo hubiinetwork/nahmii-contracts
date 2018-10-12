@@ -101,7 +101,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         active.add(amount, address(0), 0);
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
-        //emit event
+        // Emit event
         emit DepositEvent(wallet, amount, address(0), 0);
     }
 
@@ -120,7 +120,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         active.add(amount, currencyCt, currencyId);
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
-        //emit event
+        // Emit event
         emit DepositEvent(wallet, amount, currencyCt, currencyId);
     }
 
@@ -166,7 +166,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         start_time = block.timestamp + ((wallet == deployer) ? withdrawalTimeout : 0);
         walletMap[wallet].subStaged[currencyCt][currencyId].list.push(SubStageItem(amount, start_time));
 
-        //emit event
+        // Emit event
         emit StageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
@@ -219,7 +219,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
             require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(to_send_amount), currencyCt, currencyId));
         }
 
-        //emit event
+        // Emit event
         emit WithdrawEvent(msg.sender, to_send_amount, currencyCt, currencyId);
     }
 

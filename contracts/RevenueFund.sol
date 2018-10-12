@@ -77,7 +77,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         inUsePeriodAccrual.addItem(address(0), 0);
         inUseAggregateAccrual.addItem(address(0), 0);
 
-        //emit event
+        // Emit event
         emit DepositEvent(wallet, amount, address(0), 0);
     }
 
@@ -102,7 +102,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         inUsePeriodAccrual.addItem(currencyCt, currencyId);
         inUseAggregateAccrual.addItem(currencyCt, currencyId);
 
-        //emit event
+        // Emit event
         emit DepositEvent(wallet, amount, currencyCt, currencyId);
     }
 
@@ -182,7 +182,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
             AccrualBeneficiary(beneficiaryAddress).closeAccrualPeriod();
         }
 
-        //emit event
+        // Emit event
         emit CloseAccrualPeriodEvent();
     }
 
@@ -198,7 +198,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         //register
         registeredServicesMap[service] = true;
 
-        //emit event
+        // Emit event
         emit RegisterServiceEvent(service);
     }
 
@@ -209,7 +209,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         //remove service
         registeredServicesMap[service] = false;
 
-        //emit event
+        // Emit event
         emit DeregisterServiceEvent(service);
     }
 

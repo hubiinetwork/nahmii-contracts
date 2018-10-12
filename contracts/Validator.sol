@@ -306,7 +306,7 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
-    function isGenuineSuccessiveTradesNetFees(
+    function isGenuineSuccessiveTradesTotalFees(
         NahmiiTypes.Trade firstTrade,
         NahmiiTypes.TradePartyRole firstTradePartyRole,
         NahmiiTypes.Trade lastTrade,
@@ -322,13 +322,13 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
         else if (NahmiiTypes.TradePartyRole.Seller == lastTradePartyRole)
             lastSingleFee = lastTrade.seller.fees.single;
 
-        MonetaryTypes.Figure[] memory firstNetFees = (NahmiiTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.net : firstTrade.seller.fees.net);
-        MonetaryTypes.Figure memory firstNetFee = MonetaryTypes.getFigureByCurrency(firstNetFees, lastSingleFee.currency);
+        MonetaryTypes.Figure[] memory firstTotalFees = (NahmiiTypes.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.total : firstTrade.seller.fees.total);
+        MonetaryTypes.Figure memory firstTotalFee = MonetaryTypes.getFigureByCurrency(firstTotalFees, lastSingleFee.currency);
 
-        MonetaryTypes.Figure[] memory lastNetFees = (NahmiiTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.net : lastTrade.seller.fees.net);
-        MonetaryTypes.Figure memory lastNetFee = MonetaryTypes.getFigureByCurrency(lastNetFees, lastSingleFee.currency);
+        MonetaryTypes.Figure[] memory lastTotalFees = (NahmiiTypes.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.total : lastTrade.seller.fees.total);
+        MonetaryTypes.Figure memory lastTotalFee = MonetaryTypes.getFigureByCurrency(lastTotalFees, lastSingleFee.currency);
 
-        return lastNetFee.amount == firstNetFee.amount.add(lastSingleFee.amount);
+        return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
     }
 
     function isGenuineSuccessiveTradeOrderResiduals(
@@ -347,7 +347,7 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
         return firstCurrentResiduals == lastPreviousResiduals;
     }
 
-    function isGenuineSuccessivePaymentsNetFees(
+    function isGenuineSuccessivePaymentsTotalFees(
         NahmiiTypes.Payment firstPayment,
         NahmiiTypes.Payment lastPayment
     )
@@ -355,12 +355,12 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        MonetaryTypes.Figure memory firstNetFee = MonetaryTypes.getFigureByCurrency(firstPayment.sender.fees.net, lastPayment.sender.fees.single.currency);
-        MonetaryTypes.Figure memory lastNetFee = MonetaryTypes.getFigureByCurrency(lastPayment.sender.fees.net, lastPayment.sender.fees.single.currency);
-        return lastNetFee.amount == firstNetFee.amount.add(lastPayment.sender.fees.single.amount);
+        MonetaryTypes.Figure memory firstTotalFee = MonetaryTypes.getFigureByCurrency(firstPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
+        MonetaryTypes.Figure memory lastTotalFee = MonetaryTypes.getFigureByCurrency(lastPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
+        return lastTotalFee.amount == firstTotalFee.amount.add(lastPayment.sender.fees.single.amount);
     }
 
-    function isGenuineSuccessiveTradePaymentNetFees(
+    function isGenuineSuccessiveTradePaymentTotalFees(
         NahmiiTypes.Trade trade,
         NahmiiTypes.TradePartyRole tradePartyRole,
         NahmiiTypes.Payment payment
@@ -369,15 +369,15 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        MonetaryTypes.Figure[] memory firstNetFees = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.net : trade.seller.fees.net);
-        MonetaryTypes.Figure memory firstNetFee = MonetaryTypes.getFigureByCurrency(firstNetFees, payment.sender.fees.single.currency);
+        MonetaryTypes.Figure[] memory firstTotalFees = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
+        MonetaryTypes.Figure memory firstTotalFee = MonetaryTypes.getFigureByCurrency(firstTotalFees, payment.sender.fees.single.currency);
 
-        MonetaryTypes.Figure memory lastNetFee = MonetaryTypes.getFigureByCurrency(payment.sender.fees.net, payment.sender.fees.single.currency);
+        MonetaryTypes.Figure memory lastTotalFee = MonetaryTypes.getFigureByCurrency(payment.sender.fees.total, payment.sender.fees.single.currency);
 
-        return lastNetFee.amount == firstNetFee.amount.add(payment.sender.fees.single.amount);
+        return lastTotalFee.amount == firstTotalFee.amount.add(payment.sender.fees.single.amount);
     }
 
-    function isGenuineSuccessivePaymentTradeNetFees(
+    function isGenuineSuccessivePaymentTradeTotalFees(
         NahmiiTypes.Payment payment,
         NahmiiTypes.PaymentPartyRole paymentPartyRole,
         NahmiiTypes.Trade trade,
@@ -393,13 +393,13 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
         else if (NahmiiTypes.TradePartyRole.Seller == tradePartyRole)
             lastSingleFee = trade.seller.fees.single;
 
-        MonetaryTypes.Figure[] memory firstNetFees = (NahmiiTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.net : payment.recipient.fees.net);
-        MonetaryTypes.Figure memory firstNetFee = MonetaryTypes.getFigureByCurrency(firstNetFees, lastSingleFee.currency);
+        MonetaryTypes.Figure[] memory firstTotalFees = (NahmiiTypes.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.total : payment.recipient.fees.total);
+        MonetaryTypes.Figure memory firstTotalFee = MonetaryTypes.getFigureByCurrency(firstTotalFees, lastSingleFee.currency);
 
-        MonetaryTypes.Figure[] memory lastNetFees = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.net : trade.seller.fees.net);
-        MonetaryTypes.Figure memory lastNetFee = MonetaryTypes.getFigureByCurrency(lastNetFees, lastSingleFee.currency);
+        MonetaryTypes.Figure[] memory lastTotalFees = (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
+        MonetaryTypes.Figure memory lastTotalFee = MonetaryTypes.getFigureByCurrency(lastTotalFees, lastSingleFee.currency);
 
-        return lastNetFee.amount == firstNetFee.amount.add(lastSingleFee.amount);
+        return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
     }
 
     //

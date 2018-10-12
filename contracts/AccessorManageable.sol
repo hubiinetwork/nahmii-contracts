@@ -52,7 +52,7 @@ contract AccessorManageable is Ownable {
             address oldAccessor = address(accessorManager);
             accessorManager = AccessorManager(newAccessor);
 
-            //emit event
+            // Emit event
             emit ChangeAccessorManagerEvent(oldAccessor, newAccessor);
         }
     }

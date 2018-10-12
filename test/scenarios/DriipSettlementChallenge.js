@@ -1,16 +1,19 @@
 const chai = require('chai');
-const sinonChai = require("sinon-chai");
-const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require('sinon-chai');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const MockedConfiguration = artifacts.require("MockedConfiguration");
-const MockedValidator = artifacts.require("MockedValidator");
-const MockedSecurityBond = artifacts.require("MockedSecurityBond");
-const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
-const MockedCancelOrdersChallenge = artifacts.require("MockedCancelOrdersChallenge");
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedValidator = artifacts.require('MockedValidator');
+const MockedSecurityBond = artifacts.require('MockedSecurityBond');
+const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
+const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
@@ -618,10 +621,10 @@ module.exports = (glob) => {
                 it('should return intended stage default value', async () => {
                     const address = Wallet.createRandom().address;
                     const result = await ethersDriipSettlementChallengeOwner.getChallengeIntendedStage(address);
-                    result.amount.eq(utils.bigNumberify(0)).should.be.true;
+
+                    result.amount._bn.should.eq.BN(0);
                     result.currency.ct.should.equal(mocks.address0);
-                    result.currency.id.eq(utils.bigNumberify(0)).should.be.true;
-                    result.set.should.be.false;
+                    result.currency.id._bn.should.eq.BN(0);
                 });
             });
 
@@ -642,10 +645,10 @@ module.exports = (glob) => {
 
                 it('should return intended stage of ongoing challenge', async () => {
                     const result = await ethersDriipSettlementChallengeOwner.getChallengeIntendedStage(trade.buyer.wallet);
-                    result.amount.eq(trade.buyer.balances.intended.current).should.be.true;
+
+                    result.amount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     result.currency.ct.should.equal(trade.currencies.intended.ct);
-                    result.currency.id.eq(trade.currencies.intended.id).should.be.true;
-                    result.set.should.be.true;
+                    result.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
                 });
             });
         });
@@ -655,10 +658,10 @@ module.exports = (glob) => {
                 it('should return conjugate stage default value', async () => {
                     const address = Wallet.createRandom().address;
                     const result = await ethersDriipSettlementChallengeOwner.getChallengeConjugateStage(address);
-                    result.amount.eq(utils.bigNumberify(0)).should.be.true;
+
+                    result.amount._bn.should.eq.BN(0);
                     result.currency.ct.should.equal(mocks.address0);
-                    result.currency.id.eq(utils.bigNumberify(0)).should.be.true;
-                    result.set.should.be.false;
+                    result.currency.id._bn.should.eq.BN(0);
                 });
             });
 
@@ -679,10 +682,10 @@ module.exports = (glob) => {
 
                 it('should return conjugate stage of ongoing challenge', async () => {
                     const result = await ethersDriipSettlementChallengeOwner.getChallengeConjugateStage(trade.buyer.wallet);
-                    result.amount.eq(trade.buyer.balances.conjugate.current).should.be.true;
+
+                    result.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     result.currency.ct.should.equal(trade.currencies.conjugate.ct);
-                    result.currency.id.eq(trade.currencies.conjugate.id).should.be.true;
-                    result.set.should.be.true;
+                    result.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                 });
             });
         });

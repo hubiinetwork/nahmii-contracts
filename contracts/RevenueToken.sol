@@ -61,7 +61,7 @@ contract RevenueToken is ERC20, Ownable {
         name = newName;
         symbol = newSymbol;
 
-        //emit event
+        // Emit event
         emit SetTokenInformation(newName, newSymbol);
     }
 

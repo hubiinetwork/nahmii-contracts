@@ -41,7 +41,7 @@ contract Configurable is Ownable {
         Configuration oldConfiguration = configuration;
         configuration = newConfiguration;
 
-        //emit event
+        // Emit event
         emit ChangeConfigurationEvent(oldConfiguration, newConfiguration);
     }
 

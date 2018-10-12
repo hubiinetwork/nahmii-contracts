@@ -102,7 +102,7 @@ exports.mockTrade = async (operator, params) => {
                         id: utils.bigNumberify(0)
                     }
                 },
-                net: [
+                total: [
                     {
                         amount: utils.parseUnits('0.2', 18),
                         currency: {
@@ -147,7 +147,7 @@ exports.mockTrade = async (operator, params) => {
                         id: utils.bigNumberify(0)
                     }
                 },
-                net: [
+                total: [
                     {
                         amount: utils.parseUnits('0.0004', 18),
                         currency: {
@@ -161,11 +161,11 @@ exports.mockTrade = async (operator, params) => {
         transfers: {
             intended: {
                 single: utils.parseUnits('100', 18),
-                net: utils.parseUnits('200', 18)
+                total: utils.parseUnits('200', 18)
             },
             conjugate: {
                 single: utils.parseUnits('0.1', 18),
-                net: utils.parseUnits('0.2', 18)
+                total: utils.parseUnits('0.2', 18)
             }
         },
         blockNumber: utils.bigNumberify(0)
@@ -202,7 +202,7 @@ exports.mockPayment = async (operator, params) => {
                         id: utils.bigNumberify(0)
                     }
                 },
-                net: [
+                total: [
                     {
                         amount: utils.parseUnits('0.2', 18),
                         currency: {
@@ -221,7 +221,7 @@ exports.mockPayment = async (operator, params) => {
                 previous: utils.parseUnits('19600', 18)
             },
             fees: {
-                net: [
+                total: [
                     // {
                     //     amount: utils.parseUnits('0.0', 18),
                     //     currency: {
@@ -234,7 +234,7 @@ exports.mockPayment = async (operator, params) => {
         },
         transfers: {
             single: utils.parseUnits('100', 18),
-            net: utils.parseUnits('200', 18)
+            total: utils.parseUnits('200', 18)
         },
         blockNumber: utils.bigNumberify(0)
     }, params);
@@ -388,8 +388,8 @@ exports.hashTrade = (trade) => {
         trade.buyer.fees.single.amount,
         trade.buyer.fees.single.currency.ct,
         trade.buyer.fees.single.currency.id
-        // TODO Consider adding dynamic size 'trade.buyer.fees.net' to hash
-        // trade.buyer.fees.net
+        // TODO Consider adding dynamic size 'trade.buyer.fees.total' to hash
+        // trade.buyer.fees.total
     );
     const sellerHash = cryptography.hash(
         trade.seller.nonce,
@@ -409,14 +409,14 @@ exports.hashTrade = (trade) => {
         trade.seller.fees.single.amount,
         trade.seller.fees.single.currency.ct,
         trade.seller.fees.single.currency.id
-        // TODO Consider adding dynamic size 'trade.seller.fees.net' to hash
-        // trade.seller.fees.net
+        // TODO Consider adding dynamic size 'trade.seller.fees.total' to hash
+        // trade.seller.fees.total
     );
     const transfersHash = cryptography.hash(
         trade.transfers.intended.single,
-        trade.transfers.intended.net,
+        trade.transfers.intended.total,
         trade.transfers.conjugate.single,
-        trade.transfers.conjugate.net
+        trade.transfers.conjugate.total
     );
     return cryptography.hash(globalHash, buyerHash, sellerHash, transfersHash);
 };
@@ -453,19 +453,19 @@ exports.hashPaymentAsOperator = (payment) => {
         payment.sender.fees.single.amount,
         payment.sender.fees.single.currency.ct,
         payment.sender.fees.single.currency.id
-        // TODO Consider adding dynamic size 'payment.sender.fees.net' to operator hash
-        // payment.sender.fees.net
+        // TODO Consider adding dynamic size 'payment.sender.fees.total' to operator hash
+        // payment.sender.fees.total
     );
     const recipientHash = cryptography.hash(
         payment.recipient.nonce,
         payment.recipient.balances.current,
         payment.recipient.balances.previous
-        // TODO Consider adding dynamic size 'payment.recipient.fees.net' to operator hash
-        // payment.recipient.fees.net
+        // TODO Consider adding dynamic size 'payment.recipient.fees.total' to operator hash
+        // payment.recipient.fees.total
     );
     const transfersHash = cryptography.hash(
         payment.transfers.single,
-        payment.transfers.net
+        payment.transfers.total
     );
 
     return cryptography.hash(walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash);

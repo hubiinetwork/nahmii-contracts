@@ -473,7 +473,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -499,7 +499,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -531,7 +531,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -563,7 +563,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -595,7 +595,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -627,7 +627,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -659,7 +659,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -687,7 +687,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -715,7 +715,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -743,7 +743,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -770,7 +770,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -802,7 +802,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -834,7 +834,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -866,7 +866,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -898,7 +898,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -930,7 +930,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -958,7 +958,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -986,7 +986,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1014,7 +1014,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1098,7 +1098,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1124,7 +1124,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1156,7 +1156,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1188,7 +1188,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1220,7 +1220,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1252,7 +1252,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1284,7 +1284,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1312,7 +1312,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1340,7 +1340,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1368,7 +1368,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1395,7 +1395,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1427,7 +1427,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1459,7 +1459,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1491,7 +1491,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1523,7 +1523,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1555,7 +1555,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1583,7 +1583,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1611,7 +1611,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1639,7 +1639,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1754,7 +1754,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1784,7 +1784,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1810,7 +1810,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1836,7 +1836,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1862,7 +1862,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1892,7 +1892,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1952,7 +1952,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -1978,7 +1978,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -1986,11 +1986,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2031,7 +2031,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2057,7 +2057,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2065,11 +2065,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2110,7 +2110,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2136,7 +2136,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2144,11 +2144,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2172,12 +2172,12 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
         //
-        //     describe('if trade party\'s net fee in last trade is not incremented by single fee in last trade relative to net fee in first trade', () => {
+        //     describe('if trade party\'s total fee in last trade is not incremented by single fee in last trade relative to total fee in first trade', () => {
         //         beforeEach(async () => {
         //             lastTrade = await mocks.mockTrade(glob.owner, {
         //                 nonce: utils.bigNumberify(20),
@@ -2202,7 +2202,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2228,7 +2228,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.4', 18), // <---- modified ----
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2236,11 +2236,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2264,7 +2264,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2300,7 +2300,7 @@ module.exports = function (glob) {
         //                     current: utils.parseUnits('19649.9', 18),
         //                     previous: utils.parseUnits('19700', 18)
         //                 },
-        //                 netFee: utils.parseUnits('0.1', 18)
+        //                 totalFee: utils.parseUnits('0.1', 18)
         //             },
         //             recipient: {
         //                 wallet: glob.user_a,
@@ -2309,7 +2309,7 @@ module.exports = function (glob) {
         //                     current: utils.parseUnits('9449.8', 18),
         //                     previous: utils.parseUnits('9399.8', 18)
         //                 },
-        //                 netFee: utils.parseUnits('0.2', 18)
+        //                 totalFee: utils.parseUnits('0.2', 18)
         //             },
         //             singleFee: utils.parseUnits('0.1', 18),
         //             blockNumber: utils.bigNumberify(blockNumber10)
@@ -2334,7 +2334,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19649.9', 18),
         //                         previous: utils.parseUnits('19700', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2343,11 +2343,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9449.8', 18),
         //                         previous: utils.parseUnits('9399.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2371,7 +2371,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19649.9', 18),
         //                         previous: utils.parseUnits('19700', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2380,11 +2380,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9449.8', 18),
         //                         previous: utils.parseUnits('9399.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2408,7 +2408,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19649.9', 18),
         //                         previous: utils.parseUnits('19700', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2417,11 +2417,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9449.8', 18),
         //                         previous: utils.parseUnits('1000', 18) // <---- modified ----
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2441,12 +2441,12 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastPayment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
         //
-        //     describe('if payment party\'s net fee in last payment is not incremented by single fee in last payment relative to net fee in first payment', () => {
+        //     describe('if payment party\'s total fee in last payment is not incremented by single fee in last payment relative to total fee in first payment', () => {
         //         beforeEach(async () => {
         //             lastPayment = await mocks.mockPayment(glob.owner, {
         //                 nonce: utils.bigNumberify(20),
@@ -2458,7 +2458,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19649.9', 18),
         //                         previous: utils.parseUnits('19700', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2467,11 +2467,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9449.8', 18),
         //                         previous: utils.parseUnits('9399.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.4', 18) // <---- modified ----
+        //                     totalFee: utils.parseUnits('0.4', 18) // <---- modified ----
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2491,7 +2491,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastPayment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2538,7 +2538,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19449.9', 18),
         //                         previous: utils.parseUnits('19500', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2547,11 +2547,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9649.8', 18),
         //                         previous: utils.parseUnits('9599.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2575,7 +2575,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19449.9', 18),
         //                         previous: utils.parseUnits('19500', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2584,11 +2584,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9649.8', 18),
         //                         previous: utils.parseUnits('9599.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2612,7 +2612,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19449.9', 18),
         //                         previous: utils.parseUnits('19500', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2621,11 +2621,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9649.8', 18),
         //                         previous: utils.parseUnits('1000', 18) // <---- modified ----
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2645,12 +2645,12 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
         //
-        //     describe('if payment party\'s net fee in payment is not incremented by single fee in payment relative to net fee in trade', () => {
+        //     describe('if payment party\'s total fee in payment is not incremented by single fee in payment relative to total fee in trade', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {
         //                 nonce: utils.bigNumberify(20),
@@ -2662,7 +2662,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19449.9', 18),
         //                         previous: utils.parseUnits('19500', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2671,11 +2671,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9649.8', 18),
         //                         previous: utils.parseUnits('9599.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.4', 18) // <---- modified ----
+        //                     totalFee: utils.parseUnits('0.4', 18) // <---- modified ----
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2695,7 +2695,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2755,7 +2755,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2781,7 +2781,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2789,11 +2789,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2834,7 +2834,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2860,7 +2860,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2868,11 +2868,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2913,7 +2913,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2939,7 +2939,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2947,11 +2947,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2975,12 +2975,12 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
         //
-        //     describe('if trade party\'s net fee in trade is not incremented by single fee in trade relative to net fee in payment', () => {
+        //     describe('if trade party\'s total fee in trade is not incremented by single fee in trade relative to total fee in payment', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 nonce: utils.bigNumberify(20),
@@ -3005,7 +3005,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -3031,7 +3031,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.4', 18), // <---- modified ----
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -3039,11 +3039,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3067,7 +3067,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -3130,7 +3130,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3159,7 +3159,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3167,11 +3167,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3215,7 +3215,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3244,7 +3244,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3252,11 +3252,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3300,7 +3300,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3329,7 +3329,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3337,11 +3337,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3385,7 +3385,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3414,7 +3414,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3422,11 +3422,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3450,7 +3450,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -3508,7 +3508,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3534,7 +3534,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3542,11 +3542,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3590,7 +3590,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3616,7 +3616,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3624,11 +3624,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3679,7 +3679,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3708,7 +3708,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3716,11 +3716,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {

@@ -10,6 +10,7 @@ pragma solidity ^0.4.24;
 
 //import {ClientFund} from "../ClientFund.sol";
 import {MonetaryTypes} from "../MonetaryTypes.sol";
+import {Beneficiary} from "../Beneficiary.sol";
 
 /**
 @title MockedClientFund
@@ -22,11 +23,12 @@ contract MockedClientFund /*is ClientFund*/ {
     // -----------------------------------------------------------------------------------------------------------------
     struct Seizure {
         address source;
-        address destination;
+        address target;
     }
 
     struct WalletUpdate {
-        address wallet;
+        address sourceWallet;
+        address targetWallet;
         MonetaryTypes.Figure figure;
     }
 
@@ -34,7 +36,7 @@ contract MockedClientFund /*is ClientFund*/ {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     Seizure[] public seizures;
-    WalletUpdate[] public updateSettledBalances;
+    WalletUpdate[] public settledBalanceUpdates;
     WalletUpdate[] public stages;
 
     //
@@ -55,23 +57,24 @@ contract MockedClientFund /*is ClientFund*/ {
     // -----------------------------------------------------------------------------------------------------------------
     function reset() public {
         seizures.length = 0;
-        updateSettledBalances.length = 0;
+        settledBalanceUpdates.length = 0;
         stages.length = 0;
     }
 
-    function seizeAllBalances(address sourceWallet, address destinationWallet)
+    function seizeAllBalances(address sourceWallet, address targetWallet)
     public
     {
-        seizures.push(Seizure(sourceWallet, destinationWallet));
-        emit SeizeAllBalancesEvent(sourceWallet, destinationWallet);
+        seizures.push(Seizure(sourceWallet, targetWallet));
+        emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
     }
 
     function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
     {
-        updateSettledBalances.push(
+        settledBalanceUpdates.push(
             WalletUpdate(
                 wallet,
+                address(0),
                 MonetaryTypes.Figure(
                     amount,
                     MonetaryTypes.Currency(currencyCt, currencyId)
@@ -81,12 +84,15 @@ contract MockedClientFund /*is ClientFund*/ {
         emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function getUpdateSettledBalance(uint256 index) public view returns (address, int256, address, uint256) {
+    function _settledBalanceUpdates(uint256 index)
+    public
+    view
+    returns (address, int256, address, uint256) {
         return (
-        updateSettledBalances[index].wallet,
-        updateSettledBalances[index].figure.amount,
-        updateSettledBalances[index].figure.currency.ct,
-        updateSettledBalances[index].figure.currency.id
+        settledBalanceUpdates[index].sourceWallet,
+        settledBalanceUpdates[index].figure.amount,
+        settledBalanceUpdates[index].figure.currency.ct,
+        settledBalanceUpdates[index].figure.currency.id
         );
     }
 
@@ -96,6 +102,7 @@ contract MockedClientFund /*is ClientFund*/ {
         stages.push(
             WalletUpdate(
                 wallet,
+                address(0),
                 MonetaryTypes.Figure(
                     amount,
                     MonetaryTypes.Currency(currencyCt, currencyId)
@@ -103,5 +110,38 @@ contract MockedClientFund /*is ClientFund*/ {
             )
         );
         emit StageEvent(wallet, amount, currencyCt, currencyId);
+    }
+
+    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId)
+    public
+    {
+        stages.push(
+            WalletUpdate(
+                sourceWallet,
+                address(beneficiary),
+                MonetaryTypes.Figure(
+                    amount,
+                    MonetaryTypes.Currency(currencyCt, currencyId)
+                )
+            )
+        );
+    }
+
+    function _stagesCount() public view returns (uint256) {
+        return stages.length;
+    }
+
+    function _stages(uint256 index)
+    public
+    view
+    returns (address, address, int256, address, uint256) {
+        return (
+        stages[index].sourceWallet,
+        stages[index].targetWallet,
+        stages[index].figure.amount,
+        stages[index].figure.currency.ct,
+        stages[index].figure.currency.id
+        );
     }
 }
