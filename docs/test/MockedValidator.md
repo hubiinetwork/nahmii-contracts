@@ -56,7 +56,7 @@ Params:
 
 
 ## Methods
-### setGenuineSuccessiveTradePaymentBalances(bool)
+### setSuccessivePaymentsPartyNonces(bool)
 
 
 **Execution cost**: less than 21340 gas
@@ -88,28 +88,9 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineSuccessivePaymentTradeTotalFees(tuple,uint8,tuple,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-2. **paymentPartyRole** *of type `uint8`*
-3. **trade** *of type `tuple`*
-4. **tradePartyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineTradeSeal(tuple)
+### changeOperator(address)
+>
+>Change the operator of this contract
 
 
 **Execution cost**: No bound available
@@ -117,33 +98,11 @@ Returns:
 
 Params:
 
-1. **trade** *of type `tuple`*
+1. **newOperator** *of type `address`*
 
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineSuccessiveTradesTotalFees(tuple,uint8,tuple,uint8)
+    > The address of the new operator
 
 
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstTrade** *of type `tuple`*
-2. **firstTradePartyRole** *of type `uint8`*
-3. **lastTrade** *of type `tuple`*
-4. **lastTradePartyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
 
 --- 
 ### changeAccessorManager(address)
@@ -161,6 +120,22 @@ Params:
     > The address of the new accessor
 
 
+
+--- 
+### isGenuineTradeSeal(tuple)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
 
 --- 
 ### isGenuinePaymentSeals(tuple)
@@ -197,7 +172,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuinePaymentWalletHash(tuple)
+### isGenuineSuccessiveTradesTotalFees(tuple,uint8,tuple,uint8)
 
 
 **Execution cost**: No bound available
@@ -207,7 +182,29 @@ Returns:
 
 Params:
 
-1. **payment** *of type `tuple`*
+1. **firstTrade** *of type `tuple`*
+2. **firstTradePartyRole** *of type `uint8`*
+3. **lastTrade** *of type `tuple`*
+4. **lastTradePartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessivePaymentsTotalFees(tuple,tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **firstPayment** *of type `tuple`*
+2. **lastPayment** *of type `tuple`*
 
 Returns:
 
@@ -230,6 +227,24 @@ Params:
 3. **trade** *of type `tuple`*
 4. **tradePartyRole** *of type `uint8`*
 5. **tradeCurrencyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentWalletHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
 
 Returns:
 
@@ -275,7 +290,7 @@ Returns:
 ### deployer()
 
 
-**Execution cost**: less than 1823 gas
+**Execution cost**: less than 1867 gas
 
 **Attributes**: constant
 
@@ -302,42 +317,6 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 944 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### isGenuineSuccessivePaymentsTotalFees(tuple,tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstPayment** *of type `tuple`*
-2. **lastPayment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### isGenuineSuccessiveTradesBalances(tuple,uint8,uint8,tuple,uint8,uint8)
 
 
@@ -361,25 +340,24 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeBuyerFee(tuple)
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 988 gas
 
 **Attributes**: constant
 
 
-Params:
-
-1. **trade** *of type `tuple`*
 
 Returns:
 
 
-1. **output_0** *of type `bool`*
+1. **output_0** *of type `address`*
 
 --- 
-### isGenuineTradeSeller(tuple)
+### isGenuineTradeBuyerFee(tuple)
 
 
 **Execution cost**: No bound available
@@ -435,7 +413,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuinePaymentOperatorSeal(tuple)
+### isGenuineTradeSeller(tuple)
 
 
 **Execution cost**: No bound available
@@ -445,7 +423,7 @@ Returns:
 
 Params:
 
-1. **payment** *of type `tuple`*
+1. **trade** *of type `tuple`*
 
 Returns:
 
@@ -489,6 +467,24 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### isGenuinePaymentOperatorSeal(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### isGenuineSuccessivePaymentsBalances(tuple,uint8,tuple,uint8)
 
 
@@ -510,7 +506,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineOrderWalletHash(tuple)
+### isGenuineTradeBuyer(tuple)
 
 
 **Execution cost**: No bound available
@@ -520,7 +516,46 @@ Returns:
 
 Params:
 
-1. **order** *of type `tuple`*
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentFee(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessivePaymentTradeTotalFees(tuple,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+2. **paymentPartyRole** *of type `uint8`*
+3. **trade** *of type `tuple`*
+4. **tradePartyRole** *of type `uint8`*
 
 Returns:
 
@@ -548,7 +583,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeBuyer(tuple)
+### isGenuineOrderWalletHash(tuple)
 
 
 **Execution cost**: No bound available
@@ -558,7 +593,25 @@ Returns:
 
 Params:
 
-1. **trade** *of type `tuple`*
+1. **order** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineOrderOperatorSeal(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **order** *of type `tuple`*
 
 Returns:
 
@@ -642,63 +695,10 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineOrderOperatorSeal(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### isGenuinePaymentFee(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### setGenuineSuccessiveTradeOrderResiduals(bool)
 
 
-**Execution cost**: less than 20834 gas
+**Execution cost**: less than 20878 gas
 
 
 Params:
@@ -707,10 +707,10 @@ Params:
 
 
 --- 
-### setGenuineOrderWalletHash(bool)
+### setGenuineOrderWalletSeal(bool)
 
 
-**Execution cost**: less than 21296 gas
+**Execution cost**: less than 21208 gas
 
 
 Params:
@@ -722,19 +722,7 @@ Params:
 ### setGenuineOrderSeals(bool)
 
 
-**Execution cost**: less than 20636 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuineOrderOperatorSeal(bool)
-
-
-**Execution cost**: less than 20768 gas
+**Execution cost**: less than 20658 gas
 
 
 Params:
@@ -764,6 +752,30 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### setGenuineOrderWalletHash(bool)
+
+
+**Execution cost**: less than 21384 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuineOrderOperatorSeal(bool)
+
+
+**Execution cost**: less than 20812 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
 ### reset()
 
 
@@ -771,103 +783,6 @@ Returns:
 
 
 
-
---- 
-### isSignedByRegisteredSigner(bytes32,uint8,bytes32,bytes32)
->
->Gauge whether a signature of a hash has been signed by a registered signer
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **hash** *of type `bytes32`*
-
-    > The hash message that was signed
-
-2. **v** *of type `uint8`*
-
-    > The v property of the ECDSA signature
-
-3. **r** *of type `bytes32`*
-
-    > The r property of the ECDSA signature
-
-4. **s** *of type `bytes32`*
-
-    > The s property of the ECDSA signature
-
-
-Returns:
-
-> true if the recovered signer is one of the registered signers, else false
-
-1. **output_0** *of type `bool`*
-
---- 
-### isSuccessiveTradesPartyNonces(tuple,uint8,tuple,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstTrade** *of type `tuple`*
-2. **firstTradePartyRole** *of type `uint8`*
-3. **lastTrade** *of type `tuple`*
-4. **lastTradePartyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isSignedBy(bytes32,uint8,bytes32,bytes32,address)
->
->Gauge whether a signature of a hash has been signed by the claimed signer
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **hash** *of type `bytes32`*
-
-    > The hash message that was signed
-
-2. **v** *of type `uint8`*
-
-    > The v property of the ECDSA signature
-
-3. **r** *of type `bytes32`*
-
-    > The r property of the ECDSA signature
-
-4. **s** *of type `bytes32`*
-
-    > The s property of the ECDSA signature
-
-5. **signer** *of type `address`*
-
-    > The claimed signer
-
-
-Returns:
-
-> true if the recovered signer equals the input signer, else false
-
-1. **output_0** *of type `bool`*
 
 --- 
 ### isSuccessivePaymentsPartyNonces(tuple,uint8,tuple,uint8)
@@ -912,10 +827,107 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### isSignedByRegisteredSigner(bytes32,uint8,bytes32,bytes32)
+>
+>Gauge whether a signature of a hash has been signed by a registered signer
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **hash** *of type `bytes32`*
+
+    > The hash message that was signed
+
+2. **v** *of type `uint8`*
+
+    > The v property of the ECDSA signature
+
+3. **r** *of type `bytes32`*
+
+    > The r property of the ECDSA signature
+
+4. **s** *of type `bytes32`*
+
+    > The s property of the ECDSA signature
+
+
+Returns:
+
+> true if the recovered signer is one of the registered signers, else false
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isSignedBy(bytes32,uint8,bytes32,bytes32,address)
+>
+>Gauge whether a signature of a hash has been signed by the claimed signer
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **hash** *of type `bytes32`*
+
+    > The hash message that was signed
+
+2. **v** *of type `uint8`*
+
+    > The v property of the ECDSA signature
+
+3. **r** *of type `bytes32`*
+
+    > The r property of the ECDSA signature
+
+4. **s** *of type `bytes32`*
+
+    > The s property of the ECDSA signature
+
+5. **signer** *of type `address`*
+
+    > The claimed signer
+
+
+Returns:
+
+> true if the recovered signer equals the input signer, else false
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isSuccessiveTradesPartyNonces(tuple,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **firstTrade** *of type `tuple`*
+2. **firstTradePartyRole** *of type `uint8`*
+3. **lastTrade** *of type `tuple`*
+4. **lastTradePartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### operator()
 
 
-**Execution cost**: less than 1053 gas
+**Execution cost**: less than 1097 gas
 
 **Attributes**: constant
 
@@ -927,10 +939,10 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### setGenuinePaymentOperatorSeal(bool)
+### setSuccessiveTradePaymentPartyNonces(bool)
 
 
-**Execution cost**: less than 21384 gas
+**Execution cost**: less than 21846 gas
 
 
 Params:
@@ -939,7 +951,115 @@ Params:
 
 
 --- 
-### setGenuineSuccessivePaymentTradeTotalFees(bool)
+### setGenuinePaymentWalletHash(bool)
+
+
+**Execution cost**: less than 21032 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuinePaymentSender(bool)
+
+
+**Execution cost**: less than 22088 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuinePaymentOperatorSeal(bool)
+
+
+**Execution cost**: less than 21494 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuinePaymentRecipient(bool)
+
+
+**Execution cost**: less than 20790 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuinePaymentSeals(bool)
+
+
+**Execution cost**: less than 43745 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuinePaymentFee(bool)
+
+
+**Execution cost**: less than 20820 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuineSuccessivePaymentsBalances(bool)
+
+
+**Execution cost**: less than 21934 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuinePaymentWalletSeal(bool)
+
+
+**Execution cost**: less than 21736 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuineTradeBuyerFee(bool)
+
+
+**Execution cost**: less than 21956 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuineSuccessivePaymentsTotalFees(bool)
 
 
 **Execution cost**: less than 22110 gas
@@ -954,7 +1074,7 @@ Params:
 ### setGenuineSuccessivePaymentTradeBalances(bool)
 
 
-**Execution cost**: less than 20592 gas
+**Execution cost**: less than 20614 gas
 
 
 Params:
@@ -963,82 +1083,10 @@ Params:
 
 
 --- 
-### setGenuinePaymentSender(bool)
+### setGenuineSuccessivePaymentTradeTotalFees(bool)
 
 
-**Execution cost**: less than 22044 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuinePaymentWalletSeal(bool)
-
-
-**Execution cost**: less than 21648 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuineOrderWalletSeal(bool)
-
-
-**Execution cost**: less than 21120 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuinePaymentRecipient(bool)
-
-
-**Execution cost**: less than 20746 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuinePaymentWalletHash(bool)
-
-
-**Execution cost**: less than 20988 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuinePaymentSeals(bool)
-
-
-**Execution cost**: less than 43701 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuinePaymentFee(bool)
-
-
-**Execution cost**: less than 20776 gas
+**Execution cost**: less than 21472 gas
 
 
 Params:
@@ -1050,79 +1098,7 @@ Params:
 ### setGenuineSuccessiveTradesBalances(bool)
 
 
-**Execution cost**: less than 21956 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuineSuccessiveTradePaymentTotalFees(bool)
-
-
-**Execution cost**: less than 21142 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuineSuccessivePaymentsTotalFees(bool)
-
-
-**Execution cost**: less than 21692 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuineSuccessivePaymentsBalances(bool)
-
-
-**Execution cost**: less than 21890 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuineSuccessiveTradesTotalFees(bool)
-
-
-**Execution cost**: less than 20680 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuineTradeSeal(bool)
-
-
-**Execution cost**: less than 42799 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setGenuineTradeBuyerFee(bool)
-
-
-**Execution cost**: less than 21912 gas
+**Execution cost**: less than 22000 gas
 
 
 Params:
@@ -1134,7 +1110,55 @@ Params:
 ### setGenuineTradeBuyer(bool)
 
 
-**Execution cost**: less than 21252 gas
+**Execution cost**: less than 21318 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuineSuccessiveTradePaymentTotalFees(bool)
+
+
+**Execution cost**: less than 20570 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuineSuccessiveTradesTotalFees(bool)
+
+
+**Execution cost**: less than 21164 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuineSuccessiveTradePaymentBalances(bool)
+
+
+**Execution cost**: less than 21428 gas
+
+
+Params:
+
+1. **genuine** *of type `bool`*
+
+
+--- 
+### setGenuineTradeSeal(bool)
+
+
+**Execution cost**: less than 42843 gas
 
 
 Params:
@@ -1146,7 +1170,7 @@ Params:
 ### setGenuineTradeSeller(bool)
 
 
-**Execution cost**: less than 21032 gas
+**Execution cost**: less than 21076 gas
 
 
 Params:
@@ -1158,7 +1182,7 @@ Params:
 ### setGenuineTradeSellerFee(bool)
 
 
-**Execution cost**: less than 20812 gas
+**Execution cost**: less than 20856 gas
 
 
 Params:
@@ -1170,7 +1194,7 @@ Params:
 ### setGenuineWalletSignature(bool)
 
 
-**Execution cost**: less than 21076 gas
+**Execution cost**: less than 21120 gas
 
 
 Params:
@@ -1182,31 +1206,7 @@ Params:
 ### setSuccessivePaymentTradePartyNonces(bool)
 
 
-**Execution cost**: less than 20658 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setSuccessivePaymentsPartyNonces(bool)
-
-
-**Execution cost**: less than 21274 gas
-
-
-Params:
-
-1. **genuine** *of type `bool`*
-
-
---- 
-### setSuccessiveTradePaymentPartyNonces(bool)
-
-
-**Execution cost**: less than 21802 gas
+**Execution cost**: less than 20680 gas
 
 
 Params:
@@ -1218,7 +1218,7 @@ Params:
 ### setSuccessiveTradesPartyNonces(bool)
 
 
-**Execution cost**: less than 20688 gas
+**Execution cost**: less than 20732 gas
 
 
 Params:
