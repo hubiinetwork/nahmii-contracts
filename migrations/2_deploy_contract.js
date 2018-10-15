@@ -37,7 +37,7 @@ const RevenueFund = artifacts.require('RevenueFund');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
-const NahmiiChallenge = artifacts.require('NahmiiChallenge');
+const DriipChallenge = artifacts.require('DriipChallenge');
 const NahmiiTypes = artifacts.require('NahmiiTypes');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
@@ -83,7 +83,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'MonetaryTypes', '', MonetaryTypes);
 
             await deployer.link(MonetaryTypes, [
-                ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementDispute, Exchange, NahmiiTypes, NahmiiChallenge, TokenHolderRevenueFund, Validator
+                ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementDispute, Exchange, NahmiiTypes, DriipChallenge, TokenHolderRevenueFund, Validator
             ]);
 
             //deploy base libraries
@@ -108,7 +108,7 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
                 FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
-                FraudChallengeByTradeSucceedingPayment, Hasher, NahmiiChallenge, Validator
+                FraudChallengeByTradeSucceedingPayment, Hasher, DriipChallenge, Validator
             ]);
             await deployer.link(BalanceLib, [
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund

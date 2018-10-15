@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Validatable} from "./Validatable.sol";
-import {NahmiiChallenge} from "./NahmiiChallenge.sol";
+import {DriipChallenge} from "./DriipChallenge.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
@@ -22,7 +22,7 @@ import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 @title DriipSettlementChallenge
 @notice Where driip settlements are challenged
 */
-contract DriipSettlementChallenge is Ownable, NahmiiChallenge, Validatable {
+contract DriipSettlementChallenge is Ownable, DriipChallenge, Validatable {
     using SafeMathIntLib for int256;
 
     //
