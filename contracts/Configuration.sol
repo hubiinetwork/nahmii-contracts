@@ -78,7 +78,7 @@ contract Configuration is Ownable, Servable {
     mapping(address => mapping(uint256 => uint256[])) public currencyPaymentMinimumFeeBlockNumbersMap;
 
     uint256 public cancelOrderChallengeTimeout;
-    uint256 public driipSettlementChallengeTimeout;
+    uint256 public settlementChallengeTimeout;
 
     MonetaryTypes.Figure public unchallengeOrderCandidateByTradeStake;
     MonetaryTypes.Figure public falseWalletSignatureStake;
@@ -111,7 +111,7 @@ contract Configuration is Ownable, Servable {
     constructor(address owner) Ownable(owner) public {
         confirmations = 12;
         cancelOrderChallengeTimeout = 3 hours;
-        driipSettlementChallengeTimeout = 5 hours;
+        settlementChallengeTimeout = 5 hours;
     }
 
     //
@@ -423,21 +423,11 @@ contract Configuration is Ownable, Servable {
         emit SetCancelOrderChallengeTimeout(timeout);
     }
 
-    /// @notice Get timeout of cancel order challenge
-    function getCancelOrderChallengeTimeout() public view returns (uint256) {
-        return cancelOrderChallengeTimeout;
-    }
-
-    /// @notice Set timeout of driip challenge
+    /// @notice Set timeout of settlement challenges
     /// @param timeout Timeout duration
     function setDriipSettlementChallengeTimeout(uint256 timeout) public onlyDeployer {
-        driipSettlementChallengeTimeout = timeout;
+        settlementChallengeTimeout = timeout;
         emit SetDriipSettlementChallengeTimeout(timeout);
-    }
-
-    /// @notice Get timeout of driip challenge
-    function getDriipSettlementChallengeTimeout() public view returns (uint256) {
-        return driipSettlementChallengeTimeout;
     }
 
     /// @notice Set currency and amount that will be gained when someone successfully unchallenges

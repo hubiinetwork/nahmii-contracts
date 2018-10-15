@@ -624,9 +624,9 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getCancelOrderChallengeTimeout()', () => {
+        describe('cancelOrderChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
+                const value = await web3Configuration.cancelOrderChallengeTimeout.call();
                 value.toNumber().should.equal(60 * 60 * 3);
             });
         });
@@ -636,7 +636,7 @@ module.exports = (glob) => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await web3Configuration.getCancelOrderChallengeTimeout.call();
+                    initialValue = await web3Configuration.cancelOrderChallengeTimeout.call();
                 });
 
                 after(async () => {
@@ -647,7 +647,7 @@ module.exports = (glob) => {
                     const result = await web3Configuration.setCancelOrderChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCancelOrderChallengeTimeout');
-                    const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
+                    const value = await web3Configuration.cancelOrderChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });
@@ -659,9 +659,9 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getDriipSettlementChallengeTimeout()', () => {
+        describe('settlementChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.driipSettlementChallengeTimeout.call();
+                const value = await web3Configuration.settlementChallengeTimeout.call();
                 value.toNumber().should.equal(60 * 60 * 5);
             });
         });
@@ -671,7 +671,7 @@ module.exports = (glob) => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await web3Configuration.driipSettlementChallengeTimeout.call();
+                    initialValue = await web3Configuration.settlementChallengeTimeout.call();
                 });
 
                 after(async () => {
@@ -682,7 +682,7 @@ module.exports = (glob) => {
                     const result = await web3Configuration.setDriipSettlementChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetDriipSettlementChallengeTimeout');
-                    const value = await web3Configuration.driipSettlementChallengeTimeout.call();
+                    const value = await web3Configuration.settlementChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });

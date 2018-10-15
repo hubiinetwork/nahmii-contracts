@@ -103,7 +103,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
             walletOrderExchangeHashIndexMap[msg.sender][orders[j].seals.exchange.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
         }
 
-        walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.getCancelOrderChallengeTimeout());
+        walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
 
         emit CancelOrdersEvent(orders, msg.sender);
     }

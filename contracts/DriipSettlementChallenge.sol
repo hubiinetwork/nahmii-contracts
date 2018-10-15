@@ -137,7 +137,7 @@ contract DriipSettlementChallenge is Ownable, DriipChallenge, Validatable {
 
         DriipSettlementTypes.Challenge memory challenge;
         challenge.nonce = trade.nonce;
-        challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
+        challenge.timeout = block.timestamp + configuration.settlementChallengeTimeout();
         challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
         //        challenge.driipExchangeHash = trade.seal.hash;
         challenge.driipType = NahmiiTypes.DriipType.Trade;
@@ -183,7 +183,7 @@ contract DriipSettlementChallenge is Ownable, DriipChallenge, Validatable {
 
         DriipSettlementTypes.Challenge memory challenge;
         challenge.nonce = payment.nonce;
-        challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
+        challenge.timeout = block.timestamp + configuration.settlementChallengeTimeout();
         challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
         //        challenge.driipExchangeHash = payment.seals.exchange.hash;
         challenge.driipType = NahmiiTypes.DriipType.Payment;

@@ -130,7 +130,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.pushChallengeCandidateOrder(order);
 
         // Update challenge
-        challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
+        challenge.timeout = block.timestamp + configuration.settlementChallengeTimeout();
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Order;
         challenge.candidateIndex = driipSettlementChallenge.challengeCandidateOrdersCount() - 1;
