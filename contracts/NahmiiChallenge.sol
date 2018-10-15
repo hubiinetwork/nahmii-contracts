@@ -13,6 +13,13 @@ import {Challenge} from "./Challenge.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 
+/**
+@title NahmiiChallenge
+@notice A challenge with internal functions for pushing trade and payment
+from memory to storage. Pushing driips without these functions is not straight
+forwards as they contain dynamically sized arrays.
+*/
+
 contract NahmiiChallenge is Challenge {
 
     function pushMemoryTradeToStorageArray(NahmiiTypes.Trade memTrade,
