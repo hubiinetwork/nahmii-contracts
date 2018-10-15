@@ -197,6 +197,22 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         return walletMap[wallet].staged.get(currencyCt, currencyId);
     }
 
+    /// @notice Get active balance (sum of deposited and settled balances) of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The active balance of the concerned wallet and currency
+    function activeBalance(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    notNullAddress(wallet)
+    returns (int256)
+    {
+        return walletMap[wallet].deposited.get(currencyCt, currencyId).add(
+            walletMap[wallet].staged.get(currencyCt, currencyId)
+        );
+    }
+
     /// @notice Update the settled balance by the difference between provided amount and deposited on-chain balance
     /// @param wallet The address of the concerned wallet
     /// @param amount The off-chain balance amount

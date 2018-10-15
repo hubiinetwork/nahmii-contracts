@@ -72,30 +72,6 @@ module.exports = function (glob) {
             });
         });
 
-        describe('stagedBalance()', () => {
-            describe('called with null wallet address', () => {
-                it('should revert', async () => {
-                    glob.ethersIoClientFund.stagedBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
-                });
-            });
-
-            describe('of Ether', () => {
-                it('should return initial value', async () => {
-                    const address = Wallet.createRandom().address;
-                    const result = await glob.ethersIoClientFund.stagedBalance(address, mocks.address0, 0);
-                    result.should.deep.equal(utils.bigNumberify(0));
-                });
-            });
-
-            describe('of ERC20 token', () => {
-                it('should return initial value', async () => {
-                    const address = Wallet.createRandom().address;
-                    const result = await glob.ethersIoClientFund.stagedBalance(address, glob.web3Erc20.address, 0);
-                    result.should.deep.equal(utils.bigNumberify(0));
-                });
-            });
-        });
-
         describe('settledBalance()', () => {
             describe('called with null wallet address', () => {
                 it('should revert', async () => {
@@ -115,6 +91,54 @@ module.exports = function (glob) {
                 it('should return initial value', async () => {
                     const address = Wallet.createRandom().address;
                     const result = await glob.ethersIoClientFund.settledBalance(address, glob.web3Erc20.address, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+        });
+
+        describe('activeBalance()', () => {
+            describe('called with null wallet address', () => {
+                it('should revert', async () => {
+                    glob.ethersIoClientFund.activeBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.activeBalance(address, mocks.address0, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.activeBalance(address, glob.web3Erc20.address, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+        });
+
+        describe('stagedBalance()', () => {
+            describe('called with null wallet address', () => {
+                it('should revert', async () => {
+                    glob.ethersIoClientFund.stagedBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.stagedBalance(address, mocks.address0, 0);
+                    result.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return initial value', async () => {
+                    const address = Wallet.createRandom().address;
+                    const result = await glob.ethersIoClientFund.stagedBalance(address, glob.web3Erc20.address, 0);
                     result.should.deep.equal(utils.bigNumberify(0));
                 });
             });
