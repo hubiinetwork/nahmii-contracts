@@ -55,7 +55,7 @@ contract DriipSettlementChallenge is Ownable, DriipChallenge, Validatable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the driip settlement challenger contract
+    /// @notice Change the driip settlement dispute contract
     /// @param newDriipSettlementDispute The (address of) DriipSettlementDispute contract instance
     function changeDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute)
     public
