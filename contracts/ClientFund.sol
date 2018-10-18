@@ -69,7 +69,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) Beneficiary() Benefactor() public {
+    constructor(address owner) Ownable(owner) Beneficiary() Benefactor()
+    public
+    {
         serviceActivationTimeout = 1 weeks;
     }
 
@@ -77,13 +79,19 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Fallback function that deposits ethers to msg.sender's deposited balance
-    function() public payable {
+    function()
+    public
+    payable
+    {
         depositEthersTo(msg.sender);
     }
 
     /// @notice Deposit ethers to the given wallet's deposited balance
     /// @param wallet The address of the concerned wallet
-    function depositEthersTo(address wallet) public payable {
+    function depositEthersTo(address wallet)
+    public
+    payable
+    {
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         // Add to per-wallet deposited balance
@@ -140,10 +148,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param wallet The address of the concerned wallet
     /// @param index The index of wallet's deposit
     /// @return The deposit metadata
-    function deposit(address wallet, uint index)
+    function deposit(address wallet, uint256 index)
     public
     view
-    returns (int256 amount, uint256 timestamp, address currencyCt, uint256 currencyId)
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         return walletMap[wallet].txHistory.deposit(index);
     }
@@ -153,6 +161,33 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @return The count of the concerned wallet's deposits
     function depositCount(address wallet) public view returns (uint256) {
         return walletMap[wallet].txHistory.depositCount();
+    }
+
+    /// @notice Get metadata of the given wallet's deposit at the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param index The index of wallet's deposit
+    /// @return The deposit metadata
+    function depositOfCurrency(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        return walletMap[wallet].txHistory.currencyDeposit(currencyCt, currencyId, index);
+    }
+
+    /// @notice Get the count of the given wallet's deposits
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of the concerned wallet's deposits
+    function depositOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return walletMap[wallet].txHistory.currencyDepositCount(currencyCt, currencyId);
     }
 
     /// @notice Get deposited balance of the given wallet and currency
@@ -262,7 +297,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param amount The concerned balance amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function unstage(int256 amount, address currencyCt, uint256 currencyId) public notDeployer {
+    function unstage(int256 amount, address currencyCt, uint256 currencyId)
+    public
+    notDeployer
+    {
         require(amount.isNonZeroPositiveInt256());
 
         // Clamp amount to move
@@ -282,7 +320,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId) public notDeployer {
+    function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
+    public
+    notDeployer
+    {
         stageToBeneficiaryPrivate(msg.sender, msg.sender, beneficiary, amount, currencyCt, currencyId);
 
         // Emit event
@@ -295,7 +336,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId) public
+    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
+    public
     onlyRegisteredActiveService
     notNullAddress(sourceWallet)
     notNullAddress(beneficiary)
@@ -345,7 +387,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(amount.isNonZeroPositiveInt256());
 
         amount = amount.clampMax(walletMap[msg.sender].staged.get(currencyCt, currencyId));
@@ -371,17 +415,52 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
 
     /// @notice Get metadata of the given wallet's withdrawal at the given index
     /// @param wallet The address of the concerned wallet
-    /// @param index The index of wallet's deposit
+    /// @param index The index of wallet's withdrawal
     /// @return The withdrawal metadata
-    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
+    function withdrawal(address wallet, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
     /// @notice Get the count of the given wallet's withdrawals
     /// @param wallet The address of the concerned wallet
     /// @return The count of the concerned wallet's withdrawals
-    function withdrawalCount(address wallet) public view returns (uint256) {
+    function withdrawalCount(address wallet)
+    public
+    view
+    returns (uint256)
+    {
         return walletMap[wallet].txHistory.withdrawalCount();
+    }
+
+    /// @notice Get metadata of the given wallet's withdrawal at the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param index The index of wallet's withdrawal
+    /// @return The withdrawal metadata
+    function withdrawalOfCurrency(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        return walletMap[wallet].txHistory.currencyWithdrawal(currencyCt, currencyId, index);
+    }
+
+    /// @notice Get the count of the given wallet's withdrawals
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of the concerned wallet's withdrawals
+    function withdrawalOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return walletMap[wallet].txHistory.currencyWithdrawalCount(currencyCt, currencyId);
     }
 
     //
@@ -434,7 +513,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         .add(walletMap[wallet].staged.get(currencyCt, currencyId));
     }
 
-    function zeroAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId) private {
+    function zeroAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId)
+    private
+    {
         walletMap[wallet].deposited.set(0, currencyCt, currencyId);
         walletMap[wallet].settled.set(0, currencyCt, currencyId);
         walletMap[wallet].staged.set(0, currencyCt, currencyId);

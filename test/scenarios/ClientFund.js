@@ -1,5 +1,7 @@
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 
@@ -7,6 +9,7 @@ const MockedClientFundService = artifacts.require('MockedClientFundService');
 const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
@@ -15,8 +18,14 @@ module.exports = function (glob) {
         let web3MockedClientFundAuthorizedService, ethersMockedClientFundAuthorizedService;
         let web3MockedClientFundUnauthorizedService, ethersMockedClientFundUnauthorizedService;
         let web3MockedBeneficiary, ethersBeneficiary;
-        let depositIndexEther = -1, depositIndexERC20 = -1;
+        let depositEtherIndex = -1, depositERC20Index = -1;
+        let currencyDepositEtherIndex = -1, currencyDepositERC20Index = -1;
+        let depositEtherBlockNumber = -1, depositERC20BlockNumber = -1;
+        let withdrawalEtherIndex = -1, withdrawalERC20Index = -1;
+        let currencyWithdrawalEtherIndex = -1, currencyWithdrawalERC20Index = -1;
+        let withdrawalEtherBlockNumber = -1, withdrawalERC20BlockNumber = -1;
         const singleDepositEther = 5, singleDepositERC20 = 10;
+        let provider;
 
         before(async () => {
             ethersClientFundUserA = glob.ethersIoClientFund.connect(glob.signer_a);
@@ -38,12 +47,38 @@ module.exports = function (glob) {
 
             // Register beneficiary
             await glob.ethersIoClientFund.registerBeneficiary(web3MockedBeneficiary.address);
+
+            provider = glob.signer_owner.provider;
         });
 
         describe('depositCount()', () => {
             it('should return initial value', async () => {
                 const address = Wallet.createRandom().address;
                 const result = await glob.ethersIoClientFund.depositCount(address);
+                result.should.deep.equal(utils.bigNumberify(0));
+            });
+        });
+
+        describe('depositOfCurrencyCount()', () => {
+            it('should return initial value', async () => {
+                const address = Wallet.createRandom().address;
+                const result = await glob.ethersIoClientFund.depositOfCurrencyCount(address, mocks.address0, 0);
+                result.should.deep.equal(utils.bigNumberify(0));
+            });
+        });
+
+        describe('withdrawalCount()', () => {
+            it('should return initial value', async () => {
+                const address = Wallet.createRandom().address;
+                const result = await glob.ethersIoClientFund.withdrawalCount(address);
+                result.should.deep.equal(utils.bigNumberify(0));
+            });
+        });
+
+        describe('withdrawalOfCurrencyCount()', () => {
+            it('should return initial value', async () => {
+                const address = Wallet.createRandom().address;
+                const result = await glob.ethersIoClientFund.withdrawalOfCurrencyCount(address, mocks.address0, 0);
                 result.should.deep.equal(utils.bigNumberify(0));
             });
         });
@@ -164,7 +199,9 @@ module.exports = function (glob) {
 
                 const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
                 depositCount.should.deep.equal(depositCountBefore.add(1));
-                depositIndexEther = depositCountBefore.toNumber();
+                depositEtherIndex = depositCountBefore.toNumber();
+                currencyDepositEtherIndex++;
+                depositEtherBlockNumber = await provider.getBlockNumber();
 
                 const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
                 depositedBalance.should.deep.equal(depositedBalanceBefore.add(utils.parseEther(singleDepositEther.toString())));
@@ -197,7 +234,9 @@ module.exports = function (glob) {
 
                 const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
                 depositCount.should.deep.equal(depositCountBefore.add(1));
-                depositIndexEther = depositCountBefore.toNumber();
+                depositEtherIndex = depositCountBefore.toNumber();
+                currencyDepositEtherIndex++;
+                depositEtherBlockNumber = await provider.getBlockNumber();
 
                 const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
                 depositedBalance.should.deep.equal(depositedBalanceBefore.add(utils.parseEther(singleDepositEther.toString())));
@@ -275,7 +314,9 @@ module.exports = function (glob) {
 
                         const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
                         depositCount.should.deep.equal(utils.bigNumberify(depositCountBefore.add(1)));
-                        depositIndexERC20 = depositCountBefore.toNumber();
+                        depositERC20Index = depositCountBefore.toNumber();
+                        currencyDepositERC20Index++;
+                        depositERC20BlockNumber = await provider.getBlockNumber();
 
                         const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
                         depositedBalance.should.deep.equal(depositedBalanceBefore.add(singleDepositERC20));
@@ -355,7 +396,9 @@ module.exports = function (glob) {
 
                         const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
                         depositCount.should.deep.equal(utils.bigNumberify(depositCountBefore.add(1)));
-                        depositIndexERC20 = depositCountBefore.toNumber();
+                        depositERC20Index = depositCountBefore.toNumber();
+                        currencyDepositERC20Index++;
+                        depositERC20BlockNumber = await provider.getBlockNumber();
 
                         const depositedBalance = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
                         depositedBalance.should.deep.equal(depositedBalanceBefore.add(singleDepositERC20));
@@ -371,11 +414,13 @@ module.exports = function (glob) {
         describe('deposit()', () => {
             describe('of Ether', () => {
                 it('should return deposit', async () => {
-                    depositIndexEther.should.be.greaterThan(-1);
+                    depositEtherIndex.should.be.greaterThan(-1);
+                    depositEtherBlockNumber.should.be.greaterThan(-1);
 
-                    const deposit = await glob.ethersIoClientFund.deposit(glob.user_a, depositIndexEther);
+                    const deposit = await glob.ethersIoClientFund.deposit(glob.user_a, depositEtherIndex);
+
                     deposit.amount.should.deep.equal(utils.parseEther(singleDepositEther.toString()));
-                    // TODO Compare to block number when deposit[1].timestamp has been replaced
+                    deposit.blockNumber._bn.should.eq.BN(depositEtherBlockNumber);
                     deposit.currencyCt.should.equal(mocks.address0);
                     deposit.currencyId.should.deep.equal(utils.bigNumberify(0));
                 });
@@ -383,13 +428,41 @@ module.exports = function (glob) {
 
             describe('of ERC20 token', () => {
                 it('should return deposit', async () => {
-                    depositIndexERC20.should.be.greaterThan(-1);
+                    depositERC20Index.should.be.greaterThan(-1);
+                    depositERC20BlockNumber.should.be.greaterThan(-1);
 
-                    const deposit = await glob.ethersIoClientFund.deposit(glob.user_a, depositIndexERC20);
+                    const deposit = await glob.ethersIoClientFund.deposit(glob.user_a, depositERC20Index);
+
                     deposit.amount.should.deep.equal(utils.bigNumberify(singleDepositERC20));
-                    // TODO Compare to block number when deposit[1].timestamp has been replaced
+                    deposit.blockNumber._bn.should.eq.BN(depositERC20BlockNumber);
                     deposit.currencyCt.should.equal(utils.getAddress(glob.web3Erc20.address));
                     deposit.currencyId.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+        });
+
+        describe('depositOfCurrency()', () => {
+            describe('of Ether', () => {
+                it('should return currency deposit', async () => {
+                    currencyDepositEtherIndex.should.be.greaterThan(-1);
+                    depositEtherBlockNumber.should.be.greaterThan(-1);
+
+                    const deposit = await glob.ethersIoClientFund.depositOfCurrency(glob.user_a, mocks.address0, 0, currencyDepositEtherIndex);
+
+                    deposit.amount.should.deep.equal(utils.parseEther(singleDepositEther.toString()));
+                    deposit.blockNumber._bn.should.eq.BN(depositEtherBlockNumber);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return currency deposit', async () => {
+                    currencyDepositERC20Index.should.be.greaterThan(-1);
+                    depositERC20BlockNumber.should.be.greaterThan(-1);
+
+                    const deposit = await glob.ethersIoClientFund.depositOfCurrency(glob.user_a, glob.web3Erc20.address, 0, currencyDepositERC20Index);
+
+                    deposit.amount.should.deep.equal(utils.bigNumberify(singleDepositERC20));
+                    deposit.blockNumber._bn.should.eq.BN(depositERC20BlockNumber);
                 });
             });
         });
@@ -1200,6 +1273,12 @@ module.exports = function (glob) {
 
         // TODO Unskip
         describe('withdraw()', () => {
+            let withdrawalCountBefore;
+
+            beforeEach(async () => {
+                withdrawalCountBefore = await glob.ethersIoClientFund.withdrawalCount(glob.user_a);
+            });
+
             describe('of Ether', () => {
                 let stagedBalanceBefore, stagedBalanceAfter, withdrawalAmount, accountBalanceBefore,
                     accountBalanceAfter;
@@ -1218,8 +1297,12 @@ module.exports = function (glob) {
                         // accountBalanceAfter = accountBalanceBefore.add(withdrawalAmount);
                     });
 
-                    it('should successfully withdraw the provided amount of Ether', async () => {
+                    it('should successfully withdraw the withdrawal amount of Ether', async () => {
                         await glob.web3ClientFund.withdraw(web3.toWei(utils.formatEther(withdrawalAmount)), mocks.address0, 0, '', {from: glob.user_a});
+
+                        withdrawalEtherIndex = withdrawalCountBefore.toNumber();
+                        currencyWithdrawalEtherIndex++;
+                        withdrawalEtherBlockNumber = await provider.getBlockNumber();
 
                         const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
                         utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceAfter));
@@ -1240,6 +1323,10 @@ module.exports = function (glob) {
 
                     it('should successfully withdraw the staged amount of Ether', async () => {
                         await glob.web3ClientFund.withdraw(web3.toWei(utils.formatEther(withdrawalAmount)), mocks.address0, 0, '', {from: glob.user_a});
+
+                        withdrawalEtherIndex = withdrawalCountBefore.toNumber();
+                        currencyWithdrawalEtherIndex++;
+                        withdrawalEtherBlockNumber = await provider.getBlockNumber();
 
                         const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
                         utils.formatEther(stagedBalance).should.equal(utils.formatEther(stagedBalanceAfter));
@@ -1270,6 +1357,10 @@ module.exports = function (glob) {
                     it('should successfully withdraw the provided amount of Ether', async () => {
                         await glob.web3ClientFund.withdraw(web3.toWei(utils.formatEther(withdrawalAmount)), glob.web3Erc20.address, 0, '', {from: glob.user_a});
 
+                        withdrawalERC20Index = withdrawalCountBefore.toNumber();
+                        currencyWithdrawalERC20Index++;
+                        withdrawalERC20BlockNumber = await provider.getBlockNumber();
+
                         const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
                         stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
                         // const accountBalance = await web3.eth.getBalance(glob.user_a);
@@ -1289,6 +1380,10 @@ module.exports = function (glob) {
 
                     it('should successfully withdraw the staged amount of Ether', async () => {
                         await glob.web3ClientFund.withdraw(web3.toWei(utils.formatEther(withdrawalAmount)), glob.web3Erc20.address, 0, '', {from: glob.user_a});
+
+                        withdrawalERC20Index = withdrawalCountBefore.toNumber();
+                        currencyWithdrawalERC20Index++;
+                        withdrawalERC20BlockNumber = await provider.getBlockNumber();
 
                         const stagedBalance = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
                         stagedBalance.toString().should.equal(stagedBalanceAfter.toString());
@@ -1344,6 +1439,62 @@ module.exports = function (glob) {
             //         });
             //     });
             // });
+        });
+
+        describe('withdrawal()', () => {
+            describe('of Ether', () => {
+                it('should return withdrawal', async () => {
+                    withdrawalEtherIndex.should.be.greaterThan(-1);
+                    withdrawalEtherBlockNumber.should.be.greaterThan(-1);
+
+                    const withdrawal = await glob.ethersIoClientFund.withdrawal(glob.user_a, withdrawalEtherIndex);
+
+                    // withdrawal.amount.should.deep.equal(utils.parseEther(singleWithdrawalEther.toString()));
+                    withdrawal.blockNumber._bn.should.eq.BN(withdrawalEtherBlockNumber);
+                    withdrawal.currencyCt.should.equal(mocks.address0);
+                    withdrawal.currencyId.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return withdrawal', async () => {
+                    withdrawalERC20Index.should.be.greaterThan(-1);
+                    withdrawalERC20BlockNumber.should.be.greaterThan(-1);
+
+                    const withdrawal = await glob.ethersIoClientFund.withdrawal(glob.user_a, withdrawalERC20Index);
+
+                    // withdrawal.amount.should.deep.equal(utils.bigNumberify(singleDepositERC20));
+                    withdrawal.blockNumber._bn.should.eq.BN(withdrawalERC20BlockNumber);
+                    withdrawal.currencyCt.should.equal(utils.getAddress(glob.web3Erc20.address));
+                    withdrawal.currencyId.should.deep.equal(utils.bigNumberify(0));
+                });
+            });
+        });
+
+        describe('withdrawalOfCurrency()', () => {
+            describe('of Ether', () => {
+                it('should return currency withdrawal', async () => {
+                    currencyWithdrawalEtherIndex.should.be.greaterThan(-1);
+                    withdrawalEtherBlockNumber.should.be.greaterThan(-1);
+
+                    const withdrawal = await glob.ethersIoClientFund.withdrawalOfCurrency(glob.user_a, mocks.address0, 0, currencyWithdrawalEtherIndex);
+
+                    // withdrawal.amount.should.deep.equal(utils.parseEther(singleWithdrawalERC20.toString()));
+                    withdrawal.blockNumber._bn.should.eq.BN(withdrawalEtherBlockNumber);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return currency withdrawal', async () => {
+                    currencyWithdrawalERC20Index.should.be.greaterThan(-1);
+                    withdrawalERC20BlockNumber.should.be.greaterThan(-1);
+
+                    const withdrawal = await glob.ethersIoClientFund.withdrawalOfCurrency(glob.user_a, glob.web3Erc20.address, 0, currencyWithdrawalERC20Index);
+
+                    // withdrawal.amount.should.deep.equal(utils.bigNumberify(singleWithdrawalERC20));
+                    withdrawal.blockNumber._bn.should.eq.BN(withdrawalERC20BlockNumber);
+                });
+            });
         });
     });
 };
