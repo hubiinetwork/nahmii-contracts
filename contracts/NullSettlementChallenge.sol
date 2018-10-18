@@ -99,36 +99,37 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         require(balanceAmount >= amount);
 
         walletProposalMap[msg.sender].nonce = walletProposalMap[msg.sender].nonce.add(1);
-        walletProposalMap[msg.sender].timeout = block.timestamp + configuration.settlementChallengeTimeout();
+        walletProposalMap[msg.sender].timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         walletProposalMap[msg.sender].status = SettlementTypes.ChallengeStatus.Qualified;
         walletProposalMap[msg.sender].currencies.length = 0;
         walletProposalMap[msg.sender].currencies.push(MonetaryTypes.Currency(currencyCt, currencyId));
         walletProposalMap[msg.sender].stageAmounts.length = 0;
         walletProposalMap[msg.sender].stageAmounts.push(amount);
         walletProposalMap[msg.sender].targetBalanceAmounts.length = 0;
-        walletProposalMap[msg.sender].targetBalanceAmounts.push(balanceAmount - amount);
+        walletProposalMap[msg.sender].targetBalanceAmounts.push(balanceAmount.sub(amount));
 
         emit StartChallenge(msg.sender, amount, currencyCt, currencyId);
     }
 
-    /// @notice Get null settlement challenge phase of given wallet
+    /// @notice Get null settlement challenge phase of the given wallet
     /// @param wallet The concerned wallet
-    /// @return The challenge phase and nonce
-    function challengePhase(address wallet) public view returns (NahmiiTypes.ChallengePhase, uint) {
+    /// @return The settlement challenge phase
+    function challengePhase(address wallet)
+    public
+    view
+    returns (NahmiiTypes.ChallengePhase) {
         if (msg.sender != deployer)
             wallet = msg.sender;
-        if (0 == walletProposalMap[wallet].nonce)
-            return (NahmiiTypes.ChallengePhase.Closed, 0);
-        else if (block.timestamp < walletProposalMap[wallet].timeout)
-            return (NahmiiTypes.ChallengePhase.Dispute, walletProposalMap[wallet].nonce);
+        if (0 != walletProposalMap[wallet].nonce && block.timestamp < walletProposalMap[wallet].timeout)
+            return NahmiiTypes.ChallengePhase.Dispute;
         else
-            return (NahmiiTypes.ChallengePhase.Closed, walletProposalMap[wallet].nonce);
+            return NahmiiTypes.ChallengePhase.Closed;
     }
 
-    /// @notice Get the challenge nonce of the given wallet
+    /// @notice Get the settlement proposal nonce of the given wallet
     /// @param wallet The concerned wallet
-    /// @return The challenge nonce
-    function challengeNonce(address wallet)
+    /// @return The settlement proposal nonce
+    function proposalNonce(address wallet)
     public
     view
     returns (uint256)
@@ -136,10 +137,21 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         return walletProposalMap[wallet].nonce;
     }
 
-    /// @notice Get the challenge status of the given wallet
+    /// @notice Get the settlement proposal timeout of the given wallet
     /// @param wallet The concerned wallet
-    /// @return The challenge status
-    function challengeStatus(address wallet)
+    /// @return The settlement proposal timeout
+    function proposalTimeout(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletProposalMap[wallet].timeout;
+    }
+
+    /// @notice Get the settlement proposal status of the given wallet
+    /// @param wallet The concerned wallet
+    /// @return The settlement proposal status
+    function proposalStatus(address wallet)
     public
     view
     returns (SettlementTypes.ChallengeStatus)
@@ -147,10 +159,10 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         return walletProposalMap[wallet].status;
     }
 
-    /// @notice Get the challenge currency count of the given wallet
+    /// @notice Get the settlement proposal currency count of the given wallet
     /// @param wallet The concerned wallet
-    /// @return The challenge currency count
-    function challengeCurrencyCount(address wallet)
+    /// @return The settlement proposal currency count
+    function proposalCurrencyCount(address wallet)
     public
     view
     returns (uint256)
@@ -158,11 +170,11 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         return walletProposalMap[wallet].currencies.length;
     }
 
-    /// @notice Get the challenge currency of the given wallet at the given index
+    /// @notice Get the settlement proposal currency of the given wallet at the given index
     /// @param wallet The concerned wallet
     /// @param index The index of the concerned currency
-    /// @return The challenge currency
-    function challengeCurrency(address wallet, uint256 index)
+    /// @return The settlement proposal currency
+    function proposalCurrency(address wallet, uint256 index)
     public
     view
     returns (MonetaryTypes.Currency)
@@ -170,12 +182,12 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         return walletProposalMap[wallet].currencies[index];
     }
 
-    /// @notice Get the challenge stage amount of the given wallet and currency
+    /// @notice Get the settlement proposal stage amount of the given wallet and currency
     /// @param wallet The concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The challenge stage amount
-    function challengeStageAmount(address wallet, address currencyCt, uint256 currencyId)
+    /// @return The settlement proposal stage amount
+    function proposalStageAmount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256)
@@ -190,12 +202,12 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         return 0;
     }
 
-    /// @notice Get the challenge target balance amount of the given wallet and currency
+    /// @notice Get the settlement proposal target balance amount of the given wallet and currency
     /// @param wallet The concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The challenge target balance amount
-    function challengeTargetBalanceAmount(address wallet, address currencyCt, uint256 currencyId)
+    /// @return The settlement proposal target balance amount
+    function proposalTargetBalanceAmount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256)
@@ -210,16 +222,150 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         return 0;
     }
 
-    /// @notice Get the challenger of the given wallet's challenge
+    /// @notice Get the driip type of the given wallet's settlement proposal
     /// @param wallet The concerned wallet
-    /// @return The challenger of the challenge
-    function challengeChallenger(address wallet)
+    /// @return The driip type of the settlement proposal
+    function proposalDriipType(address wallet)
+    public
+    view
+    returns (NahmiiTypes.DriipType)
+    {
+        return walletProposalMap[wallet].driipType;
+    }
+
+    /// @notice Get the challenger of the given wallet's settlement proposal
+    /// @param wallet The concerned wallet
+    /// @return The challenger of the settlement proposal
+    function proposalChallenger(address wallet)
     public
     view
     returns (address)
     {
         return walletProposalMap[wallet].challenger;
     }
+
+    /// @notice Get the settlement proposal of the given wallet
+    /// @param wallet The concerned wallet
+    /// @return The settlement proposal of the wallet
+    //    function proposal(address wallet)
+    //    public
+    //    view
+    //    returns (SettlementTypes.Proposal)
+    //    {
+    //        return walletProposalMap[wallet];
+    //    }
+
+    /// @notice Set the settlement proposal of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param proposal The settlement proposal to be set
+    //    function setWalletProposal(address wallet, SettlementTypes.Proposal proposal)
+    //    public
+    //    onlyNullSettlementDispute
+    //    {
+    //        walletProposalMap[wallet].nonce = proposal.nonce;
+    //        walletProposalMap[wallet].timeout = proposal.timeout;
+    //        walletProposalMap[wallet].status = proposal.status;
+    //        walletProposalMap[wallet].currencies.length = 0;
+    //        walletProposalMap[wallet].stageAmounts.length = 0;
+    //        walletProposalMap[wallet].targetBalanceAmounts.length = 0;
+    //        for (uint i = 0; i < proposal.currencies.length; i++) {
+    //            walletProposalMap[wallet].currencies.push(proposal.currencies[i]);
+    //            walletProposalMap[wallet].stageAmounts.push(proposal.stageAmounts[i]);
+    //            walletProposalMap[wallet].targetBalanceAmounts.push(proposal.targetBalanceAmounts[i]);
+    //        }
+    //        walletProposalMap[wallet].driipType = proposal.driipType;
+    //        walletProposalMap[wallet].driipIndex = proposal.driipIndex;
+    //        walletProposalMap[wallet].candidateType = proposal.candidateType;
+    //        walletProposalMap[wallet].candidateIndex = proposal.candidateIndex;
+    //        walletProposalMap[wallet].challenger = proposal.challenger;
+    //    }
+
+    /// @notice Set settlement proposal timeout property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param timeout The timeout value
+    function setProposalTimeout(address wallet, uint256 timeout)
+    public
+    onlyNullSettlementDispute
+    {
+        walletProposalMap[wallet].timeout = timeout;
+    }
+
+    /// @notice Set settlement proposal properties of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param status The status value
+    /// @param candidateType The candidate type value
+    /// @param candidateIndex The candidate index value
+    /// @param challenger The challenger value
+    //    function setWalletProposalStatusCandidateChallenge(address wallet, SettlementTypes.ChallengeStatus status,
+    //        SettlementTypes.ChallengeCandidateType candidateType, uint256 candidateIndex, address challenger)
+    //    public
+    //    onlyNullSettlementDispute
+    //    {
+    //        walletProposalMap[wallet].status = status;
+    //        walletProposalMap[wallet].candidateType = candidateType;
+    //        walletProposalMap[wallet].candidateIndex = candidateIndex;
+    //        walletProposalMap[wallet].challenger = challenger;
+    //    }
+
+    /// @notice Set settlement proposal status property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param status The status value
+    function setProposalStatus(address wallet, SettlementTypes.ChallengeStatus status)
+    public
+    onlyNullSettlementDispute
+    {
+        walletProposalMap[wallet].status = status;
+    }
+
+    /// @notice Set settlement proposal candidate type property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param candidateType The candidate type value
+    function setProposalCandidateType(address wallet, SettlementTypes.ChallengeCandidateType candidateType)
+    public
+    onlyNullSettlementDispute
+    {
+        walletProposalMap[wallet].candidateType = candidateType;
+    }
+
+    /// @notice Set settlement proposal candidate index property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param candidateIndex The candidate index value
+    function setProposalCandidateIndex(address wallet, uint256 candidateIndex)
+    public
+    onlyNullSettlementDispute
+    {
+        walletProposalMap[wallet].candidateIndex = candidateIndex;
+    }
+
+    /// @notice Set settlement proposal challenger property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param challenger The challenger value
+    function setProposalChallenger(address wallet, address challenger)
+    public
+    onlyNullSettlementDispute
+    {
+        walletProposalMap[wallet].challenger = challenger;
+    }
+
+    /// @notice Reset the settlement proposal of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    //    function resetWalletProposal(address wallet)
+    //    public
+    //    onlyNullSettlementDispute
+    //    {
+    //        walletProposalMap[wallet].status = SettlementTypes.ChallengeStatus.Qualified;
+    //        walletProposalMap[wallet].candidateType = SettlementTypes.ChallengeCandidateType.None;
+    //        walletProposalMap[wallet].candidateIndex = 0;
+    //        walletProposalMap[wallet].challenger = address(0);
+    //    }
 
     /// @notice Challenge the null settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged driip
@@ -258,56 +404,6 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     onlyOperationalModeNormal
     {
         nullSettlementDispute.challengeByPayment(payment, wallet, msg.sender);
-    }
-
-    /// @notice Get the settlement proposal of the given wallet
-    /// @param wallet The concerned wallet
-    /// @return The settlement proposal of the wallet
-    function walletProposal(address wallet)
-    public
-    view
-    returns (SettlementTypes.Proposal)
-    {
-        return walletProposalMap[wallet];
-    }
-
-    /// @notice Set the settlement proposal of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
-    /// @param proposal The settlement proposal to be set
-    function setWalletProposal(address wallet, SettlementTypes.Proposal proposal)
-    public
-    onlyNullSettlementDispute
-    {
-        walletProposalMap[wallet].nonce = proposal.nonce;
-        walletProposalMap[wallet].timeout = proposal.timeout;
-        walletProposalMap[wallet].status = proposal.status;
-        walletProposalMap[wallet].currencies.length = 0;
-        walletProposalMap[wallet].stageAmounts.length = 0;
-        walletProposalMap[wallet].targetBalanceAmounts.length = 0;
-        for (uint i = 0; i < proposal.currencies.length; i++) {
-            walletProposalMap[wallet].currencies.push(proposal.currencies[i]);
-            walletProposalMap[wallet].stageAmounts.push(proposal.stageAmounts[i]);
-            walletProposalMap[wallet].targetBalanceAmounts.push(proposal.targetBalanceAmounts[i]);
-        }
-        walletProposalMap[wallet].driipType = proposal.driipType;
-        walletProposalMap[wallet].driipIndex = proposal.driipIndex;
-        walletProposalMap[wallet].candidateType = proposal.candidateType;
-        walletProposalMap[wallet].candidateIndex = proposal.candidateIndex;
-        walletProposalMap[wallet].challenger = proposal.challenger;
-    }
-
-    /// @notice Reset the settlement proposal of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
-    function resetWalletProposal(address wallet)
-    public
-    onlyNullSettlementDispute
-    {
-        walletProposalMap[wallet].status = SettlementTypes.ChallengeStatus.Qualified;
-        walletProposalMap[wallet].candidateType = SettlementTypes.ChallengeCandidateType.None;
-        walletProposalMap[wallet].candidateIndex = 0;
-        walletProposalMap[wallet].challenger = address(0);
     }
 
     /// @notice Push to store the given challenge candidate order
