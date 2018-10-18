@@ -32,11 +32,14 @@ const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByT
 const FraudChallengeByTradeSucceedingPayment = artifacts.require('FraudChallengeByTradeSucceedingPayment');
 const InUseCurrencyLib = artifacts.require('InUseCurrencyLib');
 const MonetaryTypes = artifacts.require('MonetaryTypes');
+const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
+const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const PartnerFund = artifacts.require('PartnerFund');
 const RevenueFund = artifacts.require('RevenueFund');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
+const SettlementTypes = artifacts.require('SettlementTypes');
 const DriipChallenge = artifacts.require('DriipChallenge');
 const NahmiiTypes = artifacts.require('NahmiiTypes');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
@@ -94,14 +97,16 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
             await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
             await execDeploy(ctl, 'DriipSettlementTypes', '', DriipSettlementTypes);
+            await execDeploy(ctl, 'SettlementTypes', '', SettlementTypes);
 
             //link dependencies
             await deployer.link(SafeMathIntLib, [
                 BalanceLib, CancelOrdersChallenge, ClientFund, CommunityVote, Configuration, DriipSettlementChallenge, DriipSettlementDispute,
-                Exchange, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
+                Exchange, NullSettlementChallenge, NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathUintLib, [
-                CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, Exchange, RevenueFund, TokenHolderRevenueFund, Validator
+                CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, Exchange, NullSettlementChallenge, NullSettlementDispute,
+                RevenueFund, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(NahmiiTypes, [
                 CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, Exchange, FraudChallenge,
@@ -121,6 +126,9 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(DriipSettlementTypes, [
                 DriipSettlementChallenge, DriipSettlementDispute, Exchange
+            ]);
+            await deployer.link(SettlementTypes, [
+                NullSettlementChallenge, NullSettlementDispute, Exchange
             ]);
 
             //deploy transfer controllers
@@ -151,6 +159,10 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'DriipSettlementChallenge', '', DriipSettlementChallenge);
 
             await execDeploy(ctl, 'DriipSettlementDispute', '', DriipSettlementDispute);
+
+            await execDeploy(ctl, 'NullSettlementChallenge', '', NullSettlementChallenge);
+
+            await execDeploy(ctl, 'NullSettlementDispute', '', NullSettlementDispute);
 
             await execDeploy(ctl, 'FraudChallengeByOrder', '', FraudChallengeByOrder);
 
@@ -261,6 +273,20 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.changeValidator(addressStorage.get('Validator'));
             tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
             tx = await instance.changeDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
+            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+
+            instance = await NullSettlementChallenge.at(addressStorage.get('NullSettlementChallenge'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.changeNullSettlementDispute(addressStorage.get('NullSettlementDispute'));
+
+            instance = await NullSettlementDispute.at(addressStorage.get('NullSettlementDispute'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.changeNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
             tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
             tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
 
