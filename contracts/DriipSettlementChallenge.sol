@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {Validatable} from "./Validatable.sol";
 import {DriipChallenge} from "./DriipChallenge.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
@@ -24,6 +25,7 @@ import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 */
 contract DriipSettlementChallenge is Ownable, DriipChallenge, Validatable {
     using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
 
     //
     // Variables
@@ -137,15 +139,15 @@ contract DriipSettlementChallenge is Ownable, DriipChallenge, Validatable {
 
         DriipSettlementTypes.Challenge memory challenge;
         challenge.nonce = trade.nonce;
-        challenge.timeout = block.timestamp + configuration.settlementChallengeTimeout();
+        challenge.timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
         //        challenge.driipExchangeHash = trade.seal.hash;
         challenge.driipType = NahmiiTypes.DriipType.Trade;
-        challenge.driipIndex = walletChallengedTradesMap[wallet].length - 1;
+        challenge.driipIndex = walletChallengedTradesMap[wallet].length.sub(1);
         challenge.intendedStage = MonetaryTypes.Figure(intendedStageAmount, trade.currencies.intended);
         challenge.conjugateStage = MonetaryTypes.Figure(conjugateStageAmount, trade.currencies.conjugate);
-        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(intendedBalanceAmount - intendedStageAmount, trade.currencies.intended), true);
-        challenge.conjugateTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(conjugateBalanceAmount - conjugateStageAmount, trade.currencies.conjugate), true);
+        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(intendedBalanceAmount.sub(intendedStageAmount), trade.currencies.intended), true);
+        challenge.conjugateTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(conjugateBalanceAmount.sub(conjugateStageAmount), trade.currencies.conjugate), true);
 
         walletChallengeMap[wallet] = challenge;
 
@@ -183,13 +185,13 @@ contract DriipSettlementChallenge is Ownable, DriipChallenge, Validatable {
 
         DriipSettlementTypes.Challenge memory challenge;
         challenge.nonce = payment.nonce;
-        challenge.timeout = block.timestamp + configuration.settlementChallengeTimeout();
+        challenge.timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
         //        challenge.driipExchangeHash = payment.seals.exchange.hash;
         challenge.driipType = NahmiiTypes.DriipType.Payment;
-        challenge.driipIndex = walletChallengedPaymentsMap[wallet].length - 1;
+        challenge.driipIndex = walletChallengedPaymentsMap[wallet].length.sub(1);
         challenge.intendedStage = MonetaryTypes.Figure(stageAmount, payment.currency);
-        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(balanceAmount - stageAmount, payment.currency), true);
+        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(balanceAmount.sub(stageAmount), payment.currency), true);
 
         walletChallengeMap[wallet] = challenge;
 

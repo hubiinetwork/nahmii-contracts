@@ -14,6 +14,7 @@ import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
@@ -27,6 +28,7 @@ import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 */
 contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable {
     using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
 
     //
     // Variables
@@ -130,10 +132,10 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.pushChallengeCandidateOrder(order);
 
         // Update challenge
-        challenge.timeout = block.timestamp + configuration.settlementChallengeTimeout();
+        challenge.timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Order;
-        challenge.candidateIndex = driipSettlementChallenge.challengeCandidateOrdersCount() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidateOrdersCount().sub(1);
         challenge.challenger = challenger;
 
         // Update stored challenge
@@ -235,7 +237,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Update challenge
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Trade;
-        challenge.candidateIndex = driipSettlementChallenge.challengeCandidateTradesCount() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidateTradesCount().sub(1);
         challenge.challenger = challenger;
 
         // Update stored challenge
@@ -283,7 +285,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Update challenge
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Payment;
-        challenge.candidateIndex = driipSettlementChallenge.challengeCandidatePaymentsCount() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidatePaymentsCount().sub(1);
         challenge.challenger = challenger;
 
         // Update stored challenge

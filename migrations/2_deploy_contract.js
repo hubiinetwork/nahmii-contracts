@@ -101,7 +101,7 @@ module.exports = (deployer, network, accounts) => {
                 Exchange, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathUintLib, [
-                CancelOrdersChallenge, Exchange, RevenueFund, TokenHolderRevenueFund, Validator
+                CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, Exchange, RevenueFund, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(NahmiiTypes, [
                 CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, Exchange, FraudChallenge,
