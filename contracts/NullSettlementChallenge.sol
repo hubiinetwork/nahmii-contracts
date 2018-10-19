@@ -393,16 +393,6 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         nullSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
-    /// @notice Unchallenge null settlement by providing trade that shows that challenge order candidate has been filled
-    /// @param order The order candidate that challenged driip
-    /// @param trade The trade in which order has been filled
-    function unchallengeOrderCandidateByTrade(NahmiiTypes.Order order, NahmiiTypes.Trade trade)
-    public
-    onlyOperationalModeNormal
-    {
-        nullSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
-    }
-
     /// @notice Challenge the null settlement by providing trade candidate
     /// @param trade The trade candidate that challenges the challenged driip
     /// @param wallet The wallet whose null settlement is being challenged

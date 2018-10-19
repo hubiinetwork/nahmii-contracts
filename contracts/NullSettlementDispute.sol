@@ -44,10 +44,9 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
     event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
-    //    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
-    //    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
-    //    event UnchallengeOrderCandidateByTradeEvent(NahmiiTypes.Order order, NahmiiTypes.Trade trade, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
-    //
+    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
+    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
+
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
@@ -131,49 +130,15 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         nullSettlementChallenge.pushChallengeCandidateOrder(order);
 
         // Update settlement proposal
-        nullSettlementChallenge.setProposalTimeout(order.wallet, block.timestamp.add(configuration.settlementChallengeTimeout()));
         nullSettlementChallenge.setProposalStatus(order.wallet, SettlementTypes.ChallengeStatus.Disqualified);
         nullSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypes.ChallengeCandidateType.Order);
-        nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrdersCount() - 1);
+        nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrdersCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
         // Raise event
         emit ChallengeByOrderEvent(
             order, nullSettlementChallenge.proposalNonce(order.wallet), nullSettlementChallenge.proposalDriipType(order.wallet), challenger
         );
-    }
-
-    /// @notice Unchallenge null settlement by providing trade that shows that challenge order candidate has been filled
-    /// @param order The order candidate that challenged
-    /// @param trade The trade in which order has been filled
-    /// @param unchallenger The address of the unchallenger
-    function unchallengeOrderCandidateByTrade(NahmiiTypes.Order order, NahmiiTypes.Trade trade, address unchallenger)
-    public
-        //    validatorInitialized
-        //    onlyNullSettlementChallenge
-        //    onlySealedOrder(order)
-        //    onlySealedTrade(trade)
-        //    onlyTradeParty(trade, order.wallet)
-        //    onlyTradeOrder(trade, order)
-    {
-        //        require(nullSettlementChallenge != address(0));
-        //        require(fraudChallenge != address(0));
-        //        require(configuration != address(0));
-        //        require(securityBond != address(0));
-        //
-        //        // Require that trade candidate is not labelled fraudulent
-        //        require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
-        //
-        //        // Require that trade candidate's order is not labelled fraudulent or cancelled
-        //        require(!fraudChallenge.isFraudulentOrderExchangeHash(trade.buyer.wallet == order.wallet ?
-        //            trade.buyer.order.hashes.exchange :
-        //            trade.seller.order.hashes.exchange));
-        //
-        //        // Remove the order candidate from the ongoing challenge
-        //        SettlementTypes.Proposal memory challenge = unchallengeOrderCandidate(order, trade, unchallenger);
-        //
-        //        // Raise event
-        //        emit UnchallengeOrderCandidateByTradeEvent(order, trade, challenge.nonce, challenge.driipType, unchallenger);
     }
 
     /// @notice Challenge the null settlement by providing trade candidate
@@ -183,62 +148,64 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
     function challengeByTrade(NahmiiTypes.Trade trade, address wallet, address challenger)
     public
-        //    validatorInitialized
-        //    onlyNullSettlementChallenge
-        //    onlySealedTrade(trade)
-        //    onlyTradeParty(trade, wallet)
+    validatorInitialized
+    onlyNullSettlementChallenge
+    onlySealedTrade(trade)
+    onlyTradeParty(trade, wallet)
     {
-        //        require(nullSettlementChallenge != address(0));
-        //        require(fraudChallenge != address(0));
-        //        require(cancelOrdersChallenge != address(0));
-        //
-        //        // Require that trade candidate is not labelled fraudulent
-        //        require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
-        //
-        //        // Require that trade candidate's order is not labelled fraudulent or cancelled
-        //        bytes32 orderExchangeHash = (trade.buyer.wallet == wallet ?
-        //        trade.buyer.order.hashes.exchange :
-        //        trade.seller.order.hashes.exchange);
-        //        require(!fraudChallenge.isFraudulentOrderExchangeHash(orderExchangeHash));
-        //        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
-        //
-        //        // Require that null settlement challenge is ongoing
-        //        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
-        //
-        //        // Wallet is buyer in (candidate) trade -> consider single conjugate transfer in (candidate) trade
-        //        // Wallet is seller in (candidate) trade -> consider single intended transfer in (candidate) trade
-        //        NahmiiTypes.TradePartyRole tradePartyRole =
-        //        (trade.buyer.wallet == wallet ?
-        //        NahmiiTypes.TradePartyRole.Buyer :
-        //        NahmiiTypes.TradePartyRole.Seller);
-        //        (int256 singleTransfer, MonetaryTypes.Currency memory transferCurrency) =
-        //        (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ?
-        //        (trade.transfers.conjugate.single.abs(), trade.currencies.conjugate) :
-        //        (trade.transfers.intended.single.abs(), trade.currencies.intended));
-        //
-        //        // Get challenge target balance (balance - amount to be staged) and require that trade
-        //        // candidate has relevant currency
-        //        int256 targetBalance = getProposalTargetBalanceAmount(challenge, transferCurrency);
-        //        require(targetBalance.isPositiveInt256());
-        //
-        //        // Require that single transfer is strictly greater than target balance amount for this to be a
-        //        // valid challenge call
-        //        require(singleTransfer.abs() > targetBalance);
-        //
-        //        // Store trade candidate
-        //        nullSettlementChallenge.pushChallengeCandidateTrade(trade);
-        //
-        //        // Update challenge
-        //        challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
-        //        challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Trade;
-        //        challenge.candidateIndex = nullSettlementChallenge.challengeCandidateTradesCount() - 1;
-        //        challenge.challenger = challenger;
-        //
-        //        // Update stored challenge
-        //        nullSettlementChallenge.setWalletChallenge(wallet, challenge);
-        //
-        //        // Raise event
-        //        emit ChallengeByTradeEvent(trade, wallet, challenge.nonce, challenge.driipType, challenger);
+        require(nullSettlementChallenge != address(0));
+        require(fraudChallenge != address(0));
+        require(cancelOrdersChallenge != address(0));
+
+        // Require that trade candidate is not labelled fraudulent
+        require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
+
+        // Require that trade candidate's order is not labelled fraudulent or cancelled
+        bytes32 orderExchangeHash = (trade.buyer.wallet == wallet ?
+        trade.buyer.order.hashes.exchange :
+        trade.seller.order.hashes.exchange);
+        require(!fraudChallenge.isFraudulentOrderExchangeHash(orderExchangeHash));
+        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
+
+        // Require that null settlement challenge is ongoing
+        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(wallet));
+
+        // Require that trade's block number is not earlier than proposal's block number
+        require(trade.blockNumber >= nullSettlementChallenge.proposalBlockNumber(wallet));
+
+        // Wallet is buyer in (candidate) trade -> consider single conjugate transfer in (candidate) trade
+        // Wallet is seller in (candidate) trade -> consider single intended transfer in (candidate) trade
+        NahmiiTypes.TradePartyRole tradePartyRole =
+        (trade.buyer.wallet == wallet ?
+        NahmiiTypes.TradePartyRole.Buyer :
+        NahmiiTypes.TradePartyRole.Seller);
+        (int256 singleTransfer, MonetaryTypes.Currency memory transferCurrency) =
+        (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ?
+        (trade.transfers.conjugate.single.abs(), trade.currencies.conjugate) :
+        (trade.transfers.intended.single.abs(), trade.currencies.intended));
+
+        // Get challenge target balance (balance - amount to be staged) and require that trade
+        // candidate has relevant currency
+        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, transferCurrency.ct, transferCurrency.id);
+        require(targetBalanceAmount.isPositiveInt256());
+
+        // Require that single transfer is strictly greater than target balance amount for this to be a
+        // valid challenge call
+        require(singleTransfer.abs() > targetBalanceAmount);
+
+        // Store trade candidate
+        nullSettlementChallenge.pushChallengeCandidateTrade(trade);
+
+        // Update settlement proposal
+        nullSettlementChallenge.setProposalStatus(wallet, SettlementTypes.ChallengeStatus.Disqualified);
+        nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypes.ChallengeCandidateType.Trade);
+        nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradesCount().sub(1));
+        nullSettlementChallenge.setProposalChallenger(wallet, challenger);
+
+        // Raise event
+        emit ChallengeByTradeEvent(
+            trade, wallet, nullSettlementChallenge.proposalNonce(wallet), nullSettlementChallenge.proposalDriipType(wallet), challenger
+        );
     }
 
     /// @notice Challenge the null settlement by providing payment candidate
@@ -247,119 +214,52 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     /// @dev If wallet is recipient in (candidate) payment there is nothing here to challenge
     function challengeByPayment(NahmiiTypes.Payment payment, address wallet, address challenger)
     public
-        //    validatorInitialized
-        //    onlyNullSettlementChallenge
-        //    onlySealedPayment(payment)
-        //    onlyPaymentSender(payment, wallet)
+    validatorInitialized
+    onlyNullSettlementChallenge
+    onlySealedPayment(payment)
+    onlyPaymentSender(payment, wallet)
     {
-        //        require(nullSettlementChallenge != address(0));
-        //        require(fraudChallenge != address(0));
-        //
-        //        // Require that payment candidate is not labelled fraudulent
-        //        require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
-        //
-        //        // Require that null settlement challenge is ongoing
-        //        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
-        //
-        //        // Get challenge target balance (balance - amount to be staged) and require that payment
-        //        // candidate has relevant currency
-        //        int256 targetBalance = getProposalTargetBalanceAmount(challenge, payment.currency);
-        //        require(targetBalance.isPositiveInt256());
-        //
-        //        // Require that single transfer is strictly greater than target balance amount for this to be a
-        //        // valid challenge call
-        //        require(payment.transfers.single.abs() > targetBalance);
-        //
-        //        // Store payment candidate
-        //        nullSettlementChallenge.pushChallengeCandidatePayment(payment);
-        //
-        //        // Update challenge
-        //        challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
-        //        challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Payment;
-        //        challenge.candidateIndex = nullSettlementChallenge.challengeCandidatePaymentsCount() - 1;
-        //        challenge.challenger = challenger;
-        //
-        //        // Update stored challenge
-        //        nullSettlementChallenge.setWalletChallenge(wallet, challenge);
-        //
-        //        // Raise event
-        //        emit ChallengeByPaymentEvent(payment, wallet, challenge.nonce, challenge.driipType, challenger);
+        require(nullSettlementChallenge != address(0));
+        require(fraudChallenge != address(0));
+
+        // Require that payment candidate is not labelled fraudulent
+        require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
+
+        // Require that null settlement challenge is ongoing
+        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(wallet));
+
+        // Require that trade's block number is not earlier than proposal's block number
+        require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(wallet));
+
+        // Get challenge target balance (balance - amount to be staged) and require that payment
+        // candidate has relevant currency
+        // Get challenge target balance (balance - amount to be staged) and require that trade
+        // candidate has relevant currency
+        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, payment.currency.ct, payment.currency.id);
+        require(targetBalanceAmount.isPositiveInt256());
+
+        // Require that single transfer is strictly greater than target balance amount for this to be a
+        // valid challenge call
+        require(payment.transfers.single.abs() > targetBalanceAmount);
+
+        // Store payment candidate
+        nullSettlementChallenge.pushChallengeCandidatePayment(payment);
+
+        // Update settlement proposal
+        nullSettlementChallenge.setProposalStatus(wallet, SettlementTypes.ChallengeStatus.Disqualified);
+        nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypes.ChallengeCandidateType.Payment);
+        nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
+        nullSettlementChallenge.setProposalChallenger(wallet, challenger);
+
+        // Raise event
+        emit ChallengeByPaymentEvent(
+            payment, wallet, nullSettlementChallenge.proposalNonce(wallet), nullSettlementChallenge.proposalDriipType(wallet), challenger
+        );
     }
 
-    /// @notice Get target balance amount of challenge
-    /// @dev If not found in challenge return -1
-    //    function getProposalTargetBalanceAmount(SettlementTypes.Proposal proposal,
-    //        MonetaryTypes.Currency currency)
-    //    private
-    //    pure
-    //    returns (int256)
-    //    {
-    //        int256 amount = - 1;
-    //        if (proposal.intendedTargetBalance.set &&
-    //        currency.ct == proposal.intendedTargetBalance.figure.currency.ct &&
-    //        currency.id == proposal.intendedTargetBalance.figure.currency.id)
-    //            amount = proposal.intendedTargetBalance.figure.amount;
-    //        else if (proposal.conjugateTargetBalance.set &&
-    //        currency.ct == proposal.conjugateTargetBalance.figure.currency.ct &&
-    //        currency.id == proposal.conjugateTargetBalance.figure.currency.id)
-    //            amount = proposal.conjugateTargetBalance.figure.amount;
-    //        return amount;
-    //    }
-
-    //    /// @notice Step in unchallenge of null settlement challenge by order
-    //    /// @param order The order candidate that challenged
-    //    /// @param trade The trade in which order has been filled
-    //    /// @param challenger The wallet that challenges
-    //    function unchallengeOrderCandidate(NahmiiTypes.Order order, NahmiiTypes.Trade trade, address challenger)
-    //    private
-    //    returns (SettlementTypes.Proposal)
-    //    {
-    //        // Get challenge and require that it is ongoing and that its candidate type is order
-    //        SettlementTypes.Proposal memory challenge = nullSettlementChallenge.walletChallenge(order.wallet);
-    //        require(
-    //            0 < challenge.nonce
-    //            && block.timestamp < challenge.timeout
-    //        );
-    //        require(challenge.candidateType == DriipSettlementTypes.ChallengeCandidateType.Order);
     //
-    //        // Get challenge and require that its exchange has matches the one of order
-    //        NahmiiTypes.Order memory challengeOrder = nullSettlementChallenge.challengeCandidateOrders(challenge.candidateIndex);
-    //        require(challengeOrder.seals.exchange.hash == order.seals.exchange.hash);
-    //
-    //        // Require that challenge order's exchange hash matches any or the exchange hash of any of the trade
-    //        // orders for this to be a valid unchallenge call
-    //        require(challengeOrder.seals.exchange.hash == (trade.buyer.wallet == order.wallet ?
-    //        trade.buyer.order.hashes.exchange :
-    //        trade.seller.order.hashes.exchange));
-    //
-    //        // Reset the challenge outcome
-    //        nullSettlementChallenge.resetWalletChallenge(order.wallet);
-    //
-    //        // Obtain stake and stage it in SecurityBond
-    //        (int256 stakeAmount, address stakeCurrencyCt, uint256 stakeCurrencyId) = configuration.getUnchallengeOrderCandidateByTradeStake();
-    //        securityBond.stage(challenger, stakeAmount, stakeCurrencyCt, stakeCurrencyId);
-    //
-    //        return challenge;
-    //    }
-    //
-    //    //
-    //    // Modifiers
-    //    // -----------------------------------------------------------------------------------------------------------------
-    //    modifier onlyTradeParty(NahmiiTypes.Trade trade, address wallet) {
-    //        require(NahmiiTypes.isTradeParty(trade, wallet));
-    //        _;
-    //    }
-    //
-    //    modifier onlyTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order) {
-    //        require(NahmiiTypes.isTradeOrder(trade, order));
-    //        _;
-    //    }
-    //
-    //    modifier onlyPaymentSender(NahmiiTypes.Payment payment, address wallet) {
-    //        require(NahmiiTypes.isPaymentSender(payment, wallet));
-    //        _;
-    //    }
-
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
     modifier onlyNullSettlementChallenge() {
         require(msg.sender == address(nullSettlementChallenge));
         _;
