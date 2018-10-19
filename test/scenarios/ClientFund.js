@@ -51,26 +51,26 @@ module.exports = function (glob) {
             provider = glob.signer_owner.provider;
         });
 
-        describe('depositCount()', () => {
+        describe('depositsCount()', () => {
             it('should return initial value', async () => {
                 const address = Wallet.createRandom().address;
-                const result = await glob.ethersIoClientFund.depositCount(address);
+                const result = await glob.ethersIoClientFund.depositsCount(address);
                 result.should.deep.equal(utils.bigNumberify(0));
             });
         });
 
-        describe('depositOfCurrencyCount()', () => {
+        describe('depositsOfCurrencyCount()', () => {
             it('should return initial value', async () => {
                 const address = Wallet.createRandom().address;
-                const result = await glob.ethersIoClientFund.depositOfCurrencyCount(address, mocks.address0, 0);
+                const result = await glob.ethersIoClientFund.depositsOfCurrencyCount(address, mocks.address0, 0);
                 result.should.deep.equal(utils.bigNumberify(0));
             });
         });
 
-        describe('withdrawalCount()', () => {
+        describe('withdrawalsCount()', () => {
             it('should return initial value', async () => {
                 const address = Wallet.createRandom().address;
-                const result = await glob.ethersIoClientFund.withdrawalCount(address);
+                const result = await glob.ethersIoClientFund.withdrawalsCount(address);
                 result.should.deep.equal(utils.bigNumberify(0));
             });
         });
@@ -183,7 +183,7 @@ module.exports = function (glob) {
             let depositCountBefore, depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore;
 
             before(async () => {
-                depositCountBefore = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositCountBefore = await glob.ethersIoClientFund.depositsCount(glob.user_a);
                 depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
                 settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
                 stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
@@ -197,8 +197,8 @@ module.exports = function (glob) {
                     gas: glob.gasLimit
                 });
 
-                const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
-                depositCount.should.deep.equal(depositCountBefore.add(1));
+                const depositsCount = await glob.ethersIoClientFund.depositsCount(glob.user_a);
+                depositsCount.should.deep.equal(depositCountBefore.add(1));
                 depositEtherIndex = depositCountBefore.toNumber();
                 currencyDepositEtherIndex++;
                 depositEtherBlockNumber = await provider.getBlockNumber();
@@ -216,7 +216,7 @@ module.exports = function (glob) {
             let depositCountBefore, depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore;
 
             before(async () => {
-                depositCountBefore = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositCountBefore = await glob.ethersIoClientFund.depositsCount(glob.user_a);
                 depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, mocks.address0, 0);
                 settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, mocks.address0, 0);
                 stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, mocks.address0, 0);
@@ -232,8 +232,8 @@ module.exports = function (glob) {
                     }
                 );
 
-                const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
-                depositCount.should.deep.equal(depositCountBefore.add(1));
+                const depositsCount = await glob.ethersIoClientFund.depositsCount(glob.user_a);
+                depositsCount.should.deep.equal(depositCountBefore.add(1));
                 depositEtherIndex = depositCountBefore.toNumber();
                 currencyDepositEtherIndex++;
                 depositEtherBlockNumber = await provider.getBlockNumber();
@@ -251,7 +251,7 @@ module.exports = function (glob) {
             let depositCountBefore, depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore;
 
             beforeEach(async () => {
-                depositCountBefore = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositCountBefore = await glob.ethersIoClientFund.depositsCount(glob.user_a);
                 depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
                 settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
                 stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
@@ -312,8 +312,8 @@ module.exports = function (glob) {
                     it('should add deposit and increment deposited balance of ', async () => {
                         await glob.web3ClientFund.depositTokens(singleDepositERC20, glob.web3Erc20.address, 0, '', {from: glob.user_a});
 
-                        const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
-                        depositCount.should.deep.equal(utils.bigNumberify(depositCountBefore.add(1)));
+                        const depositsCount = await glob.ethersIoClientFund.depositsCount(glob.user_a);
+                        depositsCount.should.deep.equal(utils.bigNumberify(depositCountBefore.add(1)));
                         depositERC20Index = depositCountBefore.toNumber();
                         currencyDepositERC20Index++;
                         depositERC20BlockNumber = await provider.getBlockNumber();
@@ -333,7 +333,7 @@ module.exports = function (glob) {
             let depositCountBefore, depositedBalanceBefore, settledBalanceBefore, stagedBalanceBefore;
 
             beforeEach(async () => {
-                depositCountBefore = await glob.ethersIoClientFund.depositCount(glob.user_a);
+                depositCountBefore = await glob.ethersIoClientFund.depositsCount(glob.user_a);
                 depositedBalanceBefore = await glob.ethersIoClientFund.depositedBalance(glob.user_a, glob.web3Erc20.address, 0);
                 settledBalanceBefore = await glob.ethersIoClientFund.settledBalance(glob.user_a, glob.web3Erc20.address, 0);
                 stagedBalanceBefore = await glob.ethersIoClientFund.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
@@ -394,8 +394,8 @@ module.exports = function (glob) {
                     it('should add deposit and increment deposited balance', async () => {
                         await glob.web3ClientFund.depositTokensTo(glob.user_a, singleDepositERC20, glob.web3Erc20.address, 0, '', {from: glob.user_a});
 
-                        const depositCount = await glob.ethersIoClientFund.depositCount(glob.user_a);
-                        depositCount.should.deep.equal(utils.bigNumberify(depositCountBefore.add(1)));
+                        const depositsCount = await glob.ethersIoClientFund.depositsCount(glob.user_a);
+                        depositsCount.should.deep.equal(utils.bigNumberify(depositCountBefore.add(1)));
                         depositERC20Index = depositCountBefore.toNumber();
                         currencyDepositERC20Index++;
                         depositERC20BlockNumber = await provider.getBlockNumber();
@@ -1276,7 +1276,7 @@ module.exports = function (glob) {
             let withdrawalCountBefore;
 
             beforeEach(async () => {
-                withdrawalCountBefore = await glob.ethersIoClientFund.withdrawalCount(glob.user_a);
+                withdrawalCountBefore = await glob.ethersIoClientFund.withdrawalsCount(glob.user_a);
             });
 
             describe('of Ether', () => {

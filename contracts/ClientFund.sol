@@ -159,15 +159,15 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @notice Get the count of the given wallet's deposits
     /// @param wallet The address of the concerned wallet
     /// @return The count of the concerned wallet's deposits
-    function depositCount(address wallet) public view returns (uint256) {
-        return walletMap[wallet].txHistory.depositCount();
+    function depositsCount(address wallet) public view returns (uint256) {
+        return walletMap[wallet].txHistory.depositsCount();
     }
 
-    /// @notice Get metadata of the given wallet's deposit at the given index
+    /// @notice Get metadata of the given wallet's deposit in the given currency at the given index
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param index The index of wallet's deposit
+    /// @param index The index of wallet's deposit in the given currency
     /// @return The deposit metadata
     function depositOfCurrency(address wallet, address currencyCt, uint256 currencyId, uint256 index)
     public
@@ -177,17 +177,17 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         return walletMap[wallet].txHistory.currencyDeposit(currencyCt, currencyId, index);
     }
 
-    /// @notice Get the count of the given wallet's deposits
+    /// @notice Get the count of the given wallet's deposits in the given currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The count of the concerned wallet's deposits
-    function depositOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
+    /// @return The count of the concerned wallet's deposits in the given currency
+    function depositsOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
-        return walletMap[wallet].txHistory.currencyDepositCount(currencyCt, currencyId);
+        return walletMap[wallet].txHistory.currencyDepositsCount(currencyCt, currencyId);
     }
 
     /// @notice Get deposited balance of the given wallet and currency
@@ -428,19 +428,19 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @notice Get the count of the given wallet's withdrawals
     /// @param wallet The address of the concerned wallet
     /// @return The count of the concerned wallet's withdrawals
-    function withdrawalCount(address wallet)
+    function withdrawalsCount(address wallet)
     public
     view
     returns (uint256)
     {
-        return walletMap[wallet].txHistory.withdrawalCount();
+        return walletMap[wallet].txHistory.withdrawalsCount();
     }
 
-    /// @notice Get metadata of the given wallet's withdrawal at the given index
+    /// @notice Get metadata of the given wallet's withdrawal in the given currency at the given index
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param index The index of wallet's withdrawal
+    /// @param index The index of wallet's withdrawal in the given currency
     /// @return The withdrawal metadata
     function withdrawalOfCurrency(address wallet, address currencyCt, uint256 currencyId, uint256 index)
     public
@@ -450,17 +450,17 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         return walletMap[wallet].txHistory.currencyWithdrawal(currencyCt, currencyId, index);
     }
 
-    /// @notice Get the count of the given wallet's withdrawals
+    /// @notice Get the count of the given wallet's withdrawals in the given currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The count of the concerned wallet's withdrawals
+    /// @return The count of the concerned wallet's withdrawals in the given currency
     function withdrawalOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
-        return walletMap[wallet].txHistory.currencyWithdrawalCount(currencyCt, currencyId);
+        return walletMap[wallet].txHistory.currencyWithdrawalsCount(currencyCt, currencyId);
     }
 
     //

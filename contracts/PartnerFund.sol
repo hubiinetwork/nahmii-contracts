@@ -161,7 +161,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].txHistory.addDeposit(amount, address(0), 0);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(address(0), 0), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositsCount() - 1, walletMap[tag].active.get(address(0), 0), block.number));
 
         // Emit event
         emit DepositEvent(tag, msg.sender, amount, address(0), 0);
@@ -184,7 +184,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositsCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         // Emit event
         emit DepositEvent(tag, msg.sender, amount, currencyCt, currencyId);
@@ -207,12 +207,12 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return deposit(partnerFromWallet(wallet), index);
     }
 
-    function depositCount(address tag) public view isRegisteredTag(tag) returns (uint256) {
+    function depositsCount(address tag) public view isRegisteredTag(tag) returns (uint256) {
         return walletMap[tag].fullDepositHistory.length;
     }
 
     function depositCountFromAddress(address wallet) public view returns (uint256) {
-        return depositCount(partnerFromWallet(wallet));
+        return depositsCount(partnerFromWallet(wallet));
     }
 
 
@@ -254,7 +254,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositsCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         // Emit event
         emit StageEvent(tag, msg.sender, amount, currencyCt, currencyId);

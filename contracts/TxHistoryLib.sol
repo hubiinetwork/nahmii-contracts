@@ -12,7 +12,7 @@ library TxHistoryLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct DepositOrWithdrawal {
+    struct AssetEntry {
         int256 amount;
         uint256 blockNumber;
         address currencyCt;      //0 for ethers
@@ -20,11 +20,11 @@ library TxHistoryLib {
     }
 
     struct TxHistory {
-        DepositOrWithdrawal[] deposits;
-        mapping(address => mapping(uint256 => DepositOrWithdrawal[])) currencyDeposits;
+        AssetEntry[] deposits;
+        mapping(address => mapping(uint256 => AssetEntry[])) currencyDeposits;
 
-        DepositOrWithdrawal[] withdrawals;
-        mapping(address => mapping(uint256 => DepositOrWithdrawal[])) currencyWithdrawals;
+        AssetEntry[] withdrawals;
+        mapping(address => mapping(uint256 => AssetEntry[])) currencyWithdrawals;
     }
 
     //
@@ -33,7 +33,7 @@ library TxHistoryLib {
     function addDeposit(TxHistory storage self, int256 amount, address currencyCt, uint256 currencyId)
     internal
     {
-        DepositOrWithdrawal memory deposit = DepositOrWithdrawal(amount, block.number, currencyCt, currencyId);
+        AssetEntry memory deposit = AssetEntry(amount, block.number, currencyCt, currencyId);
         self.deposits.push(deposit);
         self.currencyDeposits[currencyCt][currencyId].push(deposit);
     }
@@ -41,7 +41,7 @@ library TxHistoryLib {
     function addWithdrawal(TxHistory storage self, int256 amount, address currencyCt, uint256 currencyId)
     internal
     {
-        DepositOrWithdrawal memory withdrawal = DepositOrWithdrawal(amount, block.number, currencyCt, currencyId);
+        AssetEntry memory withdrawal = AssetEntry(amount, block.number, currencyCt, currencyId);
         self.withdrawals.push(withdrawal);
         self.currencyWithdrawals[currencyCt][currencyId].push(withdrawal);
     }
@@ -61,7 +61,7 @@ library TxHistoryLib {
         currencyId = self.deposits[index].currencyId;
     }
 
-    function depositCount(TxHistory storage self) internal view returns (uint256) {
+    function depositsCount(TxHistory storage self) internal view returns (uint256) {
         return self.deposits.length;
     }
 
@@ -76,7 +76,7 @@ library TxHistoryLib {
         blockNumber = self.currencyDeposits[currencyCt][currencyId][index].blockNumber;
     }
 
-    function currencyDepositCount(TxHistory storage self, address currencyCt, uint256 currencyId) internal view returns (uint256) {
+    function currencyDepositsCount(TxHistory storage self, address currencyCt, uint256 currencyId) internal view returns (uint256) {
         return self.currencyDeposits[currencyCt][currencyId].length;
     }
 
@@ -95,7 +95,7 @@ library TxHistoryLib {
         currencyId = self.withdrawals[index].currencyId;
     }
 
-    function withdrawalCount(TxHistory storage self)
+    function withdrawalsCount(TxHistory storage self)
     internal
     view
     returns (uint256)
@@ -114,7 +114,7 @@ library TxHistoryLib {
         blockNumber = self.currencyWithdrawals[currencyCt][currencyId][index].blockNumber;
     }
 
-    function currencyWithdrawalCount(TxHistory storage self, address currencyCt, uint256 currencyId) internal view returns (uint256) {
+    function currencyWithdrawalsCount(TxHistory storage self, address currencyCt, uint256 currencyId) internal view returns (uint256) {
         return self.currencyWithdrawals[currencyCt][currencyId].length;
     }
 }

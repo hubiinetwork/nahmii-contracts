@@ -128,8 +128,8 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         return walletMap[wallet].txHistory.deposit(index);
     }
 
-    function depositCount(address wallet) public view returns (uint256) {
-        return walletMap[wallet].txHistory.depositCount();
+    function depositsCount(address wallet) public view returns (uint256) {
+        return walletMap[wallet].txHistory.depositsCount();
     }
 
     //
@@ -228,8 +228,8 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
-    function withdrawalCount(address wallet) public view returns (uint256) {
-        return walletMap[wallet].txHistory.withdrawalCount();
+    function withdrawalsCount(address wallet) public view returns (uint256) {
+        return walletMap[wallet].txHistory.withdrawalsCount();
     }
 
     //
