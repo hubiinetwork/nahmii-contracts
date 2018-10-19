@@ -87,8 +87,8 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
     }
 
-    /// @notice Challenge the driip settlement by providing order candidate
-    /// @param order The order candidate that challenges the challenged driip
+    /// @notice Challenge the null settlement by providing order candidate
+    /// @param order The order candidate that challenges
     /// @param challenger The address of the challenger
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
@@ -105,11 +105,8 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         require(!fraudChallenge.isFraudulentOrderExchangeHash(order.seals.exchange.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
 
-        // Get settlement proposal nonce and timeout and require that it is ongoing
-        require(
-            0 < nullSettlementChallenge.proposalNonce(order.wallet) &&
-            block.timestamp < nullSettlementChallenge.proposalTimeout(order.wallet)
-        );
+        // Require that null settlement challenge is ongoing
+        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
 
         // Buy order -> Conjugate currency and amount
         // Sell order -> Intended currency and amount
@@ -143,8 +140,8 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         );
     }
 
-    /// @notice Unchallenge driip settlement by providing trade that shows that challenge order candidate has been filled
-    /// @param order The order candidate that challenged driip
+    /// @notice Unchallenge null settlement by providing trade that shows that challenge order candidate has been filled
+    /// @param order The order candidate that challenged
     /// @param trade The trade in which order has been filled
     /// @param unchallenger The address of the unchallenger
     function unchallengeOrderCandidateByTrade(NahmiiTypes.Order order, NahmiiTypes.Trade trade, address unchallenger)
@@ -176,9 +173,9 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         //        emit UnchallengeOrderCandidateByTradeEvent(order, trade, challenge.nonce, challenge.driipType, unchallenger);
     }
 
-    /// @notice Challenge the driip settlement by providing trade candidate
-    /// @param trade The trade candidate that challenges the challenged driip
-    /// @param wallet The wallet whose driip settlement is being challenged
+    /// @notice Challenge the null settlement by providing trade candidate
+    /// @param trade The trade candidate that challenges
+    /// @param wallet The wallet whose settlement is being challenged
     /// @dev If wallet is buyer in (candidate) trade consider single _conjugate_ transfer in (candidate) trade. Else
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
     function challengeByTrade(NahmiiTypes.Trade trade, address wallet, address challenger)
@@ -202,12 +199,8 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         //        require(!fraudChallenge.isFraudulentOrderExchangeHash(orderExchangeHash));
         //        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
         //
-        //        // Get challenge and require that it is ongoing
-        //        SettlementTypes.Proposal memory challenge = nullSettlementChallenge.walletChallenge(wallet);
-        //        require(
-        //            0 < challenge.nonce
-        //            && block.timestamp < challenge.timeout
-        //        );
+        //        // Require that null settlement challenge is ongoing
+        //        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
         //
         //        // Wallet is buyer in (candidate) trade -> consider single conjugate transfer in (candidate) trade
         //        // Wallet is seller in (candidate) trade -> consider single intended transfer in (candidate) trade
@@ -245,9 +238,9 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         //        emit ChallengeByTradeEvent(trade, wallet, challenge.nonce, challenge.driipType, challenger);
     }
 
-    /// @notice Challenge the driip settlement by providing payment candidate
-    /// @param payment The payment candidate that challenges the challenged driip
-    /// @param wallet The wallet whose driip settlement is being challenged
+    /// @notice Challenge the null settlement by providing payment candidate
+    /// @param payment The payment candidate that challenges
+    /// @param wallet The wallet whose settlement is being challenged
     /// @dev If wallet is recipient in (candidate) payment there is nothing here to challenge
     function challengeByPayment(NahmiiTypes.Payment payment, address wallet, address challenger)
     public
@@ -262,11 +255,8 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         //        // Require that payment candidate is not labelled fraudulent
         //        require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
         //
-        //        // Get challenge and require that it is ongoing
-        //        SettlementTypes.Proposal memory challenge = nullSettlementChallenge.walletChallenge(wallet);
-        //        require(
-        //            0 < challenge.nonce && block.timestamp < challenge.timeout
-        //        );
+        //        // Require that null settlement challenge is ongoing
+        //        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
         //
         //        // Get challenge target balance (balance - amount to be staged) and require that payment
         //        // candidate has relevant currency
@@ -313,8 +303,8 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     //        return amount;
     //    }
 
-    //    /// @notice Step in unchallenge of driip settlement challenge by order
-    //    /// @param order The order candidate that challenged driip
+    //    /// @notice Step in unchallenge of null settlement challenge by order
+    //    /// @param order The order candidate that challenged
     //    /// @param trade The trade in which order has been filled
     //    /// @param challenger The wallet that challenges
     //    function unchallengeOrderCandidate(NahmiiTypes.Order order, NahmiiTypes.Trade trade, address challenger)

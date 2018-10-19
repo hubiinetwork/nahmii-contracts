@@ -26,6 +26,7 @@ library SettlementTypes {
 
     struct Proposal {
         uint256 nonce; // TODO Consider removal of nonce in place of exchange' hash
+        uint256 blockNumber;
         uint256 timeout;
 
         // Status

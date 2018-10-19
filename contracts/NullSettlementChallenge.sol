@@ -95,10 +95,16 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
             0 == walletProposalMap[msg.sender].nonce || block.timestamp >= walletProposalMap[msg.sender].timeout
         );
 
-        int256 balanceAmount = clientFund.activeBalance(msg.sender, currencyCt, currencyId);
-        require(balanceAmount >= amount);
+        uint256 activeAccumulationsCount = clientFund.activeAccumulationsCount(msg.sender, currencyCt, currencyId);
+        require(activeAccumulationsCount > 0);
+
+        (int256 activeBalanceAmount, uint256 activeAccumulationBlockNumber) = clientFund.activeAccumulation(
+            msg.sender, currencyCt, currencyId, activeAccumulationsCount.sub(1)
+        );
+        require(activeBalanceAmount >= amount);
 
         walletProposalMap[msg.sender].nonce = walletProposalMap[msg.sender].nonce.add(1);
+        walletProposalMap[msg.sender].blockNumber = activeAccumulationBlockNumber;
         walletProposalMap[msg.sender].timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         walletProposalMap[msg.sender].status = SettlementTypes.ChallengeStatus.Qualified;
         walletProposalMap[msg.sender].currencies.length = 0;
@@ -106,7 +112,7 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         walletProposalMap[msg.sender].stageAmounts.length = 0;
         walletProposalMap[msg.sender].stageAmounts.push(amount);
         walletProposalMap[msg.sender].targetBalanceAmounts.length = 0;
-        walletProposalMap[msg.sender].targetBalanceAmounts.push(balanceAmount.sub(amount));
+        walletProposalMap[msg.sender].targetBalanceAmounts.push(activeBalanceAmount.sub(amount));
 
         emit StartChallenge(msg.sender, amount, currencyCt, currencyId);
     }
@@ -120,7 +126,7 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     returns (NahmiiTypes.ChallengePhase) {
         if (msg.sender != deployer)
             wallet = msg.sender;
-        if (0 != walletProposalMap[wallet].nonce && block.timestamp < walletProposalMap[wallet].timeout)
+        if (0 < walletProposalMap[wallet].nonce && block.timestamp < walletProposalMap[wallet].timeout)
             return NahmiiTypes.ChallengePhase.Dispute;
         else
             return NahmiiTypes.ChallengePhase.Closed;
@@ -135,6 +141,17 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     returns (uint256)
     {
         return walletProposalMap[wallet].nonce;
+    }
+
+    /// @notice Get the settlement proposal block number of the given wallet
+    /// @param wallet The concerned wallet
+    /// @return The settlement proposal block number
+    function proposalBlockNumber(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletProposalMap[wallet].blockNumber;
     }
 
     /// @notice Get the settlement proposal timeout of the given wallet
