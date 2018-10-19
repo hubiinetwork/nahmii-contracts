@@ -354,18 +354,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyTradeParty(NahmiiTypes.Trade trade, address wallet) {
-        require(NahmiiTypes.isTradeParty(trade, wallet));
-        _;
-    }
-
     modifier onlyTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order) {
         require(NahmiiTypes.isTradeOrder(trade, order));
-        _;
-    }
-
-    modifier onlyPaymentSender(NahmiiTypes.Payment payment, address wallet) {
-        require(NahmiiTypes.isPaymentSender(payment, wallet));
         _;
     }
 
