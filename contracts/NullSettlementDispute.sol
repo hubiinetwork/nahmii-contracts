@@ -12,13 +12,13 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
-import {SecurityBondable} from "./SecurityBondable.sol";
+import {FraudChallengable} from "./FraudChallengable.sol";
+import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {SettlementTypes} from "./SettlementTypes.sol";
-import {FraudChallenge} from "./FraudChallenge.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 
@@ -26,7 +26,7 @@ import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 @title NullSettlementDispute
 @notice The workhorse of null settlement challenges, utilized by NullSettlementChallenge
 */
-contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable {
+contract NullSettlementDispute is Ownable, Configurable, Validatable, FraudChallengable, CancelOrdersChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -34,15 +34,11 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     NullSettlementChallenge public nullSettlementChallenge;
-    FraudChallenge public fraudChallenge;
-    CancelOrdersChallenge public cancelOrdersChallenge;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge, NullSettlementChallenge newNullSettlementChallenge);
-    event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
-    event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
     event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
     event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
     event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
@@ -64,28 +60,6 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         emit ChangeNullSettlementChallengeEvent(oldNullSettlementChallenge, nullSettlementChallenge);
     }
 
-    /// @notice Change the fraud challenge contract
-    /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge) public
-    onlyDeployer
-    notNullAddress(newFraudChallenge)
-    {
-        FraudChallenge oldFraudChallenge = fraudChallenge;
-        fraudChallenge = newFraudChallenge;
-        emit ChangeFraudChallengeEvent(oldFraudChallenge, fraudChallenge);
-    }
-
-    /// @notice Change the cancel orders challenge contract
-    /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
-    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge) public
-    onlyDeployer
-    notNullAddress(newCancelOrdersChallenge)
-    {
-        CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
-        cancelOrdersChallenge = newCancelOrdersChallenge;
-        emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
-    }
-
     /// @notice Challenge the null settlement by providing order candidate
     /// @param order The order candidate that challenges
     /// @param challenger The address of the challenger
@@ -93,13 +67,12 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     /// if (candidate) order has sell intention consider _intended_ currency and amount
     function challengeByOrder(NahmiiTypes.Order order, address challenger) public
     validatorInitialized
+    fraudChallengeInitialized
+    cancelOrdersChallengeInitialized
+    nullSettlementChallengeInitialized
     onlyNullSettlementChallenge
     onlySealedOrder(order)
     {
-        require(nullSettlementChallenge != address(0));
-        require(fraudChallenge != address(0));
-        require(cancelOrdersChallenge != address(0));
-
         // Require that order candidate is not labelled fraudulent or cancelled
         require(!fraudChallenge.isFraudulentOrderExchangeHash(order.seals.exchange.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
@@ -149,14 +122,13 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     function challengeByTrade(NahmiiTypes.Trade trade, address wallet, address challenger)
     public
     validatorInitialized
+    fraudChallengeInitialized
+    cancelOrdersChallengeInitialized
+    nullSettlementChallengeInitialized
     onlyNullSettlementChallenge
     onlySealedTrade(trade)
     onlyTradeParty(trade, wallet)
     {
-        require(nullSettlementChallenge != address(0));
-        require(fraudChallenge != address(0));
-        require(cancelOrdersChallenge != address(0));
-
         // Require that trade candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
 
@@ -215,13 +187,12 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     function challengeByPayment(NahmiiTypes.Payment payment, address wallet, address challenger)
     public
     validatorInitialized
+    fraudChallengeInitialized
+    nullSettlementChallengeInitialized
     onlyNullSettlementChallenge
     onlySealedPayment(payment)
     onlyPaymentSender(payment, wallet)
     {
-        require(nullSettlementChallenge != address(0));
-        require(fraudChallenge != address(0));
-
         // Require that payment candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
 
@@ -260,6 +231,11 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
+    modifier nullSettlementChallengeInitialized() {
+        require(nullSettlementChallenge != address(0));
+        _;
+    }
+
     modifier onlyNullSettlementChallenge() {
         require(msg.sender == address(nullSettlementChallenge));
         _;

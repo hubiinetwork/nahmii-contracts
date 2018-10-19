@@ -272,9 +272,9 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
             tx = await instance.changeValidator(addressStorage.get('Validator'));
             tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
             tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
             tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+            tx = await instance.changeDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
 
             instance = await NullSettlementChallenge.at(addressStorage.get('NullSettlementChallenge'));
             tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
@@ -285,10 +285,9 @@ module.exports = (deployer, network, accounts) => {
             instance = await NullSettlementDispute.at(addressStorage.get('NullSettlementDispute'));
             tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
             tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
             tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
             tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+            tx = await instance.changeNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
 
             instance = await FraudChallenge.at(addressStorage.get('FraudChallenge'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
