@@ -11,8 +11,6 @@ pragma solidity ^0.4.24;
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 library AccumulationLib {
-    using SafeMathIntLib for int256;
-
     struct Entry {
         int256 amount;
         uint256 blockNumber;
@@ -51,6 +49,7 @@ library AccumulationLib {
 
     function count(Accumulation storage self, address currencyCt, uint256 currencyId)
     internal
+    view
     returns (uint256)
     {
         if (currencyCt == address(0))

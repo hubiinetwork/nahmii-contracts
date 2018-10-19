@@ -17,6 +17,7 @@ import {Ownable} from "./Ownable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
+import {AccumulationLib} from "./AccumulationLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
@@ -27,6 +28,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 */
 contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
+    using AccumulationLib for AccumulationLib.Accumulation;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
     using SafeMathIntLib for int256;
@@ -38,6 +40,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         BalanceLib.Balance deposited;
         BalanceLib.Balance staged;
         BalanceLib.Balance settled;
+        AccumulationLib.Accumulation active;
 
         TxHistoryLib.TxHistory txHistory;
 
@@ -98,6 +101,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].deposited.add(amount, address(0), 0);
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
+        // Add active accumulation entry
+        walletMap[wallet].active.add(
+            walletMap[wallet].deposited.get(address(0), 0)
+            .add(walletMap[wallet].settled.get(address(0), 0)),
+            address(0), 0);
+
         // Add currency to in-use list
         walletMap[wallet].inUseCurrencies.addItem(address(0), 0);
 
@@ -136,6 +145,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         // Add to per-wallet deposited balance
         walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
+
+        // Add active accumulation entry
+        walletMap[wallet].active.add(
+            walletMap[wallet].deposited.get(currencyCt, currencyId)
+            .add(walletMap[wallet].settled.get(currencyCt, currencyId)),
+            currencyCt, currencyId);
 
         // Add currency to in-use list
         walletMap[wallet].inUseCurrencies.addItem(currencyCt, currencyId);
@@ -248,6 +263,35 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         );
     }
 
+    /// @notice Get active accumulation of the given wallet and currency at the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param index The index of wallet's active accumulation in the given currency
+    /// @return The active accumulation of the concerned wallet and currency
+    function activeAccumulation(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    notNullAddress(wallet)
+    returns (int256 amount, uint256 blockNumber)
+    {
+        return walletMap[wallet].active.get(currencyCt, currencyId, index);
+    }
+
+    /// @notice Get the count of the given wallet's active accumulations in the given currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of the concerned wallet's active accumulations in the given currency
+    function activeAccumulationsCount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    notNullAddress(wallet)
+    returns (uint256)
+    {
+        return walletMap[wallet].active.count(currencyCt, currencyId);
+    }
+
     /// @notice Update the settled balance by the difference between provided amount and deposited on-chain balance
     /// @param wallet The address of the concerned wallet
     /// @param amount The off-chain balance amount
@@ -285,9 +329,16 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         if (amount <= 0)
             return;
 
+        // Subtract from settled, possibly also from deposited and add to staged
         walletMap[wallet].deposited.sub(walletMap[wallet].settled.get(currencyCt, currencyId) > amount ? 0 : amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)), currencyCt, currencyId);
         walletMap[wallet].settled.sub_allow_neg(walletMap[wallet].settled.get(currencyCt, currencyId) > amount ? amount : walletMap[wallet].settled.get(currencyCt, currencyId), currencyCt, currencyId);
         walletMap[wallet].staged.add(amount, currencyCt, currencyId);
+
+        // Add active accumulation entry
+        walletMap[wallet].active.add(
+            walletMap[wallet].deposited.get(currencyCt, currencyId)
+            .add(walletMap[wallet].settled.get(currencyCt, currencyId)),
+            currencyCt, currencyId);
 
         // Emit event
         emit StageEvent(wallet, amount, currencyCt, currencyId);
@@ -310,6 +361,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
 
         // Move from staged balance to deposited
         walletMap[msg.sender].staged.transfer(walletMap[msg.sender].deposited, amount, currencyCt, currencyId);
+
+        // Add active accumulation entry
+        walletMap[msg.sender].active.add(
+            walletMap[msg.sender].deposited.get(currencyCt, currencyId)
+            .add(walletMap[msg.sender].settled.get(currencyCt, currencyId)),
+            currencyCt, currencyId);
 
         // Emit event
         emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
