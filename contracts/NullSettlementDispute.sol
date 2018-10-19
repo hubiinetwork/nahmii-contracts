@@ -108,6 +108,9 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBo
         // Require that null settlement challenge is ongoing
         require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
 
+        // Require that order's block number is not earlier than proposal's block number
+        require(order.blockNumber >= nullSettlementChallenge.proposalBlockNumber(order.wallet));
+
         // Buy order -> Conjugate currency and amount
         // Sell order -> Intended currency and amount
         (int256 orderAmount, MonetaryTypes.Currency memory orderCurrency) =
