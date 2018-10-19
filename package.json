@@ -13,6 +13,7 @@
     "deploy": "npm run deploy:test",
     "deploy:test": "truffle migrate --network testnet",
     "deploy:main": "truffle migrate --network mainnet",
+    "deploy:ganache": "truffle compile && truffle migrate --network ganache",
     "deploy:ci": "truffle migrate",
     "docs": "soldoc",
     "version:compiler": "solcjs --version"
