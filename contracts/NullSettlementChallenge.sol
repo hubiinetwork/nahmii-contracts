@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {DriipChallenge} from "./DriipChallenge.sol";
-import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -24,7 +23,7 @@ import {SettlementTypes} from "./SettlementTypes.sol";
 @title NullSettlementChallenge
 @notice Where null settlements are challenged
 */
-contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, ClientFundable {
+contract NullSettlementChallenge is Ownable, DriipChallenge, ClientFundable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -46,7 +45,7 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeNullSettlementDisputeEvent(NullSettlementDispute oldNullSettlementDispute, NullSettlementDispute newNullSettlementDispute);
-    event StartChallenge(address wallet, int256 amount, address stageCurrencyCt, uint stageCurrencyId);
+    event StartChallengeEvent(address wallet, int256 amount, address stageCurrencyCt, uint stageCurrencyId);
 
     //
     // Constructor
@@ -86,9 +85,8 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function startChallenge(int256 amount, address currencyCt, uint256 currencyId)
     public
-    validatorInitialized
+    configurationInitialized
     {
-        require(configuration != address(0));
         require(amount.isPositiveInt256());
 
         require(
@@ -114,7 +112,7 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
         walletProposalMap[msg.sender].targetBalanceAmounts.length = 0;
         walletProposalMap[msg.sender].targetBalanceAmounts.push(activeBalanceAmount.sub(amount));
 
-        emit StartChallenge(msg.sender, amount, currencyCt, currencyId);
+        emit StartChallengeEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
     /// @notice Get null settlement challenge phase of the given wallet
@@ -196,6 +194,7 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     view
     returns (MonetaryTypes.Currency)
     {
+        require(index < walletProposalMap[wallet].currencies.length);
         return walletProposalMap[wallet].currencies[index];
     }
 
@@ -209,14 +208,8 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     view
     returns (int256)
     {
-        for (uint256 i = 0; i < walletProposalMap[wallet].currencies.length; i++) {
-            if (
-                walletProposalMap[wallet].currencies[i].ct == currencyCt &&
-                walletProposalMap[wallet].currencies[i].id == currencyId
-            )
-                return walletProposalMap[wallet].stageAmounts[i];
-        }
-        return 0;
+        uint256 index = proposalCurrencyIndex(wallet, currencyCt, currencyId);
+        return walletProposalMap[wallet].stageAmounts[index];
     }
 
     /// @notice Get the settlement proposal target balance amount of the given wallet and currency
@@ -229,25 +222,30 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     view
     returns (int256)
     {
-        for (uint256 i = 0; i < walletProposalMap[wallet].currencies.length; i++) {
-            if (
-                walletProposalMap[wallet].currencies[i].ct == currencyCt &&
-                walletProposalMap[wallet].currencies[i].id == currencyId
-            )
-                return walletProposalMap[wallet].targetBalanceAmounts[i];
-        }
-        return 0;
+        uint256 index = proposalCurrencyIndex(wallet, currencyCt, currencyId);
+        return walletProposalMap[wallet].targetBalanceAmounts[index];
     }
 
-    /// @notice Get the driip type of the given wallet's settlement proposal
+    /// @notice Get the candidate type of the given wallet's settlement proposal
     /// @param wallet The concerned wallet
-    /// @return The driip type of the settlement proposal
-    function proposalDriipType(address wallet)
+    /// @return The candidate type of the settlement proposal
+    function proposalCandidateType(address wallet)
     public
     view
-    returns (NahmiiTypes.DriipType)
+    returns (SettlementTypes.ChallengeCandidateType)
     {
-        return walletProposalMap[wallet].driipType;
+        return walletProposalMap[wallet].candidateType;
+    }
+
+    /// @notice Get the candidate index of the given wallet's settlement proposal
+    /// @param wallet The concerned wallet
+    /// @return The candidate index of the settlement proposal
+    function proposalCandidateIndex(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletProposalMap[wallet].candidateIndex;
     }
 
     /// @notice Get the challenger of the given wallet's settlement proposal
@@ -259,17 +257,6 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     returns (address)
     {
         return walletProposalMap[wallet].challenger;
-    }
-
-    /// @notice Set settlement proposal timeout property of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
-    /// @param timeout The timeout value
-    function setProposalTimeout(address wallet, uint256 timeout)
-    public
-    onlyNullSettlementDispute
-    {
-        walletProposalMap[wallet].timeout = timeout;
     }
 
     /// @notice Set settlement proposal status property of the given wallet
@@ -403,6 +390,21 @@ contract NullSettlementChallenge is Ownable, DriipChallenge, Validatable, Client
     returns (uint256)
     {
         return challengeCandidatePayments.length;
+    }
+
+    function proposalCurrencyIndex(address wallet, address currencyCt, uint256 currencyId)
+    private
+    view
+    returns (uint256)
+    {
+        for (uint256 i = 0; i < walletProposalMap[wallet].currencies.length; i++) {
+            if (
+                walletProposalMap[wallet].currencies[i].ct == currencyCt &&
+                walletProposalMap[wallet].currencies[i].id == currencyId
+            )
+                return i;
+        }
+        require(false);
     }
 
     //

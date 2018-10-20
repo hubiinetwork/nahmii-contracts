@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
@@ -26,7 +25,7 @@ import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 @title NullSettlementDispute
 @notice The workhorse of null settlement challenges, utilized by NullSettlementChallenge
 */
-contract NullSettlementDispute is Ownable, Configurable, Validatable, FraudChallengable, CancelOrdersChallengable {
+contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, CancelOrdersChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -39,9 +38,9 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, FraudChall
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge, NullSettlementChallenge newNullSettlementChallenge);
-    event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
-    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
-    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
+    event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, address reporter);
+    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address wallet, uint256 nonce, address reporter);
+    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address wallet, uint256 nonce, address reporter);
 
     //
     // Constructor
@@ -65,7 +64,8 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, FraudChall
     /// @param challenger The address of the challenger
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
-    function challengeByOrder(NahmiiTypes.Order order, address challenger) public
+    function challengeByOrder(NahmiiTypes.Order order, address challenger)
+    public
     validatorInitialized
     fraudChallengeInitialized
     cancelOrdersChallengeInitialized
@@ -109,9 +109,7 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, FraudChall
         nullSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
         // Raise event
-        emit ChallengeByOrderEvent(
-            order, nullSettlementChallenge.proposalNonce(order.wallet), nullSettlementChallenge.proposalDriipType(order.wallet), challenger
-        );
+        emit ChallengeByOrderEvent(order, nullSettlementChallenge.proposalNonce(order.wallet), challenger);
     }
 
     /// @notice Challenge the null settlement by providing trade candidate
@@ -175,9 +173,7 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, FraudChall
         nullSettlementChallenge.setProposalChallenger(wallet, challenger);
 
         // Raise event
-        emit ChallengeByTradeEvent(
-            trade, wallet, nullSettlementChallenge.proposalNonce(wallet), nullSettlementChallenge.proposalDriipType(wallet), challenger
-        );
+        emit ChallengeByTradeEvent(trade, wallet, nullSettlementChallenge.proposalNonce(wallet), challenger);
     }
 
     /// @notice Challenge the null settlement by providing payment candidate
@@ -223,9 +219,7 @@ contract NullSettlementDispute is Ownable, Configurable, Validatable, FraudChall
         nullSettlementChallenge.setProposalChallenger(wallet, challenger);
 
         // Raise event
-        emit ChallengeByPaymentEvent(
-            payment, wallet, nullSettlementChallenge.proposalNonce(wallet), nullSettlementChallenge.proposalDriipType(wallet), challenger
-        );
+        emit ChallengeByPaymentEvent(payment, wallet, nullSettlementChallenge.proposalNonce(wallet), challenger);
     }
 
     //

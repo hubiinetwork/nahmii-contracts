@@ -31,15 +31,19 @@ const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDou
 const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTrades');
 const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
 const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
+const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
+const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
+const PartnerFund = artifacts.require('PartnerFund');
 const RevenueFund = artifacts.require('RevenueFund');
 const SecurityBond = artifacts.require('SecurityBond');
 const TestServable = artifacts.require('TestServable');
 const TestAuthorizableServable = artifacts.require('TestAuthorizableServable');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
-const PartnerFund = artifacts.require('PartnerFund');
+
 const ERC20Token = artifacts.require('StandardTokenEx');
 const RevenueToken = artifacts.require('RevenueToken');
+
 const UnitTestHelpers = artifacts.require('UnitTestHelpers');
 
 //augmented sendTransaction using promises
@@ -275,7 +279,29 @@ contract('Smart contract checks', function () {
             glob.ethersIoDriipSettlementDispute = new ethers.Contract(glob.web3DriipSettlementDispute.address, DriipSettlementDispute.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate DriipSettlementChallenge contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate DriipSettlementDispute contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before('Preflight: Instantiate NullSettlementChallenge contract', async () => {
+        try {
+            glob.web3NullSettlementChallenge = await NullSettlementChallenge.deployed();
+            assert.notEqual(glob.web3NullSettlementChallenge, null);
+            glob.ethersIoNullSettlementChallenge = new ethers.Contract(glob.web3NullSettlementChallenge.address, NullSettlementChallenge.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate NullSettlementChallenge contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before('Preflight: Instantiate NullSettlementDispute contract', async () => {
+        try {
+            glob.web3NullSettlementDispute = await NullSettlementDispute.deployed();
+            assert.notEqual(glob.web3NullSettlementDispute, null);
+            glob.ethersIoNullSettlementDispute = new ethers.Contract(glob.web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate NullSettlementDispute contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -553,6 +579,8 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
+    require('./scenarios/NullSettlementChallenge')(glob);
+    require('./scenarios/NullSettlementDispute')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/Servable')(glob);

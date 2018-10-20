@@ -278,12 +278,10 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await NullSettlementChallenge.at(addressStorage.get('NullSettlementChallenge'));
             tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
             tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
             tx = await instance.changeNullSettlementDispute(addressStorage.get('NullSettlementDispute'));
 
             instance = await NullSettlementDispute.at(addressStorage.get('NullSettlementDispute'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
             tx = await instance.changeValidator(addressStorage.get('Validator'));
             tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
             tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
