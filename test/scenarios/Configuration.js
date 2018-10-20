@@ -646,7 +646,7 @@ module.exports = (glob) => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setCancelOrderChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetCancelOrderChallengeTimeout');
+                    result.logs[0].event.should.equal('SetCancelOrderChallengeTimeoutEvent');
                     const value = await web3Configuration.cancelOrderChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
@@ -666,7 +666,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('setDriipSettlementChallengeTimeout()', () => {
+        describe('setSettlementChallengeTimeout()', () => {
             describe('if called with sender that is owner', () => {
                 let initialValue;
 
@@ -675,13 +675,13 @@ module.exports = (glob) => {
                 });
 
                 after(async () => {
-                    await web3Configuration.setDriipSettlementChallengeTimeout(initialValue);
+                    await web3Configuration.setSettlementChallengeTimeout(initialValue);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDriipSettlementChallengeTimeout(100);
+                    const result = await web3Configuration.setSettlementChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDriipSettlementChallengeTimeout');
+                    result.logs[0].event.should.equal('SetSettlementChallengeTimeoutEvent');
                     const value = await web3Configuration.settlementChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
@@ -689,7 +689,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setDriipSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

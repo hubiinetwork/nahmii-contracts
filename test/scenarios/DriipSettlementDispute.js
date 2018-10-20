@@ -54,7 +54,7 @@ module.exports = (glob) => {
         beforeEach(async () => {
             // Default configuration timeouts for all tests. Particular tests override these defaults.
             await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-            await ethersConfiguration.setDriipSettlementChallengeTimeout(1e4);
+            await ethersConfiguration.setSettlementChallengeTimeout(1e4);
 
             blockNumber0 = await provider.getBlockNumber();
             blockNumber10 = blockNumber0 + 10;

@@ -68,7 +68,7 @@ module.exports = (glob) => {
         beforeEach(async () => {
             // Default configuration timeouts for all tests. Particular tests override these defaults.
             await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-            await ethersConfiguration.setDriipSettlementChallengeTimeout(1e4);
+            await ethersConfiguration.setSettlementChallengeTimeout(1e4);
 
             blockNumber0 = await provider.getBlockNumber();
             blockNumber10 = blockNumber0 + 10;
@@ -538,7 +538,7 @@ module.exports = (glob) => {
 
                 describe('if driip settlement challenge has completed for given wallet', () => {
                     beforeEach(async () => {
-                        await ethersConfiguration.setDriipSettlementChallengeTimeout(0);
+                        await ethersConfiguration.setSettlementChallengeTimeout(0);
                         await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
                             trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
                             trade.buyer.balances.conjugate.current, overrideOptions
@@ -711,7 +711,7 @@ module.exports = (glob) => {
                 await ethersValidator.reset(overrideOptions);
                 await ethersCancelOrdersChallenge.reset(overrideOptions);
 
-                await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
+                await ethersConfiguration.setSettlementChallengeTimeout(2);
 
                 topic = ethersDriipSettlementDispute.interface.events['ChallengeByOrderEvent'].topics[0];
                 filter = {
@@ -786,7 +786,7 @@ module.exports = (glob) => {
                         buyer: {wallet: order.wallet},
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
-                    await ethersConfiguration.setDriipSettlementChallengeTimeout(0);
+                    await ethersConfiguration.setSettlementChallengeTimeout(0);
                     await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
                         trade, trade.buyer.wallet, trade.buyer.balances.intended.current,
                         trade.buyer.balances.conjugate.current, overrideOptions
@@ -963,7 +963,7 @@ module.exports = (glob) => {
                 await ethersFraudChallenge.reset(overrideOptions);
                 await ethersSecurityBond.reset(overrideOptions);
 
-                await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
+                await ethersConfiguration.setSettlementChallengeTimeout(2);
 
                 topic = ethersDriipSettlementDispute.interface.events['UnchallengeOrderCandidateByTradeEvent'].topics[0];
                 filter = {
@@ -1180,7 +1180,7 @@ module.exports = (glob) => {
                 await ethersFraudChallenge.reset(overrideOptions);
                 await ethersCancelOrdersChallenge.reset(overrideOptions);
 
-                await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
+                await ethersConfiguration.setSettlementChallengeTimeout(2);
 
                 topic = ethersDriipSettlementDispute.interface.events['ChallengeByTradeEvent'].topics[0];
                 filter = {
@@ -1261,7 +1261,7 @@ module.exports = (glob) => {
                     candidateTrade = await mocks.mockTrade(glob.owner, {
                         buyer: {wallet: challengedTrade.buyer.wallet}
                     });
-                    await ethersConfiguration.setDriipSettlementChallengeTimeout(0);
+                    await ethersConfiguration.setSettlementChallengeTimeout(0);
                     await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
                         challengedTrade, challengedTrade.buyer.wallet, challengedTrade.buyer.balances.intended.current,
                         challengedTrade.buyer.balances.conjugate.current, overrideOptions
@@ -1440,7 +1440,7 @@ module.exports = (glob) => {
                 await ethersConfiguration.reset(overrideOptions);
                 await ethersFraudChallenge.reset(overrideOptions);
 
-                await ethersConfiguration.setDriipSettlementChallengeTimeout(2);
+                await ethersConfiguration.setSettlementChallengeTimeout(2);
 
                 topic = ethersDriipSettlementDispute.interface.events['ChallengeByPaymentEvent'].topics[0];
                 filter = {
@@ -1511,7 +1511,7 @@ module.exports = (glob) => {
                     candidatePayment = await mocks.mockPayment(glob.owner, {
                         sender: {wallet: challengedTrade.buyer.wallet}
                     });
-                    await ethersConfiguration.setDriipSettlementChallengeTimeout(0);
+                    await ethersConfiguration.setSettlementChallengeTimeout(0);
                     await ethersDriipSettlementChallengeOwner.startChallengeFromTrade(
                         challengedTrade, challengedTrade.buyer.wallet, challengedTrade.buyer.balances.intended.current,
                         challengedTrade.buyer.balances.conjugate.current, overrideOptions

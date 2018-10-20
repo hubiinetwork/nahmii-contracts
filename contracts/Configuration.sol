@@ -98,8 +98,8 @@ contract Configuration is Ownable, Servable {
     event SetTradeTakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetPaymentMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetCurrencyPaymentMinimumFeeEvent(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal);
-    event SetCancelOrderChallengeTimeout(uint256 timeout);
-    event SetDriipSettlementChallengeTimeout(uint256 timeout);
+    event SetCancelOrderChallengeTimeoutEvent(uint256 timeout);
+    event SetSettlementChallengeTimeoutEvent(uint256 timeout);
     event SetUnchallengeDriipSettlementOrderByTradeStakeEvent(int256 amount, address currencyCt, uint256 currencyId);
     event SetFalseWalletSignatureStakeEvent(int256 amount, address currencyCt, uint256 currencyId);
     event SetDuplicateDriipNonceStakeEvent(int256 amount, address currencyCt, uint256 currencyId);
@@ -420,14 +420,14 @@ contract Configuration is Ownable, Servable {
     /// @param timeout Timeout duration
     function setCancelOrderChallengeTimeout(uint256 timeout) public onlyDeployer {
         cancelOrderChallengeTimeout = timeout;
-        emit SetCancelOrderChallengeTimeout(timeout);
+        emit SetCancelOrderChallengeTimeoutEvent(timeout);
     }
 
     /// @notice Set timeout of settlement challenges
     /// @param timeout Timeout duration
-    function setDriipSettlementChallengeTimeout(uint256 timeout) public onlyDeployer {
+    function setSettlementChallengeTimeout(uint256 timeout) public onlyDeployer {
         settlementChallengeTimeout = timeout;
-        emit SetDriipSettlementChallengeTimeout(timeout);
+        emit SetSettlementChallengeTimeoutEvent(timeout);
     }
 
     /// @notice Set currency and amount that will be gained when someone successfully unchallenges
