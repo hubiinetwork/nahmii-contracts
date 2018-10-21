@@ -9,15 +9,9 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-//import {Ownable} from "../Ownable.sol";
-//import {DriipChallenge} from "../DriipChallenge.sol";
-//import {ClientFundable} from "../ClientFundable.sol";
-//import {SafeMathIntLib} from "../SafeMathIntLib.sol";
-//import {SafeMathUintLib} from "../SafeMathUintLib.sol";
-//import {NullSettlementDispute} from "../NullSettlementDispute.sol";
-//import {MonetaryTypes} from "../MonetaryTypes.sol";
 import {NahmiiTypes} from "../NahmiiTypes.sol";
 import {SettlementTypes} from "../SettlementTypes.sol";
+import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 
 /**
 @title MockedNullSettlementChallenge
@@ -33,10 +27,10 @@ contract MockedNullSettlementChallenge {
     SettlementTypes.ChallengeCandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
     address public _proposalChallenger;
-
-    NahmiiTypes.Order[] public challengeCandidateOrders;
-    NahmiiTypes.Trade[] public challengeCandidateTrades;
-    NahmiiTypes.Payment[] public challengeCandidatePayments;
+    uint256 public _challengeCandidateOrdersCount;
+    uint256 public _challengeCandidateTradesCount;
+    uint256 public _challengeCandidatePaymentsCount;
+    NullSettlementDispute public _nullSettlementDispute;
 
     function _reset()
     public
@@ -44,6 +38,14 @@ contract MockedNullSettlementChallenge {
         delete _challengePhase;
         delete _proposalNonce;
         delete _proposalBlockNumber;
+        delete _proposalTargetBalanceAmount;
+        delete _proposalStatus;
+        delete _proposalCandidateType;
+        delete _proposalCandidateIndex;
+        delete _proposalChallenger;
+        delete _challengeCandidateOrdersCount;
+        delete _challengeCandidateTradesCount;
+        delete _challengeCandidatePaymentsCount;
     }
 
     function _setChallengePhase(NahmiiTypes.ChallengePhase challengePhase)
@@ -73,12 +75,24 @@ contract MockedNullSettlementChallenge {
         return _proposalNonce;
     }
 
+    function _setProposalBlockNumber(uint256 proposalBlockNumber)
+    public
+    {
+        _proposalBlockNumber = proposalBlockNumber;
+    }
+
     function proposalBlockNumber(address wallet)
     public
     view
     returns (uint256)
     {
-        return walletProposalMap[wallet].blockNumber;
+        return _proposalBlockNumber;
+    }
+
+    function _setProposalTargetBalanceAmount(int256 proposalTargetBalanceAmount)
+    public
+    {
+        _proposalTargetBalanceAmount = proposalTargetBalanceAmount;
     }
 
     function proposalTargetBalanceAmount(address wallet, address currencyCt, uint256 currencyId)
@@ -86,38 +100,41 @@ contract MockedNullSettlementChallenge {
     view
     returns (int256)
     {
-        uint256 index = proposalCurrencyIndex(wallet, currencyCt, currencyId);
-        return walletProposalMap[wallet].targetBalanceAmounts[index];
+        return _proposalTargetBalanceAmount;
     }
 
     function setProposalStatus(address wallet, SettlementTypes.ChallengeStatus status)
     public
     {
-        walletProposalMap[wallet].status = status;
+        require(wallet == wallet);
+        _proposalStatus = status;
     }
 
     function setProposalCandidateType(address wallet, SettlementTypes.ChallengeCandidateType candidateType)
     public
     {
-        walletProposalMap[wallet].candidateType = candidateType;
+        require(wallet == wallet);
+        _proposalCandidateType = candidateType;
     }
 
     function setProposalCandidateIndex(address wallet, uint256 candidateIndex)
     public
     {
-        walletProposalMap[wallet].candidateIndex = candidateIndex;
+        require(wallet == wallet);
+        _proposalCandidateIndex = candidateIndex;
     }
 
     function setProposalChallenger(address wallet, address challenger)
     public
     {
-        walletProposalMap[wallet].challenger = challenger;
+        require(wallet == wallet);
+        _proposalChallenger = challenger;
     }
 
     function pushChallengeCandidateOrder(NahmiiTypes.Order order)
     public
     {
-        challengeCandidateOrders.push(order);
+        _challengeCandidateOrdersCount++;
     }
 
     function challengeCandidateOrdersCount()
@@ -125,13 +142,13 @@ contract MockedNullSettlementChallenge {
     view
     returns (uint256)
     {
-        return challengeCandidateOrders.length;
+        return _challengeCandidateOrdersCount;
     }
 
     function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
     public
     {
-        pushMemoryTradeToStorageArray(trade, challengeCandidateTrades);
+        _challengeCandidateTradesCount++;
     }
 
     function challengeCandidateTradesCount()
@@ -139,13 +156,13 @@ contract MockedNullSettlementChallenge {
     view
     returns (uint256)
     {
-        return challengeCandidateTrades.length;
+        return _challengeCandidateTradesCount;
     }
 
     function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
     public
     {
-        pushMemoryPaymentToStorageArray(payment, challengeCandidatePayments);
+        _challengeCandidatePaymentsCount++;
     }
 
     function challengeCandidatePaymentsCount()
@@ -153,6 +170,30 @@ contract MockedNullSettlementChallenge {
     view
     returns (uint256)
     {
-        return challengeCandidatePayments.length;
+        return _challengeCandidatePaymentsCount;
+    }
+
+    function changeNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
+    public
+    {
+        _nullSettlementDispute = nullSettlementDispute;
+    }
+
+    function challengeByOrder(NahmiiTypes.Order order)
+    public
+    {
+        _nullSettlementDispute.challengeByOrder(order, msg.sender);
+    }
+
+    function challengeByTrade(NahmiiTypes.Trade trade, address wallet)
+    public
+    {
+        _nullSettlementDispute.challengeByTrade(trade, wallet, msg.sender);
+    }
+
+    function challengeByPayment(NahmiiTypes.Payment payment, address wallet)
+    public
+    {
+        _nullSettlementDispute.challengeByPayment(payment, wallet, msg.sender);
     }
 }

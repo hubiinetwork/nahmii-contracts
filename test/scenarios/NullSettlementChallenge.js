@@ -28,7 +28,7 @@ module.exports = (glob) => {
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
-        let blockNumber0, blockNumber10, blockNumber20, blockNumber30;
+        let blockNumber0;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -64,9 +64,6 @@ module.exports = (glob) => {
             await ethersNullSettlementChallenge.changeNullSettlementDispute(ethersNullSettlementDispute.address);
 
             blockNumber0 = await provider.getBlockNumber();
-            blockNumber10 = blockNumber0 + 10;
-            blockNumber20 = blockNumber0 + 20;
-            blockNumber30 = blockNumber0 + 30;
         });
 
         describe('constructor', () => {
@@ -708,14 +705,14 @@ module.exports = (glob) => {
 
                 before(async () => {
                     await web3Configuration.reset();
-                    challengeByOrderCountBefore = await ethersNullSettlementDispute.challengeByOrderCount();
+                    challengeByOrderCountBefore = await ethersNullSettlementDispute._challengeByOrderCount();
                     order = await mocks.mockOrder(glob.owner);
                 });
 
                 it('should call challengeByOrder() of its null settlement challenge dispute instance', async () => {
                     await ethersNullSettlementChallenge.challengeByOrder(order);
 
-                    (await ethersNullSettlementDispute.challengeByOrderCount())
+                    (await ethersNullSettlementDispute._challengeByOrderCount())
                         ._bn.should.eq.BN(challengeByOrderCountBefore.add(1)._bn);
                 });
             });
@@ -747,13 +744,13 @@ module.exports = (glob) => {
                 let challengeByTradeCountBefore;
 
                 before(async () => {
-                    challengeByTradeCountBefore = await ethersNullSettlementDispute.challengeByTradeCount();
+                    challengeByTradeCountBefore = await ethersNullSettlementDispute._challengeByTradeCount();
                 });
 
                 it('should call challengeByTrade() of its null settlement challenge dispute instance', async () => {
                     await ethersNullSettlementChallenge.challengeByTrade(trade, address, {gasLimit: 2e6});
 
-                    (await ethersNullSettlementDispute.challengeByTradeCount())
+                    (await ethersNullSettlementDispute._challengeByTradeCount())
                         ._bn.should.eq.BN(challengeByTradeCountBefore.add(1)._bn);
                 });
             });
@@ -785,13 +782,13 @@ module.exports = (glob) => {
                 let challengeByPaymentCountBefore;
 
                 before(async () => {
-                    challengeByPaymentCountBefore = await ethersNullSettlementDispute.challengeByPaymentCount();
+                    challengeByPaymentCountBefore = await ethersNullSettlementDispute._challengeByPaymentCount();
                 });
 
                 it('should call challengeByPayment() of its null settlement challenge dispute instance', async () => {
                     await ethersNullSettlementChallenge.challengeByPayment(payment, address, {gasLimit: 2e6});
 
-                    (await ethersNullSettlementDispute.challengeByPaymentCount())
+                    (await ethersNullSettlementDispute._challengeByPaymentCount())
                         ._bn.should.eq.BN(challengeByPaymentCountBefore.add(1)._bn);
                 });
             });

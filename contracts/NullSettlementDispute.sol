@@ -161,7 +161,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
 
         // Require that single transfer is strictly greater than target balance amount for this to be a
         // valid challenge call
-        require(singleTransfer.abs() > targetBalanceAmount);
+        require(singleTransfer > targetBalanceAmount);
 
         // Store trade candidate
         nullSettlementChallenge.pushChallengeCandidateTrade(trade);
