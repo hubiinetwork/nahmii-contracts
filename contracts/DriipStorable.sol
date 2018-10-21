@@ -9,18 +9,17 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Challenge} from "./Challenge.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
-@title DriipChallenge
-@notice A challenge with internal functions for pushing trade and payment
+@title DriipStorable
+@notice A contract with internal functions for pushing trade and payment
 from memory to storage. Pushing driips without these functions is not straight
 forwards as they contain dynamically sized arrays.
 */
 
-contract DriipChallenge is Challenge {
+contract DriipStorable {
 
     function pushMemoryTradeToStorageArray(NahmiiTypes.Trade memTrade,
         NahmiiTypes.Trade[] storage stgTradeArr)

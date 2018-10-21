@@ -10,7 +10,8 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {DriipChallenge} from "./DriipChallenge.sol";
+import {Challenge} from "./Challenge.sol";
+import {DriipStorable} from "./DriipStorable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -23,7 +24,7 @@ import {SettlementTypes} from "./SettlementTypes.sol";
 @title NullSettlementChallenge
 @notice Where null settlements are challenged
 */
-contract NullSettlementChallenge is Ownable, DriipChallenge, ClientFundable {
+contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFundable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
