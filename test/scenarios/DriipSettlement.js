@@ -530,7 +530,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('settleDriipAsTrade()', () => {
+        describe('settleTrade()', () => {
             let trade, overrideOptions;
 
             before(async () => {
@@ -556,7 +556,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -571,7 +571,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -582,7 +582,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
-                    ethersDriipSettlement.settleDriipAsTrade(trade, address, overrideOptions).should.be.rejected;
+                    ethersDriipSettlement.settleTrade(trade, address, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -593,7 +593,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -610,7 +610,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                        ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                     });
                 });
 
@@ -620,7 +620,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                        ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                     });
                 });
 
@@ -645,7 +645,7 @@ module.exports = (glob) => {
                     });
 
                     it('should settle trade successfully', async () => {
-                        await ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions);
 
                         const clientFundUpdateSettledBalanceEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics[0]
@@ -759,11 +759,11 @@ module.exports = (glob) => {
                             challenger,
                             overrideOptions
                         );
-                        await ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions);
+                        await ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions);
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                        ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
                     });
                 });
             });
@@ -795,7 +795,7 @@ module.exports = (glob) => {
                 });
 
                 it('should seize the wallet', async () => {
-                    await ethersDriipSettlement.settleDriipAsTrade(trade, trade.buyer.wallet, overrideOptions);
+                    await ethersDriipSettlement.settleTrade(trade, trade.buyer.wallet, overrideOptions);
                     const seized = await ethersDriipSettlement.isSeizedWallet(trade.buyer.wallet);
                     seized.should.be.true;
                     const seizure = await ethersClientFund.seizures(0);
@@ -805,7 +805,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('settleDriipAsPayment()', () => {
+        describe('settlePayment()', () => {
             let payment, overrideOptions;
 
             before(async () => {
@@ -829,7 +829,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -844,7 +844,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -855,7 +855,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
-                    ethersDriipSettlement.settleDriipAsPayment(payment, address, overrideOptions).should.be.rejected;
+                    ethersDriipSettlement.settlePayment(payment, address, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -866,7 +866,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                    ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                 });
             });
 
@@ -883,7 +883,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                        ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                     });
                 });
 
@@ -893,7 +893,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                        ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                     });
                 });
 
@@ -918,7 +918,7 @@ module.exports = (glob) => {
                     });
 
                     it('should settle payment successfully', async () => {
-                        await ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions);
 
                         const clientFundUpdateSettledBalanceEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics[0]
@@ -1009,11 +1009,11 @@ module.exports = (glob) => {
                             challenger,
                             overrideOptions
                         );
-                        await ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions);
+                        await ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions);
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
+                        ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions).should.be.rejected;
                     });
                 });
             });
@@ -1045,7 +1045,7 @@ module.exports = (glob) => {
                 });
 
                 it('should seize the wallet', async () => {
-                    await ethersDriipSettlement.settleDriipAsPayment(payment, payment.sender.wallet, overrideOptions);
+                    await ethersDriipSettlement.settlePayment(payment, payment.sender.wallet, overrideOptions);
                     const seized = await ethersDriipSettlement.isSeizedWallet(payment.sender.wallet);
                     seized.should.be.true;
                     const seizure = await ethersClientFund.seizures(0);

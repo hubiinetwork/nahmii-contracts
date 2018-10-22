@@ -177,7 +177,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
     /// @param wallet The wallet whose side of the trade is to be settled
-    function settleDriipAsTrade(NahmiiTypes.Trade trade, address wallet)
+    function settleTrade(NahmiiTypes.Trade trade, address wallet)
     public
     validatorInitialized
     fraudChallengeInitialized
@@ -281,7 +281,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
     /// @param wallet The wallet whose side of the payment is to be settled
-    function settleDriipAsPayment(NahmiiTypes.Payment payment, address wallet)
+    function settlePayment(NahmiiTypes.Payment payment, address wallet)
     public
     validatorInitialized
     fraudChallengeInitialized
