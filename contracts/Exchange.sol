@@ -14,9 +14,9 @@ import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
+import {FraudChallengable} from "./FraudChallengable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
-import {FraudChallenge} from "./FraudChallenge.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -26,9 +26,9 @@ import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 
 /**
 @title Exchange
-@notice The orchestrator of driip settlements
+@notice Where driips are settled
 */
-contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable {
+contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, FraudChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -40,7 +40,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
-    FraudChallenge public fraudChallenge;
     DriipSettlementChallenge public driipSettlementChallenge;
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
@@ -61,7 +60,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         DriipSettlementTypes.ChallengeStatus challengeStatus);
     event SettleDriipAsPaymentEvent(NahmiiTypes.Payment payment, address wallet,
         DriipSettlementTypes.ChallengeStatus challengeStatus);
-    event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
         DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
@@ -78,17 +76,6 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the fraud challenge contract
-    /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge) public
-    onlyDeployer
-    notNullAddress(newFraudChallenge)
-    {
-        FraudChallenge oldFraudChallenge = fraudChallenge;
-        fraudChallenge = newFraudChallenge;
-        emit ChangeFraudChallengeEvent(oldFraudChallenge, fraudChallenge);
-    }
-
     /// @notice Change the driip settlement challenge contract
     /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
     function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
