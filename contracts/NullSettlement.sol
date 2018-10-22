@@ -64,7 +64,8 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the null settlement challenge contract
     /// @param newNullSettlementChallenge The (address of) NullSettlementChallenge contract instance
-    function changeNullSettlementChallenge(NullSettlementChallenge newNullSettlementChallenge) public
+    function changeNullSettlementChallenge(NullSettlementChallenge newNullSettlementChallenge)
+    public
     onlyDeployer
     notNullAddress(newNullSettlementChallenge)
     {
@@ -105,14 +106,22 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     /// @notice Return boolean indicating whether there is already a settlement for the given nonce
     /// @param nonce The nonce for which to check for settlement
     /// @return true if there exists a settlement for the provided nonce, false otherwise
-    function hasSettlementByNonce(uint256 nonce) public view returns (bool) {
+    function hasSettlementByNonce(uint256 nonce)
+    public
+    view
+    returns (bool)
+    {
         return 0 < nonceSettlementIndex[nonce];
     }
 
     /// @notice Get the settlement for the given (global) nonce
     /// @param nonce The nonce of the settlement
     /// @return settlement of the provided nonce
-    function settlementByNonce(uint256 nonce) public view returns (SettlementTypes.NullSettlement) {
+    function settlementByNonce(uint256 nonce)
+    public
+    view
+    returns (SettlementTypes.NullSettlement)
+    {
         require(hasSettlementByNonce(nonce));
         return settlements[nonceSettlementIndex[nonce] - 1];
     }
@@ -120,7 +129,11 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     /// @notice Get the count of settlements for given wallet
     /// @param wallet The address for which to return settlement count
     /// @return count of settlements for the provided wallet
-    function settlementsCountByWallet(address wallet) public view returns (uint256) {
+    function settlementsCountByWallet(address wallet)
+    public
+    view
+    returns (uint256)
+    {
         return walletSettlementIndices[wallet].length;
     }
 
@@ -128,7 +141,11 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     /// @param wallet The address for which to return settlement
     /// @param index The wallet's settlement index
     /// @return settlement for the provided wallet and index
-    function settlementByWalletAndIndex(address wallet, uint256 index) public view returns (SettlementTypes.NullSettlement) {
+    function settlementByWalletAndIndex(address wallet, uint256 index)
+    public
+    view
+    returns (SettlementTypes.NullSettlement)
+    {
         require(walletSettlementIndices[wallet].length > index);
         return settlements[walletSettlementIndices[wallet][index] - 1];
     }
@@ -137,13 +154,19 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     /// @param wallet The address for which to return settlement
     /// @param nonce The wallet's nonce
     /// @return settlement for the provided wallet and index
-    function settlementByWalletAndNonce(address wallet, uint256 nonce) public view returns (SettlementTypes.NullSettlement) {
+    function settlementByWalletAndNonce(address wallet, uint256 nonce)
+    public
+    view
+    returns (SettlementTypes.NullSettlement)
+    {
         require(0 < walletNonceSettlementIndex[wallet][nonce]);
         return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
     }
 
     /// @notice Update the max null settlement nonce property from CommunityVote contract
-    function updateMaxNullNonce() public {
+    function updateMaxNullNonce()
+    public
+    {
         uint256 _maxNullNonce = communityVote.getMaxNullNonce();
         if (_maxNullNonce > 0)
             maxNullNonce = _maxNullNonce;
@@ -211,19 +234,8 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         emit SettleNullEvent(wallet, nullSettlementChallenge.proposalStatus(wallet));
     }
 
-    function getSettlement(uint256 nonce)
-    private
-    view
-    returns (SettlementTypes.NullSettlement storage)
-    {
-        uint256 index = nonceSettlementIndex[nonce];
-        SettlementTypes.NullSettlement storage settlement = settlements[index - 1];
-        return settlement;
-    }
-
     function createSettlement(uint256 nonce, address wallet)
     private
-    returns (SettlementTypes.NullSettlement storage)
     {
         SettlementTypes.NullSettlement memory settlement;
         settlement.nonce = nonce;
@@ -236,11 +248,11 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         nonceSettlementIndex[nonce] = index;
         walletSettlementIndices[wallet].push(index);
         walletNonceSettlementIndex[wallet][nonce] = index;
-
-        return settlements[index - 1];
     }
 
-    function addToSeizedWallets(address _address) private {
+    function addToSeizedWallets(address _address)
+    private
+    {
         if (!seizedWalletsMap[_address]) {
             seizedWallets.push(_address);
             seizedWalletsMap[_address] = true;
