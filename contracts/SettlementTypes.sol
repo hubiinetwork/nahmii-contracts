@@ -53,4 +53,9 @@ library SettlementTypes {
         // Address of wallet that successfully challenged
         address challenger;
     }
+
+    struct NullSettlement {
+        uint256 nonce;
+        address wallet;
+    }
 }
