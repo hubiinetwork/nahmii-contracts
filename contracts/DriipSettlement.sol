@@ -26,7 +26,7 @@ import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 
 /**
 @title DriipSettlement
-@notice Where driips are settled
+@notice Where driip settlements are finalized
 */
 contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, FraudChallengable {
     using SafeMathIntLib for int256;
@@ -180,13 +180,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     function settleDriipAsTrade(NahmiiTypes.Trade trade, address wallet)
     public
     validatorInitialized
+    fraudChallengeInitialized
+    communityVoteInitialized
+    configurationInitialized
+    clientFundInitialized
     onlySealedTrade(trade)
     {
-        require(fraudChallenge != address(0));
-        require(communityVote != address(0));
         require(driipSettlementChallenge != address(0));
-        require(configuration != address(0));
-        require(clientFund != address(0));
 
         if (msg.sender != deployer)
             wallet = msg.sender;
@@ -284,13 +284,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     function settleDriipAsPayment(NahmiiTypes.Payment payment, address wallet)
     public
     validatorInitialized
+    fraudChallengeInitialized
+    communityVoteInitialized
+    configurationInitialized
+    clientFundInitialized
     onlySealedPayment(payment)
     {
-        require(fraudChallenge != address(0));
-        require(communityVote != address(0));
         require(driipSettlementChallenge != address(0));
-        require(configuration != address(0));
-        require(clientFund != address(0));
 
         if (msg.sender != deployer)
             wallet = msg.sender;
