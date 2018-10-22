@@ -360,7 +360,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payment is not sealed by exchange', () => {
+            describe('if payment is not sealed by operator', () => {
                 beforeEach(async () => {
                     ethersValidator.setGenuinePaymentOperatorSeal(false);
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});

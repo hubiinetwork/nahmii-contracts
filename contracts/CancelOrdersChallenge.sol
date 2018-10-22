@@ -27,9 +27,9 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => mapping(bytes32 => bool)) public walletOrderExchangeHashCancelledMap;
+    mapping(address => mapping(bytes32 => bool)) public walletOrderOperatorHashCancelledMap;
     mapping(address => NahmiiTypes.Order[]) public walletOrderCancelledListMap;
-    mapping(address => mapping(bytes32 => uint256)) public walletOrderExchangeHashIndexMap;
+    mapping(address => mapping(bytes32 => uint256)) public walletOrderOperatorHashIndexMap;
     mapping(address => uint256) public walletOrderCancelledTimeoutMap;
 
     //
@@ -53,7 +53,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
         uint256 count = 0;
         for (uint256 i = 0; i < walletOrderCancelledListMap[wallet].length; i++) {
             NahmiiTypes.Order storage order = walletOrderCancelledListMap[wallet][i];
-            if (walletOrderExchangeHashCancelledMap[wallet][order.seals.exchange.hash])
+            if (walletOrderOperatorHashCancelledMap[wallet][order.seals.exchange.hash])
                 count++;
         }
         return count;
@@ -61,9 +61,9 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Get wallets cancelled status of order
     /// @param wallet The ordering wallet
-    /// @param orderHash The (exchange) hash of the order
+    /// @param orderHash The (operator) hash of the order
     function isOrderCancelled(address wallet, bytes32 orderHash) public view returns (bool) {
-        return walletOrderExchangeHashCancelledMap[wallet][orderHash];
+        return walletOrderOperatorHashCancelledMap[wallet][orderHash];
     }
 
     /// @notice Get 10 cancelled orders for given wallet starting at given start index
@@ -75,7 +75,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
         uint256 j = startIndex;
         while (i < 10 && j < walletOrderCancelledListMap[wallet].length) {
             NahmiiTypes.Order storage order = walletOrderCancelledListMap[wallet][j];
-            if (walletOrderExchangeHashCancelledMap[wallet][order.seals.exchange.hash]) {
+            if (walletOrderOperatorHashCancelledMap[wallet][order.seals.exchange.hash]) {
                 returnOrders[i] = order;
                 i++;
             }
@@ -98,9 +98,9 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
         }
 
         for (uint256 j = 0; j < orders.length; j++) {
-            walletOrderExchangeHashCancelledMap[msg.sender][orders[j].seals.exchange.hash] = true;
+            walletOrderOperatorHashCancelledMap[msg.sender][orders[j].seals.exchange.hash] = true;
             walletOrderCancelledListMap[msg.sender].push(orders[j]);
-            walletOrderExchangeHashIndexMap[msg.sender][orders[j].seals.exchange.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
+            walletOrderOperatorHashIndexMap[msg.sender][orders[j].seals.exchange.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
         }
 
         walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
@@ -118,17 +118,17 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     {
         require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
 
-        bytes32 orderExchangeHash = (
+        bytes32 orderOperatorHash = (
         wallet == trade.buyer.wallet ?
         trade.buyer.order.hashes.exchange :
         trade.seller.order.hashes.exchange
         );
 
-        require(walletOrderExchangeHashCancelledMap[wallet][orderExchangeHash]);
+        require(walletOrderOperatorHashCancelledMap[wallet][orderOperatorHash]);
 
-        walletOrderExchangeHashCancelledMap[wallet][orderExchangeHash] = false;
+        walletOrderOperatorHashCancelledMap[wallet][orderOperatorHash] = false;
 
-        uint256 orderIndex = walletOrderExchangeHashIndexMap[wallet][orderExchangeHash];
+        uint256 orderIndex = walletOrderOperatorHashIndexMap[wallet][orderOperatorHash];
         NahmiiTypes.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
 
         emit ChallengeEvent(order, trade, msg.sender);

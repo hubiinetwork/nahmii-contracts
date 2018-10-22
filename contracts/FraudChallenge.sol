@@ -35,13 +35,13 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
     mapping(address => bool) public doubleSpenderWalletsMap;
 
     NahmiiTypes.Order[] public fraudulentOrders;
-    mapping(bytes32 => bool) public fraudulentOrderExchangeHashMap;
+    mapping(bytes32 => bool) public fraudulentOrderOperatorHashMap;
 
     NahmiiTypes.Trade[] public fraudulentTrades;
     mapping(bytes32 => bool) public fraudulentTradeHashMap;
 
     NahmiiTypes.Payment[] public fraudulentPayments;
-    mapping(bytes32 => bool) public fraudulentPaymentExchangeHashMap;
+    mapping(bytes32 => bool) public fraudulentPaymentOperatorHashMap;
 
     //
     // Events
@@ -112,17 +112,17 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
         return fraudulentOrders.length;
     }
 
-    /// @notice Get the state about whether the given hash equals the exchange' hash of a fraudulent order
+    /// @notice Get the state about whether the given hash equals the operator hash of a fraudulent order
     /// @param hash The hash to be tested
-    function isFraudulentOrderExchangeHash(bytes32 hash) public view returns (bool) {
-        return fraudulentOrderExchangeHashMap[hash];
+    function isFraudulentOrderOperatorHash(bytes32 hash) public view returns (bool) {
+        return fraudulentOrderOperatorHashMap[hash];
     }
 
     /// @notice Add given trade to store of fraudulent trades if not already present
     function addFraudulentOrder(NahmiiTypes.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
-        if (!fraudulentOrderExchangeHashMap[order.seals.exchange.hash]) {
+        if (!fraudulentOrderOperatorHashMap[order.seals.exchange.hash]) {
             fraudulentOrders.push(order);
-            fraudulentOrderExchangeHashMap[order.seals.exchange.hash] = true;
+            fraudulentOrderOperatorHashMap[order.seals.exchange.hash] = true;
             emit AddFraudulentOrderEvent(order);
         }
     }
@@ -152,17 +152,17 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
         return fraudulentPayments.length;
     }
 
-    /// @notice Get the state about whether the given hash equals the exchange' hash of a fraudulent payment
+    /// @notice Get the state about whether the given hash equals the operator hash of a fraudulent payment
     /// @param hash The hash to be tested
-    function isFraudulentPaymentExchangeHash(bytes32 hash) public view returns (bool) {
-        return fraudulentPaymentExchangeHashMap[hash];
+    function isFraudulentPaymentOperatorHash(bytes32 hash) public view returns (bool) {
+        return fraudulentPaymentOperatorHashMap[hash];
     }
 
     /// @notice Add given payment to store of fraudulent payments if not already present
     function addFraudulentPayment(NahmiiTypes.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
-        if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
+        if (!fraudulentPaymentOperatorHashMap[payment.seals.exchange.hash]) {
             pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
-            fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;
+            fraudulentPaymentOperatorHashMap[payment.seals.exchange.hash] = true;
             emit AddFraudulentPaymentEvent(payment);
         }
     }

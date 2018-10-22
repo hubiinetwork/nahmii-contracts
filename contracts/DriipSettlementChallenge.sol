@@ -142,7 +142,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         challenge.nonce = trade.nonce;
         challenge.timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
-        //        challenge.driipExchangeHash = trade.seal.hash;
+        //        challenge.driipOperatorHash = trade.seal.hash;
         challenge.driipType = NahmiiTypes.DriipType.Trade;
         challenge.driipIndex = walletChallengedTradesMap[wallet].length.sub(1);
         challenge.intendedStage = MonetaryTypes.Figure(intendedStageAmount, trade.currencies.intended);
@@ -188,7 +188,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         challenge.nonce = payment.nonce;
         challenge.timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
-        //        challenge.driipExchangeHash = payment.seals.exchange.hash;
+        //        challenge.driipOperatorHash = payment.seals.exchange.hash;
         challenge.driipType = NahmiiTypes.DriipType.Payment;
         challenge.driipIndex = walletChallengedPaymentsMap[wallet].length.sub(1);
         challenge.intendedStage = MonetaryTypes.Figure(stageAmount, payment.currency);

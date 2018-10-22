@@ -313,7 +313,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if order is not sealed by exchange', () => {
+            describe('if order is not sealed by operator', () => {
                 beforeEach(async () => {
                     ethersValidator.setGenuineOrderOperatorSeal(false);
                     order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});

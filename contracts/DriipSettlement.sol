@@ -25,10 +25,10 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
 
 /**
-@title Exchange
+@title DriipSettlement
 @notice Where driips are settled
 */
-contract Exchange is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, FraudChallengable {
+contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, FraudChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -295,7 +295,7 @@ contract Exchange is Ownable, Configurable, Validatable, ClientFundable, Communi
         if (msg.sender != deployer)
             wallet = msg.sender;
 
-        require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
         require(NahmiiTypes.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 

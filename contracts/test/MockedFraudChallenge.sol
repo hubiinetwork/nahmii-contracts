@@ -25,9 +25,9 @@ contract MockedFraudChallenge is FraudChallenge {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    bool public fraudulentOrderExchangeHash;
+    bool public fraudulentOrderOperatorHash;
     bool public fraudulentTradeHash;
-    bool public fraudulentPaymentExchangeHash;
+    bool public fraudulentPaymentOperatorHash;
 
     //
     // Events
@@ -48,9 +48,9 @@ contract MockedFraudChallenge is FraudChallenge {
         fraudulentPayments.length = 0;
         seizedWallets.length = 0;
         doubleSpenderWallets.length = 0;
-        fraudulentOrderExchangeHash = false;
+        fraudulentOrderOperatorHash = false;
         fraudulentTradeHash = false;
-        fraudulentPaymentExchangeHash = false;
+        fraudulentPaymentOperatorHash = false;
     }
 
     function addFraudulentOrder(NahmiiTypes.Order order) public {
@@ -78,14 +78,14 @@ contract MockedFraudChallenge is FraudChallenge {
         emit AddDoubleSpenderWalletEvent(wallet);
     }
 
-    function setFraudulentOrderExchangeHash(bool _fraudulentOrderExchangeHash) public {
-        fraudulentOrderExchangeHash = _fraudulentOrderExchangeHash;
+    function setFraudulentOrderOperatorHash(bool _fraudulentOrderOperatorHash) public {
+        fraudulentOrderOperatorHash = _fraudulentOrderOperatorHash;
     }
 
-    function isFraudulentOrderExchangeHash(bytes32 hash) public view returns (bool) {
+    function isFraudulentOrderOperatorHash(bytes32 hash) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(hash == hash);
-        return fraudulentOrderExchangeHash;
+        return fraudulentOrderOperatorHash;
     }
 
     function setFraudulentTradeHash(bool _fraudulentTradeHash) public {
@@ -98,13 +98,13 @@ contract MockedFraudChallenge is FraudChallenge {
         return fraudulentTradeHash;
     }
 
-    function setFraudulentPaymentExchangeHash(bool _fraudulentPaymentExchangeHash) public {
-        fraudulentPaymentExchangeHash = _fraudulentPaymentExchangeHash;
+    function setFraudulentPaymentOperatorHash(bool _fraudulentPaymentOperatorHash) public {
+        fraudulentPaymentOperatorHash = _fraudulentPaymentOperatorHash;
     }
 
-    function isFraudulentPaymentExchangeHash(bytes32 hash) public view returns (bool) {
+    function isFraudulentPaymentOperatorHash(bytes32 hash) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(hash == hash);
-        return fraudulentPaymentExchangeHash;
+        return fraudulentPaymentOperatorHash;
     }
 }

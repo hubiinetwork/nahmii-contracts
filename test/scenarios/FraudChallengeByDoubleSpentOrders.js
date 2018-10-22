@@ -320,7 +320,7 @@ module.exports = (glob) => {
                             wallet: glob.user_a,
                             order: {
                                 hashes: {
-                                    exchange: cryptography.hash('some buy order exchange hash')
+                                    exchange: cryptography.hash('some buy order operator hash')
                                 }
                             }
                         },
@@ -334,7 +334,7 @@ module.exports = (glob) => {
                             wallet: glob.user_c,
                             order: {
                                 hashes: {
-                                    exchange: cryptography.hash('some buy order exchange hash')
+                                    exchange: cryptography.hash('some buy order operator hash')
                                 }
                             }
                         },
@@ -379,7 +379,7 @@ module.exports = (glob) => {
                             wallet: glob.user_b,
                             order: {
                                 hashes: {
-                                    exchange: cryptography.hash('some sell order exchange hash')
+                                    exchange: cryptography.hash('some sell order operator hash')
                                 }
                             }
                         },
@@ -393,7 +393,7 @@ module.exports = (glob) => {
                             wallet: glob.user_d,
                             order: {
                                 hashes: {
-                                    exchange: cryptography.hash('some sell order exchange hash')
+                                    exchange: cryptography.hash('some sell order operator hash')
                                 }
                             }
                         },

@@ -15,7 +15,7 @@ const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
 const DriipSettlementTypes = artifacts.require('DriipSettlementTypes');
 const ERC20TransferController = artifacts.require('ERC20TransferController');
 const ERC721TransferController = artifacts.require('ERC721TransferController');
-const Exchange = artifacts.require('Exchange');
+const DriipSettlement = artifacts.require('DriipSettlement');
 const Hasher = artifacts.require('Hasher');
 const FraudChallenge = artifacts.require('FraudChallenge');
 const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDoubleSpentOrders');
@@ -86,7 +86,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'MonetaryTypes', '', MonetaryTypes);
 
             await deployer.link(MonetaryTypes, [
-                ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementDispute, Exchange, NahmiiTypes, DriipStorable, TokenHolderRevenueFund, Validator
+                ClientFund, Configuration, DriipSettlementChallenge, DriipSettlementDispute, DriipSettlement, NahmiiTypes, DriipStorable, TokenHolderRevenueFund, Validator
             ]);
 
             //deploy base libraries
@@ -102,14 +102,14 @@ module.exports = (deployer, network, accounts) => {
             //link dependencies
             await deployer.link(SafeMathIntLib, [
                 BalanceLib, CancelOrdersChallenge, ClientFund, CommunityVote, Configuration, DriipSettlementChallenge, DriipSettlementDispute,
-                Exchange, NullSettlementChallenge, NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
+                DriipSettlement, NullSettlementChallenge, NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathUintLib, [
-                CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, Exchange, NullSettlementChallenge, NullSettlementDispute,
+                CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, DriipSettlement, NullSettlementChallenge, NullSettlementDispute,
                 RevenueFund, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(NahmiiTypes, [
-                CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, Exchange, FraudChallenge,
+                CancelOrdersChallenge, DriipSettlementChallenge, DriipSettlementDispute, DriipSettlement, FraudChallenge,
                 FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
                 FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
@@ -125,10 +125,10 @@ module.exports = (deployer, network, accounts) => {
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
             await deployer.link(DriipSettlementTypes, [
-                DriipSettlementChallenge, DriipSettlementDispute, Exchange
+                DriipSettlementChallenge, DriipSettlementDispute, DriipSettlement
             ]);
             await deployer.link(SettlementTypes, [
-                NullSettlementChallenge, NullSettlementDispute, Exchange
+                NullSettlementChallenge, NullSettlementDispute, DriipSettlement
             ]);
 
             //deploy transfer controllers
@@ -152,7 +152,7 @@ module.exports = (deployer, network, accounts) => {
 
             await execDeploy(ctl, 'Configuration', '', Configuration);
 
-            await execDeploy(ctl, 'Exchange', '', Exchange);
+            await execDeploy(ctl, 'DriipSettlement', '', DriipSettlement);
 
             await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
 
@@ -237,7 +237,7 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await ClientFund.at(addressStorage.get('ClientFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            tx = await instance.registerService(addressStorage.get('Exchange'));
+            tx = await instance.registerService(addressStorage.get('DriipSettlement'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
@@ -249,7 +249,7 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.registerBeneficiary(addressStorage.get('TradesRevenueFund'));
             // TODO Whitelist all ClientFundable contracts in ClientFund
 
-            instance = await Exchange.at(addressStorage.get('Exchange'));
+            instance = await DriipSettlement.at(addressStorage.get('DriipSettlement'));
             tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
             tx = await instance.changeValidator(addressStorage.get('Validator'));
             tx = await instance.changeCommunityVote(addressStorage.get('CommunityVote'));

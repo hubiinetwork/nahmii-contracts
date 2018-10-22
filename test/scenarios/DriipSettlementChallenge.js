@@ -744,7 +744,7 @@ module.exports = (glob) => {
 
             describe('if order is flagged as fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersFraudChallenge.setFraudulentOrderExchangeHash(true);
+                    await ethersFraudChallenge.setFraudulentOrderOperatorHash(true);
                     order = await mocks.mockOrder(glob.owner);
                 });
 
@@ -1001,7 +1001,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if order is not signed by exchange', () => {
+            describe('if order is not signed by operator', () => {
                 beforeEach(async () => {
                     order = await mocks.mockOrder(glob.owner);
                     trade = await mocks.mockTrade(glob.owner, {
@@ -1015,7 +1015,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trade is not signed by exchange', () => {
+            describe('if trade is not signed by operator', () => {
                 beforeEach(async () => {
                     order = await mocks.mockOrder(glob.owner);
                     trade = await mocks.mockTrade(glob.owner, {
@@ -1067,9 +1067,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trade\'s order\'s exchange hash is flagged as fraudulent', () => {
+            describe('if trade\'s order\'s operator hash is flagged as fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersFraudChallenge.setFraudulentOrderExchangeHash(true);
+                    await ethersFraudChallenge.setFraudulentOrderOperatorHash(true);
                     order = await mocks.mockOrder(glob.owner);
                     trade = await mocks.mockTrade(glob.owner, {
                         buyer: {wallet: order.wallet}
@@ -1200,7 +1200,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trade is not signed by exchange', () => {
+            describe('if trade is not signed by operator', () => {
                 beforeEach(async () => {
                     candidateTrade = await mocks.mockTrade(glob.user_a);
                 });
@@ -1460,7 +1460,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payment is not signed by exchange', () => {
+            describe('if payment is not signed by operator', () => {
                 beforeEach(async () => {
                     candidatePayment = await mocks.mockPayment(glob.user_a);
                 });
@@ -1482,7 +1482,7 @@ module.exports = (glob) => {
 
             describe('if payment is flagged as fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersFraudChallenge.setFraudulentPaymentExchangeHash(true);
+                    await ethersFraudChallenge.setFraudulentPaymentOperatorHash(true);
                     candidatePayment = await mocks.mockPayment(glob.user_a);
                 });
 

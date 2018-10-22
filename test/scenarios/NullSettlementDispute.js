@@ -284,7 +284,7 @@ module.exports = (glob) => {
 
             describe('if called with fraudulent order', () => {
                 beforeEach(async () => {
-                    await web3FraudChallenge.setFraudulentOrderExchangeHash(true);
+                    await web3FraudChallenge.setFraudulentOrderOperatorHash(true);
                 });
 
                 it('should revert', async () => {
@@ -477,7 +477,7 @@ module.exports = (glob) => {
 
             describe('if called with trade with fraudulent order', () => {
                 beforeEach(async () => {
-                    await web3FraudChallenge.setFraudulentOrderExchangeHash(true);
+                    await web3FraudChallenge.setFraudulentOrderOperatorHash(true);
                 });
 
                 it('should revert', async () => {
@@ -644,7 +644,7 @@ module.exports = (glob) => {
 
             describe('if called with fraudulent payment', () => {
                 beforeEach(async () => {
-                    await web3FraudChallenge.setFraudulentPaymentExchangeHash(true);
+                    await web3FraudChallenge.setFraudulentPaymentOperatorHash(true);
                 });
 
                 it('should revert', async () => {

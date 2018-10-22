@@ -74,7 +74,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     onlySealedOrder(order)
     {
         // Require that order candidate is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderExchangeHash(order.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.exchange.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
 
         // Require that null settlement challenge is ongoing
@@ -131,11 +131,11 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
 
         // Require that trade candidate's order is not labelled fraudulent or cancelled
-        bytes32 orderExchangeHash = (trade.buyer.wallet == wallet ?
+        bytes32 orderOperatorHash = (trade.buyer.wallet == wallet ?
         trade.buyer.order.hashes.exchange :
         trade.seller.order.hashes.exchange);
-        require(!fraudChallenge.isFraudulentOrderExchangeHash(orderExchangeHash));
-        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(orderOperatorHash));
+        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 
         // Require that null settlement challenge is ongoing
         require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(wallet));
@@ -190,7 +190,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
 
         // Require that null settlement challenge is ongoing
         require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(wallet));

@@ -25,7 +25,7 @@ library SettlementTypes {
     enum SettlementRole {Origin, Target}
 
     struct Proposal {
-        uint256 nonce; // TODO Consider removal of nonce in place of exchange' hash
+        uint256 nonce; // TODO Consider removal of nonce in place of operato's hash
         uint256 blockNumber;
         uint256 timeout;
 
@@ -42,7 +42,7 @@ library SettlementTypes {
         int256[] targetBalanceAmounts;
 
         // Driip info
-        //        bytes32 driipExchangeHash; // TODO Add exchange' hash
+        //        bytes32 driipOperatorHash; // TODO Add operator hash
         NahmiiTypes.DriipType driipType;
         uint256 driipIndex;
 

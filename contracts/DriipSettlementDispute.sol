@@ -75,7 +75,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     onlySealedOrder(order)
     {
         // Require that order candidate is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderExchangeHash(order.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.exchange.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
 
         // Get challenge and require that it is ongoing
@@ -139,7 +139,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
 
         // Require that trade candidate's order is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderExchangeHash(trade.buyer.wallet == order.wallet ?
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(trade.buyer.wallet == order.wallet ?
             trade.buyer.order.hashes.exchange :
             trade.seller.order.hashes.exchange));
 
@@ -169,11 +169,11 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
 
         // Require that trade candidate's order is not labelled fraudulent or cancelled
-        bytes32 orderExchangeHash = (trade.buyer.wallet == wallet ?
+        bytes32 orderOperatorHash = (trade.buyer.wallet == wallet ?
         trade.buyer.order.hashes.exchange :
         trade.seller.order.hashes.exchange);
-        require(!fraudChallenge.isFraudulentOrderExchangeHash(orderExchangeHash));
-        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(orderOperatorHash));
+        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 
         // Get challenge and require that it is ongoing
         DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(wallet);
@@ -231,7 +231,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
 
         // Get challenge and require that it is ongoing
         DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(wallet);
@@ -300,11 +300,11 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         );
         require(challenge.candidateType == DriipSettlementTypes.ChallengeCandidateType.Order);
 
-        // Get challenge and require that its exchange has matches the one of order
+        // Get challenge and require that its operator hash matches the one of order
         NahmiiTypes.Order memory challengeOrder = driipSettlementChallenge.challengeCandidateOrder(challenge.candidateIndex);
         require(challengeOrder.seals.exchange.hash == order.seals.exchange.hash);
 
-        // Require that challenge order's exchange hash matches any or the exchange hash of any of the trade
+        // Require that challenge order's operator hash matches any or the operator hash of any of the trade
         // orders for this to be a valid unchallenge call
         require(challengeOrder.seals.exchange.hash == (trade.buyer.wallet == order.wallet ?
         trade.buyer.order.hashes.exchange :

@@ -14,7 +14,7 @@ const CommunityVote = artifacts.require('CommunityVote');
 const Hasher = artifacts.require('Hasher');
 const Validator = artifacts.require('Validator');
 const Configuration = artifacts.require('Configuration');
-const Exchange = artifacts.require('Exchange');
+const DriipSettlement = artifacts.require('DriipSettlement');
 const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
 const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
@@ -239,14 +239,14 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before('Preflight: Instantiate Exchange contract', async () => {
+    before('Preflight: Instantiate DriipSettlement contract', async () => {
         try {
-            glob.web3Exchange = await Exchange.deployed();
-            assert.notEqual(glob.web3Exchange, null);
-            glob.ethersIoExchange = new ethers.Contract(glob.web3Exchange.address, Exchange.abi, glob.signer_owner);
+            glob.web3DriipSettlement = await DriipSettlement.deployed();
+            assert.notEqual(glob.web3DriipSettlement, null);
+            glob.ethersIoDriipSettlement = new ethers.Contract(glob.web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate Exchange contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate DriipSettlement contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -562,7 +562,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
-    require('./scenarios/Exchange')(glob);
+    require('./scenarios/DriipSettlement')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DriipSettlementChallenge')(glob);
     require('./scenarios/DriipSettlementDispute')(glob);
