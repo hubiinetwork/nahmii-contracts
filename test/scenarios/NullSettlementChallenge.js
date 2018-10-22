@@ -138,32 +138,19 @@ module.exports = (glob) => {
             });
         });
 
-        describe('walletProposalMap()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
-                it('should return default values', async () => {
-                    const address = Wallet.createRandom().address;
-                    const result = await ethersNullSettlementChallenge.walletProposalMap(address);
-                    result.status.should.equal(mocks.proposalStatuses.indexOf('Unknown'));
-                    result.nonce._bn.should.eq.BN(0);
-                });
+        describe('nonce', () => {
+            it('should return default value', async () => {
+                (await ethersNullSettlementChallenge.nonce())
+                    ._bn.should.eq.BN(0);
             });
+        });
 
-            describe.skip('if null settlement challenge has been started for given wallet', () => {
-                beforeEach(async () => {
-                    await web3ClientFund.reset();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
-
-                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
-                        from: glob.user_a,
-                        gas: 1e6
-                    });
-                });
-
-                it('should return proposal null challenge result', async () => {
-                    const result = await ethersNullSettlementChallenge.walletProposalMap(glob.user_a);
-                    result.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
-                    result.nonce._bn.should.eq.BN(1);
-                });
+        describe('walletProposalMap()', () => {
+            it('should return default values', async () => {
+                const address = Wallet.createRandom().address;
+                const result = await ethersNullSettlementChallenge.walletProposalMap(address);
+                result.status.should.equal(mocks.proposalStatuses.indexOf('Unknown'));
+                result.nonce._bn.should.eq.BN(0);
             });
         });
 
@@ -257,6 +244,9 @@ module.exports = (glob) => {
                     proposal.driipIndex._bn.should.eq.BN(0);
                     proposal.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
+
+                    (await ethersNullSettlementChallenge.nonce())
+                        ._bn.should.eq.BN(1);
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);

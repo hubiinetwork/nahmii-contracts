@@ -33,6 +33,8 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     // -----------------------------------------------------------------------------------------------------------------
     NullSettlementDispute public nullSettlementDispute;
 
+    uint256 public nonce;
+
     mapping(address => SettlementTypes.Proposal) public walletProposalMap;
 
     mapping(address => NahmiiTypes.Trade[]) public walletChallengedTradesMap;
@@ -102,7 +104,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
         );
         require(activeBalanceAmount >= amount);
 
-        walletProposalMap[msg.sender].nonce = walletProposalMap[msg.sender].nonce.add(1);
+        walletProposalMap[msg.sender].nonce = ++nonce;
         walletProposalMap[msg.sender].blockNumber = activeAccumulationBlockNumber;
         walletProposalMap[msg.sender].timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         walletProposalMap[msg.sender].status = SettlementTypes.ChallengeStatus.Qualified;
