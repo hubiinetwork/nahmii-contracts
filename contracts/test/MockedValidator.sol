@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../Ownable.sol";
-import {AccessorManageable} from "../AccessorManageable.sol";
+import {SignerManageable} from "../SignerManageable.sol";
 //import {Validator} from "../Validator.sol";
 import {NahmiiTypes} from "../NahmiiTypes.sol";
 
@@ -18,7 +18,7 @@ import {NahmiiTypes} from "../NahmiiTypes.sol";
 @title MockedValidator
 @notice Mocked implementation of validator contract
 */
-contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
+contract MockedValidator is Ownable, SignerManageable /*, Validator*/ {
 
     //
     // Types
@@ -68,7 +68,7 @@ contract MockedValidator is Ownable, AccessorManageable /*, Validator*/ {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) /*Validator(owner)*/ public {
+    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) /*Validator(owner)*/ public {
         reset();
     }
 

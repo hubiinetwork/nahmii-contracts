@@ -9,7 +9,7 @@ const Helpers = require('./helpers');
 const w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 
 const ClientFund = artifacts.require('ClientFund');
-const AccessorManager = artifacts.require('AccessorManager');
+const SignerManager = artifacts.require('SignerManager');
 const CommunityVote = artifacts.require('CommunityVote');
 const Hasher = artifacts.require('Hasher');
 const Validator = artifacts.require('Validator');
@@ -151,14 +151,14 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before('Preflight: Instantiate AccessorManager contract', async () => {
+    before('Preflight: Instantiate SignerManager contract', async () => {
         try {
-            glob.web3AccessorManager = await AccessorManager.deployed();
-            assert.notEqual(glob.web3AccessorManager, null);
-            glob.ethersIoAccessorManager = new ethers.Contract(glob.web3AccessorManager.address, AccessorManager.abi, glob.signer_owner);
+            glob.web3SignerManager = await SignerManager.deployed();
+            assert.notEqual(glob.web3SignerManager, null);
+            glob.ethersIoSignerManager = new ethers.Contract(glob.web3SignerManager.address, SignerManager.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate AccessorManager contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate SignerManager contract address. [Error: ' + err.toString() + ']');
         }
     });
 

@@ -11,10 +11,10 @@ pragma solidity ^0.4.24;
 import {Ownable} from "./Ownable.sol";
 
 /**
-@title AccessorManager
+@title SignerManager
 @notice A contract to control who can execute some specific actions
 */
-contract AccessorManager is Ownable {
+contract SignerManager is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

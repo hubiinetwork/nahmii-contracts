@@ -16,20 +16,20 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {Configurable} from "./Configurable.sol";
 import {Hashable} from "./Hashable.sol";
 import {Ownable} from "./Ownable.sol";
-import {AccessorManageable} from "./AccessorManageable.sol";
+import {SignerManageable} from "./SignerManageable.sol";
 
 /**
 @title Validatable
 @notice An ownable that validates valuable types (order, trade, payment)
 */
-contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
+contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address accessorManager) Ownable(owner) AccessorManageable(accessorManager) public {
+    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) public {
     }
 
     //
@@ -68,7 +68,7 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     // TODO Implement support for NFT. Current logics only applies to FT.
     function isGenuineTradeBuyer(NahmiiTypes.Trade trade) public view returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
-        && (!accessorManager.isSigner(trade.buyer.wallet))
+        && (!signerManager.isSigner(trade.buyer.wallet))
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.buyer.fees.single.amount))
         && (trade.buyer.balances.conjugate.current == trade.buyer.balances.conjugate.previous.sub(trade.transfers.conjugate.single))
         && (trade.buyer.order.amount >= trade.buyer.order.residuals.current)
@@ -79,7 +79,7 @@ contract Validator is Ownable, AccessorManageable, Configurable, Hashable {
     // TODO Implement support for NFT. Current logics only applies to FT.
     function isGenuineTradeSeller(NahmiiTypes.Trade trade) public view returns (bool) {
         return (trade.buyer.wallet != trade.seller.wallet)
-        && (!accessorManager.isSigner(trade.seller.wallet))
+        && (!signerManager.isSigner(trade.seller.wallet))
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))
         && (trade.seller.balances.conjugate.current == trade.seller.balances.conjugate.previous.add(trade.transfers.conjugate.single).sub(trade.seller.fees.single.amount))
         && (trade.seller.order.amount >= trade.seller.order.residuals.current)

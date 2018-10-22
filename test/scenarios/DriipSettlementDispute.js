@@ -36,7 +36,7 @@ module.exports = (glob) => {
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
             ethersCancelOrdersChallenge = glob.ethersIoCancelOrdersChallenge;
 
-            web3Validator = await MockedValidator.new(glob.owner, glob.web3AccessorManager.address);
+            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);

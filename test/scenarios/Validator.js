@@ -11,7 +11,7 @@ module.exports = function (glob) {
         let blockNumberAhead;
         let ethersHasher;
         let web3Configuration, ethersConfiguration;
-        let web3AccessorManager, ethersAccessorManager;
+        let web3SignerManager, ethersSignerManager;
         let web3Validator, ethersValidator;
         let partsPer;
 
@@ -21,12 +21,12 @@ module.exports = function (glob) {
             ethersHasher = glob.ethersIoHasher;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
-            web3AccessorManager = glob.web3AccessorManager;
-            ethersAccessorManager = glob.ethersIoAccessorManager;
+            web3SignerManager = glob.web3SignerManager;
+            ethersSignerManager = glob.ethersIoSignerManager;
             web3Validator = glob.web3Validator;
             ethersValidator = glob.ethersIoValidator;
 
-            await ethersValidator.changeAccessorManager(ethersAccessorManager.address);
+            await ethersValidator.changeSignerManager(ethersSignerManager.address);
             await ethersValidator.changeConfiguration(ethersConfiguration.address);
             await ethersValidator.changeHasher(ethersHasher.address);
 
