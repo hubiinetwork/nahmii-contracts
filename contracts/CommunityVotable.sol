@@ -25,30 +25,35 @@ contract CommunityVotable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeCommunityVoteEvent(CommunityVote oldAddress, CommunityVote newAddress);
+    event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Disable future updates of community vote contract
-    function disableUpdateOfCommunityVote() public onlyDeployer {
+    function disableUpdateOfCommunityVote() 
+    public 
+    onlyDeployer 
+    {
         communityVoteUpdateDisabled = true;
     }
 
     /// @notice Change the community vote contract
-    /// @param newAddress The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newAddress) public onlyDeployer
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, communityVote)
+    /// @param newCommunityVote The (address of) CommunityVote contract instance
+    function changeCommunityVote(CommunityVote newCommunityVote) 
+    public 
+    onlyDeployer
+    notNullAddress(newCommunityVote)
+    notSameAddresses(newCommunityVote, communityVote)
     {
         require(!communityVoteUpdateDisabled);
 
-        //set new community vote
-        CommunityVote oldAddress = communityVote;
-        communityVote = newAddress;
+        // Set new community vote
+        CommunityVote oldCommunityVote = communityVote;
+        communityVote = newCommunityVote;
 
         // Emit event
-        emit ChangeCommunityVoteEvent(oldAddress, newAddress);
+        emit ChangeCommunityVoteEvent(oldCommunityVote, newCommunityVote);
     }
 
     //

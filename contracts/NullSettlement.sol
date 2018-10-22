@@ -40,10 +40,6 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 
-    SettlementTypes.NullSettlement[] public settlements;
-    mapping(uint256 => uint256) public nonceSettlementIndex;
-    mapping(address => uint256[]) public walletSettlementIndices;
-    mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxNullNonce;
 
     //
@@ -94,75 +90,6 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         return seizedWallets.length;
     }
 
-    /// @notice Get the count of settlements
-    function settlementsCount()
-    public
-    view
-    returns (uint256)
-    {
-        return settlements.length;
-    }
-
-    /// @notice Return boolean indicating whether there is already a settlement for the given nonce
-    /// @param nonce The nonce for which to check for settlement
-    /// @return true if there exists a settlement for the provided nonce, false otherwise
-    function hasSettlementByNonce(uint256 nonce)
-    public
-    view
-    returns (bool)
-    {
-        return 0 < nonceSettlementIndex[nonce];
-    }
-
-    /// @notice Get the settlement for the given (global) nonce
-    /// @param nonce The nonce of the settlement
-    /// @return settlement of the provided nonce
-    function settlementByNonce(uint256 nonce)
-    public
-    view
-    returns (SettlementTypes.NullSettlement)
-    {
-        require(hasSettlementByNonce(nonce));
-        return settlements[nonceSettlementIndex[nonce] - 1];
-    }
-
-    /// @notice Get the count of settlements for given wallet
-    /// @param wallet The address for which to return settlement count
-    /// @return count of settlements for the provided wallet
-    function settlementsCountByWallet(address wallet)
-    public
-    view
-    returns (uint256)
-    {
-        return walletSettlementIndices[wallet].length;
-    }
-
-    /// @notice Get settlement of given wallet and index
-    /// @param wallet The address for which to return settlement
-    /// @param index The wallet's settlement index
-    /// @return settlement for the provided wallet and index
-    function settlementByWalletAndIndex(address wallet, uint256 index)
-    public
-    view
-    returns (SettlementTypes.NullSettlement)
-    {
-        require(walletSettlementIndices[wallet].length > index);
-        return settlements[walletSettlementIndices[wallet][index] - 1];
-    }
-
-    /// @notice Get settlement of given wallet and (wallet) nonce
-    /// @param wallet The address for which to return settlement
-    /// @param nonce The wallet's nonce
-    /// @return settlement for the provided wallet and index
-    function settlementByWalletAndNonce(address wallet, uint256 nonce)
-    public
-    view
-    returns (SettlementTypes.NullSettlement)
-    {
-        require(0 < walletNonceSettlementIndex[wallet][nonce]);
-        return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
-    }
-
     /// @notice Update the max null settlement nonce property from CommunityVote contract
     function updateMaxNullNonce()
     public
@@ -174,11 +101,11 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
 
     /// @notice Settle null
     /// @param wallet The wallet whose side of the payment is to be settled
-    function settle(address wallet)
+    function settleNull(address wallet)
     public
-    communityVoteInitialized
     configurationInitialized
     clientFundInitialized
+    communityVoteInitialized
     nullSettlementChallengeInitialized
     {
         if (msg.sender != deployer)
@@ -201,18 +128,15 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
             // Update settled nonce of wallet and currency
             walletCurrencyMaxNullNonce[wallet][currency.ct][currency.id] = nonce;
 
-            // Get settlement, or create one if no such settlement exists for the trade nonce
-            createSettlement(nonce, wallet);
-
             // Get proposal's currency, target balance amount and stage amount. (Null settlement proposals only have one of each.)
             MonetaryTypes.Currency memory currency = nullSettlementChallenge.proposalCurrency(wallet, 0);
-            int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, currency.ct, currency.id);
             int256 stageAmount = nullSettlementChallenge.proposalStageAmount(wallet, currency.ct, currency.id);
+            int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, currency.ct, currency.id);
 
             // Update settled balance
             clientFund.updateSettledBalance(wallet, targetBalanceAmount, currency.ct, currency.id);
 
-            // Stage
+            // Stage the proposed amount
             if (stageAmount.isNonZeroPositiveInt256())
                 clientFund.stage(wallet, stageAmount, currency.ct, currency.id);
 
@@ -232,22 +156,6 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
 
         // Emit event
         emit SettleNullEvent(wallet, nullSettlementChallenge.proposalStatus(wallet));
-    }
-
-    function createSettlement(uint256 nonce, address wallet)
-    private
-    {
-        SettlementTypes.NullSettlement memory settlement;
-        settlement.nonce = nonce;
-        settlement.wallet = wallet;
-
-        settlements.push(settlement);
-
-        // Index is 1 based
-        uint256 index = settlements.length;
-        nonceSettlementIndex[nonce] = index;
-        walletSettlementIndices[wallet].push(index);
-        walletNonceSettlementIndex[wallet][nonce] = index;
     }
 
     function addToSeizedWallets(address _address)

@@ -9,6 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
+import {MonetaryTypes} from "../MonetaryTypes.sol";
 import {NahmiiTypes} from "../NahmiiTypes.sol";
 import {SettlementTypes} from "../SettlementTypes.sol";
 import {NullSettlementDispute} from "../NullSettlementDispute.sol";
@@ -22,6 +23,8 @@ contract MockedNullSettlementChallenge {
     NahmiiTypes.ChallengePhase public _challengePhase;
     uint256 public _proposalNonce;
     uint256 public _proposalBlockNumber;
+    MonetaryTypes.Currency _proposalCurrency;
+    int256 public _proposalStageAmount;
     int256 public _proposalTargetBalanceAmount;
     SettlementTypes.ChallengeStatus public _proposalStatus;
     SettlementTypes.ChallengeCandidateType public _proposalCandidateType;
@@ -58,6 +61,7 @@ contract MockedNullSettlementChallenge {
     public
     view
     returns (NahmiiTypes.ChallengePhase) {
+        require(wallet == wallet);
         return _challengePhase;
     }
 
@@ -72,6 +76,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (uint256)
     {
+        require(wallet == wallet);
         return _proposalNonce;
     }
 
@@ -86,7 +91,38 @@ contract MockedNullSettlementChallenge {
     view
     returns (uint256)
     {
+        require(wallet == wallet);
         return _proposalBlockNumber;
+    }
+
+    function _setProposalCurrency(MonetaryTypes.Currency proposalCurrency)
+    public
+    {
+        _proposalCurrency = proposalCurrency;
+    }
+
+    function proposalCurrency(address wallet, uint256 index)
+    public
+    view
+    returns (MonetaryTypes.Currency)
+    {
+        require(wallet == wallet);
+        return _proposalCurrency;
+    }
+
+    function _setProposalStageAmount(int256 proposalStageAmount)
+    public
+    {
+        _proposalStageAmount = proposalStageAmount;
+    }
+
+    function proposalStageAmount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        require(wallet == wallet);
+        return _proposalStageAmount;
     }
 
     function _setProposalTargetBalanceAmount(int256 proposalTargetBalanceAmount)
@@ -100,6 +136,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (int256)
     {
+        require(wallet == wallet);
         return _proposalTargetBalanceAmount;
     }
 
@@ -110,11 +147,28 @@ contract MockedNullSettlementChallenge {
         _proposalStatus = status;
     }
 
+    function proposalStatus(address wallet)
+    public
+    returns (SettlementTypes.ChallengeStatus)
+    {
+        require(wallet == wallet);
+        return _proposalStatus;
+    }
+
     function setProposalCandidateType(address wallet, SettlementTypes.ChallengeCandidateType candidateType)
     public
     {
         require(wallet == wallet);
         _proposalCandidateType = candidateType;
+    }
+
+    function proposalCandidateType(address wallet)
+    public
+    view
+    returns (SettlementTypes.ChallengeCandidateType)
+    {
+        require(wallet == wallet);
+        return _proposalCandidateType;
     }
 
     function setProposalCandidateIndex(address wallet, uint256 candidateIndex)
@@ -124,6 +178,15 @@ contract MockedNullSettlementChallenge {
         _proposalCandidateIndex = candidateIndex;
     }
 
+    function proposalCandidateIndex(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        require(wallet == wallet);
+        return _proposalCandidateIndex;
+    }
+
     function setProposalChallenger(address wallet, address challenger)
     public
     {
@@ -131,9 +194,19 @@ contract MockedNullSettlementChallenge {
         _proposalChallenger = challenger;
     }
 
+    function proposalChallenger(address wallet)
+    public
+    view
+    returns (address)
+    {
+        require(wallet == wallet);
+        return _proposalChallenger;
+    }
+
     function pushChallengeCandidateOrder(NahmiiTypes.Order order)
     public
     {
+        require(order.nonce == order.nonce);
         _challengeCandidateOrdersCount++;
     }
 
@@ -148,6 +221,7 @@ contract MockedNullSettlementChallenge {
     function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
     public
     {
+        require(trade.nonce == trade.nonce);
         _challengeCandidateTradesCount++;
     }
 
@@ -162,6 +236,7 @@ contract MockedNullSettlementChallenge {
     function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
     public
     {
+        require(payment.nonce == payment.nonce);
         _challengeCandidatePaymentsCount++;
     }
 

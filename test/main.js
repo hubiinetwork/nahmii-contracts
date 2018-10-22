@@ -14,8 +14,8 @@ const CommunityVote = artifacts.require('CommunityVote');
 const Hasher = artifacts.require('Hasher');
 const Validator = artifacts.require('Validator');
 const Configuration = artifacts.require('Configuration');
-const DriipSettlement = artifacts.require('DriipSettlement');
 const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
+const DriipSettlement = artifacts.require('DriipSettlement');
 const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
 const FraudChallenge = artifacts.require('FraudChallenge');
@@ -31,6 +31,7 @@ const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDou
 const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTrades');
 const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
 const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
+const NullSettlement = artifacts.require('NullSettlement');
 const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
@@ -239,17 +240,6 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before('Preflight: Instantiate DriipSettlement contract', async () => {
-        try {
-            glob.web3DriipSettlement = await DriipSettlement.deployed();
-            assert.notEqual(glob.web3DriipSettlement, null);
-            glob.ethersIoDriipSettlement = new ethers.Contract(glob.web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-        }
-        catch (err) {
-            assert(false, 'Failed to instantiate DriipSettlement contract address. [Error: ' + err.toString() + ']');
-        }
-    });
-
     before('Preflight: Instantiate CancelOrdersChallenge contract', async () => {
         try {
             glob.web3CancelOrdersChallenge = await CancelOrdersChallenge.deployed();
@@ -258,6 +248,17 @@ contract('Smart contract checks', function () {
         }
         catch (err) {
             assert(false, 'Failed to instantiate CancelOrdersChallenge contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before('Preflight: Instantiate DriipSettlement contract', async () => {
+        try {
+            glob.web3DriipSettlement = await DriipSettlement.deployed();
+            assert.notEqual(glob.web3DriipSettlement, null);
+            glob.ethersIoDriipSettlement = new ethers.Contract(glob.web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate DriipSettlement contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -280,6 +281,17 @@ contract('Smart contract checks', function () {
         }
         catch (err) {
             assert(false, 'Failed to instantiate DriipSettlementDispute contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before('Preflight: Instantiate NullSettlement contract', async () => {
+        try {
+            glob.web3NullSettlement = await NullSettlement.deployed();
+            assert.notEqual(glob.web3NullSettlement, null);
+            glob.ethersIoNullSettlement = new ethers.Contract(glob.web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate NullSettlement contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -579,6 +591,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
+    require('./scenarios/NullSettlement')(glob);
     require('./scenarios/NullSettlementChallenge')(glob);
     require('./scenarios/NullSettlementDispute')(glob);
     require('./scenarios/RevenueFund')(glob);

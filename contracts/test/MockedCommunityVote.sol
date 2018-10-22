@@ -20,6 +20,7 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => bool) internal doubleSpenderWalletsMap;
     uint256 internal maxDriipNonce;
+    uint256 internal maxNullNonce;
     bool internal dataAvailable;
 
     //
@@ -34,6 +35,7 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     // -----------------------------------------------------------------------------------------------------------------
     function reset() public {
         maxDriipNonce = 0;
+        maxNullNonce = 0;
         dataAvailable = true;
     }
 
@@ -51,6 +53,14 @@ contract MockedCommunityVote /* is CommunityVote*/ {
 
     function getMaxDriipNonce() public view returns (uint256) {
         return maxDriipNonce;
+    }
+
+    function setMaxNullNonce(uint256 _maxNullNonce) public returns (uint256) {
+        return maxNullNonce = _maxNullNonce;
+    }
+
+    function getMaxNullNonce() public view returns (uint256) {
+        return maxNullNonce;
     }
 
     function setDataAvailable(bool _dataAvailable) public returns (bool) {
