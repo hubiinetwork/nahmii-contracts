@@ -233,6 +233,8 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+            tx = await instance.registerBeneficiary(addressStorage.get('PaymentsRevenueFund'));
+            tx = await instance.registerBeneficiary(addressStorage.get('TradesRevenueFund'));
             // TODO Whitelist all ClientFundable contracts in ClientFund
 
             instance = await Exchange.at(addressStorage.get('Exchange'));
