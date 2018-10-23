@@ -9,11 +9,13 @@
   "scripts": {
     "build": "truffle compile",
     "build:all": "truffle compile --all",
-    "test": "concurrently -r -s first --kill-others 'ganache-cli >/dev/null' 'truffle compile && truffle test'",
+    "test": "concurrently -r -s first --kill-others 'ganache-cli -e 1000 >/dev/null' 'truffle compile && truffle test'",
     "deploy": "npm run deploy:test",
     "deploy:test": "truffle migrate --network testnet",
     "deploy:main": "truffle migrate --network mainnet",
+    "deploy:ganache": "truffle compile && truffle migrate --network ganache",
     "deploy:ci": "truffle migrate",
+    "docs": "soldoc",
     "version:compiler": "solcjs --version"
   },
   "author": "Hubii",

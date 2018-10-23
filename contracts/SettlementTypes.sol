@@ -13,10 +13,10 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 
 /**
- * @title     DriipSettlementTypes
- * @dev       Types for driip settlement challenge
+ * @title     SettlementTypes
+ * @dev       Types for settlements
  */
-library DriipSettlementTypes {
+library SettlementTypes {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -24,28 +24,27 @@ library DriipSettlementTypes {
     enum ChallengeCandidateType {None, Order, Trade, Payment}
     enum SettlementRole {Origin, Target}
 
-    struct OptionalFigure {
-        MonetaryTypes.Figure figure;
-        bool set;
-    }
-
-    struct Challenge {
-        uint256 nonce; // TODO Consider removal of nonce in place of operator hash
+    struct Proposal {
+        uint256 nonce; // TODO Consider removal of nonce in place of operato's hash
+        uint256 blockNumber;
         uint256 timeout;
+
+        // Status
         ChallengeStatus status;
+
+        // Currencies
+        MonetaryTypes.Currency[] currencies;
+
+        // Stage info
+        int256[] stageAmounts;
+
+        // Balances after amounts have been staged
+        int256[] targetBalanceAmounts;
 
         // Driip info
         //        bytes32 driipOperatorHash; // TODO Add operator hash
         NahmiiTypes.DriipType driipType;
         uint256 driipIndex;
-
-        // Stage info
-        MonetaryTypes.Figure intendedStage;
-        MonetaryTypes.Figure conjugateStage;
-
-        // Balances after amounts have been staged
-        OptionalFigure intendedTargetBalance;
-        OptionalFigure conjugateTargetBalance;
 
         // Candidate info updated when calling any of the challenge functions
         ChallengeCandidateType candidateType;
@@ -53,5 +52,10 @@ library DriipSettlementTypes {
 
         // Address of wallet that successfully challenged
         address challenger;
+    }
+
+    struct NullSettlement {
+        uint256 nonce;
+        address wallet;
     }
 }

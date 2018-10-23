@@ -268,9 +268,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositCount]: Cannot be called from non-registered address", async() => {
+        it(testCounter.next() + ": MUST FAIL [depositsCount]: Cannot be called from non-registered address", async() => {
             try {
-                await glob.web3PartnerFund.depositCount(dummyTag);
+                await glob.web3PartnerFund.depositsCount(dummyTag);
                 assert(false, 'This test must fail.');
             }
             catch (err) {

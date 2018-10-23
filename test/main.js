@@ -9,13 +9,13 @@ const Helpers = require('./helpers');
 const w3prov = new ethers.providers.Web3Provider(web3.currentProvider);
 
 const ClientFund = artifacts.require('ClientFund');
-const AccessorManager = artifacts.require('AccessorManager');
+const SignerManager = artifacts.require('SignerManager');
 const CommunityVote = artifacts.require('CommunityVote');
 const Hasher = artifacts.require('Hasher');
 const Validator = artifacts.require('Validator');
 const Configuration = artifacts.require('Configuration');
-const Exchange = artifacts.require('Exchange');
 const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
+const DriipSettlement = artifacts.require('DriipSettlement');
 const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
 const FraudChallenge = artifacts.require('FraudChallenge');
@@ -31,15 +31,20 @@ const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDou
 const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTrades');
 const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
 const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
+const NullSettlement = artifacts.require('NullSettlement');
+const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
+const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
+const PartnerFund = artifacts.require('PartnerFund');
 const RevenueFund = artifacts.require('RevenueFund');
 const SecurityBond = artifacts.require('SecurityBond');
 const TestServable = artifacts.require('TestServable');
 const TestAuthorizableServable = artifacts.require('TestAuthorizableServable');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
-const PartnerFund = artifacts.require('PartnerFund');
+
 const ERC20Token = artifacts.require('StandardTokenEx');
 const RevenueToken = artifacts.require('RevenueToken');
+
 const UnitTestHelpers = artifacts.require('UnitTestHelpers');
 
 //augmented sendTransaction using promises
@@ -147,14 +152,14 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before('Preflight: Instantiate AccessorManager contract', async () => {
+    before('Preflight: Instantiate SignerManager contract', async () => {
         try {
-            glob.web3AccessorManager = await AccessorManager.deployed();
-            assert.notEqual(glob.web3AccessorManager, null);
-            glob.ethersIoAccessorManager = new ethers.Contract(glob.web3AccessorManager.address, AccessorManager.abi, glob.signer_owner);
+            glob.web3SignerManager = await SignerManager.deployed();
+            assert.notEqual(glob.web3SignerManager, null);
+            glob.ethersIoSignerManager = new ethers.Contract(glob.web3SignerManager.address, SignerManager.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate AccessorManager contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate SignerManager contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -235,17 +240,6 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before('Preflight: Instantiate Exchange contract', async () => {
-        try {
-            glob.web3Exchange = await Exchange.deployed();
-            assert.notEqual(glob.web3Exchange, null);
-            glob.ethersIoExchange = new ethers.Contract(glob.web3Exchange.address, Exchange.abi, glob.signer_owner);
-        }
-        catch (err) {
-            assert(false, 'Failed to instantiate Exchange contract address. [Error: ' + err.toString() + ']');
-        }
-    });
-
     before('Preflight: Instantiate CancelOrdersChallenge contract', async () => {
         try {
             glob.web3CancelOrdersChallenge = await CancelOrdersChallenge.deployed();
@@ -254,6 +248,17 @@ contract('Smart contract checks', function () {
         }
         catch (err) {
             assert(false, 'Failed to instantiate CancelOrdersChallenge contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before('Preflight: Instantiate DriipSettlement contract', async () => {
+        try {
+            glob.web3DriipSettlement = await DriipSettlement.deployed();
+            assert.notEqual(glob.web3DriipSettlement, null);
+            glob.ethersIoDriipSettlement = new ethers.Contract(glob.web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate DriipSettlement contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -275,7 +280,40 @@ contract('Smart contract checks', function () {
             glob.ethersIoDriipSettlementDispute = new ethers.Contract(glob.web3DriipSettlementDispute.address, DriipSettlementDispute.abi, glob.signer_owner);
         }
         catch (err) {
-            assert(false, 'Failed to instantiate DriipSettlementChallenge contract address. [Error: ' + err.toString() + ']');
+            assert(false, 'Failed to instantiate DriipSettlementDispute contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before('Preflight: Instantiate NullSettlement contract', async () => {
+        try {
+            glob.web3NullSettlement = await NullSettlement.deployed();
+            assert.notEqual(glob.web3NullSettlement, null);
+            glob.ethersIoNullSettlement = new ethers.Contract(glob.web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate NullSettlement contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before('Preflight: Instantiate NullSettlementChallenge contract', async () => {
+        try {
+            glob.web3NullSettlementChallenge = await NullSettlementChallenge.deployed();
+            assert.notEqual(glob.web3NullSettlementChallenge, null);
+            glob.ethersIoNullSettlementChallenge = new ethers.Contract(glob.web3NullSettlementChallenge.address, NullSettlementChallenge.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate NullSettlementChallenge contract address. [Error: ' + err.toString() + ']');
+        }
+    });
+
+    before('Preflight: Instantiate NullSettlementDispute contract', async () => {
+        try {
+            glob.web3NullSettlementDispute = await NullSettlementDispute.deployed();
+            assert.notEqual(glob.web3NullSettlementDispute, null);
+            glob.ethersIoNullSettlementDispute = new ethers.Contract(glob.web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
+        }
+        catch (err) {
+            assert(false, 'Failed to instantiate NullSettlementDispute contract address. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -536,7 +574,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
-    require('./scenarios/Exchange')(glob);
+    require('./scenarios/DriipSettlement')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DriipSettlementChallenge')(glob);
     require('./scenarios/DriipSettlementDispute')(glob);
@@ -553,6 +591,9 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
+    require('./scenarios/NullSettlement')(glob);
+    require('./scenarios/NullSettlementChallenge')(glob);
+    require('./scenarios/NullSettlementDispute')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/Servable')(glob);

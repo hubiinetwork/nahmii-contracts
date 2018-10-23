@@ -9,14 +9,14 @@
 pragma solidity ^0.4.24;
 
 import {Benefactor} from "./Benefactor.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 
 /**
 @title AccrualBenefactor
 @notice A benefactor whose registered beneficiaries obtain a predefined fraction of total amount
 */
 contract AccrualBenefactor is Benefactor {
-    using SafeMathUint for uint256;
+    using SafeMathUintLib for uint256;
 
     //
     // Constants

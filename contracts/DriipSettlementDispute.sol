@@ -13,34 +13,32 @@ import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {FraudChallengable} from "./FraudChallengable.sol";
+import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
 import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
-import {FraudChallenge} from "./FraudChallenge.sol";
-import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 
 /**
 @title DriipSettlementDispute
 @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
-contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable {
-    using SafeMathInt for int256;
+contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, FraudChallengable, CancelOrdersChallengable {
+    using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementChallenge public driipSettlementChallenge;
-    FraudChallenge public fraudChallenge;
-    CancelOrdersChallenge public cancelOrdersChallenge;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge, DriipSettlementChallenge newDriipSettlementChallenge);
-    event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
-    event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
     event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
     event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
     event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address wallet, uint256 nonce, NahmiiTypes.DriipType driipType, address reporter);
@@ -63,28 +61,6 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         emit ChangeDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
     }
 
-    /// @notice Change the fraud challenge contract
-    /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge) public
-    onlyDeployer
-    notNullAddress(newFraudChallenge)
-    {
-        FraudChallenge oldFraudChallenge = fraudChallenge;
-        fraudChallenge = newFraudChallenge;
-        emit ChangeFraudChallengeEvent(oldFraudChallenge, fraudChallenge);
-    }
-
-    /// @notice Change the cancel orders challenge contract
-    /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
-    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge) public
-    onlyDeployer
-    notNullAddress(newCancelOrdersChallenge)
-    {
-        CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
-        cancelOrdersChallenge = newCancelOrdersChallenge;
-        emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, cancelOrdersChallenge);
-    }
-
     /// @notice Challenge the driip settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged driip
     /// @param challenger The address of the challenger
@@ -92,19 +68,18 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     /// if (candidate) order has sell intention consider _intended_ currency and amount
     function challengeByOrder(NahmiiTypes.Order order, address challenger) public
     validatorInitialized
+    fraudChallengeInitialized
+    cancelOrdersChallengeInitialized
+    driipSettlementChallengeInitialized
     onlyDriipSettlementChallenge
     onlySealedOrder(order)
     {
-        require(driipSettlementChallenge != address(0));
-        require(fraudChallenge != address(0));
-        require(cancelOrdersChallenge != address(0));
-
         // Require that order candidate is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderExchangeHash(order.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.exchange.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
 
         // Get challenge and require that it is ongoing
-        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(order.wallet);
+        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(order.wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -130,10 +105,10 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.pushChallengeCandidateOrder(order);
 
         // Update challenge
-        challenge.timeout = block.timestamp + configuration.getDriipSettlementChallengeTimeout();
+        challenge.timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Order;
-        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidateOrdersLength() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidateOrdersCount().sub(1);
         challenge.challenger = challenger;
 
         // Update stored challenge
@@ -150,22 +125,21 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     function unchallengeOrderCandidateByTrade(NahmiiTypes.Order order, NahmiiTypes.Trade trade, address unchallenger)
     public
     validatorInitialized
+    fraudChallengeInitialized
+    configurationInitialized
+    securityBondInitialized
+    driipSettlementChallengeInitialized
     onlyDriipSettlementChallenge
     onlySealedOrder(order)
     onlySealedTrade(trade)
     onlyTradeParty(trade, order.wallet)
     onlyTradeOrder(trade, order)
     {
-        require(driipSettlementChallenge != address(0));
-        require(fraudChallenge != address(0));
-        require(configuration != address(0));
-        require(securityBond != address(0));
-
         // Require that trade candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
 
         // Require that trade candidate's order is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderExchangeHash(trade.buyer.wallet == order.wallet ?
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(trade.buyer.wallet == order.wallet ?
             trade.buyer.order.hashes.exchange :
             trade.seller.order.hashes.exchange));
 
@@ -184,26 +158,25 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     function challengeByTrade(NahmiiTypes.Trade trade, address wallet, address challenger)
     public
     validatorInitialized
+    fraudChallengeInitialized
+    cancelOrdersChallengeInitialized
+    driipSettlementChallengeInitialized
     onlyDriipSettlementChallenge
     onlySealedTrade(trade)
     onlyTradeParty(trade, wallet)
     {
-        require(driipSettlementChallenge != address(0));
-        require(fraudChallenge != address(0));
-        require(cancelOrdersChallenge != address(0));
-
         // Require that trade candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
 
         // Require that trade candidate's order is not labelled fraudulent or cancelled
-        bytes32 orderExchangeHash = (trade.buyer.wallet == wallet ?
+        bytes32 orderOperatorHash = (trade.buyer.wallet == wallet ?
         trade.buyer.order.hashes.exchange :
         trade.seller.order.hashes.exchange);
-        require(!fraudChallenge.isFraudulentOrderExchangeHash(orderExchangeHash));
-        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderExchangeHash));
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(orderOperatorHash));
+        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 
         // Get challenge and require that it is ongoing
-        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(wallet);
+        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
@@ -235,7 +208,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Update challenge
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Trade;
-        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidateTradesLength() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidateTradesCount().sub(1);
         challenge.challenger = challenger;
 
         // Update stored challenge
@@ -252,18 +225,16 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     function challengeByPayment(NahmiiTypes.Payment payment, address wallet, address challenger)
     public
     validatorInitialized
+    fraudChallengeInitialized
     onlyDriipSettlementChallenge
     onlySealedPayment(payment)
     onlyPaymentSender(payment, wallet)
     {
-        require(driipSettlementChallenge != address(0));
-        require(fraudChallenge != address(0));
-
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentExchangeHash(payment.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
 
         // Get challenge and require that it is ongoing
-        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(wallet);
+        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(wallet);
         require(
             0 < challenge.nonce && block.timestamp < challenge.timeout
         );
@@ -283,7 +254,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Update challenge
         challenge.status = DriipSettlementTypes.ChallengeStatus.Disqualified;
         challenge.candidateType = DriipSettlementTypes.ChallengeCandidateType.Payment;
-        challenge.candidateIndex = driipSettlementChallenge.getChallengeCandidatePaymentsLength() - 1;
+        challenge.candidateIndex = driipSettlementChallenge.challengeCandidatePaymentsCount().sub(1);
         challenge.challenger = challenger;
 
         // Update stored challenge
@@ -301,7 +272,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     pure
     returns (int256)
     {
-        int256 amount = -1;
+        int256 amount = - 1;
         if (challenge.intendedTargetBalance.set &&
         currency.ct == challenge.intendedTargetBalance.figure.currency.ct &&
         currency.id == challenge.intendedTargetBalance.figure.currency.id)
@@ -322,18 +293,18 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     returns (DriipSettlementTypes.Challenge)
     {
         // Get challenge and require that it is ongoing and that its candidate type is order
-        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.getWalletChallenge(order.wallet);
+        DriipSettlementTypes.Challenge memory challenge = driipSettlementChallenge.walletChallenge(order.wallet);
         require(
             0 < challenge.nonce
             && block.timestamp < challenge.timeout
         );
         require(challenge.candidateType == DriipSettlementTypes.ChallengeCandidateType.Order);
 
-        // Get challenge and require that its exchange has matches the one of order
-        NahmiiTypes.Order memory challengeOrder = driipSettlementChallenge.getChallengeCandidateOrder(challenge.candidateIndex);
+        // Get challenge and require that its operator hash matches the one of order
+        NahmiiTypes.Order memory challengeOrder = driipSettlementChallenge.challengeCandidateOrder(challenge.candidateIndex);
         require(challengeOrder.seals.exchange.hash == order.seals.exchange.hash);
 
-        // Require that challenge order's exchange hash matches any or the exchange hash of any of the trade
+        // Require that challenge order's operator hash matches any or the operator hash of any of the trade
         // orders for this to be a valid unchallenge call
         require(challengeOrder.seals.exchange.hash == (trade.buyer.wallet == order.wallet ?
         trade.buyer.order.hashes.exchange :
@@ -352,18 +323,13 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyTradeParty(NahmiiTypes.Trade trade, address wallet) {
-        require(NahmiiTypes.isTradeParty(trade, wallet));
-        _;
-    }
-
     modifier onlyTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order) {
         require(NahmiiTypes.isTradeOrder(trade, order));
         _;
     }
 
-    modifier onlyPaymentSender(NahmiiTypes.Payment payment, address wallet) {
-        require(NahmiiTypes.isPaymentSender(payment, wallet));
+    modifier driipSettlementChallengeInitialized() {
+        require(driipSettlementChallenge != address(0));
         _;
     }
 

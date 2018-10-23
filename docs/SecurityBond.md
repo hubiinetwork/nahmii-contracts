@@ -339,7 +339,7 @@ Params:
 
 
 --- 
-### depositCount(address)
+### depositsCount(address)
 
 
 **Execution cost**: No bound available
@@ -720,7 +720,7 @@ Returns:
 4. **id** *of type `uint256`*
 
 --- 
-### withdrawalCount(address)
+### withdrawalsCount(address)
 
 
 **Execution cost**: No bound available

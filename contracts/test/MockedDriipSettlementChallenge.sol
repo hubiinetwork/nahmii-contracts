@@ -48,7 +48,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
         walletChallengeMap[wallet].challenger = challenger;
     }
 
-    function getChallengeNonce(address wallet)
+    function challengeNonce(address wallet)
     public
     view
     returns (uint256)
@@ -56,7 +56,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
         return walletChallengeMap[wallet].nonce;
     }
 
-    function getChallengeStatus(address wallet)
+    function challengeStatus(address wallet)
     public
     view
     returns (DriipSettlementTypes.ChallengeStatus)
@@ -64,7 +64,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
         return walletChallengeMap[wallet].status;
     }
 
-    function getChallengeIntendedStage(address wallet)
+    function challengeIntendedStage(address wallet)
     public
     view
     returns (MonetaryTypes.Figure)
@@ -72,7 +72,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
         return walletChallengeMap[wallet].intendedStage;
     }
 
-    function getChallengeConjugateStage(address wallet)
+    function challengeConjugateStage(address wallet)
     public
     view
     returns (MonetaryTypes.Figure)
@@ -80,7 +80,7 @@ contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
         return walletChallengeMap[wallet].conjugateStage;
     }
 
-    function getChallengeChallenger(address wallet)
+    function challengeChallenger(address wallet)
     public
     view
     returns (address)

@@ -32,12 +32,18 @@ contract MockedClientFund /*is ClientFund*/ {
         MonetaryTypes.Figure figure;
     }
 
+    struct AccumulationEntry {
+        int256 amount;
+        uint256 blockNumber;
+    }
+
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     Seizure[] public seizures;
     WalletUpdate[] public settledBalanceUpdates;
     WalletUpdate[] public stages;
+    AccumulationEntry[] public accumulations;
 
     //
     // Events
@@ -59,6 +65,7 @@ contract MockedClientFund /*is ClientFund*/ {
         seizures.length = 0;
         settledBalanceUpdates.length = 0;
         stages.length = 0;
+        accumulations.length = 0;
     }
 
     function seizeAllBalances(address sourceWallet, address targetWallet)
@@ -143,5 +150,28 @@ contract MockedClientFund /*is ClientFund*/ {
         stages[index].figure.currency.ct,
         stages[index].figure.currency.id
         );
+    }
+
+    function activeAccumulationsCount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return accumulations.length;
+    }
+
+    function activeAccumulation(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        amount = accumulations[accumulations.length - 1].amount;
+        blockNumber = accumulations[accumulations.length - 1].blockNumber;
+    }
+
+    function _addActiveAccumulation(int256 amount, uint256 blockNumber)
+    public
+    {
+        accumulations.push(AccumulationEntry(amount, blockNumber));
     }
 }

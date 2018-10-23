@@ -76,4 +76,14 @@ contract Validatable is Ownable {
         require(validator.isGenuinePaymentSeals(payment));
         _;
     }
+
+    modifier onlyTradeParty(NahmiiTypes.Trade trade, address wallet) {
+        require(NahmiiTypes.isTradeParty(trade, wallet));
+        _;
+    }
+
+    modifier onlyPaymentSender(NahmiiTypes.Payment payment, address wallet) {
+        require(NahmiiTypes.isPaymentSender(payment, wallet));
+        _;
+    }
 }

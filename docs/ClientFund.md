@@ -632,7 +632,7 @@ Params:
 
 
 --- 
-### depositCount(address)
+### depositsCount(address)
 >
 >Get the count of the given wallet's deposits
 
@@ -932,7 +932,7 @@ Params:
 
 
 --- 
-### withdrawalCount(address)
+### withdrawalsCount(address)
 >
 >Get the count of the given wallet's withdrawals
 

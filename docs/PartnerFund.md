@@ -250,7 +250,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### depositCount(address)
+### depositsCount(address)
 
 
 **Execution cost**: less than 1960 gas

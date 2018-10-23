@@ -36,7 +36,7 @@ module.exports = (glob) => {
             web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
             ethersCancelOrdersChallenge = glob.ethersIoCancelOrdersChallenge;
 
-            web3Validator = await MockedValidator.new(glob.owner, glob.web3AccessorManager.address);
+            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
@@ -54,7 +54,7 @@ module.exports = (glob) => {
         beforeEach(async () => {
             // Default configuration timeouts for all tests. Particular tests override these defaults.
             await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-            await ethersConfiguration.setDriipSettlementChallengeTimeout(1e4);
+            await ethersConfiguration.setSettlementChallengeTimeout(1e4);
 
             blockNumber0 = await provider.getBlockNumber();
             blockNumber10 = blockNumber0 + 10;

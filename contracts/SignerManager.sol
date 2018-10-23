@@ -11,14 +11,15 @@ pragma solidity ^0.4.24;
 import {Ownable} from "./Ownable.sol";
 
 /**
-@title AccessorManager
+@title SignerManager
 @notice A contract to control who can execute some specific actions
 */
-contract AccessorManager is Ownable {
+contract SignerManager is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => bool) public signersMap;
+    address[] public signers;
 
     //
     // Events
@@ -41,6 +42,7 @@ contract AccessorManager is Ownable {
         if (!signersMap[newSigner]) {
             // Set new operator
             signersMap[newSigner] = true;
+            signers.push(newSigner);
 
             // Emit event
             emit RegisterSignerEvent(newSigner);
@@ -52,5 +54,27 @@ contract AccessorManager is Ownable {
     /// @return true if address is registered signer, else false
     function isSigner(address _address) public view returns (bool) {
         return signersMap[_address];
+    }
+
+    /// @notice Get the count of registered signers
+    /// @return The count of registered signers
+    function signersCount() public view returns (uint256) {
+        return signers.length;
+    }
+
+    /// @notice Get a subset of registered signers in the given index range
+    /// @param low The lower inclusive index
+    /// @param up The upper inclusive index
+    /// @return The subset of registered signers
+    function signersByIndices(uint256 low, uint256 up) public view returns (address[]) {
+        require(low <= up);
+
+        low = low < 0 ? 0 : low;
+        up = up > signers.length - 1 ? signers.length - 1 : up;
+        address[] memory _signers = new address[](up - low + 1);
+        for (uint256 i = low; i <= up; i++)
+            _signers[i - low] = signers[i];
+
+        return _signers;
     }
 }

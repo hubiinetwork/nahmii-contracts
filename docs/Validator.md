@@ -5,7 +5,7 @@
 
 **Execution cost**: No bound available
 
-**Deployment cost**: less than 3471600 gas
+**Deployment cost**: less than 3467200 gas
 
 **Combined cost**: No bound available
 
@@ -80,24 +80,7 @@ Params:
 
 
 ## Methods
-### changeHasher(address)
->
->Change the hasher contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) Hasher contract instance
-
-
-
---- 
-### isGenuineSuccessivePaymentTradeTotalFees(tuple,uint8,tuple,uint8)
+### isGenuineSuccessiveTradePaymentTotalFees(tuple,uint8,tuple)
 
 
 **Execution cost**: No bound available
@@ -107,10 +90,9 @@ Params:
 
 Params:
 
-1. **payment** *of type `tuple`*
-2. **paymentPartyRole** *of type `uint8`*
-3. **trade** *of type `tuple`*
-4. **tradePartyRole** *of type `uint8`*
+1. **trade** *of type `tuple`*
+2. **tradePartyRole** *of type `uint8`*
+3. **payment** *of type `tuple`*
 
 Returns:
 
@@ -135,48 +117,10 @@ Params:
 
 
 --- 
-### isGenuineOrderOperatorHash(tuple)
+### accessorManager()
 
 
 **Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentWalletHash(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 808 gas
 
 **Attributes**: constant
 
@@ -188,7 +132,20 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### isGenuinePaymentSeals(tuple)
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### isGenuineOrderOperatorHash(tuple)
 
 
 **Execution cost**: No bound available
@@ -198,7 +155,7 @@ Returns:
 
 Params:
 
-1. **payment** *of type `tuple`*
+1. **order** *of type `tuple`*
 
 Returns:
 
@@ -221,46 +178,6 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### isGenuineSuccessivePaymentTradeBalances(tuple,uint8,tuple,uint8,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-2. **paymentPartyRole** *of type `uint8`*
-3. **trade** *of type `tuple`*
-4. **tradePartyRole** *of type `uint8`*
-5. **tradeCurrencyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentOperatorHash(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### changeDeployer(address)
 >
 >Change the deployer of this contract
@@ -278,46 +195,12 @@ Params:
 
 
 --- 
-### isGenuinePaymentOperatorSeal(tuple)
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentSender(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### configuration()
-
-
-**Execution cost**: No bound available
+**Execution cost**: less than 852 gas
 
 **Attributes**: constant
 
@@ -329,7 +212,22 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### isGenuineOrderWalletHash(tuple)
+### deployer()
+
+
+**Execution cost**: less than 1578 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### isGenuineOperatorSignature(bytes32,tuple)
 
 
 **Execution cost**: No bound available
@@ -339,7 +237,8 @@ Returns:
 
 Params:
 
-1. **order** *of type `tuple`*
+1. **hash** *of type `bytes32`*
+2. **signature** *of type `tuple`*
 
 Returns:
 
@@ -347,9 +246,9 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeConfiguration(address)
+### changeHasher(address)
 >
->Change the configuration contract
+>Change the hasher contract
 
 
 **Execution cost**: No bound available
@@ -357,9 +256,26 @@ Returns:
 
 Params:
 
-1. **newConfiguration** *of type `address`*
+1. **newAddress** *of type `address`*
 
-    > The (address of) Configuration contract instance
+    > The (address of) Hasher contract instance
+
+
+
+--- 
+### changeOperator(address)
+>
+>Change the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
 
 
 
@@ -400,6 +316,131 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### changeConfiguration(address)
+>
+>Change the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### configuration()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### isGenuinePaymentRecipient(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessivePaymentTradeTotalFees(tuple,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+2. **paymentPartyRole** *of type `uint8`*
+3. **trade** *of type `tuple`*
+4. **tradePartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineOrderWalletHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **order** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentOperatorSeal(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentSeals(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### isGenuineOrderSeals(tuple)
 
 
@@ -418,22 +459,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### deployer()
-
-
-**Execution cost**: less than 1534 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### accessorManager()
+### isGenuineSuccessivePaymentTradeBalances(tuple,uint8,tuple,uint8,uint8)
 
 
 **Execution cost**: No bound available
@@ -441,11 +467,36 @@ Returns:
 **Attributes**: constant
 
 
+Params:
+
+1. **payment** *of type `tuple`*
+2. **paymentPartyRole** *of type `uint8`*
+3. **trade** *of type `tuple`*
+4. **tradePartyRole** *of type `uint8`*
+5. **tradeCurrencyRole** *of type `uint8`*
 
 Returns:
 
 
-1. **output_0** *of type `address`*
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentWalletHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
 
 --- 
 ### isGenuineOrderOperatorSeal(tuple)
@@ -459,6 +510,24 @@ Returns:
 Params:
 
 1. **order** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentOperatorHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
 
 Returns:
 
@@ -484,26 +553,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineOperatorSignature(bytes32,tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **hash** *of type `bytes32`*
-2. **signature** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentRecipient(tuple)
+### isGenuinePaymentSender(tuple)
 
 
 **Execution cost**: No bound available
@@ -519,23 +569,6 @@ Returns:
 
 
 1. **output_0** *of type `bool`*
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
 
 --- 
 ### isGenuineOrderWalletSeal(tuple)
@@ -574,7 +607,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineSuccessiveTradePaymentBalances(tuple,uint8,uint8,tuple,uint8)
+### isGenuineTradeSeal(tuple)
 
 
 **Execution cost**: No bound available
@@ -585,10 +618,6 @@ Returns:
 Params:
 
 1. **trade** *of type `tuple`*
-2. **tradePartyRole** *of type `uint8`*
-3. **tradeCurrencyRole** *of type `uint8`*
-4. **payment** *of type `tuple`*
-5. **paymentPartyRole** *of type `uint8`*
 
 Returns:
 
@@ -617,9 +646,9 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isSignedBy(bytes32,uint8,bytes32,bytes32,address)
+### isSignedByRegisteredSigner(bytes32,uint8,bytes32,bytes32)
 >
->Gauge whether a signature of a hash has been signed by the claimed signer
+>Gauge whether a signature of a hash has been signed by a registered signer
 
 
 **Execution cost**: No bound available
@@ -645,14 +674,10 @@ Params:
 
     > The s property of the ECDSA signature
 
-5. **signer** *of type `address`*
-
-    > The claimed signer
-
 
 Returns:
 
-> true if the recovered signer equals the input signer, else false
+> true if the recovered signer is one of the registered signers, else false
 
 1. **output_0** *of type `bool`*
 
@@ -668,27 +693,6 @@ Returns:
 Params:
 
 1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineSuccessiveTradesTotalFees(tuple,uint8,tuple,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstTrade** *of type `tuple`*
-2. **firstTradePartyRole** *of type `uint8`*
-3. **lastTrade** *of type `tuple`*
-4. **lastTradePartyRole** *of type `uint8`*
 
 Returns:
 
@@ -716,7 +720,26 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineSuccessiveTradePaymentTotalFees(tuple,uint8,tuple)
+### isGenuineSuccessivePaymentsTotalFees(tuple,tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **firstPayment** *of type `tuple`*
+2. **lastPayment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessiveTradePaymentBalances(tuple,uint8,uint8,tuple,uint8)
 
 
 **Execution cost**: No bound available
@@ -728,7 +751,30 @@ Params:
 
 1. **trade** *of type `tuple`*
 2. **tradePartyRole** *of type `uint8`*
-3. **payment** *of type `tuple`*
+3. **tradeCurrencyRole** *of type `uint8`*
+4. **payment** *of type `tuple`*
+5. **paymentPartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessiveTradesTotalFees(tuple,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **firstTrade** *of type `tuple`*
+2. **firstTradePartyRole** *of type `uint8`*
+3. **lastTrade** *of type `tuple`*
+4. **lastTradePartyRole** *of type `uint8`*
 
 Returns:
 
@@ -759,26 +805,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineSuccessivePaymentsTotalFees(tuple,tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstPayment** *of type `tuple`*
-2. **lastPayment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineTradeSeller(tuple)
+### isGenuineTradeHash(tuple)
 
 
 **Execution cost**: No bound available
@@ -834,24 +861,6 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeSeal(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### isGenuineTradeSellerFee(tuple)
 
 
@@ -870,7 +879,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeHash(tuple)
+### isGenuineTradeSeller(tuple)
 
 
 **Execution cost**: No bound available
@@ -888,9 +897,9 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isSignedByRegisteredSigner(bytes32,uint8,bytes32,bytes32)
+### isSignedBy(bytes32,uint8,bytes32,bytes32,address)
 >
->Gauge whether a signature of a hash has been signed by a registered signer
+>Gauge whether a signature of a hash has been signed by the claimed signer
 
 
 **Execution cost**: No bound available
@@ -916,10 +925,14 @@ Params:
 
     > The s property of the ECDSA signature
 
+5. **signer** *of type `address`*
+
+    > The claimed signer
+
 
 Returns:
 
-> true if the recovered signer is one of the registered signers, else false
+> true if the recovered signer equals the input signer, else false
 
 1. **output_0** *of type `bool`*
 
@@ -1011,7 +1024,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 918 gas
+**Execution cost**: less than 962 gas
 
 **Attributes**: constant
 
@@ -1021,19 +1034,6 @@ Returns:
 
 
 1. **output_0** *of type `address`*
-
---- 
-### triggerDestroy()
->
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
-
-
-**Execution cost**: No bound available
-
-
-
 
 --- 
 ### isGenuineOperatorSignature(bytes32,(bytes32,bytes32,uint8))

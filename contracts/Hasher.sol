@@ -60,8 +60,8 @@ contract Hasher is Ownable {
     function hashPaymentAsOperator(NahmiiTypes.Payment payment) public pure returns (bytes32) {
         bytes32 walletSignatureHash = hashSignature(payment.seals.wallet.signature);
         bytes32 nonceHash = hashPaymentNonce(payment);
-        bytes32 senderHash = hashPaymentSenderDataAsExchange(payment);
-        bytes32 recipientHash = hashPaymentRecipientDataAsExchange(payment);
+        bytes32 senderHash = hashPaymentSenderDataAsDriipSettlement(payment);
+        bytes32 recipientHash = hashPaymentRecipientDataAsDriipSettlement(payment);
         bytes32 transfersHash = hashPaymentTransfersData(payment);
 
         return keccak256(abi.encodePacked(walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash));
@@ -182,7 +182,7 @@ contract Hasher is Ownable {
         return keccak256(abi.encodePacked(payment.sender.wallet));
     }
 
-    function hashPaymentSenderDataAsExchange(NahmiiTypes.Payment payment) public pure returns (bytes32) {
+    function hashPaymentSenderDataAsDriipSettlement(NahmiiTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 payment.sender.nonce,
                 payment.sender.balances.current,
@@ -197,7 +197,7 @@ contract Hasher is Ownable {
         return keccak256(abi.encodePacked(payment.recipient.wallet));
     }
 
-    function hashPaymentRecipientDataAsExchange(NahmiiTypes.Payment payment) public pure returns (bytes32) {
+    function hashPaymentRecipientDataAsDriipSettlement(NahmiiTypes.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
                 payment.recipient.nonce,
                 payment.recipient.balances.current,
