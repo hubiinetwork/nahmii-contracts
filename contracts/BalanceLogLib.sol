@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
-library AccumulationLib {
+library BalanceLogLib {
     struct Entry {
         int256 amount;
         uint256 blockNumber;
@@ -19,14 +19,14 @@ library AccumulationLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct Accumulation {
+    struct BalanceLog {
         mapping(address => mapping(uint256 => Entry[])) entries;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function get(Accumulation storage self, address currencyCt, uint256 currencyId, uint256 index)
+    function get(BalanceLog storage self, address currencyCt, uint256 currencyId, uint256 index)
     internal
     view
     returns (int256 amount, uint256 blockNumber)
@@ -39,7 +39,7 @@ library AccumulationLib {
         blockNumber = self.entries[currencyCt][currencyId][index].blockNumber;
     }
 
-    function add(Accumulation storage self, int256 amount, address currencyCt, uint256 currencyId)
+    function add(BalanceLog storage self, int256 amount, address currencyCt, uint256 currencyId)
     internal
     {
         if (currencyCt == address(0))
@@ -47,7 +47,7 @@ library AccumulationLib {
         self.entries[currencyCt][currencyId].push(Entry(amount, block.number));
     }
 
-    function count(Accumulation storage self, address currencyCt, uint256 currencyId)
+    function count(BalanceLog storage self, address currencyCt, uint256 currencyId)
     internal
     view
     returns (uint256)

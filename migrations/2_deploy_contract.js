@@ -13,7 +13,6 @@ const Configuration = artifacts.require('Configuration');
 const DriipSettlement = artifacts.require('DriipSettlement');
 const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
-const DriipSettlementTypes = artifacts.require('DriipSettlementTypes');
 const ERC20TransferController = artifacts.require('ERC20TransferController');
 const ERC721TransferController = artifacts.require('ERC721TransferController');
 const Hasher = artifacts.require('Hasher');
@@ -98,7 +97,6 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'BalanceLib', '', BalanceLib);
             await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
             await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
-            await execDeploy(ctl, 'DriipSettlementTypes', '', DriipSettlementTypes);
             await execDeploy(ctl, 'SettlementTypes', '', SettlementTypes);
 
             //link dependencies
@@ -126,9 +124,6 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(TxHistoryLib, [
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
-            ]);
-            await deployer.link(DriipSettlementTypes, [
-                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute
             ]);
             await deployer.link(SettlementTypes, [
                 NullSettlement, NullSettlementChallenge, NullSettlementDispute

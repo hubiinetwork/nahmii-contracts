@@ -632,7 +632,7 @@ module.exports = (glob) => {
                         await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                             trade.buyer.wallet,
                             trade.nonce,
-                            mocks.challengeStatuses.indexOf('Qualified'),
+                            mocks.proposalStatuses.indexOf('Qualified'),
                             trade.buyer.balances.intended.current,
                             trade.currencies.intended.ct,
                             trade.currencies.intended.id,
@@ -749,7 +749,7 @@ module.exports = (glob) => {
                         await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                             trade.buyer.wallet,
                             trade.nonce,
-                            mocks.challengeStatuses.indexOf('Qualified'),
+                            mocks.proposalStatuses.indexOf('Qualified'),
                             trade.buyer.balances.intended.current,
                             trade.currencies.intended.ct,
                             trade.currencies.intended.id,
@@ -782,7 +782,7 @@ module.exports = (glob) => {
                     await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                         trade.buyer.wallet,
                         trade.nonce,
-                        mocks.challengeStatuses.indexOf('Disqualified'),
+                        mocks.proposalStatuses.indexOf('Disqualified'),
                         trade.buyer.balances.intended.current,
                         trade.currencies.intended.ct,
                         trade.currencies.intended.id,
@@ -905,7 +905,7 @@ module.exports = (glob) => {
                         await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                             payment.sender.wallet,
                             payment.nonce,
-                            mocks.challengeStatuses.indexOf('Qualified'),
+                            mocks.proposalStatuses.indexOf('Qualified'),
                             payment.sender.balances.current,
                             payment.currency.ct,
                             payment.currency.id,
@@ -999,7 +999,7 @@ module.exports = (glob) => {
                         await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                             payment.sender.wallet,
                             payment.nonce,
-                            mocks.challengeStatuses.indexOf('Qualified'),
+                            mocks.proposalStatuses.indexOf('Qualified'),
                             payment.sender.balances.current,
                             payment.currency.ct,
                             payment.currency.id,
@@ -1032,7 +1032,7 @@ module.exports = (glob) => {
                     await ethersDriipSettlementChallenge.updateDriipSettlementChallenge(
                         payment.sender.wallet,
                         payment.nonce,
-                        mocks.challengeStatuses.indexOf('Disqualified'),
+                        mocks.proposalStatuses.indexOf('Disqualified'),
                         payment.sender.balances.current,
                         payment.currency.ct,
                         payment.currency.id,

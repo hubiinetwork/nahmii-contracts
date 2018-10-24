@@ -38,9 +38,9 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge, NullSettlementChallenge newNullSettlementChallenge);
-    event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, address reporter);
-    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address wallet, uint256 nonce, address reporter);
-    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address wallet, uint256 nonce, address reporter);
+    event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, address challenger);
+    event ChallengeByTradeEvent(address wallet, NahmiiTypes.Trade trade, uint256 nonce, address challenger);
+    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, uint256 nonce, address challenger);
 
     //
     // Constructor
@@ -48,7 +48,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     constructor(address owner) Ownable(owner) public {
     }
 
-    /// @notice Change the null settlement challenge contract
+    /// @notice Change the settlement challenge contract
     /// @param newNullSettlementChallenge The (address of) NullSettlementChallenge contract instance
     function changeNullSettlementChallenge(NullSettlementChallenge newNullSettlementChallenge) public
     onlyDeployer
@@ -59,7 +59,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         emit ChangeNullSettlementChallengeEvent(oldNullSettlementChallenge, nullSettlementChallenge);
     }
 
-    /// @notice Challenge the null settlement by providing order candidate
+    /// @notice Challenge the settlement by providing order candidate
     /// @param order The order candidate that challenges
     /// @param challenger The address of the challenger
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
@@ -77,7 +77,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.exchange.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
 
-        // Require that null settlement challenge is ongoing
+        // Require that settlement challenge is ongoing
         require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
 
         // Require that order's block number is not earlier than proposal's block number
@@ -92,8 +92,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
 
         // Get challenge target balance (balance - amount to be staged) and require that order
         // candidate has relevant currency
-        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(order.wallet, orderCurrency.ct, orderCurrency.id);
-        require(targetBalanceAmount.isPositiveInt256());
+        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(order.wallet, orderCurrency);
 
         // Require that order amount is strictly greater than target balance amount for this to be a
         // valid challenge call
@@ -103,8 +102,8 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.pushChallengeCandidateOrder(order);
 
         // Update settlement proposal
-        nullSettlementChallenge.setProposalStatus(order.wallet, SettlementTypes.ChallengeStatus.Disqualified);
-        nullSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypes.ChallengeCandidateType.Order);
+        nullSettlementChallenge.setProposalStatus(order.wallet, SettlementTypes.ProposalStatus.Disqualified);
+        nullSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypes.CandidateType.Order);
         nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrdersCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
@@ -112,12 +111,13 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         emit ChallengeByOrderEvent(order, nullSettlementChallenge.proposalNonce(order.wallet), challenger);
     }
 
-    /// @notice Challenge the null settlement by providing trade candidate
-    /// @param trade The trade candidate that challenges
+    /// @notice Challenge the settlement by providing trade candidate
     /// @param wallet The wallet whose settlement is being challenged
+    /// @param trade The trade candidate that challenges
+    /// @param challenger The address of the challenger
     /// @dev If wallet is buyer in (candidate) trade consider single _conjugate_ transfer in (candidate) trade. Else
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
-    function challengeByTrade(NahmiiTypes.Trade trade, address wallet, address challenger)
+    function challengeByTrade(address wallet, NahmiiTypes.Trade trade, address challenger)
     public
     validatorInitialized
     fraudChallengeInitialized
@@ -137,7 +137,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(!fraudChallenge.isFraudulentOrderOperatorHash(orderOperatorHash));
         require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 
-        // Require that null settlement challenge is ongoing
+        // Require that settlement challenge is ongoing
         require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(wallet));
 
         // Require that trade's block number is not earlier than proposal's block number
@@ -156,8 +156,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
 
         // Get challenge target balance (balance - amount to be staged) and require that trade
         // candidate has relevant currency
-        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, transferCurrency.ct, transferCurrency.id);
-        require(targetBalanceAmount.isPositiveInt256());
+        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, transferCurrency);
 
         // Require that single transfer is strictly greater than target balance amount for this to be a
         // valid challenge call
@@ -167,43 +166,39 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.pushChallengeCandidateTrade(trade);
 
         // Update settlement proposal
-        nullSettlementChallenge.setProposalStatus(wallet, SettlementTypes.ChallengeStatus.Disqualified);
-        nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypes.ChallengeCandidateType.Trade);
+        nullSettlementChallenge.setProposalStatus(wallet, SettlementTypes.ProposalStatus.Disqualified);
+        nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypes.CandidateType.Trade);
         nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(wallet, challenger);
 
         // Raise event
-        emit ChallengeByTradeEvent(trade, wallet, nullSettlementChallenge.proposalNonce(wallet), challenger);
+        emit ChallengeByTradeEvent(wallet, trade, nullSettlementChallenge.proposalNonce(wallet), challenger);
     }
 
-    /// @notice Challenge the null settlement by providing payment candidate
+    /// @notice Challenge the settlement by providing payment candidate
+    /// @dev This challenges the payment sender's side of things
     /// @param payment The payment candidate that challenges
-    /// @param wallet The wallet whose settlement is being challenged
-    /// @dev If wallet is recipient in (candidate) payment there is nothing here to challenge
-    function challengeByPayment(NahmiiTypes.Payment payment, address wallet, address challenger)
+    /// @param challenger The address of the challenger
+    function challengeByPayment(NahmiiTypes.Payment payment, address challenger)
     public
     validatorInitialized
     fraudChallengeInitialized
     nullSettlementChallengeInitialized
     onlyNullSettlementChallenge
     onlySealedPayment(payment)
-    onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
 
-        // Require that null settlement challenge is ongoing
-        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(wallet));
+        // Require that settlement challenge is ongoing
+        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(payment.sender.wallet));
 
         // Require that trade's block number is not earlier than proposal's block number
-        require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(wallet));
+        require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(payment.sender.wallet));
 
-        // Get challenge target balance (balance - amount to be staged) and require that payment
-        // candidate has relevant currency
         // Get challenge target balance (balance - amount to be staged) and require that trade
         // candidate has relevant currency
-        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, payment.currency.ct, payment.currency.id);
-        require(targetBalanceAmount.isPositiveInt256());
+        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(payment.sender.wallet, payment.currency);
 
         // Require that single transfer is strictly greater than target balance amount for this to be a
         // valid challenge call
@@ -213,13 +208,13 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.pushChallengeCandidatePayment(payment);
 
         // Update settlement proposal
-        nullSettlementChallenge.setProposalStatus(wallet, SettlementTypes.ChallengeStatus.Disqualified);
-        nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypes.ChallengeCandidateType.Payment);
-        nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
-        nullSettlementChallenge.setProposalChallenger(wallet, challenger);
+        nullSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypes.ProposalStatus.Disqualified);
+        nullSettlementChallenge.setProposalCandidateType(payment.sender.wallet, SettlementTypes.CandidateType.Payment);
+        nullSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, nullSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
+        nullSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
 
         // Raise event
-        emit ChallengeByPaymentEvent(payment, wallet, nullSettlementChallenge.proposalNonce(wallet), challenger);
+        emit ChallengeByPaymentEvent(payment, nullSettlementChallenge.proposalNonce(payment.sender.wallet), challenger);
     }
 
     //

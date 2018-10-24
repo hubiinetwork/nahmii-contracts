@@ -36,6 +36,8 @@ contract MockedValidator is Ownable, SignerManageable /*, Validator*/ {
     bool tradeBuyer;
     bool tradeSeller;
     bool[] tradeSeals;
+    bool tradeParty;
+    bool tradeOrder;
     bool paymentFee;
     bool paymentSender;
     bool paymentRecipient;
@@ -86,6 +88,8 @@ contract MockedValidator is Ownable, SignerManageable /*, Validator*/ {
         tradeSeller = true;
         tradeSeals.length = 0;
         tradeSeals.push(true);
+        tradeParty = true;
+        tradeOrder = true;
         paymentFee = true;
         paymentSender = true;
         paymentRecipient = true;
@@ -206,6 +210,22 @@ contract MockedValidator is Ownable, SignerManageable /*, Validator*/ {
             require(tradeSealsIndex < tradeSeals.length);
             return tradeSeals[tradeSealsIndex++];
         }
+    }
+
+    function setTradeParty(bool _tradeParty) public {
+        tradeParty = _tradeParty;
+    }
+
+    function isTradeParty(NahmiiTypes.Trade trade, address wallet) public view returns (bool) {
+        return tradeParty;
+    }
+
+    function setTradeOrder(bool _tradeOrder) public {
+        tradeOrder = _tradeOrder;
+    }
+
+    function isTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order) public view returns (bool) {
+        return tradeOrder;
     }
 
     function setGenuinePaymentFee(bool genuine) public {

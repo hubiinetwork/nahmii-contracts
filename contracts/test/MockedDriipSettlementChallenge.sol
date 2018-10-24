@@ -9,82 +9,347 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-//import {DriipSettlementChallenge} from "../DriipSettlementChallenge.sol";
 import {MonetaryTypes} from "../MonetaryTypes.sol";
 import {NahmiiTypes} from "../NahmiiTypes.sol";
-import {DriipSettlementTypes} from "../DriipSettlementTypes.sol";
+import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
+import {SettlementTypes} from "../SettlementTypes.sol";
 
 /**
 @title MockedDriipSettlementChallenge
 @notice Mocked implementation of driip settlement challenge contract
 */
-contract MockedDriipSettlementChallenge /*is DriipSettlementChallenge*/ {
+contract MockedDriipSettlementChallenge {
 
-    //
-    // Variables
-    // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => DriipSettlementTypes.Challenge) public walletChallengeMap;
+    NahmiiTypes.ChallengePhase public _challengePhase;
+    uint256 public _proposalNonce;
+    uint256 public _proposalBlockNumber;
+    MonetaryTypes.Currency _proposalCurrency;
+    int256 public _proposalStageAmount;
+    int256 public _proposalTargetBalanceAmount;
+    uint256 public _proposalTimeout;
+    SettlementTypes.ProposalStatus public _proposalStatus;
+    NahmiiTypes.DriipType public _proposalDriipType;
+    uint256 public _proposalDriipIndex;
+    SettlementTypes.CandidateType public _proposalCandidateType;
+    uint256 public _proposalCandidateIndex;
+    address public _proposalChallenger;
+    uint256 public _challengeCandidateOrdersCount;
+    uint256 public _challengeCandidateTradesCount;
+    uint256 public _challengeCandidatePaymentsCount;
+    NahmiiTypes.Order _challengeCandidateOrder;
+    DriipSettlementDispute public _driipSettlementDispute;
 
-    //
-    // Functions
-    // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*DriipSettlementChallenge(owner)*/{
-    }
-
-    function updateDriipSettlementChallenge(address wallet, uint256 nonce, DriipSettlementTypes.ChallengeStatus status,
-        int256 intendedAmount, address intendedCurrencyCt, uint intendedCurrencyId,
-        int256 conjugateAmount, address conjugateCurrencyCt, uint conjugateCurrencyId,
-        address challenger)
+    function _reset()
     public
     {
-        walletChallengeMap[wallet].nonce = nonce;
-        walletChallengeMap[wallet].status = status;
-        walletChallengeMap[wallet].intendedStage.amount = intendedAmount;
-        walletChallengeMap[wallet].intendedStage.currency.ct = intendedCurrencyCt;
-        walletChallengeMap[wallet].intendedStage.currency.id = intendedCurrencyId;
-        walletChallengeMap[wallet].conjugateStage.amount = conjugateAmount;
-        walletChallengeMap[wallet].conjugateStage.currency.ct = conjugateCurrencyCt;
-        walletChallengeMap[wallet].conjugateStage.currency.id = conjugateCurrencyId;
-        walletChallengeMap[wallet].challenger = challenger;
+        delete _challengePhase;
+        delete _proposalNonce;
+        delete _proposalBlockNumber;
+        delete _proposalTargetBalanceAmount;
+        delete _proposalTimeout;
+        delete _proposalStatus;
+        delete _proposalDriipType;
+        delete _proposalDriipIndex;
+        delete _proposalCandidateType;
+        delete _proposalCandidateIndex;
+        delete _proposalChallenger;
+        delete _challengeCandidateOrdersCount;
+        delete _challengeCandidateTradesCount;
+        delete _challengeCandidatePaymentsCount;
+        delete _challengeCandidateOrder;
     }
 
-    function challengeNonce(address wallet)
+    function _setChallengePhase(NahmiiTypes.ChallengePhase challengePhase)
+    public
+    {
+        _challengePhase = challengePhase;
+    }
+
+    function challengePhase(address wallet)
+    public
+    view
+    returns (NahmiiTypes.ChallengePhase) {
+        require(wallet == wallet);
+        return _challengePhase;
+    }
+
+    function _setProposalNonce(uint256 proposalNonce)
+    public
+    {
+        _proposalNonce = proposalNonce;
+    }
+
+    function proposalNonce(address wallet)
     public
     view
     returns (uint256)
     {
-        return walletChallengeMap[wallet].nonce;
+        require(wallet == wallet);
+        return _proposalNonce;
     }
 
-    function challengeStatus(address wallet)
+    function _setProposalBlockNumber(uint256 proposalBlockNumber)
+    public
+    {
+        _proposalBlockNumber = proposalBlockNumber;
+    }
+
+    function proposalBlockNumber(address wallet)
     public
     view
-    returns (DriipSettlementTypes.ChallengeStatus)
+    returns (uint256)
     {
-        return walletChallengeMap[wallet].status;
+        require(wallet == wallet);
+        return _proposalBlockNumber;
     }
 
-    function challengeIntendedStage(address wallet)
+    function _setProposalCurrency(MonetaryTypes.Currency proposalCurrency)
+    public
+    {
+        _proposalCurrency = proposalCurrency;
+    }
+
+    function proposalCurrency(address wallet, uint256 index)
     public
     view
-    returns (MonetaryTypes.Figure)
+    returns (MonetaryTypes.Currency)
     {
-        return walletChallengeMap[wallet].intendedStage;
+        require(wallet == wallet);
+        require(index == index);
+        return _proposalCurrency;
     }
 
-    function challengeConjugateStage(address wallet)
+    function _setProposalStageAmount(int256 proposalStageAmount)
+    public
+    {
+        _proposalStageAmount = proposalStageAmount;
+    }
+
+    function proposalStageAmount(address wallet, MonetaryTypes.Currency currency)
     public
     view
-    returns (MonetaryTypes.Figure)
+    returns (int256)
     {
-        return walletChallengeMap[wallet].conjugateStage;
+        require(wallet == wallet);
+        require(currency.ct == currency.ct);
+        return _proposalStageAmount;
     }
 
-    function challengeChallenger(address wallet)
+    function _setProposalTargetBalanceAmount(int256 proposalTargetBalanceAmount)
+    public
+    {
+        _proposalTargetBalanceAmount = proposalTargetBalanceAmount;
+    }
+
+    function proposalTargetBalanceAmount(address wallet, MonetaryTypes.Currency currency)
+    public
+    view
+    returns (int256)
+    {
+        require(wallet == wallet);
+        require(currency.ct == currency.ct);
+        return _proposalTargetBalanceAmount;
+    }
+
+    function setProposalTimeout(address wallet, uint256 timeout)
+    public
+    {
+        require(wallet == wallet);
+        _proposalTimeout = timeout;
+    }
+
+    function proposalTimeout(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        require(wallet == wallet);
+        return _proposalTimeout;
+    }
+
+    function setProposalStatus(address wallet, SettlementTypes.ProposalStatus status)
+    public
+    {
+        require(wallet == wallet);
+        _proposalStatus = status;
+    }
+
+    function proposalStatus(address wallet)
+    public
+    view
+    returns (SettlementTypes.ProposalStatus)
+    {
+        require(wallet == wallet);
+        return _proposalStatus;
+    }
+
+    function _setProposalDriipType(address wallet, NahmiiTypes.DriipType driipType)
+    public
+    {
+        require(wallet == wallet);
+        _proposalDriipType = driipType;
+    }
+
+    function proposalDriipType(address wallet)
+    public
+    view
+    returns (NahmiiTypes.DriipType)
+    {
+        require(wallet == wallet);
+        return _proposalDriipType;
+    }
+
+    function _setProposalDriipIndex(address wallet, uint256 driipIndex)
+    public
+    {
+        require(wallet == wallet);
+        _proposalDriipIndex = driipIndex;
+    }
+
+    function proposalDriipIndex(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        require(wallet == wallet);
+        return _proposalDriipIndex;
+    }
+
+    function setProposalCandidateType(address wallet, SettlementTypes.CandidateType candidateType)
+    public
+    {
+        require(wallet == wallet);
+        _proposalCandidateType = candidateType;
+    }
+
+    function proposalCandidateType(address wallet)
+    public
+    view
+    returns (SettlementTypes.CandidateType)
+    {
+        require(wallet == wallet);
+        return _proposalCandidateType;
+    }
+
+    function setProposalCandidateIndex(address wallet, uint256 candidateIndex)
+    public
+    {
+        require(wallet == wallet);
+        _proposalCandidateIndex = candidateIndex;
+    }
+
+    function proposalCandidateIndex(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        require(wallet == wallet);
+        return _proposalCandidateIndex;
+    }
+
+    function setProposalChallenger(address wallet, address challenger)
+    public
+    {
+        require(wallet == wallet);
+        _proposalChallenger = challenger;
+    }
+
+    function proposalChallenger(address wallet)
     public
     view
     returns (address)
     {
-        return walletChallengeMap[wallet].challenger;
+        require(wallet == wallet);
+        return _proposalChallenger;
+    }
+
+    function pushChallengeCandidateOrder(NahmiiTypes.Order order)
+    public
+    {
+        require(order.nonce == order.nonce);
+        _challengeCandidateOrdersCount++;
+    }
+
+    function challengeCandidateOrdersCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _challengeCandidateOrdersCount;
+    }
+
+    function _setChallengeCandidateOrder(NahmiiTypes.Order order)
+    public
+    {
+        _challengeCandidateOrder = order;
+    }
+
+    function challengeCandidateOrder(uint256 index)
+    public
+    view
+    returns (NahmiiTypes.Order)
+    {
+        require(index == index);
+        return _challengeCandidateOrder;
+    }
+
+    function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
+    public
+    {
+        require(trade.nonce == trade.nonce);
+        _challengeCandidateTradesCount++;
+    }
+
+    function challengeCandidateTradesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _challengeCandidateTradesCount;
+    }
+
+    function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
+    public
+    {
+        require(payment.nonce == payment.nonce);
+        _challengeCandidatePaymentsCount++;
+    }
+
+    function challengeCandidatePaymentsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _challengeCandidatePaymentsCount;
+    }
+
+    function changeDriipSettlementDispute(DriipSettlementDispute driipSettlementDispute)
+    public
+    {
+        _driipSettlementDispute = driipSettlementDispute;
+    }
+
+    function challengeByOrder(NahmiiTypes.Order order)
+    public
+    {
+        _driipSettlementDispute.challengeByOrder(order, msg.sender);
+    }
+
+    function unchallengeOrderCandidateByTrade(NahmiiTypes.Order order, NahmiiTypes.Trade trade)
+    public
+    {
+        _driipSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+    }
+
+    function challengeByTrade(address wallet, NahmiiTypes.Trade trade)
+    public
+    {
+        _driipSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
+    }
+
+    function challengeByPayment(NahmiiTypes.Payment payment)
+    public
+    {
+        _driipSettlementDispute.challengeByPayment(payment, msg.sender);
     }
 }

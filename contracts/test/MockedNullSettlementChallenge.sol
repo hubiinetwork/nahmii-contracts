@@ -26,8 +26,8 @@ contract MockedNullSettlementChallenge {
     MonetaryTypes.Currency _proposalCurrency;
     int256 public _proposalStageAmount;
     int256 public _proposalTargetBalanceAmount;
-    SettlementTypes.ChallengeStatus public _proposalStatus;
-    SettlementTypes.ChallengeCandidateType public _proposalCandidateType;
+    SettlementTypes.ProposalStatus public _proposalStatus;
+    SettlementTypes.CandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
     address public _proposalChallenger;
     uint256 public _challengeCandidateOrdersCount;
@@ -107,6 +107,7 @@ contract MockedNullSettlementChallenge {
     returns (MonetaryTypes.Currency)
     {
         require(wallet == wallet);
+        require(index == index);
         return _proposalCurrency;
     }
 
@@ -116,12 +117,13 @@ contract MockedNullSettlementChallenge {
         _proposalStageAmount = proposalStageAmount;
     }
 
-    function proposalStageAmount(address wallet, address currencyCt, uint256 currencyId)
+    function proposalStageAmount(address wallet, MonetaryTypes.Currency currency)
     public
     view
     returns (int256)
     {
         require(wallet == wallet);
+        require(currency.ct == currency.ct);
         return _proposalStageAmount;
     }
 
@@ -131,16 +133,17 @@ contract MockedNullSettlementChallenge {
         _proposalTargetBalanceAmount = proposalTargetBalanceAmount;
     }
 
-    function proposalTargetBalanceAmount(address wallet, address currencyCt, uint256 currencyId)
+    function proposalTargetBalanceAmount(address wallet, MonetaryTypes.Currency currency)
     public
     view
     returns (int256)
     {
         require(wallet == wallet);
+        require(currency.ct == currency.ct);
         return _proposalTargetBalanceAmount;
     }
 
-    function setProposalStatus(address wallet, SettlementTypes.ChallengeStatus status)
+    function setProposalStatus(address wallet, SettlementTypes.ProposalStatus status)
     public
     {
         require(wallet == wallet);
@@ -149,13 +152,14 @@ contract MockedNullSettlementChallenge {
 
     function proposalStatus(address wallet)
     public
-    returns (SettlementTypes.ChallengeStatus)
+    view
+    returns (SettlementTypes.ProposalStatus)
     {
         require(wallet == wallet);
         return _proposalStatus;
     }
 
-    function setProposalCandidateType(address wallet, SettlementTypes.ChallengeCandidateType candidateType)
+    function setProposalCandidateType(address wallet, SettlementTypes.CandidateType candidateType)
     public
     {
         require(wallet == wallet);
@@ -165,7 +169,7 @@ contract MockedNullSettlementChallenge {
     function proposalCandidateType(address wallet)
     public
     view
-    returns (SettlementTypes.ChallengeCandidateType)
+    returns (SettlementTypes.CandidateType)
     {
         require(wallet == wallet);
         return _proposalCandidateType;
@@ -260,15 +264,15 @@ contract MockedNullSettlementChallenge {
         _nullSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
-    function challengeByTrade(NahmiiTypes.Trade trade, address wallet)
+    function challengeByTrade(address wallet, NahmiiTypes.Trade trade)
     public
     {
-        _nullSettlementDispute.challengeByTrade(trade, wallet, msg.sender);
+        _nullSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
-    function challengeByPayment(NahmiiTypes.Payment payment, address wallet)
+    function challengeByPayment(NahmiiTypes.Payment payment)
     public
     {
-        _nullSettlementDispute.challengeByPayment(payment, wallet, msg.sender);
+        _nullSettlementDispute.challengeByPayment(payment, msg.sender);
     }
 }

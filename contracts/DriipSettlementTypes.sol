@@ -16,6 +16,7 @@ import {NahmiiTypes} from "./NahmiiTypes.sol";
  * @title     DriipSettlementTypes
  * @dev       Types for driip settlement challenge
  */
+// TODO Remove as it is obsoleted by SettlementTypes
 library DriipSettlementTypes {
     //
     // Structures

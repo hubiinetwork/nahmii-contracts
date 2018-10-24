@@ -10,19 +10,19 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Validatable} from "./Validatable.sol";
 import {Challenge} from "./Challenge.sol";
 import {DriipStorable} from "./DriipStorable.sol";
+import {Validatable} from "./Validatable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
 import {MonetaryTypes} from "./MonetaryTypes.sol";
 import {NahmiiTypes} from "./NahmiiTypes.sol";
-import {DriipSettlementTypes} from "./DriipSettlementTypes.sol";
+import {SettlementTypes} from "./SettlementTypes.sol";
 
 /**
 @title DriipSettlementChallenge
-@notice Where driip settlements are challenged
+@notice Where driip settlements are started and challenged
 */
 contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validatable {
     using SafeMathIntLib for int256;
@@ -33,7 +33,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementDispute public driipSettlementDispute;
 
-    mapping(address => DriipSettlementTypes.Challenge) public walletChallengeMap;
+    mapping(address => SettlementTypes.Proposal) public walletProposalMap;
 
     mapping(address => NahmiiTypes.Trade[]) public walletChallengedTradesMap;
     mapping(address => NahmiiTypes.Payment[]) public walletChallengedPaymentsMap;
@@ -45,9 +45,16 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute, DriipSettlementDispute newDriipSettlementDispute);
-    event StartChallengeFromTradeEvent(NahmiiTypes.Trade trade, address wallet);
-    event StartChallengeFromPaymentEvent(NahmiiTypes.Payment payment, address wallet);
+    event ChangeDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute,
+        DriipSettlementDispute newDriipSettlementDispute);
+    event StartChallengeFromTradeEvent(address wallet, NahmiiTypes.Trade trade, int256 intendedStageAmount,
+        int256 conjugateStageAmount);
+    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, NahmiiTypes.Trade trade,
+        int256 intendedStageAmount, int256 conjugateStageAmount);
+    event StartChallengeFromPaymentEvent(address wallet, NahmiiTypes.Payment payment,
+        int256 stageAmount);
+    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, NahmiiTypes.Payment payment,
+        int256 stageAmount);
 
     //
     // Constructor
@@ -58,7 +65,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the driip settlement dispute contract
+    /// @notice Change the settlement dispute contract
     /// @param newDriipSettlementDispute The (address of) DriipSettlementDispute contract instance
     function changeDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute)
     public
@@ -70,9 +77,9 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         emit ChangeDriipSettlementDisputeEvent(oldDriipSettlementDispute, driipSettlementDispute);
     }
 
-    /// @notice Get the number of current and past driip settlement challenges from trade for given wallet
+    /// @notice Get the number of current and past settlement challenges from trade for given wallet
     /// @param wallet The wallet for which to return count
-    /// @return The count of driip settlement challenges from trade
+    /// @return The count of settlement challenges from trade
     function walletChallengedTradesCount(address wallet)
     public
     view
@@ -81,9 +88,9 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         return walletChallengedTradesMap[wallet].length;
     }
 
-    /// @notice Get the number of current and past driip settlement challenges from payment for given wallet
+    /// @notice Get the number of current and past settlement challenges from payment for given wallet
     /// @param wallet The wallet for which to return count
-    /// @return The count of driip settlement challenges from payment
+    /// @return The count of settlement challenges from payment
     function walletChallengedPaymentsCount(address wallet)
     public
     view
@@ -92,185 +99,283 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         return walletChallengedPaymentsMap[wallet].length;
     }
 
-    /// @notice Get the challenge candidate order at the given index
-    /// @param index The index of challenge order candidate
-    /// @return The challenge candidate order
-    function challengeCandidateOrder(uint256 index)
-    public
-    view
-    returns (NahmiiTypes.Order)
-    {
-        return challengeCandidateOrders[index];
-    }
-
-    /// @notice Start driip settlement challenge on driip of trade type
-    /// @param trade The challenged driip
-    /// @param wallet The relevant driip party
+    /// @notice Start settlement challenge on trade
+    /// @param trade The challenged trade
     /// @param intendedStageAmount Amount of intended currency to be staged
     /// @param conjugateStageAmount Amount of conjugate currency to be staged
-    function startChallengeFromTrade(NahmiiTypes.Trade trade, address wallet, int256 intendedStageAmount,
+    function startChallengeFromTrade(NahmiiTypes.Trade trade, int256 intendedStageAmount,
         int256 conjugateStageAmount)
     public
-    validatorInitialized
-    onlySealedTrade(trade)
     {
-        require(configuration != address(0));
-        require(intendedStageAmount.isPositiveInt256());
-        require(conjugateStageAmount.isPositiveInt256());
+        // Start challenge
+        startChallengeFromTradePrivate(msg.sender, trade, intendedStageAmount, conjugateStageAmount);
 
-        if (msg.sender != deployer)
-            wallet = msg.sender;
-
-        require(isDeployer() || validator.isTradeParty(trade, wallet));
-
-        require(
-            0 == walletChallengeMap[wallet].nonce ||
-            block.timestamp >= walletChallengeMap[wallet].timeout
-        );
-
-        (int256 intendedBalanceAmount, int256 conjugateBalanceAmount) =
-        (validator.isTradeBuyer(trade, wallet) ?
-        (trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current) :
-        (trade.seller.balances.intended.current, trade.seller.balances.conjugate.current));
-
-        require(intendedBalanceAmount >= intendedStageAmount);
-        require(conjugateBalanceAmount >= conjugateStageAmount);
-
-        pushMemoryTradeToStorageArray(trade, walletChallengedTradesMap[wallet]);
-
-        DriipSettlementTypes.Challenge memory challenge;
-        challenge.nonce = trade.nonce;
-        challenge.timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
-        challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
-        //        challenge.driipOperatorHash = trade.seal.hash;
-        challenge.driipType = NahmiiTypes.DriipType.Trade;
-        challenge.driipIndex = walletChallengedTradesMap[wallet].length.sub(1);
-        challenge.intendedStage = MonetaryTypes.Figure(intendedStageAmount, trade.currencies.intended);
-        challenge.conjugateStage = MonetaryTypes.Figure(conjugateStageAmount, trade.currencies.conjugate);
-        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(intendedBalanceAmount.sub(intendedStageAmount), trade.currencies.intended), true);
-        challenge.conjugateTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(conjugateBalanceAmount.sub(conjugateStageAmount), trade.currencies.conjugate), true);
-
-        walletChallengeMap[wallet] = challenge;
-
-        emit StartChallengeFromTradeEvent(trade, wallet);
+        // Emit event
+        emit StartChallengeFromTradeEvent(msg.sender, trade, intendedStageAmount, conjugateStageAmount);
     }
 
-    /// @notice Start driip settlement challenge on driip of payment type
-    /// @param payment The challenged driip
-    /// @param wallet The relevant driip party
-    /// @param stageAmount Amount of payment currency to be staged
-    function startChallengeFromPayment(NahmiiTypes.Payment payment, address wallet, int256 stageAmount)
+    /// @notice Start settlement challenge on trade by proxy
+    /// @param wallet The concerned party
+    /// @param trade The challenged trade
+    /// @param intendedStageAmount Amount of intended currency to be staged
+    /// @param conjugateStageAmount Amount of conjugate currency to be staged
+    function startChallengeFromTradeByProxy(address wallet, NahmiiTypes.Trade trade, int256 intendedStageAmount,
+        int256 conjugateStageAmount)
     public
-    validatorInitialized
-    onlySealedPayment(payment)
     {
-        require(configuration != address(0));
-        require(stageAmount.isPositiveInt256());
+        // Start challenge for wallet
+        startChallengeFromTradePrivate(wallet, trade, intendedStageAmount, conjugateStageAmount);
 
-        if (msg.sender != deployer)
-            wallet = msg.sender;
-
-        require(isDeployer() || validator.isPaymentParty(payment, wallet));
-
-        require(
-            0 == walletChallengeMap[wallet].nonce || block.timestamp >= walletChallengeMap[wallet].timeout
-        );
-
-        int256 balanceAmount = (validator.isPaymentParty(payment, wallet) ?
-        payment.sender.balances.current :
-        payment.recipient.balances.current);
-
-        require(balanceAmount >= stageAmount);
-
-        pushMemoryPaymentToStorageArray(payment, walletChallengedPaymentsMap[wallet]);
-
-        DriipSettlementTypes.Challenge memory challenge;
-        challenge.nonce = payment.nonce;
-        challenge.timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
-        challenge.status = DriipSettlementTypes.ChallengeStatus.Qualified;
-        //        challenge.driipOperatorHash = payment.seals.exchange.hash;
-        challenge.driipType = NahmiiTypes.DriipType.Payment;
-        challenge.driipIndex = walletChallengedPaymentsMap[wallet].length.sub(1);
-        challenge.intendedStage = MonetaryTypes.Figure(stageAmount, payment.currency);
-        challenge.intendedTargetBalance = DriipSettlementTypes.OptionalFigure(MonetaryTypes.Figure(balanceAmount.sub(stageAmount), payment.currency), true);
-
-        walletChallengeMap[wallet] = challenge;
-
-        emit StartChallengeFromPaymentEvent(payment, wallet);
+        // Emit event
+        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade, intendedStageAmount, conjugateStageAmount);
     }
 
-    /// @notice Get driip settlement challenge phase of given wallet
+    /// @notice Start settlement challenge on payment
+    /// @param payment The challenged payment
+    /// @param stageAmount Amount of payment currency to be staged
+    function startChallengeFromPayment(NahmiiTypes.Payment payment, int256 stageAmount)
+    public
+    {
+        // Start challenge for wallet
+        startChallengeFromPaymentPrivate(msg.sender, payment, stageAmount);
+
+        // Emit event
+        emit StartChallengeFromPaymentEvent(msg.sender, payment, stageAmount);
+    }
+
+    /// @notice Start settlement challenge on payment
+    /// @param wallet The concerned party
+    /// @param payment The challenged payment
+    /// @param stageAmount Amount of payment currency to be staged
+    function startChallengeFromPaymentByProxy(address wallet, NahmiiTypes.Payment payment, int256 stageAmount)
+    public
+    {
+        // Start challenge for wallet
+        startChallengeFromPaymentPrivate(wallet, payment, stageAmount);
+
+        // Emit event
+        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment, stageAmount);
+    }
+
+    /// @notice Get settlement challenge phase of given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge phase and nonce
-    function challengePhase(address wallet) public view returns (NahmiiTypes.ChallengePhase, uint) {
-        if (msg.sender != deployer)
-            wallet = msg.sender;
-        if (0 == walletChallengeMap[wallet].nonce)
-            return (NahmiiTypes.ChallengePhase.Closed, 0);
-        else if (block.timestamp < walletChallengeMap[wallet].timeout)
-            return (NahmiiTypes.ChallengePhase.Dispute, walletChallengeMap[wallet].nonce);
+    function challengePhase(address wallet)
+    public
+    view
+    returns (NahmiiTypes.ChallengePhase)
+    {
+        if (0 < walletProposalMap[wallet].nonce && block.timestamp < walletProposalMap[wallet].timeout)
+            return NahmiiTypes.ChallengePhase.Dispute;
         else
-            return (NahmiiTypes.ChallengePhase.Closed, walletChallengeMap[wallet].nonce);
+            return NahmiiTypes.ChallengePhase.Closed;
     }
 
     /// @notice Get the challenge nonce of the given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge nonce
-    function challengeNonce(address wallet)
+    function proposalNonce(address wallet)
     public
     view
     returns (uint256)
     {
-        return walletChallengeMap[wallet].nonce;
+        return walletProposalMap[wallet].nonce;
+    }
+
+    /// @notice Get the settlement proposal block number of the given wallet
+    /// @param wallet The concerned wallet
+    /// @return The settlement proposal block number
+    function proposalBlockNumber(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletProposalMap[wallet].blockNumber;
+    }
+
+    /// @notice Get the settlement proposal timeout of the given wallet
+    /// @param wallet The concerned wallet
+    /// @return The settlement proposal timeout
+    function proposalTimeout(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletProposalMap[wallet].timeout;
     }
 
     /// @notice Get the challenge status of the given wallet
     /// @param wallet The concerned wallet
     /// @return The challenge status
-    function challengeStatus(address wallet)
+    function proposalStatus(address wallet)
     public
     view
-    returns (DriipSettlementTypes.ChallengeStatus)
+    returns (SettlementTypes.ProposalStatus)
     {
-        return walletChallengeMap[wallet].status;
+        return walletProposalMap[wallet].status;
     }
 
-    /// @notice Get the intended stage, i.e. the amount of intended currency that is suggested staged, of
-    /// the given wallet
+    /// @notice Get the settlement proposal currency count of the given wallet
     /// @param wallet The concerned wallet
-    /// @return The challenge intended stage
-    function challengeIntendedStage(address wallet)
+    /// @return The settlement proposal currency count
+    function proposalCurrencyCount(address wallet)
     public
     view
-    returns (MonetaryTypes.Figure)
+    returns (uint256)
     {
-        return walletChallengeMap[wallet].intendedStage;
+        return walletProposalMap[wallet].currencies.length;
     }
 
-    /// @notice Get the conjugate stage, i.e. the amount of conjugate currency that is suggested staged, of
-    /// the given wallet
+    /// @notice Get the settlement proposal currency of the given wallet at the given index
     /// @param wallet The concerned wallet
-    /// @return The challenge conjugate stage
-    function challengeConjugateStage(address wallet)
+    /// @param index The index of the concerned currency
+    /// @return The settlement proposal currency
+    function proposalCurrency(address wallet, uint256 index)
     public
     view
-    returns (MonetaryTypes.Figure)
+    returns (MonetaryTypes.Currency)
     {
-        return walletChallengeMap[wallet].conjugateStage;
+        require(index < walletProposalMap[wallet].currencies.length);
+        return walletProposalMap[wallet].currencies[index];
     }
 
-    /// @notice Get the challenger of the given wallet's challenge
+    /// @notice Get the settlement proposal stage amount of the given wallet and currency
     /// @param wallet The concerned wallet
-    /// @return The challenger of the challenge
-    function challengeChallenger(address wallet)
+    /// @param currency The concerned currency
+    /// @return The settlement proposal stage amount
+    function proposalStageAmount(address wallet, MonetaryTypes.Currency currency)
+    public
+    view
+    returns (int256)
+    {
+        uint256 index = proposalCurrencyIndex(wallet, currency);
+        return walletProposalMap[wallet].stageAmounts[index];
+    }
+
+    /// @notice Get the settlement proposal target balance amount of the given wallet and currency
+    /// @param wallet The concerned wallet
+    /// @param currency The concerned currency
+    /// @return The settlement proposal target balance amount
+    function proposalTargetBalanceAmount(address wallet, MonetaryTypes.Currency currency)
+    public
+    view
+    returns (int256)
+    {
+        uint256 index = proposalCurrencyIndex(wallet, currency);
+        return walletProposalMap[wallet].targetBalanceAmounts[index];
+    }
+
+    /// @notice Get the driip type of the given wallet's settlement proposal
+    /// @param wallet The concerned wallet
+    /// @return The driip type of the settlement proposal
+    function proposalDriipType(address wallet)
+    public
+    view
+    returns (NahmiiTypes.DriipType)
+    {
+        return walletProposalMap[wallet].driipType;
+    }
+
+    /// @notice Get the driip index of the given wallet's settlement proposal
+    /// @param wallet The concerned wallet
+    /// @return The driip index of the settlement proposal
+    function proposalDriipIndex(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletProposalMap[wallet].driipIndex;
+    }
+
+    /// @notice Get the candidate type of the given wallet's settlement proposal
+    /// @param wallet The concerned wallet
+    /// @return The candidate type of the settlement proposal
+    function proposalCandidateType(address wallet)
+    public
+    view
+    returns (SettlementTypes.CandidateType)
+    {
+        return walletProposalMap[wallet].candidateType;
+    }
+
+    /// @notice Get the candidate index of the given wallet's settlement proposal
+    /// @param wallet The concerned wallet
+    /// @return The candidate index of the settlement proposal
+    function proposalCandidateIndex(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletProposalMap[wallet].candidateIndex;
+    }
+
+    /// @notice Get the challenger of the given wallet's settlement proposal
+    /// @param wallet The concerned wallet
+    /// @return The challenger of the settlement proposal
+    function proposalChallenger(address wallet)
     public
     view
     returns (address)
     {
-        return walletChallengeMap[wallet].challenger;
+        return walletProposalMap[wallet].challenger;
     }
 
-    /// @notice Challenge the driip settlement by providing order candidate
+    /// @notice Set settlement proposal status property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param timeout The timeout value
+    function setProposalTimeout(address wallet, uint256 timeout)
+    public
+    onlyDriipSettlementDispute
+    {
+        walletProposalMap[wallet].timeout = timeout;
+    }
+
+    /// @notice Set settlement proposal status property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param status The status value
+    function setProposalStatus(address wallet, SettlementTypes.ProposalStatus status)
+    public
+    onlyDriipSettlementDispute
+    {
+        walletProposalMap[wallet].status = status;
+    }
+
+    /// @notice Set settlement proposal candidate type property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param candidateType The candidate type value
+    function setProposalCandidateType(address wallet, SettlementTypes.CandidateType candidateType)
+    public
+    onlyDriipSettlementDispute
+    {
+        walletProposalMap[wallet].candidateType = candidateType;
+    }
+
+    /// @notice Set settlement proposal candidate index property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param candidateIndex The candidate index value
+    function setProposalCandidateIndex(address wallet, uint256 candidateIndex)
+    public
+    onlyDriipSettlementDispute
+    {
+        walletProposalMap[wallet].candidateIndex = candidateIndex;
+    }
+
+    /// @notice Set settlement proposal challenger property of the given wallet
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param wallet The concerned wallet
+    /// @param challenger The challenger value
+    function setProposalChallenger(address wallet, address challenger)
+    public
+    onlyDriipSettlementDispute
+    {
+        walletProposalMap[wallet].challenger = challenger;
+    }
+
+    /// @notice Challenge the settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged driip
     function challengeByOrder(NahmiiTypes.Order order)
     public
@@ -279,7 +384,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         driipSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
-    /// @notice Unchallenge driip settlement by providing trade that shows that challenge order candidate has been filled
+    /// @notice Unchallenge settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
     function unchallengeOrderCandidateByTrade(NahmiiTypes.Order order, NahmiiTypes.Trade trade)
@@ -289,59 +394,23 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         driipSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
-    /// @notice Challenge the driip settlement by providing trade candidate
+    /// @notice Challenge the settlement by providing trade candidate
+    /// @param wallet The wallet whose settlement is being challenged
     /// @param trade The trade candidate that challenges the challenged driip
-    /// @param wallet The wallet whose driip settlement is being challenged
-    function challengeByTrade(NahmiiTypes.Trade trade, address wallet)
+    function challengeByTrade(address wallet, NahmiiTypes.Trade trade)
     public
     onlyOperationalModeNormal
     {
-        driipSettlementDispute.challengeByTrade(trade, wallet, msg.sender);
+        driipSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
-    /// @notice Challenge the driip settlement by providing payment candidate
+    /// @notice Challenge the settlement by providing payment candidate
     /// @param payment The payment candidate that challenges the challenged driip
-    /// @param wallet The wallet whose driip settlement is being challenged
-    function challengeByPayment(NahmiiTypes.Payment payment, address wallet)
+    function challengeByPayment(NahmiiTypes.Payment payment)
     public
     onlyOperationalModeNormal
     {
-        driipSettlementDispute.challengeByPayment(payment, wallet, msg.sender);
-    }
-
-    /// @notice Get the challenge of the given wallet
-    /// @param wallet The concerned wallet
-    /// @return The challenge of the wallet
-    function walletChallenge(address wallet)
-    public
-    view
-    returns (DriipSettlementTypes.Challenge)
-    {
-        return walletChallengeMap[wallet];
-    }
-
-    /// @notice Set the challenge of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
-    /// @param challenge The challenge to be set
-    function setWalletChallenge(address wallet, DriipSettlementTypes.Challenge challenge)
-    public
-    onlyDriipSettlementDispute
-    {
-        walletChallengeMap[wallet] = challenge;
-    }
-
-    /// @notice Reset the challenge of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
-    function resetWalletChallenge(address wallet)
-    public
-    onlyDriipSettlementDispute
-    {
-        walletChallengeMap[wallet].status = DriipSettlementTypes.ChallengeStatus.Qualified;
-        walletChallengeMap[wallet].candidateType = DriipSettlementTypes.ChallengeCandidateType.None;
-        walletChallengeMap[wallet].candidateIndex = 0;
-        walletChallengeMap[wallet].challenger = address(0);
+        driipSettlementDispute.challengeByPayment(payment, msg.sender);
     }
 
     /// @notice Push to store the given challenge candidate order
@@ -364,14 +433,15 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         return challengeCandidateOrders.length;
     }
 
-    /// @notice Push to store the given challenge candidate trade
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param trade The challenge candidate trade to push
-    function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
+    /// @notice Get the challenge candidate order at the given index
+    /// @param index The index of challenge order candidate
+    /// @return The challenge candidate order
+    function challengeCandidateOrder(uint256 index)
     public
-    onlyDriipSettlementDispute
+    view
+    returns (NahmiiTypes.Order)
     {
-        pushMemoryTradeToStorageArray(trade, challengeCandidateTrades);
+        return challengeCandidateOrders[index];
     }
 
     /// @notice Get the count of challenge candidate trades
@@ -384,14 +454,14 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         return challengeCandidateTrades.length;
     }
 
-    /// @notice Push to store the given challenge candidate payment
+    /// @notice Push to store the given challenge candidate trade
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param payment The challenge candidate payment to push
-    function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
+    /// @param trade The challenge candidate trade to push
+    function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
     public
     onlyDriipSettlementDispute
     {
-        pushMemoryPaymentToStorageArray(payment, challengeCandidatePayments);
+        pushMemoryTradeToStorageArray(trade, challengeCandidateTrades);
     }
 
     /// @notice Get the count of challenge candidate payments
@@ -402,6 +472,110 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
     returns (uint256)
     {
         return challengeCandidatePayments.length;
+    }
+
+    /// @notice Push to store the given challenge candidate payment
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param payment The challenge candidate payment to push
+    function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
+    public
+    onlyDriipSettlementDispute
+    {
+        pushMemoryPaymentToStorageArray(payment, challengeCandidatePayments);
+    }
+
+    function startChallengeFromTradePrivate(address wallet, NahmiiTypes.Trade trade, int256 intendedStageAmount,
+        int256 conjugateStageAmount)
+    private
+    validatorInitialized
+    configurationInitialized
+    onlySealedTrade(trade)
+    {
+        require(intendedStageAmount.isPositiveInt256());
+        require(conjugateStageAmount.isPositiveInt256());
+
+        require(validator.isTradeParty(trade, wallet));
+
+        // Require that wallet has no overlap with ongoing challenge
+        require(NahmiiTypes.ChallengePhase.Closed == challengePhase(wallet));
+
+        (int256 intendedBalanceAmount, int256 conjugateBalanceAmount) =
+        (validator.isTradeBuyer(trade, wallet) ?
+        (trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current) :
+        (trade.seller.balances.intended.current, trade.seller.balances.conjugate.current));
+
+        require(intendedBalanceAmount >= intendedStageAmount);
+        require(conjugateBalanceAmount >= conjugateStageAmount);
+
+        pushMemoryTradeToStorageArray(trade, walletChallengedTradesMap[wallet]);
+
+        walletProposalMap[wallet].nonce = trade.nonce;
+        walletProposalMap[wallet].blockNumber = trade.blockNumber;
+        walletProposalMap[wallet].timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
+        walletProposalMap[wallet].status = SettlementTypes.ProposalStatus.Qualified;
+        walletProposalMap[wallet].currencies.length = 0;
+        walletProposalMap[wallet].currencies.push(trade.currencies.intended);
+        walletProposalMap[wallet].currencies.push(trade.currencies.conjugate);
+        walletProposalMap[wallet].stageAmounts.length = 0;
+        walletProposalMap[wallet].stageAmounts.push(intendedStageAmount);
+        walletProposalMap[wallet].stageAmounts.push(conjugateStageAmount);
+        walletProposalMap[wallet].targetBalanceAmounts.length = 0;
+        walletProposalMap[wallet].targetBalanceAmounts.push(intendedBalanceAmount.sub(intendedStageAmount));
+        walletProposalMap[wallet].targetBalanceAmounts.push(conjugateBalanceAmount.sub(conjugateStageAmount));
+        //        walletProposalMap[wallet].driipOperatorHash = trade.seal.hash;
+        walletProposalMap[wallet].driipType = NahmiiTypes.DriipType.Trade;
+        walletProposalMap[wallet].driipIndex = walletChallengedTradesMap[wallet].length.sub(1);
+    }
+
+    function startChallengeFromPaymentPrivate(address wallet, NahmiiTypes.Payment payment, int256 stageAmount)
+    private
+    validatorInitialized
+    configurationInitialized
+    onlySealedPayment(payment)
+    {
+        require(stageAmount.isPositiveInt256());
+
+        require(validator.isPaymentParty(payment, wallet));
+
+        // Require that wallet has no overlap with ongoing challenge
+        require(NahmiiTypes.ChallengePhase.Closed == challengePhase(wallet));
+
+        int256 balanceAmount = (validator.isPaymentSender(payment, wallet) ?
+        payment.sender.balances.current :
+        payment.recipient.balances.current);
+
+        require(balanceAmount >= stageAmount);
+
+        pushMemoryPaymentToStorageArray(payment, walletChallengedPaymentsMap[wallet]);
+
+        walletProposalMap[wallet].nonce = payment.nonce;
+        walletProposalMap[wallet].blockNumber = payment.blockNumber;
+        walletProposalMap[wallet].timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
+        walletProposalMap[wallet].status = SettlementTypes.ProposalStatus.Qualified;
+        walletProposalMap[wallet].currencies.length = 0;
+        walletProposalMap[wallet].currencies.push(payment.currency);
+        walletProposalMap[wallet].stageAmounts.length = 0;
+        walletProposalMap[wallet].stageAmounts.push(stageAmount);
+        walletProposalMap[wallet].targetBalanceAmounts.length = 0;
+        walletProposalMap[wallet].targetBalanceAmounts.push(balanceAmount.sub(stageAmount));
+        //        walletProposalMap[wallet].driipOperatorHash = payment.seals.exchange.hash;
+        walletProposalMap[wallet].driipType = NahmiiTypes.DriipType.Payment;
+        walletProposalMap[wallet].driipIndex = walletChallengedPaymentsMap[wallet].length.sub(1);
+    }
+
+    function proposalCurrencyIndex(address wallet, MonetaryTypes.Currency currency)
+    private
+    view
+    returns (uint256)
+    {
+        for (uint256 i = 0; i < walletProposalMap[wallet].currencies.length; i++) {
+            if (
+                walletProposalMap[wallet].currencies[i].ct == currency.ct &&
+                walletProposalMap[wallet].currencies[i].id == currency.id
+            )
+                return i;
+        }
+        require(false);
     }
 
     //

@@ -403,7 +403,7 @@ module.exports = (glob) => {
                     await ethersCommunityVote.reset();
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.challengeStatuses.indexOf('Qualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Qualified'));
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {
@@ -501,7 +501,7 @@ module.exports = (glob) => {
                     await ethersNullSettlementChallenge._reset();
 
                     await ethersNullSettlementChallenge.setProposalChallenger(wallet, challenger);
-                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.challengeStatuses.indexOf('Disqualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Disqualified'));
                 });
 
                 it('should seize the wallet', async () => {

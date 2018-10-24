@@ -161,24 +161,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeCandidateOrdersCount()', () => {
-            it('should return value initialized ', async () => {
-                (await ethersNullSettlementChallenge.challengeCandidateOrdersCount())._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('challengeCandidateTradesCount()', () => {
-            it('should return value initialized ', async () => {
-                (await ethersNullSettlementChallenge.challengeCandidateTradesCount())._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('challengeCandidatePaymentsCount()', () => {
-            it('should return value initialized ', async () => {
-                (await ethersNullSettlementChallenge.challengeCandidatePaymentsCount())._bn.should.eq.BN(0);
-            });
-        });
-
         describe('startChallenge()', () => {
             describe('if configuration contract is not initialized', () => {
                 beforeEach(async () => {
@@ -209,7 +191,7 @@ module.exports = (glob) => {
             describe('if amount to be staged is greater than active balance in client fund', () => {
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(1, 1)
+                    await web3ClientFund._addActiveBalanceLogEntry(1, 1)
                 });
 
                 it('should revert', async () => {
@@ -222,7 +204,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     topic = ethersNullSettlementChallenge.interface.events['StartChallengeEvent'].topics[0];
                     filter = {
@@ -242,7 +224,7 @@ module.exports = (glob) => {
                     proposal.blockNumber._bn.should.eq.BN(1);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
                     proposal.driipIndex._bn.should.eq.BN(0);
-                    proposal.candidateType.should.equal(mocks.challengeCandidateTypes.indexOf('None'));
+                    proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
 
                     (await ethersNullSettlementChallenge.nonce())
@@ -253,7 +235,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called before an ongoing null settlement challenge has expired', () => {
+            describe('if called before an ongoing settlement challenge has expired', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_c,
@@ -271,7 +253,7 @@ module.exports = (glob) => {
         });
 
         describe('challengePhase()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should return Closed', async () => {
                     const address = Wallet.createRandom().address;
                     (await ethersNullSettlementChallenge.challengePhase(address))
@@ -279,13 +261,13 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
                 });
 
-                describe('if null settlement challenge has completed for given wallet', () => {
+                describe('if settlement challenge has completed for given wallet', () => {
                     beforeEach(async () => {
                         await web3Configuration.setSettlementChallengeTimeout(0);
                         await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
@@ -300,7 +282,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if null settlement challenge is ongoing for given wallet', () => {
+                describe('if settlement challenge is ongoing for given wallet', () => {
                     beforeEach(async () => {
                         await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                             from: glob.user_d,
@@ -317,17 +299,17 @@ module.exports = (glob) => {
         });
 
         describe('proposalNonce()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should return default value', async () => {
                     const address = Wallet.createRandom().address;
                     (await ethersNullSettlementChallenge.proposalNonce(address))._bn.should.eq.BN(0);
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_e,
@@ -342,17 +324,17 @@ module.exports = (glob) => {
         });
 
         describe('proposalBlockNumber()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should return default value', async () => {
                     const address = Wallet.createRandom().address;
                     (await ethersNullSettlementChallenge.proposalBlockNumber(address))._bn.should.eq.BN(0);
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_e,
@@ -368,19 +350,19 @@ module.exports = (glob) => {
         });
 
         describe('proposalTimeout()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should return default value', async () => {
                     const address = Wallet.createRandom().address;
                     (await ethersNullSettlementChallenge.proposalTimeout(address))._bn.should.eq.BN(0);
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 let timestampBefore;
 
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_e,
@@ -400,7 +382,7 @@ module.exports = (glob) => {
         });
 
         describe('proposalStatus()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should return default value', async () => {
                     const address = Wallet.createRandom().address;
                     (await ethersNullSettlementChallenge.proposalStatus(address))
@@ -408,10 +390,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_f,
@@ -427,7 +409,7 @@ module.exports = (glob) => {
         });
 
         describe('proposalCurrencyCount()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should return default value', async () => {
                     const address = Wallet.createRandom().address;
                     (await ethersNullSettlementChallenge.proposalCurrencyCount(address))
@@ -435,10 +417,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_g,
@@ -454,19 +436,19 @@ module.exports = (glob) => {
         });
 
         describe('proposalCurrency()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
                     ethersNullSettlementChallenge.proposalCurrency(address, 0).should.be.rejected;
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 let currencyCt, currencyId;
 
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     currencyCt = Wallet.createRandom().address;
                     currencyId = 10;
@@ -486,17 +468,20 @@ module.exports = (glob) => {
         });
 
         describe('proposalStageAmount()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
-                    ethersNullSettlementChallenge.proposalStageAmount(address, mocks.address0, 0).should.be.rejected;
+                    ethersNullSettlementChallenge.proposalStageAmount(address, {
+                        ct: mocks.address0,
+                        id: 0
+                    }).should.be.rejected;
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_i,
@@ -505,24 +490,27 @@ module.exports = (glob) => {
                 });
 
                 it('should return stage amount at given index of ongoing challenge', async () => {
-                    (await ethersNullSettlementChallenge.proposalStageAmount(glob.user_i, mocks.address0, 0))
+                    (await ethersNullSettlementChallenge.proposalStageAmount(glob.user_i, {ct: mocks.address0, id: 0}))
                         ._bn.should.eq.BN(1);
                 });
             });
         });
 
         describe('proposalTargetBalanceAmount()', () => {
-            describe('if no null settlement challenge has been started for given wallet', () => {
+            describe('if no settlement challenge has been started for given wallet', () => {
                 it('should revert', async () => {
                     const address = Wallet.createRandom().address;
-                    ethersNullSettlementChallenge.proposalTargetBalanceAmount(address, mocks.address0, 0).should.be.rejected;
+                    ethersNullSettlementChallenge.proposalTargetBalanceAmount(address, {
+                        ct: mocks.address0,
+                        id: 0
+                    }).should.be.rejected;
                 });
             });
 
-            describe('if null settlement challenge has been started for given wallet', () => {
+            describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await web3ClientFund.reset.call();
-                    await web3ClientFund._addActiveAccumulation(10, 1);
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_a,
@@ -531,7 +519,10 @@ module.exports = (glob) => {
                 });
 
                 it('should return target balance amount at given index of ongoing challenge', async () => {
-                    const result = await ethersNullSettlementChallenge.proposalTargetBalanceAmount(glob.user_a, mocks.address0, 0);
+                    const result = await ethersNullSettlementChallenge.proposalTargetBalanceAmount(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    });
                     result._bn.should.eq.BN(9);
                 });
             });
@@ -541,7 +532,7 @@ module.exports = (glob) => {
             it('should return default value', async () => {
                 const address = Wallet.createRandom().address;
                 (await ethersNullSettlementChallenge.proposalCandidateType(address))
-                    .should.equal(mocks.challengeCandidateTypes.indexOf('None'));
+                    .should.equal(mocks.candidateTypes.indexOf('None'));
             });
         });
 
@@ -568,14 +559,14 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called from other than null settlement dispute', () => {
+            describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.setProposalStatus(address, mocks.proposalStatuses.indexOf('Disqualified'))
                         .should.be.rejected
                 });
             });
 
-            describe('if called from null settlement dispute', () => {
+            describe('if called from settlement dispute', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
                 });
@@ -598,23 +589,23 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called from other than null settlement dispute', () => {
+            describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.setProposalCandidateType(address, mocks.challengeCandidateTypes.indexOf('Payment'))
+                    web3NullSettlementChallenge.setProposalCandidateType(address, mocks.candidateTypes.indexOf('Payment'))
                         .should.be.rejected
                 });
             });
 
-            describe('if called from null settlement dispute', () => {
+            describe('if called from settlement dispute', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
                 });
 
                 it('should successfully set the new value', async () => {
-                    await web3NullSettlementChallenge.setProposalCandidateType(address, mocks.challengeCandidateTypes.indexOf('Payment'));
+                    await web3NullSettlementChallenge.setProposalCandidateType(address, mocks.candidateTypes.indexOf('Payment'));
 
                     (await ethersNullSettlementChallenge.proposalCandidateType(address))
-                        .should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
+                        .should.equal(mocks.candidateTypes.indexOf('Payment'));
                 });
             });
         });
@@ -626,14 +617,14 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called from other than null settlement dispute', () => {
+            describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.setProposalCandidateIndex(address, 10)
                         .should.be.rejected;
                 });
             });
 
-            describe('if called from null settlement dispute', () => {
+            describe('if called from settlement dispute', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
                 });
@@ -655,14 +646,14 @@ module.exports = (glob) => {
                 address2 = Wallet.createRandom().address;
             });
 
-            describe('if called from other than null settlement dispute', () => {
+            describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.setProposalChallenger(address1, address2)
                         .should.be.rejected;
                 });
             });
 
-            describe('if called from null settlement dispute', () => {
+            describe('if called from settlement dispute', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
                 });
@@ -677,110 +668,94 @@ module.exports = (glob) => {
         });
 
         describe('challengeByOrder()', () => {
-            describe('if operational mode is exit', () => {
-                let order;
+            let order;
 
-                before(async () => {
-                    await web3Configuration.setOperationalModeExit();
-                    order = await mocks.mockOrder(glob.owner);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
-                });
+            before(async () => {
+                await ethersNullSettlementDispute._reset();
+                order = await mocks.mockOrder(glob.owner);
             });
 
-            describe('if operational mode is normal', () => {
-                let order, challengeByOrderCountBefore;
+            it('should call challengeByOrder() of its settlement challenge dispute instance', async () => {
+                await ethersNullSettlementChallenge.challengeByOrder(order);
 
-                before(async () => {
-                    await web3Configuration.reset();
-                    challengeByOrderCountBefore = await ethersNullSettlementDispute._challengeByOrderCount();
-                    order = await mocks.mockOrder(glob.owner);
-                });
-
-                it('should call challengeByOrder() of its null settlement challenge dispute instance', async () => {
-                    await ethersNullSettlementChallenge.challengeByOrder(order);
-
-                    (await ethersNullSettlementDispute._challengeByOrderCount())
-                        ._bn.should.eq.BN(challengeByOrderCountBefore.add(1)._bn);
-                });
+                (await ethersNullSettlementDispute._challengeByOrderCount())
+                    ._bn.should.eq.BN(1);
             });
         });
 
         describe('challengeByTrade()', () => {
-            let trade, address;
+            let trade, wallet;
 
             before(async () => {
+                await ethersNullSettlementDispute._reset();
                 trade = await mocks.mockTrade(glob.owner);
-                address = Wallet.createRandom().address;
+                wallet = Wallet.createRandom().address;
             });
 
-            describe('if operational mode is exit', () => {
-                before(async () => {
-                    await web3Configuration.setOperationalModeExit();
-                });
+            it('should call challengeByTrade() of its settlement challenge dispute instance', async () => {
+                await ethersNullSettlementChallenge.challengeByTrade(wallet, trade, {gasLimit: 2e6});
 
-                after(async () => {
-                    await web3Configuration.reset();
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, address, {gasLimit: 2e6}).should.be.rejected;
-                });
-            });
-
-            describe('if operational mode is normal', () => {
-                let challengeByTradeCountBefore;
-
-                before(async () => {
-                    challengeByTradeCountBefore = await ethersNullSettlementDispute._challengeByTradeCount();
-                });
-
-                it('should call challengeByTrade() of its null settlement challenge dispute instance', async () => {
-                    await ethersNullSettlementChallenge.challengeByTrade(trade, address, {gasLimit: 2e6});
-
-                    (await ethersNullSettlementDispute._challengeByTradeCount())
-                        ._bn.should.eq.BN(challengeByTradeCountBefore.add(1)._bn);
-                });
+                (await ethersNullSettlementDispute._challengeByTradeCount())
+                    ._bn.should.eq.BN(1);
             });
         });
 
         describe('challengeByPayment()', () => {
-            let payment, address;
+            let payment;
 
             before(async () => {
+                await ethersNullSettlementDispute._reset();
                 payment = await mocks.mockPayment(glob.owner);
-                address = Wallet.createRandom().address;
             });
 
-            describe('if operational mode is exit', () => {
-                before(async () => {
-                    await web3Configuration.setOperationalModeExit();
-                });
+            it('should call challengeByPayment() of its settlement challenge dispute instance', async () => {
+                await ethersNullSettlementChallenge.challengeByPayment(payment, {gasLimit: 2e6});
 
-                after(async () => {
-                    await web3Configuration.reset();
-                });
+                (await ethersNullSettlementDispute._challengeByPaymentCount())
+                    ._bn.should.eq.BN(1);
+            });
+        });
 
+        describe('challengeCandidateOrdersCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersNullSettlementChallenge.challengeCandidateOrdersCount())._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('pushChallengeCandidateOrder()', () => {
+            let order;
+
+            before(async () => {
+                order = await mocks.mockOrder(glob.owner);
+            });
+
+            describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, address, {gasLimit: 2e6}).should.be.rejected;
+                    web3NullSettlementChallenge.pushChallengeCandidateOrder(order)
+                        .should.be.rejected;
                 });
             });
 
-            describe('if operational mode is normal', () => {
-                let challengeByPaymentCountBefore;
+            describe('if called from settlement dispute', () => {
+                let challengeCandidateOrdersCountBefore;
 
-                before(async () => {
-                    challengeByPaymentCountBefore = await ethersNullSettlementDispute._challengeByPaymentCount();
+                beforeEach(async () => {
+                    await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
+                    challengeCandidateOrdersCountBefore = await ethersNullSettlementChallenge.challengeCandidateOrdersCount();
                 });
 
-                it('should call challengeByPayment() of its null settlement challenge dispute instance', async () => {
-                    await ethersNullSettlementChallenge.challengeByPayment(payment, address, {gasLimit: 2e6});
+                it('should successfully push the array element', async () => {
+                    await ethersNullSettlementChallenge.pushChallengeCandidateOrder(order, {gasLimit: 2e6});
 
-                    (await ethersNullSettlementDispute._challengeByPaymentCount())
-                        ._bn.should.eq.BN(challengeByPaymentCountBefore.add(1)._bn);
+                    (await ethersNullSettlementChallenge.challengeCandidateOrdersCount())
+                        ._bn.should.eq.BN(challengeCandidateOrdersCountBefore.add(1)._bn);
                 });
+            });
+        });
+
+        describe('challengeCandidateTradesCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersNullSettlementChallenge.challengeCandidateTradesCount())._bn.should.eq.BN(0);
             });
         });
 
@@ -791,14 +766,14 @@ module.exports = (glob) => {
                 trade = await mocks.mockTrade(glob.owner);
             });
 
-            describe('if called from other than null settlement dispute', () => {
+            describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.pushChallengeCandidateTrade(trade)
                         .should.be.rejected;
                 });
             });
 
-            describe('if called from null settlement dispute', () => {
+            describe('if called from settlement dispute', () => {
                 let challengeCandidateTradesCountBefore;
 
                 beforeEach(async () => {
@@ -815,6 +790,12 @@ module.exports = (glob) => {
             });
         });
 
+        describe('challengeCandidatePaymentsCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersNullSettlementChallenge.challengeCandidatePaymentsCount())._bn.should.eq.BN(0);
+            });
+        });
+
         describe('pushChallengeCandidatePayment()', () => {
             let payment;
 
@@ -822,14 +803,14 @@ module.exports = (glob) => {
                 payment = await mocks.mockPayment(glob.owner);
             });
 
-            describe('if called from other than null settlement dispute', () => {
+            describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.pushChallengeCandidatePayment(payment)
                         .should.be.rejected;
                 });
             });
 
-            describe('if called from null settlement dispute', () => {
+            describe('if called from settlement dispute', () => {
                 let challengeCandidatePaymentsCountBefore;
 
                 beforeEach(async () => {

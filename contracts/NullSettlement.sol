@@ -45,9 +45,10 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SettleNullEvent(address wallet, SettlementTypes.ChallengeStatus challengeStatus);
     event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
         NullSettlementChallenge newNullSettlementChallenge);
+    event SettleNullEvent(address wallet, SettlementTypes.ProposalStatus proposalStatus);
+    event SettleNullByProxyEvent(address proxy, address wallet, SettlementTypes.ProposalStatus proposalStatus);
 
     //
     // Constructor
@@ -100,19 +101,38 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     }
 
     /// @notice Settle null
-    /// @param wallet The wallet whose side of the payment is to be settled
-    function settleNull(address wallet)
+    function settleNull()
     public
+    {
+        // Settle null
+        settleNullPrivate(msg.sender);
+
+        // Emit event
+        emit SettleNullEvent(msg.sender, nullSettlementChallenge.proposalStatus(msg.sender));
+    }
+
+    /// @notice Settle null by proxy
+    /// @param wallet The concerned wallet
+    function settleNullByProxy(address wallet)
+    public
+    onlyDeployer
+    {
+        // Settle null of wallet
+        settleNullPrivate(wallet);
+
+        // Emit event
+        emit SettleNullByProxyEvent(msg.sender, wallet, nullSettlementChallenge.proposalStatus(wallet));
+    }
+
+    function settleNullPrivate(address wallet)
+    private
     configurationInitialized
     clientFundInitialized
     communityVoteInitialized
     nullSettlementChallengeInitialized
     {
-        if (msg.sender != deployer)
-            wallet = msg.sender;
-
         // The current null settlement proposal qualified for settlement
-        if (nullSettlementChallenge.proposalStatus(wallet) == SettlementTypes.ChallengeStatus.Qualified) {
+        if (nullSettlementChallenge.proposalStatus(wallet) == SettlementTypes.ProposalStatus.Qualified) {
 
             uint256 nonce = nullSettlementChallenge.proposalNonce(wallet);
 
@@ -130,15 +150,14 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
 
             // Get proposal's currency, target balance amount and stage amount. (Null settlement proposals only have one of each.)
             MonetaryTypes.Currency memory currency = nullSettlementChallenge.proposalCurrency(wallet, 0);
-            int256 stageAmount = nullSettlementChallenge.proposalStageAmount(wallet, currency.ct, currency.id);
-            int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, currency.ct, currency.id);
+            int256 stageAmount = nullSettlementChallenge.proposalStageAmount(wallet, currency);
+            int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, currency);
 
             // Update settled balance
             clientFund.updateSettledBalance(wallet, targetBalanceAmount, currency.ct, currency.id);
 
             // Stage the proposed amount
-            if (stageAmount.isNonZeroPositiveInt256())
-                clientFund.stage(wallet, stageAmount, currency.ct, currency.id);
+            clientFund.stage(wallet, stageAmount, currency.ct, currency.id);
 
             // If payment nonce is beyond max null settlement nonce then update max null nonce
             if (nonce > maxNullNonce)
@@ -146,16 +165,13 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         }
 
         // The current null settlement proposal disqualified for settlement
-        else if (nullSettlementChallenge.proposalStatus(wallet) == SettlementTypes.ChallengeStatus.Disqualified) {
+        else if (nullSettlementChallenge.proposalStatus(wallet) == SettlementTypes.ProposalStatus.Disqualified) {
             // Add wallet to store of seized wallets
             addToSeizedWallets(wallet);
 
             // Slash wallet's funds
             clientFund.seizeAllBalances(wallet, nullSettlementChallenge.proposalChallenger(wallet));
         }
-
-        // Emit event
-        emit SettleNullEvent(wallet, nullSettlementChallenge.proposalStatus(wallet));
     }
 
     function addToSeizedWallets(address _address)
