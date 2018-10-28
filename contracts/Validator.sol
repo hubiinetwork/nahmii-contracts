@@ -402,6 +402,63 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
     }
 
+    function isTradeParty(NahmiiTypes.Trade trade, address wallet)
+    public
+    pure
+    returns (bool)
+    {
+        return wallet == trade.buyer.wallet || wallet == trade.seller.wallet;
+    }
+
+    function isTradeBuyer(NahmiiTypes.Trade trade, address wallet)
+    public
+    pure
+    returns (bool)
+    {
+        return wallet == trade.buyer.wallet;
+    }
+
+    function isTradeSeller(NahmiiTypes.Trade trade, address wallet)
+    public
+    pure
+    returns (bool)
+    {
+        return wallet == trade.seller.wallet;
+    }
+
+    function isPaymentParty(NahmiiTypes.Payment payment, address wallet)
+    public
+    pure
+    returns (bool)
+    {
+        return wallet == payment.sender.wallet || wallet == payment.recipient.wallet;
+    }
+
+    function isPaymentSender(NahmiiTypes.Payment payment, address wallet)
+    public
+    pure
+    returns (bool)
+    {
+        return wallet == payment.sender.wallet;
+    }
+
+    function isPaymentRecipient(NahmiiTypes.Payment payment, address wallet)
+    public
+    pure
+    returns (bool)
+    {
+        return wallet == payment.recipient.wallet;
+    }
+
+    function isTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order)
+    public
+    pure
+    returns (bool)
+    {
+        return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
+        trade.seller.order.hashes.exchange == order.seals.exchange.hash);
+    }
+
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------

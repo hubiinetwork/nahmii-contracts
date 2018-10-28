@@ -78,12 +78,12 @@ contract Validatable is Ownable {
     }
 
     modifier onlyTradeParty(NahmiiTypes.Trade trade, address wallet) {
-        require(NahmiiTypes.isTradeParty(trade, wallet));
+        require(validator.isTradeParty(trade, wallet));
         _;
     }
 
     modifier onlyPaymentSender(NahmiiTypes.Payment payment, address wallet) {
-        require(NahmiiTypes.isPaymentSender(payment, wallet));
+        require(validator.isPaymentParty(payment, wallet));
         _;
     }
 }

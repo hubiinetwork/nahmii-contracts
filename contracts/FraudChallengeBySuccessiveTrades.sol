@@ -59,8 +59,8 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challen
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(NahmiiTypes.isTradeParty(firstTrade, wallet));
-        require(NahmiiTypes.isTradeParty(lastTrade, wallet));
+        require(validator.isTradeParty(firstTrade, wallet));
+        require(validator.isTradeParty(lastTrade, wallet));
         require((currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id) ||
             (currencyCt == firstTrade.currencies.conjugate.ct && currencyId == firstTrade.currencies.conjugate.id));
         require((currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id) ||

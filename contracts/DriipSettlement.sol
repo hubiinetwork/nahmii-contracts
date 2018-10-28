@@ -192,7 +192,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             wallet = msg.sender;
 
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
-        require(NahmiiTypes.isTradeParty(trade, wallet));
+        require(validator.isTradeParty(trade, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
         // Require that the wallet's current driip settlement challenge is wrt this trade
@@ -225,7 +225,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             else
                 settlement.target.done = true;
 
-            NahmiiTypes.TradeParty memory party = NahmiiTypes.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
+            NahmiiTypes.TradeParty memory party = validator.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
 
             // If wallet has previously settled balance of the intended currency with higher driip nonce, then don't
             // settle its balance again
@@ -296,7 +296,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             wallet = msg.sender;
 
         require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
-        require(NahmiiTypes.isPaymentParty(payment, wallet));
+        require(validator.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
         // Require that the wallet's current driip settlement challenge is wrt this payment
@@ -331,7 +331,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
 
             MonetaryTypes.Figure[] memory totalFees;
             int256 currentBalance;
-            if (NahmiiTypes.isPaymentSender(payment, wallet)) {
+            if (validator.isPaymentParty(payment, wallet)) {
                 totalFees = payment.sender.fees.total;
                 currentBalance = payment.sender.balances.current;
             } else {
