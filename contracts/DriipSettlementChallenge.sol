@@ -121,7 +121,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         if (msg.sender != deployer)
             wallet = msg.sender;
 
-        require(isDeployer() || NahmiiTypes.isTradeParty(trade, wallet));
+        require(isDeployer() || validator.isTradeParty(trade, wallet));
 
         require(
             0 == walletChallengeMap[wallet].nonce ||
@@ -129,7 +129,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         );
 
         (int256 intendedBalanceAmount, int256 conjugateBalanceAmount) =
-        (NahmiiTypes.isTradeBuyer(trade, wallet) ?
+        (validator.isTradeBuyer(trade, wallet) ?
         (trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current) :
         (trade.seller.balances.intended.current, trade.seller.balances.conjugate.current));
 
@@ -170,13 +170,13 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         if (msg.sender != deployer)
             wallet = msg.sender;
 
-        require(isDeployer() || NahmiiTypes.isPaymentParty(payment, wallet));
+        require(isDeployer() || validator.isPaymentParty(payment, wallet));
 
         require(
             0 == walletChallengeMap[wallet].nonce || block.timestamp >= walletChallengeMap[wallet].timeout
         );
 
-        int256 balanceAmount = (NahmiiTypes.isPaymentSender(payment, wallet) ?
+        int256 balanceAmount = (validator.isPaymentParty(payment, wallet) ?
         payment.sender.balances.current :
         payment.recipient.balances.current);
 

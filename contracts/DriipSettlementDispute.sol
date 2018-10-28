@@ -324,7 +324,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order) {
-        require(NahmiiTypes.isTradeOrder(trade, order));
+        require(validator.isTradeOrder(trade, order));
         _;
     }
 

@@ -59,8 +59,8 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, C
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(NahmiiTypes.isTradeParty(trade, wallet));
-        require(NahmiiTypes.isPaymentParty(payment, wallet));
+        require(validator.isTradeParty(trade, wallet));
+        require(validator.isPaymentParty(payment, wallet));
         require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
         require((currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id)
             || (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id));
