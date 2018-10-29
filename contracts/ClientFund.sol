@@ -332,6 +332,18 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         // Subtract from settled, possibly also from deposited and add to staged
         walletMap[wallet].deposited.sub(walletMap[wallet].settled.get(currencyCt, currencyId) > amount ? 0 : amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)), currencyCt, currencyId);
         walletMap[wallet].settled.sub_allow_neg(walletMap[wallet].settled.get(currencyCt, currencyId) > amount ? amount : walletMap[wallet].settled.get(currencyCt, currencyId), currencyCt, currencyId);
+        walletMap[wallet].deposited.sub(
+            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
+            0 :
+            amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)),
+            currencyCt, currencyId
+        );
+        walletMap[wallet].settled.sub_allow_neg(
+            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
+            amount :
+            walletMap[wallet].settled.get(currencyCt, currencyId),
+            currencyCt, currencyId
+        );
         walletMap[wallet].staged.add(amount, currencyCt, currencyId);
 
         // Add active accumulation entry
@@ -536,8 +548,17 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         if (amount <= 0)
             return;
 
-        walletMap[sourceWallet].deposited.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ? 0 : amount.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId)), currencyCt, currencyId);
-        walletMap[sourceWallet].settled.sub_allow_neg(walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ? amount : walletMap[sourceWallet].settled.get(currencyCt, currencyId), currencyCt, currencyId);
+        walletMap[sourceWallet].deposited.sub(
+            walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ?
+            0 :
+            amount.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId)),
+            currencyCt, currencyId
+        );
+        walletMap[sourceWallet].settled.sub_allow_neg(
+            walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ?
+            amount :
+            walletMap[sourceWallet].settled.get(currencyCt, currencyId),
+            currencyCt, currencyId);
 
         transferToBeneficiaryPrivate(destWallet, beneficiary, amount, currencyCt, currencyId);
     }
