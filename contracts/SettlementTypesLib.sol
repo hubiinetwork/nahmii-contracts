@@ -9,14 +9,14 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
- * @title     SettlementTypes
+ * @title     SettlementTypesLib
  * @dev       Types for settlements
  */
-library SettlementTypes {
+library SettlementTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ library SettlementTypes {
         ProposalStatus status;
 
         // Currencies
-        MonetaryTypes.Currency[] currencies;
+        MonetaryTypesLib.Currency[] currencies;
 
         // Stage info
         int256[] stageAmounts;
@@ -43,7 +43,7 @@ library SettlementTypes {
 
         // Driip info
         //        bytes32 driipOperatorHash; // TODO Consider addition of operator hash
-        NahmiiTypes.DriipType driipType;
+        NahmiiTypesLib.DriipType driipType;
         uint256 driipIndex;
 
         // Candidate info updated when calling any of the challenge functions

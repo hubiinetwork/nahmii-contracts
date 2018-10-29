@@ -18,9 +18,9 @@ import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
-import {SettlementTypes} from "./SettlementTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
 @title NullSettlement
@@ -47,8 +47,8 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
         NullSettlementChallenge newNullSettlementChallenge);
-    event SettleNullEvent(address wallet, SettlementTypes.ProposalStatus proposalStatus);
-    event SettleNullByProxyEvent(address proxy, address wallet, SettlementTypes.ProposalStatus proposalStatus);
+    event SettleNullEvent(address wallet, SettlementTypesLib.ProposalStatus proposalStatus);
+    event SettleNullByProxyEvent(address proxy, address wallet, SettlementTypesLib.ProposalStatus proposalStatus);
 
     //
     // Constructor
@@ -132,7 +132,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     nullSettlementChallengeInitialized
     {
         // The current null settlement proposal qualified for settlement
-        if (nullSettlementChallenge.proposalStatus(wallet) == SettlementTypes.ProposalStatus.Qualified) {
+        if (nullSettlementChallenge.proposalStatus(wallet) == SettlementTypesLib.ProposalStatus.Qualified) {
 
             uint256 nonce = nullSettlementChallenge.proposalNonce(wallet);
 
@@ -149,7 +149,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
             walletCurrencyMaxNullNonce[wallet][currency.ct][currency.id] = nonce;
 
             // Get proposal's currency, target balance amount and stage amount. (Null settlement proposals only have one of each.)
-            MonetaryTypes.Currency memory currency = nullSettlementChallenge.proposalCurrency(wallet, 0);
+            MonetaryTypesLib.Currency memory currency = nullSettlementChallenge.proposalCurrency(wallet, 0);
             int256 stageAmount = nullSettlementChallenge.proposalStageAmount(wallet, currency);
             int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, currency);
 
@@ -165,7 +165,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         }
 
         // The current null settlement proposal disqualified for settlement
-        else if (nullSettlementChallenge.proposalStatus(wallet) == SettlementTypes.ProposalStatus.Disqualified) {
+        else if (nullSettlementChallenge.proposalStatus(wallet) == SettlementTypesLib.ProposalStatus.Disqualified) {
             // Add wallet to store of seized wallets
             addToSeizedWallets(wallet);
 

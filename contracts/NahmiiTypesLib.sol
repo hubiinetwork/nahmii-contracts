@@ -8,13 +8,13 @@
 
 pragma solidity ^0.4.24;
 
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
- * @title     NahmiiTypes
+ * @title     NahmiiTypesLib
  * @dev       Data types of order, trade, payment and more
  */
-library NahmiiTypes {
+library NahmiiTypesLib {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,17 +30,17 @@ library NahmiiTypes {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct IntendedConjugateCurrency {
-        MonetaryTypes.Currency intended;
-        MonetaryTypes.Currency conjugate;
+        MonetaryTypesLib.Currency intended;
+        MonetaryTypesLib.Currency conjugate;
     }
 
     struct SingleFigureTotalFigures {
-        MonetaryTypes.Figure single;
-        MonetaryTypes.Figure[] total;
+        MonetaryTypesLib.Figure single;
+        MonetaryTypesLib.Figure[] total;
     }
 
     struct TotalFigures {
-        MonetaryTypes.Figure[] total;
+        MonetaryTypesLib.Figure[] total;
     }
 
     struct CurrentPreviousInt256 {
@@ -145,7 +145,7 @@ library NahmiiTypes {
         uint256 nonce;
 
         int256 amount;
-        MonetaryTypes.Currency currency;
+        MonetaryTypesLib.Currency currency;
 
         PaymentSenderParty sender;
         PaymentRecipientParty recipient;

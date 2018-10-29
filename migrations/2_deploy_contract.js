@@ -30,7 +30,7 @@ const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
 const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByTradeOrderResiduals');
 const FraudChallengeByTradeSucceedingPayment = artifacts.require('FraudChallengeByTradeSucceedingPayment');
 const InUseCurrencyLib = artifacts.require('InUseCurrencyLib');
-const MonetaryTypes = artifacts.require('MonetaryTypes');
+const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NullSettlement = artifacts.require('NullSettlement');
 const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const NullSettlementDispute = artifacts.require('NullSettlementDispute');
@@ -39,9 +39,9 @@ const RevenueFund = artifacts.require('RevenueFund');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
-const SettlementTypes = artifacts.require('SettlementTypes');
+const SettlementTypesLib = artifacts.require('SettlementTypesLib');
 const DriipStorable = artifacts.require('DriipStorable');
-const NahmiiTypes = artifacts.require('NahmiiTypes');
+const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
@@ -83,21 +83,21 @@ module.exports = (deployer, network, accounts) => {
                 ownerAccount: ownerAccount
             };
 
-            await execDeploy(ctl, 'MonetaryTypes', '', MonetaryTypes);
+            await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
 
-            await deployer.link(MonetaryTypes, [
-                ClientFund, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, NahmiiTypes,
+            await deployer.link(MonetaryTypesLib, [
+                ClientFund, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, NahmiiTypesLib,
                 NullSettlement, TokenHolderRevenueFund, Validator
             ]);
 
             //deploy base libraries
             await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
             await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
-            await execDeploy(ctl, 'NahmiiTypes', '', NahmiiTypes);
+            await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
             await execDeploy(ctl, 'BalanceLib', '', BalanceLib);
             await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
             await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
-            await execDeploy(ctl, 'SettlementTypes', '', SettlementTypes);
+            await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
 
             //link dependencies
             await deployer.link(SafeMathIntLib, [
@@ -109,7 +109,7 @@ module.exports = (deployer, network, accounts) => {
                 CancelOrdersChallenge, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
                 NullSettlementChallenge, NullSettlementDispute, RevenueFund, TokenHolderRevenueFund, Validator
             ]);
-            await deployer.link(NahmiiTypes, [
+            await deployer.link(NahmiiTypesLib, [
                 CancelOrdersChallenge, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, FraudChallenge,
                 FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
                 FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
@@ -125,7 +125,7 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(TxHistoryLib, [
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
-            await deployer.link(SettlementTypes, [
+            await deployer.link(SettlementTypesLib, [
                 NullSettlement, NullSettlementChallenge, NullSettlementDispute
             ]);
 

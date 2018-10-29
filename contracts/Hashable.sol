@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {Hasher} from "./Hasher.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title Hashable

@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Servable} from "./Servable.sol";
 import {Ownable} from "./Ownable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title Configuration
@@ -80,10 +80,10 @@ contract Configuration is Ownable, Servable {
     uint256 public cancelOrderChallengeTimeout;
     uint256 public settlementChallengeTimeout;
 
-    MonetaryTypes.Figure public unchallengeOrderCandidateByTradeStake;
-    MonetaryTypes.Figure public falseWalletSignatureStake;
-    MonetaryTypes.Figure public duplicateDriipNonceStake;
-    MonetaryTypes.Figure public doubleSpentOrderStake;
+    MonetaryTypesLib.Figure public unchallengeOrderCandidateByTradeStake;
+    MonetaryTypesLib.Figure public falseWalletSignatureStake;
+    MonetaryTypesLib.Figure public duplicateDriipNonceStake;
+    MonetaryTypesLib.Figure public doubleSpentOrderStake;
 
     //
     // Events
@@ -436,7 +436,7 @@ contract Configuration is Ownable, Servable {
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID of currency gained (0 for ETH and ERC20)
     function setUnchallengeOrderCandidateByTradeStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
-        unchallengeOrderCandidateByTradeStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
+        unchallengeOrderCandidateByTradeStake = MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
         emit SetUnchallengeDriipSettlementOrderByTradeStakeEvent(amount, currencyCt, currencyId);
     }
 
@@ -452,7 +452,7 @@ contract Configuration is Ownable, Servable {
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID of currency gained (0 for ETH and ERC20)
     function setFalseWalletSignatureStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
-        falseWalletSignatureStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
+        falseWalletSignatureStake = MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
         emit SetFalseWalletSignatureStakeEvent(amount, currencyCt, currencyId);
     }
 
@@ -468,7 +468,7 @@ contract Configuration is Ownable, Servable {
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID of currency gained (0 for ETH and ERC20)
     function setDuplicateDriipNonceStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
-        duplicateDriipNonceStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
+        duplicateDriipNonceStake = MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
         emit SetDuplicateDriipNonceStakeEvent(amount, currencyCt, currencyId);
     }
 
@@ -484,7 +484,7 @@ contract Configuration is Ownable, Servable {
     /// @param currencyCt Contract address of currency gained (address(0) == ETH)
     /// @param currencyId ID of currency gained (0 for ETH and ERC20)
     function setDoubleSpentOrderStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
-        doubleSpentOrderStake = MonetaryTypes.Figure(amount, MonetaryTypes.Currency(currencyCt, currencyId));
+        doubleSpentOrderStake = MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
         emit SetDoubleSpentOrderStakeEvent(amount, currencyCt, currencyId);
     }
 

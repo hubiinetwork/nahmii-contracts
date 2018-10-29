@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByDuplicateDriipNonceOfTradeAndPayment
@@ -24,7 +24,7 @@ contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudC
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(NahmiiTypes.Trade trade, NahmiiTypes.Payment payment, address challenger);
+    event ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(NahmiiTypesLib.Trade trade, NahmiiTypesLib.Payment payment, address challenger);
 
     //
     // Constructor
@@ -40,8 +40,8 @@ contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudC
     /// @param trade Trade with duplicate driip nonce
     /// @param payment Payment with duplicate driip nonce
     function challenge(
-        NahmiiTypes.Trade trade,
-        NahmiiTypes.Payment payment
+        NahmiiTypesLib.Trade trade,
+        NahmiiTypesLib.Payment payment
     )
     public
     onlyOperationalModeNormal

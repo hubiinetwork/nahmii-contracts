@@ -15,9 +15,9 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
-import {SettlementTypes} from "./SettlementTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 
@@ -38,9 +38,9 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge, NullSettlementChallenge newNullSettlementChallenge);
-    event ChallengeByOrderEvent(NahmiiTypes.Order order, uint256 nonce, address challenger);
-    event ChallengeByTradeEvent(address wallet, NahmiiTypes.Trade trade, uint256 nonce, address challenger);
-    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, uint256 nonce, address challenger);
+    event ChallengeByOrderEvent(NahmiiTypesLib.Order order, uint256 nonce, address challenger);
+    event ChallengeByTradeEvent(address wallet, NahmiiTypesLib.Trade trade, uint256 nonce, address challenger);
+    event ChallengeByPaymentEvent(NahmiiTypesLib.Payment payment, uint256 nonce, address challenger);
 
     //
     // Constructor
@@ -64,7 +64,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     /// @param challenger The address of the challenger
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
-    function challengeByOrder(NahmiiTypes.Order order, address challenger)
+    function challengeByOrder(NahmiiTypesLib.Order order, address challenger)
     public
     validatorInitialized
     fraudChallengeInitialized
@@ -78,15 +78,15 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
 
         // Require that settlement challenge is ongoing
-        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
+        require(NahmiiTypesLib.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(order.wallet));
 
         // Require that order's block number is not earlier than proposal's block number
         require(order.blockNumber >= nullSettlementChallenge.proposalBlockNumber(order.wallet));
 
         // Buy order -> Conjugate currency and amount
         // Sell order -> Intended currency and amount
-        (int256 orderAmount, MonetaryTypes.Currency memory orderCurrency) =
-        (NahmiiTypes.Intention.Sell == order.placement.intention ?
+        (int256 orderAmount, MonetaryTypesLib.Currency memory orderCurrency) =
+        (NahmiiTypesLib.Intention.Sell == order.placement.intention ?
         (order.placement.amount, order.placement.currencies.intended) :
         (order.placement.amount.div(order.placement.rate), order.placement.currencies.conjugate));
 
@@ -102,8 +102,8 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.pushChallengeCandidateOrder(order);
 
         // Update settlement proposal
-        nullSettlementChallenge.setProposalStatus(order.wallet, SettlementTypes.ProposalStatus.Disqualified);
-        nullSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypes.CandidateType.Order);
+        nullSettlementChallenge.setProposalStatus(order.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
+        nullSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypesLib.CandidateType.Order);
         nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrdersCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
@@ -117,7 +117,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     /// @param challenger The address of the challenger
     /// @dev If wallet is buyer in (candidate) trade consider single _conjugate_ transfer in (candidate) trade. Else
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
-    function challengeByTrade(address wallet, NahmiiTypes.Trade trade, address challenger)
+    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade, address challenger)
     public
     validatorInitialized
     fraudChallengeInitialized
@@ -138,19 +138,19 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 
         // Require that settlement challenge is ongoing
-        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(wallet));
+        require(NahmiiTypesLib.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(wallet));
 
         // Require that trade's block number is not earlier than proposal's block number
         require(trade.blockNumber >= nullSettlementChallenge.proposalBlockNumber(wallet));
 
         // Wallet is buyer in (candidate) trade -> consider single conjugate transfer in (candidate) trade
         // Wallet is seller in (candidate) trade -> consider single intended transfer in (candidate) trade
-        NahmiiTypes.TradePartyRole tradePartyRole =
+        NahmiiTypesLib.TradePartyRole tradePartyRole =
         (trade.buyer.wallet == wallet ?
-        NahmiiTypes.TradePartyRole.Buyer :
-        NahmiiTypes.TradePartyRole.Seller);
-        (int256 singleTransfer, MonetaryTypes.Currency memory transferCurrency) =
-        (NahmiiTypes.TradePartyRole.Buyer == tradePartyRole ?
+        NahmiiTypesLib.TradePartyRole.Buyer :
+        NahmiiTypesLib.TradePartyRole.Seller);
+        (int256 singleTransfer, MonetaryTypesLib.Currency memory transferCurrency) =
+        (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ?
         (trade.transfers.conjugate.single.abs(), trade.currencies.conjugate) :
         (trade.transfers.intended.single.abs(), trade.currencies.intended));
 
@@ -166,8 +166,8 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.pushChallengeCandidateTrade(trade);
 
         // Update settlement proposal
-        nullSettlementChallenge.setProposalStatus(wallet, SettlementTypes.ProposalStatus.Disqualified);
-        nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypes.CandidateType.Trade);
+        nullSettlementChallenge.setProposalStatus(wallet, SettlementTypesLib.ProposalStatus.Disqualified);
+        nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypesLib.CandidateType.Trade);
         nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(wallet, challenger);
 
@@ -179,7 +179,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     /// @dev This challenges the payment sender's side of things
     /// @param payment The payment candidate that challenges
     /// @param challenger The address of the challenger
-    function challengeByPayment(NahmiiTypes.Payment payment, address challenger)
+    function challengeByPayment(NahmiiTypesLib.Payment payment, address challenger)
     public
     validatorInitialized
     fraudChallengeInitialized
@@ -191,7 +191,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
 
         // Require that settlement challenge is ongoing
-        require(NahmiiTypes.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(payment.sender.wallet));
+        require(NahmiiTypesLib.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(payment.sender.wallet));
 
         // Require that trade's block number is not earlier than proposal's block number
         require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(payment.sender.wallet));
@@ -208,8 +208,8 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.pushChallengeCandidatePayment(payment);
 
         // Update settlement proposal
-        nullSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypes.ProposalStatus.Disqualified);
-        nullSettlementChallenge.setProposalCandidateType(payment.sender.wallet, SettlementTypes.CandidateType.Payment);
+        nullSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
+        nullSettlementChallenge.setProposalCandidateType(payment.sender.wallet, SettlementTypesLib.CandidateType.Payment);
         nullSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, nullSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
 

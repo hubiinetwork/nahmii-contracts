@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 
 //import {ClientFund} from "../ClientFund.sol";
-import {MonetaryTypes} from "../MonetaryTypes.sol";
+import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
 /**
@@ -29,7 +29,7 @@ contract MockedClientFund /*is ClientFund*/ {
     struct WalletUpdate {
         address sourceWallet;
         address targetWallet;
-        MonetaryTypes.Figure figure;
+        MonetaryTypesLib.Figure figure;
     }
 
     struct BalanceLogEntry {
@@ -82,9 +82,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 wallet,
                 address(0),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );
@@ -110,9 +110,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 wallet,
                 address(0),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );
@@ -127,9 +127,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 sourceWallet,
                 address(beneficiary),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );

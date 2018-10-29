@@ -9,10 +9,10 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypes} from "../MonetaryTypes.sol";
-import {NahmiiTypes} from "../NahmiiTypes.sol";
+import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
-import {SettlementTypes} from "../SettlementTypes.sol";
+import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 
 /**
 @title MockedDriipSettlementChallenge
@@ -20,23 +20,23 @@ import {SettlementTypes} from "../SettlementTypes.sol";
 */
 contract MockedDriipSettlementChallenge {
 
-    NahmiiTypes.ChallengePhase public _challengePhase;
+    NahmiiTypesLib.ChallengePhase public _challengePhase;
     uint256 public _proposalNonce;
     uint256 public _proposalBlockNumber;
-    MonetaryTypes.Currency _proposalCurrency;
+    MonetaryTypesLib.Currency _proposalCurrency;
     int256 public _proposalStageAmount;
     int256 public _proposalTargetBalanceAmount;
     uint256 public _proposalTimeout;
-    SettlementTypes.ProposalStatus public _proposalStatus;
-    NahmiiTypes.DriipType public _proposalDriipType;
+    SettlementTypesLib.ProposalStatus public _proposalStatus;
+    NahmiiTypesLib.DriipType public _proposalDriipType;
     uint256 public _proposalDriipIndex;
-    SettlementTypes.CandidateType public _proposalCandidateType;
+    SettlementTypesLib.CandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
     address public _proposalChallenger;
     uint256 public _challengeCandidateOrdersCount;
     uint256 public _challengeCandidateTradesCount;
     uint256 public _challengeCandidatePaymentsCount;
-    NahmiiTypes.Order _challengeCandidateOrder;
+    NahmiiTypesLib.Order _challengeCandidateOrder;
     DriipSettlementDispute public _driipSettlementDispute;
 
     function _reset()
@@ -59,7 +59,7 @@ contract MockedDriipSettlementChallenge {
         delete _challengeCandidateOrder;
     }
 
-    function _setChallengePhase(NahmiiTypes.ChallengePhase challengePhase)
+    function _setChallengePhase(NahmiiTypesLib.ChallengePhase challengePhase)
     public
     {
         _challengePhase = challengePhase;
@@ -68,7 +68,7 @@ contract MockedDriipSettlementChallenge {
     function challengePhase(address wallet)
     public
     view
-    returns (NahmiiTypes.ChallengePhase) {
+    returns (NahmiiTypesLib.ChallengePhase) {
         require(wallet == wallet);
         return _challengePhase;
     }
@@ -103,7 +103,7 @@ contract MockedDriipSettlementChallenge {
         return _proposalBlockNumber;
     }
 
-    function _setProposalCurrency(MonetaryTypes.Currency proposalCurrency)
+    function _setProposalCurrency(MonetaryTypesLib.Currency proposalCurrency)
     public
     {
         _proposalCurrency = proposalCurrency;
@@ -112,7 +112,7 @@ contract MockedDriipSettlementChallenge {
     function proposalCurrency(address wallet, uint256 index)
     public
     view
-    returns (MonetaryTypes.Currency)
+    returns (MonetaryTypesLib.Currency)
     {
         require(wallet == wallet);
         require(index == index);
@@ -125,7 +125,7 @@ contract MockedDriipSettlementChallenge {
         _proposalStageAmount = proposalStageAmount;
     }
 
-    function proposalStageAmount(address wallet, MonetaryTypes.Currency currency)
+    function proposalStageAmount(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (int256)
@@ -141,7 +141,7 @@ contract MockedDriipSettlementChallenge {
         _proposalTargetBalanceAmount = proposalTargetBalanceAmount;
     }
 
-    function proposalTargetBalanceAmount(address wallet, MonetaryTypes.Currency currency)
+    function proposalTargetBalanceAmount(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (int256)
@@ -167,7 +167,7 @@ contract MockedDriipSettlementChallenge {
         return _proposalTimeout;
     }
 
-    function setProposalStatus(address wallet, SettlementTypes.ProposalStatus status)
+    function setProposalStatus(address wallet, SettlementTypesLib.ProposalStatus status)
     public
     {
         require(wallet == wallet);
@@ -177,13 +177,13 @@ contract MockedDriipSettlementChallenge {
     function proposalStatus(address wallet)
     public
     view
-    returns (SettlementTypes.ProposalStatus)
+    returns (SettlementTypesLib.ProposalStatus)
     {
         require(wallet == wallet);
         return _proposalStatus;
     }
 
-    function _setProposalDriipType(address wallet, NahmiiTypes.DriipType driipType)
+    function _setProposalDriipType(address wallet, NahmiiTypesLib.DriipType driipType)
     public
     {
         require(wallet == wallet);
@@ -193,7 +193,7 @@ contract MockedDriipSettlementChallenge {
     function proposalDriipType(address wallet)
     public
     view
-    returns (NahmiiTypes.DriipType)
+    returns (NahmiiTypesLib.DriipType)
     {
         require(wallet == wallet);
         return _proposalDriipType;
@@ -215,7 +215,7 @@ contract MockedDriipSettlementChallenge {
         return _proposalDriipIndex;
     }
 
-    function setProposalCandidateType(address wallet, SettlementTypes.CandidateType candidateType)
+    function setProposalCandidateType(address wallet, SettlementTypesLib.CandidateType candidateType)
     public
     {
         require(wallet == wallet);
@@ -225,7 +225,7 @@ contract MockedDriipSettlementChallenge {
     function proposalCandidateType(address wallet)
     public
     view
-    returns (SettlementTypes.CandidateType)
+    returns (SettlementTypesLib.CandidateType)
     {
         require(wallet == wallet);
         return _proposalCandidateType;
@@ -263,7 +263,7 @@ contract MockedDriipSettlementChallenge {
         return _proposalChallenger;
     }
 
-    function pushChallengeCandidateOrder(NahmiiTypes.Order order)
+    function pushChallengeCandidateOrder(NahmiiTypesLib.Order order)
     public
     {
         require(order.nonce == order.nonce);
@@ -278,7 +278,7 @@ contract MockedDriipSettlementChallenge {
         return _challengeCandidateOrdersCount;
     }
 
-    function _setChallengeCandidateOrder(NahmiiTypes.Order order)
+    function _setChallengeCandidateOrder(NahmiiTypesLib.Order order)
     public
     {
         _challengeCandidateOrder = order;
@@ -287,13 +287,13 @@ contract MockedDriipSettlementChallenge {
     function challengeCandidateOrder(uint256 index)
     public
     view
-    returns (NahmiiTypes.Order)
+    returns (NahmiiTypesLib.Order)
     {
         require(index == index);
         return _challengeCandidateOrder;
     }
 
-    function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
+    function pushChallengeCandidateTrade(NahmiiTypesLib.Trade trade)
     public
     {
         require(trade.nonce == trade.nonce);
@@ -308,7 +308,7 @@ contract MockedDriipSettlementChallenge {
         return _challengeCandidateTradesCount;
     }
 
-    function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
+    function pushChallengeCandidatePayment(NahmiiTypesLib.Payment payment)
     public
     {
         require(payment.nonce == payment.nonce);
@@ -329,25 +329,25 @@ contract MockedDriipSettlementChallenge {
         _driipSettlementDispute = driipSettlementDispute;
     }
 
-    function challengeByOrder(NahmiiTypes.Order order)
+    function challengeByOrder(NahmiiTypesLib.Order order)
     public
     {
         _driipSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
-    function unchallengeOrderCandidateByTrade(NahmiiTypes.Order order, NahmiiTypes.Trade trade)
+    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade)
     public
     {
         _driipSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
-    function challengeByTrade(address wallet, NahmiiTypes.Trade trade)
+    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade)
     public
     {
         _driipSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
-    function challengeByPayment(NahmiiTypes.Payment payment)
+    function challengeByPayment(NahmiiTypesLib.Payment payment)
     public
     {
         _driipSettlementDispute.challengeByPayment(payment, msg.sender);

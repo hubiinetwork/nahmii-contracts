@@ -16,9 +16,9 @@ import {ClientFundable} from "./ClientFundable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDispute} from "./NullSettlementDispute.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
-import {SettlementTypes} from "./SettlementTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
 @title NullSettlementChallenge
@@ -35,14 +35,14 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
 
     uint256 public nonce;
 
-    mapping(address => SettlementTypes.Proposal) public walletProposalMap;
+    mapping(address => SettlementTypesLib.Proposal) public walletProposalMap;
 
-    mapping(address => NahmiiTypes.Trade[]) public walletChallengedTradesMap;
-    mapping(address => NahmiiTypes.Payment[]) public walletChallengedPaymentsMap;
+    mapping(address => NahmiiTypesLib.Trade[]) public walletChallengedTradesMap;
+    mapping(address => NahmiiTypesLib.Payment[]) public walletChallengedPaymentsMap;
 
-    NahmiiTypes.Order[] public challengeCandidateOrders;
-    NahmiiTypes.Trade[] public challengeCandidateTrades;
-    NahmiiTypes.Payment[] public challengeCandidatePayments;
+    NahmiiTypesLib.Order[] public challengeCandidateOrders;
+    NahmiiTypesLib.Trade[] public challengeCandidateTrades;
+    NahmiiTypesLib.Payment[] public challengeCandidatePayments;
 
     //
     // Events
@@ -122,11 +122,11 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     function challengePhase(address wallet)
     public
     view
-    returns (NahmiiTypes.ChallengePhase) {
+    returns (NahmiiTypesLib.ChallengePhase) {
         if (0 < walletProposalMap[wallet].nonce && block.timestamp < walletProposalMap[wallet].timeout)
-            return NahmiiTypes.ChallengePhase.Dispute;
+            return NahmiiTypesLib.ChallengePhase.Dispute;
         else
-            return NahmiiTypes.ChallengePhase.Closed;
+            return NahmiiTypesLib.ChallengePhase.Closed;
     }
 
     /// @notice Get the settlement proposal nonce of the given wallet
@@ -168,7 +168,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     function proposalStatus(address wallet)
     public
     view
-    returns (SettlementTypes.ProposalStatus)
+    returns (SettlementTypesLib.ProposalStatus)
     {
         return walletProposalMap[wallet].status;
     }
@@ -191,7 +191,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     function proposalCurrency(address wallet, uint256 index)
     public
     view
-    returns (MonetaryTypes.Currency)
+    returns (MonetaryTypesLib.Currency)
     {
         require(index < walletProposalMap[wallet].currencies.length);
         return walletProposalMap[wallet].currencies[index];
@@ -201,7 +201,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     /// @param wallet The concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal stage amount
-    function proposalStageAmount(address wallet, MonetaryTypes.Currency currency)
+    function proposalStageAmount(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (int256)
@@ -214,7 +214,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     /// @param wallet The concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal target balance amount
-    function proposalTargetBalanceAmount(address wallet, MonetaryTypes.Currency currency)
+    function proposalTargetBalanceAmount(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (int256)
@@ -229,7 +229,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     function proposalCandidateType(address wallet)
     public
     view
-    returns (SettlementTypes.CandidateType)
+    returns (SettlementTypesLib.CandidateType)
     {
         return walletProposalMap[wallet].candidateType;
     }
@@ -260,7 +260,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     /// @dev This function can only be called by this contract's dispute instance
     /// @param wallet The concerned wallet
     /// @param status The status value
-    function setProposalStatus(address wallet, SettlementTypes.ProposalStatus status)
+    function setProposalStatus(address wallet, SettlementTypesLib.ProposalStatus status)
     public
     onlyNullSettlementDispute
     {
@@ -271,7 +271,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     /// @dev This function can only be called by this contract's dispute instance
     /// @param wallet The concerned wallet
     /// @param candidateType The candidate type value
-    function setProposalCandidateType(address wallet, SettlementTypes.CandidateType candidateType)
+    function setProposalCandidateType(address wallet, SettlementTypesLib.CandidateType candidateType)
     public
     onlyNullSettlementDispute
     {
@@ -302,7 +302,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
 
     /// @notice Challenge the settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged driip
-    function challengeByOrder(NahmiiTypes.Order order)
+    function challengeByOrder(NahmiiTypesLib.Order order)
     public
     onlyOperationalModeNormal
     {
@@ -312,7 +312,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     /// @notice Challenge the settlement by providing trade candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param trade The trade candidate that challenges the challenged driip
-    function challengeByTrade(address wallet, NahmiiTypes.Trade trade)
+    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade)
     public
     onlyOperationalModeNormal
     {
@@ -321,7 +321,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
 
     /// @notice Challenge the settlement by providing payment candidate
     /// @param payment The payment candidate that challenges the challenged driip
-    function challengeByPayment(NahmiiTypes.Payment payment)
+    function challengeByPayment(NahmiiTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
     {
@@ -341,7 +341,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     /// @notice Push to store the given challenge candidate order
     /// @dev This function can only be called by this contract's dispute instance
     /// @param order The challenge candidate order to push
-    function pushChallengeCandidateOrder(NahmiiTypes.Order order)
+    function pushChallengeCandidateOrder(NahmiiTypesLib.Order order)
     public
     onlyNullSettlementDispute
     {
@@ -361,7 +361,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     /// @notice Push to store the given challenge candidate trade
     /// @dev This function can only be called by this contract's dispute instance
     /// @param trade The challenge candidate trade to push
-    function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
+    function pushChallengeCandidateTrade(NahmiiTypesLib.Trade trade)
     public
     onlyNullSettlementDispute
     {
@@ -381,7 +381,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
     /// @notice Push to store the given challenge candidate payment
     /// @dev This function can only be called by this contract's dispute instance
     /// @param payment The challenge candidate payment to push
-    function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
+    function pushChallengeCandidatePayment(NahmiiTypesLib.Payment payment)
     public
     onlyNullSettlementDispute
     {
@@ -395,7 +395,7 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
         require(amount.isPositiveInt256());
 
         // Require that wallet has no overlap with ongoing challenge
-        require(NahmiiTypes.ChallengePhase.Closed == challengePhase(wallet));
+        require(NahmiiTypesLib.ChallengePhase.Closed == challengePhase(wallet));
 
         uint256 activeBalanceLogEntriesCount = clientFund.activeBalanceLogEntriesCount(wallet, currencyCt, currencyId);
         require(activeBalanceLogEntriesCount > 0);
@@ -408,16 +408,16 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
         walletProposalMap[wallet].nonce = ++nonce;
         walletProposalMap[wallet].blockNumber = activeBalanceBlockNumber;
         walletProposalMap[wallet].timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
-        walletProposalMap[wallet].status = SettlementTypes.ProposalStatus.Qualified;
+        walletProposalMap[wallet].status = SettlementTypesLib.ProposalStatus.Qualified;
         walletProposalMap[wallet].currencies.length = 0;
-        walletProposalMap[wallet].currencies.push(MonetaryTypes.Currency(currencyCt, currencyId));
+        walletProposalMap[wallet].currencies.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
         walletProposalMap[wallet].stageAmounts.length = 0;
         walletProposalMap[wallet].stageAmounts.push(amount);
         walletProposalMap[wallet].targetBalanceAmounts.length = 0;
         walletProposalMap[wallet].targetBalanceAmounts.push(activeBalanceAmount.sub(amount));
     }
 
-    function proposalCurrencyIndex(address wallet, MonetaryTypes.Currency currency)
+    function proposalCurrencyIndex(address wallet, MonetaryTypesLib.Currency currency)
     private
     view
     returns (uint256)

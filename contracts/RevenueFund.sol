@@ -19,7 +19,7 @@ import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title RevenueFund
@@ -131,7 +131,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
         //execute transfer
         for (currency_idx = inUsePeriodAccrual.getLength(); currency_idx > 0; currency_idx--) {
-            MonetaryTypes.Currency memory currency = inUsePeriodAccrual.getAt(currency_idx - 1);
+            MonetaryTypesLib.Currency memory currency = inUsePeriodAccrual.getAt(currency_idx - 1);
 
             remaining = periodAccrual.get(currency.ct, currency.id);
             for (idx = 0; idx < beneficiaries.length; idx++) {

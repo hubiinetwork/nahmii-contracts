@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeBySuccessiveTrades
@@ -24,7 +24,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challen
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeBySuccessiveTradesEvent(NahmiiTypes.Trade firstTrade, NahmiiTypes.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeBySuccessiveTradesEvent(NahmiiTypesLib.Trade firstTrade, NahmiiTypesLib.Trade lastTrade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -43,8 +43,8 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challen
     /// @param currencyCt Concerned currency contract address (address(0) == ETH)
     /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     function challenge(
-        NahmiiTypes.Trade firstTrade,
-        NahmiiTypes.Trade lastTrade,
+        NahmiiTypesLib.Trade firstTrade,
+        NahmiiTypesLib.Trade lastTrade,
         address wallet,
         address currencyCt,
         uint256 currencyId
@@ -66,13 +66,13 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challen
         require((currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id) ||
             (currencyCt == lastTrade.currencies.conjugate.ct && currencyId == lastTrade.currencies.conjugate.id));
 
-        NahmiiTypes.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? NahmiiTypes.TradePartyRole.Buyer : NahmiiTypes.TradePartyRole.Seller);
-        NahmiiTypes.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? NahmiiTypes.TradePartyRole.Buyer : NahmiiTypes.TradePartyRole.Seller);
+        NahmiiTypesLib.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
+        NahmiiTypesLib.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
-        NahmiiTypes.CurrencyRole firstTradeCurrencyRole = (currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id ? NahmiiTypes.CurrencyRole.Intended : NahmiiTypes.CurrencyRole.Conjugate);
-        NahmiiTypes.CurrencyRole lastTradeCurrencyRole = (currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id ? NahmiiTypes.CurrencyRole.Intended : NahmiiTypes.CurrencyRole.Conjugate);
+        NahmiiTypesLib.CurrencyRole firstTradeCurrencyRole = (currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
+        NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole = (currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
 
         require(
             !validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstTradeCurrencyRole, lastTrade, lastTradePartyRole, lastTradeCurrencyRole) ||

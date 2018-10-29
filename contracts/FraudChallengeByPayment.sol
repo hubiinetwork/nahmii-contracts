@@ -15,7 +15,7 @@ import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByPayment
@@ -25,7 +25,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Valid
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentEvent(NahmiiTypes.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByPaymentEvent(NahmiiTypesLib.Payment payment, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -38,7 +38,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Valid
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challenge(NahmiiTypes.Payment payment)
+    function challenge(NahmiiTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
     validatorInitialized

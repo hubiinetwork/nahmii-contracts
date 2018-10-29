@@ -19,7 +19,7 @@ import {RevenueToken} from "./RevenueToken.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title TokenHolderRevenueFund
@@ -60,11 +60,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     RevenueToken private revenueToken;
 
     BalanceLib.Balance periodAccrual;
-    MonetaryTypes.Currency[] periodCurrenciesList;
+    MonetaryTypesLib.Currency[] periodCurrenciesList;
     mapping(address => mapping(uint256 => bool)) periodAccrualMap;
 
     BalanceLib.Balance aggregateAccrual;
-    MonetaryTypes.Currency[] aggregateCurrenciesList;
+    MonetaryTypesLib.Currency[] aggregateCurrenciesList;
     mapping(address => mapping(uint256 => bool)) aggregateAccrualMap;
 
     mapping(address => Wallet) private walletMap;
@@ -143,12 +143,12 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         //add currency to in-use list
         if (!periodAccrualMap[currencyCt][currencyId]) {
             periodAccrualMap[currencyCt][currencyId] = true;
-            periodCurrenciesList.push(MonetaryTypes.Currency(currencyCt, currencyId));
+            periodCurrenciesList.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
         }
 
         if (!aggregateAccrualMap[currencyCt][currencyId]) {
             aggregateAccrualMap[currencyCt][currencyId] = true;
-            aggregateCurrenciesList.push(MonetaryTypes.Currency(currencyCt, currencyId));
+            aggregateCurrenciesList.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
         }
 
         //add deposit info
@@ -195,7 +195,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         //clear accruals
         len = periodCurrenciesList.length;
         for (i = 0; i < len; i++) {
-            MonetaryTypes.Currency storage currency = periodCurrenciesList[i];
+            MonetaryTypesLib.Currency storage currency = periodCurrenciesList[i];
             periodAccrual.set(0, currency.ct, currency.id);
         }
 

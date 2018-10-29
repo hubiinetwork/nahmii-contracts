@@ -20,7 +20,7 @@ import {BalanceLib} from "./BalanceLib.sol";
 import {BalanceLogLib} from "./BalanceLogLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title Client fund
@@ -429,7 +429,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         uint256 len = walletMap[sourceWallet].inUseCurrencies.getLength();
         int256 amount;
         for (uint256 i = 0; i < len; i++) {
-            MonetaryTypes.Currency memory currency = walletMap[sourceWallet].inUseCurrencies.getAt(i);
+            MonetaryTypesLib.Currency memory currency = walletMap[sourceWallet].inUseCurrencies.getAt(i);
 
             amount = sumAllBalancesOfWalletAndCurrency(sourceWallet, currency.ct, currency.id);
             assert(amount >= 0);
