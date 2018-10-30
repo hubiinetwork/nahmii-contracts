@@ -33,8 +33,8 @@ contract ClientFundable is Ownable {
     /// @notice Change the client fund contract
     /// @param newAddress The (address of) ClientFund contract instance
     function changeClientFund(ClientFund newAddress) public onlyDeployer
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, clientFund)
+    notNullAddress(newAddress)
+    notSameAddresses(newAddress, clientFund)
     {
         //set new community vote
         ClientFund oldAddress = clientFund;
