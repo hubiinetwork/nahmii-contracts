@@ -578,6 +578,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DriipSettlementChallenge')(glob);
     require('./scenarios/DriipSettlementDispute')(glob);
+    require('./scenarios/ERC20TransferController')(glob);
     require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
     require('./scenarios/FraudChallengeByTrade')(glob);
