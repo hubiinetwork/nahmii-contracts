@@ -30,7 +30,7 @@ contract ERC721TransferController is TransferController {
 
         ERC721(currencyCt).safeTransferFrom(from, to, currencyId);
 
-        //raise event
+        // Raise event
         emit CurrencyTransferred(from, to, 1, currencyCt, currencyId);
     }
 
@@ -43,14 +43,14 @@ contract ERC721TransferController is TransferController {
     }
 
     /// @notice MUST be called with DELEGATECALL
-    function send(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public {
+    function dispatch(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public {
         require(amount == 1);
         require(currencyId != 0);
 
         ERC721(currencyCt).approve(from, currencyId);
         ERC721(currencyCt).safeTransferFrom(from, to, currencyId);
 
-        //raise event
+        // Raise event
         emit CurrencyTransferred(from, to, 1, currencyCt, currencyId);
     }
 }

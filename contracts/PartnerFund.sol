@@ -278,7 +278,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         }
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
+            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
         }
 
         //raise event

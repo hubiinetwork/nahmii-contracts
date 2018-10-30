@@ -475,7 +475,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
 
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId), "uff");
+            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId), "uff");
         }
 
         // Emit event
