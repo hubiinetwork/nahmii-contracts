@@ -50,7 +50,7 @@ contract StandardTokenEx is ERC20 {
      */
     function transferFrom(address from, address to, uint value) public returns (bool success) {
         uint allowance = allowed[from][msg.sender];
-        require(value >= allowance, "value is < allowance");
+        require(value <= allowance, "value is > allowance");
 
         // Check is not needed because sub(allowance, value) will already throw if this condition is not met
         // require(value <= allowance);
