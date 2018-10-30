@@ -31,19 +31,19 @@ contract TransferController {
     function approve(address to, uint256 amount, address currencyCt, uint256 currencyId) public;
 
     /// @notice MUST be called with DELEGATECALL
-    function send(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public;
+    function dispatch(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public;
 
     //----------------------------------------
+
+    function getReceiveSignature() public pure returns (bytes4) {
+        return bytes4(keccak256("receive(address,address,uint256,address,uint256)"));
+    }
 
     function getApproveSignature() public pure returns (bytes4) {
         return bytes4(keccak256("approve(address,uint256,address,uint256)"));
     }
 
-    function getSendSignature() public pure returns (bytes4) {
-        return bytes4(keccak256("send(address,address,uint256,address,uint256)"));
-    }
-
-    function getReceiveSignature() public pure returns (bytes4) {
-        return bytes4(keccak256("receive(address,address,uint256,address,uint256)"));
+    function getDispatchSignature() public pure returns (bytes4) {
+        return bytes4(keccak256("dispatch(address,address,uint256,address,uint256)"));
     }
 }

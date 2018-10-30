@@ -216,7 +216,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         }
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(to_send_amount), currencyCt, currencyId));
+            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(to_send_amount), currencyCt, currencyId));
         }
 
         // Emit event

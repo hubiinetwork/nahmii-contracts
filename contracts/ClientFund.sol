@@ -330,8 +330,18 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
             return;
 
         // Subtract from settled, possibly also from deposited and add to staged
-        walletMap[wallet].deposited.sub(walletMap[wallet].settled.get(currencyCt, currencyId) > amount ? 0 : amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)), currencyCt, currencyId);
-        walletMap[wallet].settled.sub_allow_neg(walletMap[wallet].settled.get(currencyCt, currencyId) > amount ? amount : walletMap[wallet].settled.get(currencyCt, currencyId), currencyCt, currencyId);
+        walletMap[wallet].deposited.sub(
+            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
+            0 :
+            amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)),
+            currencyCt, currencyId
+        );
+        walletMap[wallet].settled.sub_allow_neg(
+            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
+            amount :
+            walletMap[wallet].settled.get(currencyCt, currencyId),
+            currencyCt, currencyId
+        );
         walletMap[wallet].staged.add(amount, currencyCt, currencyId);
 
         // Add active accumulation entry
@@ -395,7 +405,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
     public
-    onlyRegisteredActiveService
     notNullAddress(sourceWallet)
     notNullAddress(beneficiary)
     {
@@ -411,7 +420,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param sourceWallet The address of concerned source wallet
     /// @param targetWallet The address of concerned target wallet
     function seizeAllBalances(address sourceWallet, address targetWallet) public
-    onlyRegisteredActiveService
     notNullAddress(sourceWallet)
     notNullAddress(targetWallet)
     {
@@ -463,7 +471,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
 
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId), "uff");
+            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
         }
 
         // Emit event
@@ -512,7 +520,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The count of the concerned wallet's withdrawals in the given currency
-    function withdrawalOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
+    function withdrawalsOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
@@ -536,8 +544,17 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         if (amount <= 0)
             return;
 
-        walletMap[sourceWallet].deposited.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ? 0 : amount.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId)), currencyCt, currencyId);
-        walletMap[sourceWallet].settled.sub_allow_neg(walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ? amount : walletMap[sourceWallet].settled.get(currencyCt, currencyId), currencyCt, currencyId);
+        walletMap[sourceWallet].deposited.sub(
+            walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ?
+            0 :
+            amount.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId)),
+            currencyCt, currencyId
+        );
+        walletMap[sourceWallet].settled.sub_allow_neg(
+            walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ?
+            amount :
+            walletMap[sourceWallet].settled.get(currencyCt, currencyId),
+            currencyCt, currencyId);
 
         transferToBeneficiaryPrivate(destWallet, beneficiary, amount, currencyCt, currencyId);
     }
