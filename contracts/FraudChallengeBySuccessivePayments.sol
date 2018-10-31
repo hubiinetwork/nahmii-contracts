@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeBySuccessivePayments
@@ -24,7 +24,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Chall
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeBySuccessivePaymentsEvent(NahmiiTypes.Payment firstPayment, NahmiiTypes.Payment lastPayment, address challenger, address seizedWallet);
+    event ChallengeBySuccessivePaymentsEvent(NahmiiTypesLib.Payment firstPayment, NahmiiTypesLib.Payment lastPayment, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -41,8 +41,8 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Chall
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
     function challenge(
-        NahmiiTypes.Payment firstPayment,
-        NahmiiTypes.Payment lastPayment,
+        NahmiiTypesLib.Payment firstPayment,
+        NahmiiTypesLib.Payment lastPayment,
         address wallet
     )
     public
@@ -59,8 +59,8 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Chall
         require(validator.isPaymentParty(lastPayment, wallet));
         require(firstPayment.currency.ct == lastPayment.currency.ct && firstPayment.currency.id == lastPayment.currency.id);
 
-        NahmiiTypes.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? NahmiiTypes.PaymentPartyRole.Sender : NahmiiTypes.PaymentPartyRole.Recipient);
-        NahmiiTypes.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? NahmiiTypes.PaymentPartyRole.Sender : NahmiiTypes.PaymentPartyRole.Recipient);
+        NahmiiTypesLib.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
+        NahmiiTypesLib.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 

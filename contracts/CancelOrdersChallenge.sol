@@ -14,7 +14,7 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {Ownable} from "./Ownable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title CancelOrdersChallenge
@@ -28,15 +28,15 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => mapping(bytes32 => bool)) public walletOrderOperatorHashCancelledMap;
-    mapping(address => NahmiiTypes.Order[]) public walletOrderCancelledListMap;
+    mapping(address => NahmiiTypesLib.Order[]) public walletOrderCancelledListMap;
     mapping(address => mapping(bytes32 => uint256)) public walletOrderOperatorHashIndexMap;
     mapping(address => uint256) public walletOrderCancelledTimeoutMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CancelOrdersEvent(NahmiiTypes.Order[] orders, address wallet);
-    event ChallengeEvent(NahmiiTypes.Order order, NahmiiTypes.Trade trade, address wallet);
+    event CancelOrdersEvent(NahmiiTypesLib.Order[] orders, address wallet);
+    event ChallengeEvent(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address wallet);
 
     //
     // Constructor
@@ -52,7 +52,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     function getCancelledOrdersCount(address wallet) public view returns (uint256) {
         uint256 count = 0;
         for (uint256 i = 0; i < walletOrderCancelledListMap[wallet].length; i++) {
-            NahmiiTypes.Order storage order = walletOrderCancelledListMap[wallet][i];
+            NahmiiTypesLib.Order storage order = walletOrderCancelledListMap[wallet][i];
             if (walletOrderOperatorHashCancelledMap[wallet][order.seals.exchange.hash])
                 count++;
         }
@@ -69,12 +69,12 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     /// @notice Get 10 cancelled orders for given wallet starting at given start index
     /// @param wallet The wallet for which to return the nonces of cancelled orders
     /// @param startIndex The start index from which to extract order nonces, used for pagination
-    function getCancelledOrders(address wallet, uint256 startIndex) public view returns (NahmiiTypes.Order[10]) {
-        NahmiiTypes.Order[10] memory returnOrders;
+    function getCancelledOrders(address wallet, uint256 startIndex) public view returns (NahmiiTypesLib.Order[10]) {
+        NahmiiTypesLib.Order[10] memory returnOrders;
         uint256 i = 0;
         uint256 j = startIndex;
         while (i < 10 && j < walletOrderCancelledListMap[wallet].length) {
-            NahmiiTypes.Order storage order = walletOrderCancelledListMap[wallet][j];
+            NahmiiTypesLib.Order storage order = walletOrderCancelledListMap[wallet][j];
             if (walletOrderOperatorHashCancelledMap[wallet][order.seals.exchange.hash]) {
                 returnOrders[i] = order;
                 i++;
@@ -86,7 +86,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Cancel orders of msg.sender
     /// @param orders The orders to cancel
-    function cancelOrders(NahmiiTypes.Order[] orders)
+    function cancelOrders(NahmiiTypesLib.Order[] orders)
     public
     onlyOperationalModeNormal
     {
@@ -111,7 +111,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
     /// @param wallet The concerned wallet
-    function challenge(NahmiiTypes.Trade trade, address wallet)
+    function challenge(NahmiiTypesLib.Trade trade, address wallet)
     public
     onlyOperationalModeNormal
     onlySealedTrade(trade)
@@ -129,19 +129,19 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
         walletOrderOperatorHashCancelledMap[wallet][orderOperatorHash] = false;
 
         uint256 orderIndex = walletOrderOperatorHashIndexMap[wallet][orderOperatorHash];
-        NahmiiTypes.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
+        NahmiiTypesLib.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
 
         emit ChallengeEvent(order, trade, msg.sender);
     }
 
     /// @notice Get current phase of a wallets cancelled order challenge
     /// @param wallet The address of wallet for which the cancelled order challenge phase is returned
-    function challengePhase(address wallet) public view returns (NahmiiTypes.ChallengePhase) {
+    function challengePhase(address wallet) public view returns (NahmiiTypesLib.ChallengePhase) {
         if (0 == walletOrderCancelledListMap[wallet].length)
-            return NahmiiTypes.ChallengePhase.Closed;
+            return NahmiiTypesLib.ChallengePhase.Closed;
         if (block.timestamp < walletOrderCancelledTimeoutMap[wallet])
-            return NahmiiTypes.ChallengePhase.Dispute;
+            return NahmiiTypesLib.ChallengePhase.Dispute;
         else
-            return NahmiiTypes.ChallengePhase.Closed;
+            return NahmiiTypesLib.ChallengePhase.Closed;
     }
 }

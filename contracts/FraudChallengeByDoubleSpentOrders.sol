@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByDoubleSpentOrders
@@ -24,7 +24,7 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDoubleSpentOrdersEvent(NahmiiTypes.Trade trade1, NahmiiTypes.Trade trade2, address challenger);
+    event ChallengeByDoubleSpentOrdersEvent(NahmiiTypesLib.Trade trade1, NahmiiTypesLib.Trade trade2, address challenger);
 
     //
     // Constructor
@@ -39,7 +39,7 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
     /// trade order double spenditure
     /// @param trade1 First trade with double spent order
     /// @param trade2 Last trade with double spent order
-    function challenge(NahmiiTypes.Trade trade1, NahmiiTypes.Trade trade2)
+    function challenge(NahmiiTypesLib.Trade trade1, NahmiiTypesLib.Trade trade2)
     public
     onlyOperationalModeNormal
     validatorInitialized

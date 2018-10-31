@@ -9,31 +9,31 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
- * @title     SettlementTypes
+ * @title     SettlementTypesLib
  * @dev       Types for settlements
  */
-library SettlementTypes {
+library SettlementTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    enum ChallengeStatus {Unknown, Qualified, Disqualified}
-    enum ChallengeCandidateType {None, Order, Trade, Payment}
+    enum ProposalStatus {Unknown, Qualified, Disqualified}
+    enum CandidateType {None, Order, Trade, Payment}
     enum SettlementRole {Origin, Target}
 
     struct Proposal {
-        uint256 nonce; // TODO Consider removal of nonce in place of operato's hash
+        uint256 nonce; // TODO Consider removal of nonce in place of operator hash
         uint256 blockNumber;
         uint256 timeout;
 
         // Status
-        ChallengeStatus status;
+        ProposalStatus status;
 
         // Currencies
-        MonetaryTypes.Currency[] currencies;
+        MonetaryTypesLib.Currency[] currencies;
 
         // Stage info
         int256[] stageAmounts;
@@ -42,20 +42,15 @@ library SettlementTypes {
         int256[] targetBalanceAmounts;
 
         // Driip info
-        //        bytes32 driipOperatorHash; // TODO Add operator hash
-        NahmiiTypes.DriipType driipType;
+        //        bytes32 driipOperatorHash; // TODO Consider addition of operator hash
+        NahmiiTypesLib.DriipType driipType;
         uint256 driipIndex;
 
         // Candidate info updated when calling any of the challenge functions
-        ChallengeCandidateType candidateType;
+        CandidateType candidateType;
         uint256 candidateIndex;
 
         // Address of wallet that successfully challenged
         address challenger;
-    }
-
-    struct NullSettlement {
-        uint256 nonce;
-        address wallet;
     }
 }

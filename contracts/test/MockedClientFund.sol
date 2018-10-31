@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 
 //import {ClientFund} from "../ClientFund.sol";
-import {MonetaryTypes} from "../MonetaryTypes.sol";
+import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
 /**
@@ -29,10 +29,10 @@ contract MockedClientFund /*is ClientFund*/ {
     struct WalletUpdate {
         address sourceWallet;
         address targetWallet;
-        MonetaryTypes.Figure figure;
+        MonetaryTypesLib.Figure figure;
     }
 
-    struct AccumulationEntry {
+    struct BalanceLogEntry {
         int256 amount;
         uint256 blockNumber;
     }
@@ -43,7 +43,7 @@ contract MockedClientFund /*is ClientFund*/ {
     Seizure[] public seizures;
     WalletUpdate[] public settledBalanceUpdates;
     WalletUpdate[] public stages;
-    AccumulationEntry[] public accumulations;
+    BalanceLogEntry[] public accumulations;
 
     //
     // Events
@@ -82,9 +82,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 wallet,
                 address(0),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );
@@ -110,9 +110,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 wallet,
                 address(0),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );
@@ -127,9 +127,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 sourceWallet,
                 address(beneficiary),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );
@@ -152,7 +152,7 @@ contract MockedClientFund /*is ClientFund*/ {
         );
     }
 
-    function activeAccumulationsCount(address wallet, address currencyCt, uint256 currencyId)
+    function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
@@ -160,7 +160,7 @@ contract MockedClientFund /*is ClientFund*/ {
         return accumulations.length;
     }
 
-    function activeAccumulation(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
     public
     view
     returns (int256 amount, uint256 blockNumber)
@@ -169,9 +169,9 @@ contract MockedClientFund /*is ClientFund*/ {
         blockNumber = accumulations[accumulations.length - 1].blockNumber;
     }
 
-    function _addActiveAccumulation(int256 amount, uint256 blockNumber)
+    function _addActiveBalanceLogEntry(int256 amount, uint256 blockNumber)
     public
     {
-        accumulations.push(AccumulationEntry(amount, blockNumber));
+        accumulations.push(BalanceLogEntry(amount, blockNumber));
     }
 }

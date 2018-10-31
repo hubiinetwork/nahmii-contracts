@@ -12,11 +12,12 @@ pragma experimental ABIEncoderV2;
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
-@title MockedNullSettlementDispute
-@notice Mocked implementation of null settlement dispute contract
+@title MockedDriipSettlementDispute
+@notice Mocked implementation of driip settlement dispute contract
 */
-contract MockedNullSettlementDispute {
+contract MockedDriipSettlementDispute {
     uint256 public _challengeByOrderCount;
+    uint256 public _unchallengeOrderCandidateByTradeCount;
     uint256 public _challengeByTradeCount;
     uint256 public _challengeByPaymentCount;
 
@@ -24,6 +25,7 @@ contract MockedNullSettlementDispute {
     public
     {
         _challengeByOrderCount = 0;
+        _unchallengeOrderCandidateByTradeCount = 0;
         _challengeByTradeCount = 0;
         _challengeByPaymentCount = 0;
     }
@@ -32,6 +34,12 @@ contract MockedNullSettlementDispute {
     public
     {
         _challengeByOrderCount++;
+    }
+
+    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address challenger)
+    public
+    {
+        _unchallengeOrderCandidateByTradeCount++;
     }
 
     function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade, address challenger)

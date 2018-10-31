@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByOrder
@@ -24,7 +24,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validat
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByOrderEvent(NahmiiTypes.Order order, address challenger);
+    event ChallengeByOrderEvent(NahmiiTypesLib.Order order, address challenger);
 
     //
     // Constructor
@@ -37,7 +37,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validat
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit an order candidate in continuous Fraud Challenge (FC)
     /// @param order Fraudulent order candidate
-    function challenge(NahmiiTypes.Order order)
+    function challenge(NahmiiTypesLib.Order order)
     public
     onlyOperationalModeNormal
     validatorInitialized

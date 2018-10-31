@@ -17,10 +17,10 @@ import {Ownable} from "./Ownable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
-import {AccumulationLib} from "./AccumulationLib.sol";
+import {BalanceLogLib} from "./BalanceLogLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title Client fund
@@ -28,7 +28,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 */
 contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
-    using AccumulationLib for AccumulationLib.Accumulation;
+    using BalanceLogLib for BalanceLogLib.BalanceLog;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
     using SafeMathIntLib for int256;
@@ -40,7 +40,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         BalanceLib.Balance deposited;
         BalanceLib.Balance staged;
         BalanceLib.Balance settled;
-        AccumulationLib.Accumulation active;
+        BalanceLogLib.BalanceLog active;
 
         TxHistoryLib.TxHistory txHistory;
 
@@ -101,7 +101,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].deposited.add(amount, address(0), 0);
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
-        // Add active accumulation entry
+        // Add active balance log entry
         walletMap[wallet].active.add(
             walletMap[wallet].deposited.get(address(0), 0)
             .add(walletMap[wallet].settled.get(address(0), 0)),
@@ -146,7 +146,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
-        // Add active accumulation entry
+        // Add active balance log entry
         walletMap[wallet].active.add(
             walletMap[wallet].deposited.get(currencyCt, currencyId)
             .add(walletMap[wallet].settled.get(currencyCt, currencyId)),
@@ -263,13 +263,13 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         );
     }
 
-    /// @notice Get active accumulation of the given wallet and currency at the given index
+    /// @notice Get active balance log entry of the given wallet and currency at the given index
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param index The index of wallet's active accumulation in the given currency
-    /// @return The active accumulation of the concerned wallet and currency
-    function activeAccumulation(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    /// @param index The index of wallet's active balance log entry in the given currency
+    /// @return The active balance log entry of the concerned wallet and currency
+    function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
     public
     view
     notNullAddress(wallet)
@@ -278,12 +278,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         return walletMap[wallet].active.get(currencyCt, currencyId, index);
     }
 
-    /// @notice Get the count of the given wallet's active accumulations in the given currency
+    /// @notice Get the count of entries of the given wallet's active balance log in the given currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The count of the concerned wallet's active accumulations in the given currency
-    function activeAccumulationsCount(address wallet, address currencyCt, uint256 currencyId)
+    /// @return The count of the concerned wallet's active balance log entries in the given currency
+    function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     notNullAddress(wallet)
@@ -344,7 +344,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         );
         walletMap[wallet].staged.add(amount, currencyCt, currencyId);
 
-        // Add active accumulation entry
+        // Add active balance log entry
         walletMap[wallet].active.add(
             walletMap[wallet].deposited.get(currencyCt, currencyId)
             .add(walletMap[wallet].settled.get(currencyCt, currencyId)),
@@ -372,7 +372,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         // Move from staged balance to deposited
         walletMap[msg.sender].staged.transfer(walletMap[msg.sender].deposited, amount, currencyCt, currencyId);
 
-        // Add active accumulation entry
+        // Add active balance log entry
         walletMap[msg.sender].active.add(
             walletMap[msg.sender].deposited.get(currencyCt, currencyId)
             .add(walletMap[msg.sender].settled.get(currencyCt, currencyId)),
@@ -429,7 +429,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         uint256 len = walletMap[sourceWallet].inUseCurrencies.getLength();
         int256 amount;
         for (uint256 i = 0; i < len; i++) {
-            MonetaryTypes.Currency memory currency = walletMap[sourceWallet].inUseCurrencies.getAt(i);
+            MonetaryTypesLib.Currency memory currency = walletMap[sourceWallet].inUseCurrencies.getAt(i);
 
             amount = sumAllBalancesOfWalletAndCurrency(sourceWallet, currency.ct, currency.id);
             assert(amount >= 0);

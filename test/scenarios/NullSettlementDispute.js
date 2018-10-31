@@ -322,16 +322,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on negative proposal target balance amount', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge._setProposalTargetBalanceAmount(-10);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
-                });
-            });
-
             describe('if called on order whose amount is smaller than the proposal target balance amount', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(utils.parseUnits('10000', 18));
@@ -364,7 +354,7 @@ module.exports = (glob) => {
                     (await ethersNullSettlementChallenge._proposalStatus())
                         .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
                     (await ethersNullSettlementChallenge._proposalCandidateType())
-                        .should.equal(mocks.challengeCandidateTypes.indexOf('Order'));
+                        .should.equal(mocks.candidateTypes.indexOf('Order'));
                     (await ethersNullSettlementChallenge._proposalCandidateIndex())
                         ._bn.should.eq.BN(0);
                     (await web3NullSettlementChallenge._proposalChallenger())
@@ -397,7 +387,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -410,7 +400,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -424,7 +414,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -439,13 +429,13 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
             describe('if called from other than null settlement challenge', () => {
                 it('should revert', async () => {
-                    ethersNullSettlementDispute.challengeByTrade(trade, trade.buyer.wallet, Wallet.createRandom().address).should.be.rejected;
+                    ethersNullSettlementDispute.challengeByTrade(trade.buyer.wallet, trade, Wallet.createRandom().address).should.be.rejected;
                 });
             });
 
@@ -455,13 +445,13 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
             describe('if called with wallet that is not trade party', () => {
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, Wallet.createRandom().address).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(Wallet.createRandom().address, trade).should.be.rejected;
                 });
             });
 
@@ -471,7 +461,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -481,7 +471,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -491,7 +481,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -501,7 +491,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -511,17 +501,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
-                });
-            });
-
-            describe('if called on negative proposal target balance amount', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge._setProposalTargetBalanceAmount(-10);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -531,7 +511,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
                 });
             });
 
@@ -550,14 +530,14 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully challenge', async () => {
-                    await ethersNullSettlementChallenge.challengeByTrade(trade, trade.buyer.wallet, {gasLimit: 1e6});
+                    await ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade, {gasLimit: 1e6});
 
                     (await ethersNullSettlementChallenge._challengeCandidateTradesCount())
                         ._bn.should.eq.BN(1);
                     (await ethersNullSettlementChallenge._proposalStatus())
                         .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
                     (await ethersNullSettlementChallenge._proposalCandidateType())
-                        .should.equal(mocks.challengeCandidateTypes.indexOf('Trade'));
+                        .should.equal(mocks.candidateTypes.indexOf('Trade'));
                     (await ethersNullSettlementChallenge._proposalCandidateIndex())
                         ._bn.should.eq.BN(0);
                     (await web3NullSettlementChallenge._proposalChallenger())
@@ -589,7 +569,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
                 });
             });
 
@@ -602,7 +582,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
                 });
             });
 
@@ -616,13 +596,13 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
                 });
             });
 
             describe('if called from other than null settlement challenge', () => {
                 it('should revert', async () => {
-                    ethersNullSettlementDispute.challengeByPayment(payment, payment.sender.wallet, Wallet.createRandom().address).should.be.rejected;
+                    ethersNullSettlementDispute.challengeByPayment(payment, Wallet.createRandom().address).should.be.rejected;
                 });
             });
 
@@ -632,13 +612,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
-                });
-            });
-
-            describe('if called with wallet that is not payment sender', () => {
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, Wallet.createRandom().address).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
                 });
             });
 
@@ -648,7 +622,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
                 });
             });
 
@@ -658,7 +632,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
                 });
             });
 
@@ -668,17 +642,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
-                });
-            });
-
-            describe('if called on negative proposal target balance amount', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge._setProposalTargetBalanceAmount(-10);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
                 });
             });
 
@@ -688,7 +652,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
                 });
             });
 
@@ -707,14 +671,14 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully challenge', async () => {
-                    await ethersNullSettlementChallenge.challengeByPayment(payment, payment.sender.wallet, {gasLimit: 1e6});
+                    await ethersNullSettlementChallenge.challengeByPayment(payment, {gasLimit: 1e6});
 
                     (await ethersNullSettlementChallenge._challengeCandidatePaymentsCount())
                         ._bn.should.eq.BN(1);
                     (await ethersNullSettlementChallenge._proposalStatus())
                         .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
                     (await ethersNullSettlementChallenge._proposalCandidateType())
-                        .should.equal(mocks.challengeCandidateTypes.indexOf('Payment'));
+                        .should.equal(mocks.candidateTypes.indexOf('Payment'));
                     (await ethersNullSettlementChallenge._proposalCandidateIndex())
                         ._bn.should.eq.BN(0);
                     (await web3NullSettlementChallenge._proposalChallenger())

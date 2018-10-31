@@ -16,7 +16,7 @@ import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title PartnerFund

@@ -9,13 +9,14 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
  * @title     DriipSettlementTypes
  * @dev       Types for driip settlement challenge
  */
+// TODO Remove as it is obsoleted by SettlementTypesLib
 library DriipSettlementTypes {
     //
     // Structures
@@ -25,7 +26,7 @@ library DriipSettlementTypes {
     enum SettlementRole {Origin, Target}
 
     struct OptionalFigure {
-        MonetaryTypes.Figure figure;
+        MonetaryTypesLib.Figure figure;
         bool set;
     }
 
@@ -36,12 +37,12 @@ library DriipSettlementTypes {
 
         // Driip info
         //        bytes32 driipOperatorHash; // TODO Add operator hash
-        NahmiiTypes.DriipType driipType;
+        NahmiiTypesLib.DriipType driipType;
         uint256 driipIndex;
 
         // Stage info
-        MonetaryTypes.Figure intendedStage;
-        MonetaryTypes.Figure conjugateStage;
+        MonetaryTypesLib.Figure intendedStage;
+        MonetaryTypesLib.Figure conjugateStage;
 
         // Balances after amounts have been staged
         OptionalFigure intendedTargetBalance;

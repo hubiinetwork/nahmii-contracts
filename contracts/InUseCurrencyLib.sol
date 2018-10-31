@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 library InUseCurrencyLib {
     uint256 public constant INVALID_INDEX = 2**256 - 1;
@@ -18,7 +18,7 @@ library InUseCurrencyLib {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct InUseCurrency {
-        MonetaryTypes.Currency[] list;
+        MonetaryTypesLib.Currency[] list;
         mapping(address => mapping(uint256 => InUseCurrencyItem)) map;
         uint256 mapVersion;
     }
@@ -32,7 +32,7 @@ library InUseCurrencyLib {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function clear(InUseCurrency storage i) public {
-        MonetaryTypes.Currency[] storage _list = i.list;
+        MonetaryTypesLib.Currency[] storage _list = i.list;
         assembly {
             mstore(_list_slot, 0)
         }
@@ -43,7 +43,7 @@ library InUseCurrencyLib {
     function addItem(InUseCurrency storage i, address currencyCt, uint256 currencyId) public {
         InUseCurrencyItem storage item = i.map[currencyCt][currencyId];
         if (item.listIndex == 0 || item.version != i.mapVersion) {
-            i.list.push(MonetaryTypes.Currency(currencyCt, currencyId));
+            i.list.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
             item.listIndex = i.list.length;
             item.version = i.mapVersion;
         }
@@ -82,7 +82,7 @@ library InUseCurrencyLib {
         return i.list.length;
     }
 
-    function getAt(InUseCurrency storage i, uint256 idx) public view returns (MonetaryTypes.Currency) {
+    function getAt(InUseCurrency storage i, uint256 idx) public view returns (MonetaryTypesLib.Currency) {
         require(idx < i.list.length);
         return i.list[idx];
     }

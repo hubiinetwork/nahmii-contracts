@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByTrade
@@ -24,7 +24,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validat
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(NahmiiTypes.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(NahmiiTypesLib.Trade trade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -37,7 +37,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validat
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(NahmiiTypes.Trade trade) public
+    function challenge(NahmiiTypesLib.Trade trade) public
     onlyOperationalModeNormal
     validatorInitialized
     onlySealedTrade(trade)

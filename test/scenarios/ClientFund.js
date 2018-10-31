@@ -45,7 +45,7 @@ module.exports = function (glob) {
             web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
             ethersBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
 
-            // // Fully wire the mocked authorized service
+            // Fully wire the mocked authorized service
             await web3ClientFund.registerService(web3MockedClientFundAuthorizedService.address);
             await web3ClientFund.authorizeRegisteredService(web3MockedClientFundAuthorizedService.address, {from: glob.user_a});
             await web3MockedClientFundAuthorizedService.changeClientFund(web3ClientFund.address);
@@ -91,9 +91,9 @@ module.exports = function (glob) {
             });
         });
 
-        describe('activeAccumulationsCount()', () => {
+        describe('activeBalanceLogEntriesCount()', () => {
             it('should return initial value', async () => {
-                (await ethersClientFund.activeAccumulationsCount(Wallet.createRandom().address, mocks.address0, 0))
+                (await ethersClientFund.activeBalanceLogEntriesCount(Wallet.createRandom().address, mocks.address0, 0))
                     ._bn.should.eq.BN(0);
             });
         });
@@ -331,7 +331,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should add deposit and increment deposited balance of ', async () => {
+                    it('should add initial deposit and increment deposited balance', async () => {
                         await web3ClientFund.depositTokens(
                             10, web3ERC20.address, 0, '', {from: glob.user_a}
                         );
@@ -358,7 +358,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should add initial deposit and increment deposited balance of ', async () => {
+                    it('should add on top of the first deposit', async () => {
                         await web3ClientFund.depositTokens(
                             10, web3ERC20.address, 0, '', {from: glob.user_a}
                         );
@@ -445,7 +445,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should add initial deposit and increment deposited balance', async () => {
+                    it('should add on top of the first deposit', async () => {
                         await web3ClientFund.depositTokensTo(
                             glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
@@ -1367,10 +1367,10 @@ module.exports = function (glob) {
             });
         });
 
-        describe('activeAccumulation()', () => {
+        describe('activeBalanceLogEntry()', () => {
             describe('before first deposit', () => {
                 it('should revert', async () => {
-                    ethersClientFund.activeAccumulation(glob.user_a, mocks.address0, 0, 0).should.be.rejected;
+                    ethersClientFund.activeBalanceLogEntry(glob.user_a, mocks.address0, 0, 0).should.be.rejected;
                 });
             });
 
@@ -1384,16 +1384,16 @@ module.exports = function (glob) {
                     );
                 });
 
-                it('should successfully return withdrawal', async () => {
-                    let activeAccumulation = await ethersClientFund.activeAccumulation(glob.user_a, mocks.address0, 0, 0);
+                it('should successfully return log entry', async () => {
+                    let activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntry(glob.user_a, mocks.address0, 0, 0);
 
-                    activeAccumulation.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
-                    activeAccumulation.blockNumber.should.exist;
+                    activeBalanceLogEntry.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    activeBalanceLogEntry.blockNumber.should.exist;
 
-                    activeAccumulation = await ethersClientFund.activeAccumulation(glob.user_a, mocks.address0, 0, 1);
+                    activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntry(glob.user_a, mocks.address0, 0, 1);
 
-                    activeAccumulation.amount._bn.should.eq.BN(utils.parseEther('0.7')._bn);
-                    activeAccumulation.blockNumber.should.exist;
+                    activeBalanceLogEntry.amount._bn.should.eq.BN(utils.parseEther('0.7')._bn);
+                    activeBalanceLogEntry.blockNumber.should.exist;
                 });
             });
 
@@ -1410,16 +1410,16 @@ module.exports = function (glob) {
                     );
                 });
 
-                it('should successfully return withdrawal', async () => {
-                    let activeAccumulation = await ethersClientFund.activeAccumulation(glob.user_a, web3ERC20.address, 0, 0);
+                it('should successfully return log entry', async () => {
+                    let activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntry(glob.user_a, web3ERC20.address, 0, 0);
 
-                    activeAccumulation.amount._bn.should.eq.BN(10);
-                    activeAccumulation.blockNumber.should.exist;
+                    activeBalanceLogEntry.amount._bn.should.eq.BN(10);
+                    activeBalanceLogEntry.blockNumber.should.exist;
 
-                    activeAccumulation = await ethersClientFund.activeAccumulation(glob.user_a, web3ERC20.address, 0, 1);
+                    activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntry(glob.user_a, web3ERC20.address, 0, 1);
 
-                    activeAccumulation.amount._bn.should.eq.BN(7);
-                    activeAccumulation.blockNumber.should.exist;
+                    activeBalanceLogEntry.amount._bn.should.eq.BN(7);
+                    activeBalanceLogEntry.blockNumber.should.exist;
                 });
             });
         });

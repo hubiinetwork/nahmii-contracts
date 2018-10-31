@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {DriipStorable} from "./DriipStorable.sol";
 import {Servable} from "./Servable.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallenge
@@ -34,13 +34,13 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
     address[] public doubleSpenderWallets;
     mapping(address => bool) public doubleSpenderWalletsMap;
 
-    NahmiiTypes.Order[] public fraudulentOrders;
+    NahmiiTypesLib.Order[] public fraudulentOrders;
     mapping(bytes32 => bool) public fraudulentOrderOperatorHashMap;
 
-    NahmiiTypes.Trade[] public fraudulentTrades;
+    NahmiiTypesLib.Trade[] public fraudulentTrades;
     mapping(bytes32 => bool) public fraudulentTradeHashMap;
 
-    NahmiiTypes.Payment[] public fraudulentPayments;
+    NahmiiTypesLib.Payment[] public fraudulentPayments;
     mapping(bytes32 => bool) public fraudulentPaymentOperatorHashMap;
 
     //
@@ -48,9 +48,9 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     event AddSeizedWalletEvent(address wallet);
     event AddDoubleSpenderWalletEvent(address wallet);
-    event AddFraudulentOrderEvent(NahmiiTypes.Order order);
-    event AddFraudulentTradeEvent(NahmiiTypes.Trade trade);
-    event AddFraudulentPaymentEvent(NahmiiTypes.Payment payment);
+    event AddFraudulentOrderEvent(NahmiiTypesLib.Order order);
+    event AddFraudulentTradeEvent(NahmiiTypesLib.Trade trade);
+    event AddFraudulentPaymentEvent(NahmiiTypesLib.Payment payment);
 
     //
     // Constructor
@@ -119,7 +119,7 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
     }
 
     /// @notice Add given trade to store of fraudulent trades if not already present
-    function addFraudulentOrder(NahmiiTypes.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
+    function addFraudulentOrder(NahmiiTypesLib.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
         if (!fraudulentOrderOperatorHashMap[order.seals.exchange.hash]) {
             fraudulentOrders.push(order);
             fraudulentOrderOperatorHashMap[order.seals.exchange.hash] = true;
@@ -139,7 +139,7 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
     }
 
     /// @notice Add given order to store of fraudulent orders if not already present
-    function addFraudulentTrade(NahmiiTypes.Trade trade) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION) {
+    function addFraudulentTrade(NahmiiTypesLib.Trade trade) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION) {
         if (!fraudulentTradeHashMap[trade.seal.hash]) {
             pushMemoryTradeToStorageArray(trade, fraudulentTrades);
             fraudulentTradeHashMap[trade.seal.hash] = true;
@@ -159,7 +159,7 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
     }
 
     /// @notice Add given payment to store of fraudulent payments if not already present
-    function addFraudulentPayment(NahmiiTypes.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
+    function addFraudulentPayment(NahmiiTypesLib.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
         if (!fraudulentPaymentOperatorHashMap[payment.seals.exchange.hash]) {
             pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
             fraudulentPaymentOperatorHashMap[payment.seals.exchange.hash] = true;

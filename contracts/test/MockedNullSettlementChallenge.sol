@@ -9,9 +9,9 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypes} from "../MonetaryTypes.sol";
-import {NahmiiTypes} from "../NahmiiTypes.sol";
-import {SettlementTypes} from "../SettlementTypes.sol";
+import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
+import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 
 /**
@@ -20,14 +20,14 @@ import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 */
 contract MockedNullSettlementChallenge {
 
-    NahmiiTypes.ChallengePhase public _challengePhase;
+    NahmiiTypesLib.ChallengePhase public _challengePhase;
     uint256 public _proposalNonce;
     uint256 public _proposalBlockNumber;
-    MonetaryTypes.Currency _proposalCurrency;
+    MonetaryTypesLib.Currency _proposalCurrency;
     int256 public _proposalStageAmount;
     int256 public _proposalTargetBalanceAmount;
-    SettlementTypes.ChallengeStatus public _proposalStatus;
-    SettlementTypes.ChallengeCandidateType public _proposalCandidateType;
+    SettlementTypesLib.ProposalStatus public _proposalStatus;
+    SettlementTypesLib.CandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
     address public _proposalChallenger;
     uint256 public _challengeCandidateOrdersCount;
@@ -51,7 +51,7 @@ contract MockedNullSettlementChallenge {
         delete _challengeCandidatePaymentsCount;
     }
 
-    function _setChallengePhase(NahmiiTypes.ChallengePhase challengePhase)
+    function _setChallengePhase(NahmiiTypesLib.ChallengePhase challengePhase)
     public
     {
         _challengePhase = challengePhase;
@@ -60,7 +60,7 @@ contract MockedNullSettlementChallenge {
     function challengePhase(address wallet)
     public
     view
-    returns (NahmiiTypes.ChallengePhase) {
+    returns (NahmiiTypesLib.ChallengePhase) {
         require(wallet == wallet);
         return _challengePhase;
     }
@@ -95,7 +95,7 @@ contract MockedNullSettlementChallenge {
         return _proposalBlockNumber;
     }
 
-    function _setProposalCurrency(MonetaryTypes.Currency proposalCurrency)
+    function _setProposalCurrency(MonetaryTypesLib.Currency proposalCurrency)
     public
     {
         _proposalCurrency = proposalCurrency;
@@ -104,9 +104,10 @@ contract MockedNullSettlementChallenge {
     function proposalCurrency(address wallet, uint256 index)
     public
     view
-    returns (MonetaryTypes.Currency)
+    returns (MonetaryTypesLib.Currency)
     {
         require(wallet == wallet);
+        require(index == index);
         return _proposalCurrency;
     }
 
@@ -116,12 +117,13 @@ contract MockedNullSettlementChallenge {
         _proposalStageAmount = proposalStageAmount;
     }
 
-    function proposalStageAmount(address wallet, address currencyCt, uint256 currencyId)
+    function proposalStageAmount(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (int256)
     {
         require(wallet == wallet);
+        require(currency.ct == currency.ct);
         return _proposalStageAmount;
     }
 
@@ -131,16 +133,17 @@ contract MockedNullSettlementChallenge {
         _proposalTargetBalanceAmount = proposalTargetBalanceAmount;
     }
 
-    function proposalTargetBalanceAmount(address wallet, address currencyCt, uint256 currencyId)
+    function proposalTargetBalanceAmount(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (int256)
     {
         require(wallet == wallet);
+        require(currency.ct == currency.ct);
         return _proposalTargetBalanceAmount;
     }
 
-    function setProposalStatus(address wallet, SettlementTypes.ChallengeStatus status)
+    function setProposalStatus(address wallet, SettlementTypesLib.ProposalStatus status)
     public
     {
         require(wallet == wallet);
@@ -149,13 +152,14 @@ contract MockedNullSettlementChallenge {
 
     function proposalStatus(address wallet)
     public
-    returns (SettlementTypes.ChallengeStatus)
+    view
+    returns (SettlementTypesLib.ProposalStatus)
     {
         require(wallet == wallet);
         return _proposalStatus;
     }
 
-    function setProposalCandidateType(address wallet, SettlementTypes.ChallengeCandidateType candidateType)
+    function setProposalCandidateType(address wallet, SettlementTypesLib.CandidateType candidateType)
     public
     {
         require(wallet == wallet);
@@ -165,7 +169,7 @@ contract MockedNullSettlementChallenge {
     function proposalCandidateType(address wallet)
     public
     view
-    returns (SettlementTypes.ChallengeCandidateType)
+    returns (SettlementTypesLib.CandidateType)
     {
         require(wallet == wallet);
         return _proposalCandidateType;
@@ -203,7 +207,7 @@ contract MockedNullSettlementChallenge {
         return _proposalChallenger;
     }
 
-    function pushChallengeCandidateOrder(NahmiiTypes.Order order)
+    function pushChallengeCandidateOrder(NahmiiTypesLib.Order order)
     public
     {
         require(order.nonce == order.nonce);
@@ -218,7 +222,7 @@ contract MockedNullSettlementChallenge {
         return _challengeCandidateOrdersCount;
     }
 
-    function pushChallengeCandidateTrade(NahmiiTypes.Trade trade)
+    function pushChallengeCandidateTrade(NahmiiTypesLib.Trade trade)
     public
     {
         require(trade.nonce == trade.nonce);
@@ -233,7 +237,7 @@ contract MockedNullSettlementChallenge {
         return _challengeCandidateTradesCount;
     }
 
-    function pushChallengeCandidatePayment(NahmiiTypes.Payment payment)
+    function pushChallengeCandidatePayment(NahmiiTypesLib.Payment payment)
     public
     {
         require(payment.nonce == payment.nonce);
@@ -254,21 +258,21 @@ contract MockedNullSettlementChallenge {
         _nullSettlementDispute = nullSettlementDispute;
     }
 
-    function challengeByOrder(NahmiiTypes.Order order)
+    function challengeByOrder(NahmiiTypesLib.Order order)
     public
     {
         _nullSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
-    function challengeByTrade(NahmiiTypes.Trade trade, address wallet)
+    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade)
     public
     {
-        _nullSettlementDispute.challengeByTrade(trade, wallet, msg.sender);
+        _nullSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
-    function challengeByPayment(NahmiiTypes.Payment payment, address wallet)
+    function challengeByPayment(NahmiiTypesLib.Payment payment)
     public
     {
-        _nullSettlementDispute.challengeByPayment(payment, wallet, msg.sender);
+        _nullSettlementDispute.challengeByPayment(payment, msg.sender);
     }
 }
