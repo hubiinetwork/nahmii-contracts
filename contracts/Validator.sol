@@ -426,6 +426,15 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         return wallet == trade.seller.wallet;
     }
 
+    function isTradeOrder(NahmiiTypesLib.Trade trade, NahmiiTypesLib.Order order)
+    public
+    pure
+    returns (bool)
+    {
+        return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
+        trade.seller.order.hashes.exchange == order.seals.exchange.hash);
+    }
+
     function isPaymentParty(NahmiiTypesLib.Payment payment, address wallet)
     public
     pure
@@ -448,15 +457,6 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     returns (bool)
     {
         return wallet == payment.recipient.wallet;
-    }
-
-    function isTradeOrder(NahmiiTypesLib.Trade trade, NahmiiTypesLib.Order order)
-    public
-    pure
-    returns (bool)
-    {
-        return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
-        trade.seller.order.hashes.exchange == order.seals.exchange.hash);
     }
 
     //

@@ -264,9 +264,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if caller from sender that is not trade party', () => {
+            describe('if called from sender that is not trade party', () => {
                 beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner);
+                    await web3Validator.setTradeParty(false);
                 });
 
                 it('should revert', async () => {
@@ -340,6 +340,18 @@ module.exports = (glob) => {
                 };
             });
 
+            describe('if called from non-deployer', () => {
+                beforeEach(async () => {
+                    ethersDriipSettlementChallenge = ethersDriipSettlementChallenge.connect(glob.signer_a);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.startChallengeFromTradeByProxy(
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if validator contract is not initialized', () => {
                 beforeEach(async () => {
                     web3DriipSettlementChallenge = await DriipSettlementChallenge.new(glob.owner);
@@ -396,7 +408,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if caller from sender that is not trade party', () => {
+            describe('if called with wallet is not trade party', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.startChallengeFromTradeByProxy(
                         Wallet.createRandom().address, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current
@@ -516,9 +528,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if caller from sender that is not payment party', () => {
+            describe('if called from sender that is not payment party', () => {
                 beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner);
+                    await web3Validator.setPaymentParty(false);
                 });
 
                 it('should revert', async () => {
@@ -584,6 +596,18 @@ module.exports = (glob) => {
                 };
             });
 
+            describe('if called from non-deployer', () => {
+                beforeEach(async () => {
+                    ethersDriipSettlementChallenge = ethersDriipSettlementChallenge.connect(glob.signer_a);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.startChallengeFromPaymentByProxy(
+                        payment.sender.wallet, payment, payment.sender.balances.current
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if validator contract is not initialized', () => {
                 beforeEach(async () => {
                     web3DriipSettlementChallenge = await DriipSettlementChallenge.new(glob.owner);
@@ -632,11 +656,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if caller from sender that is not payment party', () => {
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner);
-                });
-
+            describe('if called with wallet that is not payment party', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.startChallengeFromPaymentByProxy(
                         Wallet.createRandom().address, payment, payment.sender.balances.current

@@ -15,7 +15,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe.only('ClientFund', function () {
+    describe('ClientFund', function () {
         let web3TransferControllerManager;
         let web3ERC20;
         let web3ClientFund, ethersClientFund;
@@ -331,7 +331,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should add deposit and increment deposited balance of ', async () => {
+                    it('should add initial deposit and increment deposited balance', async () => {
                         await web3ClientFund.depositTokens(
                             10, web3ERC20.address, 0, '', {from: glob.user_a}
                         );
@@ -358,7 +358,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should add initial deposit and increment deposited balance of ', async () => {
+                    it('should add on top of the first deposit', async () => {
                         await web3ClientFund.depositTokens(
                             10, web3ERC20.address, 0, '', {from: glob.user_a}
                         );
@@ -445,7 +445,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should add initial deposit and increment deposited balance', async () => {
+                    it('should add on top of the first deposit', async () => {
                         await web3ClientFund.depositTokensTo(
                             glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
@@ -1384,7 +1384,7 @@ module.exports = function (glob) {
                     );
                 });
 
-                it('should successfully return withdrawal', async () => {
+                it('should successfully return log entry', async () => {
                     let activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntry(glob.user_a, mocks.address0, 0, 0);
 
                     activeBalanceLogEntry.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
@@ -1410,7 +1410,7 @@ module.exports = function (glob) {
                     );
                 });
 
-                it('should successfully return withdrawal', async () => {
+                it('should successfully return log entry', async () => {
                     let activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntry(glob.user_a, web3ERC20.address, 0, 0);
 
                     activeBalanceLogEntry.amount._bn.should.eq.BN(10);
