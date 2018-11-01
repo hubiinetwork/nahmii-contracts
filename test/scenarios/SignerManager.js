@@ -74,7 +74,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if called with zero address', () => {
+            describe('if called with null address', () => {
                 it('should revert', async () => {
                     web3SignerManager.registerSigner(mocks.address0).should.be.rejected;
                 });

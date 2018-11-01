@@ -238,14 +238,24 @@ module.exports = (deployer, network, accounts) => {
             instance = await ClientFund.at(addressStorage.get('ClientFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerService(addressStorage.get('DriipSettlement'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('DriipSettlement'));
             tx = await instance.registerService(addressStorage.get('NullSettlement'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('NullSettlement'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeByPayment'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeBySuccessivePayments'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeByTrade'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+            tx = await instance.disableInitialServiceAuthorization();
             tx = await instance.registerBeneficiary(addressStorage.get('PaymentsRevenueFund'));
             tx = await instance.registerBeneficiary(addressStorage.get('TradesRevenueFund'));
             // TODO Whitelist all ClientFundable contracts in ClientFund

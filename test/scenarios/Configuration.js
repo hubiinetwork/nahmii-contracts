@@ -421,7 +421,7 @@ module.exports = (glob) => {
         });
 
         describe('setTradeMakerMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.tradeMakerMinimumFee++;
@@ -466,7 +466,7 @@ module.exports = (glob) => {
         });
 
         describe('setTradeTakerMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.tradeTakerMinimumFee++;
@@ -512,7 +512,7 @@ module.exports = (glob) => {
         });
 
         describe('setPaymentMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.paymentMininumFee++;
@@ -586,7 +586,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberAhead, 1e18);
 
@@ -632,7 +632,7 @@ module.exports = (glob) => {
         });
 
         describe('setCancelOrderChallengeTimeout()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValue;
 
                 before(async () => {
@@ -667,7 +667,7 @@ module.exports = (glob) => {
         });
 
         describe('setSettlementChallengeTimeout()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValue;
 
                 before(async () => {
@@ -712,7 +712,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValues;
 
                 before(async () => {
@@ -761,7 +761,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValues;
 
                 before(async () => {
@@ -810,7 +810,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValues;
 
                 before(async () => {
@@ -859,7 +859,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValues;
 
                 before(async () => {

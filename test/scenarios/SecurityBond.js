@@ -70,7 +70,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with zero address", async() => {
+        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with null address", async() => {
             try {
                 await glob.web3SecurityBond.depositTokens(5, 0, 0, "", { from: glob.user_a });
                 assert(false, 'This test must fail.');

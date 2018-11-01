@@ -400,17 +400,6 @@ module.exports = (glob) => {
                 });
             });
 
-            // TODO Remove
-            // describe('if called on order whose block number is lower than the one of the proposal', () => {
-            //     beforeEach(async () => {
-            //         await web3DriipSettlementChallenge._setProposalBlockNumber(1e6);
-            //     });
-            //
-            //     it('should revert', async () => {
-            //         ethersDriipSettlementChallenge.challengeByOrder(order).should.be.rejected;
-            //     });
-            // });
-
             describe('if called on order whose amount is smaller than the proposal target balance amount', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalTargetBalanceAmount(
