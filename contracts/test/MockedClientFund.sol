@@ -43,7 +43,7 @@ contract MockedClientFund /*is ClientFund*/ {
     Seizure[] public seizures;
     WalletUpdate[] public settledBalanceUpdates;
     WalletUpdate[] public stages;
-    BalanceLogEntry[] public accumulations;
+    BalanceLogEntry[] public activeBalanceLogEntries;
 
     //
     // Events
@@ -65,7 +65,7 @@ contract MockedClientFund /*is ClientFund*/ {
         seizures.length = 0;
         settledBalanceUpdates.length = 0;
         stages.length = 0;
-        accumulations.length = 0;
+        activeBalanceLogEntries.length = 0;
     }
 
     function seizeAllBalances(address sourceWallet, address targetWallet)
@@ -157,7 +157,7 @@ contract MockedClientFund /*is ClientFund*/ {
     view
     returns (uint256)
     {
-        return accumulations.length;
+        return activeBalanceLogEntries.length;
     }
 
     function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
@@ -165,13 +165,13 @@ contract MockedClientFund /*is ClientFund*/ {
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        amount = accumulations[accumulations.length - 1].amount;
-        blockNumber = accumulations[accumulations.length - 1].blockNumber;
+        amount = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].amount;
+        blockNumber = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].blockNumber;
     }
 
     function _addActiveBalanceLogEntry(int256 amount, uint256 blockNumber)
     public
     {
-        accumulations.push(BalanceLogEntry(amount, blockNumber));
+        activeBalanceLogEntries.push(BalanceLogEntry(amount, blockNumber));
     }
 }

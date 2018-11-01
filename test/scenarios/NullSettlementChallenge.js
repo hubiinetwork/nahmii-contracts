@@ -162,6 +162,10 @@ module.exports = (glob) => {
         });
 
         describe('startChallenge()', () => {
+            beforeEach(async () => {
+                await web3ClientFund.reset();
+            });
+
             describe('if configuration contract is not initialized', () => {
                 beforeEach(async () => {
                     web3NullSettlementChallenge = await NullSettlementChallenge.new(glob.owner);
@@ -179,10 +183,6 @@ module.exports = (glob) => {
             });
 
             describe('if wallet has never deposited into client fund', () => {
-                beforeEach(async () => {
-                    await web3ClientFund.reset.call();
-                });
-
                 it('should revert', async () => {
                     web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0).should.be.rejected;
                 });
@@ -190,7 +190,6 @@ module.exports = (glob) => {
 
             describe('if amount to be staged is greater than active balance in client fund', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(1, 1)
                 });
 
@@ -203,7 +202,6 @@ module.exports = (glob) => {
                 let topic, filter;
 
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     topic = ethersNullSettlementChallenge.interface.events['StartChallengeEvent'].topics[0];
@@ -214,12 +212,9 @@ module.exports = (glob) => {
                 });
 
                 it('should start challenge successfully', async () => {
-                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
-                        from: glob.user_b,
-                        gas: 1e6
-                    });
+                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 1e6});
 
-                    const proposal = await ethersNullSettlementChallenge.walletProposalMap(glob.user_b);
+                    const proposal = await ethersNullSettlementChallenge.walletProposalMap(glob.owner);
                     proposal.nonce._bn.should.eq.BN(1);
                     proposal.blockNumber._bn.should.eq.BN(1);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -237,17 +232,107 @@ module.exports = (glob) => {
 
             describe('if called before an ongoing settlement challenge has expired', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
-                        from: glob.user_c,
-                        gas: 1e6
-                    });
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+
+                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 1e6});
                 });
 
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
-                        from: glob.user_c,
-                        gas: 1e6
-                    }).should.be.rejected;
+                    web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 1e6})
+                        .should.be.rejected;
+                });
+            });
+        });
+
+        describe('startChallengeByProxy()', () => {
+            let wallet;
+
+            beforeEach(async () => {
+                wallet = Wallet.createRandom().address;
+
+                await web3ClientFund.reset();
+            });
+
+            describe('if called from non-deployer', () => {
+                it('should revert', async () => {
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if configuration contract is not initialized', () => {
+                beforeEach(async () => {
+                    web3NullSettlementChallenge = await NullSettlementChallenge.new(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('if amount to be staged is negative', () => {
+                it('should revert', async () => {
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, -1, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('if wallet has never deposited into client fund', () => {
+                it('should revert', async () => {
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('if amount to be staged is greater than active balance in client fund', () => {
+                beforeEach(async () => {
+                    await web3ClientFund._addActiveBalanceLogEntry(1, 1)
+                });
+
+                it('should revert', async () => {
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 10, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let topic, filter;
+
+                beforeEach(async () => {
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+
+                    topic = ethersNullSettlementChallenge.interface.events['StartChallengeByProxyEvent'].topics[0];
+                    filter = {
+                        fromBlock: blockNumber0,
+                        topics: [topic]
+                    };
+                });
+
+                it('should start challenge successfully', async () => {
+                    await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 1e6});
+
+                    const proposal = await ethersNullSettlementChallenge.walletProposalMap(wallet);
+                    proposal.nonce._bn.should.eq.BN(1);
+                    proposal.blockNumber._bn.should.eq.BN(1);
+                    proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.driipIndex._bn.should.eq.BN(0);
+                    proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
+                    proposal.candidateIndex._bn.should.eq.BN(0);
+
+                    (await ethersNullSettlementChallenge.nonce())
+                        ._bn.should.eq.BN(1);
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
+
+            describe('if called before an ongoing settlement challenge has expired', () => {
+                beforeEach(async () => {
+                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+
+                    await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 1e6});
+                });
+
+                it('should revert', async () => {
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 1e6})
+                        .should.be.rejected;
                 });
             });
         });

@@ -18,10 +18,11 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => bool) internal doubleSpenderWalletsMap;
-    uint256 internal maxDriipNonce;
-    uint256 internal maxNullNonce;
-    bool internal dataAvailable;
+    bool[] public doubleSpenderWalletStats;
+    uint256 public doubleSpenderWalletStatsIndex;
+    uint256 public maxDriipNonce;
+    uint256 public maxNullNonce;
+    bool public dataAvailable;
 
     //
     // Constructor
@@ -37,14 +38,18 @@ contract MockedCommunityVote /* is CommunityVote*/ {
         maxDriipNonce = 0;
         maxNullNonce = 0;
         dataAvailable = true;
+        doubleSpenderWalletStats.length = 0;
+        doubleSpenderWalletStatsIndex = 0;
     }
 
-    function setDoubleSpenderWallet(address wallet, bool doubleSpender) public returns (address[3]) {
-        doubleSpenderWalletsMap[wallet] = doubleSpender;
+    function addDoubleSpenderWallet(bool doubleSpender) public returns (address[3]) {
+        doubleSpenderWalletStats.push(doubleSpender);
     }
 
     function isDoubleSpenderWallet(address wallet) public view returns (bool) {
-        return doubleSpenderWalletsMap[wallet];
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        return doubleSpenderWalletStats.length == 0 ? false : doubleSpenderWalletStats[doubleSpenderWalletStatsIndex++];
     }
 
     function setMaxDriipNonce(uint256 _maxDriipNonce) public returns (uint256) {
