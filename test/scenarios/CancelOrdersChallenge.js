@@ -261,7 +261,7 @@ module.exports = (glob) => {
                                 order: {
                                     hashes: {
                                         wallet: order.seals.wallet.hash,
-                                        exchange: order.seals.exchange.hash
+                                        operator: order.seals.operator.hash
                                     }
                                 }
                             },
@@ -292,7 +292,7 @@ module.exports = (glob) => {
                                 order: {
                                     hashes: {
                                         wallet: order.seals.wallet.hash,
-                                        exchange: order.seals.exchange.hash
+                                        operator: order.seals.operator.hash
                                     }
                                 }
                             }

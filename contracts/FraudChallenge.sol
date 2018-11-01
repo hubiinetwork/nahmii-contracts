@@ -120,9 +120,9 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
 
     /// @notice Add given trade to store of fraudulent trades if not already present
     function addFraudulentOrder(NahmiiTypesLib.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
-        if (!fraudulentOrderOperatorHashMap[order.seals.exchange.hash]) {
+        if (!fraudulentOrderOperatorHashMap[order.seals.operator.hash]) {
             fraudulentOrders.push(order);
-            fraudulentOrderOperatorHashMap[order.seals.exchange.hash] = true;
+            fraudulentOrderOperatorHashMap[order.seals.operator.hash] = true;
             emit AddFraudulentOrderEvent(order);
         }
     }
@@ -160,9 +160,9 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
 
     /// @notice Add given payment to store of fraudulent payments if not already present
     function addFraudulentPayment(NahmiiTypesLib.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
-        if (!fraudulentPaymentOperatorHashMap[payment.seals.exchange.hash]) {
+        if (!fraudulentPaymentOperatorHashMap[payment.seals.operator.hash]) {
             pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
-            fraudulentPaymentOperatorHashMap[payment.seals.exchange.hash] = true;
+            fraudulentPaymentOperatorHashMap[payment.seals.operator.hash] = true;
             emit AddFraudulentPaymentEvent(payment);
         }
     }

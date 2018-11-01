@@ -92,7 +92,7 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     }
 
     function isGenuineOrderOperatorHash(NahmiiTypesLib.Order order) public view returns (bool) {
-        return hasher.hashOrderAsOperator(order) == order.seals.exchange.hash;
+        return hasher.hashOrderAsOperator(order) == order.seals.operator.hash;
     }
 
     function isGenuineOperatorSignature(bytes32 hash, NahmiiTypesLib.Signature signature)
@@ -118,7 +118,7 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
 
     function isGenuineOrderOperatorSeal(NahmiiTypesLib.Order order) public view returns (bool) {
         return isGenuineOrderOperatorHash(order)
-        && isGenuineOperatorSignature(order.seals.exchange.hash, order.seals.exchange.signature);
+        && isGenuineOperatorSignature(order.seals.operator.hash, order.seals.operator.signature);
     }
 
     function isGenuineOrderSeals(NahmiiTypesLib.Order order) public view returns (bool) {
@@ -139,7 +139,7 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     }
 
     function isGenuinePaymentOperatorHash(NahmiiTypesLib.Payment payment) public view returns (bool) {
-        return hasher.hashPaymentAsOperator(payment) == payment.seals.exchange.hash;
+        return hasher.hashPaymentAsOperator(payment) == payment.seals.operator.hash;
     }
 
     function isGenuinePaymentWalletSeal(NahmiiTypesLib.Payment payment) public view returns (bool) {
@@ -149,7 +149,7 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     
     function isGenuinePaymentOperatorSeal(NahmiiTypesLib.Payment payment) public view returns (bool) {
         return isGenuinePaymentOperatorHash(payment)
-        && isGenuineOperatorSignature(payment.seals.exchange.hash, payment.seals.exchange.signature);
+        && isGenuineOperatorSignature(payment.seals.operator.hash, payment.seals.operator.signature);
     }
 
     function isGenuinePaymentSeals(NahmiiTypesLib.Payment payment) public view returns (bool) {
@@ -431,8 +431,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
-        trade.seller.order.hashes.exchange == order.seals.exchange.hash);
+        return (trade.buyer.order.hashes.operator == order.seals.operator.hash ||
+        trade.seller.order.hashes.operator == order.seals.operator.hash);
     }
 
     function isPaymentParty(NahmiiTypesLib.Payment payment, address wallet)

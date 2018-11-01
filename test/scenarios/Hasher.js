@@ -46,7 +46,7 @@ module.exports = function (glob) {
 
             it('should calculate identical hash', async () => {
                 const result = await ethersHasher.hashPaymentAsOperator(payment);
-                result.should.equal(payment.seals.exchange.hash);
+                result.should.equal(payment.seals.operator.hash);
             });
         });
 
@@ -72,7 +72,7 @@ module.exports = function (glob) {
 
             it('should calculate identical hash', async () => {
                 const result = await ethersHasher.hashOrderAsOperator(order);
-                result.should.equal(order.seals.exchange.hash);
+                result.should.equal(order.seals.operator.hash);
             });
         });
     });

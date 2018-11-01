@@ -1690,7 +1690,7 @@ module.exports = function (glob) {
         //     describe('if operator hash differs from calculated', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-        //             payment.seals.exchange.hash = utils.id('some non-existent hash');
+        //             payment.seals.operator.hash = utils.id('some non-existent hash');
         //         });
         //
         //         it('should revert', async () => {
@@ -1701,7 +1701,7 @@ module.exports = function (glob) {
         //     describe('if not signed by operator', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-        //             payment.seals.exchange.signature = payment.seals.wallet.signature;
+        //             payment.seals.operator.signature = payment.seals.wallet.signature;
         //         });
         //
         //         it('should revert', async () => {
@@ -1714,9 +1714,9 @@ module.exports = function (glob) {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             const signAsWallet = mocks.createWeb3Signer(glob.user_a);
         //             payment.seals.wallet.signature = await signAsWallet(payment.seals.wallet.hash);
-        //             payment.seals.exchange.hash = mocks.hashPaymentAsOperator(payment);
+        //             payment.seals.operator.hash = mocks.hashPaymentAsOperator(payment);
         //             const signAsDriipSettlement = mocks.createWeb3Signer(glob.owner);
-        //             payment.seals.exchange.signature = await signAsDriipSettlement(payment.seals.exchange.hash);
+        //             payment.seals.operator.signature = await signAsDriipSettlement(payment.seals.operator.hash);
         //         });
         //
         //         it('should record fraudulent payment, toggle operational mode and emit event', async () => {
@@ -3573,7 +3573,7 @@ module.exports = function (glob) {
         //                     order: {
         //                         amount: utils.parseUnits('1000', 18),
         //                         hashes: {
-        //                             exchange: firstTrade.buyer.order.hashes.exchange // <---- modified ----
+        //                             operator: firstTrade.buyer.order.hashes.operator // <---- modified ----
         //                         },
         //                         residuals: {
         //                             current: utils.parseUnits('300', 18),
@@ -3691,7 +3691,7 @@ module.exports = function (glob) {
         //                     order: {
         //                         amount: utils.parseUnits('1000', 18),
         //                         hashes: {
-        //                             exchange: firstTrade.seller.order.hashes.exchange // <---- modified ----
+        //                             operator: firstTrade.seller.order.hashes.operator // <---- modified ----
         //                         },
         //                         residuals: {
         //                             current: utils.parseUnits('500', 18),

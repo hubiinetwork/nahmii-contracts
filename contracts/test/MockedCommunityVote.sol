@@ -46,7 +46,7 @@ contract MockedCommunityVote /* is CommunityVote*/ {
         doubleSpenderWalletStats.push(doubleSpender);
     }
 
-    function isDoubleSpenderWallet(address wallet) public view returns (bool) {
+    function isDoubleSpenderWallet(address wallet) public returns (bool) {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return doubleSpenderWalletStats.length == 0 ? false : doubleSpenderWalletStats[doubleSpenderWalletStatsIndex++];

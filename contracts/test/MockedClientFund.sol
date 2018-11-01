@@ -157,6 +157,10 @@ contract MockedClientFund /*is ClientFund*/ {
     view
     returns (uint256)
     {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         return activeBalanceLogEntries.length;
     }
 
@@ -165,6 +169,11 @@ contract MockedClientFund /*is ClientFund*/ {
     view
     returns (int256 amount, uint256 blockNumber)
     {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        require(index == index);
         amount = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].amount;
         blockNumber = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].blockNumber;
     }

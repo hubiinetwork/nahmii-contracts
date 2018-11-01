@@ -294,7 +294,7 @@ module.exports = (glob) => {
 
             describe('if called with cancelled order', () => {
                 beforeEach(async () => {
-                    await web3CancelOrdersChallenge.cancelOrdersByHash([order.seals.exchange.hash]);
+                    await web3CancelOrdersChallenge.cancelOrdersByHash([order.seals.operator.hash]);
                 });
 
                 it('should revert', async () => {
@@ -477,7 +477,7 @@ module.exports = (glob) => {
 
             describe('if called with cancelled order', () => {
                 beforeEach(async () => {
-                    await web3CancelOrdersChallenge.cancelOrdersByHash([trade.buyer.order.hashes.exchange]);
+                    await web3CancelOrdersChallenge.cancelOrdersByHash([trade.buyer.order.hashes.operator]);
                 });
 
                 it('should revert', async () => {

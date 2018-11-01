@@ -50,8 +50,8 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
         require(fraudChallenge != address(0));
         require(securityBond != address(0));
 
-        bool doubleSpentBuyOrder = trade1.buyer.order.hashes.exchange == trade2.buyer.order.hashes.exchange;
-        bool doubleSpentSellOrder = trade1.seller.order.hashes.exchange == trade2.seller.order.hashes.exchange;
+        bool doubleSpentBuyOrder = trade1.buyer.order.hashes.operator == trade2.buyer.order.hashes.operator;
+        bool doubleSpentSellOrder = trade1.seller.order.hashes.operator == trade2.seller.order.hashes.operator;
 
         require(doubleSpentBuyOrder || doubleSpentSellOrder);
 

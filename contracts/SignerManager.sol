@@ -18,7 +18,7 @@ contract SignerManager is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => bool) public signersMap;
+    mapping(address => uint256) public signerIndicesMap; // 1 based internally
     address[] public signers;
 
     //
@@ -36,37 +36,65 @@ contract SignerManager is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Gauge whether an address is registered signer
+    /// @param _address The concerned address
+    /// @return true if address is registered signer, else false
+    function isSigner(address _address)
+    public
+    view
+    returns (bool)
+    {
+        return 0 < signerIndicesMap[_address];
+    }
+
+    /// @notice Get the count of registered signers
+    /// @return The count of registered signers
+    function signersCount()
+    public
+    view
+    returns (uint256)
+    {
+        return signers.length;
+    }
+
+    /// @notice Get the 0 based index of the given address in the list of signers
+    /// @param _address The concerned address
+    /// @return The index of the signer address
+    function signerIndex(address _address)
+    public
+    view
+    returns (uint256)
+    {
+        require(isSigner(_address));
+        return signerIndicesMap[_address] - 1;
+    }
+
     /// @notice Registers a signer
     /// @param newSigner The address of the signer to register
-    function registerSigner(address newSigner) public onlyDeployer notNullOrThisAddress(newSigner) {
-        if (!signersMap[newSigner]) {
+    function registerSigner(address newSigner)
+    public
+    onlyDeployer
+    notNullOrThisAddress(newSigner)
+    {
+        if (0 == signerIndicesMap[newSigner]) {
             // Set new operator
-            signersMap[newSigner] = true;
             signers.push(newSigner);
+            signerIndicesMap[newSigner] = signers.length;
 
             // Emit event
             emit RegisterSignerEvent(newSigner);
         }
     }
 
-    /// @notice Gauge whether an address is registered signer
-    /// @param _address The concerned address
-    /// @return true if address is registered signer, else false
-    function isSigner(address _address) public view returns (bool) {
-        return signersMap[_address];
-    }
-
-    /// @notice Get the count of registered signers
-    /// @return The count of registered signers
-    function signersCount() public view returns (uint256) {
-        return signers.length;
-    }
-
-    /// @notice Get a subset of registered signers in the given index range
+    /// @notice Get a subset of registered signers in the given 0 based index range
     /// @param low The lower inclusive index
     /// @param up The upper inclusive index
     /// @return The subset of registered signers
-    function signersByIndices(uint256 low, uint256 up) public view returns (address[]) {
+    function signersByIndices(uint256 low, uint256 up)
+    public
+    view
+    returns (address[])
+    {
         require(low <= up);
 
         low = low < 0 ? 0 : low;

@@ -53,7 +53,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
         uint256 count = 0;
         for (uint256 i = 0; i < walletOrderCancelledListMap[wallet].length; i++) {
             NahmiiTypesLib.Order storage order = walletOrderCancelledListMap[wallet][i];
-            if (walletOrderOperatorHashCancelledMap[wallet][order.seals.exchange.hash])
+            if (walletOrderOperatorHashCancelledMap[wallet][order.seals.operator.hash])
                 count++;
         }
         return count;
@@ -75,7 +75,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
         uint256 j = startIndex;
         while (i < 10 && j < walletOrderCancelledListMap[wallet].length) {
             NahmiiTypesLib.Order storage order = walletOrderCancelledListMap[wallet][j];
-            if (walletOrderOperatorHashCancelledMap[wallet][order.seals.exchange.hash]) {
+            if (walletOrderOperatorHashCancelledMap[wallet][order.seals.operator.hash]) {
                 returnOrders[i] = order;
                 i++;
             }
@@ -98,9 +98,9 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
         }
 
         for (uint256 j = 0; j < orders.length; j++) {
-            walletOrderOperatorHashCancelledMap[msg.sender][orders[j].seals.exchange.hash] = true;
+            walletOrderOperatorHashCancelledMap[msg.sender][orders[j].seals.operator.hash] = true;
             walletOrderCancelledListMap[msg.sender].push(orders[j]);
-            walletOrderOperatorHashIndexMap[msg.sender][orders[j].seals.exchange.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
+            walletOrderOperatorHashIndexMap[msg.sender][orders[j].seals.operator.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
         }
 
         walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
@@ -120,8 +120,8 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
         bytes32 orderOperatorHash = (
         wallet == trade.buyer.wallet ?
-        trade.buyer.order.hashes.exchange :
-        trade.seller.order.hashes.exchange
+        trade.buyer.order.hashes.operator :
+        trade.seller.order.hashes.operator
         );
 
         require(walletOrderOperatorHashCancelledMap[wallet][orderOperatorHash]);

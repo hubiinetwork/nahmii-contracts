@@ -47,8 +47,8 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
 
     function cancelOrders(NahmiiTypesLib.Order[] orders) public {
         for (uint256 i = 0; i < orders.length; i++) {
-            cancelledOrderHashes.push(orders[i].seals.exchange.hash);
-            orderHashCancelledMap[orders[i].seals.exchange.hash] = true;
+            cancelledOrderHashes.push(orders[i].seals.operator.hash);
+            orderHashCancelledMap[orders[i].seals.operator.hash] = true;
         }
 
         emit CancelOrdersEvent(orders, msg.sender);

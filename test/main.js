@@ -598,6 +598,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/Servable')(glob);
+    require('./scenarios/SignerManager')(glob);
     require('./scenarios/AuthorizableServable')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);
     require('./scenarios/PartnerFund')(glob);
