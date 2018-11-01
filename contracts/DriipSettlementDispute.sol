@@ -86,8 +86,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(SettlementTypesLib.ProposalStatus.Disqualified != driipSettlementChallenge.proposalStatus(order.wallet));
 
         // Require that order candidate is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.exchange.hash));
-        require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.operator.hash));
+        require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash));
 
         // Buy order -> Conjugate currency and amount
         // Sell order -> Intended currency and amount
@@ -185,7 +185,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(SettlementTypesLib.ProposalStatus.Disqualified != driipSettlementChallenge.proposalStatus(payment.sender.wallet));
 
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.operator.hash));
 
         // Require that payment's block number is not earlier than proposal's block number
         require(payment.blockNumber >= driipSettlementChallenge.proposalBlockNumber(payment.sender.wallet));
@@ -226,21 +226,21 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
         // Require that trade candidate's order is not labelled fraudulent
         require(!fraudChallenge.isFraudulentOrderOperatorHash(trade.buyer.wallet == order.wallet ?
-            trade.buyer.order.hashes.exchange :
-            trade.seller.order.hashes.exchange));
+            trade.buyer.order.hashes.operator :
+            trade.seller.order.hashes.operator));
 
         // Get challenge and require that its operator hash matches the one of order
         NahmiiTypesLib.Order memory candidateOrder = driipSettlementChallenge.challengeCandidateOrder(
             driipSettlementChallenge.proposalCandidateIndex(order.wallet)
         );
-        require(candidateOrder.seals.exchange.hash == order.seals.exchange.hash);
+        require(candidateOrder.seals.operator.hash == order.seals.operator.hash);
 
-        // Order wallet is buyer -> require candidate order exchange hash to match buyer's order exchange hash
-        // Order wallet is seller -> require candidate order exchange hash to match seller's order exchange hash
-        require(candidateOrder.seals.exchange.hash == (
+        // Order wallet is buyer -> require candidate order operator hash to match buyer's order operator hash
+        // Order wallet is seller -> require candidate order operator hash to match seller's order operator hash
+        require(candidateOrder.seals.operator.hash == (
         trade.buyer.wallet == order.wallet ?
-        trade.buyer.order.hashes.exchange :
-        trade.seller.order.hashes.exchange
+        trade.buyer.order.hashes.operator :
+        trade.seller.order.hashes.operator
         ));
 
         // Reset the challenge outcome
@@ -268,8 +268,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
 
         // Require that trade candidate's order is not labelled fraudulent or cancelled
         bytes32 orderOperatorHash = (trade.buyer.wallet == wallet ?
-        trade.buyer.order.hashes.exchange :
-        trade.seller.order.hashes.exchange);
+        trade.buyer.order.hashes.operator :
+        trade.seller.order.hashes.operator);
         require(!fraudChallenge.isFraudulentOrderOperatorHash(orderOperatorHash));
         require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 

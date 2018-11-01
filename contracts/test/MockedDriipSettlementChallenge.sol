@@ -135,7 +135,6 @@ contract MockedDriipSettlementChallenge {
 
     function proposalStageAmount(address wallet, MonetaryTypesLib.Currency currency)
     public
-    view
     returns (int256)
     {
         // To silence unused function parameter compiler warning

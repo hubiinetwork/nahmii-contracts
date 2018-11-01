@@ -349,7 +349,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     driipSettlementChallengeInitialized
     onlySealedPayment(payment)
     {
-        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.exchange.hash));
+        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.operator.hash));
         require(validator.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 

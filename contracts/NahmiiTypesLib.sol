@@ -63,14 +63,14 @@ library NahmiiTypesLib {
         SingleTotalInt256 conjugate;
     }
 
-    struct WalletExchangeHashes {
+    struct WalletOperatorHashes {
         bytes32 wallet;
-        bytes32 exchange;
+        bytes32 operator;
     }
 
     struct TradeOrder {
         int256 amount;
-        WalletExchangeHashes hashes;
+        WalletOperatorHashes hashes;
         CurrentPreviousInt256 residuals;
     }
 
@@ -85,9 +85,9 @@ library NahmiiTypesLib {
         Signature signature;
     }
 
-    struct WalletExchangeSeal {
+    struct WalletOperatorSeal {
         Seal wallet;
-        Seal exchange;
+        Seal operator;
     }
 
     struct TradeParty {
@@ -121,6 +121,7 @@ library NahmiiTypesLib {
 
         Seal seal;
         uint256 blockNumber;
+        uint256 operatorId;
     }
 
     struct PaymentSenderParty {
@@ -153,8 +154,9 @@ library NahmiiTypesLib {
         // Positive transfer is always in direction from sender to recipient
         SingleTotalInt256 transfers;
 
-        WalletExchangeSeal seals;
+        WalletOperatorSeal seals;
         uint256 blockNumber;
+        uint256 operatorId;
     }
 
     struct OrderPlacement {
@@ -173,8 +175,9 @@ library NahmiiTypesLib {
 
         OrderPlacement placement;
 
-        WalletExchangeSeal seals;
+        WalletOperatorSeal seals;
         uint256 blockNumber;
+        uint256 operatorId;
     }
 
     struct SettlementParty {

@@ -560,7 +560,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         walletProposalMap[wallet].stageAmounts.push(stageAmount);
         walletProposalMap[wallet].targetBalanceAmounts.length = 0;
         walletProposalMap[wallet].targetBalanceAmounts.push(balanceAmount.sub(stageAmount));
-        //        walletProposalMap[wallet].driipOperatorHash = payment.seals.exchange.hash;
+        //        walletProposalMap[wallet].driipOperatorHash = payment.seals.operator.hash;
         walletProposalMap[wallet].driipType = NahmiiTypesLib.DriipType.Payment;
         walletProposalMap[wallet].driipIndex = walletChallengedPaymentsMap[wallet].length.sub(1);
     }
