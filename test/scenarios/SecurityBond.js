@@ -1,664 +1,615 @@
-var Helpers = require('../helpers');
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
+const {Wallet, Contract, utils} = require('ethers');
+const mocks = require('../mocks');
+const ERC20Token = artifacts.require('StandardTokenEx');
+const TransferControllerManager = artifacts.require('TransferControllerManager');
+const SecurityBond = artifacts.require('SecurityBond');
+const MockedSecurityBondService = artifacts.require('MockedSecurityBondService');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+
+chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
+chai.should();
 
 module.exports = function (glob) {
-    var testCounter = Helpers.TestCounter();
+    describe('SecurityBond', function () {
+        let web3TransferControllerManager;
+        let web3Configuration, ethersConfiguration;
+        let web3ERC20;
+        let web3SecurityBond, ethersSecurityBond;
+        let web3MockedSecurityBondService, ethersMockedSecurityBondService;
 
-    describe("SecurityBond", function () {
-        it(testCounter.next() + ": MUST FAIL [payable]: cannot be called with 0 ethers", async() => {
-            try {
-                await web3.eth.sendTransactionPromise({
+        before(async () => {
+            web3TransferControllerManager = await TransferControllerManager.deployed();
+
+            web3Configuration = await MockedConfiguration.new(glob.owner);
+            ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
+        });
+
+        beforeEach(async () => {
+            web3ERC20 = await ERC20Token.new();
+            await web3ERC20.testMint(glob.user_a, 1000);
+
+            await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
+
+            web3SecurityBond = await SecurityBond.new(glob.owner);
+            ethersSecurityBond = new Contract(web3SecurityBond.address, SecurityBond.abi, glob.signer_owner);
+
+            await web3SecurityBond.changeConfiguration(web3Configuration.address);
+            await web3SecurityBond.changeTransferControllerManager(web3TransferControllerManager.address);
+
+            web3MockedSecurityBondService = await MockedSecurityBondService.new(glob.owner);
+            ethersMockedSecurityBondService = new Contract(web3MockedSecurityBondService.address, MockedSecurityBondService.abi, glob.signer_owner);
+
+            // Fully wire the mocked service
+            await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
+            await web3SecurityBond.enableServiceAction(web3MockedSecurityBondService.address, 'stage');
+            await web3MockedSecurityBondService.changeSecurityBond(web3SecurityBond.address);
+        });
+
+        describe('constructor()', () => {
+            it('should initialize fields', async () => {
+                (await web3SecurityBond.deployer.call()).should.equal(glob.owner);
+                (await web3SecurityBond.operator.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('withdrawalTimeout()', () => {
+            it('should return initial value', async () => {
+                (await ethersSecurityBond.withdrawalTimeout())
+                    ._bn.should.eq.BN(1800);
+            });
+        });
+
+        describe('setWithdrawalTimeout()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3SecurityBond.setWithdrawalTimeout(1000, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if called by deployer', () => {
+                it('should revert', async () => {
+                    const result = await web3SecurityBond.setWithdrawalTimeout(1000);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetWithdrawalTimeoutEvent');
+
+                    (await ethersSecurityBond.withdrawalTimeout())
+                        ._bn.should.eq.BN(1000);
+                });
+            });
+        });
+
+        describe('depositsCount()', () => {
+            it('should return initial value', async () => {
+                (await ethersSecurityBond.depositsCount(Wallet.createRandom().address))
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('withdrawalsCount()', () => {
+            it('should return initial value', async () => {
+                (await ethersSecurityBond.withdrawalsCount(Wallet.createRandom().address))
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('activeBalance()', () => {
+            describe('of Ether', () => {
+                it('should return initial value', async () => {
+                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return initial value', async () => {
+                    (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('stagedBalance()', () => {
+            describe('if called with null wallet address', () => {
+                it('should revert', async () => {
+                    ethersSecurityBond.stagedBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                it('should return initial value', async () => {
+                    (await ethersSecurityBond.stagedBalance(Wallet.createRandom().address, mocks.address0, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return initial value', async () => {
+                    (await ethersSecurityBond.stagedBalance(Wallet.createRandom().address, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('fallback function', () => {
+            describe('first deposit', () => {
+                it('should add initial deposit and increment deposited balance', async () => {
+                    await web3.eth.sendTransactionPromise({
                         from: glob.user_a,
-                        to: glob.web3SecurityBond.address,
-                        value: web3.toWei(0, 'ether'),
-                        gas: glob.gasLimit
+                        to: web3SecurityBond.address,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
                     });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
 
-        //-------------------------------------------------------------------------
+                    (await ethersSecurityBond.depositsCount(glob.user_a))
+                        ._bn.should.eq.BN(1);
 
-        it(testCounter.next() + ": MUST SUCCEED [payable]: User A adds 0.5 ETH to active balance", async() => {
-            try {
-                await web3.eth.sendTransactionPromise({
+                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                });
+            });
+
+            describe('second deposit', () => {
+                beforeEach(async () => {
+                    await web3.eth.sendTransactionPromise({
                         from: glob.user_a,
-                        to: glob.web3SecurityBond.address,
-                        value: web3.toWei(0.5, 'ether'),
-                        gas: glob.gasLimit
+                        to: web3SecurityBond.address,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
                     });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
+                });
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [payable]: Owner adds 1.5 ETH to active balance", async() => {
-            try {
-                await web3.eth.sendTransactionPromise({
-                        from: glob.owner,
-                        to: glob.web3SecurityBond.address,
-                        value: web3.toWei(1.5, 'ether'),
-                        gas: glob.gasLimit
+                it('should add on top of the first deposit', async () => {
+                    await web3.eth.sendTransactionPromise({
+                        from: glob.user_a,
+                        to: web3SecurityBond.address,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
                     });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+
+                    (await ethersSecurityBond.depositsCount(glob.user_a))
+                        ._bn.should.eq.BN(2);
+
+                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('depositEthersTo()', () => {
+            describe('first deposit', () => {
+                it('should add initial deposit and increment deposited balance', async () => {
+                    const result = await web3SecurityBond.depositEthersTo(
+                        glob.user_a,
+                        {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    );
 
-        it(testCounter.next() + ": MUST SUCCEED [depositTokens]: User A adds 10 tokens to deposited balance", async() => {
-            try {
-                await glob.web3Erc20.approve(glob.web3SecurityBond.address, 10, { from: glob.user_a });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
-            }
-            try {
-                await glob.web3SecurityBond.depositTokens(10, glob.web3Erc20.address, 0, "", { from: glob.user_a });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('DepositEvent');
+
+                    (await ethersSecurityBond.depositsCount(glob.user_a))
+                        ._bn.should.eq.BN(1);
+
+                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                });
+            });
+
+            describe('second deposit', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.depositEthersTo(
+                        glob.user_a,
+                        {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    );
+                });
+
+                it('should add on top of the first deposit', async () => {
+                    await web3SecurityBond.depositEthersTo(
+                        glob.user_a, {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    );
+
+                    (await ethersSecurityBond.depositsCount(glob.user_a))
+                        ._bn.should.eq.BN(2);
+
+                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('depositTokens()', () => {
+            describe('of ERC20 token', () => {
+                describe('if called with zero amount', () => {
+                    it('should revert', async () => {
+                        web3SecurityBond.depositTokens(0, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with null address", async() => {
-            try {
-                await glob.web3SecurityBond.depositTokens(5, 0, 0, "", { from: glob.user_a });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                describe('if called without prior approval', () => {
+                    it('should revert', async () => {
+                        web3SecurityBond.depositTokens(10, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with excessive amount', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(web3SecurityBond.address, 9999, {from: glob.user_a, gas: 1e6});
+                    });
+
+                    it('should revert', async () => {
+                        web3SecurityBond.depositTokens(9999, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('first deposit', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
+                        );
+                    });
+
+                    it('should add initial deposit and increment deposited balance', async () => {
+                        const result = await web3SecurityBond.depositTokens(
+                            10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        );
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('DepositEvent');
+
+                        (await ethersSecurityBond.depositsCount(glob.user_a))
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(10);
+                    });
+                });
+
+                describe('second deposit', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3SecurityBond.address, 20, {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3SecurityBond.depositTokens(
+                            10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        );
+                    });
+
+                    it('should add on top of the first deposit', async () => {
+                        await web3SecurityBond.depositTokens(
+                            10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        );
+
+                        (await ethersSecurityBond.depositsCount(glob.user_a))
+                            ._bn.should.eq.BN(2);
+
+                        (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(20);
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('depositTokensTo()', () => {
+            describe('of ERC20 token', () => {
+                describe('if called with zero amount', () => {
+                    it('should revert', async () => {
+                        web3SecurityBond.depositTokensTo(glob.user_a, 0, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with zero amount", async() => {
-            try {
-                await glob.web3SecurityBond.depositTokens(0, glob.web3Erc20.address, 0, "", { from: glob.user_a });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                describe('if called without prior approval', () => {
+                    it('should revert', async () => {
+                        web3SecurityBond.depositTokensTo(glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with excessive amount', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(web3SecurityBond.address, 9999, {
+                            from: glob.user_a,
+                            gas: 1e6
+                        });
+                    });
+
+                    it('should revert', async () => {
+                        web3SecurityBond.depositTokensTo(glob.user_a, 9999, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('first deposit', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
+                        );
+                    });
+
+                    it('should add initial deposit and increment deposited balance', async () => {
+                        const result = await web3SecurityBond.depositTokensTo(
+                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        );
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('DepositEvent');
+
+                        (await ethersSecurityBond.depositsCount(glob.user_a))
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(10);
+                    });
+                });
+
+                describe('second deposit', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3SecurityBond.address, 20, {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3SecurityBond.depositTokensTo(
+                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        );
+                    });
+
+                    it('should add on top of the first deposit', async () => {
+                        await web3SecurityBond.depositTokensTo(
+                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        );
+
+                        (await ethersSecurityBond.depositsCount(glob.user_a))
+                            ._bn.should.eq.BN(2);
+
+                        (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(20);
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('deposit()', () => {
+            describe('before first deposit', () => {
+                it('should revert', async () => {
+                    web3SecurityBond.deposit.call(glob.user_a, 0).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: User does not have enough tokens to deposit.", async() => {
-            try {
-                await glob.web3Erc20.approve(glob.web3SecurityBond.address, 9999, { from: glob.user_a });
-            }
-            catch (err) {
-                assert(false, 'Error: ERC20 failed to approve token transfer.');
-            }
-            try {
-                await glob.web3SecurityBond.depositTokens(9999, glob.web3Erc20.address, 0, "", { from: glob.user_a });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.depositEthersTo(
+                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const deposit = await ethersSecurityBond.deposit(glob.user_a, 0);
+
+                    deposit.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    deposit.blockNumber.should.exist;
+                    deposit.currencyCt.should.equal(mocks.address0);
+                    deposit.currencyId._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3SecurityBond.depositTokensTo(
+                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const deposit = await ethersSecurityBond.deposit(glob.user_a, 0);
+
+                    deposit.amount._bn.should.eq.BN(10);
+                    deposit.blockNumber.should.exist;
+                    deposit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
+                    deposit.currencyId._bn.should.eq.BN(0);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('stage()', () => {
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.stage(
+                        mocks.address0, 1e18
+                    ).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ": MUST SUCCEED [depositsCount]: User A should have 2 deposits", async() => {
-            try {
-                let count = await glob.web3SecurityBond.depositsCount(glob.user_a);
-                assert.equal(count, 2, 'This test must succeed. Error: Deposit count: ' + count.toString());
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            describe('if called by service that is not registered', () => {
+                beforeEach(async () => {
+                    web3SecurityBond = await SecurityBond.new(glob.owner);
+                    await web3MockedSecurityBondService.changeSecurityBond(web3SecurityBond.address);
+                });
+
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.stage(
+                        glob.user_a, 1e18
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called by registered service with action not enabled', () => {
+                beforeEach(async () => {
+                    web3SecurityBond = await SecurityBond.new(glob.owner);
+                    await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
+                    await web3MockedSecurityBondService.changeSecurityBond(web3SecurityBond.address);
+                });
+
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.stage(
+                        glob.user_a, 1e18
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.depositEthersTo(
+                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should successfully stage', async () => {
+                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
+
+                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.7')._bn);
+                    (await ethersSecurityBond.stagedBalance(glob.user_a, mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.3')._bn);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3SecurityBond.depositTokensTo(
+                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should successfully stage', async () => {
+                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
+
+                    (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                        ._bn.should.eq.BN(7);
+                    (await ethersSecurityBond.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(3);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('withdraw()', () => {
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.depositEthersTo(
+                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
+                });
 
-        it(testCounter.next() + ": MUST SUCCEED [depositsCount]: Onwer should have 1 deposit", async() => {
-            try {
-                let count = await glob.web3SecurityBond.depositsCount(glob.owner);
-                assert.equal(count, 1, 'This test must succeed. Error: Deposit count: ' + count.toString());
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                it('should successfully withdraw', async () => {
+                    const result = await web3SecurityBond.withdraw(
+                        web3.toWei(0.2, 'ether'), mocks.address0, 0, '', {from: glob.user_a}
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('WithdrawEvent');
+
+                    (await ethersSecurityBond.withdrawalsCount(glob.user_a))
+                        ._bn.should.eq.BN(1);
+
+                    (await ethersSecurityBond.stagedBalance(glob.user_a, mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.1')._bn);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3SecurityBond.depositTokensTo(
+                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
+                });
+
+                it('should successfully withdraw', async () => {
+                    const result = await web3SecurityBond.withdraw(
+                        2, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('WithdrawEvent');
+
+                    (await ethersSecurityBond.withdrawalsCount(glob.user_a))
+                        ._bn.should.eq.BN(1);
+
+                    (await ethersSecurityBond.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(1);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [deposit]: Owner should have 1.5 ETH at index 0", async() => {
-            try {
-                let args = await glob.web3SecurityBond.deposit(glob.owner, 0);
-                const _amount = args[0];
-                const _timestamp = args[1];
-                const _currencyCt = args[2];
-                const _currencyId = args[3];
-
-                assert.equal(_currencyCt, 0, "Unexpected token deposit.");
-                assert.equal(_currencyId, 0, "Unexpected token deposit.");
-                assert.equal(_amount, web3.toWei(1.5, 'ether'), "Unexpected ether deposit amount.");
-                assert.notEqual(_timestamp, 0, "Timestamp cannot be null.");
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [deposit]: Invalid index deposit 1 for user B.", async() => {
-            try {
-                await glob.web3SecurityBond.deposit(glob.user_b, 1);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [deposit]: User A should have 10 tokens at index 1", async() => {
-            try {
-                let args = await glob.web3SecurityBond.deposit(glob.user_a, 1);
-                const _amount = args[0];
-                const _timestamp = args[1];
-                const _currencyCt = args[2];
-                const _currencyId = args[3];
-
-                assert.equal(_currencyCt, glob.web3Erc20.address, "Unexpected ether or other token deposit.");
-                assert.equal(_currencyId, 0, "Unexpected ether or other token deposit.");
-                assert.equal(_amount, 10, "Unexpeced token deposit amount.");
-                assert.notEqual(_timestamp, 0, "Timestamp cannot be null.");
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [activeBalance]: Total should be 2.0 ETH", async() => {
-            try {
-                let balance = await glob.web3SecurityBond.activeBalance(0, 0);
-                assert.equal(balance, web3.toWei(2.0, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [activeBalance]: Total should be 10 tokens", async() => {
-            try {
-                let balance = await glob.web3SecurityBond.activeBalance(glob.web3Erc20.address, 0);
-                assert.equal(balance, 10, 'Wrong balance [' + balance.toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 ETH for User A", async() => {
-            try {
-                let balance = await glob.web3SecurityBond.stagedBalance(glob.user_a, 0, 0);
-                assert.equal(balance, web3.toWei(0, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 tokens for User A", async() => {
-            try {
-                let balance = await glob.web3SecurityBond.stagedBalance(glob.user_a, glob.web3Erc20.address, 0);
-                assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [setWithdrawalTimeout]: Non-owner trying to set the withdrawal timeout", async() => {
-            try {
-                await glob.web3SecurityBond.setWithdrawalTimeout(30, { from: glob.user_a });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [setWithdrawalTimeout]: Set the withdrawal timeout to 10 seconds", async() => {
-            try {
-                await glob.web3SecurityBond.setWithdrawalTimeout(10);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
- 
-        it(testCounter.next() + ": MUST FAIL [registerService]: Register UnitTestHelpers_FAIL SC as a service from non-owner", async() => {
-            try {
-                await glob.web3SecurityBond.registerService(glob.web3UnitTestHelpers_FAIL_TESTS.address, { from: glob.user_a });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [registerServiceAction]: Register UnitTestHelpers_SUCCESS SC as a service", async() => {
-            try {
-                await glob.web3SecurityBond.registerService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
-                await glob.web3SecurityBond.enableServiceAction(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, "stage");
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User A wants to withdraw 1 ETH but thay are NOT staged", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_a, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_a);
-
-                let result = await glob.web3SecurityBond.withdraw(web3.toWei(1, 'ether'), 0, 0, "", { from: glob.user_a });
-
-                let tx = web3.eth.getTransaction(result.tx);
-                let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
-                totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_a, 0, 0);
-                let newEthersBalance = await web3.eth.getBalancePromise(glob.user_a);
-
-                assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0.0, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.0, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST FAIL [stage]: UnitTestHelpers_FAIL stages 0.5 ETH to User A", async() => {
-            try {
-                await glob.web3UnitTestHelpers_FAIL_TESTS.callToStage_SECURITYBOND(glob.web3SecurityBond.address, glob.user_a, web3.toWei(0.5, 'ether'), 0, 0);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stage]: UnitTestHelpers_SUCCESS stages 0.5 ETH to User C", async() => {
-            try {
-                let oldActiveBalance = await glob.web3SecurityBond.activeBalance(0, 0);
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, 0, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToStage_SECURITYBOND(glob.web3SecurityBond.address, glob.user_c, web3.toWei(0.5, 'ether'), 0, 0);
-
-                let newActiveBalance = await glob.web3SecurityBond.activeBalance(0, 0);
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, 0, 0);
-
-                assert.equal(newActiveBalance.sub(oldActiveBalance), web3.toWei(-0.5, 'ether'), 'Wrong active balance [Diff ' + web3.fromWei(newActiveBalance.sub(oldActiveBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.5, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stage]: UnitTestHelpers_SUCCESS stages 2 tokens to User C", async() => {
-            try {
-                let oldActiveBalance = await glob.web3SecurityBond.activeBalance(glob.web3Erc20.address, 0);
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, glob.web3Erc20.address, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToStage_SECURITYBOND(glob.web3SecurityBond.address, glob.user_c, 2, glob.web3Erc20.address, 0);
-
-                let newActiveBalance = await glob.web3SecurityBond.activeBalance(glob.web3Erc20.address, 0);
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, glob.web3Erc20.address, 0);
-
-                assert.equal(newActiveBalance.sub(oldActiveBalance), -2, 'Wrong active balance [Diff ' + newActiveBalance.sub(oldActiveBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), 2, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User C withdraw 1.0 ETH (but only can get 0.5)", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_c);
-
-                let result = await glob.web3SecurityBond.withdraw(web3.toWei(1.0, 'ether'), 0, 0, "", { from: glob.user_c });
-
-                let tx = web3.eth.getTransaction(result.tx);
-                let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
-                totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, 0, 0);
-                let newEthersBalance = await web3.eth.getBalancePromise(glob.user_c);
-
-                assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0.5, 'ether'), 'Wrong user C balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(-0.5, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User C withdraw 10 tokens (but only can get 2)", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, glob.web3Erc20.address, 0);
-                let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.user_c);
-
-                await glob.web3SecurityBond.withdraw(10, glob.web3Erc20.address, 0, "", { from: glob.user_c });
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, glob.web3Erc20.address, 0);
-                let newTokensBalance = await glob.web3Erc20.balanceOf(glob.user_c);
-
-                assert.equal(newTokensBalance.sub(oldTokensBalance), 2, 'Wrong user C balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), -2, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: Repeat user C withdraw 1.0 ETH (but now he will get nothing)", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_c);
-
-                let result = await glob.web3SecurityBond.withdraw(web3.toWei(1.0, 'ether'), 0, 0, "", { from: glob.user_c });
-
-                let tx = web3.eth.getTransaction(result.tx);
-                let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
-                totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, 0, 0);
-                let newEthersBalance = await web3.eth.getBalancePromise(glob.user_c);
-
-                assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0, 'ether'), 'Wrong user C balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: Repeat user C withdraw 10 tokens (but now he will get nothing)", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, glob.web3Erc20.address, 0);
-                let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.user_c);
-
-                await glob.web3SecurityBond.withdraw(10, glob.web3Erc20.address, 0, "", { from: glob.user_c });
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.user_c, glob.web3Erc20.address, 0);
-                let newTokensBalance = await glob.web3Erc20.balanceOf(glob.user_c);
-
-                assert.equal(newTokensBalance.sub(oldTokensBalance), 0, 'Wrong user C balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), 0, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stage]: UnitTestHelpers_SUCCESS stages 0.2 ETH to Owner", async() => {
-            try {
-                let oldActiveBalance = await glob.web3SecurityBond.activeBalance(0, 0);
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToStage_SECURITYBOND(glob.web3SecurityBond.address, glob.owner, web3.toWei(0.2, 'ether'), 0, 0);
-
-                let newActiveBalance = await glob.web3SecurityBond.activeBalance(0, 0);
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-
-                assert.equal(newActiveBalance.sub(oldActiveBalance), web3.toWei(-0.2, 'ether'), 'Wrong active balance [Diff ' + web3.fromWei(newActiveBalance.sub(oldActiveBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.2, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stage]: UnitTestHelpers_SUCCESS stages 2 tokens to Owner", async() => {
-            try {
-                let oldActiveBalance = await glob.web3SecurityBond.activeBalance(glob.web3Erc20.address, 0);
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToStage_SECURITYBOND(glob.web3SecurityBond.address, glob.owner, 2, glob.web3Erc20.address, 0);
-
-                let newActiveBalance = await glob.web3SecurityBond.activeBalance(glob.web3Erc20.address, 0);
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-
-                assert.equal(newActiveBalance.sub(oldActiveBalance), -2, 'Wrong active balance [Diff ' + newActiveBalance.sub(oldActiveBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), 2, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        it(testCounter.next() + ": MUST SUCCEED [stage]: After 2 seconds UnitTestHelpers_SUCCESS stages other 0.3 ETH to Owner", async() => {
-            try {
-                await Helpers.sleep(2000);
-
-                let oldActiveBalance = await glob.web3SecurityBond.activeBalance(0, 0);
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToStage_SECURITYBOND(glob.web3SecurityBond.address, glob.owner, web3.toWei(0.3, 'ether'), 0, 0);
-
-                let newActiveBalance = await glob.web3SecurityBond.activeBalance(0, 0);
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-
-                assert.equal(newActiveBalance.sub(oldActiveBalance), web3.toWei(-0.3, 'ether'), 'Wrong active balance [Diff ' + web3.fromWei(newActiveBalance.sub(oldActiveBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.3, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [stage]: Also UnitTestHelpers_SUCCESS stages other 3 tokens to Owner", async() => {
-            try {
-                let oldActiveBalance = await glob.web3SecurityBond.activeBalance(glob.web3Erc20.address, 0);
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-
-                await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToStage_SECURITYBOND(glob.web3SecurityBond.address, glob.owner, 3, glob.web3Erc20.address, 0);
-
-                let newActiveBalance = await glob.web3SecurityBond.activeBalance(glob.web3Erc20.address, 0);
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-
-                assert.equal(newActiveBalance.sub(oldActiveBalance), -3, 'Wrong active balance [Diff ' + newActiveBalance.sub(oldActiveBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), 3, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: Owner wants to withdraw 1.0 ETH before timeout but will get 0", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.owner);
-
-                let result = await glob.web3SecurityBond.withdraw(web3.toWei(1.0, 'ether'), 0, 0, "", { from: glob.owner });
-
-                let tx = web3.eth.getTransaction(result.tx);
-                let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
-                totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-                let newEthersBalance = await web3.eth.getBalancePromise(glob.owner);
-
-                assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0, 'ether'), 'Wrong Owner balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: Onwer withdraw 10 tokens before timeout but will get 0", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-                let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.owner);
-
-                await glob.web3SecurityBond.withdraw(10, glob.web3Erc20.address, 0, "", { from: glob.owner });
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-                let newTokensBalance = await glob.web3Erc20.balanceOf(glob.owner);
-
-                assert.equal(newTokensBalance.sub(oldTokensBalance), 0, 'Wrong Owner balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), 0, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: After 8 secs, Owner withdraw 1.0 ETH (but only can get 0.2)", async() => {
-            try {
-                await Helpers.sleep(8000);
-
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.owner);
-
-                let result = await glob.web3SecurityBond.withdraw(web3.toWei(1.0, 'ether'), 0, 0, "", { from: glob.owner });
-
-                let tx = web3.eth.getTransaction(result.tx);
-                let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
-                totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-                let newEthersBalance = await web3.eth.getBalancePromise(glob.owner);
-
-                assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0.2, 'ether'), 'Wrong Owner balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(-0.2, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: Onwer withdraw 10 tokens (but only can get 2)", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-                let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.owner);
-
-                await glob.web3SecurityBond.withdraw(10, glob.web3Erc20.address, 0, "", { from: glob.owner });
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-                let newTokensBalance = await glob.web3Erc20.balanceOf(glob.owner);
-
-                assert.equal(newTokensBalance.sub(oldTokensBalance), 2, 'Wrong Owner balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), -2, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: After other 3 secs, Owner withdraw 1.0 ETH (but only can get 0.3)", async() => {
-            try {
-                await Helpers.sleep(8000);
-
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.owner);
-
-                let result = await glob.web3SecurityBond.withdraw(web3.toWei(1.0, 'ether'), 0, 0, "", { from: glob.owner });
-
-                let tx = web3.eth.getTransaction(result.tx);
-                let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
-                totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, 0, 0);
-                let newEthersBalance = await web3.eth.getBalancePromise(glob.owner);
-
-                assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0.3, 'ether'), 'Wrong Owner balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(-0.3, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: Onwer withdraw 10 tokens (but only can get 3)", async() => {
-            try {
-                let oldStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-                let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.owner);
-
-                await glob.web3SecurityBond.withdraw(10, glob.web3Erc20.address, 0, "", { from: glob.owner });
-
-                let newStagedBalance = await glob.web3SecurityBond.stagedBalance(glob.owner, glob.web3Erc20.address, 0);
-                let newTokensBalance = await glob.web3Erc20.balanceOf(glob.owner);
-
-                assert.equal(newTokensBalance.sub(oldTokensBalance), 3, 'Wrong Owner balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), -3, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+        describe('withdrawal()', () => {
+            describe('before first withdrawal', () => {
+                it('should revert', async () => {
+                    web3SecurityBond.withdrawal.call(glob.user_a, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.depositEthersTo(
+                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
+                    await web3SecurityBond.withdraw(
+                        web3.toWei(0.2, 'ether'), mocks.address0, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should successfully return withdrawal', async () => {
+                    const withdrawal = await ethersSecurityBond.withdrawal(glob.user_a, 0);
+
+                    withdrawal.amount._bn.should.eq.BN(utils.parseEther('0.2')._bn);
+                    withdrawal.blockNumber.should.exist;
+                    withdrawal.currencyCt.should.equal(mocks.address0);
+                    withdrawal.currencyId._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3SecurityBond.depositTokensTo(
+                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
+                    await web3SecurityBond.withdraw(
+                        2, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should successfully return withdrawal', async () => {
+                    const withdrawal = await ethersSecurityBond.withdrawal(glob.user_a, 0);
+
+                    withdrawal.amount._bn.should.eq.BN(2);
+                    withdrawal.blockNumber.should.exist;
+                    withdrawal.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
+                    withdrawal.currencyId._bn.should.eq.BN(0);
+                });
+            });
         });
     });
 };

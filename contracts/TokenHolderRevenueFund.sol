@@ -158,7 +158,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         emit DepositEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
+    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId) {
         return walletMap[wallet].txHistory.deposit(index);
     }
 
@@ -278,7 +278,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id) {
+    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId) {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 

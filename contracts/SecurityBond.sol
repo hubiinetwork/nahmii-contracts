@@ -10,6 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {Configurable} from "./Configurable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {Ownable} from "./Ownable.sol";
@@ -24,7 +25,7 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 @title SecurityBond
 @notice Fund that contains crypto incentive for challenging operator fraud.
 */
-contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
+contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using SafeMathIntLib for int256;
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
@@ -60,15 +61,17 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => Wallet) private walletMap;
 
-    BalanceLib.Balance active;
+    BalanceLib.Balance private active;
+    InUseCurrencyLib.InUseCurrency private inUseCurrencies;
 
-    uint256 private withdrawalTimeout;
+    uint256 public withdrawalTimeout;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event SetWithdrawalTimeoutEvent(uint256 timeoutInSeconds);
     event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
-    event StageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event StageEvent(address from, uint256 fraction);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
 
     //
@@ -86,6 +89,9 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     onlyDeployer
     {
         withdrawalTimeout = timeoutInSeconds;
+
+        // Emit event
+        emit SetWithdrawalTimeoutEvent(timeoutInSeconds);
     }
 
     //
@@ -104,6 +110,9 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         // Add to active balance
         active.add(amount, address(0), 0);
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
+
+        // Add currency to in-use list
+        inUseCurrencies.addItem(address(0), 0);
 
         // Emit event
         emit DepositEvent(wallet, amount, address(0), 0);
@@ -128,6 +137,9 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         active.add(amount, currencyCt, currencyId);
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
+        // Add currency to in-use list
+        inUseCurrencies.addItem(currencyCt, currencyId);
+
         // Emit event
         emit DepositEvent(wallet, amount, currencyCt, currencyId);
     }
@@ -135,7 +147,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     function deposit(address wallet, uint index)
     public
     view
-    returns (int256 amount, uint256 timestamp, address currencyCt, uint256 currencyId)
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         return walletMap[wallet].txHistory.deposit(index);
     }
@@ -172,35 +184,35 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function stage(address wallet, uint256 fraction)
     public
     notNullAddress(wallet)
     onlyDeployerOrEnabledServiceAction(STAGE_ACTION)
     {
         uint256 startTime;
 
-        require(amount.isPositiveInt256());
+        uint256 numCurrencies = inUseCurrencies.getLength();
+        int256 partsPer = configuration.PARTS_PER();
+        for (uint256 i = 0; i < numCurrencies; i++) {
+            MonetaryTypesLib.Currency memory currency = inUseCurrencies.getAt(i);
 
-        // Clamp amount to move
-        amount = amount.clampMax(active.get(currencyCt, currencyId));
-        if (amount <= 0)
-            return;
+            int256 amount = active.get(currency.ct, currency.id).mul(
+                SafeMathIntLib.toInt256(fraction)
+            ).div(partsPer);
 
-        // Move from active balance to staged
-        active.sub(amount, currencyCt, currencyId);
-        walletMap[wallet].staged.add(amount, currencyCt, currencyId);
+            // Move from active balance to staged
+            active.sub(amount, currency.ct, currency.id);
+            walletMap[wallet].staged.add(amount, currency.ct, currency.id);
 
-        // Add substage info
-        startTime = block.timestamp + ((wallet == deployer) ? withdrawalTimeout : 0);
-        walletMap[wallet].subStaged[currencyCt][currencyId].list.push(SubStageItem(amount, startTime));
+            // Add substage info
+            startTime = block.timestamp + ((wallet == deployer) ? withdrawalTimeout : 0);
+            walletMap[wallet].subStaged[currency.ct][currency.id].list.push(SubStageItem(amount, startTime));
+        }
 
         // Emit event
-        emit StageEvent(msg.sender, amount, currencyCt, currencyId);
+        emit StageEvent(wallet, fraction);
     }
 
-    //
-    // Withdrawal functions
-    // -----------------------------------------------------------------------------------------------------------------
     function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
     public
     {
@@ -253,7 +265,7 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     function withdrawal(address wallet, uint index)
     public
     view
-    returns (int256 amount, uint256 timestamp, address token, uint256 id)
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
