@@ -3,11 +3,11 @@
 > CancelOrdersChallenge
 
 
-**Execution cost**: less than 43133 gas
+**Execution cost**: less than 43169 gas
 
-**Deployment cost**: less than 1919200 gas
+**Deployment cost**: less than 1949800 gas
 
-**Combined cost**: less than 1962333 gas
+**Combined cost**: less than 1992969 gas
 
 ## Constructor
 
@@ -92,9 +92,7 @@ Params:
 
 
 ## Methods
-### getCancelledOrders(address,uint256)
->
->Get 10 cancelled orders for given wallet starting at given start index
+### walletOrderOperatorHashIndexMap(address,bytes32)
 
 
 **Execution cost**: No bound available
@@ -104,19 +102,13 @@ Params:
 
 Params:
 
-1. **wallet** *of type `address`*
-
-    > The wallet for which to return the nonces of cancelled orders
-
-2. **startIndex** *of type `uint256`*
-
-    > The start index from which to extract order nonces, used for pagination
-
+1. **param_0** *of type `address`*
+2. **param_1** *of type `bytes32`*
 
 Returns:
 
 
-1. **output_0** *of type `tuple[10]`*
+1. **output_0** *of type `uint256`*
 
 --- 
 ### changeOperator(address)
@@ -159,18 +151,6 @@ Returns:
 1. **output_0** *of type `uint8`*
 
 --- 
-### cancelOrders(tuple[])
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **orders** *of type `tuple[]`*
-
-
---- 
 ### changeDeployer(address)
 >
 >Change the deployer of this contract
@@ -185,6 +165,31 @@ Params:
 
     > The address of the new deployer
 
+
+
+--- 
+### challenge(tuple,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **wallet** *of type `address`*
+
+
+--- 
+### cancelOrders(tuple[])
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **orders** *of type `tuple[]`*
 
 
 --- 
@@ -205,7 +210,26 @@ Params:
 
 
 --- 
-### challenge(tuple,address)
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
+
+
+**Execution cost**: less than 786 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### changeValidator(address)
+>
+>Change the validator contract
 
 
 **Execution cost**: No bound available
@@ -213,9 +237,87 @@ Params:
 
 Params:
 
-1. **trade** *of type `tuple`*
-2. **wallet** *of type `address`*
+1. **newAddress** *of type `address`*
 
+    > The (address of) Validator contract instance
+
+
+
+--- 
+### walletOrderOperatorHashCancelledMap(address,bytes32)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `bytes32`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### getCancelledOrders(address,uint256)
+>
+>Get 10 cancelled orders for given wallet starting at given start index
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The wallet for which to return the nonces of cancelled orders
+
+2. **startIndex** *of type `uint256`*
+
+    > The start index from which to extract order nonces, used for pagination
+
+
+Returns:
+
+
+1. **output_0** *of type `tuple[10]`*
+
+--- 
+### deployer()
+
+
+**Execution cost**: less than 1050 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### configuration()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
 
 --- 
 ### getCancelledOrdersCount(address)
@@ -241,83 +343,6 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### changeValidator(address)
->
->Change the validator contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) Validator contract instance
-
-
-
---- 
-### triggerDestroy()
->
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### configuration()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### deployer()
-
-
-**Execution cost**: less than 1050 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 830 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### isOrderCancelled(address,bytes32)
 >
 >Get wallets cancelled status of order
@@ -336,7 +361,7 @@ Params:
 
 2. **orderHash** *of type `bytes32`*
 
-    > The (exchange) hash of the order
+    > The (operator) hash of the order
 
 
 Returns:
@@ -348,7 +373,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 874 gas
+**Execution cost**: less than 808 gas
 
 **Attributes**: constant
 
@@ -358,6 +383,19 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
+
+
+**Execution cost**: No bound available
+
+
+
 
 --- 
 ### validator()
@@ -396,12 +434,13 @@ Returns:
 3. **placement** *of type `tuple`*
 4. **seals** *of type `tuple`*
 5. **blockNumber** *of type `uint256`*
+6. **operatorId** *of type `uint256`*
 
 --- 
 ### walletOrderCancelledTimeoutMap(address)
 
 
-**Execution cost**: less than 958 gas
+**Execution cost**: less than 914 gas
 
 **Attributes**: constant
 
@@ -416,45 +455,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### walletOrderExchangeHashCancelledMap(address,bytes32)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-2. **param_1** *of type `bytes32`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### walletOrderExchangeHashIndexMap(address,bytes32)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-2. **param_1** *of type `bytes32`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### cancelOrders((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256)[])
+### cancelOrders((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256)[])
 >
 >Cancel orders of msg.sender
 
@@ -471,7 +472,7 @@ Params:
 
 
 --- 
-### challenge((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),address)
+### challenge((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),address)
 >
 >Challenge cancelled order
 

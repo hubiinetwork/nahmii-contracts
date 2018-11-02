@@ -41,6 +41,22 @@ Params:
 
 
 --- 
+### dispatch(address,address,uint256,address,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **from** *of type `address`*
+2. **to** *of type `address`*
+3. **amount** *of type `uint256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+
+
+--- 
 ### getApproveSignature()
 
 
@@ -56,7 +72,7 @@ Returns:
 1. **output_0** *of type `bytes4`*
 
 --- 
-### getReceiveSignature()
+### getDispatchSignature()
 
 
 **Execution cost**: No bound available
@@ -71,7 +87,7 @@ Returns:
 1. **output_0** *of type `bytes4`*
 
 --- 
-### getSendSignature()
+### getReceiveSignature()
 
 
 **Execution cost**: No bound available
@@ -117,22 +133,6 @@ Returns:
 
 --- 
 ### receive(address,address,uint256,address,uint256)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **from** *of type `address`*
-2. **to** *of type `address`*
-3. **amount** *of type `uint256`*
-4. **currencyCt** *of type `address`*
-5. **currencyId** *of type `uint256`*
-
-
---- 
-### send(address,address,uint256,address,uint256)
 
 
 **Execution cost**: No bound available

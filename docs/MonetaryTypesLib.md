@@ -1,6 +1,6 @@
-# MonetaryTypes
-[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/MonetaryTypes.sol)
-> MonetaryTypes
+# MonetaryTypesLib
+[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/MonetaryTypesLib.sol)
+> MonetaryTypesLib
 
 
 **Execution cost**: less than 304 gas
@@ -32,7 +32,7 @@ Returns:
 1. **output_0** *of type `tuple`*
 
 --- 
-### getFigureByCurrency(MonetaryTypes.Figure[],MonetaryTypes.Currency)
+### getFigureByCurrency(MonetaryTypesLib.Figure[],MonetaryTypesLib.Currency)
 
 
 **Execution cost**: No bound available
@@ -40,4 +40,4 @@ Returns:
 
 
 
-[Back to the top ↑](#monetarytypes)
+[Back to the top ↑](#monetarytypeslib)

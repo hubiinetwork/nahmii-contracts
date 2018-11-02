@@ -68,19 +68,21 @@ Params:
 
 
 --- 
-### clientFund()
+### changeOperator(address)
+>
+>Change the operator of this contract
 
 
 **Execution cost**: No bound available
 
-**Attributes**: constant
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
 
 
-
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### changeDeployer(address)
@@ -117,27 +119,25 @@ Params:
 
 
 --- 
-### changeOperator(address)
->
->Change the operator of this contract
+### clientFund()
 
 
 **Execution cost**: No bound available
 
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
+**Attributes**: constant
 
 
+
+Returns:
+
+
+1. **output_0** *of type `address`*
 
 --- 
 ### deployer()
 
 
-**Execution cost**: less than 811 gas
+**Execution cost**: less than 833 gas
 
 **Attributes**: constant
 
@@ -154,7 +154,7 @@ Returns:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 723 gas
+**Execution cost**: less than 701 gas
 
 **Attributes**: constant
 
@@ -169,7 +169,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 745 gas
+**Execution cost**: less than 723 gas
 
 **Attributes**: constant
 
@@ -181,7 +181,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### seizeAllBalancesInClientFund(address,address)
+### seizeAllBalances(address,address)
 
 
 **Execution cost**: No bound available
@@ -194,7 +194,7 @@ Params:
 
 
 --- 
-### stageInClientFund(address,int256,address,uint256)
+### stage(address,int256,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -209,7 +209,7 @@ Params:
 
 
 --- 
-### stageToBeneficiaryUntargetedInClientFund(address,address,int256,address,uint256)
+### stageToBeneficiaryUntargeted(address,address,int256,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -225,7 +225,7 @@ Params:
 
 
 --- 
-### updateSettledBalanceInClientFund(address,int256,address,uint256)
+### updateSettledBalance(address,int256,address,uint256)
 
 
 **Execution cost**: No bound available

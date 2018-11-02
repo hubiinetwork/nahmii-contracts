@@ -3,11 +3,11 @@
 > Community vote
 
 
-**Execution cost**: less than 61335 gas
+**Execution cost**: less than 61341 gas
 
-**Deployment cost**: less than 214000 gas
+**Deployment cost**: less than 221600 gas
 
-**Combined cost**: less than 275335 gas
+**Combined cost**: less than 282941 gas
 
 ## Constructor
 
@@ -48,7 +48,7 @@ Params:
 >Change the deployer of this contract
 
 
-**Execution cost**: less than 22910 gas
+**Execution cost**: less than 22932 gas
 
 
 Params:
@@ -80,7 +80,7 @@ Params:
 ### deployer()
 
 
-**Execution cost**: less than 691 gas
+**Execution cost**: less than 713 gas
 
 **Attributes**: constant
 
@@ -115,6 +115,24 @@ Returns:
 
 
 **Execution cost**: less than 406 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+> the max driip nonce
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### getMaxNullNonce()
+>
+>Get the max null settlement nonce to be accepted in settlements
+
+
+**Execution cost**: less than 538 gas
 
 **Attributes**: constant
 

@@ -3,11 +3,11 @@
 > FraudChallengeByTrade
 
 
-**Execution cost**: less than 42388 gas
+**Execution cost**: less than 42395 gas
 
-**Deployment cost**: less than 1230200 gas
+**Deployment cost**: less than 1238800 gas
 
-**Combined cost**: less than 1272588 gas
+**Combined cost**: less than 1281195 gas
 
 ## Constructor
 
@@ -75,8 +75,8 @@ Params:
 
 Params:
 
-1. **oldAddress** *of type `address`*
-2. **newAddress** *of type `address`*
+1. **oldFraudChallenge** *of type `address`*
+2. **newFraudChallenge** *of type `address`*
 
 --- 
 ### ChangeOperatorEvent(address,address)
@@ -138,7 +138,7 @@ Params:
 --- 
 ### changeFraudChallenge(address)
 >
->Change the fraudChallenge contract
+>Change the fraud challenge contract
 
 
 **Execution cost**: No bound available
@@ -146,7 +146,7 @@ Params:
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **newFraudChallenge** *of type `address`*
 
     > The (address of) FraudChallenge contract instance
 
@@ -187,6 +187,18 @@ Params:
 
 
 --- 
+### challenge(tuple)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+
+--- 
 ### changeClientFund(address)
 >
 >Change the client fund contract
@@ -201,18 +213,6 @@ Params:
 
     > The (address of) ClientFund contract instance
 
-
-
---- 
-### challenge(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **trade** *of type `tuple`*
 
 
 --- 
@@ -298,7 +298,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 808 gas
+**Execution cost**: less than 830 gas
 
 **Attributes**: constant
 
@@ -338,7 +338,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### challenge((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### challenge((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 >
 >Submit a trade candidate in continuous Fraud Challenge (FC)
 

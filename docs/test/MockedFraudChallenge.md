@@ -3,11 +3,11 @@
 > MockedFraudChallenge
 
 
-**Execution cost**: less than 44614 gas
+**Execution cost**: less than 44574 gas
 
-**Deployment cost**: less than 3163400 gas
+**Deployment cost**: less than 3135200 gas
 
-**Combined cost**: less than 3208014 gas
+**Combined cost**: less than 3179774 gas
 
 ## Constructor
 
@@ -18,7 +18,7 @@ Params:
 1. **owner** *of type `address`*
 
 ## Events
-### RegisterServiceDeferredEvent(address,uint256)
+### RegisterServiceEvent(address)
 
 
 **Execution cost**: No bound available
@@ -27,7 +27,6 @@ Params:
 Params:
 
 1. **service** *of type `address`*
-2. **timeout** *of type `uint256`*
 
 --- 
 ### AddSeizedWalletEvent(address)
@@ -83,18 +82,6 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
-
---- 
-### ChangeConfigurationEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldConfiguration** *of type `address`*
-2. **newConfiguration** *of type `address`*
 
 --- 
 ### ChangeDeployerEvent(address,address)
@@ -156,7 +143,7 @@ Params:
 2. **action** *of type `string`*
 
 --- 
-### RegisterServiceEvent(address)
+### RegisterServiceDeferredEvent(address,uint256)
 
 
 **Execution cost**: No bound available
@@ -165,6 +152,7 @@ Params:
 Params:
 
 1. **service** *of type `address`*
+2. **timeout** *of type `uint256`*
 
 --- 
 ### ServiceActivationTimeoutEvent(uint256)
@@ -179,21 +167,19 @@ Params:
 
 
 ## Methods
-### setServiceActivationTimeout(uint256)
->
->Set the service activation timeout
+### fraudulentOrderOperatorHash()
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 1069 gas
+
+**Attributes**: constant
 
 
-Params:
 
-1. **timeoutInSeconds** *of type `uint256`*
-
-    > The set timeout in unit of seconds
+Returns:
 
 
+1. **output_0** *of type `bool`*
 
 --- 
 ### fraudulentOrders(uint256)
@@ -216,18 +202,7 @@ Returns:
 3. **placement** *of type `tuple`*
 4. **seals** *of type `tuple`*
 5. **blockNumber** *of type `uint256`*
-
---- 
-### addFraudulentTrade(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
+6. **operatorId** *of type `uint256`*
 
 --- 
 ### ADD_FRAUDULENT_PAYMENT_ACTION()
@@ -245,22 +220,16 @@ Returns:
 1. **output_0** *of type `string`*
 
 --- 
-### fraudulentOrderExchangeHashMap(bytes32)
+### addFraudulentTrade(tuple)
 
 
-**Execution cost**: less than 810 gas
-
-**Attributes**: constant
+**Execution cost**: No bound available
 
 
 Params:
 
-1. **param_0** *of type `bytes32`*
+1. **trade** *of type `tuple`*
 
-Returns:
-
-
-1. **output_0** *of type `bool`*
 
 --- 
 ### ADD_FRAUDULENT_ORDER_ACTION()
@@ -310,24 +279,6 @@ Params:
 
 
 --- 
-### doubleSpenderWallets(uint256)
-
-
-**Execution cost**: less than 2122 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `uint256`*
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### enableServiceAction(address,string)
 >
 >Enable a named action in an already registered service contract
@@ -349,10 +300,28 @@ Params:
 
 
 --- 
+### doubleSpenderWallets(uint256)
+
+
+**Execution cost**: less than 2056 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
 ### deployer()
 
 
-**Execution cost**: less than 1625 gas
+**Execution cost**: less than 1559 gas
 
 **Attributes**: constant
 
@@ -364,25 +333,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### doubleSpenderWalletsMap(address)
-
-
-**Execution cost**: less than 1633 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### addFraudulentOrder(tuple)
+### addFraudulentPayment(tuple)
 
 
 **Execution cost**: No bound available
@@ -390,7 +341,7 @@ Returns:
 
 Params:
 
-1. **order** *of type `tuple`*
+1. **payment** *of type `tuple`*
 
 
 --- 
@@ -415,19 +366,22 @@ Params:
 
 
 --- 
-### ADD_SEIZED_WALLET_ACTION()
+### doubleSpenderWalletsMap(address)
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 1545 gas
 
 **Attributes**: constant
 
 
+Params:
+
+1. **param_0** *of type `address`*
 
 Returns:
 
 
-1. **output_0** *of type `string`*
+1. **output_0** *of type `bool`*
 
 --- 
 ### destructor()
@@ -435,7 +389,7 @@ Returns:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 965 gas
+**Execution cost**: less than 921 gas
 
 **Attributes**: constant
 
@@ -447,6 +401,24 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### fraudulentOrderOperatorHashMap(bytes32)
+
+
+**Execution cost**: less than 1030 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `bytes32`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### addDoubleSpenderWallet(address)
 
 
@@ -456,18 +428,6 @@ Returns:
 Params:
 
 1. **wallet** *of type `address`*
-
-
---- 
-### addFraudulentPayment(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **payment** *of type `tuple`*
 
 
 --- 
@@ -488,6 +448,21 @@ Params:
 
 
 --- 
+### ADD_SEIZED_WALLET_ACTION()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `string`*
+
+--- 
 ### addSeizedWallet(address)
 
 
@@ -497,38 +472,6 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
-
-
---- 
-### fraudulentOrderExchangeHash()
-
-
-**Execution cost**: less than 937 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### changeConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
-
 
 
 --- 
@@ -549,19 +492,16 @@ Params:
 
 
 --- 
-### configuration()
+### addFraudulentOrder(tuple)
 
 
 **Execution cost**: No bound available
 
-**Attributes**: constant
 
+Params:
 
+1. **order** *of type `tuple`*
 
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### doubleSpenderWalletsCount()
@@ -569,7 +509,7 @@ Returns:
 >Get the number of wallets tagged as double spenders
 
 
-**Execution cost**: less than 1057 gas
+**Execution cost**: less than 991 gas
 
 **Attributes**: constant
 
@@ -597,25 +537,28 @@ Returns:
 1. **output_0** *of type `string`*
 
 --- 
-### fraudulentTradeHash()
+### seizedWallets(uint256)
 
 
-**Execution cost**: less than 1388 gas
+**Execution cost**: less than 1924 gas
 
 **Attributes**: constant
 
 
+Params:
+
+1. **param_0** *of type `uint256`*
 
 Returns:
 
 
-1. **output_0** *of type `bool`*
+1. **output_0** *of type `address`*
 
 --- 
 ### seizedWalletsMap(address)
 
 
-**Execution cost**: less than 1325 gas
+**Execution cost**: less than 1259 gas
 
 **Attributes**: constant
 
@@ -628,6 +571,23 @@ Returns:
 
 
 1. **output_0** *of type `bool`*
+
+--- 
+### fraudulentPaymentsCount()
+>
+>Get the number of fraudulent payments
+
+
+**Execution cost**: less than 1035 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
 
 --- 
 ### isEnabledServiceAction(address,string)
@@ -657,45 +617,10 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### fraudulentPaymentsCount()
->
->Get the number of fraudulent payments
-
-
-**Execution cost**: less than 1123 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### fraudulentPaymentExchangeHashMap(bytes32)
-
-
-**Execution cost**: less than 1382 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `bytes32`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### operator()
 
 
-**Execution cost**: less than 1053 gas
+**Execution cost**: less than 1031 gas
 
 **Attributes**: constant
 
@@ -729,7 +654,7 @@ Params:
 >Get the double spender status of given wallet
 
 
-**Execution cost**: less than 1598 gas
+**Execution cost**: less than 1510 gas
 
 **Attributes**: constant
 
@@ -765,92 +690,6 @@ Params:
 
 
 --- 
-### isFraudulentOrderExchangeHash(bytes32)
-
-
-**Execution cost**: less than 702 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **hash** *of type `bytes32`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isFraudulentPaymentExchangeHash(bytes32)
-
-
-**Execution cost**: less than 1461 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **hash** *of type `bytes32`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isFraudulentTradeHash(bytes32)
-
-
-**Execution cost**: less than 1483 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **hash** *of type `bytes32`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### fraudulentTradesCount()
->
->Get the number of fraudulent trades
-
-
-**Execution cost**: less than 727 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### fraudulentPaymentExchangeHash()
-
-
-**Execution cost**: less than 1366 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### isRegisteredActiveService(address)
 >
 >Gauge whether a service contract is registered and active
@@ -875,10 +714,46 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### isFraudulentPaymentOperatorHash(bytes32)
+
+
+**Execution cost**: less than 1373 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **hash** *of type `bytes32`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isFraudulentTradeHash(bytes32)
+
+
+**Execution cost**: less than 1395 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **hash** *of type `bytes32`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### fraudulentTradeHashMap(bytes32)
 
 
-**Execution cost**: less than 832 gas
+**Execution cost**: less than 788 gas
 
 **Attributes**: constant
 
@@ -893,22 +768,90 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### seizedWallets(uint256)
+### fraudulentTradesCount()
+>
+>Get the number of fraudulent trades
 
 
-**Execution cost**: less than 2012 gas
+**Execution cost**: less than 705 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### fraudulentTradeHash()
+
+
+**Execution cost**: less than 1300 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isFraudulentOrderOperatorHash(bytes32)
+
+
+**Execution cost**: less than 1714 gas
 
 **Attributes**: constant
 
 
 Params:
 
-1. **param_0** *of type `uint256`*
+1. **hash** *of type `bytes32`*
 
 Returns:
 
 
-1. **output_0** *of type `address`*
+1. **output_0** *of type `bool`*
+
+--- 
+### seizedWalletsCount()
+>
+>Get the number of wallets whose funds have be seized
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+> Number of seized wallets
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### fraudulentPaymentOperatorHashMap(bytes32)
+
+
+**Execution cost**: less than 1580 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `bytes32`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
 
 --- 
 ### isSeizedWallet(address)
@@ -916,7 +859,7 @@ Returns:
 >Get the seized status of given wallet
 
 
-**Execution cost**: less than 1818 gas
+**Execution cost**: less than 1752 gas
 
 **Attributes**: constant
 
@@ -940,7 +883,7 @@ Returns:
 >Get the number of fraudulent orders
 
 
-**Execution cost**: less than 1453 gas
+**Execution cost**: less than 1387 gas
 
 **Attributes**: constant
 
@@ -952,12 +895,36 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
+### fraudulentPaymentOperatorHash()
+
+
+**Execution cost**: less than 706 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### reset()
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
 ### isRegisteredService(address)
 >
 >Gauge whether a service contract is registered
 
 
-**Execution cost**: less than 1092 gas
+**Execution cost**: less than 1048 gas
 
 **Attributes**: constant
 
@@ -974,15 +941,6 @@ Returns:
 > true if service is registered, else false
 
 1. **output_0** *of type `bool`*
-
---- 
-### reset()
-
-
-**Execution cost**: No bound available
-
-
-
 
 --- 
 ### fraudulentPayments(uint256)
@@ -1008,6 +966,7 @@ Returns:
 6. **transfers** *of type `tuple`*
 7. **seals** *of type `tuple`*
 8. **blockNumber** *of type `uint256`*
+9. **operatorId** *of type `uint256`*
 
 --- 
 ### fraudulentTrades(uint256)
@@ -1034,30 +993,13 @@ Returns:
 7. **transfers** *of type `tuple`*
 8. **seal** *of type `tuple`*
 9. **blockNumber** *of type `uint256`*
-
---- 
-### seizedWalletsCount()
->
->Get the number of wallets whose funds have be seized
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-> Number of seized wallets
-
-1. **output_0** *of type `uint256`*
+10. **operatorId** *of type `uint256`*
 
 --- 
 ### serviceActivationTimeout()
 
 
-**Execution cost**: less than 793 gas
+**Execution cost**: less than 749 gas
 
 **Attributes**: constant
 
@@ -1069,39 +1011,56 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### setFraudulentOrderExchangeHash(bool)
+### setFraudulentOrderOperatorHash(bool)
 
 
-**Execution cost**: less than 21018 gas
+**Execution cost**: less than 20534 gas
 
 
 Params:
 
-1. **_fraudulentOrderExchangeHash** *of type `bool`*
+1. **_fraudulentOrderOperatorHash** *of type `bool`*
 
 
 --- 
-### setFraudulentPaymentExchangeHash(bool)
+### setFraudulentPaymentOperatorHash(bool)
 
 
-**Execution cost**: less than 20548 gas
+**Execution cost**: less than 20922 gas
 
 
 Params:
 
-1. **_fraudulentPaymentExchangeHash** *of type `bool`*
+1. **_fraudulentPaymentOperatorHash** *of type `bool`*
 
 
 --- 
 ### setFraudulentTradeHash(bool)
 
 
-**Execution cost**: less than 21450 gas
+**Execution cost**: less than 21362 gas
 
 
 Params:
 
 1. **_fraudulentTradeHash** *of type `bool`*
+
+
+--- 
+### setServiceActivationTimeout(uint256)
+>
+>Set the service activation timeout
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **timeoutInSeconds** *of type `uint256`*
+
+    > The set timeout in unit of seconds
+
 
 
 --- 
@@ -1118,7 +1077,7 @@ Params:
 
 
 --- 
-### addFraudulentOrder((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### addFraudulentOrder((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1127,7 +1086,7 @@ Params:
 
 
 --- 
-### addFraudulentPayment((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### addFraudulentPayment((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1136,7 +1095,7 @@ Params:
 
 
 --- 
-### addFraudulentTrade((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### addFraudulentTrade((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 
 
 **Execution cost**: No bound available

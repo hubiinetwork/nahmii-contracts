@@ -5,7 +5,7 @@
 
 **Execution cost**: No bound available
 
-**Deployment cost**: less than 137200 gas
+**Deployment cost**: less than 231000 gas
 
 **Combined cost**: No bound available
 
@@ -17,10 +17,89 @@
 
 
 ## Methods
+### doubleSpenderWalletStatsIndex()
+
+
+**Execution cost**: less than 538 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### doubleSpenderWalletStats(uint256)
+
+
+**Execution cost**: less than 2631 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### dataAvailable()
+
+
+**Execution cost**: less than 528 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### addDoubleSpenderWallet(bool)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **doubleSpender** *of type `bool`*
+
+Returns:
+
+
+1. **output_0** *of type `address[3]`*
+
+--- 
 ### getMaxDriipNonce()
 
 
-**Execution cost**: less than 406 gas
+**Execution cost**: less than 407 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### getMaxNullNonce()
+
+
+**Execution cost**: less than 604 gas
 
 **Attributes**: constant
 
@@ -35,7 +114,7 @@ Returns:
 ### isDataAvailable()
 
 
-**Execution cost**: less than 506 gas
+**Execution cost**: less than 594 gas
 
 **Attributes**: constant
 
@@ -50,9 +129,7 @@ Returns:
 ### isDoubleSpenderWallet(address)
 
 
-**Execution cost**: less than 571 gas
-
-**Attributes**: constant
+**Execution cost**: less than 22990 gas
 
 
 Params:
@@ -65,10 +142,40 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### maxDriipNonce()
+
+
+**Execution cost**: less than 472 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### maxNullNonce()
+
+
+**Execution cost**: less than 450 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
 ### reset()
 
 
-**Execution cost**: less than 25501 gas
+**Execution cost**: No bound available
 
 
 
@@ -90,32 +197,31 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### setDoubleSpenderWallet(address,bool)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **doubleSpender** *of type `bool`*
-
-Returns:
-
-
-1. **output_0** *of type `address[3]`*
-
---- 
 ### setMaxDriipNonce(uint256)
 
 
-**Execution cost**: less than 20262 gas
+**Execution cost**: less than 20240 gas
 
 
 Params:
 
 1. **_maxDriipNonce** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### setMaxNullNonce(uint256)
+
+
+**Execution cost**: less than 20460 gas
+
+
+Params:
+
+1. **_maxNullNonce** *of type `uint256`*
 
 Returns:
 
