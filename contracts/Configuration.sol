@@ -139,11 +139,6 @@ contract Configuration is Ownable, Servable {
         return PARTS_PER;
     }
 
-    /// @notice Return the number of confirmations
-    function getConfirmations() public view returns (uint256) {
-        return confirmations;
-    }
-
     /// @notice Set the number of confirmations
     /// @param newConfirmations The new confirmations value
     function setConfirmations(uint256 newConfirmations) public onlyDeployer {

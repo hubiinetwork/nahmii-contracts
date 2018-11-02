@@ -72,7 +72,7 @@ module.exports = (glob) => {
             });
 
             describe('if called with registered service as sender', () => {
-                before(async () => {
+                beforeEach(async () => {
                     await web3Configuration.registerService(glob.user_a);
                     await web3Configuration.enableServiceAction(glob.user_a, 'operational_mode');
                 });
@@ -91,39 +91,30 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getPartsPer()', () => {
+        describe('PARTS_PER()', () => {
             it('should get the value initialized at construction time', async () => {
-                const partsPer = await web3Configuration.PARTS_PER.call();
-                partsPer.toNumber().should.equal(1e18);
+                (await ethersConfiguration.PARTS_PER())
+                    ._bn.should.eq.BN(1e18.toString());
             });
         });
 
-        describe('getConfirmations()', () => {
+        describe('confirmations()', () => {
             it('should get the value initialized at construction time', async () => {
-                const confirmations = await web3Configuration.getConfirmations.call();
-                confirmations.toNumber().should.equal(12);
+                (await ethersConfiguration.confirmations())
+                    ._bn.should.eq.BN(12);
             });
         });
 
         describe('setConfirmations()', () => {
-            let confirmations;
-
-            before(async () => {
-                confirmations = (await web3Configuration.getConfirmations.call()).toNumber();
-            });
-
-            after(async () => {
-                web3Configuration.setConfirmations(confirmations);
-            });
-
             describe('if provided with correct parameter and called with sender that is owner', () => {
                 it('should successfully set new value and emit event', async () => {
                     const result = await web3Configuration.setConfirmations(10);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetConfirmationsEvent');
-                    const value = await web3Configuration.getConfirmations.call();
-                    value.toNumber().should.equal(10);
+
+                    (await ethersConfiguration.confirmations())
+                        ._bn.should.eq.BN(10);
                 });
             });
 
@@ -131,6 +122,13 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     web3Configuration.setConfirmations(20, {from: glob.user_a}).should.be.rejected;
                 });
+            });
+        });
+
+        describe('getTradeMakerFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.getTradeMakerFeesCount())
+                    ._bn.should.eq.BN(0);
             });
         });
 
@@ -142,15 +140,15 @@ module.exports = (glob) => {
 
             describe('if called with non-existent discount key', () => {
                 it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e15);
+                    (await ethersConfiguration.getTradeMakerFee(blockNumberAhead, 0))
+                        ._bn.should.eq.BN(1e15.toString());
                 });
             });
 
             describe('if called with existent discount key', () => {
                 it('should get the discounted value', async () => {
-                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 1);
-                    value.toNumber().should.equal(9e14);
+                    (await ethersConfiguration.getTradeMakerFee(blockNumberAhead, 1))
+                        ._bn.should.eq.BN(9e14.toString());
                 });
             });
         });
@@ -158,59 +156,70 @@ module.exports = (glob) => {
         describe('setTradeMakerFee()', () => {
             describe('if provided with correct parameters and called with sender that is owner', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
+                    const result = await web3Configuration.setTradeMakerFee(
+                        blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]
+                    );
                     feeUpdates.tradeMakerFee++;
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeMakerFeeEvent');
-                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e18);
+
+                    (await ethersConfiguration.getTradeMakerFee(blockNumberAhead, 0))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.getTradeMakerFeesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setTradeMakerFee(
+                        blockNumberAhead, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}
+                    ).should.be.rejected;
                 });
             });
 
             describe('if called with block number behind the current one + number of confirmations', () => {
                 it('should revert', async () => {
-                    web3Configuration.setTradeMakerFee(blockNumber, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+                    web3Configuration.setTradeMakerFee(
+                        blockNumber, 1e18, [1, 10], [1e17, 2e17]
+                    ).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
                 it('should revert', async () => {
-                    web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                    web3Configuration.setTradeMakerFee(
+                        blockNumberAhead, 1e18, [1, 10], [1e17, 2e17, 3e17]
+                    ).should.be.rejected;
                 });
             });
         });
 
-        describe.skip('getTradeMakerFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getTradeMakerFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.tradeMakerFee);
+        describe('getTradeTakerFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.getTradeTakerFeesCount())
+                    ._bn.should.eq.BN(0);
             });
         });
 
         describe('getTradeTakerFee()', () => {
-            before(async () => {
+            beforeEach(async () => {
                 await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
                 feeUpdates.tradeTakerFee++;
             });
 
             describe('if called with non-existent discount key', () => {
                 it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e15);
+                    (await ethersConfiguration.getTradeTakerFee(blockNumberAhead, 0))
+                        ._bn.should.eq.BN(1e15.toString());
                 });
             });
 
             describe('if called with existent discount key', () => {
                 it('should get the discounted value', async () => {
-                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 1);
-                    value.toNumber().should.equal(9e14);
+                    (await ethersConfiguration.getTradeTakerFee(blockNumberAhead, 1))
+                        ._bn.should.eq.BN(9e14.toString());
                 });
             });
         });
@@ -223,8 +232,11 @@ module.exports = (glob) => {
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeTakerFeeEvent');
-                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e18);
+
+                    (await ethersConfiguration.getTradeTakerFee(blockNumberAhead, 0))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.getTradeTakerFeesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -247,30 +259,30 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('getTradeTakerFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getTradeTakerFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.tradeTakerFee);
+        describe('getPaymentFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.getPaymentFeesCount())
+                    ._bn.should.eq.BN(0);
             });
         });
 
         describe('getPaymentFee()', () => {
-            before(async () => {
+            beforeEach(async () => {
                 await web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
                 feeUpdates.paymentFee++;
             });
 
             describe('if called with non-existent discount key', () => {
                 it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e15);
+                    (await ethersConfiguration.getPaymentFee(blockNumberAhead, 0))
+                        ._bn.should.eq.BN(1e15.toString());
                 });
             });
 
             describe('if called with existent discount key', () => {
                 it('should get the discounted value', async () => {
-                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 1);
-                    value.toNumber().should.equal(9e14);
+                    (await ethersConfiguration.getPaymentFee(blockNumberAhead, 1))
+                        ._bn.should.eq.BN(9e14.toString());
                 });
             });
         });
@@ -283,8 +295,11 @@ module.exports = (glob) => {
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetPaymentFeeEvent');
-                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e18);
+
+                    (await ethersConfiguration.getPaymentFee(blockNumberAhead, 0))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.getPaymentFeesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -307,10 +322,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('getPaymentFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getPaymentFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.paymentFee);
+        describe('getCurrencyPaymentFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.getCurrencyPaymentFeesCount(Wallet.createRandom().address, 0))
+                    ._bn.should.eq.BN(0);
             });
         });
 
@@ -330,15 +345,16 @@ module.exports = (glob) => {
             describe('if called with non-existent currency', () => {
                 describe('if called with non-existent currency contract', () => {
                     it('should get the currency agnostic value', async () => {
-                        const value = await web3Configuration.getCurrencyPaymentFee.call(Wallet.createRandom().address, currencyId, blockNumberAhead, 0);
-                        value.toNumber().should.equal(1e15);
+                        (await ethersConfiguration.getCurrencyPaymentFee(
+                            Wallet.createRandom().address, currencyId, blockNumberAhead, 0
+                        ))._bn.should.eq.BN(1e15.toString());
                     });
                 });
 
                 describe('if called with non-existent currency ID', () => {
                     it('should get the currency agnostic value', async () => {
-                        const value = await web3Configuration.getCurrencyPaymentFee.call(currencyCt, 1, blockNumberAhead, 0);
-                        value.toNumber().should.equal(1e15);
+                        (await ethersConfiguration.getCurrencyPaymentFee(currencyCt, 1, blockNumberAhead, 0))
+                            ._bn.should.eq.BN(1e15.toString());
                     });
                 });
             });
@@ -346,15 +362,15 @@ module.exports = (glob) => {
             describe('if called with existent currency', () => {
                 describe('if called with non-existent discount key', () => {
                     it('should get the nominal value', async () => {
-                        const value = await web3Configuration.getCurrencyPaymentFee.call(currencyCt, currencyId, blockNumberAhead, 0);
-                        value.toNumber().should.equal(2e15);
+                        (await ethersConfiguration.getCurrencyPaymentFee(currencyCt, currencyId, blockNumberAhead, 0))
+                            ._bn.should.eq.BN(2e15.toString());
                     });
                 });
 
                 describe('if called with existent discount key', () => {
                     it('should get the discounted value', async () => {
-                        const value = await web3Configuration.getCurrencyPaymentFee.call(currencyCt, currencyId, blockNumberAhead, 1);
-                        value.toNumber().should.equal(18e14);
+                        (await ethersConfiguration.getCurrencyPaymentFee(currencyCt, currencyId, blockNumberAhead, 1))
+                            ._bn.should.eq.BN(18e14.toString());
                     });
                 });
             });
@@ -374,8 +390,11 @@ module.exports = (glob) => {
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCurrencyPaymentFeeEvent');
-                    const value = await web3Configuration.getCurrencyPaymentFee.call(currencyCt, currencyId, blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e18);
+
+                    (await ethersConfiguration.getCurrencyPaymentFee(currencyCt, currencyId, blockNumberAhead, 0))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.getCurrencyPaymentFeesCount(currencyCt, currencyId))
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -398,29 +417,22 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('getCurrencyPaymentFeesCount()', () => {
-            let currencyCt, currencyId;
-
-            before(() => {
-                currencyCt = Wallet.createRandom().address;
-                currencyId = 0;
-            });
-
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getCurrencyPaymentFeesCount.call(currencyCt, currencyId);
-                value.toNumber().should.equal(0);
+        describe('getTradeMakerMinimumFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.getTradeMakerMinimumFeesCount())
+                    ._bn.should.eq.BN(0);
             });
         });
 
         describe('getTradeMakerMinimumFee()', () => {
-            before(async () => {
+            beforeEach(async () => {
                 await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
                 feeUpdates.tradeMakerMinimumFee++;
             });
 
             it('should get the nominal value', async () => {
-                const value = await web3Configuration.getTradeMakerMinimumFee.call(blockNumberAhead);
-                value.toNumber().should.equal(1e14);
+                (await ethersConfiguration.getTradeMakerMinimumFee(blockNumberAhead))
+                    ._bn.should.eq.BN(1e14.toString());
             });
         });
 
@@ -432,8 +444,11 @@ module.exports = (glob) => {
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeMakerMinimumFeeEvent');
-                    const value = await web3Configuration.getTradeMakerMinimumFee.call(blockNumberAhead);
-                    value.toNumber().should.equal(1e18);
+
+                    (await ethersConfiguration.getTradeMakerMinimumFee(blockNumberAhead))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.getTradeMakerMinimumFeesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -450,22 +465,22 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('getTradeMakerMinimumFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getTradeMakerMinimumFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.tradeMakerMinimumFee);
+        describe('getTradeTakerMinimumFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.getTradeTakerMinimumFeesCount())
+                    ._bn.should.eq.BN(0);
             });
         });
 
         describe('getTradeTakerMinimumFee()', () => {
-            before(async () => {
+            beforeEach(async () => {
                 await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
                 feeUpdates.tradeTakerMinimumFee++;
             });
 
             it('should get the nominal value', async () => {
-                const value = await web3Configuration.getTradeTakerMinimumFee.call(blockNumberAhead);
-                value.toNumber().should.equal(1e14);
+                (await ethersConfiguration.getTradeTakerMinimumFee(blockNumberAhead))
+                    ._bn.should.eq.BN(1e14.toString());
             });
         });
 
@@ -477,8 +492,11 @@ module.exports = (glob) => {
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeTakerMinimumFeeEvent');
-                    const value = await web3Configuration.getTradeTakerMinimumFee.call(blockNumberAhead);
-                    value.toNumber().should.equal(1e18);
+
+                    (await ethersConfiguration.getTradeTakerMinimumFee(blockNumberAhead))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.getTradeTakerMinimumFeesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -495,23 +513,22 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('getTradeTakerMinimumFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getTradeTakerMinimumFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.tradeTakerMinimumFee);
+        describe('getPaymentMinimumFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.getPaymentMinimumFeesCount())
+                    ._bn.should.eq.BN(0);
             });
         });
 
         describe('getPaymentMinimumFee()', () => {
-            before(async () => {
+            beforeEach(async () => {
                 await web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e14);
                 feeUpdates.paymentMininumFee++;
-
             });
 
             it('should get the nominal value', async () => {
-                const value = await web3Configuration.getPaymentMinimumFee.call(blockNumberAhead);
-                value.toNumber().should.equal(1e14);
+                (await ethersConfiguration.getPaymentMinimumFee(blockNumberAhead))
+                    ._bn.should.eq.BN(1e14.toString());
             });
         });
 
@@ -523,8 +540,11 @@ module.exports = (glob) => {
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetPaymentMinimumFeeEvent');
-                    const value = await web3Configuration.getPaymentMinimumFee.call(blockNumberAhead);
-                    value.toNumber().should.equal(1e18);
+
+                    (await ethersConfiguration.getPaymentMinimumFee(blockNumberAhead))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.getPaymentMinimumFeesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -541,10 +561,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('getPaymentMinimumFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getPaymentMinimumFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.paymentMininumFee);
+        describe('getCurrencyPaymentMinimumFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.getCurrencyPaymentMinimumFeesCount(Wallet.createRandom().address, 0))
+                    ._bn.should.eq.BN(0);
             });
         });
 
@@ -563,21 +583,25 @@ module.exports = (glob) => {
             describe('if called with non-existent currency', () => {
                 describe('if called with non-existent currency contract', () => {
                     it('should be reverted', () => {
-                        web3Configuration.getCurrencyPaymentMinimumFee.call(Wallet.createRandom().address, currencyId, blockNumberAhead, 0).should.be.rejected;
+                        web3Configuration.getCurrencyPaymentMinimumFee.call(
+                            Wallet.createRandom().address, currencyId, blockNumberAhead, 0
+                        ).should.be.rejected;
                     });
                 });
 
                 describe('if called with non-existent currency ID', () => {
                     it('should be reverted', () => {
-                        web3Configuration.getCurrencyPaymentMinimumFee.call(currencyCt, 1, blockNumberAhead, 0).should.be.rejected;
+                        web3Configuration.getCurrencyPaymentMinimumFee.call(
+                            currencyCt, 1, blockNumberAhead, 0
+                        ).should.be.rejected;
                     });
                 });
             });
 
             describe('if called with existent currency', () => {
                 it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getCurrencyPaymentMinimumFee.call(currencyCt, currencyId, blockNumberAhead);
-                    value.toNumber().should.equal(1e14);
+                    (await ethersConfiguration.getCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberAhead))
+                        ._bn.should.eq.BN(1e14.toString());
                 });
             });
         });
@@ -596,8 +620,11 @@ module.exports = (glob) => {
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCurrencyPaymentMinimumFeeEvent');
-                    const value = await web3Configuration.getCurrencyPaymentMinimumFee.call(currencyCt, currencyId, blockNumberAhead);
-                    value.toNumber().should.equal(1e18);
+
+                    (await ethersConfiguration.getCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberAhead))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.getCurrencyPaymentMinimumFeesCount(currencyCt, currencyId))
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -614,45 +641,23 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('getCurrencyPaymentMinimumFeesCount()', () => {
-            let currencyCt, currencyId;
-
-            before(() => {
-                currencyCt = Wallet.createRandom().address;
-                currencyId = 0;
-            });
-
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getCurrencyPaymentMinimumFeesCount.call(currencyCt, currencyId);
-                value.toNumber().should.equal(0);
-            });
-        });
-
         describe('cancelOrderChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.cancelOrderChallengeTimeout.call();
-                value.toNumber().should.equal(60 * 60 * 3);
+                (await ethersConfiguration.cancelOrderChallengeTimeout())
+                    ._bn.should.eq.BN(60 * 60 * 24 * 3);
             });
         });
 
         describe('setCancelOrderChallengeTimeout()', () => {
             describe('if called from non-deployer', () => {
-                let initialValue;
-
-                before(async () => {
-                    initialValue = await web3Configuration.cancelOrderChallengeTimeout.call();
-                });
-
-                after(async () => {
-                    await web3Configuration.setCancelOrderChallengeTimeout(initialValue);
-                });
-
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setCancelOrderChallengeTimeout(100);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCancelOrderChallengeTimeoutEvent');
-                    const value = await web3Configuration.cancelOrderChallengeTimeout.call();
-                    value.toNumber().should.equal(100);
+
+                    (await ethersConfiguration.cancelOrderChallengeTimeout())
+                        ._bn.should.eq.BN(100);
                 });
             });
 
@@ -665,29 +670,21 @@ module.exports = (glob) => {
 
         describe('settlementChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.settlementChallengeTimeout.call();
-                value.toNumber().should.equal(60 * 60 * 5);
+                (await ethersConfiguration.settlementChallengeTimeout())
+                    ._bn.should.eq.BN(60 * 60 * 24 * 5);
             });
         });
 
         describe('setSettlementChallengeTimeout()', () => {
             describe('if called from non-deployer', () => {
-                let initialValue;
-
-                before(async () => {
-                    initialValue = await web3Configuration.settlementChallengeTimeout.call();
-                });
-
-                after(async () => {
-                    await web3Configuration.setSettlementChallengeTimeout(initialValue);
-                });
-
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setSettlementChallengeTimeout(100);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetSettlementChallengeTimeoutEvent');
-                    const value = await web3Configuration.settlementChallengeTimeout.call();
-                    value.toNumber().should.equal(100);
+
+                    (await ethersConfiguration.settlementChallengeTimeout())
+                        ._bn.should.eq.BN(100);
                 });
             });
 
@@ -700,8 +697,8 @@ module.exports = (glob) => {
 
         describe('unchallengeOrderCandidateByTradeStake()', () => {
             it('should return initial value', async () => {
-                (await web3Configuration.unchallengeOrderCandidateByTradeStake.call())
-                    .should.eq.BN(0);
+                (await ethersConfiguration.unchallengeOrderCandidateByTradeStake())
+                    ._bn.should.eq.BN(0);
             });
         });
 
@@ -714,7 +711,7 @@ module.exports = (glob) => {
                     result.logs[0].event.should.equal('SetUnchallengeDriipSettlementOrderByTradeStakeEvent');
 
                     (await ethersConfiguration.unchallengeOrderCandidateByTradeStake())
-                        .should.eq.BN(1e18);
+                        ._bn.should.eq.BN(1e18.toString());
                 });
             });
 
@@ -728,8 +725,8 @@ module.exports = (glob) => {
 
         describe('falseWalletSignatureStake()', () => {
             it('should return initial value', async () => {
-                (await web3Configuration.falseWalletSignatureStake.call())
-                    .should.eq.BN(0);
+                (await ethersConfiguration.falseWalletSignatureStake())
+                    ._bn.should.eq.BN(0);
             });
         });
 
@@ -742,7 +739,7 @@ module.exports = (glob) => {
                     result.logs[0].event.should.equal('SetFalseWalletSignatureStakeEvent');
 
                     (await ethersConfiguration.falseWalletSignatureStake())
-                        .should.eq.BN(1e18);
+                        ._bn.should.eq.BN(1e18.toString());
                 });
             });
 
@@ -756,8 +753,8 @@ module.exports = (glob) => {
 
         describe('duplicateDriipNonceStake()', () => {
             it('should return initial value', async () => {
-                (await web3Configuration.duplicateDriipNonceStake.call())
-                    .should.eq.BN(0);
+                (await ethersConfiguration.duplicateDriipNonceStake())
+                    ._bn.should.eq.BN(0);
             });
         });
 
@@ -770,7 +767,7 @@ module.exports = (glob) => {
                     result.logs[0].event.should.equal('SetDuplicateDriipNonceStakeEvent');
 
                     (await ethersConfiguration.duplicateDriipNonceStake())
-                        .should.eq.BN(1e18);
+                        ._bn.should.eq.BN(1e18.toString());
                 });
             });
 
@@ -784,8 +781,8 @@ module.exports = (glob) => {
 
         describe('doubleSpentOrderStake()', () => {
             it('should return initial value', async () => {
-                (await web3Configuration.doubleSpentOrderStake.call())
-                    .should.eq.BN(0);
+                (await ethersConfiguration.doubleSpentOrderStake())
+                    ._bn.should.eq.BN(0);
             });
         });
 
@@ -798,7 +795,7 @@ module.exports = (glob) => {
                     result.logs[0].event.should.equal('SetDoubleSpentOrderStakeEvent');
 
                     (await ethersConfiguration.doubleSpentOrderStake())
-                        .should.eq.BN(1e18);
+                        ._bn.should.eq.BN(1e18.toString());
                 });
             });
 
