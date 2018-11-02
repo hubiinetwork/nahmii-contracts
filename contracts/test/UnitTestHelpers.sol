@@ -58,39 +58,6 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     */
 
     //
-    // Helper for ClientFunds SC
-    // -----------------------------------------------------------------------------------------------------------------
-    function callToUpdateSettledBalance_CLIENTFUND(address clientFund, address wallet, int256 amount, address currencyCt, uint256 currencyId) public {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.updateSettledBalance(wallet, amount, currencyCt, currencyId);
-    }
-
-    //    function callToWithdrawFromDepositedBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
-    //        require(clientFund != address(0));
-    //        ClientFund sc = ClientFund(clientFund);
-    //        sc.withdrawFromDepositedBalance(sourceWallet, destWallet, amount, token);
-    //    }
-
-    //    function callToDepositEthersToSettledBalance_CLIENTFUND(address clientFund, address destWallet) public payable {
-    //        require(clientFund != address(0));
-    //        ClientFund sc = ClientFund(clientFund);
-    //        sc.depositEthersToSettledBalance.value(msg.value)(destWallet);
-    //    }
-
-    //    function callToDepositTokensToSettledBalance_CLIENTFUND(address clientFund, address destWallet, address token, int256 amount) public {
-    //        require(clientFund != address(0));
-    //        ClientFund sc = ClientFund(clientFund);
-    //        sc.depositTokensToSettledBalance(destWallet, token, amount);
-    //    }
-
-    function callToSeizeAllBalances_CLIENTFUND(address clientFund, address sourceWallet, address destWallet) public {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.seizeAllBalances(sourceWallet, destWallet);
-    }
-
-    //
     // Helpers for RevenueFund SC
     // -----------------------------------------------------------------------------------------------------------------
     function callToDepositTokens_REVENUEFUND(address revenueFund, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
@@ -115,18 +82,8 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     }
 
     //
-    // Helpers for SecurityBond SC
-    // -----------------------------------------------------------------------------------------------------------------
-    function callToStage_SECURITYBOND(address securityBond, address wallet, int256 amount, address currencyCt, uint256 currencyid) public {
-        require(securityBond != address(0));
-        SecurityBond sc = SecurityBond(securityBond);
-        sc.stage(wallet, amount, currencyCt, currencyid);
-    }
-
-    //
     // Helpers for TokenHolderRevenueFund SC
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Update to two-component currency descriptor
     function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund, address token, int256 amount) public {
         require(tokenHolderRevenueFund != address(0));
         TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFund);

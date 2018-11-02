@@ -33,24 +33,38 @@ contract MockedDriipSettlementDispute {
     function challengeByOrder(NahmiiTypesLib.Order order, address challenger)
     public
     {
+        // To silence unused function parameter compiler warning
+        require(order.nonce == order.nonce);
+        require(challenger == challenger);
         _challengeByOrderCount++;
     }
 
     function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address challenger)
     public
     {
+        // To silence unused function parameter compiler warning
+        require(order.nonce == order.nonce);
+        require(trade.nonce == trade.nonce);
+        require(challenger == challenger);
         _unchallengeOrderCandidateByTradeCount++;
     }
 
     function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade, address challenger)
     public
     {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        require(trade.nonce == trade.nonce);
+        require(challenger == challenger);
         _challengeByTradeCount++;
     }
 
     function challengeByPayment(NahmiiTypesLib.Payment payment, address challenger)
     public
     {
+        // To silence unused function parameter compiler warning
+        require(payment.nonce == payment.nonce);
+        require(challenger == challenger);
         _challengeByPaymentCount++;
     }
 }

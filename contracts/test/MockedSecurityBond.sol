@@ -24,7 +24,7 @@ contract MockedSecurityBond /*is SecurityBond*/ {
     // -----------------------------------------------------------------------------------------------------------------
     struct Stage {
         address wallet;
-        MonetaryTypesLib.Figure figure;
+        uint256 fraction;
     }
 
     //
@@ -35,7 +35,7 @@ contract MockedSecurityBond /*is SecurityBond*/ {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event StageEvent(address wallet, uint256 fraction);
 
     //
     // Constructor
@@ -54,8 +54,8 @@ contract MockedSecurityBond /*is SecurityBond*/ {
         return stages.length;
     }
 
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId) public {
-        stages.push(Stage(wallet, MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId))));
-        emit StageEvent(msg.sender, amount, currencyCt, currencyId);
+    function stage(address wallet, uint256 fraction) {
+        stages.push(Stage(wallet, fraction));
+        emit StageEvent(msg.sender, fraction);
     }
 }

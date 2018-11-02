@@ -250,8 +250,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.setProposalChallenger(order.wallet, address(0));
 
         // Obtain stake and stage it in SecurityBond
-        (int256 stakeAmount, address stakeCurrencyCt, uint256 stakeCurrencyId) = configuration.getUnchallengeOrderCandidateByTradeStake();
-        securityBond.stage(unchallenger, stakeAmount, stakeCurrencyCt, stakeCurrencyId);
+        uint256 stakeFraction = configuration.unchallengeOrderCandidateByTradeStake();
+        securityBond.stage(unchallenger, stakeFraction);
     }
 
     function challengeByTradePrivate(address wallet, NahmiiTypesLib.Trade trade, address challenger)

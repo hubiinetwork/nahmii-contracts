@@ -1,15 +1,18 @@
 const chai = require('chai');
-const sinonChai = require("sinon-chai");
-const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require('sinon-chai');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
-const MockedConfiguration = artifacts.require("MockedConfiguration");
-const MockedValidator = artifacts.require("MockedValidator");
-const MockedSecurityBond = artifacts.require("MockedSecurityBond");
+const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedValidator = artifacts.require('MockedValidator');
+const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 let provider;
@@ -22,7 +25,6 @@ module.exports = (glob) => {
         let web3SecurityBond, ethersSecurityBond;
         let web3Validator, ethersValidator;
         let blockNumber0, blockNumber10, blockNumber20;
-
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -286,7 +288,7 @@ module.exports = (glob) => {
 
             before(async () => {
                 overrideOptions = {gasLimit: 3e6};
-                await ethersConfiguration.setDuplicateDriipNonceStake(utils.bigNumberify(1000), mocks.address0, utils.bigNumberify(0));
+                await web3Configuration.setDuplicateDriipNonceStake(1e17);
             });
 
             beforeEach(async () => {
@@ -406,9 +408,7 @@ module.exports = (glob) => {
                     fraudulentPaymentsCount.eq(1).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.figure.currency.ct.should.equal(mocks.address0);
-                    stage.figure.currency.id.should.deep.equal(utils.bigNumberify(0));
-                    stage.figure.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    stage.fraction._bn.should.eq.BN(1e17.toString());
                     logs.should.have.lengthOf(1);
                 });
             });

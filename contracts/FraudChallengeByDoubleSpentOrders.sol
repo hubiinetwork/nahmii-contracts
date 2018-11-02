@@ -59,8 +59,8 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
         fraudChallenge.addFraudulentTrade(trade1);
         fraudChallenge.addFraudulentTrade(trade2);
 
-        (int256 stakeAmount, address stakeCurrencyCt, uint256 stakeCurrencyId) = configuration.getDoubleSpentOrderStake();
-        securityBond.stage(msg.sender, stakeAmount, stakeCurrencyCt, stakeCurrencyId);
+        uint256 stakeFraction = configuration.doubleSpentOrderStake();
+        securityBond.stage(msg.sender, stakeFraction);
 
         if (doubleSpentBuyOrder) {
             fraudChallenge.addDoubleSpenderWallet(trade1.buyer.wallet);

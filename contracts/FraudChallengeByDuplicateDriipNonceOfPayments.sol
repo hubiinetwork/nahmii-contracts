@@ -60,8 +60,8 @@ contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChalleng
         fraudChallenge.addFraudulentPayment(payment1);
         fraudChallenge.addFraudulentPayment(payment2);
 
-        (int256 stakeAmount, address stakeCurrencyCt, uint256 stakeCurrencyId) = configuration.getDuplicateDriipNonceStake();
-        securityBond.stage(msg.sender, stakeAmount, stakeCurrencyCt, stakeCurrencyId);
+        uint256 stakeFraction = configuration.duplicateDriipNonceStake();
+        securityBond.stage(msg.sender, stakeFraction);
 
         emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(payment1, payment2, msg.sender);
     }

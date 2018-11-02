@@ -10,6 +10,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {Configurable} from "./Configurable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {Ownable} from "./Ownable.sol";
@@ -24,12 +25,11 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 @title SecurityBond
 @notice Fund that contains crypto incentive for challenging operator fraud.
 */
-// TODO Update to two-component currency descriptor
-contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
+contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, TransferControllerManageable {
+    using SafeMathIntLib for int256;
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
-    using SafeMathIntLib for int256;
 
     //
     // Constants
@@ -40,12 +40,12 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct SubStageItem {
-        int256 available_amount;
-        uint256 start_timestamp;
+        int256 availableAmount;
+        uint256 startTimestamp;
     }
 
     struct SubStageInfo {
-        uint256 current_index;
+        uint256 currentIndex;
         SubStageItem[] list;
     }
 
@@ -61,16 +61,17 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => Wallet) private walletMap;
 
-    //Active balance of ethers and tokens shared among all wallets
-    BalanceLib.Balance active;
+    BalanceLib.Balance private active;
+    InUseCurrencyLib.InUseCurrency private inUseCurrencies;
 
-    uint256 private withdrawalTimeout;
+    uint256 public withdrawalTimeout;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event SetWithdrawalTimeoutEvent(uint256 timeoutInSeconds);
     event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
-    event StageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event StageEvent(address from, uint256 fraction);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
 
     //
@@ -83,8 +84,14 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setWithdrawalTimeout(uint256 timeoutInSeconds) public onlyDeployer {
+    function setWithdrawalTimeout(uint256 timeoutInSeconds)
+    public
+    onlyDeployer
+    {
         withdrawalTimeout = timeoutInSeconds;
+
+        // Emit event
+        emit SetWithdrawalTimeoutEvent(timeoutInSeconds);
     }
 
     //
@@ -94,52 +101,81 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
         depositEthersTo(msg.sender);
     }
 
-    function depositEthersTo(address wallet) public payable {
+    function depositEthersTo(address wallet)
+    public
+    payable
+    {
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
-        //add to active balance
+        // Add to active balance
         active.add(amount, address(0), 0);
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
+
+        // Add currency to in-use list
+        inUseCurrencies.addItem(address(0), 0);
 
         // Emit event
         emit DepositEvent(wallet, amount, address(0), 0);
     }
 
-    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         depositTokensTo(msg.sender, amount, currencyCt, currencyId, standard);
     }
 
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(amount.isNonZeroPositiveInt256());
 
-        //execute transfer
+        // Execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
         require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
-        //add to per-wallet deposited balance
+        // Add to per-wallet deposited balance
         active.add(amount, currencyCt, currencyId);
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
+
+        // Add currency to in-use list
+        inUseCurrencies.addItem(currencyCt, currencyId);
 
         // Emit event
         emit DepositEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address currencyCt, uint256 currencyId) {
+    function deposit(address wallet, uint index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
         return walletMap[wallet].txHistory.deposit(index);
     }
 
-    function depositsCount(address wallet) public view returns (uint256) {
+    function depositsCount(address wallet)
+    public
+    view
+    returns (uint256)
+    {
         return walletMap[wallet].txHistory.depositsCount();
     }
 
     //
     // Balance retrieval functions
     // -----------------------------------------------------------------------------------------------------------------
-    function activeBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+    function activeBalance(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         return active.get(currencyCt, currencyId);
     }
 
-    function stagedBalance(address wallet, address currencyCt, uint256 currencyId) public view returns (int256) {
+    function stagedBalance(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         require(wallet != address(0));
 
         return walletMap[wallet].staged.get(currencyCt, currencyId);
@@ -148,87 +184,97 @@ contract SecurityBond is Ownable, AccrualBeneficiary, Servable, TransferControll
     //
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId) public notNullAddress(wallet) onlyDeployerOrEnabledServiceAction(STAGE_ACTION) {
-        uint256 start_time;
+    function stage(address wallet, uint256 fraction)
+    public
+    notNullAddress(wallet)
+    onlyDeployerOrEnabledServiceAction(STAGE_ACTION)
+    {
+        uint256 startTime;
 
-        require(amount.isPositiveInt256());
+        uint256 numCurrencies = inUseCurrencies.getLength();
+        int256 partsPer = configuration.PARTS_PER();
+        for (uint256 i = 0; i < numCurrencies; i++) {
+            MonetaryTypesLib.Currency memory currency = inUseCurrencies.getAt(i);
 
-        //clamp amount to move
-        amount = amount.clampMax(active.get(currencyCt, currencyId));
-        if (amount <= 0)
-            return;
+            int256 amount = active.get(currency.ct, currency.id).mul(
+                SafeMathIntLib.toInt256(fraction)
+            ).div(partsPer);
 
-        //move from active balance to staged
-        active.sub(amount, currencyCt, currencyId);
-        walletMap[wallet].staged.add(amount, currencyCt, currencyId);
+            // Move from active balance to staged
+            active.sub(amount, currency.ct, currency.id);
+            walletMap[wallet].staged.add(amount, currency.ct, currency.id);
 
-        //add substage info
-        start_time = block.timestamp + ((wallet == deployer) ? withdrawalTimeout : 0);
-        walletMap[wallet].subStaged[currencyCt][currencyId].list.push(SubStageItem(amount, start_time));
+            // Add substage info
+            startTime = block.timestamp + ((wallet == deployer) ? withdrawalTimeout : 0);
+            walletMap[wallet].subStaged[currency.ct][currency.id].list.push(SubStageItem(amount, startTime));
+        }
 
         // Emit event
-        emit StageEvent(msg.sender, amount, currencyCt, currencyId);
+        emit StageEvent(wallet, fraction);
     }
 
-    //
-    // Withdrawal functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
-        uint256 current_index;
-        int256 to_send_amount;
-        int256 this_round_amount;
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
+        uint256 currentIndex;
+        int256 toSendAmount;
+        int256 thisRoundAmount;
 
         require(amount.isNonZeroPositiveInt256());
 
-        //start withdrawal from current substage
+        // Start withdrawal from current substage
         SubStageInfo storage ssi = walletMap[msg.sender].subStaged[currencyCt][currencyId];
-        to_send_amount = 0;
-        while (to_send_amount < amount) {
-            current_index = ssi.current_index;
+        toSendAmount = 0;
+        while (toSendAmount < amount) {
+            currentIndex = ssi.currentIndex;
 
-            if (current_index >= ssi.list.length) {
+            if (currentIndex >= ssi.list.length)
                 break;
-            }
-            if (block.timestamp < ssi.list[current_index].start_timestamp) {
+
+            if (block.timestamp < ssi.list[currentIndex].startTimestamp)
                 break;
-            }
 
-            this_round_amount = (amount - to_send_amount).clampMax(ssi.list[current_index].available_amount);
+            thisRoundAmount = (amount - toSendAmount).clampMax(ssi.list[currentIndex].availableAmount);
 
-            ssi.list[current_index].available_amount = ssi.list[current_index].available_amount.sub_nn(this_round_amount);
-            if (ssi.list[current_index].available_amount == 0) {
-                ssi.current_index++;
-            }
+            ssi.list[currentIndex].availableAmount = ssi.list[currentIndex].availableAmount.sub_nn(thisRoundAmount);
+            if (ssi.list[currentIndex].availableAmount == 0)
+                ssi.currentIndex++;
 
-            to_send_amount = to_send_amount + this_round_amount;
+            toSendAmount = toSendAmount + thisRoundAmount;
         }
-        if (to_send_amount == 0)
+        if (toSendAmount == 0)
             return;
 
-        //subtract to per-wallet staged balance (will check for sufficient funds)
-        walletMap[msg.sender].staged.sub(to_send_amount, currencyCt, currencyId);
+        // Subtract to per-wallet staged balance (will check for sufficient funds)
+        walletMap[msg.sender].staged.sub(toSendAmount, currencyCt, currencyId);
 
-        walletMap[msg.sender].txHistory.addWithdrawal(to_send_amount, currencyCt, currencyId);
+        walletMap[msg.sender].txHistory.addWithdrawal(toSendAmount, currencyCt, currencyId);
 
-        //execute transfer
-        if (currencyCt == address(0)) {
-            msg.sender.transfer(uint256(to_send_amount));
-        }
+        // Execute transfer
+        if (currencyCt == address(0))
+            msg.sender.transfer(uint256(toSendAmount));
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(to_send_amount), currencyCt, currencyId));
+            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(toSendAmount), currencyCt, currencyId));
         }
 
         // Emit event
-        emit WithdrawEvent(msg.sender, to_send_amount, currencyCt, currencyId);
+        emit WithdrawEvent(msg.sender, toSendAmount, currencyCt, currencyId);
     }
 
-    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 timestamp, address token, uint256 id)
+    function withdrawal(address wallet, uint index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
-    function withdrawalsCount(address wallet) public view returns (uint256) {
+    function withdrawalsCount(address wallet)
+    public
+    view
+    returns (uint256)
+    {
         return walletMap[wallet].txHistory.withdrawalsCount();
     }
 

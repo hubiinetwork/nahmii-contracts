@@ -452,7 +452,7 @@ module.exports = (glob) => {
             let order, trade;
 
             before(async () => {
-                await web3Configuration.setUnchallengeOrderCandidateByTradeStake(1000, mocks.address0, 0);
+                await web3Configuration.setUnchallengeOrderCandidateByTradeStake(1e17);
             });
 
             beforeEach(async () => {

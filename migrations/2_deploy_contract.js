@@ -425,6 +425,7 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), partsPer.div(100));
 
             instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
             tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), 'stage');
