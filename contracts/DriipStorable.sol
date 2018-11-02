@@ -9,18 +9,24 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {Challenge} from "./Challenge.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
-contract NahmiiChallenge is Challenge {
+/**
+@title DriipStorable
+@notice A contract with internal functions for pushing trade and payment
+from memory to storage. Pushing driips without these functions is not straight
+forwards as they contain dynamically sized arrays.
+*/
 
-    function pushMemoryTradeToStorageArray(NahmiiTypes.Trade memTrade,
-        NahmiiTypes.Trade[] storage stgTradeArr)
+contract DriipStorable {
+
+    function pushMemoryTradeToStorageArray(NahmiiTypesLib.Trade memTrade,
+        NahmiiTypesLib.Trade[] storage stgTradeArr)
     internal
     {
         stgTradeArr.length += 1;
-        NahmiiTypes.Trade storage stgTrade = stgTradeArr[stgTradeArr.length - 1];
+        NahmiiTypesLib.Trade storage stgTrade = stgTradeArr[stgTradeArr.length - 1];
 
         stgTrade.nonce = memTrade.nonce;
         stgTrade.amount = memTrade.amount;
@@ -33,12 +39,12 @@ contract NahmiiChallenge is Challenge {
         stgTrade.blockNumber = memTrade.blockNumber;
     }
 
-    function pushMemoryPaymentToStorageArray(NahmiiTypes.Payment memPayment,
-        NahmiiTypes.Payment[] storage stgPaymentArr)
+    function pushMemoryPaymentToStorageArray(NahmiiTypesLib.Payment memPayment,
+        NahmiiTypesLib.Payment[] storage stgPaymentArr)
     internal
     {
         stgPaymentArr.length += 1;
-        NahmiiTypes.Payment storage stgPayment = stgPaymentArr[stgPaymentArr.length - 1];
+        NahmiiTypesLib.Payment storage stgPayment = stgPaymentArr[stgPaymentArr.length - 1];
 
         stgPayment.nonce = memPayment.nonce;
         stgPayment.amount = memPayment.amount;
@@ -50,7 +56,7 @@ contract NahmiiChallenge is Challenge {
         stgPayment.blockNumber = memPayment.blockNumber;
     }
 
-    function copyTradeParty(NahmiiTypes.TradeParty storage stgTradeParty, NahmiiTypes.TradeParty memTradeParty)
+    function copyTradeParty(NahmiiTypesLib.TradeParty storage stgTradeParty, NahmiiTypesLib.TradeParty memTradeParty)
     private
     {
         stgTradeParty.nonce = memTradeParty.nonce;
@@ -62,8 +68,8 @@ contract NahmiiChallenge is Challenge {
         copySingleFigureTotalFigures(stgTradeParty.fees, memTradeParty.fees);
     }
 
-    function copyPaymentSenderParty(NahmiiTypes.PaymentSenderParty storage stgPaymentParty,
-        NahmiiTypes.PaymentSenderParty memPaymentParty)
+    function copyPaymentSenderParty(NahmiiTypesLib.PaymentSenderParty storage stgPaymentParty,
+        NahmiiTypesLib.PaymentSenderParty memPaymentParty)
     private
     {
         stgPaymentParty.nonce = memPaymentParty.nonce;
@@ -72,8 +78,8 @@ contract NahmiiChallenge is Challenge {
         copySingleFigureTotalFigures(stgPaymentParty.fees, memPaymentParty.fees);
     }
 
-    function copyPaymentRecipientParty(NahmiiTypes.PaymentRecipientParty storage stgPaymentParty,
-        NahmiiTypes.PaymentRecipientParty memPaymentParty)
+    function copyPaymentRecipientParty(NahmiiTypesLib.PaymentRecipientParty storage stgPaymentParty,
+        NahmiiTypesLib.PaymentRecipientParty memPaymentParty)
     private
     {
         stgPaymentParty.nonce = memPaymentParty.nonce;
@@ -82,15 +88,15 @@ contract NahmiiChallenge is Challenge {
         copyFigureArray(stgPaymentParty.fees.total, memPaymentParty.fees.total);
     }
 
-    function copySingleFigureTotalFigures(NahmiiTypes.SingleFigureTotalFigures storage stgSingleFigureTotalFigures,
-        NahmiiTypes.SingleFigureTotalFigures memSingleFigureTotalFigures)
+    function copySingleFigureTotalFigures(NahmiiTypesLib.SingleFigureTotalFigures storage stgSingleFigureTotalFigures,
+        NahmiiTypesLib.SingleFigureTotalFigures memSingleFigureTotalFigures)
     private
     {
         stgSingleFigureTotalFigures.single = memSingleFigureTotalFigures.single;
         copyFigureArray(stgSingleFigureTotalFigures.total, memSingleFigureTotalFigures.total);
     }
 
-    function copyFigureArray(MonetaryTypes.Figure[] storage stgFigureArr, MonetaryTypes.Figure[] memFigureArr)
+    function copyFigureArray(MonetaryTypesLib.Figure[] storage stgFigureArr, MonetaryTypesLib.Figure[] memFigureArr)
     private
     {
         for (uint256 i = 0; i < memFigureArr.length; i++)

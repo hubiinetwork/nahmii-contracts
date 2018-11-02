@@ -24,23 +24,23 @@ contract FraudChallengable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeFraudChallengeEvent(FraudChallenge oldAddress, FraudChallenge newAddress);
+    event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the fraudChallenge contract
-    /// @param newAddress The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newAddress) public onlyDeployer
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, fraudChallenge)
+    /// @notice Change the fraud challenge contract
+    /// @param newFraudChallenge The (address of) FraudChallenge contract instance
+    function changeFraudChallenge(FraudChallenge newFraudChallenge) public onlyDeployer
+    notNullAddress(newFraudChallenge)
+    notSameAddresses(newFraudChallenge, fraudChallenge)
     {
-        //set new fraud challenge
-        FraudChallenge oldAddress = fraudChallenge;
-        fraudChallenge = newAddress;
+        // Set new fraud challenge
+        FraudChallenge oldFraudChallenge = fraudChallenge;
+        fraudChallenge = newFraudChallenge;
 
         // Emit event
-        emit ChangeFraudChallengeEvent(oldAddress, newAddress);
+        emit ChangeFraudChallengeEvent(oldFraudChallenge, newFraudChallenge);
     }
 
     //

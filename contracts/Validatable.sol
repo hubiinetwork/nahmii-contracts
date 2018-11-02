@@ -10,7 +10,7 @@ pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
 import {Validator} from "./Validator.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title Validatable
@@ -52,28 +52,38 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyOperatorSealedOrder(NahmiiTypes.Order order) {
+    modifier onlyOperatorSealedOrder(NahmiiTypesLib.Order order) {
         require(validator.isGenuineOrderOperatorSeal(order));
         _;
     }
 
-    modifier onlySealedOrder(NahmiiTypes.Order order) {
+    modifier onlySealedOrder(NahmiiTypesLib.Order order) {
         require(validator.isGenuineOrderSeals(order));
         _;
     }
 
-    modifier onlySealedTrade(NahmiiTypes.Trade trade) {
+    modifier onlySealedTrade(NahmiiTypesLib.Trade trade) {
         require(validator.isGenuineTradeSeal(trade));
         _;
     }
 
-    modifier onlyOperatorSealedPayment(NahmiiTypes.Payment payment) {
+    modifier onlyOperatorSealedPayment(NahmiiTypesLib.Payment payment) {
         require(validator.isGenuinePaymentOperatorSeal(payment));
         _;
     }
 
-    modifier onlySealedPayment(NahmiiTypes.Payment payment) {
+    modifier onlySealedPayment(NahmiiTypesLib.Payment payment) {
         require(validator.isGenuinePaymentSeals(payment));
+        _;
+    }
+
+    modifier onlyTradeParty(NahmiiTypesLib.Trade trade, address wallet) {
+        require(validator.isTradeParty(trade, wallet));
+        _;
+    }
+
+    modifier onlyPaymentSender(NahmiiTypesLib.Payment payment, address wallet) {
+        require(validator.isPaymentParty(payment, wallet));
         _;
     }
 }

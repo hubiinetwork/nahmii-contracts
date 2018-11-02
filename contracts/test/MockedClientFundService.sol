@@ -28,26 +28,26 @@ contract MockedClientFundService is Ownable, ClientFundable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function updateSettledBalanceInClientFund(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
     {
         clientFund.updateSettledBalance(wallet, amount, currencyCt, currencyId);
     }
 
-    function stageInClientFund(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
     {
         clientFund.stage(wallet, amount, currencyCt, currencyId);
     }
 
-    function stageToBeneficiaryUntargetedInClientFund(address sourceWallet, Beneficiary beneficiary, int256 amount,
+    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
         address currencyCt, uint256 currencyId)
     public
     {
         clientFund.stageToBeneficiaryUntargeted(sourceWallet, beneficiary, amount, currencyCt, currencyId);
     }
 
-    function seizeAllBalancesInClientFund(address sourceWallet, address targetWallet)
+    function seizeAllBalances(address sourceWallet, address targetWallet)
     public
     {
         clientFund.seizeAllBalances(sourceWallet, targetWallet);

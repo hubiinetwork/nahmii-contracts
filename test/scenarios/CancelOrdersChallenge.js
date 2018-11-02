@@ -28,7 +28,7 @@ module.exports = (glob) => {
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner, glob.web3AccessorManager.address);
+            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
             ethersCancelOrdersChallengeUserA = ethersCancelOrdersChallengeOwner.connect(glob.signer_a);
@@ -261,7 +261,7 @@ module.exports = (glob) => {
                                 order: {
                                     hashes: {
                                         wallet: order.seals.wallet.hash,
-                                        exchange: order.seals.exchange.hash
+                                        operator: order.seals.operator.hash
                                     }
                                 }
                             },
@@ -292,7 +292,7 @@ module.exports = (glob) => {
                                 order: {
                                     hashes: {
                                         wallet: order.seals.wallet.hash,
-                                        exchange: order.seals.exchange.hash
+                                        operator: order.seals.operator.hash
                                     }
                                 }
                             }

@@ -10,10 +10,10 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 /**
- * @title     MonetaryTypes
+ * @title     MonetaryTypesLib
  * @dev       Data types
  */
-library MonetaryTypes {
+library MonetaryTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------

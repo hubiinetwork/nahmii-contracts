@@ -11,7 +11,7 @@ module.exports = function (glob) {
         let blockNumberAhead;
         let ethersHasher;
         let web3Configuration, ethersConfiguration;
-        let web3AccessorManager, ethersAccessorManager;
+        let web3SignerManager, ethersSignerManager;
         let web3Validator, ethersValidator;
         let partsPer;
 
@@ -21,12 +21,12 @@ module.exports = function (glob) {
             ethersHasher = glob.ethersIoHasher;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
-            web3AccessorManager = glob.web3AccessorManager;
-            ethersAccessorManager = glob.ethersIoAccessorManager;
+            web3SignerManager = glob.web3SignerManager;
+            ethersSignerManager = glob.ethersIoSignerManager;
             web3Validator = glob.web3Validator;
             ethersValidator = glob.ethersIoValidator;
 
-            await ethersValidator.changeAccessorManager(ethersAccessorManager.address);
+            await ethersValidator.changeSignerManager(ethersSignerManager.address);
             await ethersValidator.changeConfiguration(ethersConfiguration.address);
             await ethersValidator.changeHasher(ethersHasher.address);
 
@@ -428,7 +428,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (exchange) hash differs from calculated', () => {
+        //     describe('if (operator) hash differs from calculated', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             trade.seal.hash = utils.id('some non-existent hash');
@@ -439,7 +439,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if not signed (by exchange)', () => {
+        //     describe('if not signed (by operator)', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             const sign = mocks.createWeb3Signer(glob.user_a);
@@ -1053,7 +1053,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (exchange) hash differs from calculated', () => {
+        //     describe('if (operator) hash differs from calculated', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             trade.seal.hash = utils.id('some non-existent hash');
@@ -1064,7 +1064,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if not signed (by exchange)', () => {
+        //     describe('if not signed (by operator)', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             const sign = mocks.createWeb3Signer(glob.user_a);
@@ -1687,10 +1687,10 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if exchange hash differs from calculated', () => {
+        //     describe('if operator hash differs from calculated', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-        //             payment.seals.exchange.hash = utils.id('some non-existent hash');
+        //             payment.seals.operator.hash = utils.id('some non-existent hash');
         //         });
         //
         //         it('should revert', async () => {
@@ -1698,10 +1698,10 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if not signed by exchange', () => {
+        //     describe('if not signed by operator', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-        //             payment.seals.exchange.signature = payment.seals.wallet.signature;
+        //             payment.seals.operator.signature = payment.seals.wallet.signature;
         //         });
         //
         //         it('should revert', async () => {
@@ -1714,9 +1714,9 @@ module.exports = function (glob) {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             const signAsWallet = mocks.createWeb3Signer(glob.user_a);
         //             payment.seals.wallet.signature = await signAsWallet(payment.seals.wallet.hash);
-        //             payment.seals.exchange.hash = mocks.hashPaymentAsOperator(payment);
-        //             const signAsExchange = mocks.createWeb3Signer(glob.owner);
-        //             payment.seals.exchange.signature = await signAsExchange(payment.seals.exchange.hash);
+        //             payment.seals.operator.hash = mocks.hashPaymentAsOperator(payment);
+        //             const signAsDriipSettlement = mocks.createWeb3Signer(glob.owner);
+        //             payment.seals.operator.signature = await signAsDriipSettlement(payment.seals.operator.hash);
         //         });
         //
         //         it('should record fraudulent payment, toggle operational mode and emit event', async () => {
@@ -3573,7 +3573,7 @@ module.exports = function (glob) {
         //                     order: {
         //                         amount: utils.parseUnits('1000', 18),
         //                         hashes: {
-        //                             exchange: firstTrade.buyer.order.hashes.exchange // <---- modified ----
+        //                             operator: firstTrade.buyer.order.hashes.operator // <---- modified ----
         //                         },
         //                         residuals: {
         //                             current: utils.parseUnits('300', 18),
@@ -3691,7 +3691,7 @@ module.exports = function (glob) {
         //                     order: {
         //                         amount: utils.parseUnits('1000', 18),
         //                         hashes: {
-        //                             exchange: firstTrade.seller.order.hashes.exchange // <---- modified ----
+        //                             operator: firstTrade.seller.order.hashes.operator // <---- modified ----
         //                         },
         //                         residuals: {
         //                             current: utils.parseUnits('500', 18),

@@ -1,5 +1,5 @@
-# NahmiiChallenge
-[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/NahmiiChallenge.sol)
+# DriipChallenge
+[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/DriipChallenge.sol)
 
 
 **Execution cost**: No bound available
@@ -151,4 +151,4 @@ Returns:
 
 
 
-[Back to the top ↑](#nahmiichallenge)
+[Back to the top ↑](#driipchallenge)

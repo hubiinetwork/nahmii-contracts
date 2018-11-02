@@ -421,7 +421,7 @@ module.exports = (glob) => {
         });
 
         describe('setTradeMakerMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.tradeMakerMinimumFee++;
@@ -466,7 +466,7 @@ module.exports = (glob) => {
         });
 
         describe('setTradeTakerMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.tradeTakerMinimumFee++;
@@ -512,7 +512,7 @@ module.exports = (glob) => {
         });
 
         describe('setPaymentMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e18);
                     feeUpdates.paymentMininumFee++;
@@ -586,7 +586,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumberAhead, 1e18);
 
@@ -624,19 +624,19 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getCancelOrderChallengeTimeout()', () => {
+        describe('cancelOrderChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
+                const value = await web3Configuration.cancelOrderChallengeTimeout.call();
                 value.toNumber().should.equal(60 * 60 * 3);
             });
         });
 
         describe('setCancelOrderChallengeTimeout()', () => {
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await web3Configuration.getCancelOrderChallengeTimeout.call();
+                    initialValue = await web3Configuration.cancelOrderChallengeTimeout.call();
                 });
 
                 after(async () => {
@@ -646,8 +646,8 @@ module.exports = (glob) => {
                 it('should successfully set new values and emit event', async () => {
                     const result = await web3Configuration.setCancelOrderChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetCancelOrderChallengeTimeout');
-                    const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
+                    result.logs[0].event.should.equal('SetCancelOrderChallengeTimeoutEvent');
+                    const value = await web3Configuration.cancelOrderChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });
@@ -659,37 +659,37 @@ module.exports = (glob) => {
             });
         });
 
-        describe('getDriipSettlementChallengeTimeout()', () => {
+        describe('settlementChallengeTimeout()', () => {
             it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.driipSettlementChallengeTimeout.call();
+                const value = await web3Configuration.settlementChallengeTimeout.call();
                 value.toNumber().should.equal(60 * 60 * 5);
             });
         });
 
-        describe('setDriipSettlementChallengeTimeout()', () => {
-            describe('if called with sender that is owner', () => {
+        describe('setSettlementChallengeTimeout()', () => {
+            describe('if called from non-deployer', () => {
                 let initialValue;
 
                 before(async () => {
-                    initialValue = await web3Configuration.driipSettlementChallengeTimeout.call();
+                    initialValue = await web3Configuration.settlementChallengeTimeout.call();
                 });
 
                 after(async () => {
-                    await web3Configuration.setDriipSettlementChallengeTimeout(initialValue);
+                    await web3Configuration.setSettlementChallengeTimeout(initialValue);
                 });
 
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDriipSettlementChallengeTimeout(100);
+                    const result = await web3Configuration.setSettlementChallengeTimeout(100);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDriipSettlementChallengeTimeout');
-                    const value = await web3Configuration.driipSettlementChallengeTimeout.call();
+                    result.logs[0].event.should.equal('SetSettlementChallengeTimeoutEvent');
+                    const value = await web3Configuration.settlementChallengeTimeout.call();
                     value.toNumber().should.equal(100);
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should fail to set new values', async () => {
-                    web3Configuration.setDriipSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
+                    web3Configuration.setSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -712,7 +712,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValues;
 
                 before(async () => {
@@ -761,7 +761,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValues;
 
                 before(async () => {
@@ -810,7 +810,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValues;
 
                 before(async () => {
@@ -859,7 +859,7 @@ module.exports = (glob) => {
                 currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called from non-deployer', () => {
                 let initialValues;
 
                 before(async () => {

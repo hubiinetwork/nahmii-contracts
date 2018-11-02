@@ -9,10 +9,10 @@
 pragma solidity ^0.4.24;
 
 /**
- * @title     SafeMathInt
+ * @title     SafeMathIntLib
  * @dev       Math operations with safety checks that throw on error
  */
-library SafeMathInt {
+library SafeMathIntLib {
     int256 constant INT256_MIN = int256((uint256(1) << 255));
     int256 constant INT256_MAX = int256(~((uint256(1) << 255)));
 

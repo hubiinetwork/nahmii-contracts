@@ -13,13 +13,13 @@ import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {RevenueToken} from "./RevenueToken.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title TokenHolderRevenueFund
@@ -29,8 +29,8 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
-    using SafeMathInt for int256;
-    using SafeMathUint for uint256;
+    using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
 
     //
     // Constants
@@ -60,11 +60,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     RevenueToken private revenueToken;
 
     BalanceLib.Balance periodAccrual;
-    MonetaryTypes.Currency[] periodCurrenciesList;
+    MonetaryTypesLib.Currency[] periodCurrenciesList;
     mapping(address => mapping(uint256 => bool)) periodAccrualMap;
 
     BalanceLib.Balance aggregateAccrual;
-    MonetaryTypes.Currency[] aggregateCurrenciesList;
+    MonetaryTypesLib.Currency[] aggregateCurrenciesList;
     mapping(address => mapping(uint256 => bool)) aggregateAccrualMap;
 
     mapping(address => Wallet) private walletMap;
@@ -110,7 +110,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     }
 
     function depositEthersTo(address wallet) public payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         //add to balances
         periodAccrual.add(amount, address(0), 0);
@@ -143,12 +143,12 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         //add currency to in-use list
         if (!periodAccrualMap[currencyCt][currencyId]) {
             periodAccrualMap[currencyCt][currencyId] = true;
-            periodCurrenciesList.push(MonetaryTypes.Currency(currencyCt, currencyId));
+            periodCurrenciesList.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
         }
 
         if (!aggregateAccrualMap[currencyCt][currencyId]) {
             aggregateAccrualMap[currencyCt][currencyId] = true;
-            aggregateCurrenciesList.push(MonetaryTypes.Currency(currencyCt, currencyId));
+            aggregateCurrenciesList.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
         }
 
         //add deposit info
@@ -162,8 +162,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         return walletMap[wallet].txHistory.deposit(index);
     }
 
-    function depositCount(address wallet) public view returns (uint256) {
-        return walletMap[wallet].txHistory.depositCount();
+    function depositsCount(address wallet) public view returns (uint256) {
+        return walletMap[wallet].txHistory.depositsCount();
     }
 
     //
@@ -195,7 +195,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         //clear accruals
         len = periodCurrenciesList.length;
         for (i = 0; i < len; i++) {
-            MonetaryTypes.Currency storage currency = periodCurrenciesList[i];
+            MonetaryTypesLib.Currency storage currency = periodCurrenciesList[i];
             periodAccrual.set(0, currency.ct, currency.id);
         }
 
@@ -269,7 +269,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         }
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            if (!address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId)) {
+            if (!address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId)) {
                 revert();
             }
         }
@@ -282,8 +282,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
-    function withdrawalCount(address wallet) public view returns (uint256) {
-        return walletMap[wallet].txHistory.withdrawalCount();
+    function withdrawalsCount(address wallet) public view returns (uint256) {
+        return walletMap[wallet].txHistory.withdrawalsCount();
     }
 
     //

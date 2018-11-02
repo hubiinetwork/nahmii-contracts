@@ -10,50 +10,49 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {AccessorManager} from "./AccessorManager.sol";
-import {NahmiiTypes} from "./NahmiiTypes.sol";
+import {SignerManager} from "./SignerManager.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title AccessorManageable
+@title SignerManageable
 @notice A contract to interface ACL
 */
-contract AccessorManageable is Ownable {
+contract SignerManageable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    AccessorManager public accessorManager;
+    SignerManager public signerManager;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeAccessorManagerEvent(address oldAccessor, address newAccessor);
+    event ChangeSignerManagerEvent(address oldSignerManager, address newSignerManager);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address manager) public {
         require(manager != address(0));
-        accessorManager = AccessorManager(manager);
+        signerManager = SignerManager(manager);
     }
-
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the accessor manager of this contract
-    /// @param newAccessor The address of the new accessor
-    function changeAccessorManager(address newAccessor)
+    /// @notice Change the signer manager of this contract
+    /// @param newSignerManager The address of the new signer
+    function changeSignerManager(address newSignerManager)
     public
     onlyDeployer
-    notNullOrThisAddress(newAccessor)
+    notNullOrThisAddress(newSignerManager)
     {
-        if (newAccessor != address(accessorManager)) {
-            //set new accessor
-            address oldAccessor = address(accessorManager);
-            accessorManager = AccessorManager(newAccessor);
+        if (newSignerManager != address(signerManager)) {
+            //set new signer
+            address oldSignerManager = address(signerManager);
+            signerManager = SignerManager(newSignerManager);
 
             // Emit event
-            emit ChangeAccessorManagerEvent(oldAccessor, newAccessor);
+            emit ChangeSignerManagerEvent(oldSignerManager, newSignerManager);
         }
     }
 
@@ -84,8 +83,8 @@ contract AccessorManageable is Ownable {
     view
     returns (bool)
     {
-        require(accessorManager != address(0));
-        return accessorManager.isSigner(ethrecover(hash, v, r, s));
+        require(signerManager != address(0));
+        return signerManager.isSigner(ethrecover(hash, v, r, s));
     }
 
     /// @notice Gauge whether a signature of a hash has been signed by the claimed signer
@@ -105,8 +104,8 @@ contract AccessorManageable is Ownable {
 
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier accessorManagerInitialized() {
-        require(accessorManager != address(0));
+    modifier signerManagerInitialized() {
+        require(signerManager != address(0));
         _;
     }
 }

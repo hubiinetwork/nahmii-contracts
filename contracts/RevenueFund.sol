@@ -13,13 +13,13 @@ import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {AccrualBenefactor} from "./AccrualBenefactor.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title RevenueFund
@@ -30,8 +30,8 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
-    using SafeMathInt for int256;
-    using SafeMathUint for uint256;
+    using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
 
     //
@@ -67,7 +67,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     }
 
     function depositEthersTo(address wallet) public payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         //add to balances
         periodAccrual.add(amount, address(0), 0);
@@ -131,7 +131,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
         //execute transfer
         for (currency_idx = inUsePeriodAccrual.getLength(); currency_idx > 0; currency_idx--) {
-            MonetaryTypes.Currency memory currency = inUsePeriodAccrual.getAt(currency_idx - 1);
+            MonetaryTypesLib.Currency memory currency = inUsePeriodAccrual.getAt(currency_idx - 1);
 
             remaining = periodAccrual.get(currency.ct, currency.id);
             for (idx = 0; idx < beneficiaries.length; idx++) {

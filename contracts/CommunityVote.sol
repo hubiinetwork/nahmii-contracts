@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {ERC20} from "./ERC20.sol";
 import {Ownable} from "./Ownable.sol";
 
@@ -22,6 +22,7 @@ contract CommunityVote is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => bool) doubleSpenderWalletsMap;
     uint256 maxDriipNonce;
+    uint256 maxNullNonce;
     bool dataAvailable;
 
     //
@@ -45,6 +46,12 @@ contract CommunityVote is Ownable {
     /// @return the max driip nonce
     function getMaxDriipNonce() public view returns (uint256) {
         return maxDriipNonce;
+    }
+
+    /// @notice Get the max null settlement nonce to be accepted in settlements
+    /// @return the max driip nonce
+    function getMaxNullNonce() public view returns (uint256) {
+        return maxNullNonce;
     }
 
     /// @notice Get the data availability status

@@ -8,13 +8,13 @@
 
 pragma solidity ^0.4.24;
 
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
- * @title     NahmiiTypes
+ * @title     NahmiiTypesLib
  * @dev       Data types of order, trade, payment and more
  */
-library NahmiiTypes {
+library NahmiiTypesLib {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,17 +30,17 @@ library NahmiiTypes {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct IntendedConjugateCurrency {
-        MonetaryTypes.Currency intended;
-        MonetaryTypes.Currency conjugate;
+        MonetaryTypesLib.Currency intended;
+        MonetaryTypesLib.Currency conjugate;
     }
 
     struct SingleFigureTotalFigures {
-        MonetaryTypes.Figure single;
-        MonetaryTypes.Figure[] total;
+        MonetaryTypesLib.Figure single;
+        MonetaryTypesLib.Figure[] total;
     }
 
     struct TotalFigures {
-        MonetaryTypes.Figure[] total;
+        MonetaryTypesLib.Figure[] total;
     }
 
     struct CurrentPreviousInt256 {
@@ -63,14 +63,14 @@ library NahmiiTypes {
         SingleTotalInt256 conjugate;
     }
 
-    struct WalletExchangeHashes {
+    struct WalletOperatorHashes {
         bytes32 wallet;
-        bytes32 exchange;
+        bytes32 operator;
     }
 
     struct TradeOrder {
         int256 amount;
-        WalletExchangeHashes hashes;
+        WalletOperatorHashes hashes;
         CurrentPreviousInt256 residuals;
     }
 
@@ -85,9 +85,9 @@ library NahmiiTypes {
         Signature signature;
     }
 
-    struct WalletExchangeSeal {
+    struct WalletOperatorSeal {
         Seal wallet;
-        Seal exchange;
+        Seal operator;
     }
 
     struct TradeParty {
@@ -121,6 +121,7 @@ library NahmiiTypes {
 
         Seal seal;
         uint256 blockNumber;
+        uint256 operatorId;
     }
 
     struct PaymentSenderParty {
@@ -145,7 +146,7 @@ library NahmiiTypes {
         uint256 nonce;
 
         int256 amount;
-        MonetaryTypes.Currency currency;
+        MonetaryTypesLib.Currency currency;
 
         PaymentSenderParty sender;
         PaymentRecipientParty recipient;
@@ -153,8 +154,9 @@ library NahmiiTypes {
         // Positive transfer is always in direction from sender to recipient
         SingleTotalInt256 transfers;
 
-        WalletExchangeSeal seals;
+        WalletOperatorSeal seals;
         uint256 blockNumber;
+        uint256 operatorId;
     }
 
     struct OrderPlacement {
@@ -173,8 +175,9 @@ library NahmiiTypes {
 
         OrderPlacement placement;
 
-        WalletExchangeSeal seals;
+        WalletOperatorSeal seals;
         uint256 blockNumber;
+        uint256 operatorId;
     }
 
     struct SettlementParty {
@@ -188,37 +191,5 @@ library NahmiiTypes {
         DriipType driipType;
         SettlementParty origin;
         SettlementParty target;
-    }
-
-    //
-    // Functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function isTradeParty(NahmiiTypes.Trade trade, address wallet) internal pure returns (bool) {
-        return wallet == trade.buyer.wallet || wallet == trade.seller.wallet;
-    }
-
-    function isTradeBuyer(NahmiiTypes.Trade trade, address wallet) internal pure returns (bool) {
-        return wallet == trade.buyer.wallet;
-    }
-
-    function isTradeSeller(NahmiiTypes.Trade trade, address wallet) internal pure returns (bool) {
-        return wallet == trade.seller.wallet;
-    }
-
-    function isPaymentParty(NahmiiTypes.Payment payment, address wallet) internal pure returns (bool) {
-        return wallet == payment.sender.wallet || wallet == payment.recipient.wallet;
-    }
-
-    function isPaymentSender(NahmiiTypes.Payment payment, address wallet) internal pure returns (bool) {
-        return wallet == payment.sender.wallet;
-    }
-
-    function isPaymentRecipient(NahmiiTypes.Payment payment, address wallet) internal pure returns (bool) {
-        return wallet == payment.recipient.wallet;
-    }
-
-    function isTradeOrder(NahmiiTypes.Trade trade, NahmiiTypes.Order order) internal pure returns (bool) {
-        return (trade.buyer.order.hashes.exchange == order.seals.exchange.hash ||
-        trade.seller.order.hashes.exchange == order.seals.exchange.hash);
     }
 }

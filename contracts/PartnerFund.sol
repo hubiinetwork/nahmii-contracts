@@ -9,14 +9,14 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {Ownable} from "./Ownable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
-import {MonetaryTypes} from "./MonetaryTypes.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title PartnerFund
@@ -25,7 +25,7 @@ import {MonetaryTypes} from "./MonetaryTypes.sol";
 contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
-    using SafeMathInt for int256;
+    using SafeMathIntLib for int256;
 
     //
     // Structures
@@ -154,14 +154,14 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     }
 
     function depositEthersTo(address tag) public isRegisteredTag(tag) payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         //add to per-wallet deposited balance
         walletMap[tag].active.add(amount, address(0), 0);
         walletMap[tag].txHistory.addDeposit(amount, address(0), 0);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(address(0), 0), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositsCount() - 1, walletMap[tag].active.get(address(0), 0), block.number));
 
         // Emit event
         emit DepositEvent(tag, msg.sender, amount, address(0), 0);
@@ -184,7 +184,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositsCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         // Emit event
         emit DepositEvent(tag, msg.sender, amount, currencyCt, currencyId);
@@ -207,12 +207,12 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return deposit(partnerFromWallet(wallet), index);
     }
 
-    function depositCount(address tag) public view isRegisteredTag(tag) returns (uint256) {
+    function depositsCount(address tag) public view isRegisteredTag(tag) returns (uint256) {
         return walletMap[tag].fullDepositHistory.length;
     }
 
     function depositCountFromAddress(address wallet) public view returns (uint256) {
-        return depositCount(partnerFromWallet(wallet));
+        return depositsCount(partnerFromWallet(wallet));
     }
 
 
@@ -254,7 +254,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         //add full history
-        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
+        walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositsCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         // Emit event
         emit StageEvent(tag, msg.sender, amount, currencyCt, currencyId);
@@ -278,7 +278,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         }
         else {
             TransferController controller = getTransferController(currencyCt, standard);
-            require(address(controller).delegatecall(controller.getSendSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
+            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
         }
 
         //raise event

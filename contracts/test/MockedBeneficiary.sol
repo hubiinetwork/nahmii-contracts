@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 
 import {Beneficiary} from "../Beneficiary.sol";
-import {MonetaryTypes} from "../MonetaryTypes.sol";
+import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 
 /**
 @title MockedBeneficiary
@@ -22,7 +22,7 @@ contract MockedBeneficiary is Beneficiary {
     // -----------------------------------------------------------------------------------------------------------------
     struct Deposit {
         address wallet;
-        MonetaryTypes.Figure figure;
+        MonetaryTypesLib.Figure figure;
         string standard;
     }
 
@@ -42,9 +42,9 @@ contract MockedBeneficiary is Beneficiary {
         deposits.push(
             Deposit(
                 wallet,
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     int256(msg.value),
-                    MonetaryTypes.Currency(address(0), 0)
+                    MonetaryTypesLib.Currency(address(0), 0)
                 ),
                 "ether"
             )
@@ -56,9 +56,9 @@ contract MockedBeneficiary is Beneficiary {
         deposits.push(
             Deposit(
                 wallet,
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
                 standard
             )

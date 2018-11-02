@@ -1,6 +1,6 @@
-# SafeMathInt
-[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/SafeMathInt.sol)
-> SafeMathInt
+# SafeMathIntLib
+[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/SafeMathIntLib.sol)
+> SafeMathIntLib
 
 
 **Execution cost**: less than 249 gas
@@ -232,4 +232,4 @@ Returns:
 
 1. **output_0** *of type `uint256`*
 
-[Back to the top ↑](#safemathint)
+[Back to the top ↑](#safemathintlib)

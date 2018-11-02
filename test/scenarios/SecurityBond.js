@@ -70,7 +70,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with zero address", async() => {
+        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with null address", async() => {
             try {
                 await glob.web3SecurityBond.depositTokens(5, 0, 0, "", { from: glob.user_a });
                 assert(false, 'This test must fail.');
@@ -112,9 +112,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [depositCount]: User A should have 2 deposits", async() => {
+        it(testCounter.next() + ": MUST SUCCEED [depositsCount]: User A should have 2 deposits", async() => {
             try {
-                let count = await glob.web3SecurityBond.depositCount(glob.user_a);
+                let count = await glob.web3SecurityBond.depositsCount(glob.user_a);
                 assert.equal(count, 2, 'This test must succeed. Error: Deposit count: ' + count.toString());
             }
             catch (err) {
@@ -124,9 +124,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [depositCount]: Onwer should have 1 deposit", async() => {
+        it(testCounter.next() + ": MUST SUCCEED [depositsCount]: Onwer should have 1 deposit", async() => {
             try {
-                let count = await glob.web3SecurityBond.depositCount(glob.owner);
+                let count = await glob.web3SecurityBond.depositsCount(glob.owner);
                 assert.equal(count, 1, 'This test must succeed. Error: Deposit count: ' + count.toString());
             }
             catch (err) {

@@ -9,7 +9,7 @@
 pragma solidity ^0.4.24;
 
 //import {ClientFund} from "../ClientFund.sol";
-import {MonetaryTypes} from "../MonetaryTypes.sol";
+import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
 /**
@@ -29,7 +29,12 @@ contract MockedClientFund /*is ClientFund*/ {
     struct WalletUpdate {
         address sourceWallet;
         address targetWallet;
-        MonetaryTypes.Figure figure;
+        MonetaryTypesLib.Figure figure;
+    }
+
+    struct BalanceLogEntry {
+        int256 amount;
+        uint256 blockNumber;
     }
 
     //
@@ -38,6 +43,7 @@ contract MockedClientFund /*is ClientFund*/ {
     Seizure[] public seizures;
     WalletUpdate[] public settledBalanceUpdates;
     WalletUpdate[] public stages;
+    BalanceLogEntry[] public activeBalanceLogEntries;
 
     //
     // Events
@@ -59,6 +65,7 @@ contract MockedClientFund /*is ClientFund*/ {
         seizures.length = 0;
         settledBalanceUpdates.length = 0;
         stages.length = 0;
+        activeBalanceLogEntries.length = 0;
     }
 
     function seizeAllBalances(address sourceWallet, address targetWallet)
@@ -75,9 +82,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 wallet,
                 address(0),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );
@@ -103,9 +110,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 wallet,
                 address(0),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );
@@ -120,9 +127,9 @@ contract MockedClientFund /*is ClientFund*/ {
             WalletUpdate(
                 sourceWallet,
                 address(beneficiary),
-                MonetaryTypes.Figure(
+                MonetaryTypesLib.Figure(
                     amount,
-                    MonetaryTypes.Currency(currencyCt, currencyId)
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
                 )
             )
         );
@@ -143,5 +150,37 @@ contract MockedClientFund /*is ClientFund*/ {
         stages[index].figure.currency.ct,
         stages[index].figure.currency.id
         );
+    }
+
+    function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        return activeBalanceLogEntries.length;
+    }
+
+    function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        require(index == index);
+        amount = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].amount;
+        blockNumber = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].blockNumber;
+    }
+
+    function _addActiveBalanceLogEntry(int256 amount, uint256 blockNumber)
+    public
+    {
+        activeBalanceLogEntries.push(BalanceLogEntry(amount, blockNumber));
     }
 }

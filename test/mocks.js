@@ -7,8 +7,8 @@ exports.intentions = ['Buy', 'Sell'];
 exports.driipTypes = ['Trade', 'Payment'];
 exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
-exports.challengeStatuses = ['Unknown', 'Qualified', 'Disqualified'];
-exports.challengeCandidateTypes = ['None', 'Order', 'Trade', 'Payment'];
+exports.proposalStatuses = ['Unknown', 'Qualified', 'Disqualified'];
+exports.candidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
 exports.address0 = '0x0000000000000000000000000000000000000000';
 
@@ -39,7 +39,8 @@ exports.mockOrder = async (operator, params) => {
                 previous: utils.parseUnits('500', 18)
             }
         },
-        blockNumber: utils.bigNumberify(0)
+        blockNumber: utils.bigNumberify(0),
+        operatorId: utils.bigNumberify(0)
     }, params);
 
     const operatorSigner = exports.createWeb3Signer(operator);
@@ -77,7 +78,7 @@ exports.mockTrade = async (operator, params) => {
                 amount: utils.parseUnits('1000', 18),
                 hashes: {
                     wallet: cryptography.hash(Wallet.createRandom().address),
-                    exchange: cryptography.hash(Wallet.createRandom().address)
+                    operator: cryptography.hash(Wallet.createRandom().address)
                 },
                 residuals: {
                     current: utils.parseUnits('400', 18),
@@ -122,7 +123,7 @@ exports.mockTrade = async (operator, params) => {
                 amount: utils.parseUnits('1000', 18),
                 hashes: {
                     wallet: cryptography.hash(Wallet.createRandom().address),
-                    exchange: cryptography.hash(Wallet.createRandom().address)
+                    operator: cryptography.hash(Wallet.createRandom().address)
                 },
                 residuals: {
                     current: utils.parseUnits('600', 18),
@@ -168,7 +169,8 @@ exports.mockTrade = async (operator, params) => {
                 total: utils.parseUnits('0.2', 18)
             }
         },
-        blockNumber: utils.bigNumberify(0)
+        blockNumber: utils.bigNumberify(0),
+        operatorId: utils.bigNumberify(0)
     }, params);
 
     const operatorSigner = exports.createWeb3Signer(operator);
@@ -236,7 +238,8 @@ exports.mockPayment = async (operator, params) => {
             single: utils.parseUnits('100', 18),
             total: utils.parseUnits('200', 18)
         },
-        blockNumber: utils.bigNumberify(0)
+        blockNumber: utils.bigNumberify(0),
+        operatorId: utils.bigNumberify(0)
     }, params);
 
     const operatorSigner = exports.createWeb3Signer(operator);
@@ -298,7 +301,7 @@ exports.augmentOrderSeals = async (order, operatorSign, walletSign) => {
         },
     };
     const operatorHash = exports.hashOrderAsOperator(order);
-    order.seals.exchange = {
+    order.seals.operator = {
         hash: operatorHash,
         signature: await operatorSign(operatorHash)
     };
@@ -323,7 +326,7 @@ exports.augmentPaymentSeals = async (payment, operatorSign, walletSign) => {
         }
     };
     const operatorHash = exports.hashPaymentAsOperator(payment);
-    payment.seals.exchange = {
+    payment.seals.operator = {
         hash: operatorHash,
         signature: await operatorSign(operatorHash)
     };
@@ -377,7 +380,7 @@ exports.hashTrade = (trade) => {
         // trade.buyer.rollingVolume,
         // {type: 'uint8', value: trade.buyer.liquidityRole},
         trade.buyer.order.hashes.wallet,
-        trade.buyer.order.hashes.exchange,
+        trade.buyer.order.hashes.operator,
         trade.buyer.order.amount,
         trade.buyer.order.residuals.current,
         trade.buyer.order.residuals.previous,
@@ -398,7 +401,7 @@ exports.hashTrade = (trade) => {
         // trade.seller.rollingVolume,
         // {type: 'uint8', value: trade.seller.liquidityRole},
         trade.seller.order.hashes.wallet,
-        trade.seller.order.hashes.exchange,
+        trade.seller.order.hashes.operator,
         trade.seller.order.amount,
         trade.seller.order.residuals.current,
         trade.seller.order.residuals.previous,

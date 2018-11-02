@@ -572,7 +572,7 @@ Returns:
 3. **output_2** *of type `uint256`*
 
 --- 
-### getCancelOrderChallengeTimeout()
+### cancelOrderChallengeTimeout()
 >
 >Get timeout of cancel order challenge
 
@@ -930,7 +930,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### getDriipSettlementChallengeTimeout()
+### settlementChallengeTimeout()
 >
 >Get timeout of driip challenge
 
@@ -1089,7 +1089,7 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
-### driipSettlementChallengeTimeout()
+### settlementChallengeTimeout()
 
 
 **Execution cost**: less than 507 gas

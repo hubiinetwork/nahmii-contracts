@@ -8,7 +8,7 @@
 
 pragma solidity ^0.4.24;
 
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {Ownable} from "./Ownable.sol";
 import {ERC20} from "./ERC20.sol";
 
@@ -17,7 +17,7 @@ import {ERC20} from "./ERC20.sol";
  * @dev Implementation of the EIP20 standard token (also known as ERC20 token) with addition of calculation of balance blocks
  */
 contract RevenueToken is ERC20, Ownable {
-    using SafeMathUint for uint256;
+    using SafeMathUintLib for uint256;
 
     //
     // Events
