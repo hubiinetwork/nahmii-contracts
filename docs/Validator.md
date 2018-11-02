@@ -5,7 +5,7 @@
 
 **Execution cost**: No bound available
 
-**Deployment cost**: less than 3467200 gas
+**Deployment cost**: less than 3650200 gas
 
 **Combined cost**: No bound available
 
@@ -16,21 +16,9 @@
 Params:
 
 1. **owner** *of type `address`*
-2. **accessorManager** *of type `address`*
+2. **signerManager** *of type `address`*
 
 ## Events
-### ChangeAccessorManagerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldAccessor** *of type `address`*
-2. **newAccessor** *of type `address`*
-
---- 
 ### ChangeConfigurationEvent(address,address)
 
 
@@ -78,9 +66,127 @@ Params:
 1. **oldOperator** *of type `address`*
 2. **newOperator** *of type `address`*
 
+--- 
+### ChangeSignerManagerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldSignerManager** *of type `address`*
+2. **newSignerManager** *of type `address`*
+
 
 ## Methods
-### isGenuineSuccessiveTradePaymentTotalFees(tuple,uint8,tuple)
+### isSuccessivePaymentTradePartyNonces(tuple,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+2. **paymentPartyRole** *of type `uint8`*
+3. **trade** *of type `tuple`*
+4. **tradePartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### changeSignerManager(address)
+>
+>Change the signer manager of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newSignerManager** *of type `address`*
+
+    > The address of the new signer
+
+
+
+--- 
+### changeDeployer(address)
+>
+>Change the deployer of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### changeOperator(address)
+>
+>Change the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
+
+--- 
+### changeHasher(address)
+>
+>Change the hasher contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) Hasher contract instance
+
+
+
+--- 
+### changeConfiguration(address)
+>
+>Change the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### isGenuineTradeSellerFee(tuple)
 
 
 **Execution cost**: No bound available
@@ -91,8 +197,6 @@ Params:
 Params:
 
 1. **trade** *of type `tuple`*
-2. **tradePartyRole** *of type `uint8`*
-3. **payment** *of type `tuple`*
 
 Returns:
 
@@ -100,52 +204,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeAccessorManager(address)
->
->Change the accessor manager of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAccessor** *of type `address`*
-
-    > The address of the new accessor
-
-
-
---- 
-### accessorManager()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### triggerDestroy()
->
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### isGenuineOrderOperatorHash(tuple)
+### isGenuineOrderWalletHash(tuple)
 
 
 **Execution cost**: No bound available
@@ -178,44 +237,10 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 852 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### deployer()
 
 
-**Execution cost**: less than 1578 gas
+**Execution cost**: less than 1710 gas
 
 **Attributes**: constant
 
@@ -246,38 +271,57 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeHasher(address)
->
->Change the hasher contract
+### isGenuineOrderOperatorHash(tuple)
 
 
 **Execution cost**: No bound available
 
+**Attributes**: constant
+
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **order** *of type `tuple`*
 
-    > The (address of) Hasher contract instance
+Returns:
 
 
+1. **output_0** *of type `bool`*
 
 --- 
-### changeOperator(address)
+### destructor()
 >
->Change the operator of this contract
+>Return the address that is able to initiate self-destruction
+
+
+**Execution cost**: less than 962 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### isGenuineOrderSeals(tuple)
 
 
 **Execution cost**: No bound available
 
+**Attributes**: constant
+
 
 Params:
 
-1. **newOperator** *of type `address`*
+1. **order** *of type `tuple`*
 
-    > The address of the new operator
+Returns:
 
 
+1. **output_0** *of type `bool`*
 
 --- 
 ### ethrecover(bytes32,uint8,bytes32,bytes32)
@@ -316,78 +360,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
-
-
-
---- 
-### configuration()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### isGenuinePaymentRecipient(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineSuccessivePaymentTradeTotalFees(tuple,uint8,tuple,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-2. **paymentPartyRole** *of type `uint8`*
-3. **trade** *of type `tuple`*
-4. **tradePartyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineOrderWalletHash(tuple)
+### isGenuineOrderOperatorSeal(tuple)
 
 
 **Execution cost**: No bound available
@@ -405,7 +378,158 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuinePaymentOperatorSeal(tuple)
+### configuration()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### isGenuineSuccessivePaymentTradeBalances(tuple,uint8,tuple,uint8,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+2. **paymentPartyRole** *of type `uint8`*
+3. **trade** *of type `tuple`*
+4. **tradePartyRole** *of type `uint8`*
+5. **tradeCurrencyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessiveTradePaymentTotalFees(tuple,uint8,tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **tradePartyRole** *of type `uint8`*
+3. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentSender(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessivePaymentsBalances(tuple,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **firstPayment** *of type `tuple`*
+2. **firstPaymentPartyRole** *of type `uint8`*
+3. **lastPayment** *of type `tuple`*
+4. **lastPaymentPartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessivePaymentsTotalFees(tuple,tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **firstPayment** *of type `tuple`*
+2. **lastPayment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentOperatorHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentWalletHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentWalletSeal(tuple)
 
 
 **Execution cost**: No bound available
@@ -441,100 +565,6 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineOrderSeals(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineSuccessivePaymentTradeBalances(tuple,uint8,tuple,uint8,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-2. **paymentPartyRole** *of type `uint8`*
-3. **trade** *of type `tuple`*
-4. **tradePartyRole** *of type `uint8`*
-5. **tradeCurrencyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentWalletHash(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineOrderOperatorSeal(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentOperatorHash(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### isGenuinePaymentFee(tuple)
 
 
@@ -553,7 +583,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuinePaymentSender(tuple)
+### isGenuinePaymentRecipient(tuple)
 
 
 **Execution cost**: No bound available
@@ -564,6 +594,69 @@ Returns:
 Params:
 
 1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessiveTradePaymentBalances(tuple,uint8,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **tradePartyRole** *of type `uint8`*
+3. **tradeCurrencyRole** *of type `uint8`*
+4. **payment** *of type `tuple`*
+5. **paymentPartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessiveTradeOrderResiduals(tuple,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **firstTrade** *of type `tuple`*
+2. **lastTrade** *of type `tuple`*
+3. **tradePartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineSuccessivePaymentTradeTotalFees(tuple,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+2. **paymentPartyRole** *of type `uint8`*
+3. **trade** *of type `tuple`*
+4. **tradePartyRole** *of type `uint8`*
 
 Returns:
 
@@ -589,7 +682,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuinePaymentWalletSeal(tuple)
+### isGenuinePaymentOperatorSeal(tuple)
 
 
 **Execution cost**: No bound available
@@ -607,7 +700,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeSeal(tuple)
+### isPaymentSender(tuple,address)
 
 
 **Execution cost**: No bound available
@@ -617,7 +710,8 @@ Returns:
 
 Params:
 
-1. **trade** *of type `tuple`*
+1. **payment** *of type `tuple`*
+2. **wallet** *of type `address`*
 
 Returns:
 
@@ -625,7 +719,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineSuccessivePaymentsBalances(tuple,uint8,tuple,uint8)
+### isGenuineSuccessiveTradesBalances(tuple,uint8,uint8,tuple,uint8,uint8)
 
 
 **Execution cost**: No bound available
@@ -635,10 +729,32 @@ Returns:
 
 Params:
 
-1. **firstPayment** *of type `tuple`*
-2. **firstPaymentPartyRole** *of type `uint8`*
-3. **lastPayment** *of type `tuple`*
-4. **lastPaymentPartyRole** *of type `uint8`*
+1. **firstTrade** *of type `tuple`*
+2. **firstTradePartyRole** *of type `uint8`*
+3. **firstTradeCurrencyRole** *of type `uint8`*
+4. **lastTrade** *of type `tuple`*
+5. **lastTradePartyRole** *of type `uint8`*
+6. **lastTradeCurrencyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineWalletSignature(bytes32,tuple,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **hash** *of type `bytes32`*
+2. **signature** *of type `tuple`*
+3. **wallet** *of type `address`*
 
 Returns:
 
@@ -682,7 +798,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeBuyer(tuple)
+### isGenuineTradeSeller(tuple)
 
 
 **Execution cost**: No bound available
@@ -700,46 +816,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineSuccessiveTradeOrderResiduals(tuple,tuple,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstTrade** *of type `tuple`*
-2. **lastTrade** *of type `tuple`*
-3. **tradePartyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineSuccessivePaymentsTotalFees(tuple,tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstPayment** *of type `tuple`*
-2. **lastPayment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineSuccessiveTradePaymentBalances(tuple,uint8,uint8,tuple,uint8)
+### isGenuineTradeHash(tuple)
 
 
 **Execution cost**: No bound available
@@ -750,10 +827,43 @@ Returns:
 Params:
 
 1. **trade** *of type `tuple`*
-2. **tradePartyRole** *of type `uint8`*
-3. **tradeCurrencyRole** *of type `uint8`*
-4. **payment** *of type `tuple`*
-5. **paymentPartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineTradeBuyerFee(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isPaymentParty(tuple,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+2. **wallet** *of type `address`*
 
 Returns:
 
@@ -782,30 +892,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineSuccessiveTradesBalances(tuple,uint8,uint8,tuple,uint8,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstTrade** *of type `tuple`*
-2. **firstTradePartyRole** *of type `uint8`*
-3. **firstTradeCurrencyRole** *of type `uint8`*
-4. **lastTrade** *of type `tuple`*
-5. **lastTradePartyRole** *of type `uint8`*
-6. **lastTradeCurrencyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineTradeHash(tuple)
+### isGenuineTradeSeal(tuple)
 
 
 **Execution cost**: No bound available
@@ -823,7 +910,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineWalletSignature(bytes32,tuple,address)
+### isPaymentRecipient(tuple,address)
 
 
 **Execution cost**: No bound available
@@ -833,9 +920,8 @@ Returns:
 
 Params:
 
-1. **hash** *of type `bytes32`*
-2. **signature** *of type `tuple`*
-3. **wallet** *of type `address`*
+1. **payment** *of type `tuple`*
+2. **wallet** *of type `address`*
 
 Returns:
 
@@ -843,43 +929,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeBuyerFee(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineTradeSellerFee(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineTradeSeller(tuple)
+### isGenuineTradeBuyer(tuple)
 
 
 **Execution cost**: No bound available
@@ -933,27 +983,6 @@ Params:
 Returns:
 
 > true if the recovered signer equals the input signer, else false
-
-1. **output_0** *of type `bool`*
-
---- 
-### isSuccessivePaymentTradePartyNonces(tuple,uint8,tuple,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-2. **paymentPartyRole** *of type `uint8`*
-3. **trade** *of type `tuple`*
-4. **tradePartyRole** *of type `uint8`*
-
-Returns:
-
 
 1. **output_0** *of type `bool`*
 
@@ -1021,10 +1050,86 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### isTradeBuyer(tuple,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **wallet** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isTradeOrder(tuple,tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **order** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isTradeParty(tuple,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **wallet** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isTradeSeller(tuple,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **wallet** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### operator()
 
 
-**Execution cost**: less than 962 gas
+**Execution cost**: less than 1050 gas
 
 **Attributes**: constant
 
@@ -1036,6 +1141,34 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### signerManager()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
 ### isGenuineOperatorSignature(bytes32,(bytes32,bytes32,uint8))
 
 
@@ -1045,7 +1178,7 @@ Returns:
 
 
 --- 
-### isGenuineOrderOperatorHash((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuineOrderOperatorHash((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1054,7 +1187,7 @@ Returns:
 
 
 --- 
-### isGenuineOrderOperatorSeal((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuineOrderOperatorSeal((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1063,7 +1196,7 @@ Returns:
 
 
 --- 
-### isGenuineOrderSeals((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuineOrderSeals((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1072,7 +1205,7 @@ Returns:
 
 
 --- 
-### isGenuineOrderWalletHash((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuineOrderWalletHash((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1081,7 +1214,7 @@ Returns:
 
 
 --- 
-### isGenuineOrderWalletSeal((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuineOrderWalletSeal((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1090,7 +1223,7 @@ Returns:
 
 
 --- 
-### isGenuinePaymentFee((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuinePaymentFee((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1099,7 +1232,7 @@ Returns:
 
 
 --- 
-### isGenuinePaymentOperatorHash((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuinePaymentOperatorHash((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1108,7 +1241,7 @@ Returns:
 
 
 --- 
-### isGenuinePaymentOperatorSeal((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuinePaymentOperatorSeal((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1117,7 +1250,7 @@ Returns:
 
 
 --- 
-### isGenuinePaymentRecipient((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuinePaymentRecipient((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1126,7 +1259,7 @@ Returns:
 
 
 --- 
-### isGenuinePaymentSeals((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuinePaymentSeals((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1135,7 +1268,7 @@ Returns:
 
 
 --- 
-### isGenuinePaymentSender((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuinePaymentSender((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1144,7 +1277,7 @@ Returns:
 
 
 --- 
-### isGenuinePaymentWalletHash((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuinePaymentWalletHash((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1153,7 +1286,7 @@ Returns:
 
 
 --- 
-### isGenuinePaymentWalletSeal((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuinePaymentWalletSeal((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1162,7 +1295,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessivePaymentTradeBalances((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8,uint8)
+### isGenuineSuccessivePaymentTradeBalances((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8,uint8)
 
 
 **Execution cost**: No bound available
@@ -1171,7 +1304,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessivePaymentTradeTotalFees((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8)
+### isGenuineSuccessivePaymentTradeTotalFees((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8)
 
 
 **Execution cost**: No bound available
@@ -1180,7 +1313,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessivePaymentsBalances((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8)
+### isGenuineSuccessivePaymentsBalances((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8)
 
 
 **Execution cost**: No bound available
@@ -1189,7 +1322,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessivePaymentsTotalFees((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuineSuccessivePaymentsTotalFees((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1198,7 +1331,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessiveTradeOrderResiduals((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8)
+### isGenuineSuccessiveTradeOrderResiduals((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8)
 
 
 **Execution cost**: No bound available
@@ -1207,7 +1340,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessiveTradePaymentBalances((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8,uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8)
+### isGenuineSuccessiveTradePaymentBalances((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8,uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8)
 
 
 **Execution cost**: No bound available
@@ -1216,7 +1349,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessiveTradePaymentTotalFees((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### isGenuineSuccessiveTradePaymentTotalFees((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1225,7 +1358,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessiveTradesBalances((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8,uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8,uint8)
+### isGenuineSuccessiveTradesBalances((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8,uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8,uint8)
 
 
 **Execution cost**: No bound available
@@ -1234,7 +1367,7 @@ Returns:
 
 
 --- 
-### isGenuineSuccessiveTradesTotalFees((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8)
+### isGenuineSuccessiveTradesTotalFees((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8)
 
 
 **Execution cost**: No bound available
@@ -1243,7 +1376,7 @@ Returns:
 
 
 --- 
-### isGenuineTradeBuyer((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### isGenuineTradeBuyer((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1252,7 +1385,7 @@ Returns:
 
 
 --- 
-### isGenuineTradeBuyerFee((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### isGenuineTradeBuyerFee((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1261,7 +1394,7 @@ Returns:
 
 
 --- 
-### isGenuineTradeHash((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### isGenuineTradeHash((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1270,7 +1403,7 @@ Returns:
 
 
 --- 
-### isGenuineTradeSeal((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### isGenuineTradeSeal((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1279,7 +1412,7 @@ Returns:
 
 
 --- 
-### isGenuineTradeSeller((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### isGenuineTradeSeller((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1288,7 +1421,7 @@ Returns:
 
 
 --- 
-### isGenuineTradeSellerFee((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### isGenuineTradeSellerFee((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -1306,7 +1439,7 @@ Returns:
 
 
 --- 
-### isSuccessivePaymentTradePartyNonces((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8)
+### isPaymentParty((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address)
 
 
 **Execution cost**: No bound available
@@ -1315,7 +1448,7 @@ Returns:
 
 
 --- 
-### isSuccessivePaymentsPartyNonces((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8)
+### isPaymentRecipient((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address)
 
 
 **Execution cost**: No bound available
@@ -1324,7 +1457,7 @@ Returns:
 
 
 --- 
-### isSuccessiveTradePaymentPartyNonces((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),uint8)
+### isPaymentSender((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address)
 
 
 **Execution cost**: No bound available
@@ -1333,7 +1466,70 @@ Returns:
 
 
 --- 
-### isSuccessiveTradesPartyNonces((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),uint8)
+### isSuccessivePaymentTradePartyNonces((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8)
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### isSuccessivePaymentsPartyNonces((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8)
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### isSuccessiveTradePaymentPartyNonces((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),uint8)
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### isSuccessiveTradesPartyNonces((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),uint8)
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### isTradeBuyer((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),address)
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### isTradeOrder((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),(uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### isTradeParty((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),address)
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### isTradeSeller((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),address)
 
 
 **Execution cost**: No bound available

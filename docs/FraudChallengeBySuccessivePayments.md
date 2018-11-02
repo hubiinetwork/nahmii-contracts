@@ -3,11 +3,11 @@
 > FraudChallengeBySuccessivePayments
 
 
-**Execution cost**: less than 42456 gas
+**Execution cost**: less than 42517 gas
 
-**Deployment cost**: less than 1294200 gas
+**Deployment cost**: less than 1353800 gas
 
-**Combined cost**: less than 1336656 gas
+**Combined cost**: less than 1396317 gas
 
 ## Constructor
 
@@ -76,8 +76,8 @@ Params:
 
 Params:
 
-1. **oldAddress** *of type `address`*
-2. **newAddress** *of type `address`*
+1. **oldFraudChallenge** *of type `address`*
+2. **newFraudChallenge** *of type `address`*
 
 --- 
 ### ChangeOperatorEvent(address,address)
@@ -120,23 +120,9 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### challenge(tuple,tuple,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **firstPayment** *of type `tuple`*
-2. **lastPayment** *of type `tuple`*
-3. **wallet** *of type `address`*
-
-
---- 
-### changeConfiguration(address)
+### changeOperator(address)
 >
->Change the configuration contract
+>Change the operator of this contract
 
 
 **Execution cost**: No bound available
@@ -144,9 +130,9 @@ Params:
 
 Params:
 
-1. **newConfiguration** *of type `address`*
+1. **newOperator** *of type `address`*
 
-    > The (address of) Configuration contract instance
+    > The address of the new operator
 
 
 
@@ -168,39 +154,9 @@ Params:
 
 
 --- 
-### triggerDestroy()
->
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### changeValidator(address)
->
->Change the validator contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) Validator contract instance
-
-
-
---- 
 ### changeFraudChallenge(address)
 >
->Change the fraudChallenge contract
+>Change the fraud challenge contract
 
 
 **Execution cost**: No bound available
@@ -208,26 +164,9 @@ Params:
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **newFraudChallenge** *of type `address`*
 
     > The (address of) FraudChallenge contract instance
-
-
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
 
 
 
@@ -245,6 +184,54 @@ Params:
 1. **newDeployer** *of type `address`*
 
     > The address of the new deployer
+
+
+
+--- 
+### changeConfiguration(address)
+>
+>Change the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### challenge(tuple,tuple,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **firstPayment** *of type `tuple`*
+2. **lastPayment** *of type `tuple`*
+3. **wallet** *of type `address`*
+
+
+--- 
+### changeValidator(address)
+>
+>Change the validator contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) Validator contract instance
 
 
 
@@ -326,6 +313,19 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
 ### validator()
 
 
@@ -341,7 +341,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### challenge((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),address)
+### challenge((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address)
 >
 >Submit two payment candidates in continuous Fraud Challenge (FC) to be tested for succession differences
 

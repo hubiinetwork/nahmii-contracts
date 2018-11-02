@@ -3,11 +3,11 @@
 > TokenHolderRevenueFund
 
 
-**Execution cost**: less than 43314 gas
+**Execution cost**: less than 43365 gas
 
-**Deployment cost**: less than 2074400 gas
+**Deployment cost**: less than 2119000 gas
 
-**Combined cost**: less than 2117714 gas
+**Combined cost**: less than 2162365 gas
 
 ## Constructor
 
@@ -324,22 +324,13 @@ Params:
 
 
 --- 
-### depositsCount(address)
+### closeAccrualPeriod()
 
 
 **Execution cost**: No bound available
 
-**Attributes**: constant
 
 
-Params:
-
-1. **wallet** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
 
 --- 
 ### depositEthersTo(address)
@@ -377,13 +368,19 @@ Params:
 
 
 --- 
-### closeAccrualPeriod()
+### deployer()
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 1292 gas
+
+**Attributes**: constant
 
 
 
+Returns:
+
+
+1. **output_0** *of type `address`*
 
 --- 
 ### depositTokens(int256,address,uint256,string)
@@ -490,21 +487,6 @@ Params:
 
 
 --- 
-### deployer()
-
-
-**Execution cost**: less than 1292 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### changeTransferControllerManager(address)
 >
 >Change the currency manager contract
@@ -535,9 +517,7 @@ Params:
 
 
 --- 
-### isRegisteredActiveService(address)
->
->Gauge whether a service contract is registered and active
+### depositsCount(address)
 
 
 **Execution cost**: No bound available
@@ -547,36 +527,15 @@ Params:
 
 Params:
 
-1. **service** *of type `address`*
-
-    > The address of the service contract
-
+1. **wallet** *of type `address`*
 
 Returns:
 
-> true if service is registered and activate, else false
 
-1. **output_0** *of type `bool`*
-
---- 
-### registerService(address)
->
->Register a service contract whose activation is immediate
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-
-    > The address of the service contract to be registered
-
-
+1. **output_0** *of type `uint256`*
 
 --- 
-### periodAccrualBalance(address,uint256)
+### withdrawal(address,uint256)
 
 
 **Execution cost**: No bound available
@@ -586,13 +545,16 @@ Params:
 
 Params:
 
-1. **currencyCt** *of type `address`*
-2. **currencyId** *of type `uint256`*
+1. **wallet** *of type `address`*
+2. **index** *of type `uint256`*
 
 Returns:
 
 
-1. **output_0** *of type `int256`*
+1. **amount** *of type `int256`*
+2. **timestamp** *of type `uint256`*
+3. **token** *of type `address`*
+4. **id** *of type `uint256`*
 
 --- 
 ### isRegisteredService(address)
@@ -617,6 +579,66 @@ Returns:
 > true if service is registered, else false
 
 1. **output_0** *of type `bool`*
+
+--- 
+### isRegisteredActiveService(address)
+>
+>Gauge whether a service contract is registered and active
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the service contract
+
+
+Returns:
+
+> true if service is registered and activate, else false
+
+1. **output_0** *of type `bool`*
+
+--- 
+### periodAccrualBalance(address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **currencyCt** *of type `address`*
+2. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `int256`*
+
+--- 
+### registerService(address)
+>
+>Register a service contract whose activation is immediate
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the service contract to be registered
+
+
 
 --- 
 ### registerServiceDeferred(address)
@@ -729,28 +751,6 @@ Params:
 3. **currencyId** *of type `uint256`*
 4. **standard** *of type `string`*
 
-
---- 
-### withdrawal(address,uint256)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **index** *of type `uint256`*
-
-Returns:
-
-
-1. **amount** *of type `int256`*
-2. **timestamp** *of type `uint256`*
-3. **token** *of type `address`*
-4. **id** *of type `uint256`*
 
 --- 
 ### withdrawalsCount(address)

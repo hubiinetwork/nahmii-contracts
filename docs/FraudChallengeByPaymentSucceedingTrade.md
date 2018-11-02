@@ -3,11 +3,11 @@
 > FraudChallengeByPaymentSucceedingTrade
 
 
-**Execution cost**: less than 42780 gas
+**Execution cost**: less than 42850 gas
 
-**Deployment cost**: less than 1599400 gas
+**Deployment cost**: less than 1657800 gas
 
-**Combined cost**: less than 1642180 gas
+**Combined cost**: less than 1700650 gas
 
 ## Constructor
 
@@ -76,8 +76,8 @@ Params:
 
 Params:
 
-1. **oldAddress** *of type `address`*
-2. **newAddress** *of type `address`*
+1. **oldFraudChallenge** *of type `address`*
+2. **newFraudChallenge** *of type `address`*
 
 --- 
 ### ChangeOperatorEvent(address,address)
@@ -105,9 +105,7 @@ Params:
 
 
 ## Methods
-### changeConfiguration(address)
->
->Change the configuration contract
+### challenge(tuple,tuple,address,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -115,10 +113,11 @@ Params:
 
 Params:
 
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
-
+1. **trade** *of type `tuple`*
+2. **payment** *of type `tuple`*
+3. **wallet** *of type `address`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
 
 
 --- 
@@ -141,7 +140,7 @@ Params:
 --- 
 ### changeFraudChallenge(address)
 >
->Change the fraudChallenge contract
+>Change the fraud challenge contract
 
 
 **Execution cost**: No bound available
@@ -149,7 +148,7 @@ Params:
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **newFraudChallenge** *of type `address`*
 
     > The (address of) FraudChallenge contract instance
 
@@ -173,7 +172,9 @@ Params:
 
 
 --- 
-### challenge(tuple,tuple,address,address,uint256)
+### changeConfiguration(address)
+>
+>Change the configuration contract
 
 
 **Execution cost**: No bound available
@@ -181,11 +182,10 @@ Params:
 
 Params:
 
-1. **trade** *of type `tuple`*
-2. **payment** *of type `tuple`*
-3. **wallet** *of type `address`*
-4. **currencyCt** *of type `address`*
-5. **currencyId** *of type `uint256`*
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
 
 
 --- 
@@ -343,7 +343,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### challenge((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),address,address,uint256)
+### challenge((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address,address,uint256)
 >
 >Submit trade and subsequent payment candidates in continuous Fraud Challenge (FC) to be tested for succession differences
 

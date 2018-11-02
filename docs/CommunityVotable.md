@@ -18,8 +18,8 @@
 
 Params:
 
-1. **oldAddress** *of type `address`*
-2. **newAddress** *of type `address`*
+1. **oldCommunityVote** *of type `address`*
+2. **newCommunityVote** *of type `address`*
 
 --- 
 ### ChangeDeployerEvent(address,address)
@@ -55,7 +55,7 @@ Params:
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **newCommunityVote** *of type `address`*
 
 
 --- 

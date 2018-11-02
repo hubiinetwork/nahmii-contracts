@@ -3,11 +3,11 @@
 > MockedCancelOrdersChallenge
 
 
-**Execution cost**: less than 600 gas
+**Execution cost**: less than 606 gas
 
-**Deployment cost**: less than 564000 gas
+**Deployment cost**: less than 574600 gas
 
-**Combined cost**: less than 564600 gas
+**Combined cost**: less than 575206 gas
 
 ## Constructor
 
@@ -92,7 +92,7 @@ Returns:
 
 
 --- 
-### cancelOrders((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256)[])
+### cancelOrders((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256)[])
 
 
 **Execution cost**: No bound available

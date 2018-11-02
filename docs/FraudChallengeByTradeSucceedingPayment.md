@@ -3,11 +3,11 @@
 > FraudChallengeByTradeSucceedingPayment
 
 
-**Execution cost**: less than 42773 gas
+**Execution cost**: less than 42836 gas
 
-**Deployment cost**: less than 1590800 gas
+**Deployment cost**: less than 1649200 gas
 
-**Combined cost**: less than 1633573 gas
+**Combined cost**: less than 1692036 gas
 
 ## Constructor
 
@@ -76,8 +76,8 @@ Params:
 
 Params:
 
-1. **oldAddress** *of type `address`*
-2. **newAddress** *of type `address`*
+1. **oldFraudChallenge** *of type `address`*
+2. **newFraudChallenge** *of type `address`*
 
 --- 
 ### ChangeOperatorEvent(address,address)
@@ -105,20 +105,19 @@ Params:
 
 
 ## Methods
-### challenge(tuple,tuple,address,address,uint256)
+### configuration()
 
 
 **Execution cost**: No bound available
 
+**Attributes**: constant
 
-Params:
 
-1. **payment** *of type `tuple`*
-2. **trade** *of type `tuple`*
-3. **wallet** *of type `address`*
-4. **currencyCt** *of type `address`*
-5. **currencyId** *of type `uint256`*
 
+Returns:
+
+
+1. **output_0** *of type `address`*
 
 --- 
 ### changeOperator(address)
@@ -140,7 +139,7 @@ Params:
 --- 
 ### changeFraudChallenge(address)
 >
->Change the fraudChallenge contract
+>Change the fraud challenge contract
 
 
 **Execution cost**: No bound available
@@ -148,7 +147,7 @@ Params:
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **newFraudChallenge** *of type `address`*
 
     > The (address of) FraudChallenge contract instance
 
@@ -206,6 +205,22 @@ Params:
 
 
 --- 
+### challenge(tuple,tuple,address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+2. **trade** *of type `tuple`*
+3. **wallet** *of type `address`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+
+
+--- 
 ### changeValidator(address)
 >
 >Change the validator contract
@@ -224,21 +239,6 @@ Params:
 
 --- 
 ### clientFund()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### configuration()
 
 
 **Execution cost**: No bound available
@@ -343,7 +343,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### challenge((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),address,address,uint256)
+### challenge((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),address,address,uint256)
 >
 >Submit payment and subsequent trade candidates in continuous Fraud Challenge (FC) to be tested for succession differences
 

@@ -3,11 +3,11 @@
 > FraudChallengeByDuplicateDriipNonceOfPayments
 
 
-**Execution cost**: less than 42328 gas
+**Execution cost**: less than 42334 gas
 
-**Deployment cost**: less than 1174400 gas
+**Deployment cost**: less than 1183000 gas
 
-**Combined cost**: less than 1216728 gas
+**Combined cost**: less than 1225334 gas
 
 ## Constructor
 
@@ -63,8 +63,8 @@ Params:
 
 Params:
 
-1. **oldAddress** *of type `address`*
-2. **newAddress** *of type `address`*
+1. **oldFraudChallenge** *of type `address`*
+2. **newFraudChallenge** *of type `address`*
 
 --- 
 ### ChangeOperatorEvent(address,address)
@@ -104,19 +104,21 @@ Params:
 
 
 ## Methods
-### configuration()
+### changeConfiguration(address)
+>
+>Change the configuration contract
 
 
 **Execution cost**: No bound available
 
-**Attributes**: constant
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
 
 
-
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### changeOperator(address)
@@ -138,7 +140,7 @@ Params:
 --- 
 ### changeFraudChallenge(address)
 >
->Change the fraudChallenge contract
+>Change the fraud challenge contract
 
 
 **Execution cost**: No bound available
@@ -146,7 +148,7 @@ Params:
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **newFraudChallenge** *of type `address`*
 
     > The (address of) FraudChallenge contract instance
 
@@ -166,23 +168,6 @@ Params:
 1. **newDeployer** *of type `address`*
 
     > The address of the new deployer
-
-
-
---- 
-### changeConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
 
 
 
@@ -232,6 +217,21 @@ Params:
     > The (address of) Validator contract instance
 
 
+
+--- 
+### configuration()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
 
 --- 
 ### deployer()
@@ -339,7 +339,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### challenge((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256),(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### challenge((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 >
 >Submit two payment candidates in continuous Fraud Challenge (FC) to be tested for duplicate driip nonce
 

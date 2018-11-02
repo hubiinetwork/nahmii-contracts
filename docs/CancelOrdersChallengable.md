@@ -1,5 +1,5 @@
-# DriipChallenge
-[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/DriipChallenge.sol)
+# CancelOrdersChallengable
+[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/CancelOrdersChallengable.sol)
 
 
 **Execution cost**: No bound available
@@ -10,7 +10,7 @@
 
 
 ## Events
-### ChangeConfigurationEvent(address,address)
+### ChangeCancelOrdersChallengeEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -18,8 +18,8 @@
 
 Params:
 
-1. **oldConfiguration** *of type `address`*
-2. **newConfiguration** *of type `address`*
+1. **oldCancelOrdersChallenge** *of type `address`*
+2. **newCancelOrdersChallenge** *of type `address`*
 
 --- 
 ### ChangeDeployerEvent(address,address)
@@ -47,7 +47,22 @@ Params:
 
 
 ## Methods
-### changeConfiguration(address)
+### cancelOrdersChallenge()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### changeCancelOrdersChallenge(address)
 
 
 **Execution cost**: No bound available
@@ -55,7 +70,7 @@ Params:
 
 Params:
 
-1. **newConfiguration** *of type `address`*
+1. **newCancelOrdersChallenge** *of type `address`*
 
 
 --- 
@@ -81,21 +96,6 @@ Params:
 
 1. **newOperator** *of type `address`*
 
-
---- 
-### configuration()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### deployer()
@@ -151,4 +151,4 @@ Returns:
 
 
 
-[Back to the top ↑](#driipchallenge)
+[Back to the top ↑](#cancelorderschallengable)

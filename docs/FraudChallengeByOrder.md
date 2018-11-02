@@ -3,11 +3,11 @@
 > FraudChallengeByOrder
 
 
-**Execution cost**: less than 42148 gas
+**Execution cost**: less than 42161 gas
 
-**Deployment cost**: less than 1002600 gas
+**Deployment cost**: less than 1013200 gas
 
-**Combined cost**: less than 1044748 gas
+**Combined cost**: less than 1055361 gas
 
 ## Constructor
 
@@ -62,8 +62,8 @@ Params:
 
 Params:
 
-1. **oldAddress** *of type `address`*
-2. **newAddress** *of type `address`*
+1. **oldFraudChallenge** *of type `address`*
+2. **newFraudChallenge** *of type `address`*
 
 --- 
 ### ChangeOperatorEvent(address,address)
@@ -103,19 +103,21 @@ Params:
 
 
 ## Methods
-### configuration()
+### changeConfiguration(address)
+>
+>Change the configuration contract
 
 
 **Execution cost**: No bound available
 
-**Attributes**: constant
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
 
 
-
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### changeOperator(address)
@@ -137,7 +139,7 @@ Params:
 --- 
 ### changeFraudChallenge(address)
 >
->Change the fraudChallenge contract
+>Change the fraud challenge contract
 
 
 **Execution cost**: No bound available
@@ -145,7 +147,7 @@ Params:
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **newFraudChallenge** *of type `address`*
 
     > The (address of) FraudChallenge contract instance
 
@@ -165,23 +167,6 @@ Params:
 1. **newDeployer** *of type `address`*
 
     > The address of the new deployer
-
-
-
---- 
-### changeConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
 
 
 
@@ -232,6 +217,21 @@ Params:
 
 
 --- 
+### configuration()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
 ### deployer()
 
 
@@ -252,7 +252,7 @@ Returns:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 786 gas
+**Execution cost**: less than 764 gas
 
 **Attributes**: constant
 
@@ -282,7 +282,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 808 gas
+**Execution cost**: less than 786 gas
 
 **Attributes**: constant
 
@@ -337,7 +337,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### challenge((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256))
+### challenge((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 >
 >Submit an order candidate in continuous Fraud Challenge (FC)
 

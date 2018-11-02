@@ -3,11 +3,11 @@
 > FraudChallengeByDuplicateDriipNonceOfTrades
 
 
-**Execution cost**: less than 42361 gas
+**Execution cost**: less than 42368 gas
 
-**Deployment cost**: less than 1205000 gas
+**Deployment cost**: less than 1213600 gas
 
-**Combined cost**: less than 1247361 gas
+**Combined cost**: less than 1255968 gas
 
 ## Constructor
 
@@ -63,8 +63,8 @@ Params:
 
 Params:
 
-1. **oldAddress** *of type `address`*
-2. **newAddress** *of type `address`*
+1. **oldFraudChallenge** *of type `address`*
+2. **newFraudChallenge** *of type `address`*
 
 --- 
 ### ChangeOperatorEvent(address,address)
@@ -140,7 +140,7 @@ Params:
 --- 
 ### changeFraudChallenge(address)
 >
->Change the fraudChallenge contract
+>Change the fraud challenge contract
 
 
 **Execution cost**: No bound available
@@ -148,10 +148,23 @@ Params:
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **newFraudChallenge** *of type `address`*
 
     > The (address of) FraudChallenge contract instance
 
+
+
+--- 
+### challenge(tuple,tuple)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **trade1** *of type `tuple`*
+2. **trade2** *of type `tuple`*
 
 
 --- 
@@ -169,19 +182,6 @@ Params:
 
     > The address of the new deployer
 
-
-
---- 
-### challenge(tuple,tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **trade1** *of type `tuple`*
-2. **trade2** *of type `tuple`*
 
 
 --- 
@@ -237,7 +237,7 @@ Returns:
 ### deployer()
 
 
-**Execution cost**: less than 940 gas
+**Execution cost**: less than 918 gas
 
 **Attributes**: constant
 
@@ -339,7 +339,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### challenge((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256),(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256))
+### challenge((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256),(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 >
 >Submit two trade candidates in continuous Fraud Challenge (FC) to be tested for duplicate driip nonce
 

@@ -3,11 +3,11 @@
 > SecurityBond
 
 
-**Execution cost**: less than 63118 gas
+**Execution cost**: less than 63168 gas
 
-**Deployment cost**: less than 1899400 gas
+**Deployment cost**: less than 1944000 gas
 
-**Combined cost**: less than 1962518 gas
+**Combined cost**: less than 2007168 gas
 
 ## Constructor
 
@@ -277,21 +277,22 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
-### setServiceActivationTimeout(uint256)
->
->Set the service activation timeout
+### depositsCount(address)
 
 
 **Execution cost**: No bound available
 
+**Attributes**: constant
+
 
 Params:
 
-1. **timeoutInSeconds** *of type `uint256`*
+1. **wallet** *of type `address`*
 
-    > The set timeout in unit of seconds
+Returns:
 
 
+1. **output_0** *of type `uint256`*
 
 --- 
 ### isRegisteredService(address)
@@ -339,22 +340,13 @@ Params:
 
 
 --- 
-### depositsCount(address)
+### closeAccrualPeriod()
 
 
-**Execution cost**: No bound available
-
-**Attributes**: constant
+**Execution cost**: less than 1599 gas
 
 
-Params:
 
-1. **wallet** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
 
 --- 
 ### depositTokens(int256,address,uint256,string)
@@ -444,15 +436,6 @@ Params:
 
 
 --- 
-### closeAccrualPeriod()
-
-
-**Execution cost**: less than 1599 gas
-
-
-
-
---- 
 ### isRegisteredActiveService(address)
 >
 >Gauge whether a service contract is registered and active
@@ -509,20 +492,6 @@ Params:
 
 
 --- 
-### depositEthersTo(address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: payable
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-
---- 
 ### enableServiceAction(address,string)
 >
 >Enable a named action in an already registered service contract
@@ -544,7 +513,21 @@ Params:
 
 
 --- 
-### withdraw(int256,address,uint256,string)
+### depositEthersTo(address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: payable
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+
+--- 
+### stage(address,int256,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -552,10 +535,10 @@ Params:
 
 Params:
 
-1. **amount** *of type `int256`*
-2. **currencyCt** *of type `address`*
-3. **currencyId** *of type `uint256`*
-4. **standard** *of type `string`*
+1. **wallet** *of type `address`*
+2. **amount** *of type `int256`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
 
 
 --- 
@@ -623,6 +606,23 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
+### setServiceActivationTimeout(uint256)
+>
+>Set the service activation timeout
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **timeoutInSeconds** *of type `uint256`*
+
+    > The set timeout in unit of seconds
+
+
+
+--- 
 ### setWithdrawalTimeout(uint256)
 
 
@@ -632,21 +632,6 @@ Returns:
 Params:
 
 1. **timeoutInSeconds** *of type `uint256`*
-
-
---- 
-### stage(address,int256,address,uint256)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
 
 
 --- 
@@ -695,6 +680,21 @@ Returns:
 **Execution cost**: No bound available
 
 
+
+
+--- 
+### withdraw(int256,address,uint256,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **amount** *of type `int256`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+4. **standard** *of type `string`*
 
 
 --- 

@@ -3,11 +3,11 @@
 > TestAuthorizableServable
 
 
-**Execution cost**: less than 42254 gas
+**Execution cost**: less than 42524 gas
 
-**Deployment cost**: less than 1102600 gas
+**Deployment cost**: less than 1361400 gas
 
-**Combined cost**: less than 1144854 gas
+**Combined cost**: less than 1403924 gas
 
 ## Constructor
 
@@ -18,6 +18,29 @@ Params:
 1. **owner** *of type `address`*
 
 ## Events
+### RegisterServiceEvent(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+--- 
+### AuthorizeInitiallyRegisteredServiceEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **service** *of type `address`*
+
+--- 
 ### RegisterServiceDeferredEvent(address,uint256)
 
 
@@ -28,18 +51,6 @@ Params:
 
 1. **service** *of type `address`*
 2. **timeout** *of type `uint256`*
-
---- 
-### AuthorizeRegisteredServiceEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **service** *of type `address`*
 
 --- 
 ### AuthorizeRegisteredServiceActionEvent(address,address,string)
@@ -53,6 +64,18 @@ Params:
 1. **wallet** *of type `address`*
 2. **service** *of type `address`*
 3. **action** *of type `string`*
+
+--- 
+### AuthorizeRegisteredServiceEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **service** *of type `address`*
 
 --- 
 ### ChangeDeployerEvent(address,address)
@@ -112,17 +135,6 @@ Params:
 
 1. **service** *of type `address`*
 2. **action** *of type `string`*
-
---- 
-### RegisterServiceEvent(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
 
 --- 
 ### ServiceActivationTimeoutEvent(uint256)
@@ -208,9 +220,9 @@ Params:
 
 
 --- 
-### authorizeRegisteredServiceAction(address,string)
+### authorizeInitiallyRegisteredService(address)
 >
->Authorize the given registered service action
+>Add service to initial whitelist of services
 >
 > The service must be registered already
 
@@ -224,19 +236,90 @@ Params:
 
     > The address of the concerned registered service
 
-2. **action** *of type `string`*
 
-    > The concerned service action
+
+--- 
+### initialServiceWalletUnauthorizedMap(address,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### registerService(address)
+>
+>Register a service contract whose activation is immediate
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the service contract to be registered
 
 
 
 --- 
-### isRegisteredActiveService(address)
+### initialServiceAuthorizedMap(address)
+
+
+**Execution cost**: less than 907 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### enableServiceAction(address,string)
 >
->Gauge whether a service contract is registered and active
+>Enable a named action in an already registered service contract
 
 
 **Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the registered service contract
+
+2. **action** *of type `string`*
+
+    > The name of the action to be enabled
+
+
+
+--- 
+### isRegisteredService(address)
+>
+>Gauge whether a service contract is registered
+
+
+**Execution cost**: less than 1026 gas
 
 **Attributes**: constant
 
@@ -250,12 +333,12 @@ Params:
 
 Returns:
 
-> true if service is registered and activate, else false
+> true if service is registered, else false
 
 1. **output_0** *of type `bool`*
 
 --- 
-### isAuthorizedServiceActionForWallet(address,string,address)
+### isAuthorizedRegisteredServiceAction(address,string,address)
 >
 >Gauge whether the given service action is authorized for the given wallet
 
@@ -308,19 +391,15 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### disableInitialServiceAuthorization()
 >
->Change the deployer of this contract
+>Disable further initial authorization of services
+>
+> This operation can not be undone
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 21300 gas
 
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
 
 
 
@@ -330,7 +409,7 @@ Params:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 789 gas
+**Execution cost**: less than 877 gas
 
 **Attributes**: constant
 
@@ -359,7 +438,22 @@ Params:
 
 
 --- 
-### isAuthorizedServiceForWallet(address,address)
+### operator()
+
+
+**Execution cost**: less than 921 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### isAuthorizedRegisteredService(address,address)
 >
 >Gauge whether the given service is authorized for the given wallet
 
@@ -387,21 +481,6 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### deployer()
-
-
-**Execution cost**: less than 1031 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### changeOperator(address)
 >
 >Change the operator of this contract
@@ -419,9 +498,11 @@ Params:
 
 
 --- 
-### enableServiceAction(address,string)
+### authorizeRegisteredServiceAction(address,string)
 >
->Enable a named action in an already registered service contract
+>Authorize the given registered service action
+>
+> The service must be registered already
 
 
 **Execution cost**: No bound available
@@ -431,21 +512,21 @@ Params:
 
 1. **service** *of type `address`*
 
-    > The address of the registered service contract
+    > The address of the concerned registered service
 
 2. **action** *of type `string`*
 
-    > The name of the action to be enabled
+    > The concerned service action
 
 
 
 --- 
-### isRegisteredService(address)
+### isRegisteredActiveService(address)
 >
->Gauge whether a service contract is registered
+>Gauge whether a service contract is registered and active
 
 
-**Execution cost**: less than 960 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -459,15 +540,32 @@ Params:
 
 Returns:
 
-> true if service is registered, else false
+> true if service is registered and activate, else false
 
 1. **output_0** *of type `bool`*
 
 --- 
-### operator()
+### changeDeployer(address)
+>
+>Change the deployer of this contract
 
 
-**Execution cost**: less than 855 gas
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### deployer()
+
+
+**Execution cost**: less than 1207 gas
 
 **Attributes**: constant
 
@@ -479,21 +577,19 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### registerService(address)
->
->Register a service contract whose activation is immediate
+### initialServiceAuthorizationDisabled()
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 937 gas
+
+**Attributes**: constant
 
 
-Params:
 
-1. **service** *of type `address`*
-
-    > The address of the service contract to be registered
+Returns:
 
 
+1. **output_0** *of type `bool`*
 
 --- 
 ### registerServiceDeferred(address)
@@ -513,10 +609,50 @@ Params:
 
 
 --- 
+### serviceActionWalletTouchedMap(address,bytes32,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `bytes32`*
+3. **param_2** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### serviceActionWalletUnauthorizedMap(address,bytes32,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `bytes32`*
+3. **param_2** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### serviceActivationTimeout()
 
 
-**Execution cost**: less than 617 gas
+**Execution cost**: less than 705 gas
 
 **Attributes**: constant
 
@@ -526,6 +662,45 @@ Returns:
 
 
 1. **output_0** *of type `uint256`*
+
+--- 
+### serviceWalletActionList(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `address`*
+3. **param_2** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
+### serviceWalletUnauthorizedMap(address,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
 
 --- 
 ### setServiceActivationTimeout(uint256)

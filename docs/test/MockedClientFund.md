@@ -3,11 +3,11 @@
 > MockedClientFund
 
 
-**Execution cost**: less than 651 gas
+**Execution cost**: less than 766 gas
 
-**Deployment cost**: less than 619400 gas
+**Deployment cost**: less than 731400 gas
 
-**Combined cost**: less than 620051 gas
+**Combined cost**: less than 732166 gas
 
 ## Constructor
 
@@ -56,19 +56,24 @@ Params:
 
 
 ## Methods
-### _stagesCount()
+### stages(uint256)
 
 
-**Execution cost**: less than 495 gas
+**Execution cost**: less than 2012 gas
 
 **Attributes**: constant
 
 
+Params:
+
+1. **param_0** *of type `uint256`*
 
 Returns:
 
 
-1. **output_0** *of type `uint256`*
+1. **sourceWallet** *of type `address`*
+2. **targetWallet** *of type `address`*
+3. **figure** *of type `tuple`*
 
 --- 
 ### reset()
@@ -80,10 +85,71 @@ Returns:
 
 
 --- 
+### activeBalanceLogEntriesCount(address,address,uint256)
+
+
+**Execution cost**: less than 539 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### activeBalanceLogEntry(address,address,uint256,uint256)
+
+
+**Execution cost**: less than 1596 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+4. **index** *of type `uint256`*
+
+Returns:
+
+
+1. **amount** *of type `int256`*
+2. **blockNumber** *of type `uint256`*
+
+--- 
+### activeBalanceLogEntries(uint256)
+
+
+**Execution cost**: less than 1028 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `uint256`*
+
+Returns:
+
+
+1. **amount** *of type `int256`*
+2. **blockNumber** *of type `uint256`*
+
+--- 
 ### _settledBalanceUpdates(uint256)
 
 
-**Execution cost**: less than 2643 gas
+**Execution cost**: less than 2709 gas
 
 **Attributes**: constant
 
@@ -104,7 +170,7 @@ Returns:
 ### _stages(uint256)
 
 
-**Execution cost**: less than 3356 gas
+**Execution cost**: less than 3422 gas
 
 **Attributes**: constant
 
@@ -123,10 +189,38 @@ Returns:
 5. **output_4** *of type `uint256`*
 
 --- 
+### _addActiveBalanceLogEntry(int256,uint256)
+
+
+**Execution cost**: less than 60507 gas
+
+
+Params:
+
+1. **amount** *of type `int256`*
+2. **blockNumber** *of type `uint256`*
+
+
+--- 
+### _stagesCount()
+
+
+**Execution cost**: less than 561 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
 ### seizeAllBalances(address,address)
 
 
-**Execution cost**: less than 62526 gas
+**Execution cost**: less than 62592 gas
 
 
 Params:
@@ -158,7 +252,7 @@ Returns:
 ### settledBalanceUpdates(uint256)
 
 
-**Execution cost**: less than 2012 gas
+**Execution cost**: less than 2100 gas
 
 **Attributes**: constant
 
@@ -178,7 +272,7 @@ Returns:
 ### stage(address,int256,address,uint256)
 
 
-**Execution cost**: less than 123671 gas
+**Execution cost**: less than 123759 gas
 
 
 Params:
@@ -193,7 +287,7 @@ Params:
 ### stageToBeneficiaryUntargeted(address,address,int256,address,uint256)
 
 
-**Execution cost**: less than 121614 gas
+**Execution cost**: less than 121658 gas
 
 
 Params:
@@ -206,30 +300,10 @@ Params:
 
 
 --- 
-### stages(uint256)
-
-
-**Execution cost**: less than 1946 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `uint256`*
-
-Returns:
-
-
-1. **sourceWallet** *of type `address`*
-2. **targetWallet** *of type `address`*
-3. **figure** *of type `tuple`*
-
---- 
 ### updateSettledBalance(address,int256,address,uint256)
 
 
-**Execution cost**: less than 123649 gas
+**Execution cost**: less than 123737 gas
 
 
 Params:

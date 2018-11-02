@@ -1,5 +1,5 @@
-# AccessorManageable
-[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/AccessorManageable.sol)
+# SignerManageable
+[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/SignerManageable.sol)
 
 
 **Execution cost**: No bound available
@@ -17,18 +17,6 @@ Params:
 1. **manager** *of type `address`*
 
 ## Events
-### ChangeAccessorManagerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldAccessor** *of type `address`*
-2. **newAccessor** *of type `address`*
-
---- 
 ### ChangeDeployerEvent(address,address)
 
 
@@ -51,6 +39,18 @@ Params:
 
 1. **oldOperator** *of type `address`*
 2. **newOperator** *of type `address`*
+
+--- 
+### ChangeSignerManagerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldSignerManager** *of type `address`*
+2. **newSignerManager** *of type `address`*
 
 
 ## Methods
@@ -75,7 +75,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeAccessorManager(address)
+### changeOperator(address)
 
 
 **Execution cost**: No bound available
@@ -83,23 +83,8 @@ Returns:
 
 Params:
 
-1. **newAccessor** *of type `address`*
+1. **newOperator** *of type `address`*
 
-
---- 
-### accessorManager()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### changeDeployer(address)
@@ -114,7 +99,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### changeSignerManager(address)
 
 
 **Execution cost**: No bound available
@@ -122,7 +107,7 @@ Params:
 
 Params:
 
-1. **newOperator** *of type `address`*
+1. **newSignerManager** *of type `address`*
 
 
 --- 
@@ -214,6 +199,21 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### signerManager()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
 ### triggerDestroy()
 
 
@@ -222,4 +222,4 @@ Returns:
 
 
 
-[Back to the top ↑](#accessormanageable)
+[Back to the top ↑](#signermanageable)
