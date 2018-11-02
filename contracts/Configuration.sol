@@ -80,10 +80,10 @@ contract Configuration is Ownable, Servable {
     uint256 public cancelOrderChallengeTimeout;
     uint256 public settlementChallengeTimeout;
 
-    MonetaryTypesLib.Figure public unchallengeOrderCandidateByTradeStake;
-    MonetaryTypesLib.Figure public falseWalletSignatureStake;
-    MonetaryTypesLib.Figure public duplicateDriipNonceStake;
-    MonetaryTypesLib.Figure public doubleSpentOrderStake;
+    uint256 public unchallengeOrderCandidateByTradeStake;
+    uint256 public falseWalletSignatureStake;
+    uint256 public duplicateDriipNonceStake;
+    uint256 public doubleSpentOrderStake;
 
     //
     // Events
@@ -100,18 +100,18 @@ contract Configuration is Ownable, Servable {
     event SetCurrencyPaymentMinimumFeeEvent(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal);
     event SetCancelOrderChallengeTimeoutEvent(uint256 timeout);
     event SetSettlementChallengeTimeoutEvent(uint256 timeout);
-    event SetUnchallengeDriipSettlementOrderByTradeStakeEvent(int256 amount, address currencyCt, uint256 currencyId);
-    event SetFalseWalletSignatureStakeEvent(int256 amount, address currencyCt, uint256 currencyId);
-    event SetDuplicateDriipNonceStakeEvent(int256 amount, address currencyCt, uint256 currencyId);
-    event SetDoubleSpentOrderStakeEvent(int256 amount, address currencyCt, uint256 currencyId);
+    event SetUnchallengeDriipSettlementOrderByTradeStakeEvent(uint256 stakeFraction);
+    event SetFalseWalletSignatureStakeEvent(uint256 stakeFraction);
+    event SetDuplicateDriipNonceStakeEvent(uint256 stakeFraction);
+    event SetDoubleSpentOrderStakeEvent(uint256 stakeFraction);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) Ownable(owner) public {
         confirmations = 12;
-        cancelOrderChallengeTimeout = 3 hours;
-        settlementChallengeTimeout = 5 hours;
+        cancelOrderChallengeTimeout = 3 days;
+        settlementChallengeTimeout = 5 days;
     }
 
     //
@@ -430,68 +430,36 @@ contract Configuration is Ownable, Servable {
         emit SetSettlementChallengeTimeoutEvent(timeout);
     }
 
-    /// @notice Set currency and amount that will be gained when someone successfully unchallenges
+    /// @notice Set fraction of security bond that will be gained when someone successfully unchallenges
     /// (driip settlement) order candidate by trade
-    /// @param amount Amount gained
-    /// @param currencyCt Contract address of currency gained (address(0) == ETH)
-    /// @param currencyId ID of currency gained (0 for ETH and ERC20)
-    function setUnchallengeOrderCandidateByTradeStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
-        unchallengeOrderCandidateByTradeStake = MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
-        emit SetUnchallengeDriipSettlementOrderByTradeStakeEvent(amount, currencyCt, currencyId);
+    /// @param stakeFraction The fraction gained
+    function setUnchallengeOrderCandidateByTradeStake(uint256 stakeFraction) public onlyDeployer {
+        unchallengeOrderCandidateByTradeStake = stakeFraction;
+        emit SetUnchallengeDriipSettlementOrderByTradeStakeEvent(stakeFraction);
     }
 
-    /// @notice Get the currency and amount that will be gained when someone successfully
-    /// unchallenges (driip settlement) order candidate by trade
-    function getUnchallengeOrderCandidateByTradeStake() public view returns (int256, address, uint256) {
-        return (unchallengeOrderCandidateByTradeStake.amount, unchallengeOrderCandidateByTradeStake.currency.ct, unchallengeOrderCandidateByTradeStake.currency.id);
-    }
-
-    /// @notice Set currency and amount that will be gained when someone successfully challenges
+    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
     /// false wallet signature on order or payment
-    /// @param amount Amount gained
-    /// @param currencyCt Contract address of currency gained (address(0) == ETH)
-    /// @param currencyId ID of currency gained (0 for ETH and ERC20)
-    function setFalseWalletSignatureStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
-        falseWalletSignatureStake = MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
-        emit SetFalseWalletSignatureStakeEvent(amount, currencyCt, currencyId);
+    /// @param stakeFraction The fraction gained
+    function setFalseWalletSignatureStake(uint256 stakeFraction) public onlyDeployer {
+        falseWalletSignatureStake = stakeFraction;
+        emit SetFalseWalletSignatureStakeEvent(stakeFraction);
     }
 
-    /// @notice Get the figure that will be gained when someone successfully challenges
-    /// false wallet signature on order or payment
-    function getFalseWalletSignatureStake() public view returns (int256, address, uint256) {
-        return (falseWalletSignatureStake.amount, falseWalletSignatureStake.currency.ct, falseWalletSignatureStake.currency.id);
-    }
-
-    /// @notice Set currency and amount that will be gained when someone successfully challenges
+    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
     /// duplicate driip nonce
-    /// @param amount Amount gained
-    /// @param currencyCt Contract address of currency gained (address(0) == ETH)
-    /// @param currencyId ID of currency gained (0 for ETH and ERC20)
-    function setDuplicateDriipNonceStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
-        duplicateDriipNonceStake = MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
-        emit SetDuplicateDriipNonceStakeEvent(amount, currencyCt, currencyId);
+    /// @param stakeFraction The fraction gained
+    function setDuplicateDriipNonceStake(uint256 stakeFraction) public onlyDeployer {
+        duplicateDriipNonceStake = stakeFraction;
+        emit SetDuplicateDriipNonceStakeEvent(stakeFraction);
     }
 
-    /// @notice Get the figure that will be gained when someone successfully challenges
-    /// duplicate driip nonce
-    function getDuplicateDriipNonceStake() public view returns (int256, address, uint256) {
-        return (duplicateDriipNonceStake.amount, duplicateDriipNonceStake.currency.ct, duplicateDriipNonceStake.currency.id);
-    }
-
-    /// @notice Set currency and amount that will be gained when someone successfully challenges
+    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
     /// double spent order
-    /// @param amount Amount gained
-    /// @param currencyCt Contract address of currency gained (address(0) == ETH)
-    /// @param currencyId ID of currency gained (0 for ETH and ERC20)
-    function setDoubleSpentOrderStake(int256 amount, address currencyCt, uint256 currencyId) public onlyDeployer {
-        doubleSpentOrderStake = MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
-        emit SetDoubleSpentOrderStakeEvent(amount, currencyCt, currencyId);
-    }
-
-    /// @notice Get the figure that will be gained when someone successfully challenges
-    /// double spent order
-    function getDoubleSpentOrderStake() public view returns (int256, address, uint256) {
-        return (doubleSpentOrderStake.amount, doubleSpentOrderStake.currency.ct, doubleSpentOrderStake.currency.id);
+    /// @param stakeFraction The fraction gained
+    function setDoubleSpentOrderStake(uint256 stakeFraction) public onlyDeployer {
+        doubleSpentOrderStake = stakeFraction;
+        emit SetDoubleSpentOrderStakeEvent(stakeFraction);
     }
 
     //
