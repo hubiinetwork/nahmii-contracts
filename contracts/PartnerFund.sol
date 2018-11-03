@@ -86,7 +86,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].canChangeAddress = canChangeAddress;
         walletMap[tag].fee = fee;
 
-        //raise event
+        // Emit event
         emit RegisterParnerEvent(tag, fee);
     }
 
@@ -95,7 +95,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         walletMap[tag].fee = fee;
 
-        //raise event
+        // Emit event
         emit ChangedFeeEvent(tag, fee);
     }
 
@@ -138,7 +138,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         if (newWallet != address(0))
             addressTagMap[newWallet] = tag;
 
-        //raise event
+        // Emit event
         emit ChangedWalletEvent(tag, oldWallet, newWallet);
     }
 
@@ -281,7 +281,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
             require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
         }
 
-        //raise event
+        // Emit event
         emit WithdrawEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 

@@ -30,7 +30,7 @@ contract ERC721TransferController is TransferController {
 
         ERC721(currencyCt).safeTransferFrom(from, to, currencyId);
 
-        // Raise event
+        // Emit event
         emit CurrencyTransferred(from, to, 1, currencyCt, currencyId);
     }
 
@@ -50,7 +50,7 @@ contract ERC721TransferController is TransferController {
         ERC721(currencyCt).approve(from, currencyId);
         ERC721(currencyCt).safeTransferFrom(from, to, currencyId);
 
-        // Raise event
+        // Emit event
         emit CurrencyTransferred(from, to, 1, currencyCt, currencyId);
     }
 }

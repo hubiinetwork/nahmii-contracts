@@ -86,7 +86,7 @@ contract SignerManager is Ownable {
         }
     }
 
-    /// @notice Get a subset of registered signers in the given 0 based index range
+    /// @notice Get the subset of registered signers in the given 0 based index range
     /// @param low The lower inclusive index
     /// @param up The upper inclusive index
     /// @return The subset of registered signers

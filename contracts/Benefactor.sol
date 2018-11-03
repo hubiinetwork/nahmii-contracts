@@ -44,7 +44,7 @@ contract Benefactor is Ownable {
         beneficiaries.push(beneficiary);
         beneficiariesMap[beneficiary] = beneficiaries.length;
 
-        //raise event
+        // Emit event
         emit RegisterBeneficiaryEvent(beneficiary);
 
         return true;
@@ -77,7 +77,7 @@ contract Benefactor is Ownable {
         beneficiaries.length--;
         beneficiariesMap[beneficiary] = 0;
 
-        //raise event
+        // Emit event
         emit DeregisterBeneficiaryEvent(beneficiary);
 
         return true;

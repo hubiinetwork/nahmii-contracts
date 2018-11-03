@@ -114,7 +114,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.setProposalCandidateIndex(order.wallet, driipSettlementChallenge.challengeCandidateOrdersCount().sub(1));
         driipSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
-        // Raise event
+        // Emit event
         emit ChallengeByOrderEvent(order, driipSettlementChallenge.proposalNonce(order.wallet),
             driipSettlementChallenge.proposalDriipType(order.wallet), challenger);
     }
@@ -138,7 +138,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Unchallenge order by trade
         unchallengeOrderCandidateByTradePrivate(order, trade, unchallenger);
 
-        // Raise event
+        // Emit event
         emit UnchallengeOrderCandidateByTradeEvent(order, trade, driipSettlementChallenge.proposalNonce(order.wallet),
             driipSettlementChallenge.proposalDriipType(order.wallet), unchallenger);
     }
@@ -162,7 +162,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // Challenge by trade
         challengeByTradePrivate(wallet, trade, challenger);
 
-        // Raise event
+        // Emit event
         emit ChallengeByTradeEvent(wallet, trade, driipSettlementChallenge.proposalNonce(wallet),
             driipSettlementChallenge.proposalDriipType(wallet), challenger);
     }
@@ -207,7 +207,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, driipSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
         driipSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
 
-        // Raise event
+        // Emit event
         emit ChallengeByPaymentEvent(payment, driipSettlementChallenge.proposalNonce(payment.sender.wallet),
             driipSettlementChallenge.proposalDriipType(payment.sender.wallet), challenger);
     }

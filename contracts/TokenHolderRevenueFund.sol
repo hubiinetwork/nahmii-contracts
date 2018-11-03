@@ -199,7 +199,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             periodAccrual.set(0, currency.ct, currency.id);
         }
 
-        //raise event
+        // Emit event
         emit CloseAccrualPeriodEvent();
     }
 
@@ -245,7 +245,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         // Store upper bound as the last claimed accrual block number for currency
         claimAccrualBlockNumbers.push(bn_up);
 
-        //raise event
+        // Emit event
         emit ClaimAccrualEvent(msg.sender, currencyCt, currencyId);
     }
 

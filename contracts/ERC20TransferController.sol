@@ -32,7 +32,7 @@ contract ERC20TransferController is TransferController {
 
         require(ERC20(currencyCt).transferFrom(from, to, amount));
 
-        // Raise event
+        // Emit event
         emit CurrencyTransferred(from, to, amount, currencyCt, currencyId);
     }
 
@@ -52,7 +52,7 @@ contract ERC20TransferController is TransferController {
         require(ERC20(currencyCt).approve(from, amount));
         require(ERC20(currencyCt).transferFrom(from, to, amount));
 
-        // Raise event
+        // Emit event
         emit CurrencyTransferred(from, to, amount, currencyCt, currencyId);
     }
 }

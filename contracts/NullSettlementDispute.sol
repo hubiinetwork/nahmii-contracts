@@ -107,7 +107,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrdersCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
-        // Raise event
+        // Emit event
         emit ChallengeByOrderEvent(order, nullSettlementChallenge.proposalNonce(order.wallet), challenger);
     }
 
@@ -171,7 +171,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(wallet, challenger);
 
-        // Raise event
+        // Emit event
         emit ChallengeByTradeEvent(wallet, trade, nullSettlementChallenge.proposalNonce(wallet), challenger);
     }
 
@@ -213,7 +213,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, nullSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
 
-        // Raise event
+        // Emit event
         emit ChallengeByPaymentEvent(payment, nullSettlementChallenge.proposalNonce(payment.sender.wallet), challenger);
     }
 
