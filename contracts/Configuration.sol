@@ -24,6 +24,8 @@ contract Configuration is Ownable, Servable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
+    int256 constant public PARTS_PER = 1e18;
+
     string constant public OPERATIONAL_MODE_ACTION = "operational_mode";
 
     //
@@ -54,8 +56,6 @@ contract Configuration is Ownable, Servable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     OperationalMode public operationalMode = OperationalMode.Normal;
-
-    int256 constant public PARTS_PER = 1e18;
 
     uint256 public confirmations;
 

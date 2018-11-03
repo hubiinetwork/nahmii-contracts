@@ -34,6 +34,13 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     using SafeMathIntLib for int256;
 
     //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    bytes32 constant public DEPOSITED_BALANCE = keccak256(abi.encodePacked("deposited"));
+    bytes32 constant public SETTLED_BALANCE = keccak256(abi.encodePacked("settled"));
+    bytes32 constant public STAGED_BALANCE = keccak256(abi.encodePacked("staged"));
+
+    //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Wallet {
@@ -58,7 +65,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event DepositEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
+    event ReceiveEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event UnstageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
@@ -86,51 +93,63 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     public
     payable
     {
-        depositEthersTo(msg.sender);
+        receiveEthersTo(msg.sender, "deposited");
     }
 
     /// @notice Deposit ethers to the given wallet's deposited balance
     /// @param wallet The address of the concerned wallet
-    function depositEthersTo(address wallet)
+    /// @param balance The target balance
+    function receiveEthersTo(address wallet, string balance)
     public
     payable
     {
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
-        // Add to per-wallet deposited balance
-        walletMap[wallet].deposited.add(amount, address(0), 0);
-        walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
+        bytes32 balanceHash = 0 < bytes(balance).length ? keccak256(abi.encodePacked(balance)) : DEPOSITED_BALANCE;
 
-        // Add active balance log entry
-        walletMap[wallet].active.add(activeBalance(wallet, address(0), 0), address(0), 0);
+        if (STAGED_BALANCE == balanceHash)
+            walletMap[wallet].staged.add(amount, address(0), 0);
+
+        else {// DEPOSITED_BALANCE
+            // Add to per-wallet deposited balance
+            walletMap[wallet].deposited.add(amount, address(0), 0);
+            walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
+
+            // Add active balance log entry
+            walletMap[wallet].active.add(activeBalance(wallet, address(0), 0), address(0), 0);
+        }
 
         // Add currency to in-use list
         walletMap[wallet].inUseCurrencies.addItem(address(0), 0);
 
         // Emit event
-        emit DepositEvent(wallet, amount, address(0), 0, "");
+        emit ReceiveEvent(wallet, amount, address(0), 0, "");
     }
 
-    /// @notice Deposit token to msg.sender's deposited balance
+    /// @notice Receive token to msg.sender's given balance
     /// @dev The wallet must approve of this ClientFund's transfer prior to calling this function
+    /// @param balance The target balance
     /// @param amount The amount to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function receiveTokens(string balance, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
     public
     {
-        depositTokensTo(msg.sender, amount, currencyCt, currencyId, standard);
+        receiveTokensTo(msg.sender, balance, amount, currencyCt, currencyId, standard);
     }
 
-    /// @notice Deposit token to the given wallet's deposited balance
+    /// @notice Receive token to the given wallet's given balance
     /// @dev The wallet must approve of this ClientFund's transfer prior to calling this function
     /// @param wallet The address of the concerned wallet
+    /// @param balance The target balance
     /// @param amount The amount to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("ERC20", "ERC721")
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
     public
     {
         require(amount.isNonZeroPositiveInt256());
@@ -139,18 +158,25 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         TransferController controller = getTransferController(currencyCt, standard);
         require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
-        // Add to per-wallet deposited balance
-        walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
-        walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
+        bytes32 balanceHash = 0 < bytes(balance).length ? keccak256(abi.encodePacked(balance)) : DEPOSITED_BALANCE;
 
-        // Add active balance log entry
-        walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+        if (STAGED_BALANCE == balanceHash)
+            walletMap[wallet].staged.add(amount, currencyCt, currencyId);
+
+        else {// DEPOSITED_BALANCE
+            // Add to per-wallet deposited balance
+            walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
+            walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
+
+            // Add active balance log entry
+            walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+        }
 
         // Add currency to in-use list
         walletMap[wallet].inUseCurrencies.addItem(currencyCt, currencyId);
 
         // Emit event
-        emit DepositEvent(wallet, amount, currencyCt, currencyId, standard);
+        emit ReceiveEvent(wallet, amount, currencyCt, currencyId, standard);
     }
 
     /// @notice Get metadata of the given wallet's deposit at the given index
@@ -349,7 +375,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    /// @notice Stage the amount from msg.sender to the given beneficiary and targeted to msg.sender 
+    /// @notice Stage the amount from msg.sender to the given beneficiary and targeted to msg.sender
     /// @param beneficiary The (address of) concerned beneficiary contract
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
@@ -370,7 +396,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount, 
+    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
         address currencyCt, uint256 currencyId)
     public
     notNullAddress(sourceWallet)
@@ -541,18 +567,19 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // TODO Update this function with 'standard' parameter as in deposits and withdrawals
     function transferToBeneficiary(address destWallet, Beneficiary beneficiary,
         int256 amount, address currencyCt, uint256 currencyId)
-    private {
+    private
+    {
         // Transfer funds to the beneficiary
         if (currencyCt == address(0) && currencyId == 0)
-            beneficiary.depositEthersTo.value(uint256(amount))(destWallet);
+            beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, "");
 
         else {
-            //execute transfer
+            // Execute transfer
             TransferController controller = getTransferController(currencyCt, "");
             require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 
-            //transfer funds to the beneficiary
-            beneficiary.depositTokensTo(destWallet, amount, currencyCt, currencyId, "");
+            // Transfer funds to the beneficiary
+            beneficiary.receiveTokensTo(destWallet, "", amount, currencyCt, currencyId, "");
         }
     }
 

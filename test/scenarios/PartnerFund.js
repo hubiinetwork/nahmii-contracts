@@ -26,9 +26,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [depositEthersTo]: Not registered tag', async() => {
+        it(testCounter.next() + ': MUST FAIL [receiveEthersTo]: Not registered tag', async() => {
             try {
-                await glob.web3PartnerFund.depositEthersTo(dummyTag, { value: web3.toWei(0.2, 'ether') });
+                await glob.web3PartnerFund.receiveEthersTo(dummyTag, '', { value: web3.toWei(0.2, 'ether') });
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -38,9 +38,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [depositTokensTo]: Not registered tag', async() => {
+        it(testCounter.next() + ': MUST FAIL [receiveTokensTo]: Not registered tag', async() => {
             try {
-                await glob.web3PartnerFund.depositTokensTo(dummyTag, 2, glob.web3Erc20.address, 0, "");
+                await glob.web3PartnerFund.receiveTokensTo(dummyTag, '', 2, glob.web3Erc20.address, 0, "");
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -228,9 +228,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST SUCCEED [depositEthersTo]: add 1 ether to user A deposited balance', async() => {
+        it(testCounter.next() + ': MUST SUCCEED [receiveEthersTo]: add 1 ether to user A deposited balance', async() => {
             try {
-                await glob.web3PartnerFund.depositEthersTo(userATag, { from: glob.owner, value: web3.toWei(1, 'ether') });
+                await glob.web3PartnerFund.receiveEthersTo(userATag, '', { from: glob.owner, value: web3.toWei(1, 'ether') });
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -239,7 +239,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST SUCCEED [depositTokensTo]: 3 tokens added to A deposited balance', async() => {
+        it(testCounter.next() + ': MUST SUCCEED [receiveTokensTo]: 3 tokens added to A deposited balance', async() => {
             try {
                 await glob.web3Erc20.approve(glob.web3PartnerFund.address, 3, { from: glob.owner });
             }
@@ -247,7 +247,7 @@ module.exports = function (glob) {
                 assert(false, 'This test must succeed. Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
             }
             try {
-                await glob.web3PartnerFund.depositTokensTo(userATag, 3, glob.web3Erc20.address, 0, "", { from: glob.owner });
+                await glob.web3PartnerFund.receiveTokensTo(userATag, '', 3, glob.web3Erc20.address, 0, "", { from: glob.owner });
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');

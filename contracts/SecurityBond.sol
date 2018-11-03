@@ -36,6 +36,8 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     // -----------------------------------------------------------------------------------------------------------------
     string constant public STAGE_ACTION = "stage";
 
+    bytes32 constant public ACTIVE_BALANCE = keccak256(abi.encodePacked("active"));
+
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -70,7 +72,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetWithdrawalTimeoutEvent(uint256 timeoutInSeconds);
-    event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
     event StageEvent(address from, uint256 fraction);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
 
@@ -98,13 +100,15 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        depositEthersTo(msg.sender);
+        receiveEthersTo(msg.sender, "");
     }
 
-    function depositEthersTo(address wallet)
+    function receiveEthersTo(address wallet, string balance)
     public
     payable
     {
+        require(0 == bytes(balance).length || ACTIVE_BALANCE == keccak256(abi.encodePacked(balance)));
+
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         // Add to active balance
@@ -115,18 +119,22 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         inUseCurrencies.addItem(address(0), 0);
 
         // Emit event
-        emit DepositEvent(wallet, amount, address(0), 0);
+        emit ReceiveEvent(wallet, amount, address(0), 0);
     }
 
-    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function receiveTokens(string balance, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
     public
     {
-        depositTokensTo(msg.sender, amount, currencyCt, currencyId, standard);
+        receiveTokensTo(msg.sender, balance, amount, currencyCt, currencyId, standard);
     }
 
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
     public
     {
+        require(0 == bytes(balance).length || ACTIVE_BALANCE == keccak256(abi.encodePacked(balance)));
+
         require(amount.isNonZeroPositiveInt256());
 
         // Execute transfer
@@ -141,7 +149,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         inUseCurrencies.addItem(currencyCt, currencyId);
 
         // Emit event
-        emit DepositEvent(wallet, amount, currencyCt, currencyId);
+        emit ReceiveEvent(wallet, amount, currencyCt, currencyId);
     }
 
     function deposit(address wallet, uint index)
@@ -185,6 +193,35 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     // Staging functions
     // -----------------------------------------------------------------------------------------------------------------
     function stage(address wallet, uint256 fraction)
+    public
+    notNullAddress(wallet)
+    onlyDeployerOrEnabledServiceAction(STAGE_ACTION)
+    {
+        uint256 startTime;
+
+        uint256 numCurrencies = inUseCurrencies.getLength();
+        int256 partsPer = configuration.PARTS_PER();
+        for (uint256 i = 0; i < numCurrencies; i++) {
+            MonetaryTypesLib.Currency memory currency = inUseCurrencies.getAt(i);
+
+            int256 amount = active.get(currency.ct, currency.id).mul(
+                SafeMathIntLib.toInt256(fraction)
+            ).div(partsPer);
+
+            // Move from active balance to staged
+            active.sub(amount, currency.ct, currency.id);
+            walletMap[wallet].staged.add(amount, currency.ct, currency.id);
+
+            // Add substage info
+            startTime = block.timestamp + ((wallet == deployer) ? withdrawalTimeout : 0);
+            walletMap[wallet].subStaged[currency.ct][currency.id].list.push(SubStageItem(amount, startTime));
+        }
+
+        // Emit event
+        emit StageEvent(wallet, fraction);
+    }
+
+    function stageToBeneficiary(address wallet, uint256 fraction)
     public
     notNullAddress(wallet)
     onlyDeployerOrEnabledServiceAction(STAGE_ACTION)

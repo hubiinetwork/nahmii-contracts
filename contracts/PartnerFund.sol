@@ -28,6 +28,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     using SafeMathIntLib for int256;
 
     //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    bytes32 constant public ACTIVE_BALANCE = keccak256(abi.encodePacked("active"));
+
+    //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Wallet {
@@ -63,7 +68,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     event RegisterParnerEvent(address tag, uint256 fee);
     event ChangedFeeEvent(address tag, uint256 fee);
     event ChangedWalletEvent(address tag, address oldWallet, address newWallet);
-    event DepositEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
     event StageEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address tag, address to, int256 amount, address currencyCt, uint256 currencyId);
 
@@ -153,7 +158,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         revert();
     }
 
-    function depositEthersTo(address tag) public isRegisteredTag(tag) payable {
+    function receiveEthersTo(address tag, string balance) public isRegisteredTag(tag) payable {
+        require(0 == bytes(balance).length || ACTIVE_BALANCE == keccak256(abi.encodePacked(balance)));
+
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         //add to per-wallet deposited balance
@@ -164,15 +171,16 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositsCount() - 1, walletMap[tag].active.get(address(0), 0), block.number));
 
         // Emit event
-        emit DepositEvent(tag, msg.sender, amount, address(0), 0);
+        emit ReceiveEvent(tag, msg.sender, amount, address(0), 0);
     }
 
-    //NOTE: 'wallet' must call ERC20.approve first
-    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
-        depositTokensTo(partnerFromWallet(msg.sender), amount, currencyCt, currencyId, standard);
+    function receiveTokens(string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        receiveTokensTo(partnerFromWallet(msg.sender), balance, amount, currencyCt, currencyId, standard);
     }
 
-    function depositTokensTo(address tag, int256 amount, address currencyCt, uint256 currencyId, string standard) public isRegisteredTag(tag) {
+    function receiveTokensTo(address tag, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public isRegisteredTag(tag) {
+        require(0 == bytes(balance).length || ACTIVE_BALANCE == keccak256(abi.encodePacked(balance)));
+
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
@@ -187,7 +195,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].fullDepositHistory.push(FullDepositHistory(walletMap[tag].txHistory.depositsCount() - 1, walletMap[tag].active.get(currencyCt, currencyId), block.number));
 
         // Emit event
-        emit DepositEvent(tag, msg.sender, amount, currencyCt, currencyId);
+        emit ReceiveEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 
     //

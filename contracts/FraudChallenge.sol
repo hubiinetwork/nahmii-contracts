@@ -19,7 +19,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 */
 contract FraudChallenge is Ownable, Servable {
     //
-    // Variables
+    // Constants
     // -----------------------------------------------------------------------------------------------------------------
     string constant public ADD_SEIZED_WALLET_ACTION = "add_seized_wallet";
     string constant public ADD_DOUBLE_SPENDER_WALLET_ACTION = "add_double_spender_wallet";
@@ -27,6 +27,9 @@ contract FraudChallenge is Ownable, Servable {
     string constant public ADD_FRAUDULENT_TRADE_ACTION = "add_fraudulent_trade";
     string constant public ADD_FRAUDULENT_PAYMENT_ACTION = "add_fraudulent_payment";
 
+    //
+    // Variables
+    // -----------------------------------------------------------------------------------------------------------------
     address[] public seizedWallets;
     mapping(address => bool) public seizedWalletsMap;
 

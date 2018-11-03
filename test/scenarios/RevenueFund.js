@@ -79,7 +79,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST SUCCEED [depositTokens]: UnitTestHelpers_MISC_1 \'collaborates\' with 10 tokens', async () => {
+        it(testCounter.next() + ': MUST SUCCEED [receiveTokens]: UnitTestHelpers_MISC_1 \'collaborates\' with 10 tokens', async () => {
             try {
                 await glob.web3UnitTestHelpers_MISC_1.callToApprove_ERC20(glob.web3Erc20.address, glob.web3RevenueFund.address, 10);
             }
@@ -105,9 +105,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [depositTokens]: Cannot be called from owner', async () => {
+        it(testCounter.next() + ': MUST FAIL [receiveTokens]: Cannot be called from owner', async () => {
             try {
-                await glob.web3RevenueFund.depositTokens(glob.web3Erc20.address, 0, {from: glob.owner});
+                await glob.web3RevenueFund.receiveTokens('', glob.web3Erc20.address, 0, {from: glob.owner});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -117,7 +117,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [depositTokens]: cannot be called with 0 tokens', async () => {
+        it(testCounter.next() + ': MUST FAIL [receiveTokens]: cannot be called with 0 tokens', async () => {
             try {
                 await glob.web3UnitTestHelpers_MISC_2.callToDepositTokens_REVENUEFUND(glob.web3RevenueFund.address, glob.web3Erc20.address, 0);
                 assert(false, 'This test must fail.');
@@ -129,9 +129,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [depositTokens]: Cannot be called with null address', async () => {
+        it(testCounter.next() + ': MUST FAIL [receiveTokens]: Cannot be called with null address', async () => {
             try {
-                await glob.web3RevenueFund.depositTokens(0, 5, {from: glob.user_a});
+                await glob.web3RevenueFund.receiveTokens('', 0, 5, {from: glob.user_a});
                 assert(false, 'This test must fail.');
             }
             catch (err) {

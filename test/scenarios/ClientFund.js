@@ -163,7 +163,7 @@ module.exports = function (glob) {
         });
 
         describe('fallback function', () => {
-            describe('first deposit', () => {
+            describe('first reception', () => {
                 it('should add initial deposit and increment deposited balance', async () => {
                     await web3.eth.sendTransactionPromise({
                         from: glob.user_a,
@@ -184,7 +184,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('second deposit', () => {
+            describe('second reception', () => {
                 beforeEach(async () => {
                     await web3.eth.sendTransactionPromise({
                         from: glob.user_a,
@@ -211,79 +211,189 @@ module.exports = function (glob) {
             });
         });
 
-        describe('depositEthersTo()', () => {
-            describe('first deposit', () => {
-                it('should add initial deposit and increment deposited balance', async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a,
-                        {
-                            from: glob.user_a,
-                            value: web3.toWei(1, 'ether'),
-                            gas: 1e6
-                        }
-                    );
+        describe('receiveEthersTo()', () => {
+            describe('to default balance', () => {
+                describe('first reception', () => {
+                    it('should add initial deposit and increment deposited balance', async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            '',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
 
-                    (await ethersClientFund.depositsCount(glob.user_a))
-                        ._bn.should.eq.BN(1);
+                        (await ethersClientFund.depositsCount(glob.user_a))
+                            ._bn.should.eq.BN(1);
 
-                    (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
-                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
-                    (await ethersClientFund.settledBalance(glob.user_a, mocks.address0, 0))
-                        ._bn.should.eq.BN(0);
-                    (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
-                        ._bn.should.eq.BN(0);
+                        (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                        (await ethersClientFund.settledBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(0);
+                        (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(0);
+                    });
+                });
+
+                describe('second reception', () => {
+                    beforeEach(async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            '',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
+                    });
+
+                    it('should add on top of the first deposit', async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            '',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
+
+                        (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                    });
                 });
             });
 
-            describe('second deposit', () => {
-                beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a,
-                        {
-                            from: glob.user_a,
-                            value: web3.toWei(1, 'ether'),
-                            gas: 1e6
-                        }
-                    );
+            describe('to deposited balance', () => {
+                describe('first reception', () => {
+                    it('should add initial deposit and increment deposited balance', async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            'deposited',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
+
+                        (await ethersClientFund.depositsCount(glob.user_a))
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                        (await ethersClientFund.settledBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(0);
+                        (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(0);
+                    });
                 });
 
-                it('should add on top of the first deposit', async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {
-                            from: glob.user_a,
-                            value: web3.toWei(1, 'ether'),
-                            gas: 1e6
-                        }
-                    );
+                describe('second reception', () => {
+                    beforeEach(async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            'deposited',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
+                    });
 
-                    (await ethersClientFund.depositsCount(glob.user_a))
-                        ._bn.should.eq.BN(2);
+                    it('should add on top of the first deposit', async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            'deposited',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
 
-                    (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
-                        ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                        (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                    });
+                });
+            });
+
+            describe('to staged balance', () => {
+                describe('first reception', () => {
+                    it('should add initial stage and increment deposited balance', async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            'staged',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
+
+                        (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(0);
+                        (await ethersClientFund.settledBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(0);
+                        (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    });
+                });
+
+                describe('second reception', () => {
+                    beforeEach(async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            'staged',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
+                    });
+
+                    it('should add on top of the first stage', async () => {
+                        await web3ClientFund.receiveEthersTo(
+                            glob.user_a,
+                            'staged',
+                            {
+                                from: glob.user_a,
+                                value: web3.toWei(1, 'ether'),
+                                gas: 1e6
+                            }
+                        );
+
+                        (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                    });
                 });
             });
         });
 
-        describe('depositTokens()', () => {
+        describe('receiveTokens()', () => {
             describe('of ERC20 token', () => {
                 describe('if called with zero amount', () => {
                     it('should revert', async () => {
-                        web3ClientFund.depositTokens(0, web3ERC20.address, 0, '', {from: glob.user_a})
+                        web3ClientFund.receiveTokens('', 0, web3ERC20.address, 0, '', {from: glob.user_a})
                             .should.be.rejected;
                     });
                 });
 
                 describe('if called with zero ERC20 contract address', () => {
                     it('should revert', async () => {
-                        web3ClientFund.depositTokens(10, 0, 0, '', {from: glob.user_a})
+                        web3ClientFund.receiveTokens('', 10, 0, 0, '', {from: glob.user_a})
                             .should.be.rejected;
                     });
                 });
 
                 describe('if called without prior approval', () => {
                     it('should revert', async () => {
-                        web3ClientFund.depositTokens(10, web3ERC20.address, 0, '', {from: glob.user_a})
+                        web3ClientFund.receiveTokens('', 10, web3ERC20.address, 0, '', {from: glob.user_a})
                             .should.be.rejected;
                     });
                 });
@@ -294,81 +404,177 @@ module.exports = function (glob) {
                     });
 
                     it('should revert', async () => {
-                        web3ClientFund.depositTokens(9999, web3ERC20.address, 0, '', {from: glob.user_a})
+                        web3ClientFund.receiveTokens('', 9999, web3ERC20.address, 0, '', {from: glob.user_a})
                             .should.be.rejected;
                     });
                 });
 
-                describe('first deposit', () => {
-                    beforeEach(async () => {
-                        await web3ERC20.approve(
-                            web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
-                        );
+                describe('to default balance', () => {
+                    describe('first reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add initial deposit and increment deposited balance', async () => {
+                            await web3ClientFund.receiveTokens(
+                                '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
+
+                            (await ethersClientFund.depositsCount(glob.user_a))
+                                ._bn.should.eq.BN(1);
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(10);
+                            (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                            (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                        });
                     });
 
-                    it('should add initial deposit and increment deposited balance', async () => {
-                        await web3ClientFund.depositTokens(
-                            10, web3ERC20.address, 0, '', {from: glob.user_a}
-                        );
+                    describe('second reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ClientFund.receiveTokens(
+                                '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
+                        });
 
-                        (await ethersClientFund.depositsCount(glob.user_a))
-                            ._bn.should.eq.BN(1);
+                        it('should add on top of the first deposit', async () => {
+                            await web3ClientFund.receiveTokens(
+                                '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
 
-                        (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(10);
-                        (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(0);
-                        (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(0);
+                            (await ethersClientFund.depositsCount(glob.user_a))
+                                ._bn.should.eq.BN(2);
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(20);
+                        });
                     });
                 });
 
-                describe('second deposit', () => {
-                    beforeEach(async () => {
-                        await web3ERC20.approve(
-                            web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
-                        );
-                        await web3ClientFund.depositTokens(
-                            10, web3ERC20.address, 0, '', {from: glob.user_a}
-                        );
+                describe('to deposited balance', () => {
+                    describe('first reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add initial deposit and increment deposited balance', async () => {
+                            await web3ClientFund.receiveTokens(
+                                'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
+
+                            (await ethersClientFund.depositsCount(glob.user_a))
+                                ._bn.should.eq.BN(1);
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(10);
+                            (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                            (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                        });
                     });
 
-                    it('should add on top of the first deposit', async () => {
-                        await web3ClientFund.depositTokens(
-                            10, web3ERC20.address, 0, '', {from: glob.user_a}
-                        );
+                    describe('second reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ClientFund.receiveTokens(
+                                'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
+                        });
 
-                        (await ethersClientFund.depositsCount(glob.user_a))
-                            ._bn.should.eq.BN(2);
+                        it('should add on top of the first deposit', async () => {
+                            await web3ClientFund.receiveTokens(
+                                'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
 
-                        (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(20);
+                            (await ethersClientFund.depositsCount(glob.user_a))
+                                ._bn.should.eq.BN(2);
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(20);
+                        });
+                    });
+                });
+
+                describe('to staged balance', () => {
+                    describe('first reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add initial stage and increment staged balance', async () => {
+                            await web3ClientFund.receiveTokens(
+                                'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                            (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                            (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(10);
+                        });
                     });
 
+                    describe('second reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ClientFund.receiveTokens(
+                                'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
+                        });
+
+                        it('should add on top of the first stage', async () => {
+                            await web3ClientFund.receiveTokens(
+                                'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                            );
+
+                            (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(20);
+                        });
+                    });
                 });
             });
         });
 
-        describe('depositTokensTo()', () => {
+        describe('receiveTokensTo()', () => {
             describe('of ERC20 token', () => {
                 describe('if called with zero amount', () => {
                     it('should revert', async () => {
-                        web3ClientFund.depositTokensTo(glob.user_a, 0, web3ERC20.address, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3ClientFund.receiveTokensTo(
+                            glob.user_a, '', 0, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
                 describe('if called with zero ERC20 contract address', () => {
                     it('should revert', async () => {
-                        web3ClientFund.depositTokensTo(glob.user_a, 10, 0, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3ClientFund.receiveTokensTo(
+                            glob.user_a, '', 10, 0, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
                 describe('if called without prior approval', () => {
                     it('should revert', async () => {
-                        web3ClientFund.depositTokensTo(glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3ClientFund.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
@@ -381,55 +587,150 @@ module.exports = function (glob) {
                     });
 
                     it('should revert', async () => {
-                        web3ClientFund.depositTokensTo(glob.user_a, 9999, web3ERC20.address, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3ClientFund.receiveTokensTo(
+                            glob.user_a, '', 9999, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
-                describe('first deposit', () => {
-                    beforeEach(async () => {
-                        await web3ERC20.approve(
-                            web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
-                        );
+                describe('to default balance', () => {
+                    describe('first reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add initial deposit and increment deposited balance', async () => {
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+
+                            (await ethersClientFund.depositsCount(glob.user_a))
+                                ._bn.should.eq.BN(1);
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(10);
+                            (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                            (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                        });
                     });
 
-                    it('should add initial deposit and increment deposited balance', async () => {
-                        await web3ClientFund.depositTokensTo(
-                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                        );
+                    describe('second reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+                        });
 
-                        (await ethersClientFund.depositsCount(glob.user_a))
-                            ._bn.should.eq.BN(1);
+                        it('should add on top of the first deposit', async () => {
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
 
-                        (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(10);
-                        (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(0);
-                        (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(0);
+                            (await ethersClientFund.depositsCount(glob.user_a))
+                                ._bn.should.eq.BN(2);
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(20);
+                        });
                     });
                 });
 
-                describe('second deposit', () => {
-                    beforeEach(async () => {
-                        await web3ERC20.approve(
-                            web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
-                        );
-                        await web3ClientFund.depositTokensTo(
-                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                        );
+                describe('to deposited balance', () => {
+                    describe('first reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add initial deposit and increment deposited balance', async () => {
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, 'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+
+                            (await ethersClientFund.depositsCount(glob.user_a))
+                                ._bn.should.eq.BN(1);
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(10);
+                            (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                            (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                        });
                     });
 
-                    it('should add on top of the first deposit', async () => {
-                        await web3ClientFund.depositTokensTo(
-                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                        );
+                    describe('second reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, 'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+                        });
 
-                        (await ethersClientFund.depositsCount(glob.user_a))
-                            ._bn.should.eq.BN(2);
+                        it('should add on top of the first deposit', async () => {
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, 'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
 
-                        (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(20);
+                            (await ethersClientFund.depositsCount(glob.user_a))
+                                ._bn.should.eq.BN(2);
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(20);
+                        });
+                    });
+                });
+
+                describe('to staged balance', () => {
+                    describe('first reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add initial stage and increment staged balance', async () => {
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, 'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+
+                            (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                            (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(0);
+                            (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(10);
+                        });
+                    });
+
+                    describe('second reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC20.approve(
+                                web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, 'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add on top of the first deposit', async () => {
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, 'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+
+                            (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                                ._bn.should.eq.BN(20);
+                        });
                     });
                 });
             });
@@ -444,8 +745,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                 });
 
@@ -464,8 +765,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                 });
 
@@ -489,8 +790,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                 });
 
@@ -507,8 +808,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                 });
 
@@ -556,8 +857,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                 });
 
@@ -580,8 +881,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                 });
 
@@ -627,8 +928,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                 });
 
@@ -680,8 +981,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                 });
 
@@ -739,8 +1040,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gas: 1e6}
@@ -766,8 +1067,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedClientFundAuthorizedService.stage(
                         glob.user_a, 3, web3ERC20.address, 0, {gasLimit: 1e6}
@@ -814,8 +1115,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                 });
 
@@ -873,8 +1174,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                 });
 
@@ -957,8 +1258,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                 });
 
@@ -1013,8 +1314,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                 });
 
@@ -1095,8 +1396,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.updateSettledBalance(
                         glob.user_a, web3.toWei(1.4, 'ether'), mocks.address0, 0
@@ -1132,8 +1433,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.updateSettledBalance(
                         glob.user_a, 14, web3ERC20.address, 0
@@ -1168,8 +1469,8 @@ module.exports = function (glob) {
         describe('withdraw()', () => {
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6},
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gasLimit: 1e6}
@@ -1200,8 +1501,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, 3, web3ERC20.address, 0, {gas: 1e6}
@@ -1241,8 +1542,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gasLimit: 1e6}
@@ -1267,8 +1568,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, 3, web3ERC20.address, 0, {gas: 1e6}
@@ -1290,7 +1591,7 @@ module.exports = function (glob) {
         });
 
         describe('withdrawalOfCurrency()', () => {
-            describe('before first deposit', () => {
+            describe('before first withdrawal', () => {
                 it('should revert', async () => {
                     ethersClientFund.withdrawalOfCurrency(glob.user_a, mocks.address0, 0, 0).should.be.rejected;
                 });
@@ -1298,8 +1599,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gasLimit: 1e6}
@@ -1322,8 +1623,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, 3, web3ERC20.address, 0, {gas: 1e6}
@@ -1351,8 +1652,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gasLimit: 1e6}
@@ -1377,8 +1678,8 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3ClientFund.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, 3, web3ERC20.address, 0, {gas: 1e6}

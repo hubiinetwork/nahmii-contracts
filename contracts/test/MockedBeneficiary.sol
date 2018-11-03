@@ -20,8 +20,9 @@ contract MockedBeneficiary is Beneficiary {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct Deposit {
+    struct Benefit {
         address wallet;
+        string balance;
         MonetaryTypesLib.Figure figure;
         string standard;
     }
@@ -29,19 +30,20 @@ contract MockedBeneficiary is Beneficiary {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Deposit[] public deposits;
+    Benefit[] public benefits;
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function reset() public {
-        deposits.length = 0;
+        benefits.length = 0;
     }
 
-    function depositEthersTo(address wallet) public payable {
-        deposits.push(
-            Deposit(
+    function receiveEthersTo(address wallet, string balance) public payable {
+        benefits.push(
+            Benefit(
                 wallet,
+                balance,
                 MonetaryTypesLib.Figure(
                     int256(msg.value),
                     MonetaryTypesLib.Currency(address(0), 0)
@@ -51,11 +53,11 @@ contract MockedBeneficiary is Beneficiary {
         );
     }
 
-    //NOTE: 'wallet' must call currency's approve first
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
-        deposits.push(
-            Deposit(
+    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        benefits.push(
+            Benefit(
                 wallet,
+                balance,
                 MonetaryTypesLib.Figure(
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -65,15 +67,16 @@ contract MockedBeneficiary is Beneficiary {
         );
     }
 
-    function getDeposit(uint256 index)
+    function getBenefit(uint256 index)
     public
     view
-    returns (address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    returns (address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard)
     {
-        wallet = deposits[index].wallet;
-        amount = deposits[index].figure.amount;
-        currencyCt = deposits[index].figure.currency.ct;
-        currencyId = deposits[index].figure.currency.id;
-        standard = deposits[index].standard;
+        wallet = benefits[index].wallet;
+        balance = benefits[index].balance;
+        amount = benefits[index].figure.amount;
+        currencyCt = benefits[index].figure.currency.ct;
+        currencyId = benefits[index].figure.currency.id;
+        standard = benefits[index].standard;
     }
 }
