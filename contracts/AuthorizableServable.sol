@@ -23,9 +23,9 @@ contract AuthorizableServable is Servable {
     mapping(address => bool) public initialServiceAuthorizedMap;
     mapping(address => mapping(address => bool)) public initialServiceWalletUnauthorizedMap;
 
-    mapping(address => mapping(address => bool)) public serviceWalletUnauthorizedMap;
+    mapping(address => mapping(address => bool)) public serviceWalletAuthorizedMap;
 
-    mapping(address => mapping(bytes32 => mapping(address => bool))) public serviceActionWalletUnauthorizedMap;
+    mapping(address => mapping(bytes32 => mapping(address => bool))) public serviceActionWalletAuthorizedMap;
     mapping(address => mapping(bytes32 => mapping(address => bool))) public serviceActionWalletTouchedMap;
     mapping(address => mapping(address => bytes32[])) public serviceWalletActionList;
 
@@ -88,7 +88,7 @@ contract AuthorizableServable is Servable {
         require(!initialServiceAuthorizedMap[service]);
 
         // Enable all actions for given wallet
-        serviceWalletUnauthorizedMap[service][msg.sender] = false;
+        serviceWalletAuthorizedMap[service][msg.sender] = true;
 
         // Emit event
         emit AuthorizeRegisteredServiceEvent(msg.sender, service);
@@ -113,9 +113,9 @@ contract AuthorizableServable is Servable {
 
         // Else disable all actions for given wallet
         else {
-            serviceWalletUnauthorizedMap[service][msg.sender] = true;
+            serviceWalletAuthorizedMap[service][msg.sender] = false;
             for (uint256 i = 0; i < serviceWalletActionList[service][msg.sender].length; i++)
-                serviceActionWalletUnauthorizedMap[service][serviceWalletActionList[service][msg.sender][i]][msg.sender] = true;
+                serviceActionWalletAuthorizedMap[service][serviceWalletActionList[service][msg.sender][i]][msg.sender] = true;
         }
 
         // Emit event
@@ -135,8 +135,7 @@ contract AuthorizableServable is Servable {
             return false;
 
         return isRegisteredActiveService(service) &&
-        !isInitialServiceUnauthorizedForWallet(service, wallet) &&
-        !serviceWalletUnauthorizedMap[service][wallet];
+        (isInitialServiceAuthorizedForWallet(service, wallet) || serviceWalletAuthorizedMap[service][wallet]);
     }
 
     /// @notice Authorize the given registered service action
@@ -159,8 +158,8 @@ contract AuthorizableServable is Servable {
         require(!initialServiceAuthorizedMap[service]);
 
         // Enable service action for given wallet
-        serviceWalletUnauthorizedMap[service][msg.sender] = true;
-        serviceActionWalletUnauthorizedMap[service][actionHash][msg.sender] = false;
+        serviceWalletAuthorizedMap[service][msg.sender] = false;
+        serviceActionWalletAuthorizedMap[service][actionHash][msg.sender] = true;
         if (!serviceActionWalletTouchedMap[service][actionHash][msg.sender]) {
             serviceActionWalletTouchedMap[service][actionHash][msg.sender] = true;
             serviceWalletActionList[service][msg.sender].push(actionHash);
@@ -190,7 +189,7 @@ contract AuthorizableServable is Servable {
         require(!initialServiceAuthorizedMap[service]);
 
         // Disable service action for given wallet
-        serviceActionWalletUnauthorizedMap[service][actionHash][msg.sender] = true;
+        serviceActionWalletAuthorizedMap[service][actionHash][msg.sender] = false;
 
         // Emit event
         emit UnauthorizeRegisteredServiceActionEvent(msg.sender, service, action);
@@ -212,15 +211,14 @@ contract AuthorizableServable is Servable {
         bytes32 actionHash = hashString(action);
 
         return isEnabledServiceAction(service, action) &&
-        !isInitialServiceUnauthorizedForWallet(service, wallet) &&
-        !serviceActionWalletUnauthorizedMap[service][actionHash][wallet];
+        (isInitialServiceAuthorizedForWallet(service, wallet) || serviceActionWalletAuthorizedMap[service][actionHash][wallet]);
     }
 
-    function isInitialServiceUnauthorizedForWallet(address service, address wallet)
+    function isInitialServiceAuthorizedForWallet(address service, address wallet)
     private
     view
     returns (bool)
     {
-        return initialServiceAuthorizedMap[service] ? initialServiceWalletUnauthorizedMap[service][wallet] : false;
+        return initialServiceAuthorizedMap[service] ? !initialServiceWalletUnauthorizedMap[service][wallet] : false;
     }
 }
