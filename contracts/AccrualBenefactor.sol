@@ -52,7 +52,7 @@ contract AccrualBenefactor is Benefactor {
         beneficiaryFractionMap[beneficiary] = fraction;
         totalBeneficiaryFraction = totalBeneficiaryFraction.add(fraction);
 
-        //raise event
+        // Emit event
         emit RegisterAccrualBeneficiaryEvent(beneficiary, fraction);
 
         return true;
@@ -65,7 +65,7 @@ contract AccrualBenefactor is Benefactor {
         totalBeneficiaryFraction = totalBeneficiaryFraction.sub(beneficiaryFractionMap[beneficiary]);
         beneficiaryFractionMap[beneficiary] = 0;
 
-        //raise event
+        // Emit event
         emit DeregisterAccrualBeneficiaryEvent(beneficiary);
 
         return true;

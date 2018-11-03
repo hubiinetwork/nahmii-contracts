@@ -60,7 +60,7 @@ contract TransferControllerManager is Ownable {
 
         registeredTransferControllers[standardHash] = controller;
 
-        //raise event
+        // Emit event
         emit RegisterTransferControllerEvent(standard, controller);
     }
 
@@ -77,7 +77,7 @@ contract TransferControllerManager is Ownable {
         registeredTransferControllers[newStandardHash] = registeredTransferControllers[oldStandardHash];
         registeredTransferControllers[oldStandardHash] = address(0);
 
-        //raise event
+        // Emit event
         emit ReassociateTransferControllerEvent(oldStandard, newStandard, controller);
     }
 
@@ -89,7 +89,7 @@ contract TransferControllerManager is Ownable {
 
         registeredCurrencies[currencyCt].standard = standardHash;
 
-        //raise event
+        // Emit event
         emit RegisterCurrencyEvent(currencyCt, standard);
     }
 
@@ -99,7 +99,7 @@ contract TransferControllerManager is Ownable {
         registeredCurrencies[currencyCt].standard = bytes32(0);
         registeredCurrencies[currencyCt].blacklisted = false;
 
-        //raise event
+        // Emit event
         emit DeregisterCurrencyEvent(currencyCt);
     }
 
@@ -108,7 +108,7 @@ contract TransferControllerManager is Ownable {
 
         registeredCurrencies[currencyCt].blacklisted = true;
 
-        //raise event
+        // Emit event
         emit BlacklistCurrencyEvent(currencyCt);
     }
 
@@ -117,7 +117,7 @@ contract TransferControllerManager is Ownable {
 
         registeredCurrencies[currencyCt].blacklisted = false;
 
-        //raise event
+        // Emit event
         emit WhitelistCurrencyEvent(currencyCt);
     }
 
