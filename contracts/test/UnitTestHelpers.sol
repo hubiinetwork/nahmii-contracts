@@ -28,8 +28,8 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event DepositEthersToWasCalled(address wallet);
-    event DepositTokensToWasCalled(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event DepositEthersToWasCalled(address wallet, string balance);
+    event DepositTokensToWasCalled(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodWasCalled();
 
     //
@@ -67,14 +67,14 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     }
 
     function receiveEthersTo(address wallet, string balance) public payable {
-        emit DepositEthersToWasCalled(wallet);
+        emit DepositEthersToWasCalled(wallet, balance);
     }
 
     function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
         controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
-        emit DepositTokensToWasCalled(wallet, amount, currencyCt, currencyId);
+        emit DepositTokensToWasCalled(wallet, balance, amount, currencyCt, currencyId);
     }
 
     function closeAccrualPeriod() public {

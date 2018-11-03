@@ -14,13 +14,15 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
+import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByOrder
 @notice Where order is challenged wrt signature error
 */
-contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
+contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -58,8 +60,8 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validat
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentOrderHash(order.seals.operator.hash);
 
-        uint256 stakeFraction = configuration.falseWalletSignatureStake();
-        securityBond.stage(msg.sender, stakeFraction);
+        // Obtain stake fraction and stage
+        securityBond.stageToBeneficiary(msg.sender, clientFund, configuration.fraudStakeFraction());
 
         emit ChallengeByOrderEvent(order, msg.sender);
     }

@@ -15,6 +15,7 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
+import {ClientFundable} from "./ClientFundable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
@@ -26,7 +27,8 @@ import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 @title DriipSettlementDispute
 @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
-contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, FraudChallengable, CancelOrdersChallengable {
+contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, FraudChallengable,
+CancelOrdersChallengable, ClientFundable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -249,9 +251,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.setProposalCandidateIndex(order.wallet, 0);
         driipSettlementChallenge.setProposalChallenger(order.wallet, address(0));
 
-        // Obtain stake and stage it in SecurityBond
-        uint256 stakeFraction = configuration.unchallengeOrderCandidateByTradeStake();
-        securityBond.stage(unchallenger, stakeFraction);
+        // Obtain stake fraction and stage
+        securityBond.stageToBeneficiary(unchallenger, clientFund, configuration.settlementStakeFraction());
     }
 
     function challengeByTradePrivate(address wallet, NahmiiTypesLib.Trade trade, address challenger)

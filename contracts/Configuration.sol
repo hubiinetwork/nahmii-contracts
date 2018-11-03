@@ -84,6 +84,8 @@ contract Configuration is Ownable, Servable {
     uint256 public falseWalletSignatureStake;
     uint256 public duplicateDriipNonceStake;
     uint256 public doubleSpentOrderStake;
+    uint256 public fraudStakeFraction;
+    uint256 public settlementStakeFraction;
 
     //
     // Events
@@ -104,6 +106,8 @@ contract Configuration is Ownable, Servable {
     event SetFalseWalletSignatureStakeEvent(uint256 stakeFraction);
     event SetDuplicateDriipNonceStakeEvent(uint256 stakeFraction);
     event SetDoubleSpentOrderStakeEvent(uint256 stakeFraction);
+    event SetFraudStakeFractionEvent(uint256 stakeFraction);
+    event SetSettlementStakeFractionEvent(uint256 stakeFraction);
 
     //
     // Constructor
@@ -455,6 +459,22 @@ contract Configuration is Ownable, Servable {
     function setDoubleSpentOrderStake(uint256 stakeFraction) public onlyDeployer {
         doubleSpentOrderStake = stakeFraction;
         emit SetDoubleSpentOrderStakeEvent(stakeFraction);
+    }
+
+    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
+    /// in fraud challenge
+    /// @param stakeFraction The fraction gained
+    function setFraudStakeFraction(uint256 stakeFraction) public onlyDeployer {
+        fraudStakeFraction = stakeFraction;
+        emit SetFraudStakeFractionEvent(stakeFraction);
+    }
+
+    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
+    /// in settlement challenge
+    /// @param stakeFraction The fraction gained
+    function setSettlementStakeFraction(uint256 stakeFraction) public onlyDeployer {
+        settlementStakeFraction = stakeFraction;
+        emit SetSettlementStakeFractionEvent(stakeFraction);
     }
 
     //

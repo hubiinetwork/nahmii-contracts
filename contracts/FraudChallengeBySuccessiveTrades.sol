@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
@@ -20,11 +21,13 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeBySuccessiveTrades
 @notice Where driips are challenged wrt fraud by mismatch in successive trades
 */
-contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeBySuccessiveTradesEvent(NahmiiTypesLib.Trade firstTrade, NahmiiTypesLib.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeBySuccessiveTradesEvent(NahmiiTypesLib.Trade firstTrade,
+        NahmiiTypesLib.Trade lastTrade, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -81,6 +84,9 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challen
 
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
+
+        // Obtain stake fraction and stage
+        securityBond.stageToBeneficiary(msg.sender, clientFund, configuration.fraudStakeFraction());
 
         clientFund.seizeAllBalances(wallet, msg.sender);
         fraudChallenge.addSeizedWallet(wallet);

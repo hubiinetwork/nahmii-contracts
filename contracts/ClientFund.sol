@@ -36,9 +36,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    bytes32 constant public DEPOSITED_BALANCE = keccak256(abi.encodePacked("deposited"));
-    bytes32 constant public SETTLED_BALANCE = keccak256(abi.encodePacked("settled"));
-    bytes32 constant public STAGED_BALANCE = keccak256(abi.encodePacked("staged"));
+    string constant public DEPOSITED_BALANCE = "deposited";
+    string constant public SETTLED_BALANCE = "settled";
+    string constant public STAGED_BALANCE = "staged";
 
     //
     // Structures
@@ -65,7 +65,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
+    event ReceiveEvent(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event UnstageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
@@ -105,9 +105,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     {
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
-        bytes32 balanceHash = 0 < bytes(balance).length ? keccak256(abi.encodePacked(balance)) : DEPOSITED_BALANCE;
+        if (0 == bytes(balance).length)
+            balance = DEPOSITED_BALANCE;
 
-        if (STAGED_BALANCE == balanceHash)
+        bytes32 balanceHash = keccak256(abi.encodePacked(balance));
+
+        if (keccak256(abi.encodePacked(STAGED_BALANCE)) == balanceHash)
             walletMap[wallet].staged.add(amount, address(0), 0);
 
         else {// DEPOSITED_BALANCE
@@ -123,7 +126,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].inUseCurrencies.addItem(address(0), 0);
 
         // Emit event
-        emit ReceiveEvent(wallet, amount, address(0), 0, "");
+        emit ReceiveEvent(wallet, balance, amount, address(0), 0, "");
     }
 
     /// @notice Receive token to msg.sender's given balance
@@ -158,9 +161,12 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         TransferController controller = getTransferController(currencyCt, standard);
         require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
-        bytes32 balanceHash = 0 < bytes(balance).length ? keccak256(abi.encodePacked(balance)) : DEPOSITED_BALANCE;
+        if (0 == bytes(balance).length)
+            balance = DEPOSITED_BALANCE;
 
-        if (STAGED_BALANCE == balanceHash)
+        bytes32 balanceHash = keccak256(abi.encodePacked(balance));
+
+        if (keccak256(abi.encodePacked(STAGED_BALANCE)) == balanceHash)
             walletMap[wallet].staged.add(amount, currencyCt, currencyId);
 
         else {// DEPOSITED_BALANCE
@@ -176,7 +182,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].inUseCurrencies.addItem(currencyCt, currencyId);
 
         // Emit event
-        emit ReceiveEvent(wallet, amount, currencyCt, currencyId, standard);
+        emit ReceiveEvent(wallet, balance, amount, currencyCt, currencyId, standard);
     }
 
     /// @notice Get metadata of the given wallet's deposit at the given index
@@ -574,7 +580,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
             beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, "");
 
         else {
-            // Execute transfer
+            // Approve of beneficiary
             TransferController controller = getTransferController(currencyCt, "");
             require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 

@@ -28,10 +28,16 @@ contract MockedSecurityBondService is Ownable, SecurityBondable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stage(address wallet, uint256 fraction)
+    //    function stage(address wallet, uint256 fraction)
+    //    public
+    //    {
+    //        securityBond.stage(wallet, fraction);
+    //    }
+
+    function stageToBeneficiary(address wallet, Beneficiary beneficiary, uint256 fraction)
     public
     {
-        securityBond.stage(wallet, fraction);
+        securityBond.stageToBeneficiary(wallet, beneficiary, fraction);
     }
 
     //    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)

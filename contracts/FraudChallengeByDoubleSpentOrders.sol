@@ -15,12 +15,14 @@ import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {ClientFundable} from"./ClientFundable.sol";
 
 /**
 @title FraudChallengeByDoubleSpentOrders
 @notice Where driips are challenged wrt fraud by double spent orders
 */
-contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
+contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -59,8 +61,8 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
         fraudChallenge.addFraudulentTradeHash(trade1.seal.hash);
         fraudChallenge.addFraudulentTradeHash(trade2.seal.hash);
 
-        uint256 stakeFraction = configuration.doubleSpentOrderStake();
-        securityBond.stage(msg.sender, stakeFraction);
+        // Obtain stake fraction and stage
+        securityBond.stageToBeneficiary(msg.sender, clientFund, configuration.fraudStakeFraction());
 
         if (doubleSpentBuyOrder) {
             fraudChallenge.addDoubleSpenderWallet(trade1.buyer.wallet);

@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
@@ -20,11 +21,13 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeByTrade
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(NahmiiTypesLib.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(NahmiiTypesLib.Trade trade, address challenger,
+        address seizedWallet);
 
     //
     // Constructor
@@ -58,6 +61,9 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validat
 
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
+
+        // Obtain stake fraction and stage
+        securityBond.stageToBeneficiary(msg.sender, clientFund, configuration.fraudStakeFraction());
 
         address seizedWallet;
         if (!genuineBuyerAndFee)

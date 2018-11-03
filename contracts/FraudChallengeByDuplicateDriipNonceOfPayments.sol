@@ -14,17 +14,20 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
+import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByDuplicateDriipNonceOfPayments
 @notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
 */
-contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
+contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(NahmiiTypesLib.Payment payment1, NahmiiTypesLib.Payment payment2, address challenger);
+    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(NahmiiTypesLib.Payment payment1,
+        NahmiiTypesLib.Payment payment2, address challenger);
 
     //
     // Constructor
@@ -60,8 +63,8 @@ contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChalleng
         fraudChallenge.addFraudulentPaymentHash(payment1.seals.operator.hash);
         fraudChallenge.addFraudulentPaymentHash(payment2.seals.operator.hash);
 
-        uint256 stakeFraction = configuration.duplicateDriipNonceStake();
-        securityBond.stage(msg.sender, stakeFraction);
+        // Obtain stake fraction and stage
+        securityBond.stageToBeneficiary(msg.sender, clientFund, configuration.fraudStakeFraction());
 
         emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(payment1, payment2, msg.sender);
     }

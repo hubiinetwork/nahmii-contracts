@@ -37,7 +37,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    bytes32 constant public PERIOD_BALANCE = keccak256(abi.encodePacked("period"));
+    string constant public PERIOD_BALANCE = "period";
 
     //
     // Variables
@@ -72,7 +72,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     }
 
     function receiveEthersTo(address wallet, string balance) public payable {
-        require(0 == bytes(balance).length || PERIOD_BALANCE == keccak256(abi.encodePacked(balance)));
+        require(0 == bytes(balance).length || keccak256(abi.encodePacked(PERIOD_BALANCE)) == keccak256(abi.encodePacked(balance)));
 
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
@@ -93,7 +93,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     }
 
     function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
-        require(0 == bytes(balance).length || PERIOD_BALANCE == keccak256(abi.encodePacked(balance)));
+        require(0 == bytes(balance).length || keccak256(abi.encodePacked(PERIOD_BALANCE)) == keccak256(abi.encodePacked(balance)));
 
         require(amount.isNonZeroPositiveInt256());
 
