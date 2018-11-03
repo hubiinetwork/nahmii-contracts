@@ -266,6 +266,9 @@ module.exports = (glob) => {
                 });
 
                 it('should unauthorize registered service contract and emit event', async () => {
+                    (await web3AuthorizableServable.isAuthorizedRegisteredService.call(service, glob.user_a))
+                        .should.be.true;
+
                     const result = await web3AuthorizableServable.unauthorizeRegisteredService(service, {from: glob.user_a});
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
@@ -367,6 +370,12 @@ module.exports = (glob) => {
 
             describe('if within operational constraints', () => {
                 it('should authorize registered service contract and emit event', async () => {
+                    (await ethersAuthorizableServable.isAuthorizedRegisteredService(service, glob.user_a))
+                        .should.be.false;
+                    (await ethersAuthorizableServable.isAuthorizedRegisteredServiceAction(
+                        service, 'some_action', glob.user_a
+                    )).should.be.false;
+
                     const result = await web3AuthorizableServable.authorizeRegisteredServiceAction(
                         service, 'some_action', {from: glob.user_a}
                     );
@@ -471,6 +480,10 @@ module.exports = (glob) => {
 
             describe('if within operational constraints', () => {
                 it('should unauthorize registered service contract and emit event', async () => {
+                    (await ethersAuthorizableServable.isAuthorizedRegisteredServiceAction(
+                        service, 'some_action', glob.user_a
+                    )).should.be.true;
+
                     const result = await web3AuthorizableServable.unauthorizeRegisteredServiceAction(
                         service, 'some_action', {from: glob.user_a}
                     );
