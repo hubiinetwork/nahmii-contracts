@@ -99,12 +99,12 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(orderAmount > targetBalanceAmount);
 
         // Store order candidate
-        nullSettlementChallenge.pushChallengeCandidateOrder(order);
+        nullSettlementChallenge.pushChallengeCandidateOrderHash(order.seals.operator.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(order.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         nullSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypesLib.CandidateType.Order);
-        nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrdersCount().sub(1));
+        nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrderHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
         // Emit event
@@ -163,12 +163,12 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(singleTransfer > targetBalanceAmount);
 
         // Store trade candidate
-        nullSettlementChallenge.pushChallengeCandidateTrade(trade);
+        nullSettlementChallenge.pushChallengeCandidateTradeHash(trade.seal.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypesLib.CandidateType.Trade);
-        nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradesCount().sub(1));
+        nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradeHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(wallet, challenger);
 
         // Emit event
@@ -205,12 +205,12 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(payment.transfers.single.abs() > targetBalanceAmount);
 
         // Store payment candidate
-        nullSettlementChallenge.pushChallengeCandidatePayment(payment);
+        nullSettlementChallenge.pushChallengeCandidatePaymentHash(payment.seals.operator.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         nullSettlementChallenge.setProposalCandidateType(payment.sender.wallet, SettlementTypesLib.CandidateType.Payment);
-        nullSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, nullSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
+        nullSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, nullSettlementChallenge.challengeCandidatePaymentHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
 
         // Emit event

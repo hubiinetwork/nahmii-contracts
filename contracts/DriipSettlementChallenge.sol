@@ -48,13 +48,12 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute,
         DriipSettlementDispute newDriipSettlementDispute);
-    event StartChallengeFromTradeEvent(address wallet, NahmiiTypesLib.Trade trade,
+    event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
-    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Trade trade,
+    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
-    event StartChallengeFromPaymentEvent(address wallet, NahmiiTypesLib.Payment payment,
-        int256 stageAmount);
-    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Payment payment,
+    event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
+    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
         int256 stageAmount);
 
     //
@@ -122,7 +121,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         startChallengeFromTradePrivate(msg.sender, trade, intendedStageAmount, conjugateStageAmount);
 
         // Emit event
-        emit StartChallengeFromTradeEvent(msg.sender, trade, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
 
     /// @notice Start settlement challenge on trade by proxy
@@ -139,7 +138,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         startChallengeFromTradePrivate(wallet, trade, intendedStageAmount, conjugateStageAmount);
 
         // Emit event
-        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
 
     /// @notice Start settlement challenge on payment
@@ -152,7 +151,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         startChallengeFromPaymentPrivate(msg.sender, payment, stageAmount);
 
         // Emit event
-        emit StartChallengeFromPaymentEvent(msg.sender, payment, stageAmount);
+        emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Start settlement challenge on payment
@@ -167,7 +166,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         startChallengeFromPaymentPrivate(wallet, payment, stageAmount);
 
         // Emit event
-        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment, stageAmount);
+        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Get settlement challenge phase of given wallet
@@ -436,7 +435,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         return challengeCandidateOrderHashes.length;
     }
 
-    /// @notice Push to store the given challenge candidate order
+    /// @notice Push to store the given challenge candidate order hash
     /// @dev This function can only be called by this contract's dispute instance
     /// @param hash The challenge candidate order hash to push
     function pushChallengeCandidateOrderHash(bytes32 hash)
@@ -456,7 +455,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         return challengeCandidateTradeHashes.length;
     }
 
-    /// @notice Push to store the given challenge candidate trade
+    /// @notice Push to store the given challenge candidate trade hash
     /// @dev This function can only be called by this contract's dispute instance
     /// @param hash The challenge candidate trade hash to push
     function pushChallengeCandidateTradeHash(bytes32 hash)
@@ -476,7 +475,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         return challengeCandidatePaymentHashes.length;
     }
 
-    /// @notice Push to store the given challenge candidate payment
+    /// @notice Push to store the given challenge candidate payment hash
     /// @dev This function can only be called by this contract's dispute instance
     /// @param hash The challenge candidate payment hash to push
     function pushChallengeCandidatePaymentHash(bytes32 hash)

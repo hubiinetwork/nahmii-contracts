@@ -30,9 +30,9 @@ contract MockedNullSettlementChallenge {
     SettlementTypesLib.CandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
     address public _proposalChallenger;
-    uint256 public _challengeCandidateOrdersCount;
-    uint256 public _challengeCandidateTradesCount;
-    uint256 public _challengeCandidatePaymentsCount;
+    uint256 public _challengeCandidateOrderHashesCount;
+    uint256 public _challengeCandidateTradeHashesCount;
+    uint256 public _challengeCandidatePaymentHashesCount;
     NullSettlementDispute public _nullSettlementDispute;
 
     function _reset()
@@ -46,9 +46,9 @@ contract MockedNullSettlementChallenge {
         delete _proposalCandidateType;
         delete _proposalCandidateIndex;
         delete _proposalChallenger;
-        delete _challengeCandidateOrdersCount;
-        delete _challengeCandidateTradesCount;
-        delete _challengeCandidatePaymentsCount;
+        delete _challengeCandidateOrderHashesCount;
+        delete _challengeCandidateTradeHashesCount;
+        delete _challengeCandidatePaymentHashesCount;
     }
 
     function _setChallengePhase(NahmiiTypesLib.ChallengePhase challengePhase)
@@ -61,6 +61,7 @@ contract MockedNullSettlementChallenge {
     public
     view
     returns (NahmiiTypesLib.ChallengePhase) {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return _challengePhase;
     }
@@ -76,6 +77,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (uint256)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return _proposalNonce;
     }
@@ -91,6 +93,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (uint256)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return _proposalBlockNumber;
     }
@@ -106,6 +109,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (MonetaryTypesLib.Currency)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         require(index == index);
         return _proposalCurrency;
@@ -122,6 +126,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (int256)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         require(currency.ct == currency.ct);
         return _proposalStageAmount;
@@ -138,6 +143,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (int256)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         require(currency.ct == currency.ct);
         return _proposalTargetBalanceAmount;
@@ -146,6 +152,7 @@ contract MockedNullSettlementChallenge {
     function setProposalStatus(address wallet, SettlementTypesLib.ProposalStatus status)
     public
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         _proposalStatus = status;
     }
@@ -155,6 +162,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (SettlementTypesLib.ProposalStatus)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return _proposalStatus;
     }
@@ -162,6 +170,7 @@ contract MockedNullSettlementChallenge {
     function setProposalCandidateType(address wallet, SettlementTypesLib.CandidateType candidateType)
     public
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         _proposalCandidateType = candidateType;
     }
@@ -171,6 +180,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (SettlementTypesLib.CandidateType)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return _proposalCandidateType;
     }
@@ -178,6 +188,7 @@ contract MockedNullSettlementChallenge {
     function setProposalCandidateIndex(address wallet, uint256 candidateIndex)
     public
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         _proposalCandidateIndex = candidateIndex;
     }
@@ -187,6 +198,7 @@ contract MockedNullSettlementChallenge {
     view
     returns (uint256)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return _proposalCandidateIndex;
     }
@@ -194,6 +206,7 @@ contract MockedNullSettlementChallenge {
     function setProposalChallenger(address wallet, address challenger)
     public
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         _proposalChallenger = challenger;
     }
@@ -203,53 +216,57 @@ contract MockedNullSettlementChallenge {
     view
     returns (address)
     {
+        // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return _proposalChallenger;
     }
 
-    function pushChallengeCandidateOrder(NahmiiTypesLib.Order order)
+    function pushChallengeCandidateOrderHash(bytes32 hash)
     public
     {
-        require(order.nonce == order.nonce);
-        _challengeCandidateOrdersCount++;
+        // To silence unused function parameter compiler warning
+        require(hash == hash);
+        _challengeCandidateOrderHashesCount++;
     }
 
-    function challengeCandidateOrdersCount()
+    function challengeCandidateOrderHashesCount()
     public
     view
     returns (uint256)
     {
-        return _challengeCandidateOrdersCount;
+        return _challengeCandidateOrderHashesCount;
     }
 
-    function pushChallengeCandidateTrade(NahmiiTypesLib.Trade trade)
+    function pushChallengeCandidateTradeHash(bytes32 hash)
     public
     {
-        require(trade.nonce == trade.nonce);
-        _challengeCandidateTradesCount++;
+        // To silence unused function parameter compiler warning
+        require(hash == hash);
+        _challengeCandidateTradeHashesCount++;
     }
 
-    function challengeCandidateTradesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return _challengeCandidateTradesCount;
-    }
-
-    function pushChallengeCandidatePayment(NahmiiTypesLib.Payment payment)
-    public
-    {
-        require(payment.nonce == payment.nonce);
-        _challengeCandidatePaymentsCount++;
-    }
-
-    function challengeCandidatePaymentsCount()
+    function challengeCandidateTradeHashesCount()
     public
     view
     returns (uint256)
     {
-        return _challengeCandidatePaymentsCount;
+        return _challengeCandidateTradeHashesCount;
+    }
+
+    function pushChallengeCandidatePaymentHash(bytes32 hash)
+    public
+    {
+        // To silence unused function parameter compiler warning
+        require(hash == hash);
+        _challengeCandidatePaymentHashesCount++;
+    }
+
+    function challengeCandidatePaymentHashesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _challengeCandidatePaymentHashesCount;
     }
 
     function changeNullSettlementDispute(NullSettlementDispute nullSettlementDispute)

@@ -808,13 +808,13 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeCandidateOrdersCount()', () => {
+        describe('challengeCandidateOrderHashesCount()', () => {
             it('should return value initialized ', async () => {
-                (await ethersNullSettlementChallenge.challengeCandidateOrdersCount())._bn.should.eq.BN(0);
+                (await ethersNullSettlementChallenge.challengeCandidateOrderHashesCount())._bn.should.eq.BN(0);
             });
         });
 
-        describe('pushChallengeCandidateOrder()', () => {
+        describe('pushChallengeCandidateOrderHash()', () => {
             let order;
 
             before(async () => {
@@ -823,35 +823,35 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.pushChallengeCandidateOrder(order)
+                    web3NullSettlementChallenge.pushChallengeCandidateOrderHash(order.seals.operator.hash)
                         .should.be.rejected;
                 });
             });
 
             describe('if called from settlement dispute', () => {
-                let challengeCandidateOrdersCountBefore;
+                let challengeCandidateOrderHashesCountBefore;
 
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
-                    challengeCandidateOrdersCountBefore = await ethersNullSettlementChallenge.challengeCandidateOrdersCount();
+                    challengeCandidateOrderHashesCountBefore = await ethersNullSettlementChallenge.challengeCandidateOrderHashesCount();
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersNullSettlementChallenge.pushChallengeCandidateOrder(order, {gasLimit: 2e6});
+                    await ethersNullSettlementChallenge.pushChallengeCandidateOrderHash(order.seals.operator.hash, {gasLimit: 2e6});
 
-                    (await ethersNullSettlementChallenge.challengeCandidateOrdersCount())
-                        ._bn.should.eq.BN(challengeCandidateOrdersCountBefore.add(1)._bn);
+                    (await ethersNullSettlementChallenge.challengeCandidateOrderHashesCount())
+                        ._bn.should.eq.BN(challengeCandidateOrderHashesCountBefore.add(1)._bn);
                 });
             });
         });
 
-        describe('challengeCandidateTradesCount()', () => {
+        describe('challengeCandidateTradeHashesCount()', () => {
             it('should return value initialized ', async () => {
-                (await ethersNullSettlementChallenge.challengeCandidateTradesCount())._bn.should.eq.BN(0);
+                (await ethersNullSettlementChallenge.challengeCandidateTradeHashesCount())._bn.should.eq.BN(0);
             });
         });
 
-        describe('pushChallengeCandidateTrade()', () => {
+        describe('pushChallengeCandidateTradeHash()', () => {
             let trade;
 
             before(async () => {
@@ -860,35 +860,35 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.pushChallengeCandidateTrade(trade)
+                    web3NullSettlementChallenge.pushChallengeCandidateTradeHash(trade.seal.hash)
                         .should.be.rejected;
                 });
             });
 
             describe('if called from settlement dispute', () => {
-                let challengeCandidateTradesCountBefore;
+                let challengeCandidateTradeHashesCountBefore;
 
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
-                    challengeCandidateTradesCountBefore = await ethersNullSettlementChallenge.challengeCandidateTradesCount();
+                    challengeCandidateTradeHashesCountBefore = await ethersNullSettlementChallenge.challengeCandidateTradeHashesCount();
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersNullSettlementChallenge.pushChallengeCandidateTrade(trade, {gasLimit: 2e6});
+                    await ethersNullSettlementChallenge.pushChallengeCandidateTradeHash(trade.seal.hash, {gasLimit: 2e6});
 
-                    (await ethersNullSettlementChallenge.challengeCandidateTradesCount())
-                        ._bn.should.eq.BN(challengeCandidateTradesCountBefore.add(1)._bn);
+                    (await ethersNullSettlementChallenge.challengeCandidateTradeHashesCount())
+                        ._bn.should.eq.BN(challengeCandidateTradeHashesCountBefore.add(1)._bn);
                 });
             });
         });
 
-        describe('challengeCandidatePaymentsCount()', () => {
+        describe('challengeCandidatePaymentHashesCount()', () => {
             it('should return value initialized ', async () => {
-                (await ethersNullSettlementChallenge.challengeCandidatePaymentsCount())._bn.should.eq.BN(0);
+                (await ethersNullSettlementChallenge.challengeCandidatePaymentHashesCount())._bn.should.eq.BN(0);
             });
         });
 
-        describe('pushChallengeCandidatePayment()', () => {
+        describe('pushChallengeCandidatePaymentHash()', () => {
             let payment;
 
             before(async () => {
@@ -897,24 +897,24 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.pushChallengeCandidatePayment(payment)
+                    web3NullSettlementChallenge.pushChallengeCandidatePaymentHash(payment.seals.operator.hash)
                         .should.be.rejected;
                 });
             });
 
             describe('if called from settlement dispute', () => {
-                let challengeCandidatePaymentsCountBefore;
+                let challengeCandidatePaymentHashesCountBefore;
 
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
-                    challengeCandidatePaymentsCountBefore = await ethersNullSettlementChallenge.challengeCandidatePaymentsCount();
+                    challengeCandidatePaymentHashesCountBefore = await ethersNullSettlementChallenge.challengeCandidatePaymentHashesCount();
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersNullSettlementChallenge.pushChallengeCandidatePayment(payment, {gasLimit: 2e6});
+                    await ethersNullSettlementChallenge.pushChallengeCandidatePaymentHash(payment.seals.operator.hash, {gasLimit: 2e6});
 
-                    (await ethersNullSettlementChallenge.challengeCandidatePaymentsCount())
-                        ._bn.should.eq.BN(challengeCandidatePaymentsCountBefore.add(1)._bn);
+                    (await ethersNullSettlementChallenge.challengeCandidatePaymentHashesCount())
+                        ._bn.should.eq.BN(challengeCandidatePaymentHashesCountBefore.add(1)._bn);
                 });
             });
         });
