@@ -99,7 +99,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(orderAmount > targetBalanceAmount);
 
         // Store order candidate
-        nullSettlementChallenge.pushChallengeCandidateOrderHash(order.seals.operator.hash);
+        nullSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(order.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
@@ -163,7 +163,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(singleTransfer > targetBalanceAmount);
 
         // Store trade candidate
-        nullSettlementChallenge.pushChallengeCandidateTradeHash(trade.seal.hash);
+        nullSettlementChallenge.addChallengeCandidateTradeHash(trade.seal.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(wallet, SettlementTypesLib.ProposalStatus.Disqualified);
@@ -205,7 +205,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(payment.transfers.single.abs() > targetBalanceAmount);
 
         // Store payment candidate
-        nullSettlementChallenge.pushChallengeCandidatePaymentHash(payment.seals.operator.hash);
+        nullSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypesLib.ProposalStatus.Disqualified);

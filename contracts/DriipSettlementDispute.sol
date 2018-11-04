@@ -105,7 +105,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(orderAmount > targetBalanceAmount);
 
         // Store order candidate
-        driipSettlementChallenge.pushChallengeCandidateOrderHash(order.seals.operator.hash);
+        driipSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash);
 
         // Update challenge proposal
         driipSettlementChallenge.setProposalTimeout(order.wallet, block.timestamp.add(configuration.settlementChallengeTimeout()));
@@ -199,7 +199,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(payment.transfers.single.abs() > targetBalanceAmount);
 
         // Store payment candidate
-        driipSettlementChallenge.pushChallengeCandidatePaymentHash(payment.seals.operator.hash);
+        driipSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash);
 
         // Update challenge proposal
         driipSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
@@ -296,7 +296,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(singleTransferAmount > targetBalanceAmount);
 
         // Store trade candidate
-        driipSettlementChallenge.pushChallengeCandidateTradeHash(trade.seal.hash);
+        driipSettlementChallenge.addChallengeCandidateTradeHash(trade.seal.hash);
 
         // Update challenge proposal
         driipSettlementChallenge.setProposalStatus(wallet, SettlementTypesLib.ProposalStatus.Disqualified);

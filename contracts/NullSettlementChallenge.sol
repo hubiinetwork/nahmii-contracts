@@ -349,7 +349,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     /// @notice Push to store the given challenge candidate order hash
     /// @dev This function can only be called by this contract's dispute instance
     /// @param hash The challenge candidate order hash to push
-    function pushChallengeCandidateOrderHash(bytes32 hash)
+    function addChallengeCandidateOrderHash(bytes32 hash)
     public
     onlyNullSettlementDispute
     {
@@ -369,7 +369,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     /// @notice Push to store the given challenge candidate trade hash
     /// @dev This function can only be called by this contract's dispute instance
     /// @param hash The challenge candidate trade hash to push
-    function pushChallengeCandidateTradeHash(bytes32 hash)
+    function addChallengeCandidateTradeHash(bytes32 hash)
     public
     onlyNullSettlementDispute
     {
@@ -389,7 +389,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     /// @notice Push to store the given challenge candidate payment hash
     /// @dev This function can only be called by this contract's dispute instance
     /// @param hash The challenge candidate payment hash to push
-    function pushChallengeCandidatePaymentHash(bytes32 hash)
+    function addChallengeCandidatePaymentHash(bytes32 hash)
     public
     onlyNullSettlementDispute
     {

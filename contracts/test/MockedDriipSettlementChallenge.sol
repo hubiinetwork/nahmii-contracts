@@ -286,7 +286,7 @@ contract MockedDriipSettlementChallenge {
         return _proposalChallenger;
     }
 
-    function pushChallengeCandidateOrderHash(bytes32 hash)
+    function addChallengeCandidateOrderHash(bytes32 hash)
     public
     {
         // To silence unused function parameter compiler warning
@@ -318,7 +318,7 @@ contract MockedDriipSettlementChallenge {
         return _challengeCandidateOrderHash;
     }
 
-    function pushChallengeCandidateTradeHash(bytes32 hash)
+    function addChallengeCandidateTradeHash(bytes32 hash)
     public
     {
         // To silence unused function parameter compiler warning
@@ -334,7 +334,7 @@ contract MockedDriipSettlementChallenge {
         return _challengeCandidateTradeHashesCount;
     }
 
-    function pushChallengeCandidatePaymentHash(bytes32 hash)
+    function addChallengeCandidatePaymentHash(bytes32 hash)
     public
     {
         require(hash == hash);

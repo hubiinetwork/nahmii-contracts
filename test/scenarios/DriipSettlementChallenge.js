@@ -1199,7 +1199,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('pushChallengeCandidateOrderHash()', () => {
+        describe('addChallengeCandidateOrderHash()', () => {
             let order;
 
             before(async () => {
@@ -1208,7 +1208,7 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenge.pushChallengeCandidateOrderHash(order.seals.operator.hash)
+                    web3DriipSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash)
                         .should.be.rejected;
                 });
             });
@@ -1222,7 +1222,7 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersDriipSettlementChallenge.pushChallengeCandidateOrderHash(order.seals.operator.hash, {gasLimit: 2e6});
+                    await ethersDriipSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash, {gasLimit: 2e6});
 
                     (await ethersDriipSettlementChallenge.challengeCandidateOrderHashesCount())
                         ._bn.should.eq.BN(challengeCandidateOrderHashesCountBefore.add(1)._bn);
@@ -1236,7 +1236,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('pushChallengeCandidateTradeHash()', () => {
+        describe('addChallengeCandidateTradeHash()', () => {
             let trade;
 
             before(async () => {
@@ -1245,7 +1245,7 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenge.pushChallengeCandidateTradeHash(trade.seal.hash)
+                    web3DriipSettlementChallenge.addChallengeCandidateTradeHash(trade.seal.hash)
                         .should.be.rejected;
                 });
             });
@@ -1259,7 +1259,7 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersDriipSettlementChallenge.pushChallengeCandidateTradeHash(trade.seal.hash, {gasLimit: 2e6});
+                    await ethersDriipSettlementChallenge.addChallengeCandidateTradeHash(trade.seal.hash, {gasLimit: 2e6});
 
                     (await ethersDriipSettlementChallenge.challengeCandidateTradeHashesCount())
                         ._bn.should.eq.BN(challengeCandidateTradeHashesCountBefore.add(1)._bn);
@@ -1273,7 +1273,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('pushChallengeCandidatePaymentHash()', () => {
+        describe('addChallengeCandidatePaymentHash()', () => {
             let payment;
 
             before(async () => {
@@ -1282,7 +1282,7 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenge.pushChallengeCandidatePaymentHash(payment.seals.operator.hash)
+                    web3DriipSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash)
                         .should.be.rejected;
                 });
             });
@@ -1296,7 +1296,7 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersDriipSettlementChallenge.pushChallengeCandidatePaymentHash(payment.seals.operator.hash, {gasLimit: 2e6});
+                    await ethersDriipSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash, {gasLimit: 2e6});
 
                     (await ethersDriipSettlementChallenge.challengeCandidatePaymentHashesCount())
                         ._bn.should.eq.BN(challengeCandidatePaymentHashesCountBefore.add(1)._bn);
