@@ -10,7 +10,6 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {DriipStorable} from "./DriipStorable.sol";
 import {Servable} from "./Servable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
@@ -18,7 +17,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, DriipStorable, Servable {
+contract FraudChallenge is Ownable, Servable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
