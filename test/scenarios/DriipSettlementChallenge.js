@@ -177,6 +177,13 @@ module.exports = (glob) => {
             });
         });
 
+        describe('challengedWalletsCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
         describe('walletChallengedTradesCount()', () => {
             it('should return value initialized ', async () => {
                 const address = Wallet.createRandom().address;
@@ -307,6 +314,9 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+
+                    (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -447,6 +457,9 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+
+                    (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -563,6 +576,9 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+
+                    (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -687,6 +703,9 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+
+                    (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 

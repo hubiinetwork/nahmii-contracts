@@ -19,7 +19,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe('NullSettlementChallenge', () => {
+    describe.only('NullSettlementChallenge', () => {
         let web3NullSettlementChallenge, ethersNullSettlementChallenge;
         let web3NullSettlementDispute, ethersNullSettlementDispute;
         let web3Configuration, ethersConfiguration;
@@ -151,6 +151,13 @@ module.exports = (glob) => {
                 const result = await ethersNullSettlementChallenge.walletProposalMap(address);
                 result.status.should.equal(mocks.proposalStatuses.indexOf('Unknown'));
                 result.nonce._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('challengedWalletsCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersNullSettlementChallenge.challengedWalletsCount())
+                    ._bn.should.eq.BN(0);
             });
         });
 

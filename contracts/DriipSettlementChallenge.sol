@@ -33,6 +33,8 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementDispute public driipSettlementDispute;
 
+    address[] public challengedWallets;
+
     mapping(address => SettlementTypesLib.Proposal) public walletProposalMap;
 
     mapping(address => NahmiiTypesLib.Trade[]) public walletChallengedTradesMap;
@@ -47,8 +49,8 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute,
         DriipSettlementDispute newDriipSettlementDispute);
-    event StartChallengeFromTradeEvent(address wallet, NahmiiTypesLib.Trade trade, int256 intendedStageAmount,
-        int256 conjugateStageAmount);
+    event StartChallengeFromTradeEvent(address wallet, NahmiiTypesLib.Trade trade,
+        int256 intendedStageAmount, int256 conjugateStageAmount);
     event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Trade trade,
         int256 intendedStageAmount, int256 conjugateStageAmount);
     event StartChallengeFromPaymentEvent(address wallet, NahmiiTypesLib.Payment payment,
@@ -75,6 +77,16 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         DriipSettlementDispute oldDriipSettlementDispute = driipSettlementDispute;
         driipSettlementDispute = newDriipSettlementDispute;
         emit ChangeDriipSettlementDisputeEvent(oldDriipSettlementDispute, driipSettlementDispute);
+    }
+
+    /// @notice Get the number of challenged wallets
+    /// @return The number of challenged wallets
+    function challengedWalletsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return challengedWallets.length;
     }
 
     /// @notice Get the number of current and past settlement challenges from trade for given wallet
@@ -509,6 +521,9 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         require(intendedBalanceAmount >= intendedStageAmount);
         require(conjugateBalanceAmount >= conjugateStageAmount);
 
+        if (0 == walletProposalMap[wallet].nonce)
+            challengedWallets.push(wallet);
+
         pushMemoryTradeToStorageArray(trade, walletChallengedTradesMap[wallet]);
 
         walletProposalMap[wallet].nonce = trade.nonce;
@@ -547,6 +562,9 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         payment.recipient.balances.current);
 
         require(balanceAmount >= stageAmount);
+
+        if (0 == walletProposalMap[wallet].nonce)
+            challengedWallets.push(wallet);
 
         pushMemoryPaymentToStorageArray(payment, walletChallengedPaymentsMap[wallet]);
 

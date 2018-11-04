@@ -35,6 +35,8 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
 
     uint256 public nonce;
 
+    address[] public challengedWallets;
+
     mapping(address => SettlementTypesLib.Proposal) public walletProposalMap;
 
     mapping(address => NahmiiTypesLib.Trade[]) public walletChallengedTradesMap;
@@ -51,8 +53,8 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
         NullSettlementDispute newNullSettlementDispute);
     event StartChallengeEvent(address wallet, int256 amount, address stageCurrencyCt,
         uint stageCurrencyId);
-    event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount, address stageCurrencyCt,
-        uint stageCurrencyId);
+    event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
+        address stageCurrencyCt, uint stageCurrencyId);
 
     //
     // Constructor
@@ -73,6 +75,16 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
         NullSettlementDispute oldNullSettlementDispute = nullSettlementDispute;
         nullSettlementDispute = newNullSettlementDispute;
         emit ChangeNullSettlementDisputeEvent(oldNullSettlementDispute, nullSettlementDispute);
+    }
+
+    /// @notice Get the number of challenged wallets
+    /// @return The number of challenged wallets
+    function challengedWalletsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return challengedWallets.length;
     }
 
     /// @notice Get the number of current and past settlement challenges for given wallet
@@ -404,6 +416,9 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
             wallet, currencyCt, currencyId, activeBalanceLogEntriesCount.sub(1)
         );
         require(activeBalanceAmount >= amount);
+
+        if (0 == walletProposalMap[wallet].nonce)
+            challengedWallets.push(wallet);
 
         walletProposalMap[wallet].nonce = ++nonce;
         walletProposalMap[wallet].blockNumber = activeBalanceBlockNumber;
