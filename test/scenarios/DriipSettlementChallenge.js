@@ -184,6 +184,20 @@ module.exports = (glob) => {
             });
         });
 
+        describe('challengedTradeHashesCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersDriipSettlementChallenge.challengedTradeHashesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('challengedPaymentHashesCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersDriipSettlementChallenge.challengedPaymentHashesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
         describe('walletChallengedTradeHashesCount()', () => {
             it('should return value initialized ', async () => {
                 const address = Wallet.createRandom().address;
@@ -316,6 +330,8 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersDriipSettlementChallenge.challengedTradeHashesCount())
                         ._bn.should.eq.BN(1);
                 });
             });
@@ -460,6 +476,8 @@ module.exports = (glob) => {
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
+                    (await ethersDriipSettlementChallenge.challengedTradeHashesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -578,6 +596,8 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersDriipSettlementChallenge.challengedPaymentHashesCount())
                         ._bn.should.eq.BN(1);
                 });
             });
@@ -705,6 +725,8 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersDriipSettlementChallenge.challengedPaymentHashesCount())
                         ._bn.should.eq.BN(1);
                 });
             });

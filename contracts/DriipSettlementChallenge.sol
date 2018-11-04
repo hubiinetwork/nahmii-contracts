@@ -36,7 +36,10 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
 
     mapping(address => SettlementTypesLib.Proposal) public walletProposalMap;
 
+    bytes32[] public challengedTradeHashes;
     mapping(address => bytes32[]) public walletChallengedTradeHashesMap;
+
+    bytes32[] public challengedPaymentHashes;
     mapping(address => bytes32[]) public walletChallengedPaymentHashesMap;
 
     bytes32[] public challengeCandidateOrderHashes;
@@ -85,6 +88,26 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     returns (uint256)
     {
         return challengedWallets.length;
+    }
+
+    /// @notice Get the number of challenged trade hashes
+    /// @return The count of challenged trade hashes
+    function challengedTradeHashesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return challengedTradeHashes.length;
+    }
+
+    /// @notice Get the number of challenged payment hashes
+    /// @return The count of challenged payment hashes
+    function challengedPaymentHashesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return challengedPaymentHashes.length;
     }
 
     /// @notice Get the number of current and past settlement challenges from trade for given wallet
@@ -511,6 +534,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         if (0 == walletProposalMap[wallet].nonce)
             challengedWallets.push(wallet);
 
+        challengedTradeHashes.push(trade.seal.hash);
         walletChallengedTradeHashesMap[wallet].push(trade.seal.hash);
 
         walletProposalMap[wallet].nonce = trade.nonce;
@@ -554,6 +578,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         if (0 == walletProposalMap[wallet].nonce)
             challengedWallets.push(wallet);
 
+        challengedPaymentHashes.push(payment.seals.operator.hash);
         walletChallengedPaymentHashesMap[wallet].push(payment.seals.operator.hash);
 
         walletProposalMap[wallet].nonce = payment.nonce;
