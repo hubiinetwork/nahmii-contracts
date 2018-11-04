@@ -66,7 +66,7 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Valid
         require(!genuineWalletSignature || !genuineSenderAndFee || !genuineRecipient);
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentPayment(payment);
+        fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
         if (!genuineWalletSignature) {
             uint256 stakeFraction = configuration.falseWalletSignatureStake();

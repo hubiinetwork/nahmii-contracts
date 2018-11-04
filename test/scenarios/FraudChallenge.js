@@ -10,7 +10,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe('FraudChallenge', () => {
+    describe.only('FraudChallenge', () => {
         let web3FraudChallenge, ethersFraudChallengeOwner;
         let ethersFraudChallengeUserA, ethersFraudChallengeUserB;
 
@@ -140,28 +140,28 @@ module.exports = (glob) => {
             });
         });
 
-        describe('fraudulentOrdersCount()', () => {
+        describe('fraudulentOrderHashesCount()', () => {
             it('should equal value initialized', async () => {
-                const count = await ethersFraudChallengeOwner.fraudulentOrdersCount();
+                const count = await ethersFraudChallengeOwner.fraudulentOrderHashesCount();
                 count.toNumber().should.equal(0);
             })
         });
 
-        describe('fraudulentOrders()', () => {
+        describe('fraudulentOrderHashes()', () => {
             it('should equal value initialized', async () => {
-                ethersFraudChallengeOwner.fraudulentOrders(0).should.be.rejected;
+                ethersFraudChallengeOwner.fraudulentOrderHashes(0).should.be.rejected;
             })
         });
 
-        describe('isFraudulentOrderOperatorHash()', () => {
+        describe('isFraudulentOrderHash()', () => {
             it('should equal value initialized', async () => {
                 const hash = cryptography.hash('some order');
-                const fraudulentOrderOperatorHash = await ethersFraudChallengeOwner.isFraudulentOrderOperatorHash(hash);
-                fraudulentOrderOperatorHash.should.be.false;
+                const fraudulentOrderHash = await ethersFraudChallengeOwner.isFraudulentOrderHash(hash);
+                fraudulentOrderHash.should.be.false;
             })
         });
 
-        describe('addFraudulentOrder()', () => {
+        describe('addFraudulentOrderHash()', () => {
             let overrideOptions, order;
 
             before(() => {
@@ -174,9 +174,9 @@ module.exports = (glob) => {
 
             describe('if called as deployer', () => {
                 it('should add fraudulent order', async () => {
-                    await ethersFraudChallengeOwner.addFraudulentOrder(order, overrideOptions);
-                    const fraudulentOrderOperatorHash = await ethersFraudChallengeOwner.isFraudulentOrderOperatorHash(order.seals.operator.hash);
-                    fraudulentOrderOperatorHash.should.be.true;
+                    await ethersFraudChallengeOwner.addFraudulentOrderHash(order.seals.operator.hash, overrideOptions);
+                    const fraudulentOrderHash = await ethersFraudChallengeOwner.isFraudulentOrderHash(order.seals.operator.hash);
+                    fraudulentOrderHash.should.be.true;
                 });
             });
 
@@ -187,29 +187,29 @@ module.exports = (glob) => {
                 });
 
                 it('should add fraudulent order', async () => {
-                    await ethersFraudChallengeUserA.addFraudulentOrder(order, overrideOptions);
-                    const fraudulentOrderOperatorHash = await ethersFraudChallengeOwner.isFraudulentOrderOperatorHash(order.seals.operator.hash);
-                    fraudulentOrderOperatorHash.should.be.true;
+                    await ethersFraudChallengeUserA.addFraudulentOrderHash(order.seals.operator.hash, overrideOptions);
+                    const fraudulentOrderHash = await ethersFraudChallengeOwner.isFraudulentOrderHash(order.seals.operator.hash);
+                    fraudulentOrderHash.should.be.true;
                 });
             });
 
             describe('if called as neither deployer nor registered service action', () => {
                 it('should revert', async () => {
-                    ethersFraudChallengeUserB.addFraudulentOrder(order, overrideOptions).should.be.rejected;
+                    ethersFraudChallengeUserB.addFraudulentOrderHash(order.seals.operator.hash, overrideOptions).should.be.rejected;
                 });
             });
         });
 
-        describe('fraudulentTradesCount()', () => {
+        describe('fraudulentTradeHashesCount()', () => {
             it('should equal value initialized', async () => {
-                const count = await ethersFraudChallengeOwner.fraudulentTradesCount();
+                const count = await ethersFraudChallengeOwner.fraudulentTradeHashesCount();
                 count.toNumber().should.equal(0);
             })
         });
 
-        describe('fraudulentTrades()', () => {
+        describe('fraudulentTradeHashes()', () => {
             it('should equal value initialized', async () => {
-                ethersFraudChallengeOwner.fraudulentTrades(0).should.be.rejected;
+                ethersFraudChallengeOwner.fraudulentTradeHashes(0).should.be.rejected;
             })
         });
 
@@ -221,7 +221,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('addFraudulentTrade()', () => {
+        describe('addFraudulentTradeHash()', () => {
             let overrideOptions, trade;
 
             before(() => {
@@ -234,7 +234,7 @@ module.exports = (glob) => {
 
             describe('if called as deployer', () => {
                 it('should add fraudulent trade', async () => {
-                    await ethersFraudChallengeOwner.addFraudulentTrade(trade, overrideOptions);
+                    await ethersFraudChallengeOwner.addFraudulentTradeHash(trade.seal.hash, overrideOptions);
                     const fraudulentTradeDriipSettlementHash = await ethersFraudChallengeOwner.isFraudulentTradeHash(trade.seal.hash);
                     fraudulentTradeDriipSettlementHash.should.be.true;
                 });
@@ -247,7 +247,7 @@ module.exports = (glob) => {
                 });
 
                 it('should add fraudulent trade', async () => {
-                    await ethersFraudChallengeUserA.addFraudulentTrade(trade, overrideOptions);
+                    await ethersFraudChallengeUserA.addFraudulentTradeHash(trade.seal.hash, overrideOptions);
                     const fraudulentTradeDriipSettlementHash = await ethersFraudChallengeOwner.isFraudulentTradeHash(trade.seal.hash);
                     fraudulentTradeDriipSettlementHash.should.be.true;
                 });
@@ -255,33 +255,33 @@ module.exports = (glob) => {
 
             describe('if called as neither deployer nor registered service action', () => {
                 it('should revert', async () => {
-                    ethersFraudChallengeUserB.addFraudulentTrade(trade, overrideOptions).should.be.rejected;
+                    ethersFraudChallengeUserB.addFraudulentTradeHash(trade.seal.hash, overrideOptions).should.be.rejected;
                 });
             });
         });
 
-        describe('fraudulentPaymentsCount()', () => {
+        describe('fraudulentPaymentHashesCount()', () => {
             it('should equal value initialized', async () => {
-                const count = await ethersFraudChallengeOwner.fraudulentPaymentsCount();
+                const count = await ethersFraudChallengeOwner.fraudulentPaymentHashesCount();
                 count.toNumber().should.equal(0);
             })
         });
 
-        describe('fraudulentPayments()', () => {
+        describe('fraudulentPaymentHashes()', () => {
             it('should equal value initialized', async () => {
-                ethersFraudChallengeOwner.fraudulentPayments(0).should.be.rejected;
+                ethersFraudChallengeOwner.fraudulentPaymentHashes(0).should.be.rejected;
             })
         });
 
-        describe('isFraudulentPaymentOperatorHash()', () => {
+        describe('isFraudulentPaymentHash()', () => {
             it('should equal value initialized', async () => {
                 const hash = cryptography.hash('some payment');
-                const fraudulentPaymentOperatorHash = await ethersFraudChallengeOwner.isFraudulentPaymentOperatorHash(hash);
-                fraudulentPaymentOperatorHash.should.be.false;
+                const fraudulentPaymentHash = await ethersFraudChallengeOwner.isFraudulentPaymentHash(hash);
+                fraudulentPaymentHash.should.be.false;
             })
         });
 
-        describe('addFraudulentPayment()', () => {
+        describe('addFraudulentPaymentHash()', () => {
             let overrideOptions, payment;
 
             before(() => {
@@ -294,9 +294,9 @@ module.exports = (glob) => {
 
             describe('if called as deployer', () => {
                 it('should add fraudulent payment', async () => {
-                    await ethersFraudChallengeOwner.addFraudulentPayment(payment, overrideOptions);
-                    const fraudulentPaymentOperatorHash = await ethersFraudChallengeOwner.isFraudulentPaymentOperatorHash(payment.seals.operator.hash);
-                    fraudulentPaymentOperatorHash.should.be.true;
+                    await ethersFraudChallengeOwner.addFraudulentPaymentHash(payment.seals.operator.hash, overrideOptions);
+                    const fraudulentPaymentHash = await ethersFraudChallengeOwner.isFraudulentPaymentHash(payment.seals.operator.hash);
+                    fraudulentPaymentHash.should.be.true;
                 });
             });
 
@@ -307,15 +307,15 @@ module.exports = (glob) => {
                 });
 
                 it('should add fraudulent payment', async () => {
-                    await ethersFraudChallengeUserA.addFraudulentPayment(payment, overrideOptions);
-                    const fraudulentPaymentOperatorHash = await ethersFraudChallengeOwner.isFraudulentPaymentOperatorHash(payment.seals.operator.hash);
-                    fraudulentPaymentOperatorHash.should.be.true;
+                    await ethersFraudChallengeUserA.addFraudulentPaymentHash(payment.seals.operator.hash, overrideOptions);
+                    const fraudulentPaymentHash = await ethersFraudChallengeOwner.isFraudulentPaymentHash(payment.seals.operator.hash);
+                    fraudulentPaymentHash.should.be.true;
                 });
             });
 
             describe('if called as neither deployer nor registered service action', () => {
                 it('should revert', async () => {
-                    ethersFraudChallengeUserB.addFraudulentPayment(payment, overrideOptions).should.be.rejected;
+                    ethersFraudChallengeUserB.addFraudulentPaymentHash(payment.seals.operator.hash, overrideOptions).should.be.rejected;
                 });
             });
         });

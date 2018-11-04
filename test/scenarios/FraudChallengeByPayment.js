@@ -393,15 +393,15 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent payment and stage in security bond', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentsCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersSecurityBond.stagesCount(),
                         ethersSecurityBond.stages(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(1).should.be.true;
+                    fraudulentPaymentHashesCount.eq(1).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
                     stage.fraction._bn.should.eq.BN(1e17.toString());
@@ -417,16 +417,16 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersFraudChallenge.seizedWalletsCount(),
                         ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(1).should.be.true;
+                    fraudulentPaymentHashesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(payment.sender.wallet);
                     seizure.source.should.equal(payment.sender.wallet);
@@ -443,16 +443,16 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersFraudChallenge.seizedWalletsCount(),
                         ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(1).should.be.true;
+                    fraudulentPaymentHashesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(payment.sender.wallet);
                     seizure.source.should.equal(payment.sender.wallet);
@@ -469,16 +469,16 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent payment and seize seller\'s funds', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersFraudChallenge.seizedWalletsCount(),
                         ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(1).should.be.true;
+                    fraudulentPaymentHashesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(payment.recipient.wallet);
                     seizure.source.should.equal(payment.recipient.wallet);

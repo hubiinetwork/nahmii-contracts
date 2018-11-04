@@ -25,9 +25,9 @@ contract MockedFraudChallenge is FraudChallenge {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    bool public fraudulentOrderOperatorHash;
+    bool public fraudulentOrderHash;
     bool public fraudulentTradeHash;
-    bool public fraudulentPaymentOperatorHash;
+    bool public fraudulentPaymentHash;
 
     //
     // Events
@@ -43,29 +43,29 @@ contract MockedFraudChallenge is FraudChallenge {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function reset() public {
-        fraudulentOrders.length = 0;
-        fraudulentTrades.length = 0;
-        fraudulentPayments.length = 0;
+        fraudulentOrderHashes.length = 0;
+        fraudulentTradeHashes.length = 0;
+        fraudulentPaymentHashes.length = 0;
         seizedWallets.length = 0;
         doubleSpenderWallets.length = 0;
-        fraudulentOrderOperatorHash = false;
+        fraudulentOrderHash = false;
         fraudulentTradeHash = false;
-        fraudulentPaymentOperatorHash = false;
+        fraudulentPaymentHash = false;
     }
 
-    function addFraudulentOrder(NahmiiTypesLib.Order order) public {
-        fraudulentOrders.push(order);
-        emit AddFraudulentOrderEvent(order);
+    function addFraudulentOrderHash(bytes32 hash) public {
+        fraudulentOrderHashes.push(hash);
+        emit AddFraudulentOrderHashEvent(hash);
     }
 
-    function addFraudulentTrade(NahmiiTypesLib.Trade trade) public {
-        pushMemoryTradeToStorageArray(trade, fraudulentTrades);
-        emit AddFraudulentTradeEvent(trade);
+    function addFraudulentTradeHash(bytes32 hash) public {
+        fraudulentTradeHashes.push(hash);
+        emit AddFraudulentTradeHashEvent(hash);
     }
 
-    function addFraudulentPayment(NahmiiTypesLib.Payment payment) public {
-        pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
-        emit AddFraudulentPaymentEvent(payment);
+    function addFraudulentPaymentHash(bytes32 hash) public {
+        fraudulentPaymentHashes.push(hash);
+        emit AddFraudulentPaymentHashEvent(hash);
     }
 
     function addSeizedWallet(address wallet) public {
@@ -78,14 +78,14 @@ contract MockedFraudChallenge is FraudChallenge {
         emit AddDoubleSpenderWalletEvent(wallet);
     }
 
-    function setFraudulentOrderOperatorHash(bool _fraudulentOrderOperatorHash) public {
-        fraudulentOrderOperatorHash = _fraudulentOrderOperatorHash;
+    function setFraudulentOrderOperatorHash(bool _fraudulentOrderHash) public {
+        fraudulentOrderHash = _fraudulentOrderHash;
     }
 
-    function isFraudulentOrderOperatorHash(bytes32 hash) public view returns (bool) {
+    function isFraudulentOrderHash(bytes32 hash) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(hash == hash);
-        return fraudulentOrderOperatorHash;
+        return fraudulentOrderHash;
     }
 
     function setFraudulentTradeHash(bool _fraudulentTradeHash) public {
@@ -98,13 +98,13 @@ contract MockedFraudChallenge is FraudChallenge {
         return fraudulentTradeHash;
     }
 
-    function setFraudulentPaymentOperatorHash(bool _fraudulentPaymentOperatorHash) public {
-        fraudulentPaymentOperatorHash = _fraudulentPaymentOperatorHash;
+    function setFraudulentPaymentOperatorHash(bool _fraudulentPaymentHash) public {
+        fraudulentPaymentHash = _fraudulentPaymentHash;
     }
 
-    function isFraudulentPaymentOperatorHash(bytes32 hash) public view returns (bool) {
+    function isFraudulentPaymentHash(bytes32 hash) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(hash == hash);
-        return fraudulentPaymentOperatorHash;
+        return fraudulentPaymentHash;
     }
 }

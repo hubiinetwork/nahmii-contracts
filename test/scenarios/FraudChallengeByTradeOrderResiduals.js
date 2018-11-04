@@ -586,16 +586,16 @@ module.exports = (glob) => {
                         firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
                         firstTrade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradesCount(),
+                        ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersFraudChallenge.seizedWalletsCount(),
                         ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentTradesCount.eq(1).should.be.true;
+                    fraudulentTradeHashesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
                     seizure.source.should.equal(utils.getAddress(firstTrade.buyer.wallet));

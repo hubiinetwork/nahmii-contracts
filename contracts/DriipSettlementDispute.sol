@@ -86,7 +86,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(SettlementTypesLib.ProposalStatus.Disqualified != driipSettlementChallenge.proposalStatus(order.wallet));
 
         // Require that order candidate is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.operator.hash));
+        require(!fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash));
 
         // Buy order -> Conjugate currency and amount
@@ -185,7 +185,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(SettlementTypesLib.ProposalStatus.Disqualified != driipSettlementChallenge.proposalStatus(payment.sender.wallet));
 
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.operator.hash));
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
 
         // Require that payment's block number is not earlier than proposal's block number
         require(payment.blockNumber >= driipSettlementChallenge.proposalBlockNumber(payment.sender.wallet));
@@ -225,7 +225,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
 
         // Require that trade candidate's order is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentOrderOperatorHash(trade.buyer.wallet == order.wallet ?
+        require(!fraudChallenge.isFraudulentOrderHash(trade.buyer.wallet == order.wallet ?
             trade.buyer.order.hashes.operator :
             trade.seller.order.hashes.operator));
 
@@ -270,7 +270,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         bytes32 orderOperatorHash = (trade.buyer.wallet == wallet ?
         trade.buyer.order.hashes.operator :
         trade.seller.order.hashes.operator);
-        require(!fraudChallenge.isFraudulentOrderOperatorHash(orderOperatorHash));
+        require(!fraudChallenge.isFraudulentOrderHash(orderOperatorHash));
         require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 
         // Require that trade's block number is not earlier than proposal's block number

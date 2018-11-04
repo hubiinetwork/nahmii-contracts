@@ -34,23 +34,23 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
     address[] public doubleSpenderWallets;
     mapping(address => bool) public doubleSpenderWalletsMap;
 
-    NahmiiTypesLib.Order[] public fraudulentOrders;
-    mapping(bytes32 => bool) public fraudulentOrderOperatorHashMap;
+    bytes32[] public fraudulentOrderHashes;
+    mapping(bytes32 => bool) public fraudulentOrderHashMap;
 
-    NahmiiTypesLib.Trade[] public fraudulentTrades;
+    bytes32[] public fraudulentTradeHashes;
     mapping(bytes32 => bool) public fraudulentTradeHashMap;
 
-    NahmiiTypesLib.Payment[] public fraudulentPayments;
-    mapping(bytes32 => bool) public fraudulentPaymentOperatorHashMap;
+    bytes32[] public fraudulentPaymentHashes;
+    mapping(bytes32 => bool) public fraudulentPaymentHashMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event AddSeizedWalletEvent(address wallet);
     event AddDoubleSpenderWalletEvent(address wallet);
-    event AddFraudulentOrderEvent(NahmiiTypesLib.Order order);
-    event AddFraudulentTradeEvent(NahmiiTypesLib.Trade trade);
-    event AddFraudulentPaymentEvent(NahmiiTypesLib.Payment payment);
+    event AddFraudulentOrderHashEvent(bytes32 hash);
+    event AddFraudulentTradeHashEvent(bytes32 hash);
+    event AddFraudulentPaymentHashEvent(bytes32 hash);
 
     //
     // Constructor
@@ -107,63 +107,74 @@ contract FraudChallenge is Ownable, DriipStorable, Servable {
         }
     }
 
-    /// @notice Get the number of fraudulent orders
-    function fraudulentOrdersCount() public view returns (uint256) {
-        return fraudulentOrders.length;
+    /// @notice Get the number of fraudulent order hashes
+    function fraudulentOrderHashesCount() public view returns (uint256) {
+        return fraudulentOrderHashes.length;
     }
 
-    /// @notice Get the state about whether the given hash equals the operator hash of a fraudulent order
+    /// @notice Get the state about whether the given hash equals the hash of a fraudulent order
     /// @param hash The hash to be tested
-    function isFraudulentOrderOperatorHash(bytes32 hash) public view returns (bool) {
-        return fraudulentOrderOperatorHashMap[hash];
+    function isFraudulentOrderHash(bytes32 hash) public view returns (bool) {
+        return fraudulentOrderHashMap[hash];
     }
 
-    /// @notice Add given trade to store of fraudulent trades if not already present
-    function addFraudulentOrder(NahmiiTypesLib.Order order) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION) {
-        if (!fraudulentOrderOperatorHashMap[order.seals.operator.hash]) {
-            fraudulentOrders.push(order);
-            fraudulentOrderOperatorHashMap[order.seals.operator.hash] = true;
-            emit AddFraudulentOrderEvent(order);
+    /// @notice Add given order hash to store of fraudulent order hashes if not already present
+    function addFraudulentOrderHash(bytes32 hash)
+    public
+    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION)
+    {
+        if (!fraudulentOrderHashMap[hash]) {
+            fraudulentOrderHashMap[hash] = true;
+            fraudulentOrderHashes.push(hash);
+            emit AddFraudulentOrderHashEvent(hash);
         }
     }
 
-    /// @notice Get the number of fraudulent trades
-    function fraudulentTradesCount() public view returns (uint256) {
-        return fraudulentTrades.length;
+    /// @notice Get the number of fraudulent trade hashes
+    function fraudulentTradeHashesCount() public view returns (uint256) {
+        return fraudulentTradeHashes.length;
     }
 
     /// @notice Get the state about whether the given hash equals the hash of a fraudulent trade
     /// @param hash The hash to be tested
+    /// @return true if hash is the one of a fraudulent trade, else false
     function isFraudulentTradeHash(bytes32 hash) public view returns (bool) {
         return fraudulentTradeHashMap[hash];
     }
 
-    /// @notice Add given order to store of fraudulent orders if not already present
-    function addFraudulentTrade(NahmiiTypesLib.Trade trade) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION) {
-        if (!fraudulentTradeHashMap[trade.seal.hash]) {
-            pushMemoryTradeToStorageArray(trade, fraudulentTrades);
-            fraudulentTradeHashMap[trade.seal.hash] = true;
-            emit AddFraudulentTradeEvent(trade);
+    /// @notice Add given trade hash to store of fraudulent trade hashes if not already present
+    function addFraudulentTradeHash(bytes32 hash)
+    public
+    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
+    {
+        if (!fraudulentTradeHashMap[hash]) {
+            fraudulentTradeHashMap[hash] = true;
+            fraudulentTradeHashes.push(hash);
+            emit AddFraudulentTradeHashEvent(hash);
         }
     }
 
-    /// @notice Get the number of fraudulent payments
-    function fraudulentPaymentsCount() public view returns (uint256) {
-        return fraudulentPayments.length;
+    /// @notice Get the number of fraudulent payment hashes
+    function fraudulentPaymentHashesCount() public view returns (uint256) {
+        return fraudulentPaymentHashes.length;
     }
 
-    /// @notice Get the state about whether the given hash equals the operator hash of a fraudulent payment
+    /// @notice Get the state about whether the given hash equals the hash of a fraudulent payment
     /// @param hash The hash to be tested
-    function isFraudulentPaymentOperatorHash(bytes32 hash) public view returns (bool) {
-        return fraudulentPaymentOperatorHashMap[hash];
+    /// @return true if hash is the one of a fraudulent payment, else null
+    function isFraudulentPaymentHash(bytes32 hash) public view returns (bool) {
+        return fraudulentPaymentHashMap[hash];
     }
 
-    /// @notice Add given payment to store of fraudulent payments if not already present
-    function addFraudulentPayment(NahmiiTypesLib.Payment payment) public onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION) {
-        if (!fraudulentPaymentOperatorHashMap[payment.seals.operator.hash]) {
-            pushMemoryPaymentToStorageArray(payment, fraudulentPayments);
-            fraudulentPaymentOperatorHashMap[payment.seals.operator.hash] = true;
-            emit AddFraudulentPaymentEvent(payment);
+    /// @notice Add given payment hash to store of fraudulent payment hashes if not already present
+    function addFraudulentPaymentHash(bytes32 hash)
+    public
+    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
+    {
+        if (!fraudulentPaymentHashMap[hash]) {
+            fraudulentPaymentHashMap[hash] = true;
+            fraudulentPaymentHashes.push(hash);
+            emit AddFraudulentPaymentHashEvent(hash);
         }
     }
 }

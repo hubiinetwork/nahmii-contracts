@@ -74,7 +74,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     onlySealedOrder(order)
     {
         // Require that order candidate is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.operator.hash));
+        require(!fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash));
 
         // Require that settlement challenge is ongoing
@@ -134,7 +134,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         bytes32 orderOperatorHash = (trade.buyer.wallet == wallet ?
         trade.buyer.order.hashes.operator :
         trade.seller.order.hashes.operator);
-        require(!fraudChallenge.isFraudulentOrderOperatorHash(orderOperatorHash));
+        require(!fraudChallenge.isFraudulentOrderHash(orderOperatorHash));
         require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 
         // Require that settlement challenge is ongoing
@@ -188,7 +188,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     onlySealedPayment(payment)
     {
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.operator.hash));
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
 
         // Require that settlement challenge is ongoing
         require(NahmiiTypesLib.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(payment.sender.wallet));

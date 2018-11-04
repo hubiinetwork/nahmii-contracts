@@ -416,16 +416,16 @@ module.exports = (glob) => {
                     await ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersFraudChallenge.seizedWalletsCount(),
                         ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(1).should.be.true;
+                    fraudulentPaymentHashesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(utils.getAddress(firstPayment.sender.wallet));
                     seizure.source.should.equal(utils.getAddress(firstPayment.sender.wallet));
@@ -443,16 +443,16 @@ module.exports = (glob) => {
                     await ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersFraudChallenge.seizedWalletsCount(),
                         ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(1).should.be.true;
+                    fraudulentPaymentHashesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(utils.getAddress(firstPayment.sender.wallet));
                     seizure.source.should.equal(utils.getAddress(firstPayment.sender.wallet));

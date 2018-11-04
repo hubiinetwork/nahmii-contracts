@@ -70,7 +70,7 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Chall
         );
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentPayment(lastPayment);
+        fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
         clientFund.seizeAllBalances(wallet, msg.sender);
         fraudChallenge.addSeizedWallet(wallet);

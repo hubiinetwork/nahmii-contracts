@@ -352,16 +352,16 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradesCount(),
+                        ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersFraudChallenge.doubleSpenderWalletsCount(),
                         ethersSecurityBond.stagesCount(),
                         ethersSecurityBond.stages(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentTradesCount.eq(2).should.be.true;
+                    fraudulentTradeHashesCount.eq(2).should.be.true;
                     doubleSpenderWalletsCount.eq(2).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
@@ -406,16 +406,16 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradesCount(),
+                        ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersFraudChallenge.doubleSpenderWalletsCount(),
                         ethersSecurityBond.stagesCount(),
                         ethersSecurityBond.stages(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentTradesCount.eq(2).should.be.true;
+                    fraudulentTradeHashesCount.eq(2).should.be.true;
                     doubleSpenderWalletsCount.eq(2).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
