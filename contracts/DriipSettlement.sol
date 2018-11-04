@@ -44,7 +44,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
 
-    NahmiiTypesLib.Settlement[] public settlements;
+    SettlementTypesLib.Settlement[] public settlements;
     mapping(uint256 => uint256) public nonceSettlementIndex;
     mapping(address => uint256[]) public walletSettlementIndices;
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
@@ -140,7 +140,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @notice Get the settlement for the given (global) nonce
     /// @param nonce The nonce of the settlement
     /// @return settlement of the provided nonce
-    function settlementByNonce(uint256 nonce) public view returns (NahmiiTypesLib.Settlement) {
+    function settlementByNonce(uint256 nonce) public view returns (SettlementTypesLib.Settlement) {
         require(hasSettlementByNonce(nonce));
         return settlements[nonceSettlementIndex[nonce] - 1];
     }
@@ -156,7 +156,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @param wallet The address for which to return settlement
     /// @param index The wallet's settlement index
     /// @return settlement for the provided wallet and index
-    function settlementByWalletAndIndex(address wallet, uint256 index) public view returns (NahmiiTypesLib.Settlement) {
+    function settlementByWalletAndIndex(address wallet, uint256 index) public view returns (SettlementTypesLib.Settlement) {
         require(walletSettlementIndices[wallet].length > index);
         return settlements[walletSettlementIndices[wallet][index] - 1];
     }
@@ -165,7 +165,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @param wallet The address for which to return settlement
     /// @param nonce The wallet's nonce
     /// @return settlement for the provided wallet and index
-    function settlementByWalletAndNonce(address wallet, uint256 nonce) public view returns (NahmiiTypesLib.Settlement) {
+    function settlementByWalletAndNonce(address wallet, uint256 nonce) public view returns (SettlementTypesLib.Settlement) {
         require(0 < walletNonceSettlementIndex[wallet][nonce]);
         return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
     }
@@ -254,7 +254,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
                 || (trade.nonce < maxDriipNonce));
 
             // Get settlement, or create one if no such settlement exists for the trade nonce
-            NahmiiTypesLib.Settlement storage settlement = hasSettlementByNonce(trade.nonce) ?
+            SettlementTypesLib.Settlement storage settlement = hasSettlementByNonce(trade.nonce) ?
             getSettlement(
                 trade.nonce, NahmiiTypesLib.DriipType.Trade
             ) :
@@ -363,7 +363,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
                 || (payment.nonce < maxDriipNonce));
 
             // Get settlement, or create one if no such settlement exists for the trade nonce
-            NahmiiTypesLib.Settlement storage settlement = hasSettlementByNonce(payment.nonce) ?
+            SettlementTypesLib.Settlement storage settlement = hasSettlementByNonce(payment.nonce) ?
             getSettlement(payment.nonce, NahmiiTypesLib.DriipType.Payment) :
             createSettlement(payment.nonce, NahmiiTypesLib.DriipType.Payment,
                 payment.sender.nonce, payment.sender.wallet, payment.recipient.nonce, payment.recipient.wallet);
@@ -453,10 +453,10 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     function getSettlement(uint256 nonce, NahmiiTypesLib.DriipType driipType)
     private
     view
-    returns (NahmiiTypesLib.Settlement storage)
+    returns (SettlementTypesLib.Settlement storage)
     {
         uint256 index = nonceSettlementIndex[nonce];
-        NahmiiTypesLib.Settlement storage settlement = settlements[index - 1];
+        SettlementTypesLib.Settlement storage settlement = settlements[index - 1];
         require(driipType == settlement.driipType);
         return settlement;
     }
@@ -464,13 +464,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     function createSettlement(uint256 nonce, NahmiiTypesLib.DriipType driipType,
         uint256 originNonce, address originWallet, uint256 targetNonce, address targetWallet)
     private
-    returns (NahmiiTypesLib.Settlement storage)
+    returns (SettlementTypesLib.Settlement storage)
     {
-        NahmiiTypesLib.Settlement memory settlement;
+        SettlementTypesLib.Settlement memory settlement;
         settlement.nonce = nonce;
         settlement.driipType = driipType;
-        settlement.origin = NahmiiTypesLib.SettlementParty(originNonce, originWallet, false);
-        settlement.target = NahmiiTypesLib.SettlementParty(targetNonce, targetWallet, false);
+        settlement.origin = SettlementTypesLib.SettlementParty(originNonce, originWallet, false);
+        settlement.target = SettlementTypesLib.SettlementParty(targetNonce, targetWallet, false);
 
         settlements.push(settlement);
 

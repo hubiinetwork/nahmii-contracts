@@ -53,4 +53,17 @@ library SettlementTypesLib {
         // Address of wallet that successfully challenged
         address challenger;
     }
+
+    struct SettlementParty {
+        uint256 nonce;
+        address wallet;
+        bool done;
+    }
+
+    struct Settlement {
+        uint256 nonce;
+        NahmiiTypesLib.DriipType driipType;
+        SettlementParty origin;
+        SettlementParty target;
+    }
 }
