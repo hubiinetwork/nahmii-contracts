@@ -1,12 +1,12 @@
 const chai = require('chai');
-const sinonChai = require("sinon-chai");
-const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require('sinon-chai');
+const chaiAsPromised = require('chai-as-promised');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
-const MockedConfiguration = artifacts.require("MockedConfiguration");
-const MockedValidator = artifacts.require("MockedValidator");
-const MockedClientFund = artifacts.require("MockedClientFund");
+const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedValidator = artifacts.require('MockedValidator');
+const MockedClientFund = artifacts.require('MockedClientFund');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -453,16 +453,16 @@ module.exports = (glob) => {
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
                         trade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersFraudChallenge.seizedWalletsCount(),
                         ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(1).should.be.true;
+                    fraudulentPaymentHashesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
@@ -481,16 +481,16 @@ module.exports = (glob) => {
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
                         trade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentsCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersFraudChallenge.seizedWalletsCount(),
                         ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(1).should.be.true;
+                    fraudulentPaymentHashesCount.eq(1).should.be.true;
                     seizedWalletsCount.eq(1).should.be.true;
                     seizedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));

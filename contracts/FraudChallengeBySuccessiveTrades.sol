@@ -80,7 +80,7 @@ contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challen
         );
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentTrade(lastTrade);
+        fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
 
         clientFund.seizeAllBalances(wallet, msg.sender);
         fraudChallenge.addSeizedWallet(wallet);

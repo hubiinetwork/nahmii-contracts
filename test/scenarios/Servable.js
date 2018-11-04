@@ -1,5 +1,5 @@
 const chai = require('chai');
-const chaiAsPromised = require("chai-as-promised");
+const chaiAsPromised = require('chai-as-promised');
 const {Wallet, utils} = require('ethers');
 const address0 = require('../mocks').address0;
 const setTimeoutPromise = require('util').promisify(setTimeout);

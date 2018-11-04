@@ -78,7 +78,7 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, C
         );
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentTrade(trade);
+        fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
         clientFund.seizeAllBalances(wallet, msg.sender);
         fraudChallenge.addSeizedWallet(wallet);

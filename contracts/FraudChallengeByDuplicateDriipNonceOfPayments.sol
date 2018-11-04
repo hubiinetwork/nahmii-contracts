@@ -57,8 +57,8 @@ contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChalleng
         require(payment1.nonce == payment2.nonce);
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentPayment(payment1);
-        fraudChallenge.addFraudulentPayment(payment2);
+        fraudChallenge.addFraudulentPaymentHash(payment1.seals.operator.hash);
+        fraudChallenge.addFraudulentPaymentHash(payment2.seals.operator.hash);
 
         uint256 stakeFraction = configuration.duplicateDriipNonceStake();
         securityBond.stage(msg.sender, stakeFraction);

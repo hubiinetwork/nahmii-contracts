@@ -346,15 +346,15 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent order and seize buyer\'s funds', async () => {
                     await ethersFraudChallengeByOrder.challenge(order, overrideOptions);
-                    const [operationalModeExit, fraudulentOrdersCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentOrderHashesCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentOrdersCount(),
+                        ethersFraudChallenge.fraudulentOrderHashesCount(),
                         ethersSecurityBond.stagesCount(),
                         ethersSecurityBond.stages(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentOrdersCount.eq(1).should.be.true;
+                    fraudulentOrderHashesCount.eq(1).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
                     stage.fraction._bn.should.eq.BN(1e17.toString())

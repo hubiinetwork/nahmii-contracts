@@ -431,7 +431,7 @@ module.exports = (glob) => {
                 it('should successfully challenge', async () => {
                     await ethersDriipSettlementChallenge.challengeByOrder(order, {gasLimit: 1e6});
 
-                    (await ethersDriipSettlementChallenge._challengeCandidateOrdersCount())
+                    (await ethersDriipSettlementChallenge._challengeCandidateOrderHashesCount())
                         ._bn.should.eq.BN(1);
                     (await ethersDriipSettlementChallenge._proposalStatus())
                         .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
@@ -474,7 +474,7 @@ module.exports = (glob) => {
                 });
 
                 await web3DriipSettlementChallenge.setProposalCandidateType(order.wallet, mocks.candidateTypes.indexOf('Order'));
-                await ethersDriipSettlementChallenge._setChallengeCandidateOrder(order, {gasLimit: 1e6});
+                await ethersDriipSettlementChallenge._setChallengeCandidateOrderHash(order.seals.operator.hash, {gasLimit: 1e6});
             });
 
             describe('if validator contract is not initialized', () => {
@@ -644,7 +644,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     candidateOrder = await mocks.mockOrder(glob.owner);
-                    await ethersDriipSettlementChallenge._setChallengeCandidateOrder(candidateOrder, {gasLimit: 1e6});
+                    await ethersDriipSettlementChallenge._setChallengeCandidateOrderHash(candidateOrder.seals.operator.hash, {gasLimit: 1e6});
                 });
 
                 it('should revert', async () => {
@@ -874,7 +874,7 @@ module.exports = (glob) => {
                 it('should successfully challenge', async () => {
                     await ethersDriipSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade, {gasLimit: 1e6});
 
-                    (await ethersDriipSettlementChallenge._challengeCandidateTradesCount())
+                    (await ethersDriipSettlementChallenge._challengeCandidateTradeHashesCount())
                         ._bn.should.eq.BN(1);
                     (await ethersDriipSettlementChallenge._proposalStatus())
                         .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
@@ -1028,7 +1028,7 @@ module.exports = (glob) => {
                 it('should successfully challenge', async () => {
                     await ethersDriipSettlementChallenge.challengeByPayment(payment, {gasLimit: 4e6});
 
-                    (await ethersDriipSettlementChallenge._challengeCandidatePaymentsCount())
+                    (await ethersDriipSettlementChallenge._challengeCandidatePaymentHashesCount())
                         ._bn.should.eq.BN(1);
                     (await ethersDriipSettlementChallenge._proposalStatus())
                         .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));

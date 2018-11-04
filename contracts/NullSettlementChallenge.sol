@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Challenge} from "./Challenge.sol";
-import {DriipStorable} from "./DriipStorable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -24,7 +23,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 @title NullSettlementChallenge
 @notice Where null settlements are started and challenged
 */
-contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFundable {
+contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -35,14 +34,13 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
 
     uint256 public nonce;
 
+    address[] public challengedWallets;
+
     mapping(address => SettlementTypesLib.Proposal) public walletProposalMap;
 
-    mapping(address => NahmiiTypesLib.Trade[]) public walletChallengedTradesMap;
-    mapping(address => NahmiiTypesLib.Payment[]) public walletChallengedPaymentsMap;
-
-    NahmiiTypesLib.Order[] public challengeCandidateOrders;
-    NahmiiTypesLib.Trade[] public challengeCandidateTrades;
-    NahmiiTypesLib.Payment[] public challengeCandidatePayments;
+    bytes32[] public challengeCandidateOrderHashes;
+    bytes32[] public challengeCandidateTradeHashes;
+    bytes32[] public challengeCandidatePaymentHashes;
 
     //
     // Events
@@ -51,8 +49,8 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
         NullSettlementDispute newNullSettlementDispute);
     event StartChallengeEvent(address wallet, int256 amount, address stageCurrencyCt,
         uint stageCurrencyId);
-    event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount, address stageCurrencyCt,
-        uint stageCurrencyId);
+    event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
+        address stageCurrencyCt, uint stageCurrencyId);
 
     //
     // Constructor
@@ -73,6 +71,16 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
         NullSettlementDispute oldNullSettlementDispute = nullSettlementDispute;
         nullSettlementDispute = newNullSettlementDispute;
         emit ChangeNullSettlementDisputeEvent(oldNullSettlementDispute, nullSettlementDispute);
+    }
+
+    /// @notice Get the number of challenged wallets
+    /// @return The number of challenged wallets
+    function challengedWalletsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return challengedWallets.length;
     }
 
     /// @notice Get the number of current and past settlement challenges for given wallet
@@ -328,64 +336,64 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
         nullSettlementDispute.challengeByPayment(payment, msg.sender);
     }
 
-    /// @notice Get the count of challenge candidate orders
-    /// @return The count of challenge candidate orders
-    function challengeCandidateOrdersCount()
+    /// @notice Get the count of challenge candidate order hashes
+    /// @return The count of challenge candidate order hashes
+    function challengeCandidateOrderHashesCount()
     public
     view
     returns (uint256)
     {
-        return challengeCandidateOrders.length;
+        return challengeCandidateOrderHashes.length;
     }
 
-    /// @notice Push to store the given challenge candidate order
+    /// @notice Push to store the given challenge candidate order hash
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param order The challenge candidate order to push
-    function pushChallengeCandidateOrder(NahmiiTypesLib.Order order)
+    /// @param hash The challenge candidate order hash to push
+    function addChallengeCandidateOrderHash(bytes32 hash)
     public
     onlyNullSettlementDispute
     {
-        challengeCandidateOrders.push(order);
+        challengeCandidateOrderHashes.push(hash);
     }
 
-    /// @notice Get the count of challenge candidate trades
-    /// @return The count of challenge candidate trades
-    function challengeCandidateTradesCount()
+    /// @notice Get the count of challenge candidate trade hashes
+    /// @return The count of challenge candidate trade hashes
+    function challengeCandidateTradeHashesCount()
     public
     view
     returns (uint256)
     {
-        return challengeCandidateTrades.length;
+        return challengeCandidateTradeHashes.length;
     }
 
-    /// @notice Push to store the given challenge candidate trade
+    /// @notice Push to store the given challenge candidate trade hash
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param trade The challenge candidate trade to push
-    function pushChallengeCandidateTrade(NahmiiTypesLib.Trade trade)
+    /// @param hash The challenge candidate trade hash to push
+    function addChallengeCandidateTradeHash(bytes32 hash)
     public
     onlyNullSettlementDispute
     {
-        pushMemoryTradeToStorageArray(trade, challengeCandidateTrades);
+        challengeCandidateTradeHashes.push(hash);
     }
 
-    /// @notice Get the count of challenge candidate payments
-    /// @return The count of challenge candidate payments
-    function challengeCandidatePaymentsCount()
+    /// @notice Get the count of challenge candidate payment hashes
+    /// @return The count of challenge candidate payment hashes
+    function challengeCandidatePaymentHashesCount()
     public
     view
     returns (uint256)
     {
-        return challengeCandidatePayments.length;
+        return challengeCandidatePaymentHashes.length;
     }
 
-    /// @notice Push to store the given challenge candidate payment
+    /// @notice Push to store the given challenge candidate payment hash
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param payment The challenge candidate payment to push
-    function pushChallengeCandidatePayment(NahmiiTypesLib.Payment payment)
+    /// @param hash The challenge candidate payment hash to push
+    function addChallengeCandidatePaymentHash(bytes32 hash)
     public
     onlyNullSettlementDispute
     {
-        pushMemoryPaymentToStorageArray(payment, challengeCandidatePayments);
+        challengeCandidatePaymentHashes.push(hash);
     }
 
     function startChallengePrivate(address wallet, int256 amount, address currencyCt, uint256 currencyId)
@@ -404,6 +412,9 @@ contract NullSettlementChallenge is Ownable, Challenge, DriipStorable, ClientFun
             wallet, currencyCt, currencyId, activeBalanceLogEntriesCount.sub(1)
         );
         require(activeBalanceAmount >= amount);
+
+        if (0 == walletProposalMap[wallet].nonce)
+            challengedWallets.push(wallet);
 
         walletProposalMap[wallet].nonce = ++nonce;
         walletProposalMap[wallet].blockNumber = activeBalanceBlockNumber;

@@ -52,8 +52,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => Wallet) private walletMap;
 
-    mapping(address => uint256) private registeredServicesMap;
-    mapping(address => mapping(address => bool)) private disabledServicesMap;
+    mapping(address => uint256) public registeredServicesMap;
+    mapping(address => mapping(address => bool)) public disabledServicesMap;
 
     //
     // Events
@@ -102,10 +102,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
         // Add active balance log entry
-        walletMap[wallet].active.add(
-            walletMap[wallet].deposited.get(address(0), 0)
-            .add(walletMap[wallet].settled.get(address(0), 0)),
-            address(0), 0);
+        walletMap[wallet].active.add(activeBalance(wallet, address(0), 0), address(0), 0);
 
         // Add currency to in-use list
         walletMap[wallet].inUseCurrencies.addItem(address(0), 0);
@@ -147,10 +144,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         // Add active balance log entry
-        walletMap[wallet].active.add(
-            walletMap[wallet].deposited.get(currencyCt, currencyId)
-            .add(walletMap[wallet].settled.get(currencyCt, currencyId)),
-            currencyCt, currencyId);
+        walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
 
         // Add currency to in-use list
         walletMap[wallet].inUseCurrencies.addItem(currencyCt, currencyId);
@@ -213,7 +207,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     function depositedBalance(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    notNullAddress(wallet)
     returns (int256)
     {
         return walletMap[wallet].deposited.get(currencyCt, currencyId);
@@ -227,7 +220,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     function settledBalance(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    notNullAddress(wallet)
     returns (int256)
     {
         return walletMap[wallet].settled.get(currencyCt, currencyId);
@@ -241,7 +233,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     function stagedBalance(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    notNullAddress(wallet)
     returns (int256)
     {
         return walletMap[wallet].staged.get(currencyCt, currencyId);
@@ -255,12 +246,10 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     function activeBalance(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    notNullAddress(wallet)
     returns (int256)
     {
-        return walletMap[wallet].deposited.get(currencyCt, currencyId).add(
-            walletMap[wallet].staged.get(currencyCt, currencyId)
-        );
+        return walletMap[wallet].deposited.get(currencyCt, currencyId)
+        .add(walletMap[wallet].staged.get(currencyCt, currencyId));
     }
 
     /// @notice Get active balance log entry of the given wallet and currency at the given index
@@ -272,7 +261,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
     public
     view
-    notNullAddress(wallet)
     returns (int256 amount, uint256 blockNumber)
     {
         return walletMap[wallet].active.get(currencyCt, currencyId, index);
@@ -286,7 +274,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    notNullAddress(wallet)
     returns (uint256)
     {
         return walletMap[wallet].active.count(currencyCt, currencyId);
@@ -324,31 +311,14 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         require(isAuthorizedRegisteredService(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
-        // Clamp amount to stage
-        amount = amount.clampMax(walletMap[wallet].deposited.get(currencyCt, currencyId).add(walletMap[wallet].settled.get(currencyCt, currencyId)));
-        if (amount <= 0)
-            return;
-
-        // Subtract from settled, possibly also from deposited and add to staged
-        walletMap[wallet].deposited.sub(
-            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
-            0 :
-            amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)),
-            currencyCt, currencyId
-        );
-        walletMap[wallet].settled.sub_allow_neg(
-            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
-            amount :
-            walletMap[wallet].settled.get(currencyCt, currencyId),
-            currencyCt, currencyId
-        );
-        walletMap[wallet].staged.add(amount, currencyCt, currencyId);
+        // Subtract stage amount from settled, possibly also from deposited
+        stageSubtract(wallet, amount, currencyCt, currencyId);
 
         // Add active balance log entry
-        walletMap[wallet].active.add(
-            walletMap[wallet].deposited.get(currencyCt, currencyId)
-            .add(walletMap[wallet].settled.get(currencyCt, currencyId)),
-            currencyCt, currencyId);
+        walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+
+        // Add to staged
+        walletMap[wallet].staged.add(amount, currencyCt, currencyId);
 
         // Emit event
         emit StageEvent(wallet, amount, currencyCt, currencyId);
@@ -373,10 +343,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[msg.sender].staged.transfer(walletMap[msg.sender].deposited, amount, currencyCt, currencyId);
 
         // Add active balance log entry
-        walletMap[msg.sender].active.add(
-            walletMap[msg.sender].deposited.get(currencyCt, currencyId)
-            .add(walletMap[msg.sender].settled.get(currencyCt, currencyId)),
-            currencyCt, currencyId);
+        walletMap[msg.sender].active.add(activeBalance(msg.sender, currencyCt, currencyId), currencyCt, currencyId);
 
         // Emit event
         emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
@@ -403,7 +370,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
+    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount, 
+        address currencyCt, uint256 currencyId)
     public
     notNullAddress(sourceWallet)
     notNullAddress(beneficiary)
@@ -538,29 +506,40 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         require(amount.isNonZeroPositiveInt256());
         require(isRegisteredBeneficiary(beneficiary));
 
-        //clamp amount to stage
-        amount = amount.clampMax(walletMap[sourceWallet].deposited.get(currencyCt, currencyId)
-            .add(walletMap[sourceWallet].settled.get(currencyCt, currencyId)));
+        // Subtract stage amount from settled, possibly also from deposited
+        stageSubtract(sourceWallet, amount, currencyCt, currencyId);
+
+        // Add active balance log entry
+        walletMap[sourceWallet].active.add(activeBalance(sourceWallet, currencyCt, currencyId), currencyCt, currencyId);
+
+        transferToBeneficiary(destWallet, beneficiary, amount, currencyCt, currencyId);
+    }
+
+    function stageSubtract(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    private
+    {
+        // Clamp amount to stage
+        amount = amount.clampMax(activeBalance(wallet, currencyCt, currencyId));
         if (amount <= 0)
             return;
 
-        walletMap[sourceWallet].deposited.sub(
-            walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ?
+        // Subtract from settled, possibly also from deposited
+        walletMap[wallet].deposited.sub(
+            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
             0 :
-            amount.sub(walletMap[sourceWallet].settled.get(currencyCt, currencyId)),
+            amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)),
             currencyCt, currencyId
         );
-        walletMap[sourceWallet].settled.sub_allow_neg(
-            walletMap[sourceWallet].settled.get(currencyCt, currencyId) > amount ?
+        walletMap[wallet].settled.sub_allow_neg(
+            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
             amount :
-            walletMap[sourceWallet].settled.get(currencyCt, currencyId),
-            currencyCt, currencyId);
-
-        transferToBeneficiaryPrivate(destWallet, beneficiary, amount, currencyCt, currencyId);
+            walletMap[wallet].settled.get(currencyCt, currencyId),
+            currencyCt, currencyId
+        );
     }
 
     // TODO Update this function with 'standard' parameter as in deposits and withdrawals
-    function transferToBeneficiaryPrivate(address destWallet, Beneficiary beneficiary,
+    function transferToBeneficiary(address destWallet, Beneficiary beneficiary,
         int256 amount, address currencyCt, uint256 currencyId)
     private {
         // Transfer funds to the beneficiary

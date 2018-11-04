@@ -57,7 +57,7 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validat
         require(!genuineBuyerAndFee || !genuineSellerAndFee);
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentTrade(trade);
+        fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
         address seizedWallet;
         if (!genuineBuyerAndFee)

@@ -177,18 +177,39 @@ module.exports = (glob) => {
             });
         });
 
-        describe('walletChallengedTradesCount()', () => {
+        describe('challengedWalletsCount()', () => {
             it('should return value initialized ', async () => {
-                const address = Wallet.createRandom().address;
-                (await ethersDriipSettlementChallenge.walletChallengedTradesCount(address))
+                (await ethersDriipSettlementChallenge.challengedWalletsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
-        describe('walletChallengedPaymentsCount()', () => {
+        describe('challengedTradeHashesCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersDriipSettlementChallenge.challengedTradeHashesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('challengedPaymentHashesCount()', () => {
+            it('should return value initialized ', async () => {
+                (await ethersDriipSettlementChallenge.challengedPaymentHashesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('walletChallengedTradeHashesCount()', () => {
             it('should return value initialized ', async () => {
                 const address = Wallet.createRandom().address;
-                (await ethersDriipSettlementChallenge.walletChallengedPaymentsCount(address))
+                (await ethersDriipSettlementChallenge.walletChallengedTradeHashesCount(address))
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('walletChallengedPaymentHashesCount()', () => {
+            it('should return value initialized ', async () => {
+                const address = Wallet.createRandom().address;
+                (await ethersDriipSettlementChallenge.walletChallengedPaymentHashesCount(address))
                     ._bn.should.eq.BN(0);
             });
         });
@@ -307,6 +328,11 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+
+                    (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersDriipSettlementChallenge.challengedTradeHashesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -447,6 +473,11 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+
+                    (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersDriipSettlementChallenge.challengedTradeHashesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -563,6 +594,11 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+
+                    (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersDriipSettlementChallenge.challengedPaymentHashesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -687,6 +723,11 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+
+                    (await ethersDriipSettlementChallenge.challengedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersDriipSettlementChallenge.challengedPaymentHashesCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
 
@@ -1152,13 +1193,13 @@ module.exports = (glob) => {
             });
         });
         
-        describe('challengeCandidateOrdersCount()', () => {
+        describe('challengeCandidateOrderHashesCount()', () => {
             it('should return value initialized ', async () => {
-                (await ethersDriipSettlementChallenge.challengeCandidateOrdersCount())._bn.should.eq.BN(0);
+                (await ethersDriipSettlementChallenge.challengeCandidateOrderHashesCount())._bn.should.eq.BN(0);
             });
         });
 
-        describe('pushChallengeCandidateOrder()', () => {
+        describe('addChallengeCandidateOrderHash()', () => {
             let order;
 
             before(async () => {
@@ -1167,35 +1208,35 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenge.pushChallengeCandidateOrder(order)
+                    web3DriipSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash)
                         .should.be.rejected;
                 });
             });
 
             describe('if called from settlement dispute', () => {
-                let challengeCandidateOrdersCountBefore;
+                let challengeCandidateOrderHashesCountBefore;
 
                 beforeEach(async () => {
                     await web3DriipSettlementChallenge.changeDriipSettlementDispute(glob.owner);
-                    challengeCandidateOrdersCountBefore = await ethersDriipSettlementChallenge.challengeCandidateOrdersCount();
+                    challengeCandidateOrderHashesCountBefore = await ethersDriipSettlementChallenge.challengeCandidateOrderHashesCount();
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersDriipSettlementChallenge.pushChallengeCandidateOrder(order, {gasLimit: 2e6});
+                    await ethersDriipSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash, {gasLimit: 2e6});
 
-                    (await ethersDriipSettlementChallenge.challengeCandidateOrdersCount())
-                        ._bn.should.eq.BN(challengeCandidateOrdersCountBefore.add(1)._bn);
+                    (await ethersDriipSettlementChallenge.challengeCandidateOrderHashesCount())
+                        ._bn.should.eq.BN(challengeCandidateOrderHashesCountBefore.add(1)._bn);
                 });
             });
         });
 
-        describe('challengeCandidateTradesCount()', () => {
+        describe('challengeCandidateTradeHashesCount()', () => {
             it('should return value initialized ', async () => {
-                (await ethersDriipSettlementChallenge.challengeCandidateTradesCount())._bn.should.eq.BN(0);
+                (await ethersDriipSettlementChallenge.challengeCandidateTradeHashesCount())._bn.should.eq.BN(0);
             });
         });
 
-        describe('pushChallengeCandidateTrade()', () => {
+        describe('addChallengeCandidateTradeHash()', () => {
             let trade;
 
             before(async () => {
@@ -1204,35 +1245,35 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenge.pushChallengeCandidateTrade(trade)
+                    web3DriipSettlementChallenge.addChallengeCandidateTradeHash(trade.seal.hash)
                         .should.be.rejected;
                 });
             });
 
             describe('if called from settlement dispute', () => {
-                let challengeCandidateTradesCountBefore;
+                let challengeCandidateTradeHashesCountBefore;
 
                 beforeEach(async () => {
                     await web3DriipSettlementChallenge.changeDriipSettlementDispute(glob.owner);
-                    challengeCandidateTradesCountBefore = await ethersDriipSettlementChallenge.challengeCandidateTradesCount();
+                    challengeCandidateTradeHashesCountBefore = await ethersDriipSettlementChallenge.challengeCandidateTradeHashesCount();
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersDriipSettlementChallenge.pushChallengeCandidateTrade(trade, {gasLimit: 2e6});
+                    await ethersDriipSettlementChallenge.addChallengeCandidateTradeHash(trade.seal.hash, {gasLimit: 2e6});
 
-                    (await ethersDriipSettlementChallenge.challengeCandidateTradesCount())
-                        ._bn.should.eq.BN(challengeCandidateTradesCountBefore.add(1)._bn);
+                    (await ethersDriipSettlementChallenge.challengeCandidateTradeHashesCount())
+                        ._bn.should.eq.BN(challengeCandidateTradeHashesCountBefore.add(1)._bn);
                 });
             });
         });
 
-        describe('challengeCandidatePaymentsCount()', () => {
+        describe('challengeCandidatePaymentHashesCount()', () => {
             it('should return value initialized ', async () => {
-                (await ethersDriipSettlementChallenge.challengeCandidatePaymentsCount())._bn.should.eq.BN(0);
+                (await ethersDriipSettlementChallenge.challengeCandidatePaymentHashesCount())._bn.should.eq.BN(0);
             });
         });
 
-        describe('pushChallengeCandidatePayment()', () => {
+        describe('addChallengeCandidatePaymentHash()', () => {
             let payment;
 
             before(async () => {
@@ -1241,24 +1282,24 @@ module.exports = (glob) => {
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenge.pushChallengeCandidatePayment(payment)
+                    web3DriipSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash)
                         .should.be.rejected;
                 });
             });
 
             describe('if called from settlement dispute', () => {
-                let challengeCandidatePaymentsCountBefore;
+                let challengeCandidatePaymentHashesCountBefore;
 
                 beforeEach(async () => {
                     await web3DriipSettlementChallenge.changeDriipSettlementDispute(glob.owner);
-                    challengeCandidatePaymentsCountBefore = await ethersDriipSettlementChallenge.challengeCandidatePaymentsCount();
+                    challengeCandidatePaymentHashesCountBefore = await ethersDriipSettlementChallenge.challengeCandidatePaymentHashesCount();
                 });
 
                 it('should successfully push the array element', async () => {
-                    await ethersDriipSettlementChallenge.pushChallengeCandidatePayment(payment, {gasLimit: 2e6});
+                    await ethersDriipSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash, {gasLimit: 2e6});
 
-                    (await ethersDriipSettlementChallenge.challengeCandidatePaymentsCount())
-                        ._bn.should.eq.BN(challengeCandidatePaymentsCountBefore.add(1)._bn);
+                    (await ethersDriipSettlementChallenge.challengeCandidatePaymentHashesCount())
+                        ._bn.should.eq.BN(challengeCandidatePaymentHashesCountBefore.add(1)._bn);
                 });
             });
         });

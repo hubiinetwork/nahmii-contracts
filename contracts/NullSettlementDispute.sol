@@ -74,7 +74,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     onlySealedOrder(order)
     {
         // Require that order candidate is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderOperatorHash(order.seals.operator.hash));
+        require(!fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash));
 
         // Require that settlement challenge is ongoing
@@ -99,12 +99,12 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(orderAmount > targetBalanceAmount);
 
         // Store order candidate
-        nullSettlementChallenge.pushChallengeCandidateOrder(order);
+        nullSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(order.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         nullSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypesLib.CandidateType.Order);
-        nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrdersCount().sub(1));
+        nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrderHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
         // Emit event
@@ -134,7 +134,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         bytes32 orderOperatorHash = (trade.buyer.wallet == wallet ?
         trade.buyer.order.hashes.operator :
         trade.seller.order.hashes.operator);
-        require(!fraudChallenge.isFraudulentOrderOperatorHash(orderOperatorHash));
+        require(!fraudChallenge.isFraudulentOrderHash(orderOperatorHash));
         require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderOperatorHash));
 
         // Require that settlement challenge is ongoing
@@ -163,12 +163,12 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(singleTransfer > targetBalanceAmount);
 
         // Store trade candidate
-        nullSettlementChallenge.pushChallengeCandidateTrade(trade);
+        nullSettlementChallenge.addChallengeCandidateTradeHash(trade.seal.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         nullSettlementChallenge.setProposalCandidateType(wallet, SettlementTypesLib.CandidateType.Trade);
-        nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradesCount().sub(1));
+        nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradeHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(wallet, challenger);
 
         // Emit event
@@ -188,7 +188,7 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     onlySealedPayment(payment)
     {
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentOperatorHash(payment.seals.operator.hash));
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
 
         // Require that settlement challenge is ongoing
         require(NahmiiTypesLib.ChallengePhase.Dispute == nullSettlementChallenge.challengePhase(payment.sender.wallet));
@@ -205,12 +205,12 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         require(payment.transfers.single.abs() > targetBalanceAmount);
 
         // Store payment candidate
-        nullSettlementChallenge.pushChallengeCandidatePayment(payment);
+        nullSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash);
 
         // Update settlement proposal
         nullSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         nullSettlementChallenge.setProposalCandidateType(payment.sender.wallet, SettlementTypesLib.CandidateType.Payment);
-        nullSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, nullSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
+        nullSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, nullSettlementChallenge.challengeCandidatePaymentHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
 
         // Emit event

@@ -56,8 +56,8 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
         require(doubleSpentBuyOrder || doubleSpentSellOrder);
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentTrade(trade1);
-        fraudChallenge.addFraudulentTrade(trade2);
+        fraudChallenge.addFraudulentTradeHash(trade1.seal.hash);
+        fraudChallenge.addFraudulentTradeHash(trade2.seal.hash);
 
         uint256 stakeFraction = configuration.doubleSpentOrderStake();
         securityBond.stage(msg.sender, stakeFraction);

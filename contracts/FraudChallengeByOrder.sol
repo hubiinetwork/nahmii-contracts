@@ -56,7 +56,7 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validat
         require(!genuineWalletSignature);
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentOrder(order);
+        fraudChallenge.addFraudulentOrderHash(order.seals.operator.hash);
 
         uint256 stakeFraction = configuration.falseWalletSignatureStake();
         securityBond.stage(msg.sender, stakeFraction);

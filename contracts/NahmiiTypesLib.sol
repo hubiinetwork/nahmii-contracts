@@ -179,17 +179,4 @@ library NahmiiTypesLib {
         uint256 blockNumber;
         uint256 operatorId;
     }
-
-    struct SettlementParty {
-        uint256 nonce;
-        address wallet;
-        bool done;
-    }
-
-    struct Settlement {
-        uint256 nonce;
-        DriipType driipType;
-        SettlementParty origin;
-        SettlementParty target;
-    }
 }

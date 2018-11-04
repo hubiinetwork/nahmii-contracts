@@ -27,16 +27,20 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
+    address[] public cancellingWallets;
+
     mapping(address => mapping(bytes32 => bool)) public walletOrderOperatorHashCancelledMap;
-    mapping(address => NahmiiTypesLib.Order[]) public walletOrderCancelledListMap;
-    mapping(address => mapping(bytes32 => uint256)) public walletOrderOperatorHashIndexMap;
+
+    mapping(address => bytes32[]) public walletCancelledOrderOperatorHashes;
+    mapping(address => mapping(bytes32 => uint256)) public walletCancelledOrderOperatorHashIndexMap;
+
     mapping(address => uint256) public walletOrderCancelledTimeoutMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CancelOrdersEvent(NahmiiTypesLib.Order[] orders, address wallet);
-    event ChallengeEvent(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address wallet);
+    event CancelOrdersEvent(bytes32[] orderOperatorHashes, address wallet);
+    event ChallengeEvent(bytes32 orderOperatorHash, bytes32 tradeHash, address wallet);
 
     //
     // Constructor
@@ -47,13 +51,28 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Get count of wallets that have cancelled orders
+    /// @return The count of cancelling wallets
+    function cancellingWalletsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return cancellingWallets.length;
+    }
+
     /// @notice Get count of cancelled orders for given wallet
     /// @param wallet The wallet for which to return the count of cancelled orders
-    function getCancelledOrdersCount(address wallet) public view returns (uint256) {
+    /// @return The count of cancelled orders
+    function cancelledOrdersCount(address wallet)
+    public
+    view
+    returns (uint256)
+    {
         uint256 count = 0;
-        for (uint256 i = 0; i < walletOrderCancelledListMap[wallet].length; i++) {
-            NahmiiTypesLib.Order storage order = walletOrderCancelledListMap[wallet][i];
-            if (walletOrderOperatorHashCancelledMap[wallet][order.seals.operator.hash])
+        for (uint256 i = 0; i < walletCancelledOrderOperatorHashes[wallet].length; i++) {
+            bytes32 operatorHash = walletCancelledOrderOperatorHashes[wallet][i];
+            if (walletOrderOperatorHashCancelledMap[wallet][operatorHash])
                 count++;
         }
         return count;
@@ -62,26 +81,34 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     /// @notice Get wallets cancelled status of order
     /// @param wallet The ordering wallet
     /// @param orderHash The (operator) hash of the order
-    function isOrderCancelled(address wallet, bytes32 orderHash) public view returns (bool) {
+    /// @return true if order is cancelled, else false
+    function isOrderCancelled(address wallet, bytes32 orderHash)
+    public
+    view
+    returns (bool)
+    {
         return walletOrderOperatorHashCancelledMap[wallet][orderHash];
     }
 
-    /// @notice Get 10 cancelled orders for given wallet starting at given start index
+    /// @notice Get cancelled order hashes for given wallet in the given index range
     /// @param wallet The wallet for which to return the nonces of cancelled orders
-    /// @param startIndex The start index from which to extract order nonces, used for pagination
-    function getCancelledOrders(address wallet, uint256 startIndex) public view returns (NahmiiTypesLib.Order[10]) {
-        NahmiiTypesLib.Order[10] memory returnOrders;
-        uint256 i = 0;
-        uint256 j = startIndex;
-        while (i < 10 && j < walletOrderCancelledListMap[wallet].length) {
-            NahmiiTypesLib.Order storage order = walletOrderCancelledListMap[wallet][j];
-            if (walletOrderOperatorHashCancelledMap[wallet][order.seals.operator.hash]) {
-                returnOrders[i] = order;
-                i++;
-            }
-            j++;
-        }
-        return returnOrders;
+    /// @param low The lower inclusive index from which to extract orders
+    /// @param up The upper inclusive index from which to extract orders
+    /// @return The array of cancelled operator hashes
+    function cancelledOrderHashesByIndices(address wallet, uint256 low, uint256 up)
+    public
+    view
+    returns (bytes32[])
+    {
+        require(0 < walletCancelledOrderOperatorHashes[wallet].length);
+        require(low <= up);
+
+        low = low < 0 ? 0 : low;
+        up = up > walletCancelledOrderOperatorHashes[wallet].length - 1 ? walletCancelledOrderOperatorHashes[wallet].length - 1 : up;
+        bytes32[] memory hashes = new bytes32[](up - low + 1);
+        for (uint256 i = low; i <= up; i++)
+            hashes[i - low] = walletCancelledOrderOperatorHashes[wallet][i];
+        return hashes;
     }
 
     /// @notice Cancel orders of msg.sender
@@ -89,23 +116,24 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     function cancelOrders(NahmiiTypesLib.Order[] orders)
     public
     onlyOperationalModeNormal
+    validatorInitialized
+    configurationInitialized
     {
-        require(configuration != address(0));
-
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i].wallet);
             require(validator.isGenuineOrderSeals(orders[i]));
-        }
 
-        for (uint256 j = 0; j < orders.length; j++) {
-            walletOrderOperatorHashCancelledMap[msg.sender][orders[j].seals.operator.hash] = true;
-            walletOrderCancelledListMap[msg.sender].push(orders[j]);
-            walletOrderOperatorHashIndexMap[msg.sender][orders[j].seals.operator.hash] = walletOrderCancelledListMap[msg.sender].length - 1;
+            if (0 == walletCancelledOrderOperatorHashes[msg.sender].length)
+                cancellingWallets.push(msg.sender);
+
+            walletOrderOperatorHashCancelledMap[msg.sender][orders[i].seals.operator.hash] = true;
+            walletCancelledOrderOperatorHashes[msg.sender].push(orders[i].seals.operator.hash);
+            walletCancelledOrderOperatorHashIndexMap[msg.sender][orders[i].seals.operator.hash] = walletCancelledOrderOperatorHashes[msg.sender].length - 1;
         }
 
         walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
 
-        emit CancelOrdersEvent(orders, msg.sender);
+        emit CancelOrdersEvent(orderOperatorHashes(orders), msg.sender);
     }
 
     /// @notice Challenge cancelled order
@@ -118,30 +146,41 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     {
         require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
 
-        bytes32 orderOperatorHash = (
+        bytes32 tradeOrderOperatorHash = (
         wallet == trade.buyer.wallet ?
         trade.buyer.order.hashes.operator :
         trade.seller.order.hashes.operator
         );
 
-        require(walletOrderOperatorHashCancelledMap[wallet][orderOperatorHash]);
+        require(walletOrderOperatorHashCancelledMap[wallet][tradeOrderOperatorHash]);
 
-        walletOrderOperatorHashCancelledMap[wallet][orderOperatorHash] = false;
+        walletOrderOperatorHashCancelledMap[wallet][tradeOrderOperatorHash] = false;
 
-        uint256 orderIndex = walletOrderOperatorHashIndexMap[wallet][orderOperatorHash];
-        NahmiiTypesLib.Order memory order = walletOrderCancelledListMap[wallet][orderIndex];
-
-        emit ChallengeEvent(order, trade, msg.sender);
+        emit ChallengeEvent(tradeOrderOperatorHash, trade.seal.hash, msg.sender);
     }
 
     /// @notice Get current phase of a wallets cancelled order challenge
     /// @param wallet The address of wallet for which the cancelled order challenge phase is returned
-    function challengePhase(address wallet) public view returns (NahmiiTypesLib.ChallengePhase) {
-        if (0 == walletOrderCancelledListMap[wallet].length)
-            return NahmiiTypesLib.ChallengePhase.Closed;
-        if (block.timestamp < walletOrderCancelledTimeoutMap[wallet])
+    /// @return The challenge phase
+    function challengePhase(address wallet)
+    public
+    view
+    returns (NahmiiTypesLib.ChallengePhase)
+    {
+        if (0 < walletCancelledOrderOperatorHashes[wallet].length && block.timestamp < walletOrderCancelledTimeoutMap[wallet])
             return NahmiiTypesLib.ChallengePhase.Dispute;
         else
             return NahmiiTypesLib.ChallengePhase.Closed;
+    }
+
+    function orderOperatorHashes(NahmiiTypesLib.Order[] orders)
+    private
+    pure
+    returns (bytes32[])
+    {
+        bytes32[] memory operatorHashes = new bytes32[](orders.length);
+        for (uint256 i = 0; i < orders.length; i++)
+            operatorHashes[i] = orders[i].seals.operator.hash;
+        return operatorHashes;
     }
 }

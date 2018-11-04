@@ -408,15 +408,15 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByDuplicateDriipNonceOfTrades.challenge(
                         trade1, trade2, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradesCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, stagesCount, stage, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradesCount(),
+                        ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersSecurityBond.stagesCount(),
                         ethersSecurityBond.stages(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentTradesCount.eq(2).should.be.true;
+                    fraudulentTradeHashesCount.eq(2).should.be.true;
                     stagesCount.eq(1).should.be.true;
                     stage.wallet.should.equal(utils.getAddress(glob.owner));
                     stage.fraction._bn.should.eq.BN(1e17.toString());

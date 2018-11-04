@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Challenge} from "./Challenge.sol";
-import {DriipStorable} from "./DriipStorable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -24,7 +23,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 @title DriipSettlementChallenge
 @notice Where driip settlements are started and challenged
 */
-contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validatable {
+contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -33,27 +32,31 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementDispute public driipSettlementDispute;
 
+    address[] public challengedWallets;
+
     mapping(address => SettlementTypesLib.Proposal) public walletProposalMap;
 
-    mapping(address => NahmiiTypesLib.Trade[]) public walletChallengedTradesMap;
-    mapping(address => NahmiiTypesLib.Payment[]) public walletChallengedPaymentsMap;
+    bytes32[] public challengedTradeHashes;
+    mapping(address => bytes32[]) public walletChallengedTradeHashesMap;
 
-    NahmiiTypesLib.Order[] public challengeCandidateOrders;
-    NahmiiTypesLib.Trade[] public challengeCandidateTrades;
-    NahmiiTypesLib.Payment[] public challengeCandidatePayments;
+    bytes32[] public challengedPaymentHashes;
+    mapping(address => bytes32[]) public walletChallengedPaymentHashesMap;
+
+    bytes32[] public challengeCandidateOrderHashes;
+    bytes32[] public challengeCandidateTradeHashes;
+    bytes32[] public challengeCandidatePaymentHashes;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute,
         DriipSettlementDispute newDriipSettlementDispute);
-    event StartChallengeFromTradeEvent(address wallet, NahmiiTypesLib.Trade trade, int256 intendedStageAmount,
-        int256 conjugateStageAmount);
-    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Trade trade,
+    event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
-    event StartChallengeFromPaymentEvent(address wallet, NahmiiTypesLib.Payment payment,
-        int256 stageAmount);
-    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Payment payment,
+    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
+        int256 intendedStageAmount, int256 conjugateStageAmount);
+    event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
+    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
         int256 stageAmount);
 
     //
@@ -77,26 +80,56 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         emit ChangeDriipSettlementDisputeEvent(oldDriipSettlementDispute, driipSettlementDispute);
     }
 
-    /// @notice Get the number of current and past settlement challenges from trade for given wallet
-    /// @param wallet The wallet for which to return count
-    /// @return The count of settlement challenges from trade
-    function walletChallengedTradesCount(address wallet)
+    /// @notice Get the number of challenged wallets
+    /// @return The number of challenged wallets
+    function challengedWalletsCount()
     public
     view
     returns (uint256)
     {
-        return walletChallengedTradesMap[wallet].length;
+        return challengedWallets.length;
+    }
+
+    /// @notice Get the number of challenged trade hashes
+    /// @return The count of challenged trade hashes
+    function challengedTradeHashesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return challengedTradeHashes.length;
+    }
+
+    /// @notice Get the number of challenged payment hashes
+    /// @return The count of challenged payment hashes
+    function challengedPaymentHashesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return challengedPaymentHashes.length;
+    }
+
+    /// @notice Get the number of current and past settlement challenges from trade for given wallet
+    /// @param wallet The wallet for which to return count
+    /// @return The count of settlement challenges from trade
+    function walletChallengedTradeHashesCount(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletChallengedTradeHashesMap[wallet].length;
     }
 
     /// @notice Get the number of current and past settlement challenges from payment for given wallet
     /// @param wallet The wallet for which to return count
     /// @return The count of settlement challenges from payment
-    function walletChallengedPaymentsCount(address wallet)
+    function walletChallengedPaymentHashesCount(address wallet)
     public
     view
     returns (uint256)
     {
-        return walletChallengedPaymentsMap[wallet].length;
+        return walletChallengedPaymentHashesMap[wallet].length;
     }
 
     /// @notice Start settlement challenge on trade
@@ -111,7 +144,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         startChallengeFromTradePrivate(msg.sender, trade, intendedStageAmount, conjugateStageAmount);
 
         // Emit event
-        emit StartChallengeFromTradeEvent(msg.sender, trade, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
 
     /// @notice Start settlement challenge on trade by proxy
@@ -128,7 +161,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         startChallengeFromTradePrivate(wallet, trade, intendedStageAmount, conjugateStageAmount);
 
         // Emit event
-        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
 
     /// @notice Start settlement challenge on payment
@@ -141,7 +174,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         startChallengeFromPaymentPrivate(msg.sender, payment, stageAmount);
 
         // Emit event
-        emit StartChallengeFromPaymentEvent(msg.sender, payment, stageAmount);
+        emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Start settlement challenge on payment
@@ -156,7 +189,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         startChallengeFromPaymentPrivate(wallet, payment, stageAmount);
 
         // Emit event
-        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment, stageAmount);
+        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Get settlement challenge phase of given wallet
@@ -415,79 +448,68 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         driipSettlementDispute.challengeByPayment(payment, msg.sender);
     }
 
-    /// @notice Push to store the given challenge candidate order
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param order The challenge candidate order to push
-    function pushChallengeCandidateOrder(NahmiiTypesLib.Order order)
-    public
-    onlyDriipSettlementDispute
-    {
-        challengeCandidateOrders.push(order);
-    }
-
-    /// @notice Get the count of challenge candidate orders
-    /// @return The count of challenge candidate orders
-    function challengeCandidateOrdersCount()
+    /// @notice Get the count of challenge candidate order hashes
+    /// @return The count of challenge candidate order hashes
+    function challengeCandidateOrderHashesCount()
     public
     view
     returns (uint256)
     {
-        return challengeCandidateOrders.length;
+        return challengeCandidateOrderHashes.length;
     }
 
-    /// @notice Get the challenge candidate order at the given index
-    /// @param index The index of challenge order candidate
-    /// @return The challenge candidate order
-    function challengeCandidateOrder(uint256 index)
+    /// @notice Add to store the given challenge candidate order hash
+    /// @dev This function can only be called by this contract's dispute instance
+    /// @param hash The challenge candidate order hash to push
+    function addChallengeCandidateOrderHash(bytes32 hash)
     public
-    view
-    returns (NahmiiTypesLib.Order)
+    onlyDriipSettlementDispute
     {
-        return challengeCandidateOrders[index];
+        challengeCandidateOrderHashes.push(hash);
     }
 
-    /// @notice Get the count of challenge candidate trades
-    /// @return The count of challenge candidate trades
-    function challengeCandidateTradesCount()
+    /// @notice Get the count of challenge candidate trade hashes
+    /// @return The count of challenge candidate trade hashes
+    function challengeCandidateTradeHashesCount()
     public
     view
     returns (uint256)
     {
-        return challengeCandidateTrades.length;
+        return challengeCandidateTradeHashes.length;
     }
 
-    /// @notice Push to store the given challenge candidate trade
+    /// @notice Add to store the given challenge candidate trade hash
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param trade The challenge candidate trade to push
-    function pushChallengeCandidateTrade(NahmiiTypesLib.Trade trade)
+    /// @param hash The challenge candidate trade hash to push
+    function addChallengeCandidateTradeHash(bytes32 hash)
     public
     onlyDriipSettlementDispute
     {
-        pushMemoryTradeToStorageArray(trade, challengeCandidateTrades);
+        challengeCandidateTradeHashes.push(hash);
     }
 
-    /// @notice Get the count of challenge candidate payments
-    /// @return The count of challenge candidate payments
-    function challengeCandidatePaymentsCount()
+    /// @notice Get the count of challenge candidate payment hashes
+    /// @return The count of challenge candidate payment hashes
+    function challengeCandidatePaymentHashesCount()
     public
     view
     returns (uint256)
     {
-        return challengeCandidatePayments.length;
+        return challengeCandidatePaymentHashes.length;
     }
 
-    /// @notice Push to store the given challenge candidate payment
+    /// @notice Add to store the given challenge candidate payment hash
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param payment The challenge candidate payment to push
-    function pushChallengeCandidatePayment(NahmiiTypesLib.Payment payment)
+    /// @param hash The challenge candidate payment hash to push
+    function addChallengeCandidatePaymentHash(bytes32 hash)
     public
     onlyDriipSettlementDispute
     {
-        pushMemoryPaymentToStorageArray(payment, challengeCandidatePayments);
+        challengeCandidatePaymentHashes.push(hash);
     }
 
-    function startChallengeFromTradePrivate(address wallet, NahmiiTypesLib.Trade trade, int256 intendedStageAmount,
-        int256 conjugateStageAmount)
+    function startChallengeFromTradePrivate(address wallet, NahmiiTypesLib.Trade trade,
+        int256 intendedStageAmount, int256 conjugateStageAmount)
     private
     validatorInitialized
     configurationInitialized
@@ -509,7 +531,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         require(intendedBalanceAmount >= intendedStageAmount);
         require(conjugateBalanceAmount >= conjugateStageAmount);
 
-        pushMemoryTradeToStorageArray(trade, walletChallengedTradesMap[wallet]);
+        if (0 == walletProposalMap[wallet].nonce)
+            challengedWallets.push(wallet);
+
+        challengedTradeHashes.push(trade.seal.hash);
+        walletChallengedTradeHashesMap[wallet].push(trade.seal.hash);
 
         walletProposalMap[wallet].nonce = trade.nonce;
         walletProposalMap[wallet].blockNumber = trade.blockNumber;
@@ -526,10 +552,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         walletProposalMap[wallet].targetBalanceAmounts.push(conjugateBalanceAmount.sub(conjugateStageAmount));
         //        walletProposalMap[wallet].driipOperatorHash = trade.seal.hash;
         walletProposalMap[wallet].driipType = NahmiiTypesLib.DriipType.Trade;
-        walletProposalMap[wallet].driipIndex = walletChallengedTradesMap[wallet].length.sub(1);
+        walletProposalMap[wallet].driipIndex = walletChallengedTradeHashesMap[wallet].length.sub(1);
     }
 
-    function startChallengeFromPaymentPrivate(address wallet, NahmiiTypesLib.Payment payment, int256 stageAmount)
+    function startChallengeFromPaymentPrivate(address wallet, NahmiiTypesLib.Payment payment,
+        int256 stageAmount)
     private
     validatorInitialized
     configurationInitialized
@@ -548,7 +575,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
 
         require(balanceAmount >= stageAmount);
 
-        pushMemoryPaymentToStorageArray(payment, walletChallengedPaymentsMap[wallet]);
+        if (0 == walletProposalMap[wallet].nonce)
+            challengedWallets.push(wallet);
+
+        challengedPaymentHashes.push(payment.seals.operator.hash);
+        walletChallengedPaymentHashesMap[wallet].push(payment.seals.operator.hash);
 
         walletProposalMap[wallet].nonce = payment.nonce;
         walletProposalMap[wallet].blockNumber = payment.blockNumber;
@@ -562,7 +593,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, DriipStorable, Validata
         walletProposalMap[wallet].targetBalanceAmounts.push(balanceAmount.sub(stageAmount));
         //        walletProposalMap[wallet].driipOperatorHash = payment.seals.operator.hash;
         walletProposalMap[wallet].driipType = NahmiiTypesLib.DriipType.Payment;
-        walletProposalMap[wallet].driipIndex = walletChallengedPaymentsMap[wallet].length.sub(1);
+        walletProposalMap[wallet].driipIndex = walletChallengedPaymentHashesMap[wallet].length.sub(1);
     }
 
     function proposalCurrencyIndex(address wallet, MonetaryTypesLib.Currency currency)

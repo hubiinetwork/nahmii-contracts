@@ -444,6 +444,14 @@ module.exports = (glob) => {
             })
         });
 
+        describe('settlements()', () => {
+            describe('if no matching settlement exists', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlements(0).should.be.rejected;
+                })
+            });
+        });
+
         describe('hasSettlementByNonce()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlement.hasSettlementByNonce(1)).should.equal(false);
@@ -768,12 +776,26 @@ module.exports = (glob) => {
                         totalFeeStage[3].should.equal(trade.buyer.fees.total[0].currency.ct);
                         totalFeeStage[4]._bn.should.eq.BN(trade.buyer.fees.total[0].currency.id._bn);
 
+                        (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
+
+                        const settlement = await ethersDriipSettlement.settlements(0);
+                        settlement.nonce._bn.should.eq.BN(trade.nonce._bn);
+                        settlement.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                        settlement.origin.nonce._bn.should.eq.BN(trade.seller.nonce._bn);
+                        settlement.origin.wallet.should.equal(utils.getAddress(trade.seller.wallet));
+                        settlement.origin.done.should.be.false;
+                        settlement.target.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
+                        settlement.target.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                        settlement.target.done.should.be.true;
+
                         const nBuyerSettlements = await ethersDriipSettlement.settlementsCountByWallet(trade.buyer.wallet);
                         const buyerSettlementByIndex = await ethersDriipSettlement.settlementByWalletAndIndex(trade.buyer.wallet, nBuyerSettlements.sub(1));
                         buyerSettlementByIndex.nonce._bn.should.eq.BN(trade.nonce._bn);
                         buyerSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                        buyerSettlementByIndex.origin.nonce._bn.should.eq.BN(trade.seller.nonce._bn);
                         buyerSettlementByIndex.origin.wallet.should.equal(utils.getAddress(trade.seller.wallet));
                         buyerSettlementByIndex.origin.done.should.be.false;
+                        buyerSettlementByIndex.target.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                         buyerSettlementByIndex.target.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                         buyerSettlementByIndex.target.done.should.be.true;
 
@@ -1102,12 +1124,26 @@ module.exports = (glob) => {
                         totalFeeStage[3].should.equal(trade.buyer.fees.total[0].currency.ct);
                         totalFeeStage[4]._bn.should.eq.BN(trade.buyer.fees.total[0].currency.id._bn);
 
+                        (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
+
+                        const settlement = await ethersDriipSettlement.settlements(0);
+                        settlement.nonce._bn.should.eq.BN(trade.nonce._bn);
+                        settlement.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                        settlement.origin.nonce._bn.should.eq.BN(trade.seller.nonce._bn);
+                        settlement.origin.wallet.should.equal(utils.getAddress(trade.seller.wallet));
+                        settlement.origin.done.should.be.false;
+                        settlement.target.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
+                        settlement.target.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                        settlement.target.done.should.be.true;
+
                         const nBuyerSettlements = await ethersDriipSettlement.settlementsCountByWallet(trade.buyer.wallet);
                         const buyerSettlementByIndex = await ethersDriipSettlement.settlementByWalletAndIndex(trade.buyer.wallet, nBuyerSettlements.sub(1));
                         buyerSettlementByIndex.nonce._bn.should.eq.BN(trade.nonce._bn);
                         buyerSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                        buyerSettlementByIndex.origin.nonce._bn.should.eq.BN(trade.seller.nonce._bn);
                         buyerSettlementByIndex.origin.wallet.should.equal(utils.getAddress(trade.seller.wallet));
                         buyerSettlementByIndex.origin.done.should.be.false;
+                        buyerSettlementByIndex.target.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                         buyerSettlementByIndex.target.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                         buyerSettlementByIndex.target.done.should.be.true;
 
@@ -1396,19 +1432,33 @@ module.exports = (glob) => {
                         holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
 
                         const totalFeeStage = await ethersClientFund._stages(1);
-                        totalFeeStage[0].should.equal((utils.getAddress(payment.sender.wallet)));
+                        totalFeeStage[0].should.equal(utils.getAddress(payment.sender.wallet));
                         totalFeeStage[1].should.equal(utils.getAddress(ethersRevenueFund.address));
                         totalFeeStage[2]._bn.should.eq.BN(payment.sender.fees.total[0].amount._bn);
                         totalFeeStage[3].should.equal(payment.sender.fees.total[0].currency.ct);
                         totalFeeStage[4]._bn.should.eq.BN(payment.sender.fees.total[0].currency.id._bn);
 
+                        (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
+
+                        const settlement = await ethersDriipSettlement.settlements(0);
+                        settlement.nonce._bn.should.eq.BN(payment.nonce._bn);
+                        settlement.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
+                        settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                        settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                        settlement.origin.done.should.be.true;
+                        settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
+                        settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
+                        settlement.target.done.should.be.false;
+
                         const nSenderSettlements = await ethersDriipSettlement.settlementsCountByWallet(payment.sender.wallet);
                         const senderSettlementByIndex = await ethersDriipSettlement.settlementByWalletAndIndex(payment.sender.wallet, nSenderSettlements.sub(1));
                         senderSettlementByIndex.nonce._bn.should.eq.BN(payment.nonce._bn);
                         senderSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
-                        senderSettlementByIndex.origin.wallet.should.equal((utils.getAddress(payment.sender.wallet)));
+                        senderSettlementByIndex.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                        senderSettlementByIndex.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                         senderSettlementByIndex.origin.done.should.be.true;
-                        senderSettlementByIndex.target.wallet.should.equal(payment.recipient.wallet);
+                        senderSettlementByIndex.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
+                        senderSettlementByIndex.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
                         senderSettlementByIndex.target.done.should.be.false;
 
                         const senderSettlementByNonce = await ethersDriipSettlement.settlementByWalletAndNonce(payment.sender.wallet, payment.sender.nonce);
@@ -1696,19 +1746,33 @@ module.exports = (glob) => {
                         holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
 
                         const totalFeeStage = await ethersClientFund._stages(1);
-                        totalFeeStage[0].should.equal((utils.getAddress(payment.sender.wallet)));
+                        totalFeeStage[0].should.equal(utils.getAddress(payment.sender.wallet));
                         totalFeeStage[1].should.equal(utils.getAddress(ethersRevenueFund.address));
                         totalFeeStage[2]._bn.should.eq.BN(payment.sender.fees.total[0].amount._bn);
                         totalFeeStage[3].should.equal(payment.sender.fees.total[0].currency.ct);
                         totalFeeStage[4]._bn.should.eq.BN(payment.sender.fees.total[0].currency.id._bn);
 
+                        (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
+
+                        const settlement = await ethersDriipSettlement.settlements(0);
+                        settlement.nonce._bn.should.eq.BN(payment.nonce._bn);
+                        settlement.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
+                        settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                        settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                        settlement.origin.done.should.be.true;
+                        settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
+                        settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
+                        settlement.target.done.should.be.false;
+
                         const nSenderSettlements = await ethersDriipSettlement.settlementsCountByWallet(payment.sender.wallet);
                         const senderSettlementByIndex = await ethersDriipSettlement.settlementByWalletAndIndex(payment.sender.wallet, nSenderSettlements.sub(1));
                         senderSettlementByIndex.nonce._bn.should.eq.BN(payment.nonce._bn);
                         senderSettlementByIndex.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
-                        senderSettlementByIndex.origin.wallet.should.equal((utils.getAddress(payment.sender.wallet)));
+                        senderSettlementByIndex.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                        senderSettlementByIndex.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                         senderSettlementByIndex.origin.done.should.be.true;
-                        senderSettlementByIndex.target.wallet.should.equal(payment.recipient.wallet);
+                        senderSettlementByIndex.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
+                        senderSettlementByIndex.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
                         senderSettlementByIndex.target.done.should.be.false;
 
                         const senderSettlementByNonce = await ethersDriipSettlement.settlementByWalletAndNonce(payment.sender.wallet, payment.sender.nonce);

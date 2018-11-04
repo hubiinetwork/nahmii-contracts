@@ -1,4 +1,4 @@
-var BlueBird = require("bluebird");
+var BlueBird = require('bluebird');
 
 module.exports.augmentWeb3 = function (web3)
 {
@@ -18,7 +18,7 @@ module.exports.TestCounter = function ()
 		this.next = function()
 		{
 			testCounter++;
-			return "T" + ("000" + testCounter.toString()).slice(-3);
+			return 'T' + ('000' + testCounter.toString()).slice(-3);
 		}
 	}
 	return new TestCounter();

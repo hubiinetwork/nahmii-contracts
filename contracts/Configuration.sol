@@ -412,17 +412,17 @@ contract Configuration is Ownable, Servable {
     }
 
     /// @notice Set timeout of cancel order challenge
-    /// @param timeout Timeout duration
-    function setCancelOrderChallengeTimeout(uint256 timeout) public onlyDeployer {
-        cancelOrderChallengeTimeout = timeout;
-        emit SetCancelOrderChallengeTimeoutEvent(timeout);
+    /// @param timeoutInSeconds Timeout duration in seconds
+    function setCancelOrderChallengeTimeout(uint256 timeoutInSeconds) public onlyDeployer {
+        cancelOrderChallengeTimeout = timeoutInSeconds;
+        emit SetCancelOrderChallengeTimeoutEvent(timeoutInSeconds);
     }
 
     /// @notice Set timeout of settlement challenges
-    /// @param timeout Timeout duration
-    function setSettlementChallengeTimeout(uint256 timeout) public onlyDeployer {
-        settlementChallengeTimeout = timeout;
-        emit SetSettlementChallengeTimeoutEvent(timeout);
+    /// @param timeoutInSeconds Timeout duration in seconds
+    function setSettlementChallengeTimeout(uint256 timeoutInSeconds) public onlyDeployer {
+        settlementChallengeTimeout = timeoutInSeconds;
+        emit SetSettlementChallengeTimeoutEvent(timeoutInSeconds);
     }
 
     /// @notice Set fraction of security bond that will be gained when someone successfully unchallenges
