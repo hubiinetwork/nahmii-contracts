@@ -36,7 +36,7 @@ module.exports = function (glob) {
             web3ClientFund = await ClientFund.new(glob.owner);
             ethersClientFund = new Contract(web3ClientFund.address, ClientFund.abi, glob.signer_owner);
 
-            await web3ClientFund.changeTransferControllerManager(web3TransferControllerManager.address)
+            await web3ClientFund.changeTransferControllerManager(web3TransferControllerManager.address);
 
             web3MockedClientFundAuthorizedService = await MockedClientFundService.new(glob.owner);
             ethersMockedClientFundAuthorizedService = new Contract(web3MockedClientFundAuthorizedService.address, MockedClientFundService.abi, glob.signer_owner);
@@ -99,13 +99,6 @@ module.exports = function (glob) {
         });
 
         describe('depositedBalance()', () => {
-            describe('called with null wallet address', () => {
-                it('should revert', async () => {
-                    ethersClientFund.depositedBalance(mocks.address0, mocks.address0, 0)
-                        .should.be.rejected;
-                });
-            });
-
             describe('of Ether', () => {
                 it('should return initial value', async () => {
                     (await ethersClientFund.depositedBalance(Wallet.createRandom().address, mocks.address0, 0))
@@ -122,12 +115,6 @@ module.exports = function (glob) {
         });
 
         describe('settledBalance()', () => {
-            describe('called with null wallet address', () => {
-                it('should revert', async () => {
-                    ethersClientFund.settledBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
-                });
-            });
-
             describe('of Ether', () => {
                 it('should return initial value', async () => {
                     (await ethersClientFund.settledBalance(Wallet.createRandom().address, mocks.address0, 0))
@@ -144,12 +131,6 @@ module.exports = function (glob) {
         });
 
         describe('stagedBalance()', () => {
-            describe('called with null wallet address', () => {
-                it('should revert', async () => {
-                    ethersClientFund.stagedBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
-                });
-            });
-
             describe('of Ether', () => {
                 it('should return initial value', async () => {
                     (await ethersClientFund.stagedBalance(Wallet.createRandom().address, mocks.address0, 0))
@@ -166,12 +147,6 @@ module.exports = function (glob) {
         });
 
         describe('activeBalance()', () => {
-            describe('called with null wallet address', () => {
-                it('should revert', async () => {
-                    ethersClientFund.activeBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
-                });
-            });
-
             describe('of Ether', () => {
                 it('should return initial value', async () => {
                     (await ethersClientFund.activeBalance(Wallet.createRandom().address, mocks.address0, 0))
