@@ -68,8 +68,8 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         DriipSettlementChallenge newDriipSettlementChallenge);
     event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event StageTotalFeeEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount, address currencyCt,
-        uint256 currencyId);
+    event StageTotalFeeEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
+        address currencyCt, uint256 currencyId);
 
     //
     // Constructor
