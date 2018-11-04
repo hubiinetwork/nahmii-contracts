@@ -16,7 +16,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('DriipSettlementDispute', () => {
+    describe('DriipSettlementDispute', () => {
         let web3DriipSettlementDispute, ethersDriipSettlementDispute;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
@@ -474,7 +474,7 @@ module.exports = (glob) => {
                 });
 
                 await web3DriipSettlementChallenge.setProposalCandidateType(order.wallet, mocks.candidateTypes.indexOf('Order'));
-                await ethersDriipSettlementChallenge._setChallengeCandidateOrderHash(order, {gasLimit: 1e6});
+                await ethersDriipSettlementChallenge._setChallengeCandidateOrderHash(order.seals.operator.hash, {gasLimit: 1e6});
             });
 
             describe('if validator contract is not initialized', () => {
@@ -644,7 +644,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     candidateOrder = await mocks.mockOrder(glob.owner);
-                    await ethersDriipSettlementChallenge._setChallengeCandidateOrderHash(candidateOrder, {gasLimit: 1e6});
+                    await ethersDriipSettlementChallenge._setChallengeCandidateOrderHash(candidateOrder.seals.operator.hash, {gasLimit: 1e6});
                 });
 
                 it('should revert', async () => {

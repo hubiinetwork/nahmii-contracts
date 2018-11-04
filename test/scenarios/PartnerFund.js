@@ -1,15 +1,15 @@
 var Helpers = require('../helpers');
 
 module.exports = function (glob) {
-    var userATag = "0x1111111111222222222233333333334444444444";
-    var userBTag = "0x4444444444333333333322222222221111111111";
-    var dummyTag = "0x1234567890123456789012345678901234567890";
+    var userATag = '0x1111111111222222222233333333334444444444';
+    var userBTag = '0x4444444444333333333322222222221111111111';
+    var dummyTag = '0x1234567890123456789012345678901234567890';
     var testCounter = Helpers.TestCounter();
 
     const _1e18 = '1000000000000000000';
 
-    describe("PartnerFund", function () {
-        it(testCounter.next() + ": MUST FAIL [payable]: Payable is disabled", async() => {
+    describe('PartnerFund', function () {
+        it(testCounter.next() + ': MUST FAIL [payable]: Payable is disabled', async() => {
             try {
                 await web3.eth.sendTransactionPromise({
                     from: glob.user_a,
@@ -26,7 +26,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositEthersTo]: Not registered tag", async() => {
+        it(testCounter.next() + ': MUST FAIL [depositEthersTo]: Not registered tag', async() => {
             try {
                 await glob.web3PartnerFund.depositEthersTo(dummyTag, { value: web3.toWei(0.2, 'ether') });
                 assert(false, 'This test must fail.');
@@ -38,7 +38,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositTokensTo]: Not registered tag", async() => {
+        it(testCounter.next() + ': MUST FAIL [depositTokensTo]: Not registered tag', async() => {
             try {
                 await glob.web3PartnerFund.depositTokensTo(dummyTag, 2, glob.web3Erc20.address, 0, "");
                 assert(false, 'This test must fail.');
@@ -50,7 +50,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [registerPartner]: Register user A tag and owner can change the address", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [registerPartner]: Register user A tag and owner can change the address', async() => {
             try {
                 let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
@@ -65,7 +65,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [setPartnerWallet]: Set user A address", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: Set user A address', async() => {
             try {
                 await glob.web3PartnerFund.setPartnerWallet(userATag, glob.user_a);
             }
@@ -76,7 +76,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [setPartnerWallet]: User A trying to modify his address", async() => {
+        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: User A trying to modify his address', async() => {
             try {
                 await glob.web3PartnerFund.setPartnerWallet(userATag, glob.user_a, { from: glob.user_a });
                 assert(false, 'This test must fail.');
@@ -88,7 +88,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [registerPartner]: Register user B tag and only he can change the address", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [registerPartner]: Register user B tag and only he can change the address', async() => {
             try {
                 let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
@@ -103,7 +103,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [setPartnerWallet]: User B trying to modify his address but not set previously", async() => {
+        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: User B trying to modify his address but not set previously', async() => {
             try {
                 await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b, { from: glob.user_b });
                 assert(false, 'This test must fail.');
@@ -115,7 +115,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [setPartnerWallet]: Set user B address", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: Set user B address', async() => {
             try {
                 await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b);
             }
@@ -126,7 +126,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [setPartnerWallet]: Owner trying to set user B address again", async() => {
+        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: Owner trying to set user B address again', async() => {
             try {
                 await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b);
                 assert(false, 'This test must fail.');
@@ -138,7 +138,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [setPartnerWallet]: User B changing his address", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: User B changing his address', async() => {
             try {
                 await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b, { from: glob.user_b });
             }
@@ -149,14 +149,14 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [getPartnerFee]: Get user B fee", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [getPartnerFee]: Get user B fee', async() => {
             try {
                 let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
                 var fee_2_pct = (new BN(_1e18)).div(100).mul(2);
 
                 let fee = await glob.web3PartnerFund.getPartnerFee(userBTag);
-                assert.equal(fee.toString(), fee_2_pct.toString(), "Fee is not 2%. [Got " + fee_2_pct.div(_1e18).mul(100).toString() + "%].");
+                assert.equal(fee.toString(), fee_2_pct.toString(), 'Fee is not 2%. [Got ' + fee_2_pct.div(_1e18).mul(100).toString() + '%].');
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -165,7 +165,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [changePartnerFee]: Change non-registered user fee", async() => {
+        it(testCounter.next() + ': MUST FAIL [changePartnerFee]: Change non-registered user fee', async() => {
             try {
                 let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
@@ -181,7 +181,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [changePartnerFee]: User B wants to change its fee", async() => {
+        it(testCounter.next() + ': MUST FAIL [changePartnerFee]: User B wants to change its fee', async() => {
             try {
                 let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
@@ -197,7 +197,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [changePartnerFee]: Set new fee to user B", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [changePartnerFee]: Set new fee to user B', async() => {
             try {
                 let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
@@ -212,14 +212,14 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [getPartnerFee]: Verify new user B fee", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [getPartnerFee]: Verify new user B fee', async() => {
             try {
                 let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
                 var fee_3_pct = (new BN(_1e18)).div(100).mul(3);
 
                 let fee = await glob.web3PartnerFund.getPartnerFee(userBTag);
-                assert.equal(fee.toString(), fee_3_pct.toString(), "Fee is not 3%. [Got " + fee_3_pct.div(_1e18).mul(100).toString() + "%].");
+                assert.equal(fee.toString(), fee_3_pct.toString(), 'Fee is not 3%. [Got ' + fee_3_pct.div(_1e18).mul(100).toString() + '%].');
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -228,7 +228,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [depositEthersTo]: add 1 ether to user A deposited balance", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [depositEthersTo]: add 1 ether to user A deposited balance', async() => {
             try {
                 await glob.web3PartnerFund.depositEthersTo(userATag, { from: glob.owner, value: web3.toWei(1, 'ether') });
             }
@@ -239,7 +239,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [depositTokensTo]: 3 tokens added to A deposited balance", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [depositTokensTo]: 3 tokens added to A deposited balance', async() => {
             try {
                 await glob.web3Erc20.approve(glob.web3PartnerFund.address, 3, { from: glob.owner });
             }
@@ -256,7 +256,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [depositCountFromAddress]: User A should have 2 deposits", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [depositCountFromAddress]: User A should have 2 deposits', async() => {
             try {
                 let count = await glob.web3PartnerFund.depositCountFromAddress(glob.user_a);
                 assert.equal(count, 2, 'This test must succeed. Error: Deposit count: ' + count.toString());
@@ -268,7 +268,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositsCount]: Cannot be called from non-registered address", async() => {
+        it(testCounter.next() + ': MUST FAIL [depositsCount]: Cannot be called from non-registered address', async() => {
             try {
                 await glob.web3PartnerFund.depositsCount(dummyTag);
                 assert(false, 'This test must fail.');
@@ -280,7 +280,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [deposit]: User A should have 1 ETH at index 0", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [deposit]: User A should have 1 ETH at index 0', async() => {
             try {
                 let args = await glob.web3PartnerFund.deposit(userATag, 0);
                 const _amount = args[0];
@@ -288,10 +288,10 @@ module.exports = function (glob) {
                 const _currencyCt = args[2];
                 const _currencyId = args[3];
 
-                assert.equal(_currencyCt, 0, "Unexpected token deposit.");
-                assert.equal(_currencyId, 0, "Unexpected token deposit.");
-                assert.equal(_amount, web3.toWei(1, 'ether'), "Unexpected ether deposit amount.");
-                assert.notEqual(_blocknum, 0, "Block number cannot be null.");
+                assert.equal(_currencyCt, 0, 'Unexpected token deposit.');
+                assert.equal(_currencyId, 0, 'Unexpected token deposit.');
+                assert.equal(_amount, web3.toWei(1, 'ether'), 'Unexpected ether deposit amount.');
+                assert.notEqual(_blocknum, 0, 'Block number cannot be null.');
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -300,7 +300,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [deposit]: Invalid index deposit 0 for user B.", async() => {
+        it(testCounter.next() + ': MUST FAIL [deposit]: Invalid index deposit 0 for user B.', async() => {
             try {
                 await glob.web3PartnerFund.deposit(userBTag, 0);
                 assert(false, 'This test must fail.');
@@ -312,7 +312,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [deposit]: User A should have 3 tokens at index 1", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [deposit]: User A should have 3 tokens at index 1', async() => {
             try {
                 let args = await glob.web3PartnerFund.deposit(userATag, 1);
                 const _amount = args[0];
@@ -320,10 +320,10 @@ module.exports = function (glob) {
                 const _currencyCt = args[2];
                 const _currencyId = args[3];
 
-                assert.equal(_currencyCt, glob.web3Erc20.address, "Unexpected ether or other token deposit.");
-                assert.equal(_currencyId, 0, "Unexpected NFT token deposit.");
-                assert.equal(_amount, 3, "Unexpeced token deposit amount.");
-                assert.notEqual(_blocknum, 0, "Block number cannot be null.");
+                assert.equal(_currencyCt, glob.web3Erc20.address, 'Unexpected ether or other token deposit.');
+                assert.equal(_currencyId, 0, 'Unexpected NFT token deposit.');
+                assert.equal(_amount, 3, 'Unexpeced token deposit amount.');
+                assert.notEqual(_blocknum, 0, 'Block number cannot be null.');
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -332,7 +332,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [activeBalance]: 1 ETH for User A", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [activeBalance]: 1 ETH for User A', async() => {
             try {
                 let balance = await glob.web3PartnerFund.activeBalance(userATag, 0, 0);
                 assert.equal(balance, web3.toWei(1, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
@@ -344,7 +344,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [activeBalance]: 3 tokens for User A", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [activeBalance]: 3 tokens for User A', async() => {
             try {
                 let balance = await glob.web3PartnerFund.activeBalance(userATag, glob.web3Erc20.address, 0);
                 assert.equal(balance, 3, 'Wrong balance [' + balance.toString() + ' tokens].');
@@ -356,7 +356,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 ETH for User A", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [stagedBalance]: 0 ETH for User A', async() => {
             try {
                 let balance = await glob.web3PartnerFund.stagedBalance(userATag, 0, 0);
                 assert.equal(balance, web3.toWei(0, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
@@ -368,7 +368,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [stagedBalance]: 0 tokens for User A", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [stagedBalance]: 0 tokens for User A', async() => {
             try {
                 let balance = await glob.web3PartnerFund.stagedBalance(userATag, glob.web3Erc20.address, 0);
                 assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
@@ -380,7 +380,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [stage]: User A wants to stage 0.2 ETH", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [stage]: User A wants to stage 0.2 ETH', async() => {
             try {
                 let oldStagedBalance = await glob.web3PartnerFund.stagedBalance(userATag, 0, 0);
                 let oldActiveBalance = await glob.web3PartnerFund.activeBalance(userATag, 0, 0);
@@ -400,7 +400,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [stage]: User A wants to stage 2 token", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [stage]: User A wants to stage 2 token', async() => {
             try {
                 let oldStagedBalance = await glob.web3PartnerFund.stagedBalance(userATag, glob.web3Erc20.address, 0);
                 let oldActiveBalance = await glob.web3PartnerFund.activeBalance(userATag, glob.web3Erc20.address, 0);
@@ -419,7 +419,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User A wants to withdraw 0.1 ETH", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [withdraw]: User A wants to withdraw 0.1 ETH', async() => {
             try {
                 let oldStagedBalance = await glob.web3PartnerFund.stagedBalanceFromAddress(glob.user_a, 0, 0);
                 let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_a);
@@ -443,7 +443,7 @@ module.exports = function (glob) {
 
         //------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [withdraw]: User A wants to withdraw 1 token", async() => {
+        it(testCounter.next() + ': MUST SUCCEED [withdraw]: User A wants to withdraw 1 token', async() => {
             try {
                 let oldStagedBalance = await glob.web3PartnerFund.stagedBalanceFromAddress(glob.user_a, glob.web3Erc20.address, 0);
                 let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.user_a);

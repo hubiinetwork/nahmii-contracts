@@ -1,12 +1,12 @@
 const chai = require('chai');
-const sinonChai = require("sinon-chai");
-const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require('sinon-chai');
+const chaiAsPromised = require('chai-as-promised');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
-const MockedConfiguration = artifacts.require("MockedConfiguration");
-const MockedValidator = artifacts.require("MockedValidator");
-const MockedClientFund = artifacts.require("MockedClientFund");
+const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedValidator = artifacts.require('MockedValidator');
+const MockedClientFund = artifacts.require('MockedClientFund');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);

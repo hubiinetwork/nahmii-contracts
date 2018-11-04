@@ -6,8 +6,8 @@ module.exports = function (glob) {
 
 	var testCounter = Helpers.TestCounter();
 
-	describe.skip("TokenHolderRevenueFund", function () {
-		it(testCounter.next() + ": MUST SUCCEED [payable]: UnitTestHelpers_MISC_1 'collaborates' with 0.6 Ethers", async() => {
+	describe.skip('TokenHolderRevenueFund', function () {
+		it(testCounter.next() + ': MUST SUCCEED [payable]: UnitTestHelpers_MISC_1 \'collaborates\' with 0.6 Ethers', async() => {
 			try {
 				let oldPeriodAccrualBalance = await glob.web3TokenHolderRevenueFund.periodAccrualBalance(0);
 				let oldAggregateAccrualBalance = await glob.web3TokenHolderRevenueFund.aggregateAccrualBalance(0);
@@ -27,7 +27,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [payable]: UnitTestHelpers_MISC_2 'collaborates' with 0.3 Ethers", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [payable]: UnitTestHelpers_MISC_2 \'collaborates\' with 0.3 Ethers', async() => {
 			try {
 				let oldPeriodAccrualBalance = await glob.web3TokenHolderRevenueFund.periodAccrualBalance(0);
 				let oldAggregateAccrualBalance = await glob.web3TokenHolderRevenueFund.aggregateAccrualBalance(0);
@@ -47,7 +47,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [payable]: cannot be called with 0 ethers", async() => {
+		it(testCounter.next() + ': MUST FAIL [payable]: cannot be called with 0 ethers', async() => {
 			try {
 				await web3.eth.sendTransactionPromise({
 						from: glob.user_d,
@@ -64,7 +64,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [setRevenueTokenAddress]: Set revenue token from a non-owner caller", async() => {
+		it(testCounter.next() + ': MUST FAIL [setRevenueTokenAddress]: Set revenue token from a non-owner caller', async() => {
 			try {
 				await glob.web3TokenHolderRevenueFund.setRevenueTokenAddress(glob.web3UnitTestHelpers_MISC_1.address, { from: glob.user_d });
 				assert(false, 'This test must fail.');
@@ -76,7 +76,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [setRevenueTokenAddress]: Set UnitTestHelpers_MISC_1 as our dummy revenue token", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [setRevenueTokenAddress]: Set UnitTestHelpers_MISC_1 as our dummy revenue token', async() => {
 			try {
 				await glob.web3TokenHolderRevenueFund.setRevenueTokenAddress(glob.web3UnitTestHelpers_MISC_1.address);
 			}
@@ -87,7 +87,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [depositTokens]: UnitTestHelpers_MISC_1 'collaborates' with 7 tokens", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [depositTokens]: UnitTestHelpers_MISC_1 \'collaborates\' with 7 tokens', async() => {
 			try {
 				await glob.web3UnitTestHelpers_MISC_1.callToApprove_ERC20(glob.web3Erc20.address, glob.web3TokenHolderRevenueFund.address, 7);
 			}
@@ -113,7 +113,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called from owner", async() => {
+		it(testCounter.next() + ': MUST FAIL [depositTokens]: Cannot be called from owner', async() => {
 			try {
 				await glob.web3TokenHolderRevenueFund.depositTokens(glob.web3Erc20.address, 0, { from: glob.owner });
 				assert(false, 'This test must fail.');
@@ -125,7 +125,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [depositTokens]: cannot be called with 0 tokens", async() => {
+		it(testCounter.next() + ': MUST FAIL [depositTokens]: cannot be called with 0 tokens', async() => {
 			try {
 				await glob.web3UnitTestHelpers_MISC_2.callToDepositTokens_TOKENHOLDERREVENUEFUND(glob.web3TokenHolderRevenueFund.address, glob.web3Erc20.address, 0);
 				assert(false, 'This test must fail.');
@@ -137,7 +137,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with null address", async() => {
+		it(testCounter.next() + ': MUST FAIL [depositTokens]: Cannot be called with null address', async() => {
 			try {
 				await glob.web3TokenHolderRevenueFund.depositTokens(0, 5, { from: glob.user_a });
 				assert(false, 'This test must fail.');
@@ -149,9 +149,9 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [registerServiceAction]: Register UnitTestHelpers_FAIL SC as a service from non-owner", async() => {
+		it(testCounter.next() + ': MUST FAIL [registerServiceAction]: Register UnitTestHelpers_FAIL SC as a service from non-owner', async() => {
 			try {
-				await glob.web3TokenHolderRevenueFund.registerServiceAction(glob.web3UnitTestHelpers_FAIL_TESTS.address, "close_accrual_period", { from: glob.user_a });
+				await glob.web3TokenHolderRevenueFund.registerServiceAction(glob.web3UnitTestHelpers_FAIL_TESTS.address, 'close_accrual_period', { from: glob.user_a });
 				assert(false, 'This test must fail.');
 			}
 			catch (err) {
@@ -161,9 +161,9 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [registerServiceAction]: Register UnitTestHelpers_SUCCESS SC as a service", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [registerServiceAction]: Register UnitTestHelpers_SUCCESS SC as a service', async() => {
 			try {
-				await glob.web3TokenHolderRevenueFund.registerServiceAction(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, "close_accrual_period");
+				await glob.web3TokenHolderRevenueFund.registerServiceAction(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, 'close_accrual_period');
 			}
 			catch (err) {
 				assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -172,7 +172,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [claimAccrual]: Calling without closing accrual first", async() => {
+		it(testCounter.next() + ': MUST FAIL [claimAccrual]: Calling without closing accrual first', async() => {
 			try {
 				await glob.web3TokenHolderRevenueFund.claimAccrual(0);
 				assert(false, 'This test must fail.');
@@ -184,7 +184,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [closeAccrualPeriod]: Calling from non-owner and non-registerd address", async() => {
+		it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Calling from non-owner and non-registerd address', async() => {
 			try {
 				await glob.web3TokenHolderRevenueFund.closeAccrualPeriod({ from: glob.user_a });
 				assert(false, 'This test must fail.');
@@ -196,7 +196,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [closeAccrualPeriod]: Calling from UnitTestHelpers_SUCCESS_TESTS", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [closeAccrualPeriod]: Calling from UnitTestHelpers_SUCCESS_TESTS', async() => {
 			try {
 				await glob.web3UnitTestHelpers_SUCCESS_TESTS.callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(glob.web3TokenHolderRevenueFund.address);
 			}
@@ -207,7 +207,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [claimAccrual]: Calling for a token without accrual deposits", async() => {
+		it(testCounter.next() + ': MUST FAIL [claimAccrual]: Calling for a token without accrual deposits', async() => {
 			const MOCK_TOKEN_XYZ = '0xcafeefac0000dddd0000cccc0000bbbb0000aaaa';
 
 			try {
@@ -221,9 +221,9 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [claimAccrual]: User A is claiming his ETH accrual", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [claimAccrual]: User A is claiming his ETH accrual', async() => {
 			try {
-				let BN = web3.BigNumber.another({ DECIMAL_PLACES: 0, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN }); //another is the old method name of "clone"
+				let BN = web3.BigNumber.another({ DECIMAL_PLACES: 0, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN }); //another is the old method name of 'clone'
 
 				let bn_1e18 = new BN(_1e18);
 
@@ -253,7 +253,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST FAIL [claimAccrual]: Claiming more than once on the same period is not allowed", async() => {
+		it(testCounter.next() + ': MUST FAIL [claimAccrual]: Claiming more than once on the same period is not allowed', async() => {
 			try {
 				await glob.web3TokenHolderRevenueFund.claimAccrual(0, { from: glob.user_a, gasLimit: glob.gasLimit });
 				assert(false, 'This test must fail.');
@@ -265,9 +265,9 @@ module.exports = function (glob) {
 		
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [claimAccrual]: User A is claiming his tokens accrual", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [claimAccrual]: User A is claiming his tokens accrual', async() => {
 			try {
-				let BN = web3.BigNumber.another({ DECIMAL_PLACES: 0, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN }); //another is the old method name of "clone"
+				let BN = web3.BigNumber.another({ DECIMAL_PLACES: 0, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN }); //another is the old method name of 'clone'
 
 				let bn_1e18 = new BN(_1e18);
 
@@ -298,7 +298,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 		
-		it(testCounter.next() + ": MUST SUCCEED [withdrawEthers]: User A wants to withdraw 1 ETH but he will get less", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [withdrawEthers]: User A wants to withdraw 1 ETH but he will get less', async() => {
 			try {
 				let oldStagedBalance = await glob.web3TokenHolderRevenueFund.stagedBalance(glob.user_a, 0);
 				let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_a);
@@ -324,7 +324,7 @@ module.exports = function (glob) {
 
 		//-------------------------------------------------------------------------
 
-		it(testCounter.next() + ": MUST SUCCEED [withdrawTokens]: User A withdraw 10 tokens (but only can get 0)", async() => {
+		it(testCounter.next() + ': MUST SUCCEED [withdrawTokens]: User A withdraw 10 tokens (but only can get 0)', async() => {
 			try {
 				let oldStagedBalance = await glob.web3TokenHolderRevenueFund.stagedBalance(glob.user_a, glob.web3Erc20.address);
 				let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.user_a);
