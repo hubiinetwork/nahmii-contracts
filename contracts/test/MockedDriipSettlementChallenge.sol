@@ -34,10 +34,10 @@ contract MockedDriipSettlementChallenge {
     SettlementTypesLib.CandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
     address public _proposalChallenger;
-    uint256 public _challengeCandidateOrdersCount;
-    uint256 public _challengeCandidateTradesCount;
-    uint256 public _challengeCandidatePaymentsCount;
-    NahmiiTypesLib.Order _challengeCandidateOrder;
+    uint256 public _challengeCandidateOrderHashesCount;
+    uint256 public _challengeCandidateTradeHashesCount;
+    uint256 public _challengeCandidatePaymentHashesCount;
+    bytes32 _challengeCandidateOrderHash;
     DriipSettlementDispute public _driipSettlementDispute;
 
     function _reset()
@@ -54,10 +54,10 @@ contract MockedDriipSettlementChallenge {
         delete _proposalCandidateType;
         delete _proposalCandidateIndex;
         delete _proposalChallenger;
-        delete _challengeCandidateOrdersCount;
-        delete _challengeCandidateTradesCount;
-        delete _challengeCandidatePaymentsCount;
-        delete _challengeCandidateOrder;
+        delete _challengeCandidateOrderHashesCount;
+        delete _challengeCandidateTradeHashesCount;
+        delete _challengeCandidatePaymentHashesCount;
+        delete _challengeCandidateOrderHash;
 
         _proposalStageAmounts.length = 0;
         _proposalStageAmountIndex = 0;
@@ -286,67 +286,67 @@ contract MockedDriipSettlementChallenge {
         return _proposalChallenger;
     }
 
-    function pushChallengeCandidateOrder(NahmiiTypesLib.Order order)
+    function pushChallengeCandidateOrderHash(bytes32 hash)
     public
     {
         // To silence unused function parameter compiler warning
-        require(order.nonce == order.nonce);
-        _challengeCandidateOrdersCount++;
+        require(hash == hash);
+        _challengeCandidateOrderHashesCount++;
     }
 
-    function challengeCandidateOrdersCount()
+    function challengeCandidateOrderHashesCount()
     public
     view
     returns (uint256)
     {
-        return _challengeCandidateOrdersCount;
+        return _challengeCandidateOrderHashesCount;
     }
 
-    function _setChallengeCandidateOrder(NahmiiTypesLib.Order order)
+    function _setChallengeCandidateOrderHash(bytes32 hash)
     public
     {
-        _challengeCandidateOrder = order;
+        _challengeCandidateOrderHash = hash;
     }
 
-    function challengeCandidateOrder(uint256 index)
+    function challengeCandidateOrderHashes(uint256 index)
     public
     view
-    returns (NahmiiTypesLib.Order)
+    returns (bytes32)
     {
         // To silence unused function parameter compiler warning
         require(index == index);
-        return _challengeCandidateOrder;
+        return _challengeCandidateOrderHash;
     }
 
-    function pushChallengeCandidateTrade(NahmiiTypesLib.Trade trade)
+    function pushChallengeCandidateTradeHash(bytes32 hash)
     public
     {
         // To silence unused function parameter compiler warning
-        require(trade.nonce == trade.nonce);
-        _challengeCandidateTradesCount++;
+        require(hash == hash);
+        _challengeCandidateTradeHashesCount++;
     }
 
-    function challengeCandidateTradesCount()
+    function challengeCandidateTradeHashesCount()
     public
     view
     returns (uint256)
     {
-        return _challengeCandidateTradesCount;
+        return _challengeCandidateTradeHashesCount;
     }
 
-    function pushChallengeCandidatePayment(NahmiiTypesLib.Payment payment)
+    function pushChallengeCandidatePaymentHash(bytes32 hash)
     public
     {
-        require(payment.nonce == payment.nonce);
-        _challengeCandidatePaymentsCount++;
+        require(hash == hash);
+        _challengeCandidatePaymentHashesCount++;
     }
 
-    function challengeCandidatePaymentsCount()
+    function challengeCandidatePaymentHashesCount()
     public
     view
     returns (uint256)
     {
-        return _challengeCandidatePaymentsCount;
+        return _challengeCandidatePaymentHashesCount;
     }
 
     function changeDriipSettlementDispute(DriipSettlementDispute driipSettlementDispute)

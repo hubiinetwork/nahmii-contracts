@@ -105,13 +105,13 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(orderAmount > targetBalanceAmount);
 
         // Store order candidate
-        driipSettlementChallenge.pushChallengeCandidateOrder(order);
+        driipSettlementChallenge.pushChallengeCandidateOrderHash(order.seals.operator.hash);
 
         // Update challenge proposal
         driipSettlementChallenge.setProposalTimeout(order.wallet, block.timestamp.add(configuration.settlementChallengeTimeout()));
         driipSettlementChallenge.setProposalStatus(order.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         driipSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypesLib.CandidateType.Order);
-        driipSettlementChallenge.setProposalCandidateIndex(order.wallet, driipSettlementChallenge.challengeCandidateOrdersCount().sub(1));
+        driipSettlementChallenge.setProposalCandidateIndex(order.wallet, driipSettlementChallenge.challengeCandidateOrderHashesCount().sub(1));
         driipSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
         // Emit event
@@ -199,12 +199,12 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(payment.transfers.single.abs() > targetBalanceAmount);
 
         // Store payment candidate
-        driipSettlementChallenge.pushChallengeCandidatePayment(payment);
+        driipSettlementChallenge.pushChallengeCandidatePaymentHash(payment.seals.operator.hash);
 
         // Update challenge proposal
         driipSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         driipSettlementChallenge.setProposalCandidateType(payment.sender.wallet, SettlementTypesLib.CandidateType.Payment);
-        driipSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, driipSettlementChallenge.challengeCandidatePaymentsCount().sub(1));
+        driipSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, driipSettlementChallenge.challengeCandidatePaymentHashesCount().sub(1));
         driipSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
 
         // Emit event
@@ -230,14 +230,14 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
             trade.seller.order.hashes.operator));
 
         // Get challenge and require that its operator hash matches the one of order
-        NahmiiTypesLib.Order memory candidateOrder = driipSettlementChallenge.challengeCandidateOrder(
+        bytes32 candidateOrderHash = driipSettlementChallenge.challengeCandidateOrderHashes(
             driipSettlementChallenge.proposalCandidateIndex(order.wallet)
         );
-        require(candidateOrder.seals.operator.hash == order.seals.operator.hash);
+        require(candidateOrderHash == order.seals.operator.hash);
 
         // Order wallet is buyer -> require candidate order operator hash to match buyer's order operator hash
         // Order wallet is seller -> require candidate order operator hash to match seller's order operator hash
-        require(candidateOrder.seals.operator.hash == (
+        require(candidateOrderHash == (
         trade.buyer.wallet == order.wallet ?
         trade.buyer.order.hashes.operator :
         trade.seller.order.hashes.operator
@@ -296,12 +296,12 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         require(singleTransferAmount > targetBalanceAmount);
 
         // Store trade candidate
-        driipSettlementChallenge.pushChallengeCandidateTrade(trade);
+        driipSettlementChallenge.pushChallengeCandidateTradeHash(trade.seal.hash);
 
         // Update challenge proposal
         driipSettlementChallenge.setProposalStatus(wallet, SettlementTypesLib.ProposalStatus.Disqualified);
         driipSettlementChallenge.setProposalCandidateType(wallet, SettlementTypesLib.CandidateType.Trade);
-        driipSettlementChallenge.setProposalCandidateIndex(wallet, driipSettlementChallenge.challengeCandidateTradesCount().sub(1));
+        driipSettlementChallenge.setProposalCandidateIndex(wallet, driipSettlementChallenge.challengeCandidateTradeHashesCount().sub(1));
         driipSettlementChallenge.setProposalChallenger(wallet, challenger);
     }
 
