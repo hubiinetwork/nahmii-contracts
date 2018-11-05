@@ -168,10 +168,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('walletProposalMap()', () => {
+        describe('proposalsByWallet()', () => {
             it('should return default values', async () => {
                 const address = Wallet.createRandom().address;
-                const result = await ethersDriipSettlementChallenge.walletProposalMap(address);
+                const result = await ethersDriipSettlementChallenge.proposalsByWallet(address);
                 result.status.should.equal(mocks.proposalStatuses.indexOf('Unknown'));
                 result.nonce._bn.should.eq.BN(0);
             });
@@ -319,7 +319,7 @@ module.exports = (glob) => {
                         trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 2e6}
                     );
 
-                    const proposal = await ethersDriipSettlementChallenge.walletProposalMap(trade.buyer.wallet);
+                    const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(trade.buyer.wallet);
                     proposal.nonce._bn.should.eq.BN(trade.nonce._bn);
                     proposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -328,7 +328,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
-                    proposal.bondReward.should.be.false;
+                    proposal.balanceReward.should.be.true;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -465,7 +465,7 @@ module.exports = (glob) => {
                         trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 2e6}
                     );
 
-                    const proposal = await ethersDriipSettlementChallenge.walletProposalMap(trade.buyer.wallet);
+                    const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(trade.buyer.wallet);
                     proposal.nonce._bn.should.eq.BN(trade.nonce._bn);
                     proposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -474,7 +474,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
-                    proposal.bondReward.should.be.true;
+                    proposal.balanceReward.should.be.false;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -587,7 +587,7 @@ module.exports = (glob) => {
                         payment, payment.sender.balances.current, {gasLimit: 2e6}
                     );
 
-                    const proposal = await ethersDriipSettlementChallenge.walletProposalMap(payment.sender.wallet);
+                    const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(payment.sender.wallet);
                     proposal.nonce._bn.should.eq.BN(payment.nonce._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -596,7 +596,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
-                    proposal.bondReward.should.be.false;
+                    proposal.balanceReward.should.be.true;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -717,7 +717,7 @@ module.exports = (glob) => {
                         payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 2e6}
                     );
 
-                    const proposal = await ethersDriipSettlementChallenge.walletProposalMap(payment.sender.wallet);
+                    const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(payment.sender.wallet);
                     proposal.nonce._bn.should.eq.BN(payment.nonce._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -726,7 +726,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
-                    proposal.bondReward.should.be.true;
+                    proposal.balanceReward.should.be.false;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -1013,6 +1013,13 @@ module.exports = (glob) => {
             it('should return default value', async () => {
                 (await ethersDriipSettlementChallenge.proposalChallenger(glob.owner))
                     .should.equal(mocks.address0);
+            });
+        });
+
+        describe('proposalBalanceReward()', () => {
+            it('should return default value', async () => {
+                (await ethersDriipSettlementChallenge.proposalBalanceReward(glob.owner))
+                    .should.be.false;
             });
         });
 

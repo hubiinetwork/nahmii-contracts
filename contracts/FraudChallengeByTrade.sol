@@ -62,8 +62,8 @@ SecurityBondable, ClientFundable {
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
-        // Obtain stake fraction and stage
-        securityBond.stageToBeneficiary(msg.sender, clientFund, configuration.fraudStakeFraction());
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
         address seizedWallet;
         if (!genuineBuyerAndFee)

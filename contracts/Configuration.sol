@@ -84,8 +84,10 @@ contract Configuration is Ownable, Servable {
     uint256 public falseWalletSignatureStake;
     uint256 public duplicateDriipNonceStake;
     uint256 public doubleSpentOrderStake;
+
+    uint256 public walletSettlementStakeFraction;
+    uint256 public operatorSettlementStakeFraction;
     uint256 public fraudStakeFraction;
-    uint256 public settlementStakeFraction;
 
     //
     // Events
@@ -106,8 +108,9 @@ contract Configuration is Ownable, Servable {
     event SetFalseWalletSignatureStakeEvent(uint256 stakeFraction);
     event SetDuplicateDriipNonceStakeEvent(uint256 stakeFraction);
     event SetDoubleSpentOrderStakeEvent(uint256 stakeFraction);
+    event SetWalletSettlementStakeFractionEvent(uint256 stakeFraction);
+    event SetOperatorSettlementStakeFractionEvent(uint256 stakeFraction);
     event SetFraudStakeFractionEvent(uint256 stakeFraction);
-    event SetSettlementStakeFractionEvent(uint256 stakeFraction);
 
     //
     // Constructor
@@ -116,6 +119,9 @@ contract Configuration is Ownable, Servable {
         confirmations = 12;
         cancelOrderChallengeTimeout = 3 days;
         settlementChallengeTimeout = 5 days;
+        walletSettlementStakeFraction = 1e17;
+        operatorSettlementStakeFraction = 5e17;
+        fraudStakeFraction = 5e17;
     }
 
     //
@@ -173,7 +179,7 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
     function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
-        onlyConfirmableBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberTradeMakerFeeMap[blockNumber];
         setDiscountableFee(fee, tradeMakerFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -205,7 +211,7 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
     function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
-        onlyConfirmableBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberTradeTakerFeeMap[blockNumber];
         setDiscountableFee(fee, tradeTakerFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -237,7 +243,7 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
     function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
-        onlyConfirmableBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberPaymentFeeMap[blockNumber];
         setDiscountableFee(fee, paymentFeeBlockNumberList, blockNumber, nominal, discountTiers, discountValues);
@@ -276,7 +282,7 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
     function setCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
-        onlyConfirmableBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = currencyBlockNumberPaymentFeeMap[currencyCt][currencyId][blockNumber];
         setDiscountableFee(fee, currencyPaymentFeeBlockNumbersMap[currencyCt][currencyId], blockNumber, nominal, discountTiers, discountValues);
@@ -307,7 +313,7 @@ contract Configuration is Ownable, Servable {
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
     function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
-        onlyConfirmableBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberTradeMakerMinimumFeeMap[blockNumber];
         setStaticFee(fee, tradeMakerMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -336,7 +342,7 @@ contract Configuration is Ownable, Servable {
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
     function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
-        onlyConfirmableBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberTradeTakerMinimumFeeMap[blockNumber];
         setStaticFee(fee, tradeTakerMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -365,7 +371,7 @@ contract Configuration is Ownable, Servable {
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
     function setPaymentMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
-        onlyConfirmableBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberPaymentMinimumFeeMap[blockNumber];
         setStaticFee(fee, paymentMinimumFeeBlockNumberList, blockNumber, nominal);
@@ -401,7 +407,7 @@ contract Configuration is Ownable, Servable {
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
     function setCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal) public onlyDeployer
-        onlyConfirmableBlockNumber(blockNumber)
+    onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = currencyBlockNumberPaymentMinimumFeeMap[currencyCt][currencyId][blockNumber];
         setStaticFee(fee, currencyPaymentMinimumFeeBlockNumbersMap[currencyCt][currencyId], blockNumber, nominal);
@@ -461,20 +467,28 @@ contract Configuration is Ownable, Servable {
         emit SetDoubleSpentOrderStakeEvent(stakeFraction);
     }
 
-    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
+    /// @notice Set fraction of security bond that will be gained from successfully challenging
+    /// in settlement challenge triggered by wallet
+    /// @param stakeFraction The fraction gained
+    function setWalletSettlementStakeFraction(uint256 stakeFraction) public onlyDeployer {
+        walletSettlementStakeFraction = stakeFraction;
+        emit SetWalletSettlementStakeFractionEvent(stakeFraction);
+    }
+
+    /// @notice Set fraction of security bond that will be gained from successfully challenging
+    /// in settlement challenge triggered by operator
+    /// @param stakeFraction The fraction gained
+    function setOperatorSettlementStakeFraction(uint256 stakeFraction) public onlyDeployer {
+        operatorSettlementStakeFraction = stakeFraction;
+        emit SetOperatorSettlementStakeFractionEvent(stakeFraction);
+    }
+
+    /// @notice Set fraction of security bond that will be gained from successfully challenging
     /// in fraud challenge
     /// @param stakeFraction The fraction gained
     function setFraudStakeFraction(uint256 stakeFraction) public onlyDeployer {
         fraudStakeFraction = stakeFraction;
         emit SetFraudStakeFractionEvent(stakeFraction);
-    }
-
-    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
-    /// in settlement challenge
-    /// @param stakeFraction The fraction gained
-    function setSettlementStakeFraction(uint256 stakeFraction) public onlyDeployer {
-        settlementStakeFraction = stakeFraction;
-        emit SetSettlementStakeFractionEvent(stakeFraction);
     }
 
     //

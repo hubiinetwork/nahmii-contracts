@@ -75,8 +75,8 @@ SecurityBondable, ClientFundable {
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
-        // Obtain stake fraction and stage
-        securityBond.stageToBeneficiary(msg.sender, clientFund, configuration.fraudStakeFraction());
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
         clientFund.seizeAllBalances(wallet, msg.sender);
         fraudChallenge.addSeizedWallet(wallet);

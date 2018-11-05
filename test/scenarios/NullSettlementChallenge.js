@@ -145,10 +145,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('walletProposalMap()', () => {
+        describe('proposalsByWallet()', () => {
             it('should return default values', async () => {
                 const address = Wallet.createRandom().address;
-                const result = await ethersNullSettlementChallenge.walletProposalMap(address);
+                const result = await ethersNullSettlementChallenge.proposalsByWallet(address);
                 result.status.should.equal(mocks.proposalStatuses.indexOf('Unknown'));
                 result.nonce._bn.should.eq.BN(0);
             });
@@ -221,14 +221,14 @@ module.exports = (glob) => {
                 it('should start challenge successfully', async () => {
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 1e6});
 
-                    const proposal = await ethersNullSettlementChallenge.walletProposalMap(glob.owner);
+                    const proposal = await ethersNullSettlementChallenge.proposalsByWallet(glob.owner);
                     proposal.nonce._bn.should.eq.BN(1);
                     proposal.blockNumber._bn.should.eq.BN(1);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
                     proposal.driipIndex._bn.should.eq.BN(0);
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
-                    proposal.bondReward.should.be.false;
+                    proposal.balanceReward.should.be.true;
 
                     (await ethersNullSettlementChallenge.nonce())
                         ._bn.should.eq.BN(1);
@@ -315,14 +315,14 @@ module.exports = (glob) => {
                 it('should start challenge successfully', async () => {
                     await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 1e6});
 
-                    const proposal = await ethersNullSettlementChallenge.walletProposalMap(wallet);
+                    const proposal = await ethersNullSettlementChallenge.proposalsByWallet(wallet);
                     proposal.nonce._bn.should.eq.BN(1);
                     proposal.blockNumber._bn.should.eq.BN(1);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
                     proposal.driipIndex._bn.should.eq.BN(0);
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
-                    proposal.bondReward.should.be.true;
+                    proposal.balanceReward.should.be.false;
 
                     (await ethersNullSettlementChallenge.nonce())
                         ._bn.should.eq.BN(1);

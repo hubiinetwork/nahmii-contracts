@@ -59,7 +59,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) Servable() public {
+    constructor(address deployer) Ownable(deployer) Servable() public {
     }
 
     //

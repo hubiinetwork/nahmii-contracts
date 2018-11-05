@@ -18,7 +18,6 @@ import {Beneficiary} from "../Beneficiary.sol";
 @notice Mocked implementation of service contract that interacts with SecurityBond
 */
 contract MockedSecurityBondService is Ownable, SecurityBondable {
-
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
@@ -28,9 +27,9 @@ contract MockedSecurityBondService is Ownable, SecurityBondable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reward(address wallet, uint256 fraction)
+    function reward(address wallet, uint256 rewardFraction)
     public
     {
-        securityBond.reward(wallet, fraction);
+        securityBond.reward(wallet, rewardFraction);
     }
 }

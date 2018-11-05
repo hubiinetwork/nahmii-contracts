@@ -10,52 +10,50 @@ pragma solidity ^0.4.24;
 
 pragma experimental ABIEncoderV2;
 
-//import {SecurityBond} from "../SecurityBond.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 
 /**
 @title MockedSecurityBond
 @notice Mocked implementation of security bond contract
 */
-contract MockedSecurityBond /*is SecurityBond*/ {
-
+contract MockedSecurityBond {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct Stage {
+    struct Reward {
         address wallet;
-        uint256 fraction;
+        uint256 rewardFraction;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Stage[] public stages;
+    Reward[] public rewards;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event StageEvent(address wallet, uint256 fraction);
+    event RewardEvent(address wallet, uint256 rewardFraction);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*SecurityBond(owner)*/ {
+    constructor() public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
-        stages.length = 0;
+    function _reset() public {
+        rewards.length = 0;
     }
 
-    function stagesCount() public view returns (uint256) {
-        return stages.length;
+    function _rewardsCount() public view returns (uint256) {
+        return rewards.length;
     }
 
-    function stage(address wallet, uint256 fraction) {
-        stages.push(Stage(wallet, fraction));
-        emit StageEvent(msg.sender, fraction);
+    function reward(address wallet, uint256 rewardFraction) {
+        rewards.push(Reward(wallet, rewardFraction));
+        emit RewardEvent(msg.sender, rewardFraction);
     }
 }

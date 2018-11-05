@@ -46,8 +46,8 @@ library SettlementTypesLib {
         NahmiiTypesLib.DriipType driipType;
         uint256 driipIndex;
 
-        // Reward from bond or from slashing of wallet's funds
-        bool bondReward;
+        // True if reward is from wallet balance
+        bool balanceReward;
 
         // Candidate info updated when calling any of the challenge functions
         CandidateType candidateType;

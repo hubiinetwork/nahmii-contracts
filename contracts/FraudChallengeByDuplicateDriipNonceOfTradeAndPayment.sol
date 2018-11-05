@@ -14,7 +14,6 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
@@ -22,7 +21,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @notice Where driips are challenged wrt fraud by duplicate drip nonce of trade and payment
 */
 contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -62,8 +61,8 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
-        // Obtain stake fraction and stage
-        securityBond.stageToBeneficiary(msg.sender, clientFund, configuration.fraudStakeFraction());
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
         emit ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(trade, payment, msg.sender);
     }

@@ -59,8 +59,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => Wallet) private walletMap;
 
-    mapping(address => uint256) public registeredServicesMap;
-    mapping(address => mapping(address => bool)) public disabledServicesMap;
+    address[] public seizedWallets;
+    mapping(address => bool) public seizuresByWallet;
 
     //
     // Events
@@ -423,7 +423,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @notice Transfer all balances of the given source wallet to the given target wallet
     /// @param sourceWallet The address of concerned source wallet
     /// @param targetWallet The address of concerned target wallet
-    function seizeAllBalances(address sourceWallet, address targetWallet) public
+    function seizeAllBalances(address sourceWallet, address targetWallet)
+    public
     notNullAddress(sourceWallet)
     notNullAddress(targetWallet)
     {
@@ -446,6 +447,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
             // Add currencyCt to in-use list
             walletMap[targetWallet].inUseCurrencies.addItem(currency.ct, currency.id);
         }
+
+        // Add to the store of seized wallets
+        addToSeizedWallets(sourceWallet);
 
         // Emit event
         emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
@@ -532,6 +536,18 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         return walletMap[wallet].txHistory.currencyWithdrawalsCount(currencyCt, currencyId);
     }
 
+    /// @notice Get the seized status of given wallet
+    /// @return true if wallet is seized, false otherwise
+    function isSeizedWallet(address wallet) public view returns (bool) {
+        return seizuresByWallet[wallet];
+    }
+
+    /// @notice Get the number of wallets whose funds have been seized
+    /// @return Number of wallets
+    function seizedWalletsCount() public view returns (uint256) {
+        return seizedWallets.length;
+    }
+
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
@@ -609,5 +625,14 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].deposited.set(0, currencyCt, currencyId);
         walletMap[wallet].settled.set(0, currencyCt, currencyId);
         walletMap[wallet].staged.set(0, currencyCt, currencyId);
+    }
+
+    function addToSeizedWallets(address wallet)
+    private
+    {
+        if (!seizuresByWallet[wallet]) {
+            seizuresByWallet[wallet] = true;
+            seizedWallets.push(wallet);
+        }
     }
 }

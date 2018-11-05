@@ -239,8 +239,12 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerService(addressStorage.get('DriipSettlement'));
             tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('DriipSettlement'));
+            tx = await instance.registerService(addressStorage.get('DriipSettlementDispute'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('DriipSettlementDispute'));
             tx = await instance.registerService(addressStorage.get('NullSettlement'));
             tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('NullSettlement'));
+            tx = await instance.registerService(addressStorage.get('NullSettlementDispute'));
+            tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('NullSettlementDispute'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
             tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
@@ -255,7 +259,7 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeByTrade'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
             tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
-            tx = await instance.disableInitialServiceAuthorization();
+            // tx = await instance.disableInitialServiceAuthorization();
             tx = await instance.registerBeneficiary(addressStorage.get('PaymentsRevenueFund'));
             tx = await instance.registerBeneficiary(addressStorage.get('TradesRevenueFund'));
             // TODO Whitelist all ClientFundable contracts in ClientFund
@@ -289,6 +293,7 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
             tx = await instance.changeValidator(addressStorage.get('Validator'));
             tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
             tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
             tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
             tx = await instance.changeDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
@@ -299,7 +304,10 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.changeNullSettlementDispute(addressStorage.get('NullSettlementDispute'));
 
             instance = await NullSettlementDispute.at(addressStorage.get('NullSettlementDispute'));
+            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
             tx = await instance.changeValidator(addressStorage.get('Validator'));
+            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
             tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
             tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
             tx = await instance.changeNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
@@ -441,6 +449,8 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), 'reward');
             tx = await instance.registerService(addressStorage.get('DriipSettlementDispute'));
             tx = await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'reward');
+            tx = await instance.registerService(addressStorage.get('NullSettlementDispute'));
+            tx = await instance.enableServiceAction(addressStorage.get('NullSettlementDispute'), 'reward');
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));

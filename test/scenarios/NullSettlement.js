@@ -268,26 +268,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('isSeizedWallet()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersNullSettlement.isSeizedWallet(glob.user_a))
-                    .should.be.false;
-            });
-        });
-
-        describe('seizedWalletsCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersNullSettlement.seizedWalletsCount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('seizedWallets()', () => {
-            it('should equal value initialized', async () => {
-                ethersNullSettlement.seizedWallets(0).should.be.rejected;
-            });
-        });
-
         describe('maxNullNonce()', () => {
             it('should equal value initialized', async () => {
                 (await ethersNullSettlement.maxNullNonce())
@@ -389,6 +369,19 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if null settlement challenge result is disqualified', () => {
+                beforeEach(async () => {
+                    await ethersClientFund.reset({gasLimit: 1e6});
+                    await ethersNullSettlementChallenge._reset();
+
+                    await ethersNullSettlementChallenge.setProposalStatus(glob.owner, mocks.proposalStatuses.indexOf('Disqualified'));
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlement.settleNull({gasLimit: 1e6}).should.be.rejected;
+                });
+            });
+
             describe('if null settlement challenge result is qualified', () => {
                 let challenger;
 
@@ -477,37 +470,6 @@ module.exports = (glob) => {
                     });
                 });
             });
-
-            describe('if null settlement challenge result is disqualified', () => {
-                let challenger;
-
-                before(() => {
-                    challenger = Wallet.createRandom().address;
-                });
-
-                beforeEach(async () => {
-                    await ethersClientFund.reset({gasLimit: 1e6});
-                    await ethersNullSettlementChallenge._reset();
-
-                    await ethersNullSettlementChallenge.setProposalChallenger(glob.owner, challenger);
-                    await ethersNullSettlementChallenge.setProposalStatus(glob.owner, mocks.proposalStatuses.indexOf('Disqualified'));
-                });
-
-                it('should seize the wallet', async () => {
-                    await ethersNullSettlement.settleNull({gasLimit: 1e6});
-
-                    (await provider.getLogs(await fromBlockTopicsFilter(
-                        ethersNullSettlement.interface.events.SettleNullEvent.topics[0]
-                    ))).should.have.lengthOf(1);
-
-                    (await ethersNullSettlement.isSeizedWallet(glob.owner))
-                        .should.be.true;
-
-                    const seizure = await ethersClientFund.seizures(0);
-                    seizure.source.should.equal(utils.getAddress(glob.owner));
-                    seizure.target.should.equal(utils.getAddress(challenger));
-                });
-            });
         });
 
         describe('settleNullByProxy()', () => {
@@ -577,6 +539,19 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
+                });
+            });
+
+            describe('if null settlement challenge result is disqualified', () => {
+                beforeEach(async () => {
+                    await ethersClientFund.reset({gasLimit: 1e6});
+                    await ethersNullSettlementChallenge._reset();
+
+                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6}).should.be.rejected;
                 });
             });
 
@@ -666,37 +641,6 @@ module.exports = (glob) => {
                     it('should revert', async () => {
                         ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6}).should.be.rejected;
                     });
-                });
-            });
-
-            describe('if null settlement challenge result is disqualified', () => {
-                let challenger;
-
-                before(() => {
-                    challenger = Wallet.createRandom().address;
-                });
-
-                beforeEach(async () => {
-                    await ethersClientFund.reset({gasLimit: 1e6});
-                    await ethersNullSettlementChallenge._reset();
-
-                    await ethersNullSettlementChallenge.setProposalChallenger(wallet, challenger);
-                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Disqualified'));
-                });
-
-                it('should seize the wallet', async () => {
-                    await ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6});
-
-                    (await provider.getLogs(await fromBlockTopicsFilter(
-                        ethersNullSettlement.interface.events.SettleNullByProxyEvent.topics[0]
-                    ))).should.have.lengthOf(1);
-
-                    (await ethersNullSettlement.isSeizedWallet(wallet))
-                        .should.be.true;
-
-                    const seizure = await ethersClientFund.seizures(0);
-                    seizure.source.should.equal(wallet);
-                    seizure.target.should.equal(utils.getAddress(challenger));
                 });
             });
         });

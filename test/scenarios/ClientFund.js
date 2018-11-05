@@ -91,6 +91,18 @@ module.exports = function (glob) {
             });
         });
 
+        describe('isSeizedWallet()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersClientFund.isSeizedWallet(glob.user_a)).should.be.false;
+            });
+        });
+
+        describe('seizedWalletsCount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersClientFund.seizedWalletsCount()).toNumber().should.equal(0);
+            })
+        });
+
         describe('activeBalanceLogEntriesCount()', () => {
             it('should return initial value', async () => {
                 (await ethersClientFund.activeBalanceLogEntriesCount(Wallet.createRandom().address, mocks.address0, 0))
@@ -1463,6 +1475,30 @@ module.exports = function (glob) {
                     (await ethersClientFund.stagedBalance(glob.user_b, web3ERC20.address, 0))
                         ._bn.should.eq.BN(14);
                 });
+            });
+        });
+
+        describe('seizedWallets()', () => {
+            describe('if called before seizure', () => {
+                it('should revert', async () => {
+                    ethersClientFund.seizedWallets(0).should.be.rejected;
+                });
+            });
+
+            describe('if called after seizure', () => {
+                beforeEach(async () => {
+                    await web3ClientFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                    await web3MockedClientFundAuthorizedService.seizeAllBalances(
+                        glob.user_a, glob.user_b, {gas: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    (await ethersClientFund.seizedWallets(0))
+                        .should.equal(glob.user_a);
+                })
             });
         });
 

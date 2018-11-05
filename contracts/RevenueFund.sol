@@ -37,7 +37,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public PERIOD_BALANCE = "period";
+    string constant public DEPOSIT_BALANCE_TYPE = "deposit";
 
     //
     // Variables
@@ -48,12 +48,12 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     BalanceLib.Balance aggregateAccrual;
     InUseCurrencyLib.InUseCurrency inUseAggregateAccrual;
 
-    mapping(address => bool) registeredServicesMap;
+    mapping(address => bool) public registeredServicesMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
     event RegisterServiceEvent(address service);
     event DeregisterServiceEvent(address service);
@@ -71,8 +71,11 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         receiveEthersTo(msg.sender, "");
     }
 
-    function receiveEthersTo(address wallet, string balance) public payable {
-        require(0 == bytes(balance).length || keccak256(abi.encodePacked(PERIOD_BALANCE)) == keccak256(abi.encodePacked(balance)));
+    function receiveEthersTo(address wallet, string balanceType) public payable {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
 
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
@@ -85,15 +88,18 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         inUseAggregateAccrual.addItem(address(0), 0);
 
         // Emit event
-        emit ReceiveEvent(wallet, amount, address(0), 0);
+        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function receiveTokens(string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
-        receiveTokensTo(msg.sender, balance, amount, currencyCt, currencyId, standard);
+    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
-        require(0 == bytes(balance).length || keccak256(abi.encodePacked(PERIOD_BALANCE)) == keccak256(abi.encodePacked(balance)));
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
 
         require(amount.isNonZeroPositiveInt256());
 
@@ -111,7 +117,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         inUseAggregateAccrual.addItem(currencyCt, currencyId);
 
         // Emit event
-        emit ReceiveEvent(wallet, amount, currencyCt, currencyId);
+        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId);
     }
 
     //
