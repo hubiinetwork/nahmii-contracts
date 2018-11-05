@@ -36,9 +36,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public DEPOSITED_BALANCE = "deposited";
-    string constant public SETTLED_BALANCE = "settled";
-    string constant public STAGED_BALANCE = "staged";
+    string constant public DEPOSITED_BALANCE_TYPE = "deposited";
+    string constant public SETTLED_BALANCE_TYPE = "settled";
+    string constant public STAGED_BALANCE_TYPE = "staged";
 
     //
     // Structures
@@ -65,7 +65,7 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEvent(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard);
+    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event UnstageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
@@ -93,65 +93,67 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     public
     payable
     {
-        receiveEthersTo(msg.sender, "deposited");
+        receiveEthersTo(msg.sender, DEPOSITED_BALANCE_TYPE);
     }
 
     /// @notice Deposit ethers to the given wallet's deposited balance
     /// @param wallet The address of the concerned wallet
-    /// @param balance The target balance
-    function receiveEthersTo(address wallet, string balance)
+    /// @param balanceType The target balance ty
+    function receiveEthersTo(address wallet, string balanceType)
     public
     payable
     {
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
-        if (0 == bytes(balance).length)
-            balance = DEPOSITED_BALANCE;
+        if (0 == bytes(balanceType).length)
+            balanceType = DEPOSITED_BALANCE_TYPE;
 
-        bytes32 balanceHash = keccak256(abi.encodePacked(balance));
+        bytes32 balanceHash = keccak256(abi.encodePacked(balanceType));
 
-        if (keccak256(abi.encodePacked(STAGED_BALANCE)) == balanceHash)
+        if (keccak256(abi.encodePacked(STAGED_BALANCE_TYPE)) == balanceHash)
             walletMap[wallet].staged.add(amount, address(0), 0);
 
-        else {// DEPOSITED_BALANCE
+        else if (keccak256(abi.encodePacked(DEPOSITED_BALANCE_TYPE)) == balanceHash) {
             // Add to per-wallet deposited balance
             walletMap[wallet].deposited.add(amount, address(0), 0);
             walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
             // Add active balance log entry
             walletMap[wallet].active.add(activeBalance(wallet, address(0), 0), address(0), 0);
-        }
+
+        } else
+            revert();
 
         // Add currency to in-use list
         walletMap[wallet].inUseCurrencies.addItem(address(0), 0);
 
         // Emit event
-        emit ReceiveEvent(wallet, balance, amount, address(0), 0, "");
+        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0, "");
     }
 
     /// @notice Receive token to msg.sender's given balance
     /// @dev The wallet must approve of this ClientFund's transfer prior to calling this function
-    /// @param balance The target balance
+    /// @param balanceType The target balance type
     /// @param amount The amount to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function receiveTokens(string balance, int256 amount, address currencyCt,
+    function receiveTokens(string balanceType, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
-        receiveTokensTo(msg.sender, balance, amount, currencyCt, currencyId, standard);
+        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
     /// @notice Receive token to the given wallet's given balance
     /// @dev The wallet must approve of this ClientFund's transfer prior to calling this function
     /// @param wallet The address of the concerned wallet
-    /// @param balance The target balance
+    /// @param balanceType The target balance type
     /// @param amount The amount to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("ERC20", "ERC721")
-    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt,
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
@@ -161,28 +163,30 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         TransferController controller = getTransferController(currencyCt, standard);
         require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
-        if (0 == bytes(balance).length)
-            balance = DEPOSITED_BALANCE;
+        if (0 == bytes(balanceType).length)
+            balanceType = DEPOSITED_BALANCE_TYPE;
 
-        bytes32 balanceHash = keccak256(abi.encodePacked(balance));
+        bytes32 balanceHash = keccak256(abi.encodePacked(balanceType));
 
-        if (keccak256(abi.encodePacked(STAGED_BALANCE)) == balanceHash)
+        if (keccak256(abi.encodePacked(STAGED_BALANCE_TYPE)) == balanceHash)
             walletMap[wallet].staged.add(amount, currencyCt, currencyId);
 
-        else {// DEPOSITED_BALANCE
+        else if (keccak256(abi.encodePacked(DEPOSITED_BALANCE_TYPE)) == balanceHash) {
             // Add to per-wallet deposited balance
             walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
             walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
             // Add active balance log entry
             walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
-        }
+
+        } else
+            revert();
 
         // Add currency to in-use list
         walletMap[wallet].inUseCurrencies.addItem(currencyCt, currencyId);
 
         // Emit event
-        emit ReceiveEvent(wallet, balance, amount, currencyCt, currencyId, standard);
+        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId, standard);
     }
 
     /// @notice Get metadata of the given wallet's deposit at the given index

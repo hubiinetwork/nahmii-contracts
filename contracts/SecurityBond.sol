@@ -35,104 +35,77 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public STAGE_ACTION = "stage";
+    string constant public REWARD_ACTION = "reward";
 
-    string constant public BALANCE = "balance";
-
-    //
-    // Structures
-    // -----------------------------------------------------------------------------------------------------------------
-    struct SubStageItem {
-        int256 availableAmount;
-        uint256 startTimestamp;
-    }
-
-    struct SubStageInfo {
-        uint256 currentIndex;
-        SubStageItem[] list;
-    }
-
-    struct Wallet {
-        BalanceLib.Balance staged;
-        mapping(address => mapping(uint256 => SubStageInfo)) subStaged;
-
-        TxHistoryLib.TxHistory txHistory;
-    }
+    string constant public DEPOSIT_BALANCE_TYPE = "deposit";
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => Wallet) private walletMap;
-
-    BalanceLib.Balance private _balance;
+    BalanceLib.Balance private deposited;
+    TxHistoryLib.TxHistory private txHistory;
     InUseCurrencyLib.InUseCurrency private inUseCurrencies;
 
-    uint256 public withdrawalTimeout;
+    mapping(address => uint256) public rewardFractionsByWallet;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetWithdrawalTimeoutEvent(uint256 timeoutInSeconds);
-    event ReceiveEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
-    event StageEvent(address from, uint256 fraction);
-    event StageToBeneficiaryEvent(address from, uint256 fraction);
-    event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
+    event RewardEvent(address wallet, uint256 rewardFraction);
+    event StageToBeneficiaryEvent(address from, Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address _owner) Ownable(_owner) Servable() public {
-        withdrawalTimeout = 30 minutes;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setWithdrawalTimeout(uint256 timeoutInSeconds)
-    public
-    onlyDeployer
-    {
-        withdrawalTimeout = timeoutInSeconds;
-
-        // Emit event
-        emit SetWithdrawalTimeoutEvent(timeoutInSeconds);
-    }
-
     function() public payable {
         receiveEthersTo(msg.sender, "");
     }
 
-    function receiveEthersTo(address wallet, string balance)
+    function receiveEthersTo(address wallet, string balanceType)
     public
     payable
     {
-        require(0 == bytes(balance).length || keccak256(abi.encodePacked(BALANCE)) == keccak256(abi.encodePacked(balance)));
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
 
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         // Add to balance
-        _balance.add(amount, address(0), 0);
-        walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
+        deposited.add(amount, address(0), 0);
+        txHistory.addDeposit(amount, address(0), 0);
 
         // Add currency to in-use list
         inUseCurrencies.addItem(address(0), 0);
 
         // Emit event
-        emit ReceiveEvent(wallet, amount, address(0), 0);
+        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function receiveTokens(string balance, int256 amount, address currencyCt,
+    function receiveTokens(string balanceType, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
-        receiveTokensTo(msg.sender, balance, amount, currencyCt, currencyId, standard);
+        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt,
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
-        require(0 == bytes(balance).length || keccak256(abi.encodePacked(BALANCE)) == keccak256(abi.encodePacked(balance)));
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
 
         require(amount.isNonZeroPositiveInt256());
 
@@ -141,74 +114,105 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
         // Add to balance
-        _balance.add(amount, currencyCt, currencyId);
-        walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
+        deposited.add(amount, currencyCt, currencyId);
+        txHistory.addDeposit(amount, currencyCt, currencyId);
 
         // Add currency to in-use list
         inUseCurrencies.addItem(currencyCt, currencyId);
 
         // Emit event
-        emit ReceiveEvent(wallet, amount, currencyCt, currencyId);
+        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId);
     }
 
-    function deposit(address wallet, uint index)
+    function deposit(uint index)
     public
     view
     returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        return walletMap[wallet].txHistory.deposit(index);
+        return txHistory.deposit(index);
     }
 
-    function depositsCount(address wallet)
+    function depositsCount()
     public
     view
     returns (uint256)
     {
-        return walletMap[wallet].txHistory.depositsCount();
+        return txHistory.depositsCount();
     }
 
-    function balance(address currencyCt, uint256 currencyId)
+    function depositedBalance(address currencyCt, uint256 currencyId)
     public
     view
     returns (int256)
     {
-        return _balance.get(currencyCt, currencyId);
+        return deposited.get(currencyCt, currencyId);
     }
 
-    function stageToBeneficiary(address wallet, Beneficiary beneficiary, uint256 fraction)
+    function inUseCurrenciesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return inUseCurrencies.list.length;
+    }
+
+    function inUseCurrenciesByIndices(uint256 low, uint256 up)
+    public
+    view
+    returns (MonetaryTypesLib.Currency[])
+    {
+        require(low <= up);
+
+        low = low < 0 ? 0 : low;
+        up = up > inUseCurrencies.list.length - 1 ? inUseCurrencies.list.length - 1 : up;
+        MonetaryTypesLib.Currency[] memory _inUseCurrencies = new MonetaryTypesLib.Currency[](up - low + 1);
+        for (uint256 i = low; i <= up; i++)
+            _inUseCurrencies[i - low] = inUseCurrencies.list[i];
+
+        return _inUseCurrencies;
+    }
+
+    function reward(address wallet, uint256 _rewardFraction)
     public
     notNullAddress(wallet)
-    onlyDeployerOrEnabledServiceAction(STAGE_ACTION)
+    onlyDeployerOrEnabledServiceAction(REWARD_ACTION)
     {
-        uint256 numCurrencies = inUseCurrencies.getLength();
-        int256 partsPer = configuration.PARTS_PER();
-        for (uint256 i = 0; i < numCurrencies; i++) {
-            MonetaryTypesLib.Currency memory currency = inUseCurrencies.getAt(i);
+        // Store reward
+        rewardFractionsByWallet[wallet] = _rewardFraction;
 
-            int256 amount = _balance
-            .get(currency.ct, currency.id)
-            .mul(SafeMathIntLib.toInt256(fraction))
-            .div(partsPer);
+        // Emit event
+        emit RewardEvent(wallet, _rewardFraction);
+    }
 
-            // Move from balance to staged
-            _balance.sub(amount, currency.ct, currency.id);
+    function stageToBeneficiary(Beneficiary beneficiary, address currencyCt, uint256 currencyId)
+    public
+    {
+        require(inUseCurrencies.has(currencyCt, currencyId));
+
+        // Calculate amount to stage
+        int256 amount = deposited
+        .get(currencyCt, currencyId)
+        .mul(SafeMathIntLib.toInt256(rewardFractionsByWallet[msg.sender]))
+        .div(configuration.PARTS_PER());
+
+        // Move from balance to staged
+        deposited.sub(amount, currencyCt, currencyId);
+
+        // Transfer funds to the beneficiary
+        if (currencyCt== address(0) && currencyId == 0)
+            beneficiary.receiveEthersTo.value(uint256(amount))(msg.sender, "staged");
+
+        else {
+            // Approve of beneficiary
+            TransferController controller = getTransferController(currencyCt, "");
+            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 
             // Transfer funds to the beneficiary
-            if (currency.ct == address(0) && currency.id == 0)
-                beneficiary.receiveEthersTo.value(uint256(amount))(wallet, "staged");
-
-            else {
-                // Approve of beneficiary
-                TransferController controller = getTransferController(currency.ct, "");
-                require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currency.ct, currency.id));
-
-                // Transfer funds to the beneficiary
-                beneficiary.receiveTokensTo(wallet, "staged", amount, currency.ct, currency.id, "");
-            }
+            beneficiary.receiveTokensTo(msg.sender, "staged", amount, currencyCt, currencyId, "");
         }
 
         // Emit event
-        emit StageToBeneficiaryEvent(wallet, fraction);
+        emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
     }
 
     //
