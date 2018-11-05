@@ -6,6 +6,7 @@ const mocks = require('../mocks');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
+const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 const MockedClientFund = artifacts.require('MockedClientFund');
 
 chai.use(sinonChai);
@@ -20,6 +21,7 @@ module.exports = (glob) => {
         let web3FraudChallenge, ethersFraudChallenge;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
+        let web3SecurityBond, ethersSecurityBond;
         let web3ClientFund, ethersClientFund;
         let blockNumber0, blockNumber10, blockNumber20;
 
@@ -35,12 +37,15 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
+            web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
+            ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
             ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
 
             await ethersFraudChallengeByTradeSucceedingPayment.changeFraudChallenge(ethersFraudChallenge.address);
             await ethersFraudChallengeByTradeSucceedingPayment.changeConfiguration(ethersConfiguration.address);
             await ethersFraudChallengeByTradeSucceedingPayment.changeValidator(ethersValidator.address);
+            await ethersFraudChallengeByTradeSucceedingPayment.changeSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallengeByTradeSucceedingPayment.changeClientFund(ethersClientFund.address);
 
             await ethersConfiguration.registerService(ethersFraudChallengeByTradeSucceedingPayment.address);
@@ -281,6 +286,7 @@ module.exports = (glob) => {
                 await ethersConfiguration.reset(overrideOptions);
                 await ethersFraudChallenge.reset(overrideOptions);
                 await ethersValidator.reset(overrideOptions);
+                await ethersSecurityBond._reset(overrideOptions);
                 await ethersClientFund.reset(overrideOptions);
 
                 payment = await mocks.mockPayment(glob.owner, {
@@ -440,15 +446,15 @@ module.exports = (glob) => {
                     await ethersValidator.setGenuineSuccessivePaymentTradeBalances(false);
                 });
 
-                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent trade and reward', async () => {
                     await ethersFraudChallengeByTradeSucceedingPayment.challenge(
                         payment, trade, payment.sender.wallet, payment.currency.ct, payment.currency.id, overrideOptions
                     );
                     const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
@@ -467,15 +473,15 @@ module.exports = (glob) => {
                     await ethersValidator.setGenuineSuccessivePaymentTradeTotalFees(false);
                 });
 
-                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent trade and reward', async () => {
                     await ethersFraudChallengeByTradeSucceedingPayment.challenge(
                         payment, trade, payment.sender.wallet, payment.currency.ct, payment.currency.id, overrideOptions
                     );
                     const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);

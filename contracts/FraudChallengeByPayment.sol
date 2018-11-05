@@ -26,7 +26,7 @@ SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentEvent(NahmiiTypesLib.Payment payment, address challenger,
+    event ChallengeByPaymentEvent(bytes32 paymentHash, address challenger,
         address seizedWallet);
 
     //
@@ -78,11 +78,9 @@ SecurityBondable, ClientFundable {
             seizedWallet = payment.sender.wallet;
         if (!genuineRecipient)
             seizedWallet = payment.recipient.wallet;
-        if (address(0) != seizedWallet) {
+        if (address(0) != seizedWallet)
             clientFund.seizeAllBalances(seizedWallet, msg.sender);
-            fraudChallenge.addSeizedWallet(seizedWallet);
-        }
 
-        emit ChallengeByPaymentEvent(payment, msg.sender, seizedWallet);
+        emit ChallengeByPaymentEvent(payment.seals.operator.hash, msg.sender, seizedWallet);
     }
 }

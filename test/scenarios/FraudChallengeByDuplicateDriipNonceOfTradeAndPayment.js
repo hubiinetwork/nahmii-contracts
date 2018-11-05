@@ -295,7 +295,7 @@ module.exports = (glob) => {
                 await ethersConfiguration.reset(overrideOptions);
                 await ethersFraudChallenge.reset(overrideOptions);
                 await ethersValidator.reset(overrideOptions);
-                await ethersSecurityBond.reset(overrideOptions);
+                await ethersSecurityBond._reset(overrideOptions);
 
                 trade = await mocks.mockTrade(glob.owner, {
                     nonce: utils.bigNumberify(1),
@@ -391,24 +391,24 @@ module.exports = (glob) => {
                     });
                 });
 
-                it('should set operational mode exit, store fraudulent trades and stage in security bond', async () => {
+                it('should set operational mode exit, store fraudulent trades and reward in security bond', async () => {
                     await ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.challenge(
                         trade, payment, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, fraudulentPaymentHashesCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, fraudulentPaymentHashesCount, rewardsCount, reward, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersSecurityBond.stagesCount(),
-                        ethersSecurityBond.stages(utils.bigNumberify(0)),
+                        ethersSecurityBond._rewardsCount(),
+                        ethersSecurityBond.rewards(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
                     fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    stagesCount.eq(1).should.be.true;
-                    stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.fraction._bn.should.eq.BN(1e17.toString());
+                    rewardsCount.eq(1).should.be.true;
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
                     logs.should.have.lengthOf(1);
                 });
             });

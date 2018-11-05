@@ -7,6 +7,7 @@ const cryptography = require('omphalos-commons').util.cryptography;
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
+const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 const MockedClientFund = artifacts.require('MockedClientFund');
 
 chai.use(sinonChai);
@@ -21,6 +22,7 @@ module.exports = (glob) => {
         let web3FraudChallenge, ethersFraudChallenge;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
+        let web3SecurityBond, ethersSecurityBond;
         let web3ClientFund, ethersClientFund;
         let blockNumber0, blockNumber10, blockNumber20;
 
@@ -36,12 +38,15 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
+            web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
+            ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
             ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
 
             await ethersFraudChallengeByTradeOrderResiduals.changeFraudChallenge(ethersFraudChallenge.address);
             await ethersFraudChallengeByTradeOrderResiduals.changeConfiguration(ethersConfiguration.address);
             await ethersFraudChallengeByTradeOrderResiduals.changeValidator(ethersValidator.address);
+            await ethersFraudChallengeByTradeOrderResiduals.changeSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallengeByTradeOrderResiduals.changeClientFund(ethersClientFund.address);
 
             await ethersConfiguration.registerService(ethersFraudChallengeByTradeOrderResiduals.address);
@@ -282,6 +287,7 @@ module.exports = (glob) => {
                 await ethersConfiguration.reset(overrideOptions);
                 await ethersFraudChallenge.reset(overrideOptions);
                 await ethersValidator.reset(overrideOptions);
+                await ethersSecurityBond._reset(overrideOptions);
                 await ethersClientFund.reset(overrideOptions);
 
                 firstTrade = await mocks.mockTrade(glob.owner, {
@@ -581,7 +587,7 @@ module.exports = (glob) => {
                     await ethersValidator.setGenuineSuccessiveTradeOrderResiduals(false);
                 });
 
-                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent trade and reward', async () => {
                     await ethersFraudChallengeByTradeOrderResiduals.challenge(
                         firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
                         firstTrade.currencies.intended.id, overrideOptions
@@ -589,8 +595,8 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);

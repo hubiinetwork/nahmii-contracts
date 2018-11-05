@@ -26,8 +26,8 @@ SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentSucceedingTradeEvent(NahmiiTypesLib.Trade trade,
-        NahmiiTypesLib.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByPaymentSucceedingTradeEvent(bytes32 tradeHash,
+        bytes32 paymentHash, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -87,8 +87,9 @@ SecurityBondable, ClientFundable {
         securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
         clientFund.seizeAllBalances(wallet, msg.sender);
-        fraudChallenge.addSeizedWallet(wallet);
 
-        emit ChallengeByPaymentSucceedingTradeEvent(trade, payment, msg.sender, wallet);
+        emit ChallengeByPaymentSucceedingTradeEvent(
+            trade.seal.hash, payment.seals.operator.hash, msg.sender, wallet
+        );
     }
 }

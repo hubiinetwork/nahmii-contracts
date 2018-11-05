@@ -25,7 +25,7 @@ SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByOrderEvent(NahmiiTypesLib.Order order, address challenger);
+    event ChallengeByOrderEvent(bytes32 orderHash, address challenger);
 
     //
     // Constructor
@@ -62,6 +62,6 @@ SecurityBondable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByOrderEvent(order, msg.sender);
+        emit ChallengeByOrderEvent(order.seals.operator.hash, msg.sender);
     }
 }

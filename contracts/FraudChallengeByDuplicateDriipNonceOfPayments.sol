@@ -25,8 +25,8 @@ SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(NahmiiTypesLib.Payment payment1,
-        NahmiiTypesLib.Payment payment2, address challenger);
+    event ChallengeByDuplicateDriipNonceOfPaymentsEvent(bytes32 paymentHash1,
+        bytes32 paymentHash2, address challenger);
 
     //
     // Constructor
@@ -65,6 +65,8 @@ SecurityBondable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(payment1, payment2, msg.sender);
+        emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(
+            payment1.seals.operator.hash, payment2.seals.operator.hash, msg.sender
+        );
     }
 }
