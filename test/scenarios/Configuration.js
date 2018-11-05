@@ -10,7 +10,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe('Configuration', () => {
+    describe.only('Configuration', () => {
         let web3Configuration, ethersConfiguration;
         let provider, blockNumber, blockNumberAhead;
         const feeUpdates = {
@@ -695,113 +695,85 @@ module.exports = (glob) => {
             });
         });
 
-        describe('unchallengeOrderCandidateByTradeStake()', () => {
+        describe('walletSettlementStakeFraction()', () => {
             it('should return initial value', async () => {
-                (await ethersConfiguration.unchallengeOrderCandidateByTradeStake())
+                (await ethersConfiguration.walletSettlementStakeFraction())
                     ._bn.should.eq.BN(0);
             });
         });
 
-        describe('setUnchallengeOrderCandidateByTradeStake()', () => {
+        describe('setWalletSettlementStakeFraction()', () => {
             describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setUnchallengeOrderCandidateByTradeStake(1e18);
+                    const result = await web3Configuration.setWalletSettlementStakeFraction(1e18);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetUnchallengeDriipSettlementOrderByTradeStakeEvent');
+                    result.logs[0].event.should.equal('SetWalletSettlementStakeFractionEvent');
 
-                    (await ethersConfiguration.unchallengeOrderCandidateByTradeStake())
+                    (await ethersConfiguration.walletSettlementStakeFraction())
                         ._bn.should.eq.BN(1e18.toString());
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3Configuration.setUnchallengeOrderCandidateByTradeStake(1e18, {from: glob.user_a})
+                    web3Configuration.setWalletSettlementStakeFraction(1e18, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
         });
 
-        describe('falseWalletSignatureStake()', () => {
+        describe('operatorSettlementStakeFraction()', () => {
             it('should return initial value', async () => {
-                (await ethersConfiguration.falseWalletSignatureStake())
+                (await ethersConfiguration.operatorSettlementStakeFraction())
                     ._bn.should.eq.BN(0);
             });
         });
 
-        describe('setFalseWalletSignatureStake()', () => {
+        describe('setOperatorSettlementStakeFraction()', () => {
             describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setFalseWalletSignatureStake(1e18);
+                    const result = await web3Configuration.setOperatorSettlementStakeFraction(1e18);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetFalseWalletSignatureStakeEvent');
+                    result.logs[0].event.should.equal('SetOperatorSettlementStakeFractionEvent');
 
-                    (await ethersConfiguration.falseWalletSignatureStake())
+                    (await ethersConfiguration.operatorSettlementStakeFraction())
                         ._bn.should.eq.BN(1e18.toString());
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3Configuration.setFalseWalletSignatureStake(1e18, {from: glob.user_a})
+                    web3Configuration.setOperatorSettlementStakeFraction(1e18, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
         });
 
-        describe('duplicateDriipNonceStake()', () => {
+        describe('fraudStakeFraction()', () => {
             it('should return initial value', async () => {
-                (await ethersConfiguration.duplicateDriipNonceStake())
+                (await ethersConfiguration.fraudStakeFraction())
                     ._bn.should.eq.BN(0);
             });
         });
 
-        describe('setDuplicateDriipNonceStake()', () => {
+        describe('setFraudStakeFraction()', () => {
             describe('if called from non-deployer', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDuplicateDriipNonceStake(1e18);
+                    const result = await web3Configuration.setFraudStakeFraction(1e18);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDuplicateDriipNonceStakeEvent');
+                    result.logs[0].event.should.equal('SetFraudStakeFractionEvent');e
 
-                    (await ethersConfiguration.duplicateDriipNonceStake())
+                    (await ethersConfiguration.fraudStakeFraction())
                         ._bn.should.eq.BN(1e18.toString());
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3Configuration.setDuplicateDriipNonceStake(1e18, {from: glob.user_a})
-                        .should.be.rejected;
-                });
-            });
-        });
-
-        describe('doubleSpentOrderStake()', () => {
-            it('should return initial value', async () => {
-                (await ethersConfiguration.doubleSpentOrderStake())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('setDoubleSpentOrderStake()', () => {
-            describe('if called from non-deployer', () => {
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDoubleSpentOrderStake(1e18);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDoubleSpentOrderStakeEvent');
-
-                    (await ethersConfiguration.doubleSpentOrderStake())
-                        ._bn.should.eq.BN(1e18.toString());
-                });
-            });
-
-            describe('if called by non-deployer', () => {
-                it('should revert', async () => {
-                    web3Configuration.setDoubleSpentOrderStake(1e18, {from: glob.user_a})
+                    web3Configuration.setFraudStakeFraction(1e18, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });

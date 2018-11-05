@@ -80,11 +80,6 @@ contract Configuration is Ownable, Servable {
     uint256 public cancelOrderChallengeTimeout;
     uint256 public settlementChallengeTimeout;
 
-    uint256 public unchallengeOrderCandidateByTradeStake;
-    uint256 public falseWalletSignatureStake;
-    uint256 public duplicateDriipNonceStake;
-    uint256 public doubleSpentOrderStake;
-
     uint256 public walletSettlementStakeFraction;
     uint256 public operatorSettlementStakeFraction;
     uint256 public fraudStakeFraction;
@@ -129,29 +124,47 @@ contract Configuration is Ownable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set operational mode to Exit
     /// @dev Once operational mode is set to Exit it may not be set back to Normal
-    function setOperationalModeExit() public onlyDeployerOrEnabledServiceAction(OPERATIONAL_MODE_ACTION) {
+    function setOperationalModeExit()
+    public
+    onlyDeployerOrEnabledServiceAction(OPERATIONAL_MODE_ACTION)
+    {
         operationalMode = OperationalMode.Exit;
         emit SetOperationalModeExitEvent();
     }
 
     /// @notice Return true if operational mode is Normal
-    function isOperationalModeNormal() public view returns (bool) {
+    function isOperationalModeNormal()
+    public
+    view
+    returns (bool)
+    {
         return OperationalMode.Normal == operationalMode;
     }
 
     /// @notice Return true if operational mode is Exit
-    function isOperationalModeExit() public view returns (bool) {
+    function isOperationalModeExit()
+    public
+    view
+    returns (bool)
+    {
         return OperationalMode.Exit == operationalMode;
     }
 
     /// @notice Return the parts per constant
-    function getPartsPer() public pure returns (int256) {
+    function getPartsPer()
+    public
+    pure
+    returns (int256)
+    {
         return PARTS_PER;
     }
 
     /// @notice Set the number of confirmations
     /// @param newConfirmations The new confirmations value
-    function setConfirmations(uint256 newConfirmations) public onlyDeployer {
+    function setConfirmations(uint256 newConfirmations)
+    public
+    onlyDeployer
+    {
         if (confirmations != newConfirmations) {
             uint256 oldConfirmations = confirmations;
             confirmations = newConfirmations;
@@ -162,7 +175,11 @@ contract Configuration is Ownable, Servable {
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
-    function getTradeMakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
+    function getTradeMakerFee(uint256 blockNumber, int256 discountTier)
+    public
+    view
+    returns (int256)
+    {
         require(0 < tradeMakerFeeBlockNumberList.length);
         uint256 index = getIndexOfLower(tradeMakerFeeBlockNumberList, blockNumber);
         if (0 < index) {
@@ -178,7 +195,9 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
+    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    public
+    onlyDeployer
     onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberTradeMakerFeeMap[blockNumber];
@@ -187,14 +206,22 @@ contract Configuration is Ownable, Servable {
     }
 
     /// @notice Get number of trade maker fee tiers
-    function getTradeMakerFeesCount() public view returns (uint256) {
+    function getTradeMakerFeesCount()
+    public
+    view
+    returns (uint256)
+    {
         return tradeMakerFeeBlockNumberList.length;
     }
 
     /// @notice Get trade taker relative fee at given block number, possibly discounted by discount tier value
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
-    function getTradeTakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
+    function getTradeTakerFee(uint256 blockNumber, int256 discountTier)
+    public
+    view
+    returns (int256)
+    {
         require(0 < tradeTakerFeeBlockNumberList.length);
         uint256 index = getIndexOfLower(tradeTakerFeeBlockNumberList, blockNumber);
         if (0 < index) {
@@ -210,7 +237,9 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
+    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    public
+    onlyDeployer
     onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberTradeTakerFeeMap[blockNumber];
@@ -219,14 +248,22 @@ contract Configuration is Ownable, Servable {
     }
 
     /// @notice Get number of trade taker fee tiers
-    function getTradeTakerFeesCount() public view returns (uint256) {
+    function getTradeTakerFeesCount()
+    public
+    view
+    returns (uint256)
+    {
         return tradeTakerFeeBlockNumberList.length;
     }
 
     /// @notice Get payment relative fee at given block number, possibly discounted by discount tier value
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
-    function getPaymentFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
+    function getPaymentFee(uint256 blockNumber, int256 discountTier)
+    public
+    view
+    returns (int256)
+    {
         require(0 < paymentFeeBlockNumberList.length);
         uint256 index = getIndexOfLower(paymentFeeBlockNumberList, blockNumber);
         if (0 < index) {
@@ -242,7 +279,9 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
+    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    public
+    onlyDeployer
     onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = blockNumberPaymentFeeMap[blockNumber];
@@ -251,7 +290,11 @@ contract Configuration is Ownable, Servable {
     }
 
     /// @notice Get number of payment fee tiers
-    function getPaymentFeesCount() public view returns (uint256) {
+    function getPaymentFeesCount()
+    public
+    view
+    returns (uint256)
+    {
         return paymentFeeBlockNumberList.length;
     }
 
@@ -260,7 +303,11 @@ contract Configuration is Ownable, Servable {
     /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     /// @param blockNumber Lower block number for the tier
     /// @param discountTier Tiered value that determines discount
-    function getCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 discountTier) public view returns (int256) {
+    function getCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 discountTier)
+    public
+    view
+    returns (int256)
+    {
         // If no currency specific fee has not been set the currency agnostic one should be used
         if (0 == currencyPaymentFeeBlockNumbersMap[currencyCt][currencyId].length)
             return getPaymentFee(blockNumber, discountTier);
@@ -281,7 +328,9 @@ contract Configuration is Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) public onlyDeployer
+    function setCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    public
+    onlyDeployer
     onlyConfirmableBlockNumber(blockNumber)
     {
         DiscountableFee storage fee = currencyBlockNumberPaymentFeeMap[currencyCt][currencyId][blockNumber];
@@ -292,13 +341,21 @@ contract Configuration is Ownable, Servable {
     /// @notice Get number of payment fee tiers of given currency
     /// @param currencyCt Concerned currency contract address (address(0) == ETH)
     /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
-    function getCurrencyPaymentFeesCount(address currencyCt, uint256 currencyId) public view returns (uint256) {
+    function getCurrencyPaymentFeesCount(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
         return currencyPaymentFeeBlockNumbersMap[currencyCt][currencyId].length;
     }
 
     /// @notice Get trade maker minimum relative fee at given block number
     /// @param blockNumber Lower block number for the tier
-    function getTradeMakerMinimumFee(uint256 blockNumber) public view returns (int256) {
+    function getTradeMakerMinimumFee(uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
         require(0 < tradeMakerMinimumFeeBlockNumberList.length);
         uint256 index = getIndexOfLower(tradeMakerMinimumFeeBlockNumberList, blockNumber);
         if (0 < index) {
@@ -312,7 +369,9 @@ contract Configuration is Ownable, Servable {
     /// @notice Set trade maker minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
+    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal)
+    public
+    onlyDeployer
     onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberTradeMakerMinimumFeeMap[blockNumber];
@@ -321,13 +380,21 @@ contract Configuration is Ownable, Servable {
     }
 
     /// @notice Get number of minimum trade maker fee tiers
-    function getTradeMakerMinimumFeesCount() public view returns (uint256) {
+    function getTradeMakerMinimumFeesCount()
+    public
+    view
+    returns (uint256)
+    {
         return tradeMakerMinimumFeeBlockNumberList.length;
     }
 
     /// @notice Get trade taker minimum relative fee at given block number
     /// @param blockNumber Lower block number for the tier
-    function getTradeTakerMinimumFee(uint256 blockNumber) public view returns (int256) {
+    function getTradeTakerMinimumFee(uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
         require(0 < tradeTakerMinimumFeeBlockNumberList.length);
         uint256 index = getIndexOfLower(tradeTakerMinimumFeeBlockNumberList, blockNumber);
         if (0 < index) {
@@ -341,7 +408,9 @@ contract Configuration is Ownable, Servable {
     /// @notice Set trade taker minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
+    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal)
+    public
+    onlyDeployer
     onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberTradeTakerMinimumFeeMap[blockNumber];
@@ -350,13 +419,21 @@ contract Configuration is Ownable, Servable {
     }
 
     /// @notice Get number of minimum trade taker fee tiers
-    function getTradeTakerMinimumFeesCount() public view returns (uint256) {
+    function getTradeTakerMinimumFeesCount()
+    public
+    view
+    returns (uint256)
+    {
         return tradeTakerMinimumFeeBlockNumberList.length;
     }
 
     /// @notice Get payment minimum relative fee at given block number
     /// @param blockNumber Lower block number for the tier
-    function getPaymentMinimumFee(uint256 blockNumber) public view returns (int256) {
+    function getPaymentMinimumFee(uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
         require(0 < paymentMinimumFeeBlockNumberList.length);
         uint256 index = getIndexOfLower(paymentMinimumFeeBlockNumberList, blockNumber);
         if (0 < index) {
@@ -370,7 +447,9 @@ contract Configuration is Ownable, Servable {
     /// @notice Set payment minimum relative fee at given block number tier
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal) public onlyDeployer
+    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal)
+    public
+    onlyDeployer
     onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = blockNumberPaymentMinimumFeeMap[blockNumber];
@@ -379,7 +458,11 @@ contract Configuration is Ownable, Servable {
     }
 
     /// @notice Get number of minimum payment fee tiers
-    function getPaymentMinimumFeesCount() public view returns (uint256) {
+    function getPaymentMinimumFeesCount()
+    public
+    view
+    returns (uint256)
+    {
         return paymentMinimumFeeBlockNumberList.length;
     }
 
@@ -387,7 +470,11 @@ contract Configuration is Ownable, Servable {
     /// @param currencyCt Concerned currency contract address (address(0) == ETH)
     /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     /// @param blockNumber Lower block number for the tier
-    function getCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber) public view returns (int256) {
+    function getCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
         // If no currency specific fee has been set the currency agnostic one should be used
         if (0 == currencyPaymentMinimumFeeBlockNumbersMap[currencyCt][currencyId].length)
             return getPaymentMinimumFee(blockNumber);
@@ -406,7 +493,9 @@ contract Configuration is Ownable, Servable {
     /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     /// @param blockNumber Lower block number tier
     /// @param nominal Minimum relative fee
-    function setCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal) public onlyDeployer
+    function setCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal)
+    public
+    onlyDeployer
     onlyConfirmableBlockNumber(blockNumber)
     {
         StaticFee storage fee = currencyBlockNumberPaymentMinimumFeeMap[currencyCt][currencyId][blockNumber];
@@ -417,60 +506,41 @@ contract Configuration is Ownable, Servable {
     /// @notice Get number of minimum payment fee tiers for given currency
     /// @param currencyCt Concerned currency contract address (address(0) == ETH)
     /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
-    function getCurrencyPaymentMinimumFeesCount(address currencyCt, uint256 currencyId) public view returns (uint256) {
+    function getCurrencyPaymentMinimumFeesCount(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
         return currencyPaymentMinimumFeeBlockNumbersMap[currencyCt][currencyId].length;
     }
 
     /// @notice Set timeout of cancel order challenge
     /// @param timeoutInSeconds Timeout duration in seconds
-    function setCancelOrderChallengeTimeout(uint256 timeoutInSeconds) public onlyDeployer {
+    function setCancelOrderChallengeTimeout(uint256 timeoutInSeconds)
+    public
+    onlyDeployer
+    {
         cancelOrderChallengeTimeout = timeoutInSeconds;
         emit SetCancelOrderChallengeTimeoutEvent(timeoutInSeconds);
     }
 
     /// @notice Set timeout of settlement challenges
     /// @param timeoutInSeconds Timeout duration in seconds
-    function setSettlementChallengeTimeout(uint256 timeoutInSeconds) public onlyDeployer {
+    function setSettlementChallengeTimeout(uint256 timeoutInSeconds)
+    public
+    onlyDeployer
+    {
         settlementChallengeTimeout = timeoutInSeconds;
         emit SetSettlementChallengeTimeoutEvent(timeoutInSeconds);
-    }
-
-    /// @notice Set fraction of security bond that will be gained when someone successfully unchallenges
-    /// (driip settlement) order candidate by trade
-    /// @param stakeFraction The fraction gained
-    function setUnchallengeOrderCandidateByTradeStake(uint256 stakeFraction) public onlyDeployer {
-        unchallengeOrderCandidateByTradeStake = stakeFraction;
-        emit SetUnchallengeDriipSettlementOrderByTradeStakeEvent(stakeFraction);
-    }
-
-    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
-    /// false wallet signature on order or payment
-    /// @param stakeFraction The fraction gained
-    function setFalseWalletSignatureStake(uint256 stakeFraction) public onlyDeployer {
-        falseWalletSignatureStake = stakeFraction;
-        emit SetFalseWalletSignatureStakeEvent(stakeFraction);
-    }
-
-    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
-    /// duplicate driip nonce
-    /// @param stakeFraction The fraction gained
-    function setDuplicateDriipNonceStake(uint256 stakeFraction) public onlyDeployer {
-        duplicateDriipNonceStake = stakeFraction;
-        emit SetDuplicateDriipNonceStakeEvent(stakeFraction);
-    }
-
-    /// @notice Set fraction of security bond that will be gained when someone successfully challenges
-    /// double spent order
-    /// @param stakeFraction The fraction gained
-    function setDoubleSpentOrderStake(uint256 stakeFraction) public onlyDeployer {
-        doubleSpentOrderStake = stakeFraction;
-        emit SetDoubleSpentOrderStakeEvent(stakeFraction);
     }
 
     /// @notice Set fraction of security bond that will be gained from successfully challenging
     /// in settlement challenge triggered by wallet
     /// @param stakeFraction The fraction gained
-    function setWalletSettlementStakeFraction(uint256 stakeFraction) public onlyDeployer {
+    function setWalletSettlementStakeFraction(uint256 stakeFraction)
+    public
+    onlyDeployer
+    {
         walletSettlementStakeFraction = stakeFraction;
         emit SetWalletSettlementStakeFractionEvent(stakeFraction);
     }
@@ -478,7 +548,10 @@ contract Configuration is Ownable, Servable {
     /// @notice Set fraction of security bond that will be gained from successfully challenging
     /// in settlement challenge triggered by operator
     /// @param stakeFraction The fraction gained
-    function setOperatorSettlementStakeFraction(uint256 stakeFraction) public onlyDeployer {
+    function setOperatorSettlementStakeFraction(uint256 stakeFraction)
+    public
+    onlyDeployer
+    {
         operatorSettlementStakeFraction = stakeFraction;
         emit SetOperatorSettlementStakeFractionEvent(stakeFraction);
     }
@@ -486,7 +559,10 @@ contract Configuration is Ownable, Servable {
     /// @notice Set fraction of security bond that will be gained from successfully challenging
     /// in fraud challenge
     /// @param stakeFraction The fraction gained
-    function setFraudStakeFraction(uint256 stakeFraction) public onlyDeployer {
+    function setFraudStakeFraction(uint256 stakeFraction)
+    public
+    onlyDeployer
+    {
         fraudStakeFraction = stakeFraction;
         emit SetFraudStakeFractionEvent(stakeFraction);
     }
@@ -495,7 +571,9 @@ contract Configuration is Ownable, Servable {
     // Internal functions
     // -----------------------------------------------------------------------------------------------------------------
     function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,
-        uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) internal onlyDeployer
+        uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    internal
+    onlyDeployer
     {
         require(discountTiers.length == discountValues.length);
 
@@ -509,7 +587,11 @@ contract Configuration is Ownable, Servable {
             fee.discounts.push(TieredDiscount({tier : discountTiers[i], value : discountValues[i]}));
     }
 
-    function getDiscountableFee(DiscountableFee storage fee, int discountTier) internal view returns (int256) {
+    function getDiscountableFee(DiscountableFee storage fee, int discountTier)
+    internal
+    view
+    returns (int256)
+    {
         uint256 index = getIndexOfLowerTier(fee.discounts, discountTier);
         if (0 < index) {
             TieredDiscount storage discount = fee.discounts[index - 1];
@@ -518,21 +600,32 @@ contract Configuration is Ownable, Servable {
             return fee.nominal;
     }
 
-    function setStaticFee(StaticFee storage fee, uint256[] storage feeBlockNumbers, uint256 blockNumber, int256 nominal) internal onlyDeployer {
+    function setStaticFee(StaticFee storage fee, uint256[] storage feeBlockNumbers, uint256 blockNumber, int256 nominal)
+    internal
+    onlyDeployer
+    {
         feeBlockNumbers.push(blockNumber);
 
         fee.blockNumber = blockNumber;
         fee.nominal = nominal;
     }
 
-    function getIndexOfLower(uint256[] arr, uint256 num) internal pure returns (uint256) {
+    function getIndexOfLower(uint256[] arr, uint256 num)
+    internal
+    pure
+    returns (uint256)
+    {
         for (uint256 i = arr.length; i > 0; i--)
             if (num >= arr[i - 1])
                 return i;
         return 0;
     }
 
-    function getIndexOfLowerTier(TieredDiscount[] arr, int256 num) internal pure returns (uint256) {
+    function getIndexOfLowerTier(TieredDiscount[] arr, int256 num)
+    internal
+    pure
+    returns (uint256)
+    {
         for (uint256 i = arr.length; i > 0; i--)
             if (num >= arr[i - 1].tier)
                 return i;
