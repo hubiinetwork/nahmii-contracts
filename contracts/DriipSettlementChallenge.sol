@@ -141,7 +141,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     public
     {
         // Start challenge
-        startChallengeFromTradePrivate(msg.sender, trade, intendedStageAmount, conjugateStageAmount);
+        startChallengeFromTradePrivate(msg.sender, trade, intendedStageAmount, conjugateStageAmount, false);
 
         // Emit event
         emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
@@ -158,7 +158,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     onlyDeployer
     {
         // Start challenge for wallet
-        startChallengeFromTradePrivate(wallet, trade, intendedStageAmount, conjugateStageAmount);
+        startChallengeFromTradePrivate(wallet, trade, intendedStageAmount, conjugateStageAmount, true);
 
         // Emit event
         emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
@@ -171,7 +171,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     public
     {
         // Start challenge for wallet
-        startChallengeFromPaymentPrivate(msg.sender, payment, stageAmount);
+        startChallengeFromPaymentPrivate(msg.sender, payment, stageAmount, false);
 
         // Emit event
         emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
@@ -186,7 +186,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     onlyDeployer
     {
         // Start challenge for wallet
-        startChallengeFromPaymentPrivate(wallet, payment, stageAmount);
+        startChallengeFromPaymentPrivate(wallet, payment, stageAmount, true);
 
         // Emit event
         emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
@@ -509,7 +509,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     function startChallengeFromTradePrivate(address wallet, NahmiiTypesLib.Trade trade,
-        int256 intendedStageAmount, int256 conjugateStageAmount)
+        int256 intendedStageAmount, int256 conjugateStageAmount, bool bondReward)
     private
     validatorInitialized
     configurationInitialized
@@ -553,10 +553,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         //        walletProposalMap[wallet].driipOperatorHash = trade.seal.hash;
         walletProposalMap[wallet].driipType = NahmiiTypesLib.DriipType.Trade;
         walletProposalMap[wallet].driipIndex = walletChallengedTradeHashesMap[wallet].length.sub(1);
+        walletProposalMap[wallet].bondReward = bondReward;
     }
 
     function startChallengeFromPaymentPrivate(address wallet, NahmiiTypesLib.Payment payment,
-        int256 stageAmount)
+        int256 stageAmount, bool bondReward)
     private
     validatorInitialized
     configurationInitialized
@@ -594,6 +595,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         //        walletProposalMap[wallet].driipOperatorHash = payment.seals.operator.hash;
         walletProposalMap[wallet].driipType = NahmiiTypesLib.DriipType.Payment;
         walletProposalMap[wallet].driipIndex = walletChallengedPaymentHashesMap[wallet].length.sub(1);
+        walletProposalMap[wallet].bondReward = bondReward;
     }
 
     function proposalCurrencyIndex(address wallet, MonetaryTypesLib.Currency currency)

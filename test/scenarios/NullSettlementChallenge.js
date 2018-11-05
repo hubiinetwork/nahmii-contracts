@@ -228,6 +228,7 @@ module.exports = (glob) => {
                     proposal.driipIndex._bn.should.eq.BN(0);
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
+                    proposal.bondReward.should.be.false;
 
                     (await ethersNullSettlementChallenge.nonce())
                         ._bn.should.eq.BN(1);
@@ -321,6 +322,7 @@ module.exports = (glob) => {
                     proposal.driipIndex._bn.should.eq.BN(0);
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
+                    proposal.bondReward.should.be.true;
 
                     (await ethersNullSettlementChallenge.nonce())
                         ._bn.should.eq.BN(1);

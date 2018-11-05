@@ -102,7 +102,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     public
     {
         // Start challenge for wallet
-        startChallengePrivate(msg.sender, amount, currencyCt, currencyId);
+        startChallengePrivate(msg.sender, amount, currencyCt, currencyId, false);
 
         // Emit event
         emit StartChallengeEvent(msg.sender, amount, currencyCt, currencyId);
@@ -118,7 +118,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     onlyDeployer
     {
         // Start challenge for wallet
-        startChallengePrivate(wallet, amount, currencyCt, currencyId);
+        startChallengePrivate(wallet, amount, currencyCt, currencyId, true);
 
         // Emit event
         emit StartChallengeByProxyEvent(msg.sender, wallet, amount, currencyCt, currencyId);
@@ -396,7 +396,8 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         challengeCandidatePaymentHashes.push(hash);
     }
 
-    function startChallengePrivate(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function startChallengePrivate(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        bool bondReward)
     private
     configurationInitialized
     {
@@ -426,6 +427,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         walletProposalMap[wallet].stageAmounts.push(amount);
         walletProposalMap[wallet].targetBalanceAmounts.length = 0;
         walletProposalMap[wallet].targetBalanceAmounts.push(activeBalanceAmount.sub(amount));
+        walletProposalMap[wallet].bondReward = bondReward;
     }
 
     function proposalCurrencyIndex(address wallet, MonetaryTypesLib.Currency currency)

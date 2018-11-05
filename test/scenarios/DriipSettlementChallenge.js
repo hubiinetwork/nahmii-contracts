@@ -328,6 +328,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.bondReward.should.be.false;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -473,6 +474,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.bondReward.should.be.true;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -594,6 +596,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.bondReward.should.be.false;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -723,6 +726,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.bondReward.should.be.true;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
