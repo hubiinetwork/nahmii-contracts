@@ -30,6 +30,7 @@ const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
 const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByTradeOrderResiduals');
 const FraudChallengeByTradeSucceedingPayment = artifacts.require('FraudChallengeByTradeSucceedingPayment');
 const InUseCurrencyLib = artifacts.require('InUseCurrencyLib');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NullSettlement = artifacts.require('NullSettlement');
 const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
@@ -45,6 +46,10 @@ const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
+const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
+const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
+const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
+const ConstantsLib = artifacts.require('ConstantsLib');
 const Validator = artifacts.require('Validator');
 
 const path = require('path');
@@ -83,10 +88,14 @@ module.exports = (deployer, network, accounts) => {
                 ownerAccount: ownerAccount
             };
 
+            await execDeploy(ctl, 'ConstantsLib', '', ConstantsLib);
             await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
 
+            await deployer.link(ConstantsLib, [
+                BlockNumbDisdIntsLib, Configuration, MockedConfiguration, RevenueFund, SecurityBond, Validator
+            ]);
             await deployer.link(MonetaryTypesLib, [
-                ClientFund, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, NahmiiTypesLib,
+                ClientFund, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, NahmiiTypesLib,
                 NullSettlement, TokenHolderRevenueFund, Validator
             ]);
 
@@ -98,6 +107,9 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
             await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
             await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
+            await execDeploy(ctl, 'BlockNumbUintsLib', '', BlockNumbUintsLib);
+            await execDeploy(ctl, 'BlockNumbIntsLib', '', BlockNumbIntsLib);
+            await execDeploy(ctl, 'BlockNumbDisdIntsLib', '', BlockNumbDisdIntsLib);
 
             //link dependencies
             await deployer.link(SafeMathIntLib, [
@@ -107,7 +119,7 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(SafeMathUintLib, [
                 CancelOrdersChallenge, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
-                NullSettlementChallenge, NullSettlementDispute, RevenueFund, TokenHolderRevenueFund, Validator
+                NullSettlementChallenge, NullSettlementDispute, /*RevenueFund, */TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(NahmiiTypesLib, [
                 CancelOrdersChallenge, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, FraudChallenge,
@@ -127,6 +139,15 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(SettlementTypesLib, [
                 NullSettlement, NullSettlementChallenge, NullSettlementDispute
+            ]);
+            await deployer.link(BlockNumbUintsLib, [
+                Configuration
+            ]);
+            await deployer.link(BlockNumbIntsLib, [
+                Configuration
+            ]);
+            await deployer.link(BlockNumbDisdIntsLib, [
+                Configuration
             ]);
 
             //deploy transfer controllers
@@ -419,17 +440,15 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.changeValidator(addressStorage.get('Validator'));
             tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
 
-            const partsPer = await Configuration.at(addressStorage.get('Configuration')).getPartsPer();
-
             instance = await RevenueFund.at(addressStorage.get('TradesRevenueFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            tx = await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), partsPer.div(100).mul(99));
-            tx = await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), partsPer.div(100));
+            tx = await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
+            tx = await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), 1e16);
 
             instance = await RevenueFund.at(addressStorage.get('PaymentsRevenueFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            tx = await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), partsPer.div(100).mul(99));
-            tx = await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), partsPer.div(100));
+            tx = await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
+            tx = await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), 1e16);
 
             instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
@@ -482,13 +501,14 @@ module.exports = (deployer, network, accounts) => {
 async function execDeploy(ctl, contractName, instanceName, contract, usesAccessManager) {
     let address = ctl.addressStorage.get(instanceName || contractName);
 
-    if ((!address) || shouldDeploy(contractName, ctl.deployFilters)) {
+    if (!address || shouldDeploy(contractName, ctl.deployFilters)) {
         let instance;
 
         if (usesAccessManager) {
             let signerManager = ctl.addressStorage.get('SignerManager');
 
             instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, signerManager, {from: ctl.ownerAccount});
+
         } else
             instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, {from: ctl.ownerAccount});
 

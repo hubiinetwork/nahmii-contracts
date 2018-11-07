@@ -283,11 +283,11 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await ethersConfiguration.reset(overrideOptions);
-                await ethersFraudChallenge.reset(overrideOptions);
-                await ethersValidator.reset(overrideOptions);
+                await ethersConfiguration._reset(overrideOptions);
+                await ethersFraudChallenge._reset(overrideOptions);
+                await ethersValidator._reset(overrideOptions);
                 await ethersSecurityBond._reset(overrideOptions);
-                await ethersClientFund.reset(overrideOptions);
+                await ethersClientFund._reset(overrideOptions);
 
                 firstTrade = await mocks.mockTrade(glob.owner, {
                     buyer: {wallet: glob.user_a},

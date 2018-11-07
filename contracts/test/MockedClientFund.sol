@@ -63,7 +63,7 @@ contract MockedClientFund {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         seizures.length = 0;
         for (uint256 i = 0; i < seizedWallets.length; i++)
             seizuresByWallet[seizedWallets[i]] = false;

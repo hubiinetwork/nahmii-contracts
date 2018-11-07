@@ -212,12 +212,12 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await web3Validator.reset();
-                await web3FraudChallenge.reset();
-                await web3CancelOrdersChallenge.reset();
+                await web3Validator._reset();
+                await web3FraudChallenge._reset();
+                await web3CancelOrdersChallenge._reset();
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
-                await web3ClientFund.reset();
+                await web3ClientFund._reset();
             });
 
             describe('if validator contract is not initialized', () => {
@@ -423,12 +423,12 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await web3Validator.reset();
-                await web3FraudChallenge.reset();
-                await web3CancelOrdersChallenge.reset();
+                await web3Validator._reset();
+                await web3FraudChallenge._reset();
+                await web3CancelOrdersChallenge._reset();
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
-                await web3ClientFund.reset();
+                await web3ClientFund._reset();
             });
 
             describe('if validator contract is not initialized', () => {
@@ -644,11 +644,11 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await web3Validator.reset();
-                await web3FraudChallenge.reset();
+                await web3Validator._reset();
+                await web3FraudChallenge._reset();
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
-                await web3ClientFund.reset();
+                await web3ClientFund._reset();
             });
 
             describe('if validator contract is not initialized', () => {

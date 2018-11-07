@@ -21,6 +21,7 @@ import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {TransferController} from "./TransferController.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
 @title SecurityBond
@@ -193,7 +194,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         int256 amount = deposited
         .get(currencyCt, currencyId)
         .mul(SafeMathIntLib.toInt256(rewardFractionsByWallet[msg.sender]))
-        .div(configuration.PARTS_PER());
+        .div(ConstantsLib.PARTS_PER());
 
         // Move from balance to staged
         deposited.sub(amount, currencyCt, currencyId);

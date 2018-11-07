@@ -49,8 +49,6 @@ module.exports = (glob) => {
             ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, MockedDriipSettlementChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
-
-            await ethersConfiguration.setConfirmations(utils.bigNumberify(0));
         });
 
         beforeEach(async () => {
@@ -520,12 +518,12 @@ module.exports = (glob) => {
             let trade;
 
             beforeEach(async () => {
-                await ethersClientFund.reset({gasLimit: 1e6});
-                await ethersCommunityVote.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset({gasLimit: 1e6});
-                await ethersValidator.reset({gasLimit: 1e6});
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
-                await ethersFraudChallenge.reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
@@ -845,12 +843,12 @@ module.exports = (glob) => {
             let trade;
 
             beforeEach(async () => {
-                await ethersClientFund.reset({gasLimit: 1e6});
-                await ethersCommunityVote.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset({gasLimit: 1e6});
-                await ethersValidator.reset({gasLimit: 1e6});
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
-                await ethersFraudChallenge.reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
 
                 trade = await mocks.mockTrade(glob.owner);
 
@@ -1178,12 +1176,12 @@ module.exports = (glob) => {
             let payment;
 
             beforeEach(async () => {
-                await ethersClientFund.reset({gasLimit: 1e6});
-                await ethersCommunityVote.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset({gasLimit: 1e6});
-                await ethersValidator.reset({gasLimit: 1e6});
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
-                await ethersFraudChallenge.reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
@@ -1469,12 +1467,12 @@ module.exports = (glob) => {
             let payment;
 
             beforeEach(async () => {
-                await ethersClientFund.reset({gasLimit: 1e6});
-                await ethersCommunityVote.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset({gasLimit: 1e6});
-                await ethersValidator.reset({gasLimit: 1e6});
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
-                await ethersFraudChallenge.reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
 
                 payment = await mocks.mockPayment(glob.owner);
 

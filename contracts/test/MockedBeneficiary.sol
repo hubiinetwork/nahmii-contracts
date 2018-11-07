@@ -35,7 +35,7 @@ contract MockedBeneficiary is Beneficiary {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         benefits.length = 0;
     }
 

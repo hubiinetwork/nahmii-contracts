@@ -45,8 +45,6 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3NullSettlementChallenge = await MockedNullSettlementChallenge.new();
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, MockedNullSettlementChallenge.abi, glob.signer_owner);
-
-            await ethersConfiguration.setConfirmations(utils.bigNumberify(0));
         });
 
         beforeEach(async () => {
@@ -371,7 +369,7 @@ module.exports = (glob) => {
 
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersClientFund.reset({gasLimit: 1e6});
+                    await ethersClientFund._reset({gasLimit: 1e6});
                     await ethersNullSettlementChallenge._reset();
 
                     await ethersNullSettlementChallenge.setProposalStatus(glob.owner, mocks.proposalStatuses.indexOf('Disqualified'));
@@ -390,9 +388,9 @@ module.exports = (glob) => {
                 });
 
                 beforeEach(async () => {
-                    await ethersConfiguration.reset();
-                    await ethersClientFund.reset({gasLimit: 1e6});
-                    await ethersCommunityVote.reset();
+                    await ethersConfiguration._reset();
+                    await ethersClientFund._reset({gasLimit: 1e6});
+                    await ethersCommunityVote._reset();
                     await ethersNullSettlementChallenge._reset();
 
                     await ethersNullSettlementChallenge.setProposalStatus(glob.owner, mocks.proposalStatuses.indexOf('Qualified'));
@@ -544,7 +542,7 @@ module.exports = (glob) => {
 
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersClientFund.reset({gasLimit: 1e6});
+                    await ethersClientFund._reset({gasLimit: 1e6});
                     await ethersNullSettlementChallenge._reset();
 
                     await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Disqualified'));
@@ -563,9 +561,9 @@ module.exports = (glob) => {
                 });
 
                 beforeEach(async () => {
-                    await ethersConfiguration.reset();
-                    await ethersClientFund.reset({gasLimit: 1e6});
-                    await ethersCommunityVote.reset();
+                    await ethersConfiguration._reset();
+                    await ethersClientFund._reset({gasLimit: 1e6});
+                    await ethersCommunityVote._reset();
                     await ethersNullSettlementChallenge._reset();
 
                     await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Qualified'));

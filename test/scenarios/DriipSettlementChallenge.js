@@ -28,7 +28,7 @@ module.exports = (glob) => {
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
-        let blockNumber0;
+        let blockNumber;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -55,9 +55,9 @@ module.exports = (glob) => {
             await ethersDriipSettlementChallenge.changeValidator(ethersValidator.address);
             await ethersDriipSettlementChallenge.changeDriipSettlementDispute(ethersDriipSettlementDispute.address);
 
-            await ethersConfiguration.setSettlementChallengeTimeout(1e4);
+            blockNumber = await provider.getBlockNumber();
 
-            blockNumber0 = await provider.getBlockNumber();
+            await ethersConfiguration.setSettlementChallengeTimeout(blockNumber + 1, 1e4);
         });
 
         describe('constructor', () => {
@@ -218,13 +218,13 @@ module.exports = (glob) => {
             let trade, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 4e6});
+                await ethersValidator._reset({gasLimit: 4e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -356,13 +356,13 @@ module.exports = (glob) => {
             let trade, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 4e6});
+                await ethersValidator._reset({gasLimit: 4e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeByProxyEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -502,13 +502,13 @@ module.exports = (glob) => {
             let payment, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 4e6});
+                await ethersValidator._reset({gasLimit: 4e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -624,13 +624,13 @@ module.exports = (glob) => {
             let payment, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 4e6});
+                await ethersValidator._reset({gasLimit: 4e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentByProxyEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -767,7 +767,7 @@ module.exports = (glob) => {
 
                 describe('if settlement challenge has completed for given wallet', () => {
                     beforeEach(async () => {
-                        await web3Configuration.setSettlementChallengeTimeout(0);
+                        await web3Configuration.setSettlementChallengeTimeout(blockNumber + 2, 0);
                         await ethersDriipSettlementChallenge.startChallengeFromPayment(
                             payment, payment.sender.balances.current, {gasLimit: 2e6}
                         );

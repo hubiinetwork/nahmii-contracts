@@ -283,10 +283,10 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await ethersConfiguration.reset(overrideOptions);
-                await ethersFraudChallenge.reset(overrideOptions);
-                await ethersValidator.reset(overrideOptions);
-                await ethersClientFund.reset(overrideOptions);
+                await ethersConfiguration._reset(overrideOptions);
+                await ethersFraudChallenge._reset(overrideOptions);
+                await ethersValidator._reset(overrideOptions);
+                await ethersClientFund._reset(overrideOptions);
 
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByTrade.interface.events.ChallengeByTradeEvent.topics

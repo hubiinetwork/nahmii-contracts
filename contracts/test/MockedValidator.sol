@@ -11,14 +11,13 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../Ownable.sol";
 import {SignerManageable} from "../SignerManageable.sol";
-//import {Validator} from "../Validator.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
 @title MockedValidator
 @notice Mocked implementation of validator contract
 */
-contract MockedValidator is Ownable, SignerManageable /*, Validator*/ {
+contract MockedValidator is Ownable, SignerManageable {
 
     //
     // Types
@@ -75,14 +74,14 @@ contract MockedValidator is Ownable, SignerManageable /*, Validator*/ {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) /*Validator(owner)*/ public {
-        reset();
+    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) public {
+        _reset();
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         orderWalletHash = true;
         orderWalletSeal = true;
         orderOperatorSeal = true;

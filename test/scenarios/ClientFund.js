@@ -1497,7 +1497,7 @@ module.exports = function (glob) {
 
                 it('should revert', async () => {
                     (await ethersClientFund.seizedWallets(0))
-                        .should.equal(glob.user_a);
+                        .should.equal(utils.getAddress(glob.user_a));
                 })
             });
         });

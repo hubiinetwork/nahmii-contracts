@@ -284,9 +284,9 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await web3Validator.reset();
-                await web3FraudChallenge.reset();
-                await web3CancelOrdersChallenge.reset();
+                await web3Validator._reset();
+                await web3FraudChallenge._reset();
+                await web3CancelOrdersChallenge._reset();
                 await web3DriipSettlementChallenge._reset();
             });
 
@@ -456,14 +456,10 @@ module.exports = (glob) => {
         describe('unchallengeOrderCandidateByTrade()', () => {
             let order, trade;
 
-            before(async () => {
-                await web3Configuration.setUnchallengeOrderCandidateByTradeStake(1e17);
-            });
-
             beforeEach(async () => {
-                await web3Validator.reset();
-                await web3FraudChallenge.reset();
-                await web3CancelOrdersChallenge.reset();
+                await web3Validator._reset();
+                await web3FraudChallenge._reset();
+                await web3CancelOrdersChallenge._reset();
                 await web3DriipSettlementChallenge._reset();
 
                 order = await mocks.mockOrder(glob.owner);
@@ -700,12 +696,12 @@ module.exports = (glob) => {
             let trade;
 
             beforeEach(async () => {
-                await web3Validator.reset();
-                await web3FraudChallenge.reset();
-                await web3CancelOrdersChallenge.reset();
+                await web3Validator._reset();
+                await web3FraudChallenge._reset();
+                await web3CancelOrdersChallenge._reset();
                 await web3DriipSettlementChallenge._reset();
                 await web3SecurityBond._reset();
-                await web3ClientFund.reset();
+                await web3ClientFund._reset();
 
                 trade = await mocks.mockTrade(glob.owner);
 
@@ -938,11 +934,11 @@ module.exports = (glob) => {
             let payment;
 
             beforeEach(async () => {
-                await web3Validator.reset();
-                await web3FraudChallenge.reset();
+                await web3Validator._reset();
+                await web3FraudChallenge._reset();
                 await web3DriipSettlementChallenge._reset();
                 await web3SecurityBond._reset();
-                await web3ClientFund.reset();
+                await web3ClientFund._reset();
 
                 payment = await mocks.mockPayment(glob.owner);
 

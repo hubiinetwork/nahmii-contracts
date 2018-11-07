@@ -28,7 +28,7 @@ module.exports = (glob) => {
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
-        let blockNumber0;
+        let blockNumber;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -52,10 +52,6 @@ module.exports = (glob) => {
         });
 
         beforeEach(async () => {
-            // Default configuration timeouts for all tests. Particular tests override these defaults.
-            await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-            await ethersConfiguration.setSettlementChallengeTimeout(1e4);
-
             web3NullSettlementChallenge = await NullSettlementChallenge.new(glob.owner);
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, NullSettlementChallenge.abi, glob.signer_owner);
 
@@ -63,7 +59,11 @@ module.exports = (glob) => {
             await ethersNullSettlementChallenge.changeClientFund(ethersClientFund.address);
             await ethersNullSettlementChallenge.changeNullSettlementDispute(ethersNullSettlementDispute.address);
 
-            blockNumber0 = await provider.getBlockNumber();
+            blockNumber = await provider.getBlockNumber();
+
+            // Default configuration timeouts for all tests. Particular tests override these defaults.
+            await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 1, 1e3);
+            await ethersConfiguration.setSettlementChallengeTimeout(blockNumber + 2, 1e4);
         });
 
         describe('constructor', () => {
@@ -170,7 +170,7 @@ module.exports = (glob) => {
 
         describe('startChallenge()', () => {
             beforeEach(async () => {
-                await web3ClientFund.reset();
+                await web3ClientFund._reset();
             });
 
             describe('if configuration contract is not initialized', () => {
@@ -213,7 +213,7 @@ module.exports = (glob) => {
 
                     topic = ethersNullSettlementChallenge.interface.events['StartChallengeEvent'].topics[0];
                     filter = {
-                        fromBlock: blockNumber0,
+                        fromBlock: blockNumber,
                         topics: [topic]
                     };
                 });
@@ -258,7 +258,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 wallet = Wallet.createRandom().address;
 
-                await web3ClientFund.reset();
+                await web3ClientFund._reset();
             });
 
             describe('if called from non-deployer', () => {
@@ -307,7 +307,7 @@ module.exports = (glob) => {
 
                     topic = ethersNullSettlementChallenge.interface.events['StartChallengeByProxyEvent'].topics[0];
                     filter = {
-                        fromBlock: blockNumber0,
+                        fromBlock: blockNumber,
                         topics: [topic]
                     };
                 });
@@ -357,13 +357,13 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
                 });
 
                 describe('if settlement challenge has completed for given wallet', () => {
                     beforeEach(async () => {
-                        await web3Configuration.setSettlementChallengeTimeout(0);
+                        await web3Configuration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 0);
                         await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                             from: glob.user_d,
                             gas: 1e6
@@ -402,7 +402,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
@@ -427,7 +427,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
@@ -455,7 +455,7 @@ module.exports = (glob) => {
                 let timestampBefore;
 
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
@@ -486,7 +486,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
@@ -513,7 +513,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
@@ -541,7 +541,7 @@ module.exports = (glob) => {
                 let currencyCt, currencyId;
 
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     currencyCt = Wallet.createRandom().address;
@@ -574,7 +574,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
@@ -603,7 +603,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
-                    await web3ClientFund.reset.call();
+                    await web3ClientFund._reset.call();
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {

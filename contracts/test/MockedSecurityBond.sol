@@ -52,7 +52,7 @@ contract MockedSecurityBond {
         return rewards.length;
     }
 
-    function reward(address wallet, uint256 rewardFraction) {
+    function reward(address wallet, uint256 rewardFraction) public {
         rewards.push(Reward(wallet, rewardFraction));
         emit RewardEvent(msg.sender, rewardFraction);
     }

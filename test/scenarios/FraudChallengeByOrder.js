@@ -278,13 +278,12 @@ module.exports = (glob) => {
 
             before(async () => {
                 overrideOptions = {gasLimit: 2e6};
-                await web3Configuration.setFalseWalletSignatureStake(1e17);
             });
 
             beforeEach(async () => {
-                await ethersConfiguration.reset(overrideOptions);
-                await ethersFraudChallenge.reset(overrideOptions);
-                await ethersValidator.reset(overrideOptions);
+                await ethersConfiguration._reset(overrideOptions);
+                await ethersFraudChallenge._reset(overrideOptions);
+                await ethersValidator._reset(overrideOptions);
                 await ethersSecurityBond._reset(overrideOptions);
 
                 filter = await fromBlockTopicsFilter(
