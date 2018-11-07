@@ -60,7 +60,10 @@ const AddressStorage = require('../scripts/common/address_storage.js');
 
 module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
-        let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
+        // TODO Remove
+        return;
+
+        let addressStorage = new AddressStorage(deployer.basePath + p   ath.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
         let ownerAccount;
         let instance, tx;
 
@@ -119,7 +122,8 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(SafeMathUintLib, [
                 CancelOrdersChallenge, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
-                NullSettlementChallenge, NullSettlementDispute, /*RevenueFund, */TokenHolderRevenueFund, Validator
+                NullSettlementChallenge, NullSettlementDispute, /*RevenueFund, */, SecurityBond, TokenHolderRevenueFund,
+                Validator
             ]);
             await deployer.link(NahmiiTypesLib, [
                 CancelOrdersChallenge, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, FraudChallenge,
@@ -520,7 +524,7 @@ function shouldDeploy(contractName, deployFilters) {
     if (!deployFilters) {
         return true;
     }
-    for (var i = 0; i < deployFilters.length; i++) {
+    for (let i = 0; i < deployFilters.length; i++) {
         if (deployFilters[i].test(contractName))
             return true;
     }
