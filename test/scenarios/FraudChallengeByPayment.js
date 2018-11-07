@@ -8,8 +8,8 @@ const mocks = require('../mocks');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
-const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
+const MockedClientFund = artifacts.require('MockedClientFund');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -324,15 +324,14 @@ module.exports = (glob) => {
 
             before(async () => {
                 overrideOptions = {gasLimit: 2e6};
-                await web3Configuration.setFalseWalletSignatureStake(1e17);
             });
 
             beforeEach(async () => {
-                await ethersConfiguration.reset(overrideOptions);
-                await ethersFraudChallenge.reset(overrideOptions);
-                await ethersValidator.reset(overrideOptions);
-                await ethersClientFund.reset(overrideOptions);
-                await ethersSecurityBond.reset(overrideOptions);
+                await ethersConfiguration._reset(overrideOptions);
+                await ethersFraudChallenge._reset(overrideOptions);
+                await ethersValidator._reset(overrideOptions);
+                await ethersClientFund._reset(overrideOptions);
+                await ethersSecurityBond._reset(overrideOptions);
 
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByPayment.interface.events.ChallengeByPaymentEvent.topics
@@ -391,20 +390,20 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
-                it('should set operational mode exit, store fraudulent payment and stage in security bond', async () => {
+                it('should set operational mode exit, store fraudulent payment and reward in security bond', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentHashesCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, rewardsCount, reward, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersSecurityBond.stagesCount(),
-                        ethersSecurityBond.stages(utils.bigNumberify(0)),
+                        ethersSecurityBond._rewardsCount(),
+                        ethersSecurityBond.rewards(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    stagesCount.eq(1).should.be.true;
-                    stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.fraction._bn.should.eq.BN(1e17.toString());
+                    rewardsCount.eq(1).should.be.true;
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -415,14 +414,14 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
-                it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent payment and reward', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
                     const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
-                        ethersClientFund.seizures(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(0),
+                        ethersClientFund.seizures(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -441,14 +440,14 @@ module.exports = (glob) => {
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
-                it('should set operational mode exit, store fraudulent payment and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent payment and reward', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
                     const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
-                        ethersClientFund.seizures(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(0),
+                        ethersClientFund.seizures(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
@@ -472,9 +471,9 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
-                        ethersClientFund.seizures(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(0),
+                        ethersClientFund.seizures(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;

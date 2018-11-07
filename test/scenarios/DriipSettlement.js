@@ -8,7 +8,7 @@ const mocks = require('../mocks');
 const DriipSettlement = artifacts.require('DriipSettlement');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedClientFund = artifacts.require('MockedClientFund');
-const MockedRevenueFund = artifacts.require('MockedRevenueFund');
+const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedDriipSettlementChallenge = artifacts.require('MockedDriipSettlementChallenge');
 const MockedCommunityVote = artifacts.require('MockedCommunityVote');
@@ -39,8 +39,8 @@ module.exports = (glob) => {
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3ClientFund = await MockedClientFund.new();
             ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
-            web3RevenueFund = await MockedRevenueFund.new();
-            ethersRevenueFund = new Contract(web3RevenueFund.address, MockedRevenueFund.abi, glob.signer_owner);
+            web3RevenueFund = await MockedBeneficiary.new();
+            ethersRevenueFund = new Contract(web3RevenueFund.address, MockedBeneficiary.abi, glob.signer_owner);
             web3CommunityVote = await MockedCommunityVote.new();
             ethersCommunityVote = new Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
@@ -49,8 +49,6 @@ module.exports = (glob) => {
             ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, MockedDriipSettlementChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
-
-            await ethersConfiguration.setConfirmations(utils.bigNumberify(0));
         });
 
         beforeEach(async () => {
@@ -420,24 +418,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('isSeizedWallet()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersDriipSettlement.isSeizedWallet(glob.user_a)).should.be.false;
-            });
-        });
-
-        describe('seizedWalletsCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersDriipSettlement.seizedWalletsCount()).toNumber().should.equal(0);
-            })
-        });
-
-        describe('seizedWallets()', () => {
-            it('should equal value initialized', async () => {
-                ethersDriipSettlement.seizedWallets(0).should.be.rejected;
-            })
-        });
-
         describe('settlementsCount()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlement.settlementsCount()).toNumber().should.equal(0);
@@ -538,12 +518,12 @@ module.exports = (glob) => {
             let trade;
 
             beforeEach(async () => {
-                await ethersClientFund.reset({gasLimit: 1e6});
-                await ethersCommunityVote.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset({gasLimit: 1e6});
-                await ethersValidator.reset({gasLimit: 1e6});
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
-                await ethersFraudChallenge.reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
@@ -679,6 +659,22 @@ module.exports = (glob) => {
             describe('if driip settlement proposal nonce is not the one of trade', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalNonce(0);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if driip settlement challenge result is disqualified', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {wallet: glob.owner},
+                        blockNumber: utils.bigNumberify(await provider.getBlockNumber())
+                    });
+
+                    await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
+                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
                 });
 
                 it('should revert', async () => {
@@ -841,48 +837,18 @@ module.exports = (glob) => {
                     });
                 });
             });
-
-            describe('if driip settlement challenge result is disqualified', () => {
-                let challenger;
-
-                before(() => {
-                    challenger = Wallet.createRandom().address;
-                });
-
-                beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner, {
-                        buyer: {wallet: glob.owner},
-                        blockNumber: utils.bigNumberify(await provider.getBlockNumber())
-                    });
-
-                    await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
-                    await ethersDriipSettlementChallenge.setProposalChallenger(trade.buyer.wallet, challenger);
-                });
-
-                it('should seize the wallet', async () => {
-                    await ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6});
-
-                    (await ethersDriipSettlement.isSeizedWallet(trade.buyer.wallet))
-                        .should.be.true;
-
-                    const seizure = await ethersClientFund.seizures(0);
-                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.target.should.equal(utils.getAddress(challenger));
-                });
-            });
         });
 
         describe('settleTradeByProxy()', () => {
             let trade;
 
             beforeEach(async () => {
-                await ethersClientFund.reset({gasLimit: 1e6});
-                await ethersCommunityVote.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset({gasLimit: 1e6});
-                await ethersValidator.reset({gasLimit: 1e6});
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
-                await ethersFraudChallenge.reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
 
                 trade = await mocks.mockTrade(glob.owner);
 
@@ -1028,6 +994,21 @@ module.exports = (glob) => {
             describe('if driip settlement proposal nonce is not the one of trade', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalNonce(0);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if driip settlement challenge result is disqualified', () => {
+                beforeEach(async () => {
+                    trade = await mocks.mockTrade(glob.owner, {
+                        blockNumber: utils.bigNumberify(await provider.getBlockNumber())
+                    });
+
+                    await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
+                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
                 });
 
                 it('should revert', async () => {
@@ -1189,47 +1170,18 @@ module.exports = (glob) => {
                     });
                 });
             });
-
-            describe('if driip settlement challenge result is disqualified', () => {
-                let challenger;
-
-                before(() => {
-                    challenger = Wallet.createRandom().address;
-                });
-
-                beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner, {
-                        blockNumber: utils.bigNumberify(await provider.getBlockNumber())
-                    });
-
-                    await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
-                    await ethersDriipSettlementChallenge.setProposalChallenger(trade.buyer.wallet, challenger);
-                });
-
-                it('should seize the wallet', async () => {
-                    await ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6});
-
-                    (await ethersDriipSettlement.isSeizedWallet(trade.buyer.wallet))
-                        .should.be.true;
-
-                    const seizure = await ethersClientFund.seizures(0);
-                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.target.should.equal(utils.getAddress(challenger));
-                });
-            });
         });
 
         describe('settlePayment()', () => {
             let payment;
 
             beforeEach(async () => {
-                await ethersClientFund.reset({gasLimit: 1e6});
-                await ethersCommunityVote.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset({gasLimit: 1e6});
-                await ethersValidator.reset({gasLimit: 1e6});
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
-                await ethersFraudChallenge.reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
@@ -1355,6 +1307,22 @@ module.exports = (glob) => {
             describe('if wallet is flagged as double spender', () => {
                 beforeEach(async () => {
                     await ethersCommunityVote.addDoubleSpenderWallet(true);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if driip settlement challenge result is disqualified', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner, {
+                        sender: {wallet: glob.owner},
+                        blockNumber: utils.bigNumberify(await provider.getBlockNumber())
+                    });
+
+                    await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
+                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
                 });
 
                 it('should revert', async () => {
@@ -1493,48 +1461,18 @@ module.exports = (glob) => {
                     });
                 });
             });
-
-            describe('if driip settlement challenge result is disqualified', () => {
-                let challenger;
-
-                before(() => {
-                    challenger = Wallet.createRandom().address;
-                });
-
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner, {
-                        sender: {wallet: glob.owner},
-                        blockNumber: utils.bigNumberify(await provider.getBlockNumber())
-                    });
-
-                    await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
-                    await ethersDriipSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
-                });
-
-                it('should seize the wallet', async () => {
-                    await ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6});
-
-                    (await ethersDriipSettlement.isSeizedWallet(payment.sender.wallet))
-                        .should.be.true;
-
-                    const seizure = await ethersClientFund.seizures(0);
-                    seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-                    seizure.target.should.equal(utils.getAddress(challenger));
-                });
-            });
         });
 
         describe('settlePaymentByProxy()', () => {
             let payment;
 
             beforeEach(async () => {
-                await ethersClientFund.reset({gasLimit: 1e6});
-                await ethersCommunityVote.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset({gasLimit: 1e6});
-                await ethersValidator.reset({gasLimit: 1e6});
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
-                await ethersFraudChallenge.reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
 
                 payment = await mocks.mockPayment(glob.owner);
 
@@ -1677,6 +1615,21 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if driip settlement challenge result is disqualified', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner, {
+                        blockNumber: utils.bigNumberify(await provider.getBlockNumber())
+                    });
+
+                    await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
+                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement challenge result is qualified', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
@@ -1805,35 +1758,6 @@ module.exports = (glob) => {
                     it('should revert', async () => {
                         ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
                     });
-                });
-            });
-
-            describe('if driip settlement challenge result is disqualified', () => {
-                let challenger;
-
-                before(() => {
-                    challenger = Wallet.createRandom().address;
-                });
-
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner, {
-                        blockNumber: utils.bigNumberify(await provider.getBlockNumber())
-                    });
-
-                    await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
-                    await ethersDriipSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
-                });
-
-                it('should seize the wallet', async () => {
-                    await ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6});
-
-                    (await ethersDriipSettlement.isSeizedWallet(payment.sender.wallet))
-                        .should.be.true;
-
-                    const seizure = await ethersClientFund.seizures(0);
-                    seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-                    seizure.target.should.equal(utils.getAddress(challenger));
                 });
             });
         });

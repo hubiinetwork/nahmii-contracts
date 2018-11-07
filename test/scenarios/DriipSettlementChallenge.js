@@ -28,7 +28,7 @@ module.exports = (glob) => {
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
-        let blockNumber0;
+        let blockNumber;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -55,9 +55,9 @@ module.exports = (glob) => {
             await ethersDriipSettlementChallenge.changeValidator(ethersValidator.address);
             await ethersDriipSettlementChallenge.changeDriipSettlementDispute(ethersDriipSettlementDispute.address);
 
-            await ethersConfiguration.setSettlementChallengeTimeout(1e4);
+            blockNumber = await provider.getBlockNumber();
 
-            blockNumber0 = await provider.getBlockNumber();
+            await ethersConfiguration.setSettlementChallengeTimeout(blockNumber + 1, 1e4);
         });
 
         describe('constructor', () => {
@@ -168,10 +168,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('walletProposalMap()', () => {
+        describe('proposalsByWallet()', () => {
             it('should return default values', async () => {
                 const address = Wallet.createRandom().address;
-                const result = await ethersDriipSettlementChallenge.walletProposalMap(address);
+                const result = await ethersDriipSettlementChallenge.proposalsByWallet(address);
                 result.status.should.equal(mocks.proposalStatuses.indexOf('Unknown'));
                 result.nonce._bn.should.eq.BN(0);
             });
@@ -218,13 +218,13 @@ module.exports = (glob) => {
             let trade, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 4e6});
+                await ethersValidator._reset({gasLimit: 4e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -319,7 +319,7 @@ module.exports = (glob) => {
                         trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 2e6}
                     );
 
-                    const proposal = await ethersDriipSettlementChallenge.walletProposalMap(trade.buyer.wallet);
+                    const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(trade.buyer.wallet);
                     proposal.nonce._bn.should.eq.BN(trade.nonce._bn);
                     proposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -328,6 +328,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.balanceReward.should.be.true;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -355,13 +356,13 @@ module.exports = (glob) => {
             let trade, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 4e6});
+                await ethersValidator._reset({gasLimit: 4e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeByProxyEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -464,7 +465,7 @@ module.exports = (glob) => {
                         trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 2e6}
                     );
 
-                    const proposal = await ethersDriipSettlementChallenge.walletProposalMap(trade.buyer.wallet);
+                    const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(trade.buyer.wallet);
                     proposal.nonce._bn.should.eq.BN(trade.nonce._bn);
                     proposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -473,6 +474,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.balanceReward.should.be.false;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -500,13 +502,13 @@ module.exports = (glob) => {
             let payment, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 4e6});
+                await ethersValidator._reset({gasLimit: 4e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -585,7 +587,7 @@ module.exports = (glob) => {
                         payment, payment.sender.balances.current, {gasLimit: 2e6}
                     );
 
-                    const proposal = await ethersDriipSettlementChallenge.walletProposalMap(payment.sender.wallet);
+                    const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(payment.sender.wallet);
                     proposal.nonce._bn.should.eq.BN(payment.nonce._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -594,6 +596,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.balanceReward.should.be.true;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -621,13 +624,13 @@ module.exports = (glob) => {
             let payment, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 4e6});
+                await ethersValidator._reset({gasLimit: 4e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentByProxyEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -714,7 +717,7 @@ module.exports = (glob) => {
                         payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 2e6}
                     );
 
-                    const proposal = await ethersDriipSettlementChallenge.walletProposalMap(payment.sender.wallet);
+                    const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(payment.sender.wallet);
                     proposal.nonce._bn.should.eq.BN(payment.nonce._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
@@ -723,6 +726,7 @@ module.exports = (glob) => {
                     proposal.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
                     proposal.candidateIndex._bn.should.eq.BN(0);
                     proposal.status.should.equal(mocks.proposalStatuses.indexOf('Qualified'));
+                    proposal.balanceReward.should.be.false;
 
                     (await ethersDriipSettlementChallenge.challengedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -763,7 +767,7 @@ module.exports = (glob) => {
 
                 describe('if settlement challenge has completed for given wallet', () => {
                     beforeEach(async () => {
-                        await web3Configuration.setSettlementChallengeTimeout(0);
+                        await web3Configuration.setSettlementChallengeTimeout(blockNumber + 2, 0);
                         await ethersDriipSettlementChallenge.startChallengeFromPayment(
                             payment, payment.sender.balances.current, {gasLimit: 2e6}
                         );
@@ -1009,6 +1013,13 @@ module.exports = (glob) => {
             it('should return default value', async () => {
                 (await ethersDriipSettlementChallenge.proposalChallenger(glob.owner))
                     .should.equal(mocks.address0);
+            });
+        });
+
+        describe('proposalBalanceReward()', () => {
+            it('should return default value', async () => {
+                (await ethersDriipSettlementChallenge.proposalBalanceReward(glob.owner))
+                    .should.be.false;
             });
         });
 

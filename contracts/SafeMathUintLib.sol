@@ -36,4 +36,19 @@ library SafeMathUintLib {
         assert(c >= a);
         return c;
     }
+
+    //
+    //Clamping functions.
+    //
+    function clamp(uint256 a, uint256 min, uint256 max) public pure returns (uint256) {
+        return (a > max) ? max : ((a < min) ? min : a);
+    }
+
+    function clampMin(uint256 a, uint256 min) public pure returns (uint256) {
+        return (a < min) ? min : a;
+    }
+
+    function clampMax(uint256 a, uint256 max) public pure returns (uint256) {
+        return (a > max) ? max : a;
+    }
 }

@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
@@ -20,11 +21,12 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeByTrade
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(NahmiiTypesLib.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(bytes32 tradeHash, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -59,16 +61,17 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validat
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+
         address seizedWallet;
         if (!genuineBuyerAndFee)
             seizedWallet = trade.buyer.wallet;
         if (!genuineSellerAndFee)
             seizedWallet = trade.seller.wallet;
-        if (address(0) != seizedWallet) {
+        if (address(0) != seizedWallet)
             clientFund.seizeAllBalances(seizedWallet, msg.sender);
-            fraudChallenge.addSeizedWallet(seizedWallet);
-        }
 
-        emit ChallengeByTradeEvent(trade, msg.sender, seizedWallet);
+        emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, seizedWallet);
     }
 }

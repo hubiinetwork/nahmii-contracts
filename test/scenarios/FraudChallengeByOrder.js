@@ -278,14 +278,13 @@ module.exports = (glob) => {
 
             before(async () => {
                 overrideOptions = {gasLimit: 2e6};
-                await web3Configuration.setFalseWalletSignatureStake(1e17);
             });
 
             beforeEach(async () => {
-                await ethersConfiguration.reset(overrideOptions);
-                await ethersFraudChallenge.reset(overrideOptions);
-                await ethersValidator.reset(overrideOptions);
-                await ethersSecurityBond.reset(overrideOptions);
+                await ethersConfiguration._reset(overrideOptions);
+                await ethersFraudChallenge._reset(overrideOptions);
+                await ethersValidator._reset(overrideOptions);
+                await ethersSecurityBond._reset(overrideOptions);
 
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByOrder.interface.events.ChallengeByOrderEvent.topics
@@ -344,20 +343,20 @@ module.exports = (glob) => {
                     order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
-                it('should set operational mode exit, store fraudulent order and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent order and reward in security bond', async () => {
                     await ethersFraudChallengeByOrder.challenge(order, overrideOptions);
-                    const [operationalModeExit, fraudulentOrderHashesCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentOrderHashesCount, rewardsCount, reward, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentOrderHashesCount(),
-                        ethersSecurityBond.stagesCount(),
-                        ethersSecurityBond.stages(utils.bigNumberify(0)),
+                        ethersSecurityBond._rewardsCount(),
+                        ethersSecurityBond.rewards(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentOrderHashesCount.eq(1).should.be.true;
-                    stagesCount.eq(1).should.be.true;
-                    stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.fraction._bn.should.eq.BN(1e17.toString())
+                    rewardsCount.eq(1).should.be.true;
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
                     logs.should.have.lengthOf(1);
                 });
             });

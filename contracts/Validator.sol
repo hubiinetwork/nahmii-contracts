@@ -17,6 +17,7 @@ import {Configurable} from "./Configurable.sol";
 import {Hashable} from "./Hashable.sol";
 import {Ownable} from "./Ownable.sol";
 import {SignerManageable} from "./SignerManageable.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
 @title Validatable
@@ -37,31 +38,31 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     // -----------------------------------------------------------------------------------------------------------------
     // TODO Implement support for NFT. Current logics only applies to FT.
     function isGenuineTradeBuyerFee(NahmiiTypesLib.Trade trade) public view returns (bool) {
-        int256 feePartsPer = configuration.getPartsPer();
+        int256 feePartsPer = ConstantsLib.PARTS_PER();
         int256 discountTier = int256(trade.buyer.rollingVolume);
         if (NahmiiTypesLib.LiquidityRole.Maker == trade.buyer.liquidityRole) {
-            return (trade.buyer.fees.single.amount <= trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.buyer.fees.single.amount == trade.amount.mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.buyer.fees.single.amount >= trade.amount.mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            return (trade.buyer.fees.single.amount <= trade.amount.mul(configuration.tradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
+            && (trade.buyer.fees.single.amount == trade.amount.mul(configuration.tradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.buyer.fees.single.amount >= trade.amount.mul(configuration.tradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
         } else {// NahmiiTypesLib.LiquidityRole.Taker == trade.buyer.liquidityRole
-            return (trade.buyer.fees.single.amount <= trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.buyer.fees.single.amount == trade.amount.mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.buyer.fees.single.amount >= trade.amount.mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            return (trade.buyer.fees.single.amount <= trade.amount.mul(configuration.tradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
+            && (trade.buyer.fees.single.amount == trade.amount.mul(configuration.tradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.buyer.fees.single.amount >= trade.amount.mul(configuration.tradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
         }
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
     function isGenuineTradeSellerFee(NahmiiTypesLib.Trade trade) public view returns (bool) {
-        int256 feePartsPer = configuration.getPartsPer();
+        int256 feePartsPer = ConstantsLib.PARTS_PER();
         int256 discountTier = int256(trade.seller.rollingVolume);
         if (NahmiiTypesLib.LiquidityRole.Maker == trade.seller.liquidityRole) {
-            return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.getTradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.getTradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.getTradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.tradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
+            && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.tradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.tradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
         } else {// NahmiiTypesLib.LiquidityRole.Taker == trade.seller.liquidityRole
-            return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.getTradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.getTradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.getTradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.tradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
+            && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.tradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
+            && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.tradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
         }
     }
 
@@ -158,10 +159,10 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
 
     // TODO Implement support for NFT. Current logics only applies to FT.
     function isGenuinePaymentFee(NahmiiTypesLib.Payment payment) public view returns (bool) {
-        int256 feePartsPer = int256(configuration.getPartsPer());
-        return (payment.sender.fees.single.amount <= payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, 0)).div(feePartsPer))
-        && (payment.sender.fees.single.amount == payment.amount.mul(configuration.getCurrencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, payment.amount)).div(feePartsPer))
-        && (payment.sender.fees.single.amount >= payment.amount.mul(configuration.getCurrencyPaymentMinimumFee(payment.currency.ct, payment.currency.id, payment.blockNumber)).div(feePartsPer));
+        int256 feePartsPer = int256(ConstantsLib.PARTS_PER());
+        return (payment.sender.fees.single.amount <= payment.amount.mul(configuration.currencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, 0)).div(feePartsPer))
+        && (payment.sender.fees.single.amount == payment.amount.mul(configuration.currencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, payment.amount)).div(feePartsPer))
+        && (payment.sender.fees.single.amount >= payment.amount.mul(configuration.currencyPaymentMinimumFee(payment.currency.ct, payment.currency.id, payment.blockNumber)).div(feePartsPer));
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.

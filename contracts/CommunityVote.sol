@@ -20,7 +20,7 @@ contract CommunityVote is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => bool) doubleSpenderWalletsMap;
+    mapping(address => bool) doubleSpenderByWallet;
     uint256 maxDriipNonce;
     uint256 maxNullNonce;
     bool dataAvailable;
@@ -39,7 +39,7 @@ contract CommunityVote is Ownable {
     /// @param wallet The wallet address for which to check double spender status
     /// @return true if wallet is double spender, false otherwise
     function isDoubleSpenderWallet(address wallet) public view returns (bool) {
-        return doubleSpenderWalletsMap[wallet];
+        return doubleSpenderByWallet[wallet];
     }
 
     /// @notice Get the max driip nonce to be accepted in settlements

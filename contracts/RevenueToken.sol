@@ -14,7 +14,7 @@ import {ERC20} from "./ERC20.sol";
 
 /**
 @title RevenueToken
-@dev Implementation of the EIP20 standard token (also known as ERC20 token) with addition of calculation of balance blocks
+@dev Implementation of the EIP20 standard token (also known as ERC20 token) with the addition of calculation of balance blocks
  */
 contract RevenueToken is ERC20, Ownable {
     using SafeMathUintLib for uint256;
@@ -39,7 +39,7 @@ contract RevenueToken is ERC20, Ownable {
     mapping(address => mapping(address => uint256)) private allowed;
 
     string public name = "Nahmii";
-    string public symbol = "SII";
+    string public symbol = "NII";
     uint8 public constant decimals = 15;
 
     //
@@ -80,10 +80,10 @@ contract RevenueToken is ERC20, Ownable {
         balances[msg.sender] = balances[msg.sender].sub(value);
         balances[_to] = balances[_to].add(value);
 
-        //adjust balance blocks
+        // Adjust balance blocks
         addBalanceBlocks(_to);
 
-        //add _to the token holders list
+        // Add _to the token holders list
         if (!holdersMap[_to]) {
             holdersMap[_to] = true;
             holders.push(_to);
@@ -123,10 +123,10 @@ contract RevenueToken is ERC20, Ownable {
         balances[to] = balances[to].add(value);
         allowed[from][msg.sender] = allowance.sub(value);
 
-        //adjust balance blocks
+        // Adjust balance blocks
         addBalanceBlocks(to);
 
-        //add to the token holders list
+        // Add to the token holders list
         if (!holdersMap[to]) {
             holdersMap[to] = true;
             holders.push(to);
@@ -145,9 +145,9 @@ contract RevenueToken is ERC20, Ownable {
     returns (bool success)
     {
         // To change the approve amount you first have to reduce the addresses'
-        //  allowance to zero by calling `approve(spender, 0)` if it is not
-        //  already 0 to mitigate the race condition described here:
-        //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+        // allowance to zero by calling `approve(spender, 0)` if it is not
+        // already 0 to mitigate the race condition described here:
+        // https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
         require(value == 0 || allowed[msg.sender][spender] == 0);
 
         allowed[msg.sender][spender] = value;
@@ -202,11 +202,11 @@ contract RevenueToken is ERC20, Ownable {
     {
         uint256 oldValue = allowed[msg.sender][_spender];
 
-        if (_subtractedValue > oldValue) {
+        if (_subtractedValue > oldValue)
             allowed[msg.sender][_spender] = 0;
-        } else {
+
+        else
             allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
-        }
 
         // Emit event
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
@@ -225,13 +225,13 @@ contract RevenueToken is ERC20, Ownable {
         totalSupply = totalSupply.add(_amount);
         balances[_to] = balances[_to].add(_amount);
 
-        //add to the token holders list
+        // Add to the token holders list
         if (!holdersMap[_to]) {
             holdersMap[_to] = true;
             holders.push(_to);
         }
 
-        //raise events
+        // Emit events
         emit Mint(_to, _amount);
         emit Transfer(address(0), _to, _amount);
         return true;
@@ -248,54 +248,48 @@ contract RevenueToken is ERC20, Ownable {
     view
     returns (uint256)
     {
-        uint256 idx;
-        uint256 low;
-        uint256 res;
-        uint256 h;
-
         require(startBlock < endBlock);
         require(wallet != address(0));
 
         uint256[] storage _balanceBlocks = balanceBlocks[wallet];
         uint256[] storage _balanceBlockNumbers = balanceBlockNumbers[wallet];
 
-        if (_balanceBlockNumbers.length == 0 || endBlock < _balanceBlockNumbers[0]) {
+        if (_balanceBlockNumbers.length == 0 || endBlock < _balanceBlockNumbers[0])
             return 0;
-        }
 
-        idx = 0;
-        while (idx < _balanceBlockNumbers.length && _balanceBlockNumbers[idx] < startBlock) {
-            idx++;
-        }
+        uint256 index = 0;
+        while (index < _balanceBlockNumbers.length && _balanceBlockNumbers[index] < startBlock)
+            index++;
 
-        if (idx >= _balanceBlockNumbers.length) {
-            res = _balanceBlocks[_balanceBlockNumbers.length - 1].mul(endBlock.sub(startBlock));
-        }
+        uint256 result;
+        if (index >= _balanceBlockNumbers.length)
+            result = _balanceBlocks[_balanceBlockNumbers.length - 1].mul(endBlock.sub(startBlock));
+
         else {
-            low = (idx == 0) ? startBlock : _balanceBlockNumbers[idx - 1];
+            uint256 low = (index == 0) ? startBlock : _balanceBlockNumbers[index - 1];
 
-            h = _balanceBlockNumbers[idx];
-            if (h > endBlock) {
+            uint256 h = _balanceBlockNumbers[index];
+            if (h > endBlock)
                 h = endBlock;
-            }
 
             h = h.sub(startBlock);
-            res = (h == 0) ? 0 : beta(wallet, idx).mul(h).div(_balanceBlockNumbers[idx].sub(low));
-            idx++;
+            result = (h == 0) ? 0 : beta(wallet, index).mul(h).div(_balanceBlockNumbers[index].sub(low));
+            index++;
 
-            while (idx < _balanceBlockNumbers.length && _balanceBlockNumbers[idx] < endBlock) {
-                res = res.add(beta(wallet, idx));
-                idx++;
+            while (index < _balanceBlockNumbers.length && _balanceBlockNumbers[index] < endBlock) {
+                result = result.add(beta(wallet, index));
+                index++;
             }
 
-            if (idx >= _balanceBlockNumbers.length) {
-                res = res.add(_balanceBlocks[_balanceBlockNumbers.length - 1].mul(endBlock.sub(_balanceBlockNumbers[_balanceBlockNumbers.length - 1])));
-            } else if (_balanceBlockNumbers[idx - 1] < endBlock) {
-                res = res.add(beta(wallet, idx).mul(endBlock.sub(_balanceBlockNumbers[idx - 1])).div(_balanceBlockNumbers[idx].sub(_balanceBlockNumbers[idx - 1])));
-            }
+            if (index >= _balanceBlockNumbers.length)
+                result = result.add(_balanceBlocks[_balanceBlockNumbers.length - 1].mul(endBlock.sub(_balanceBlockNumbers[_balanceBlockNumbers.length - 1])));
+
+            else if (_balanceBlockNumbers[index - 1] < endBlock)
+                result = result.add(beta(wallet, index).mul(endBlock.sub(_balanceBlockNumbers[index - 1])).div(_balanceBlockNumbers[index].sub(_balanceBlockNumbers[index - 1])));
+
         }
 
-        return res;
+        return result;
     }
 
     /// @notice Get the count of holders
@@ -333,20 +327,21 @@ contract RevenueToken is ERC20, Ownable {
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function addBalanceBlocks(address _to) private {
-        uint256 len;
+        uint256 length;
 
-        len = balanceBlockNumbers[msg.sender].length;
-        balanceBlocks[msg.sender].push(balances[msg.sender].mul(block.number.sub(len > 0 ? balanceBlockNumbers[msg.sender][len - 1] : 0)));
+        length = balanceBlockNumbers[msg.sender].length;
+        balanceBlocks[msg.sender].push(balances[msg.sender].mul(block.number.sub(length > 0 ? balanceBlockNumbers[msg.sender][length - 1] : 0)));
         balanceBlockNumbers[msg.sender].push(block.number);
 
-        len = balanceBlockNumbers[_to].length;
-        balanceBlocks[_to].push(balances[_to].mul(block.number.sub(len > 0 ? balanceBlockNumbers[_to][len - 1] : 0)));
+        length = balanceBlockNumbers[_to].length;
+        balanceBlocks[_to].push(balances[_to].mul(block.number.sub(length > 0 ? balanceBlockNumbers[_to][length - 1] : 0)));
         balanceBlockNumbers[_to].push(block.number);
     }
 
-    function beta(address wallet, uint256 idx) private view returns (uint256) {
-        if (idx == 0)
+    function beta(address wallet, uint256 index) private view returns (uint256) {
+        if (index == 0)
             return 0;
-        return balanceBlocks[wallet][idx - 1].mul(balanceBlockNumbers[wallet][idx].sub(balanceBlockNumbers[wallet][idx - 1]));
+
+        return balanceBlocks[wallet][index - 1].mul(balanceBlockNumbers[wallet][index].sub(balanceBlockNumbers[wallet][index - 1]));
     }
 }

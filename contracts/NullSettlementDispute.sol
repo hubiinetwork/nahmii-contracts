@@ -10,7 +10,10 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
+import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
+import {ClientFundable} from "./ClientFundable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -25,7 +28,8 @@ import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 @title NullSettlementDispute
 @notice The workhorse of null settlement challenges, utilized by NullSettlementChallenge
 */
-contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, CancelOrdersChallengable {
+contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, ClientFundable,
+FraudChallengable, CancelOrdersChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -37,10 +41,12 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge, NullSettlementChallenge newNullSettlementChallenge);
-    event ChallengeByOrderEvent(NahmiiTypesLib.Order order, uint256 nonce, address challenger);
-    event ChallengeByTradeEvent(address wallet, NahmiiTypesLib.Trade trade, uint256 nonce, address challenger);
-    event ChallengeByPaymentEvent(NahmiiTypesLib.Payment payment, uint256 nonce, address challenger);
+    event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
+        NullSettlementChallenge newNullSettlementChallenge);
+    event ChallengeByOrderEvent(bytes32 candidateHash, uint256 proposalNonce, address challenger);
+    event ChallengeByTradeEvent(address wallet, bytes32 candidateHash, uint256 proposalNonce,
+        address challenger);
+    event ChallengeByPaymentEvent(bytes32 candidateHash, uint256 proposalNonce, address challenger);
 
     //
     // Constructor
@@ -107,8 +113,14 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.setProposalCandidateIndex(order.wallet, nullSettlementChallenge.challengeCandidateOrderHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(order.wallet, challenger);
 
+        // Slash wallet's funds or reward challenger by stake fraction
+        if (nullSettlementChallenge.proposalBalanceReward(order.wallet))
+            clientFund.seizeAllBalances(order.wallet, challenger);
+        else
+            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
+
         // Emit event
-        emit ChallengeByOrderEvent(order, nullSettlementChallenge.proposalNonce(order.wallet), challenger);
+        emit ChallengeByOrderEvent(order.seals.operator.hash, nullSettlementChallenge.proposalNonce(order.wallet), challenger);
     }
 
     /// @notice Challenge the settlement by providing trade candidate
@@ -171,8 +183,14 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.setProposalCandidateIndex(wallet, nullSettlementChallenge.challengeCandidateTradeHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(wallet, challenger);
 
+        // Slash wallet's funds or reward challenger by stake fraction
+        if (nullSettlementChallenge.proposalBalanceReward(wallet))
+            clientFund.seizeAllBalances(wallet, challenger);
+        else
+            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
+
         // Emit event
-        emit ChallengeByTradeEvent(wallet, trade, nullSettlementChallenge.proposalNonce(wallet), challenger);
+        emit ChallengeByTradeEvent(wallet, trade.seal.hash, nullSettlementChallenge.proposalNonce(wallet), challenger);
     }
 
     /// @notice Challenge the settlement by providing payment candidate
@@ -213,8 +231,14 @@ contract NullSettlementDispute is Ownable, Validatable, FraudChallengable, Cance
         nullSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, nullSettlementChallenge.challengeCandidatePaymentHashesCount().sub(1));
         nullSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
 
+        // Slash wallet's funds or reward challenger by stake fraction
+        if (nullSettlementChallenge.proposalBalanceReward(payment.sender.wallet))
+            clientFund.seizeAllBalances(payment.sender.wallet, challenger);
+        else
+            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
+
         // Emit event
-        emit ChallengeByPaymentEvent(payment, nullSettlementChallenge.proposalNonce(payment.sender.wallet), challenger);
+        emit ChallengeByPaymentEvent(payment.seals.operator.hash, nullSettlementChallenge.proposalNonce(payment.sender.wallet), challenger);
     }
 
     //

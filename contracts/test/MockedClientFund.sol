@@ -8,7 +8,6 @@
 
 pragma solidity ^0.4.24;
 
-//import {ClientFund} from "../ClientFund.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
@@ -16,7 +15,7 @@ import {Beneficiary} from "../Beneficiary.sol";
 @title MockedClientFund
 @notice Mocked implementation of client fund contract
 */
-contract MockedClientFund /*is ClientFund*/ {
+contract MockedClientFund {
 
     //
     // Types
@@ -41,6 +40,9 @@ contract MockedClientFund /*is ClientFund*/ {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     Seizure[] public seizures;
+    address[] public seizedWallets;
+    mapping(address => bool) public seizuresByWallet;
+
     WalletUpdate[] public settledBalanceUpdates;
     WalletUpdate[] public stages;
     BalanceLogEntry[] public activeBalanceLogEntries;
@@ -55,14 +57,18 @@ contract MockedClientFund /*is ClientFund*/ {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*ClientFund(owner)*/ {
+    constructor() public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         seizures.length = 0;
+        for (uint256 i = 0; i < seizedWallets.length; i++)
+            seizuresByWallet[seizedWallets[i]] = false;
+        seizedWallets.length = 0;
+
         settledBalanceUpdates.length = 0;
         stages.length = 0;
         activeBalanceLogEntries.length = 0;
@@ -72,7 +78,21 @@ contract MockedClientFund /*is ClientFund*/ {
     public
     {
         seizures.push(Seizure(sourceWallet, targetWallet));
+
+        if (!seizuresByWallet[sourceWallet]) {
+            seizuresByWallet[sourceWallet] = true;
+            seizedWallets.push(sourceWallet);
+        }
+
         emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
+    }
+
+    function seizedWalletsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return seizedWallets.length;
     }
 
     function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)

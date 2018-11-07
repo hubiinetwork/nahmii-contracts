@@ -30,7 +30,7 @@ module.exports = function (glob) {
             await ethersValidator.changeConfiguration(ethersConfiguration.address);
             await ethersValidator.changeHasher(ethersHasher.address);
 
-            partsPer = await ethersConfiguration.getPartsPer();
+            partsPer = utils.bigNumberify(1e18.toString());
         });
 
         beforeEach(async () => {
@@ -266,7 +266,7 @@ module.exports = function (glob) {
                         await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
                         await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
 
-                        const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        const fee = await ethersConfiguration.tradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
                                 fees: {
@@ -294,7 +294,7 @@ module.exports = function (glob) {
                         await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
                         await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
 
-                        const fee = await ethersConfiguration.getTradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        const fee = await ethersConfiguration.tradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
                                 liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
@@ -337,7 +337,7 @@ module.exports = function (glob) {
                         await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
                         await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
 
-                        const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        const fee = await ethersConfiguration.tradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
                             seller: {
                                 fees: {
@@ -365,7 +365,7 @@ module.exports = function (glob) {
                         await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
                         await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
 
-                        const fee = await ethersConfiguration.getTradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        const fee = await ethersConfiguration.tradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
                                 liquidityRole: mocks.liquidityRoles.indexOf('Taker')
@@ -403,7 +403,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.001', 18), [], [], overrideOptions);
         //         await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
@@ -1028,7 +1028,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.001', 18), [], [], overrideOptions);
         //         await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
@@ -1653,7 +1653,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         await ethersConfiguration.setPaymentFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [], [], overrideOptions);
         //         await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
@@ -1907,7 +1907,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         firstTrade = await mocks.mockTrade(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -2278,7 +2278,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         firstPayment = await mocks.mockPayment(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -2506,7 +2506,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         trade = await mocks.mockTrade(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -2710,7 +2710,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         payment = await mocks.mockPayment(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -3082,7 +3082,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         firstTrade = await mocks.mockTrade(glob.owner, {
         //             nonce: utils.bigNumberify(10),

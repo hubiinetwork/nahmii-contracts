@@ -6,8 +6,8 @@ const mocks = require('../mocks');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
-const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
+const MockedClientFund = artifacts.require('MockedClientFund');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -45,6 +45,7 @@ module.exports = (glob) => {
             await ethersFraudChallengeByTrade.changeFraudChallenge(ethersFraudChallenge.address);
             await ethersFraudChallengeByTrade.changeConfiguration(ethersConfiguration.address);
             await ethersFraudChallengeByTrade.changeValidator(ethersValidator.address);
+            await ethersFraudChallengeByTrade.changeSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallengeByTrade.changeClientFund(ethersClientFund.address);
 
             await ethersConfiguration.registerService(ethersFraudChallengeByTrade.address);
@@ -282,10 +283,10 @@ module.exports = (glob) => {
             });
 
             beforeEach(async () => {
-                await ethersConfiguration.reset(overrideOptions);
-                await ethersFraudChallenge.reset(overrideOptions);
-                await ethersValidator.reset(overrideOptions);
-                await ethersClientFund.reset(overrideOptions);
+                await ethersConfiguration._reset(overrideOptions);
+                await ethersFraudChallenge._reset(overrideOptions);
+                await ethersValidator._reset(overrideOptions);
+                await ethersClientFund._reset(overrideOptions);
 
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByTrade.interface.events.ChallengeByTradeEvent.topics
@@ -336,14 +337,14 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
-                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent trade and reward', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
 
                     const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
@@ -371,8 +372,8 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
@@ -392,13 +393,13 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
-                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
+                it('should set operational mode exit, store fraudulent trade and reward', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
                     const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
@@ -423,8 +424,8 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersFraudChallenge.seizedWalletsCount(),
-                        ethersFraudChallenge.seizedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.seizedWalletsCount(),
+                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
                         ethersClientFund.seizures(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);

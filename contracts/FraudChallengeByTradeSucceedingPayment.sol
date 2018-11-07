@@ -14,17 +14,20 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByTradeSucceedingPayment
 @notice Where driips are challenged wrt fraud by mismatch in trade succeeding payment
 */
-contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeSucceedingPaymentEvent(NahmiiTypesLib.Payment payment, NahmiiTypesLib.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeSucceedingPaymentEvent(bytes32 paymentHash, bytes32 tradeHash,
+        address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -80,10 +83,13 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, C
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+
         clientFund.seizeAllBalances(wallet, msg.sender);
-        fraudChallenge.addSeizedWallet(wallet);
 
-        emit ChallengeByTradeSucceedingPaymentEvent(payment, trade, msg.sender, wallet);
+        emit ChallengeByTradeSucceedingPaymentEvent(
+            payment.seals.operator.hash, trade.seal.hash, msg.sender, wallet
+        );
     }
-
 }

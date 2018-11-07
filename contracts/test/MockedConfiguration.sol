@@ -20,13 +20,13 @@ contract MockedConfiguration is Configuration {
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) public Configuration(owner) {
-        reset();
+        _reset();
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         operationalMode = OperationalMode.Normal;
     }
 }

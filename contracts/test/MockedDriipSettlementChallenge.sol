@@ -31,6 +31,7 @@ contract MockedDriipSettlementChallenge {
     SettlementTypesLib.ProposalStatus public _proposalStatus;
     NahmiiTypesLib.DriipType public _proposalDriipType;
     uint256 public _proposalDriipIndex;
+    bool public _proposalBalanceReward;
     SettlementTypesLib.CandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
     address public _proposalChallenger;
@@ -51,6 +52,7 @@ contract MockedDriipSettlementChallenge {
         delete _proposalStatus;
         delete _proposalDriipType;
         delete _proposalDriipIndex;
+        delete _proposalBalanceReward;
         delete _proposalCandidateType;
         delete _proposalCandidateIndex;
         delete _proposalChallenger;
@@ -196,14 +198,6 @@ contract MockedDriipSettlementChallenge {
         return _proposalStatus;
     }
 
-    function _setProposalDriipType(address wallet, NahmiiTypesLib.DriipType driipType)
-    public
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalDriipType = driipType;
-    }
-
     function proposalDriipType(address wallet)
     public
     view
@@ -214,14 +208,6 @@ contract MockedDriipSettlementChallenge {
         return _proposalDriipType;
     }
 
-    function _setProposalDriipIndex(address wallet, uint256 driipIndex)
-    public
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalDriipIndex = driipIndex;
-    }
-
     function proposalDriipIndex(address wallet)
     public
     view
@@ -230,6 +216,22 @@ contract MockedDriipSettlementChallenge {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
         return _proposalDriipIndex;
+    }
+
+    function _setProposalBalanceReward(bool balanceReward)
+    public
+    {
+        _proposalBalanceReward = balanceReward;
+    }
+
+    function proposalBalanceReward(address wallet)
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        return _proposalBalanceReward;
     }
 
     function setProposalCandidateType(address wallet, SettlementTypesLib.CandidateType candidateType)

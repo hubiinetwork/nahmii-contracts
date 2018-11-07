@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
@@ -20,11 +21,13 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeByTradeOrderResiduals
 @notice Where driips are challenged wrt fraud by mismatch in trade order residuals
 */
-contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeOrderResidualsEvent(NahmiiTypesLib.Trade firstTrade, NahmiiTypesLib.Trade lastTrade, address challenger, address seizedWallet);
+    event ChallengeByTradeOrderResidualsEvent(bytes32 firstTradeHash, bytes32 lastTradeHash,
+        address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -80,9 +83,13 @@ contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Chal
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
 
-        clientFund.seizeAllBalances(wallet, msg.sender);
-        fraudChallenge.addSeizedWallet(wallet);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByTradeOrderResidualsEvent(firstTrade, lastTrade, msg.sender, wallet);
+        clientFund.seizeAllBalances(wallet, msg.sender);
+
+        emit ChallengeByTradeOrderResidualsEvent(
+            firstTrade.seal.hash, lastTrade.seal.hash, msg.sender, wallet
+        );
     }
 }

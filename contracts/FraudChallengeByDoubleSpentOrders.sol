@@ -20,11 +20,12 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeByDoubleSpentOrders
 @notice Where driips are challenged wrt fraud by double spent orders
 */
-contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
+contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDoubleSpentOrdersEvent(NahmiiTypesLib.Trade trade1, NahmiiTypesLib.Trade trade2, address challenger);
+    event ChallengeByDoubleSpentOrdersEvent(bytes32 tradeHash1, bytes32 tradeHash2, address challenger);
 
     //
     // Constructor
@@ -59,8 +60,8 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
         fraudChallenge.addFraudulentTradeHash(trade1.seal.hash);
         fraudChallenge.addFraudulentTradeHash(trade2.seal.hash);
 
-        uint256 stakeFraction = configuration.doubleSpentOrderStake();
-        securityBond.stage(msg.sender, stakeFraction);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
         if (doubleSpentBuyOrder) {
             fraudChallenge.addDoubleSpenderWallet(trade1.buyer.wallet);
@@ -71,6 +72,6 @@ contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challe
             fraudChallenge.addDoubleSpenderWallet(trade2.seller.wallet);
         }
 
-        emit ChallengeByDoubleSpentOrdersEvent(trade1, trade2, msg.sender);
+        emit ChallengeByDoubleSpentOrdersEvent(trade1.seal.hash, trade2.seal.hash, msg.sender);
     }
 }

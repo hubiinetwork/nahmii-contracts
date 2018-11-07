@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
@@ -20,11 +21,13 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeByPaymentSucceedingTrade
 @notice Where driips are challenged wrt fraud by mismatch in payment succeeding trade
 */
-contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentSucceedingTradeEvent(NahmiiTypesLib.Trade trade, NahmiiTypesLib.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByPaymentSucceedingTradeEvent(bytes32 tradeHash,
+        bytes32 paymentHash, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -80,9 +83,13 @@ contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, C
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
-        clientFund.seizeAllBalances(wallet, msg.sender);
-        fraudChallenge.addSeizedWallet(wallet);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByPaymentSucceedingTradeEvent(trade, payment, msg.sender, wallet);
+        clientFund.seizeAllBalances(wallet, msg.sender);
+
+        emit ChallengeByPaymentSucceedingTradeEvent(
+            trade.seal.hash, payment.seals.operator.hash, msg.sender, wallet
+        );
     }
 }

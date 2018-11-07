@@ -9,42 +9,38 @@
 pragma solidity ^0.4.24;
 
 import {Benefactor} from "./Benefactor.sol";
-import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
 @title AccrualBenefactor
 @notice A benefactor whose registered beneficiaries obtain a predefined fraction of total amount
 */
 contract AccrualBenefactor is Benefactor {
-    using SafeMathUintLib for uint256;
-
-    //
-    // Constants
-    // -----------------------------------------------------------------------------------------------------------------
-    uint256 constant public PARTS_PER = 1e18;
+    using SafeMathIntLib for int256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => uint256) internal beneficiaryFractionMap;
-    uint256 internal totalBeneficiaryFraction;
+    mapping(address => int256) internal beneficiaryFractionMap;
+    int256 internal totalBeneficiaryFraction;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisterAccrualBeneficiaryEvent(address beneficiary, uint256 fraction);
+    event RegisterAccrualBeneficiaryEvent(address beneficiary, int256 fraction);
     event DeregisterAccrualBeneficiaryEvent(address beneficiary);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function registerBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
-        return registerFractionalBeneficiary(beneficiary, PARTS_PER);
+        return registerFractionalBeneficiary(beneficiary, ConstantsLib.PARTS_PER());
     }
 
-    function registerFractionalBeneficiary(address beneficiary, uint256 fraction) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
+    function registerFractionalBeneficiary(address beneficiary, int256 fraction) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         require(fraction > 0);
-        require(totalBeneficiaryFraction.add(fraction) <= PARTS_PER);
+        require(totalBeneficiaryFraction.add(fraction) <= ConstantsLib.PARTS_PER());
 
         if (!super.registerBeneficiary(beneficiary))
             return false;
@@ -71,11 +67,11 @@ contract AccrualBenefactor is Benefactor {
         return true;
     }
 
-    function getBeneficiaryFraction(address beneficiary) public view returns (uint256) {
+    function getBeneficiaryFraction(address beneficiary) public view returns (int256) {
         return beneficiaryFractionMap[beneficiary];
     }
 
-    function getTotalBeneficiaryFraction() public view returns (uint256) {
+    function getTotalBeneficiaryFraction() public view returns (int256) {
         return totalBeneficiaryFraction;
     }
 }

@@ -7,13 +7,11 @@
  */
 pragma solidity ^0.4.24;
 
-//import {CommunityVote} from "../CommunityVote.sol";
-
 /**
 @title MockedCommunityVote
 @notice Mocked implementation of community vote contract
 */
-contract MockedCommunityVote /* is CommunityVote*/ {
+contract MockedCommunityVote {
 
     //
     // Variables
@@ -27,14 +25,14 @@ contract MockedCommunityVote /* is CommunityVote*/ {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*CommunityVote(owner)*/ {
-        reset();
+    constructor() public {
+        _reset();
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         maxDriipNonce = 0;
         maxNullNonce = 0;
         dataAvailable = true;

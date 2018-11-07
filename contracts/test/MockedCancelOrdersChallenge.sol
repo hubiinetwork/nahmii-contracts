@@ -9,14 +9,13 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-//import {CancelOrdersChallenge} from "../CancelOrdersChallenge.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
 @title MockedCancelOrdersChallenge
 @notice Mocked implementation of cancel orders challenge contract
 */
-contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
+contract MockedCancelOrdersChallenge {
 
     //
     // Variables
@@ -33,13 +32,13 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*CancelOrdersChallenge(owner)*/ {
+    constructor() public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         for (uint256 i = 0; i < cancelledOrderHashes.length; i++)
             orderHashCancelledMap[cancelledOrderHashes[i]] = false;
         cancelledOrderHashes.length = 0;
