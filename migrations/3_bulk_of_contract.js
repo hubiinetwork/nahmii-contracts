@@ -60,10 +60,7 @@ const AddressStorage = require('../scripts/common/address_storage.js');
 
 module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
-        // TODO Remove
-        return;
-
-        let addressStorage = new AddressStorage(deployer.basePath + p   ath.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
+        let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
         let ownerAccount;
         let instance, tx;
 

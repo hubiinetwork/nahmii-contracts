@@ -15,6 +15,7 @@ import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
@@ -29,6 +30,7 @@ import {ConstantsLib} from "./ConstantsLib.sol";
 */
 contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
@@ -41,13 +43,22 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     string constant public DEPOSIT_BALANCE_TYPE = "deposit";
 
     //
+    // Types
+    // -----------------------------------------------------------------------------------------------------------------
+    struct RewardMeta {
+        uint256 rewardFraction;
+        uint256 rewardNonce;
+        mapping(address => mapping(uint256 => uint256)) stageNonceByCurrency;
+    }
+
+    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     BalanceLib.Balance private deposited;
     TxHistoryLib.TxHistory private txHistory;
     InUseCurrencyLib.InUseCurrency private inUseCurrencies;
 
-    mapping(address => uint256) public rewardFractionsByWallet;
+    mapping(address => RewardMeta) public rewardMetaByWallet;
 
     //
     // Events
@@ -173,13 +184,22 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         return _inUseCurrencies;
     }
 
+    function stageNonceByWalletCurrency(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return rewardMetaByWallet[wallet].stageNonceByCurrency[currencyCt][currencyId];
+    }
+
     function reward(address wallet, uint256 _rewardFraction)
     public
     notNullAddress(wallet)
     onlyDeployerOrEnabledServiceAction(REWARD_ACTION)
     {
         // Store reward
-        rewardFractionsByWallet[wallet] = _rewardFraction;
+        rewardMetaByWallet[wallet].rewardFraction = _rewardFraction.clampMax(uint256(ConstantsLib.PARTS_PER()));
+        rewardMetaByWallet[wallet].rewardNonce++;
 
         // Emit event
         emit RewardEvent(wallet, _rewardFraction);
@@ -189,18 +209,24 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     public
     {
         require(inUseCurrencies.has(currencyCt, currencyId));
+        require(
+            rewardMetaByWallet[msg.sender].stageNonceByCurrency[currencyCt][currencyId] < rewardMetaByWallet[msg.sender].rewardNonce
+        );
+
+        // Set stage nonce of currency to the reward nonce
+        rewardMetaByWallet[msg.sender].stageNonceByCurrency[currencyCt][currencyId] = rewardMetaByWallet[msg.sender].rewardNonce;
 
         // Calculate amount to stage
         int256 amount = deposited
         .get(currencyCt, currencyId)
-        .mul(SafeMathIntLib.toInt256(rewardFractionsByWallet[msg.sender]))
+        .mul(SafeMathIntLib.toInt256(rewardMetaByWallet[msg.sender].rewardFraction))
         .div(ConstantsLib.PARTS_PER());
 
         // Move from balance to staged
         deposited.sub(amount, currencyCt, currencyId);
 
         // Transfer funds to the beneficiary
-        if (currencyCt== address(0) && currencyId == 0)
+        if (currencyCt == address(0) && currencyId == 0)
             beneficiary.receiveEthersTo.value(uint256(amount))(msg.sender, "staged");
 
         else {

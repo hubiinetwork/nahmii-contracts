@@ -84,13 +84,6 @@ module.exports = function (glob) {
             });
         });
 
-        describe('rewardFractionsByWallet()', () => {
-            it('should return initial value', async () => {
-                (await ethersSecurityBond.rewardFractionsByWallet(Wallet.createRandom().address))
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
         describe('inUseCurrenciesCount()', () => {
             it('should return initial value', async () => {
                 (await ethersSecurityBond.inUseCurrenciesCount())
@@ -439,6 +432,22 @@ module.exports = function (glob) {
             });
         });
 
+        describe('rewardMetaByWallet()', () => {
+            it('should successfully return meta', async () => {
+                const result = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
+
+                result.rewardFraction._bn.should.eq.BN(0);
+                result.rewardNonce._bn.should.eq.BN(0);
+            })
+        });
+
+        describe('stageNonceByWalletCurrency()', () => {
+            it('should successfully return meta', async () => {
+                (await ethersSecurityBond.stageNonceByWalletCurrency(glob.user_a, mocks.address0, 0))
+                    ._bn.should.eq.BN(0);
+            })
+        });
+
         describe('reward()', () => {
             describe('if called with null address', () => {
                 it('should revert', async () => {
@@ -481,8 +490,9 @@ module.exports = function (glob) {
                         glob.user_a, 1e18
                     );
 
-                    (await ethersSecurityBond.rewardFractionsByWallet(glob.user_a))
-                        ._bn.should.eq.BN(1e18.toString());
+                    const meta = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
+                    meta.rewardFraction._bn.should.eq.BN(1e18.toString());
+                    meta.rewardNonce._bn.should.eq.BN(1);
                 });
             });
         });
