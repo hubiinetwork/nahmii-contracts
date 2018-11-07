@@ -4,7 +4,8 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-const RevenueToken = artifacts.require('RevenueToken');
+const SafeMath = artifacts.require('SafeMath');
+const NahmiiToken = artifacts.require('NahmiiToken');
 
 const path = require('path');
 const helpers = require('./helpers.js');
@@ -16,7 +17,6 @@ module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
         let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
         let ownerAccount;
-        let instance, tx;
 
         await addressStorage.load();
 
@@ -42,7 +42,18 @@ module.exports = (deployer, network, accounts) => {
                 ownerAccount: ownerAccount
             };
 
-            await execDeploy(ctl, 'RevenueToken', '', RevenueToken);
+            await execDeploy(ctl, 'SafeMath', '', SafeMath);
+
+            await deployer.link(SafeMath, NahmiiToken);
+
+            await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+
+            const instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
+            await instance.mint(ownerAccount, new web3.BigNumber('120e24'));
+            await instance.disableMinting();
+
+            console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
+            console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
 
             console.log('Saving addresses...');
             await addressStorage.save();

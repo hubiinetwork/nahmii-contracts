@@ -30,6 +30,7 @@
     "ethers": "^3.0.7",
     "ganache-cli": "^6.1.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
+    "openzeppelin-solidity": "^2.0.0",
     "truffle": "^4.1.11"
   },
   "devDependencies": {
