@@ -1,12 +1,12 @@
 exports.getOwnerAccountFromArgs = function () {
-    var i;
+    let i;
 
     for (i = 0; i < process.argv.length; i++) {
         if (process.argv[i] == '--wallet') {
             if (i >= process.argv.length + 1)
                 throw new Error('Error: Missing argument for \'--wallet\'');
 
-            var address = process.argv[i + 1];
+            let address = process.argv[i + 1];
             if (address.substr(0, 2).toLowerCase() == '0x')
                 address = address.substr(2); //remove prefix
             if (!/^[0-9a-f]{40}$/i.test(address))
@@ -18,14 +18,14 @@ exports.getOwnerAccountFromArgs = function () {
 };
 
 exports.getPasswordFromArgs = function () {
-    var i;
+    let i;
 
     for (i = 0; i < process.argv.length; i++) {
         if (process.argv[i] == '--password') {
             if (i >= process.argv.length + 1)
                 throw new Error('Error: Missing argument for \'--password\'');
 
-            var password = process.argv[i + 1];
+            let password = process.argv[i + 1];
             if (password.length == 0)
                 throw new Error('Error: Invalid address specified in \'--password\' argument');
             return password;
@@ -47,15 +47,15 @@ exports.isTestNetwork = function (network) {
 };
 
 exports.getFiltersFromArgs = function () {
-    var finalFilters = [];
-    var i;
+    let finalFilters = [];
+    let i;
 
     for (i = 0; i < process.argv.length; i++) {
         if (process.argv[i] == '--filter') {
             if (i >= process.argv.length + 1)
                 throw new Error('Error: Missing argument for \'--filter\'');
 
-            var filter = process.argv[i + 1];
+            let filter = process.argv[i + 1];
             filter = filter.split(',');
             for (i = 0; i < filter.length; i++) {
                 if (!(/^[0-9A-Za-z\*]+$/.test(filter[i])))

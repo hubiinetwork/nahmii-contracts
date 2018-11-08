@@ -28,62 +28,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('isSeizedWallet()', () => {
-            it('should equal value initialized', async () => {
-                const wallet = Wallet.createRandom().address;
-                const result = await ethersFraudChallengeOwner.isSeizedWallet(wallet);
-                result.should.be.false;
-            });
-        });
-
-        describe('seizedWalletsCount()', () => {
-            it('should equal value initialized', async () => {
-                const count = await ethersFraudChallengeOwner.seizedWalletsCount();
-                count.toNumber().should.equal(0);
-            })
-        });
-
-        describe('seizedWallets()', () => {
-            it('should equal value initialized', async () => {
-                ethersFraudChallengeOwner.seizedWallets(0).should.be.rejected;
-            })
-        });
-
-        describe('addSeizedWallet()', () => {
-            let wallet;
-
-            beforeEach(() => {
-                wallet = Wallet.createRandom().address;
-            });
-
-            describe('if called as deployer', () => {
-                it('should add seized wallet', async () => {
-                    await ethersFraudChallengeOwner.addSeizedWallet(wallet);
-                    const seized = await ethersFraudChallengeOwner.isSeizedWallet(wallet);
-                    seized.should.be.true;
-                });
-            });
-
-            describe('if called as registered service action', () => {
-                before(async () => {
-                    await ethersFraudChallengeOwner.registerService(glob.user_a);
-                    await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_seized_wallet', {gasLimit: 1e6});
-                });
-
-                it('should add seized wallet', async () => {
-                    await ethersFraudChallengeUserA.addSeizedWallet(wallet);
-                    const seized = await ethersFraudChallengeOwner.isSeizedWallet(wallet);
-                    seized.should.be.true;
-                });
-            });
-
-            describe('if called as neither deployer nor registered service action', () => {
-                it('should revert', async () => {
-                    ethersFraudChallengeUserB.addSeizedWallet(wallet).should.be.rejected;
-                });
-            });
-        });
-
         describe('isDoubleSpenderWallet()', () => {
             it('should equal value initialized', async () => {
                 const wallet = Wallet.createRandom().address;

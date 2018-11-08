@@ -36,7 +36,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
 
     address[] public challengedWallets;
 
-    mapping(address => SettlementTypesLib.Proposal) public walletProposalMap;
+    mapping(address => SettlementTypesLib.Proposal) public proposalsByWallet;
 
     bytes32[] public challengeCandidateOrderHashes;
     bytes32[] public challengeCandidateTradeHashes;
@@ -91,7 +91,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (uint256)
     {
-        return walletProposalMap[wallet].nonce;
+        return proposalsByWallet[wallet].nonce;
     }
 
     /// @notice Start settlement challenge
@@ -102,7 +102,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     public
     {
         // Start challenge for wallet
-        startChallengePrivate(msg.sender, amount, currencyCt, currencyId);
+        startChallengePrivate(msg.sender, amount, currencyCt, currencyId, true);
 
         // Emit event
         emit StartChallengeEvent(msg.sender, amount, currencyCt, currencyId);
@@ -118,7 +118,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     onlyDeployer
     {
         // Start challenge for wallet
-        startChallengePrivate(wallet, amount, currencyCt, currencyId);
+        startChallengePrivate(wallet, amount, currencyCt, currencyId, false);
 
         // Emit event
         emit StartChallengeByProxyEvent(msg.sender, wallet, amount, currencyCt, currencyId);
@@ -131,7 +131,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     public
     view
     returns (NahmiiTypesLib.ChallengePhase) {
-        if (0 < walletProposalMap[wallet].nonce && block.timestamp < walletProposalMap[wallet].timeout)
+        if (0 < proposalsByWallet[wallet].nonce && block.timestamp < proposalsByWallet[wallet].timeout)
             return NahmiiTypesLib.ChallengePhase.Dispute;
         else
             return NahmiiTypesLib.ChallengePhase.Closed;
@@ -145,7 +145,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (uint256)
     {
-        return walletProposalMap[wallet].nonce;
+        return proposalsByWallet[wallet].nonce;
     }
 
     /// @notice Get the settlement proposal block number of the given wallet
@@ -156,7 +156,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (uint256)
     {
-        return walletProposalMap[wallet].blockNumber;
+        return proposalsByWallet[wallet].blockNumber;
     }
 
     /// @notice Get the settlement proposal timeout of the given wallet
@@ -167,7 +167,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (uint256)
     {
-        return walletProposalMap[wallet].timeout;
+        return proposalsByWallet[wallet].timeout;
     }
 
     /// @notice Get the settlement proposal status of the given wallet
@@ -178,7 +178,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (SettlementTypesLib.ProposalStatus)
     {
-        return walletProposalMap[wallet].status;
+        return proposalsByWallet[wallet].status;
     }
 
     /// @notice Get the settlement proposal currency count of the given wallet
@@ -189,7 +189,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (uint256)
     {
-        return walletProposalMap[wallet].currencies.length;
+        return proposalsByWallet[wallet].currencies.length;
     }
 
     /// @notice Get the settlement proposal currency of the given wallet at the given index
@@ -201,8 +201,8 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (MonetaryTypesLib.Currency)
     {
-        require(index < walletProposalMap[wallet].currencies.length);
-        return walletProposalMap[wallet].currencies[index];
+        require(index < proposalsByWallet[wallet].currencies.length);
+        return proposalsByWallet[wallet].currencies[index];
     }
 
     /// @notice Get the settlement proposal stage amount of the given wallet and currency
@@ -215,7 +215,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     returns (int256)
     {
         uint256 index = proposalCurrencyIndex(wallet, currency);
-        return walletProposalMap[wallet].stageAmounts[index];
+        return proposalsByWallet[wallet].stageAmounts[index];
     }
 
     /// @notice Get the settlement proposal target balance amount of the given wallet and currency
@@ -228,7 +228,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     returns (int256)
     {
         uint256 index = proposalCurrencyIndex(wallet, currency);
-        return walletProposalMap[wallet].targetBalanceAmounts[index];
+        return proposalsByWallet[wallet].targetBalanceAmounts[index];
     }
 
     /// @notice Get the candidate type of the given wallet's settlement proposal
@@ -239,7 +239,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (SettlementTypesLib.CandidateType)
     {
-        return walletProposalMap[wallet].candidateType;
+        return proposalsByWallet[wallet].candidateType;
     }
 
     /// @notice Get the candidate index of the given wallet's settlement proposal
@@ -250,7 +250,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (uint256)
     {
-        return walletProposalMap[wallet].candidateIndex;
+        return proposalsByWallet[wallet].candidateIndex;
     }
 
     /// @notice Get the challenger of the given wallet's settlement proposal
@@ -261,7 +261,18 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (address)
     {
-        return walletProposalMap[wallet].challenger;
+        return proposalsByWallet[wallet].challenger;
+    }
+
+    /// @notice Get the balance reward of the given wallet's settlement proposal
+    /// @param wallet The concerned wallet
+    /// @return The balance reward of the settlement proposal
+    function proposalBalanceReward(address wallet)
+    public
+    view
+    returns (bool)
+    {
+        return proposalsByWallet[wallet].balanceReward;
     }
 
     /// @notice Set settlement proposal status property of the given wallet
@@ -272,7 +283,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     public
     onlyNullSettlementDispute
     {
-        walletProposalMap[wallet].status = status;
+        proposalsByWallet[wallet].status = status;
     }
 
     /// @notice Set settlement proposal candidate type property of the given wallet
@@ -283,7 +294,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     public
     onlyNullSettlementDispute
     {
-        walletProposalMap[wallet].candidateType = candidateType;
+        proposalsByWallet[wallet].candidateType = candidateType;
     }
 
     /// @notice Set settlement proposal candidate index property of the given wallet
@@ -294,7 +305,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     public
     onlyNullSettlementDispute
     {
-        walletProposalMap[wallet].candidateIndex = candidateIndex;
+        proposalsByWallet[wallet].candidateIndex = candidateIndex;
     }
 
     /// @notice Set settlement proposal challenger property of the given wallet
@@ -305,7 +316,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     public
     onlyNullSettlementDispute
     {
-        walletProposalMap[wallet].challenger = challenger;
+        proposalsByWallet[wallet].challenger = challenger;
     }
 
     /// @notice Challenge the settlement by providing order candidate
@@ -396,7 +407,8 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         challengeCandidatePaymentHashes.push(hash);
     }
 
-    function startChallengePrivate(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function startChallengePrivate(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        bool balanceReward)
     private
     configurationInitialized
     {
@@ -413,19 +425,20 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         );
         require(activeBalanceAmount >= amount);
 
-        if (0 == walletProposalMap[wallet].nonce)
+        if (0 == proposalsByWallet[wallet].nonce)
             challengedWallets.push(wallet);
 
-        walletProposalMap[wallet].nonce = ++nonce;
-        walletProposalMap[wallet].blockNumber = activeBalanceBlockNumber;
-        walletProposalMap[wallet].timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
-        walletProposalMap[wallet].status = SettlementTypesLib.ProposalStatus.Qualified;
-        walletProposalMap[wallet].currencies.length = 0;
-        walletProposalMap[wallet].currencies.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
-        walletProposalMap[wallet].stageAmounts.length = 0;
-        walletProposalMap[wallet].stageAmounts.push(amount);
-        walletProposalMap[wallet].targetBalanceAmounts.length = 0;
-        walletProposalMap[wallet].targetBalanceAmounts.push(activeBalanceAmount.sub(amount));
+        proposalsByWallet[wallet].nonce = ++nonce;
+        proposalsByWallet[wallet].blockNumber = activeBalanceBlockNumber;
+        proposalsByWallet[wallet].timeout = block.timestamp.add(configuration.settlementChallengeTimeout());
+        proposalsByWallet[wallet].status = SettlementTypesLib.ProposalStatus.Qualified;
+        proposalsByWallet[wallet].currencies.length = 0;
+        proposalsByWallet[wallet].currencies.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
+        proposalsByWallet[wallet].stageAmounts.length = 0;
+        proposalsByWallet[wallet].stageAmounts.push(amount);
+        proposalsByWallet[wallet].targetBalanceAmounts.length = 0;
+        proposalsByWallet[wallet].targetBalanceAmounts.push(activeBalanceAmount.sub(amount));
+        proposalsByWallet[wallet].balanceReward = balanceReward;
     }
 
     function proposalCurrencyIndex(address wallet, MonetaryTypesLib.Currency currency)
@@ -433,10 +446,10 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     view
     returns (uint256)
     {
-        for (uint256 i = 0; i < walletProposalMap[wallet].currencies.length; i++) {
+        for (uint256 i = 0; i < proposalsByWallet[wallet].currencies.length; i++) {
             if (
-                walletProposalMap[wallet].currencies[i].ct == currency.ct &&
-                walletProposalMap[wallet].currencies[i].id == currency.id
+                proposalsByWallet[wallet].currencies[i].ct == currency.ct &&
+                proposalsByWallet[wallet].currencies[i].id == currency.id
             )
                 return i;
         }

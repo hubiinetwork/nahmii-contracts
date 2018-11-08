@@ -42,11 +42,10 @@ contract MockedFraudChallenge is FraudChallenge {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         fraudulentOrderHashes.length = 0;
         fraudulentTradeHashes.length = 0;
         fraudulentPaymentHashes.length = 0;
-        seizedWallets.length = 0;
         doubleSpenderWallets.length = 0;
         fraudulentOrderHash = false;
         fraudulentTradeHash = false;
@@ -66,11 +65,6 @@ contract MockedFraudChallenge is FraudChallenge {
     function addFraudulentPaymentHash(bytes32 hash) public {
         fraudulentPaymentHashes.push(hash);
         emit AddFraudulentPaymentHashEvent(hash);
-    }
-
-    function addSeizedWallet(address wallet) public {
-        seizedWallets.push(wallet);
-        emit AddSeizedWalletEvent(wallet);
     }
 
     function addDoubleSpenderWallet(address wallet) public {

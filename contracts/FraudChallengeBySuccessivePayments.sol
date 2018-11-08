@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
@@ -20,11 +21,13 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeBySuccessivePayments
 @notice Where driips are challenged wrt fraud by mismatch in successive payments
 */
-contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Challenge, Validatable, ClientFundable {
+contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeBySuccessivePaymentsEvent(NahmiiTypesLib.Payment firstPayment, NahmiiTypesLib.Payment lastPayment, address challenger, address seizedWallet);
+    event ChallengeBySuccessivePaymentsEvent(bytes32 firstPaymentHash,
+        bytes32 lastPaymentHash, address challenger, address seizedWallet);
 
     //
     // Constructor
@@ -72,9 +75,13 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Chall
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
-        clientFund.seizeAllBalances(wallet, msg.sender);
-        fraudChallenge.addSeizedWallet(wallet);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeBySuccessivePaymentsEvent(firstPayment, lastPayment, msg.sender, wallet);
+        clientFund.seizeAllBalances(wallet, msg.sender);
+
+        emit ChallengeBySuccessivePaymentsEvent(
+            firstPayment.seals.operator.hash, lastPayment.seals.operator.hash, msg.sender, wallet
+        );
     }
 }

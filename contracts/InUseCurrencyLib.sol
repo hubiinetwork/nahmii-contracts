@@ -50,29 +50,29 @@ library InUseCurrencyLib {
     }
 
     function removeItem(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId) public {
-        uint256 idx = getPos(inUseCurrency, currencyCt, currencyId);
-        require(idx != INVALID_INDEX);
-        removeItemAt(inUseCurrency, idx);
+        uint256 index = getIndex(inUseCurrency, currencyCt, currencyId);
+        require(index != INVALID_INDEX);
+        removeItemAt(inUseCurrency, index);
     }
 
-    function removeItemAt(InUseCurrency storage inUseCurrency, uint256 idx) public {
-        require(idx < inUseCurrency.list.length);
+    function removeItemAt(InUseCurrency storage inUseCurrency, uint256 index) public {
+        require(index < inUseCurrency.list.length);
 
-        address currencyCt = inUseCurrency.list[idx].ct;
-        uint256 currencyId = inUseCurrency.list[idx].id;
+        address currencyCt = inUseCurrency.list[index].ct;
+        uint256 currencyId = inUseCurrency.list[index].id;
 
-        if (idx < inUseCurrency.list.length - 1) {
+        if (index < inUseCurrency.list.length - 1) {
             //remap the last item in the array to this index
-            inUseCurrency.list[idx] = inUseCurrency.list[inUseCurrency.list.length - 1];
+            inUseCurrency.list[index] = inUseCurrency.list[inUseCurrency.list.length - 1];
 
-            inUseCurrency.map[inUseCurrency.list[idx].ct][inUseCurrency.list[idx].id].listIndex = idx + 1;
+            inUseCurrency.map[inUseCurrency.list[index].ct][inUseCurrency.list[index].id].listIndex = index + 1;
 
             //delete the last item in the array
             delete inUseCurrency.list[inUseCurrency.list.length - 1];
         }
         else {
             //it is the last item in the array
-            delete inUseCurrency.list[idx];
+            delete inUseCurrency.list[index];
         }
         inUseCurrency.list.length--;
         inUseCurrency.map[currencyCt][currencyId].listIndex = 0; //clean mapping
@@ -82,12 +82,16 @@ library InUseCurrencyLib {
         return inUseCurrency.list.length;
     }
 
-    function getAt(InUseCurrency storage inUseCurrency, uint256 idx) public view returns (MonetaryTypesLib.Currency) {
-        require(idx < inUseCurrency.list.length);
-        return inUseCurrency.list[idx];
+    function has(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId) public view returns (bool) {
+        return INVALID_INDEX != getIndex(inUseCurrency, currencyCt, currencyId);
     }
 
-    function getPos(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId) public view returns (uint256) {
+    function getAt(InUseCurrency storage inUseCurrency, uint256 index) public view returns (MonetaryTypesLib.Currency) {
+        require(index < inUseCurrency.list.length);
+        return inUseCurrency.list[index];
+    }
+
+    function getIndex(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId) public view returns (uint256) {
         InUseCurrencyItem storage item = inUseCurrency.map[currencyCt][currencyId];
         if (item.listIndex == 0 || item.version != inUseCurrency.mapVersion) {
             return INVALID_INDEX;

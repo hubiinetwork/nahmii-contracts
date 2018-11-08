@@ -26,6 +26,7 @@ contract MockedNullSettlementChallenge {
     MonetaryTypesLib.Currency _proposalCurrency;
     int256 public _proposalStageAmount;
     int256 public _proposalTargetBalanceAmount;
+    bool public _proposalBalanceReward;
     SettlementTypesLib.ProposalStatus public _proposalStatus;
     SettlementTypesLib.CandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
@@ -42,6 +43,7 @@ contract MockedNullSettlementChallenge {
         delete _proposalNonce;
         delete _proposalBlockNumber;
         delete _proposalTargetBalanceAmount;
+        delete _proposalBalanceReward;
         delete _proposalStatus;
         delete _proposalCandidateType;
         delete _proposalCandidateIndex;
@@ -147,6 +149,22 @@ contract MockedNullSettlementChallenge {
         require(wallet == wallet);
         require(currency.ct == currency.ct);
         return _proposalTargetBalanceAmount;
+    }
+
+    function _setProposalBalanceReward(bool balanceReward)
+    public
+    {
+        _proposalBalanceReward = balanceReward;
+    }
+
+    function proposalBalanceReward(address wallet)
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        return _proposalBalanceReward;
     }
 
     function setProposalStatus(address wallet, SettlementTypesLib.ProposalStatus status)

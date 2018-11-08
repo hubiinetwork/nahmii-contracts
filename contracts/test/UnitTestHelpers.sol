@@ -28,8 +28,8 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event DepositEthersToWasCalled(address wallet);
-    event DepositTokensToWasCalled(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event DepositEthersToWasCalled(address wallet, string balance);
+    event DepositTokensToWasCalled(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodWasCalled();
 
     //
@@ -63,18 +63,18 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     function callToDepositTokens_REVENUEFUND(address revenueFund, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
         require(revenueFund != address(0));
         RevenueFund sc = RevenueFund(revenueFund);
-        sc.depositTokens(amount, currencyCt, currencyId, standard);
+        sc.receiveTokens("", amount, currencyCt, currencyId, standard);
     }
 
-    function depositEthersTo(address wallet) public payable {
-        emit DepositEthersToWasCalled(wallet);
+    function receiveEthersTo(address wallet, string balance) public payable {
+        emit DepositEthersToWasCalled(wallet, balance);
     }
 
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
         //execute transfer
         TransferController controller = getTransferController(currencyCt, standard);
         controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
-        emit DepositTokensToWasCalled(wallet, amount, currencyCt, currencyId);
+        emit DepositTokensToWasCalled(wallet, balance, amount, currencyCt, currencyId);
     }
 
     function closeAccrualPeriod() public {
@@ -87,7 +87,7 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund, address token, int256 amount) public {
         require(tokenHolderRevenueFund != address(0));
         TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFund);
-        sc.depositTokens(amount, token, 0, '');
+        sc.receiveTokens("", amount, token, 0, "");
     }
 
     function callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund) public {

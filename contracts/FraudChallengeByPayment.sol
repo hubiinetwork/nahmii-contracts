@@ -21,11 +21,13 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeByPayment
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable, ClientFundable {
+contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentEvent(NahmiiTypesLib.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByPaymentEvent(bytes32 paymentHash, address challenger,
+        address seizedWallet);
 
     //
     // Constructor
@@ -68,21 +70,17 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Valid
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
-        if (!genuineWalletSignature) {
-            uint256 stakeFraction = configuration.falseWalletSignatureStake();
-            securityBond.stage(msg.sender, stakeFraction);
-        } else {
-            address seizedWallet;
-            if (!genuineSenderAndFee)
-                seizedWallet = payment.sender.wallet;
-            if (!genuineRecipient)
-                seizedWallet = payment.recipient.wallet;
-            if (address(0) != seizedWallet) {
-                clientFund.seizeAllBalances(seizedWallet, msg.sender);
-                fraudChallenge.addSeizedWallet(seizedWallet);
-            }
-        }
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByPaymentEvent(payment, msg.sender, seizedWallet);
+        address seizedWallet;
+        if (!genuineSenderAndFee)
+            seizedWallet = payment.sender.wallet;
+        if (!genuineRecipient)
+            seizedWallet = payment.recipient.wallet;
+        if (address(0) != seizedWallet)
+            clientFund.seizeAllBalances(seizedWallet, msg.sender);
+
+        emit ChallengeByPaymentEvent(payment.seals.operator.hash, msg.sender, seizedWallet);
     }
 }

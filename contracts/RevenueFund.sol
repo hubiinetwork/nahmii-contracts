@@ -20,6 +20,7 @@ import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
 @title RevenueFund
@@ -35,6 +36,11 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
 
     //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public DEPOSIT_BALANCE_TYPE = "deposit";
+
+    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     BalanceLib.Balance periodAccrual;
@@ -43,12 +49,12 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     BalanceLib.Balance aggregateAccrual;
     InUseCurrencyLib.InUseCurrency inUseAggregateAccrual;
 
-    mapping(address => bool) registeredServicesMap;
+    mapping(address => bool) public registeredServicesMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
     event RegisterServiceEvent(address service);
     event DeregisterServiceEvent(address service);
@@ -63,10 +69,15 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        depositEthersTo(msg.sender);
+        receiveEthersTo(msg.sender, "");
     }
 
-    function depositEthersTo(address wallet) public payable {
+    function receiveEthersTo(address wallet, string balanceType) public payable {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
+
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         // Add to balances
@@ -78,14 +89,19 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         inUseAggregateAccrual.addItem(address(0), 0);
 
         // Emit event
-        emit DepositEvent(wallet, amount, address(0), 0);
+        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
-        depositTokensTo(msg.sender, amount, currencyCt, currencyId, standard);
+    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
+
         require(amount.isNonZeroPositiveInt256());
 
         // Execute transfer
@@ -102,7 +118,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         inUseAggregateAccrual.addItem(currencyCt, currencyId);
 
         // Emit event
-        emit DepositEvent(wallet, amount, currencyCt, currencyId);
+        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId);
     }
 
     //
@@ -120,27 +136,30 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
     function closeAccrualPeriod() public onlyDeployer {
-        uint256 currency_idx;
-        uint256 idx;
+        uint256 currencyIndex;
+        uint256 beneficiaryIndex;
         int256 remaining;
         int256 transferable;
         address beneficiaryAddress;
 
-        require(totalBeneficiaryFraction == PARTS_PER);
+        require(totalBeneficiaryFraction == ConstantsLib.PARTS_PER());
 
         // Execute transfer
-        for (currency_idx = inUsePeriodAccrual.getLength(); currency_idx > 0; currency_idx--) {
-            MonetaryTypesLib.Currency memory currency = inUsePeriodAccrual.getAt(currency_idx - 1);
+        for (currencyIndex = inUsePeriodAccrual.getLength(); currencyIndex > 0; currencyIndex--) {
+            MonetaryTypesLib.Currency memory currency = inUsePeriodAccrual.getAt(currencyIndex - 1);
 
             remaining = periodAccrual.get(currency.ct, currency.id);
-            for (idx = 0; idx < beneficiaries.length; idx++) {
-                beneficiaryAddress = beneficiaries[idx];
+            for (beneficiaryIndex = 0; beneficiaryIndex < beneficiaries.length; beneficiaryIndex++) {
+                beneficiaryAddress = beneficiaries[beneficiaryIndex];
 
                 if (!isRegisteredBeneficiary(beneficiaryAddress))
                     continue;
 
                 if (getBeneficiaryFraction(beneficiaryAddress) > 0) {
-                    transferable = int256(uint256(periodAccrual.get(currency.ct, currency.id)).mul(getBeneficiaryFraction(beneficiaryAddress)).div(PARTS_PER));
+                    transferable = periodAccrual.get(currency.ct, currency.id).mul(
+                        getBeneficiaryFraction(beneficiaryAddress)
+                    ).div(ConstantsLib.PARTS_PER());
+
                     if (transferable > remaining)
                         transferable = remaining;
 
@@ -149,7 +168,8 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
                         //NOTE: Setting address(0) as the target wallet is ok because the beneficiaries actually ignore the target wallet.
                         if (currency.ct == address(0))
-                            AccrualBeneficiary(beneficiaryAddress).depositEthersTo.value(uint256(transferable))(address(0));
+                            AccrualBeneficiary(beneficiaryAddress).receiveEthersTo.value(uint256(transferable))(address(0), "");
+
                         else {
                             // Execute transfer
                             TransferController controller = getTransferController(currency.ct, "");
@@ -157,7 +177,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                                 revert();
 
                             //transfer funds to the beneficiary
-                            AccrualBeneficiary(beneficiaryAddress).depositTokensTo(address(0), transferable, currency.ct, currency.id, "");
+                            AccrualBeneficiary(beneficiaryAddress).receiveTokensTo(address(0), "", transferable, currency.ct, currency.id, "");
                         }
 
                         remaining = remaining.sub(transferable);
@@ -170,8 +190,8 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         }
 
         // Call "closeAccrualPeriod" of beneficiaries
-        for (idx = 0; idx < beneficiaries.length; idx++) {
-            beneficiaryAddress = beneficiaries[idx];
+        for (beneficiaryIndex = 0; beneficiaryIndex < beneficiaries.length; beneficiaryIndex++) {
+            beneficiaryAddress = beneficiaries[beneficiaryIndex];
 
             if (!isRegisteredBeneficiary(beneficiaryAddress) || 0 == getBeneficiaryFraction(beneficiaryAddress))
                 continue;

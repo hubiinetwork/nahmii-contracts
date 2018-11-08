@@ -20,11 +20,12 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeByOrder
 @notice Where order is challenged wrt signature error
 */
-contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
+contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByOrderEvent(NahmiiTypesLib.Order order, address challenger);
+    event ChallengeByOrderEvent(bytes32 orderHash, address challenger);
 
     //
     // Constructor
@@ -58,9 +59,9 @@ contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validat
         configuration.setOperationalModeExit();
         fraudChallenge.addFraudulentOrderHash(order.seals.operator.hash);
 
-        uint256 stakeFraction = configuration.falseWalletSignatureStake();
-        securityBond.stage(msg.sender, stakeFraction);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByOrderEvent(order, msg.sender);
+        emit ChallengeByOrderEvent(order.seals.operator.hash, msg.sender);
     }
 }

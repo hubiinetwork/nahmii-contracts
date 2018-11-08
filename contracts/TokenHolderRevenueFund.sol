@@ -37,6 +37,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // -----------------------------------------------------------------------------------------------------------------
     string constant public CLOSE_ACCRUAL_PERIOD_ACTION = "close_accrual_period";
 
+    string constant public DEPOSIT_BALANCE_TYPE = "deposit";
+
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -59,13 +61,13 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // -----------------------------------------------------------------------------------------------------------------
     RevenueToken private revenueToken;
 
-    BalanceLib.Balance periodAccrual;
-    MonetaryTypesLib.Currency[] periodCurrenciesList;
-    mapping(address => mapping(uint256 => bool)) periodAccrualMap;
+    BalanceLib.Balance  periodAccrual;
+    MonetaryTypesLib.Currency[]  periodCurrenciesList;
+    mapping(address => mapping(uint256 => bool)) public periodAccrualMap;
 
-    BalanceLib.Balance aggregateAccrual;
-    MonetaryTypesLib.Currency[] aggregateCurrenciesList;
-    mapping(address => mapping(uint256 => bool)) aggregateAccrualMap;
+    BalanceLib.Balance  aggregateAccrual;
+    MonetaryTypesLib.Currency[]  aggregateCurrenciesList;
+    mapping(address => mapping(uint256 => bool)) public aggregateAccrualMap;
 
     mapping(address => Wallet) private walletMap;
 
@@ -75,7 +77,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
-    event DepositEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
     event ClaimAccrualEvent(address from, address currencyCt, uint256 currencyId);
@@ -106,10 +108,15 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        depositEthersTo(msg.sender);
+        receiveEthersTo(msg.sender, "");
     }
 
-    function depositEthersTo(address wallet) public payable {
+    function receiveEthersTo(address wallet, string balanceType) public payable {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
+
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         //add to balances
@@ -120,14 +127,19 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
         // Emit event
-        emit DepositEvent(wallet, amount, address(0), 0);
+        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function depositTokens(int256 amount, address currencyCt, uint256 currencyId, string standard) public {
-        depositTokensTo(msg.sender, amount, currencyCt, currencyId, standard);
+    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function depositTokensTo(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
+
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
@@ -155,7 +167,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         // Emit event
-        emit DepositEvent(wallet, amount, currencyCt, currencyId);
+        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId);
     }
 
     function deposit(address wallet, uint index) public view returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId) {

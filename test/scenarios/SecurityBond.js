@@ -9,6 +9,7 @@ const TransferControllerManager = artifacts.require('TransferControllerManager')
 const SecurityBond = artifacts.require('SecurityBond');
 const MockedSecurityBondService = artifacts.require('MockedSecurityBondService');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 
 chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
@@ -21,12 +22,15 @@ module.exports = function (glob) {
         let web3ERC20;
         let web3SecurityBond, ethersSecurityBond;
         let web3MockedSecurityBondService, ethersMockedSecurityBondService;
+        let web3MockedBeneficiary, ethersBeneficiary;
 
         before(async () => {
             web3TransferControllerManager = await TransferControllerManager.deployed();
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
+            web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
+            ethersBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
         });
 
         beforeEach(async () => {
@@ -46,7 +50,7 @@ module.exports = function (glob) {
 
             // Fully wire the mocked service
             await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
-            await web3SecurityBond.enableServiceAction(web3MockedSecurityBondService.address, 'stage');
+            await web3SecurityBond.enableServiceAction(web3MockedSecurityBondService.address, 'reward');
             await web3MockedSecurityBondService.changeSecurityBond(web3SecurityBond.address);
         });
 
@@ -57,87 +61,38 @@ module.exports = function (glob) {
             });
         });
 
-        describe('withdrawalTimeout()', () => {
-            it('should return initial value', async () => {
-                (await ethersSecurityBond.withdrawalTimeout())
-                    ._bn.should.eq.BN(1800);
-            });
-        });
-
-        describe('setWithdrawalTimeout()', () => {
-            describe('if called by non-deployer', () => {
-                it('should revert', async () => {
-                    web3SecurityBond.setWithdrawalTimeout(1000, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called by deployer', () => {
-                it('should revert', async () => {
-                    const result = await web3SecurityBond.setWithdrawalTimeout(1000);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetWithdrawalTimeoutEvent');
-
-                    (await ethersSecurityBond.withdrawalTimeout())
-                        ._bn.should.eq.BN(1000);
-                });
-            });
-        });
-
         describe('depositsCount()', () => {
             it('should return initial value', async () => {
-                (await ethersSecurityBond.depositsCount(Wallet.createRandom().address))
+                (await ethersSecurityBond.depositsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
-        describe('withdrawalsCount()', () => {
+        describe('depositedBalance()', () => {
+            describe('of Ether', () => {
+                it('should return initial value', async () => {
+                    (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                it('should return initial value', async () => {
+                    (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('inUseCurrenciesCount()', () => {
             it('should return initial value', async () => {
-                (await ethersSecurityBond.withdrawalsCount(Wallet.createRandom().address))
+                (await ethersSecurityBond.inUseCurrenciesCount())
                     ._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('activeBalance()', () => {
-            describe('of Ether', () => {
-                it('should return initial value', async () => {
-                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
-                        ._bn.should.eq.BN(0);
-                });
-            });
-
-            describe('of ERC20 token', () => {
-                it('should return initial value', async () => {
-                    (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
-                        ._bn.should.eq.BN(0);
-                });
-            });
-        });
-
-        describe('stagedBalance()', () => {
-            describe('if called with null wallet address', () => {
-                it('should revert', async () => {
-                    ethersSecurityBond.stagedBalance(mocks.address0, mocks.address0, 0).should.be.rejected;
-                });
-            });
-
-            describe('of Ether', () => {
-                it('should return initial value', async () => {
-                    (await ethersSecurityBond.stagedBalance(Wallet.createRandom().address, mocks.address0, 0))
-                        ._bn.should.eq.BN(0);
-                });
-            });
-
-            describe('of ERC20 token', () => {
-                it('should return initial value', async () => {
-                    (await ethersSecurityBond.stagedBalance(Wallet.createRandom().address, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(0);
-                });
             });
         });
 
         describe('fallback function', () => {
-            describe('first deposit', () => {
+            describe('first reception', () => {
                 it('should add initial deposit and increment deposited balance', async () => {
                     await web3.eth.sendTransactionPromise({
                         from: glob.user_a,
@@ -146,15 +101,15 @@ module.exports = function (glob) {
                         gas: 1e6
                     });
 
-                    (await ethersSecurityBond.depositsCount(glob.user_a))
+                    (await ethersSecurityBond.depositsCount())
                         ._bn.should.eq.BN(1);
 
-                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                    (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('1')._bn);
                 });
             });
 
-            describe('second deposit', () => {
+            describe('second reception', () => {
                 beforeEach(async () => {
                     await web3.eth.sendTransactionPromise({
                         from: glob.user_a,
@@ -172,20 +127,20 @@ module.exports = function (glob) {
                         gas: 1e6
                     });
 
-                    (await ethersSecurityBond.depositsCount(glob.user_a))
+                    (await ethersSecurityBond.depositsCount())
                         ._bn.should.eq.BN(2);
 
-                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                    (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('2')._bn);
                 });
             });
         });
 
-        describe('depositEthersTo()', () => {
-            describe('first deposit', () => {
+        describe('receiveEthersTo()', () => {
+            describe('first reception', () => {
                 it('should add initial deposit and increment deposited balance', async () => {
-                    const result = await web3SecurityBond.depositEthersTo(
-                        glob.user_a,
+                    const result = await web3SecurityBond.receiveEthersTo(
+                        glob.user_a, '',
                         {
                             from: glob.user_a,
                             value: web3.toWei(1, 'ether'),
@@ -194,20 +149,20 @@ module.exports = function (glob) {
                     );
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('DepositEvent');
+                    result.logs[0].event.should.equal('ReceiveEvent');
 
-                    (await ethersSecurityBond.depositsCount(glob.user_a))
+                    (await ethersSecurityBond.depositsCount())
                         ._bn.should.eq.BN(1);
 
-                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                    (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('1')._bn);
                 });
             });
 
-            describe('second deposit', () => {
+            describe('second reception', () => {
                 beforeEach(async () => {
-                    await web3SecurityBond.depositEthersTo(
-                        glob.user_a,
+                    await web3SecurityBond.receiveEthersTo(
+                        glob.user_a, '',
                         {
                             from: glob.user_a,
                             value: web3.toWei(1, 'ether'),
@@ -217,35 +172,36 @@ module.exports = function (glob) {
                 });
 
                 it('should add on top of the first deposit', async () => {
-                    await web3SecurityBond.depositEthersTo(
-                        glob.user_a, {
+                    await web3SecurityBond.receiveEthersTo(
+                        glob.user_a, '',
+                        {
                             from: glob.user_a,
                             value: web3.toWei(1, 'ether'),
                             gas: 1e6
                         }
                     );
 
-                    (await ethersSecurityBond.depositsCount(glob.user_a))
+                    (await ethersSecurityBond.depositsCount())
                         ._bn.should.eq.BN(2);
 
-                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
+                    (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('2')._bn);
                 });
             });
         });
 
-        describe('depositTokens()', () => {
+        describe('receiveTokens()', () => {
             describe('of ERC20 token', () => {
                 describe('if called with zero amount', () => {
                     it('should revert', async () => {
-                        web3SecurityBond.depositTokens(0, web3ERC20.address, 0, '', {from: glob.user_a})
+                        web3SecurityBond.receiveTokens('', 0, web3ERC20.address, 0, '', {from: glob.user_a})
                             .should.be.rejected;
                     });
                 });
 
                 describe('if called without prior approval', () => {
                     it('should revert', async () => {
-                        web3SecurityBond.depositTokens(10, web3ERC20.address, 0, '', {from: glob.user_a})
+                        web3SecurityBond.receiveTokens('', 10, web3ERC20.address, 0, '', {from: glob.user_a})
                             .should.be.rejected;
                     });
                 });
@@ -256,12 +212,12 @@ module.exports = function (glob) {
                     });
 
                     it('should revert', async () => {
-                        web3SecurityBond.depositTokens(9999, web3ERC20.address, 0, '', {from: glob.user_a})
+                        web3SecurityBond.receiveTokens('', 9999, web3ERC20.address, 0, '', {from: glob.user_a})
                             .should.be.rejected;
                     });
                 });
 
-                describe('first deposit', () => {
+                describe('first reception', () => {
                     beforeEach(async () => {
                         await web3ERC20.approve(
                             web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
@@ -269,59 +225,61 @@ module.exports = function (glob) {
                     });
 
                     it('should add initial deposit and increment deposited balance', async () => {
-                        const result = await web3SecurityBond.depositTokens(
-                            10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        const result = await web3SecurityBond.receiveTokens(
+                            '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                         );
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('DepositEvent');
+                        result.logs[0].event.should.equal('ReceiveEvent');
 
-                        (await ethersSecurityBond.depositsCount(glob.user_a))
+                        (await ethersSecurityBond.depositsCount())
                             ._bn.should.eq.BN(1);
 
-                        (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                        (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
                     });
                 });
 
-                describe('second deposit', () => {
+                describe('second reception', () => {
                     beforeEach(async () => {
                         await web3ERC20.approve(
                             web3SecurityBond.address, 20, {from: glob.user_a, gas: 1e6}
                         );
-                        await web3SecurityBond.depositTokens(
-                            10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        await web3SecurityBond.receiveTokens(
+                            '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                         );
                     });
 
                     it('should add on top of the first deposit', async () => {
-                        await web3SecurityBond.depositTokens(
-                            10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        await web3SecurityBond.receiveTokens(
+                            '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                         );
 
-                        (await ethersSecurityBond.depositsCount(glob.user_a))
+                        (await ethersSecurityBond.depositsCount())
                             ._bn.should.eq.BN(2);
 
-                        (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                        (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(20);
                     });
                 });
             });
         });
 
-        describe('depositTokensTo()', () => {
+        describe('receiveTokensTo()', () => {
             describe('of ERC20 token', () => {
                 describe('if called with zero amount', () => {
                     it('should revert', async () => {
-                        web3SecurityBond.depositTokensTo(glob.user_a, 0, web3ERC20.address, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3SecurityBond.receiveTokensTo(
+                            glob.user_a, '', 0, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
                 describe('if called without prior approval', () => {
                     it('should revert', async () => {
-                        web3SecurityBond.depositTokensTo(glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3SecurityBond.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
@@ -334,12 +292,13 @@ module.exports = function (glob) {
                     });
 
                     it('should revert', async () => {
-                        web3SecurityBond.depositTokensTo(glob.user_a, 9999, web3ERC20.address, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3SecurityBond.receiveTokensTo(
+                            glob.user_a, '', 9999, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
-                describe('first deposit', () => {
+                describe('first reception', () => {
                     beforeEach(async () => {
                         await web3ERC20.approve(
                             web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
@@ -347,40 +306,40 @@ module.exports = function (glob) {
                     });
 
                     it('should add initial deposit and increment deposited balance', async () => {
-                        const result = await web3SecurityBond.depositTokensTo(
-                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        const result = await web3SecurityBond.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('DepositEvent');
+                        result.logs[0].event.should.equal('ReceiveEvent');
 
-                        (await ethersSecurityBond.depositsCount(glob.user_a))
+                        (await ethersSecurityBond.depositsCount())
                             ._bn.should.eq.BN(1);
 
-                        (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                        (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
                     });
                 });
 
-                describe('second deposit', () => {
+                describe('second reception', () => {
                     beforeEach(async () => {
                         await web3ERC20.approve(
                             web3SecurityBond.address, 20, {from: glob.user_a, gas: 1e6}
                         );
-                        await web3SecurityBond.depositTokensTo(
-                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        await web3SecurityBond.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
                     });
 
                     it('should add on top of the first deposit', async () => {
-                        await web3SecurityBond.depositTokensTo(
-                            glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        await web3SecurityBond.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
 
-                        (await ethersSecurityBond.depositsCount(glob.user_a))
+                        (await ethersSecurityBond.depositsCount())
                             ._bn.should.eq.BN(2);
 
-                        (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
+                        (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(20);
                     });
                 });
@@ -388,21 +347,21 @@ module.exports = function (glob) {
         });
 
         describe('deposit()', () => {
-            describe('before first deposit', () => {
+            describe('before first reception', () => {
                 it('should revert', async () => {
-                    web3SecurityBond.deposit.call(glob.user_a, 0).should.be.rejected;
+                    web3SecurityBond.deposit.call(0).should.be.rejected;
                 });
             });
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3SecurityBond.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3SecurityBond.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                 });
 
                 it('should return deposit', async () => {
-                    const deposit = await ethersSecurityBond.deposit(glob.user_a, 0);
+                    const deposit = await ethersSecurityBond.deposit(0);
 
                     deposit.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
                     deposit.blockNumber.should.exist;
@@ -416,13 +375,13 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3SecurityBond.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3SecurityBond.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                 });
 
                 it('should return deposit', async () => {
-                    const deposit = await ethersSecurityBond.deposit(glob.user_a, 0);
+                    const deposit = await ethersSecurityBond.deposit(0);
 
                     deposit.amount._bn.should.eq.BN(10);
                     deposit.blockNumber.should.exist;
@@ -432,10 +391,67 @@ module.exports = function (glob) {
             });
         });
 
-        describe('stage()', () => {
+        describe('inUseCurrenciesByIndices()', () => {
+            describe('before first reception', () => {
+                it('should revert', async () => {
+                    web3SecurityBond.inUseCurrenciesByIndices.call(0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersSecurityBond.inUseCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(mocks.address0);
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3SecurityBond.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersSecurityBond.inUseCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(utils.getAddress(web3ERC20.address));
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('rewardMetaByWallet()', () => {
+            it('should successfully return meta', async () => {
+                const result = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
+
+                result.rewardFraction._bn.should.eq.BN(0);
+                result.rewardNonce._bn.should.eq.BN(0);
+            })
+        });
+
+        describe('stageNonceByWalletCurrency()', () => {
+            it('should successfully return meta', async () => {
+                (await ethersSecurityBond.stageNonceByWalletCurrency(glob.user_a, mocks.address0, 0))
+                    ._bn.should.eq.BN(0);
+            })
+        });
+
+        describe('reward()', () => {
             describe('if called with null address', () => {
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.stage(
+                    web3MockedSecurityBondService.reward(
                         mocks.address0, 1e18
                     ).should.be.rejected;
                 });
@@ -448,7 +464,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.stage(
+                    web3MockedSecurityBondService.reward(
                         glob.user_a, 1e18
                     ).should.be.rejected;
                 });
@@ -462,26 +478,51 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.stage(
+                    web3MockedSecurityBondService.reward(
                         glob.user_a, 1e18
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully reward', async () => {
+                    await web3MockedSecurityBondService.reward(
+                        glob.user_a, 1e18
+                    );
+
+                    const meta = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
+                    meta.rewardFraction._bn.should.eq.BN(1e18.toString());
+                    meta.rewardNonce._bn.should.eq.BN(1);
+                });
+            });
+        });
+
+        describe('stageToBeneficiary()', () => {
+            describe('if called without in-use currencies present', () => {
+                it('should revert', async () => {
+                    web3SecurityBond.stageToBeneficiary(
+                        web3MockedBeneficiary.address, mocks.address0, 0
                     ).should.be.rejected;
                 });
             });
 
             describe('of Ether', () => {
                 beforeEach(async () => {
-                    await web3SecurityBond.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    await web3SecurityBond.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                    await web3MockedSecurityBondService.reward(
+                        glob.user_a, 5e17
                     );
                 });
 
                 it('should successfully stage', async () => {
-                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
+                    await web3SecurityBond.stageToBeneficiary(
+                        web3MockedBeneficiary.address, mocks.address0, 0, {from: glob.user_a}
+                    );
 
-                    (await ethersSecurityBond.activeBalance(mocks.address0, 0))
-                        ._bn.should.eq.BN(utils.parseEther('0.7')._bn);
-                    (await ethersSecurityBond.stagedBalance(glob.user_a, mocks.address0, 0))
-                        ._bn.should.eq.BN(utils.parseEther('0.3')._bn);
+                    (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.5')._bn);
                 });
             });
 
@@ -490,124 +531,21 @@ module.exports = function (glob) {
                     await web3ERC20.approve(
                         web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
                     );
-                    await web3SecurityBond.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    await web3SecurityBond.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3MockedSecurityBondService.reward(
+                        glob.user_a, 5e17
                     );
                 });
 
                 it('should successfully stage', async () => {
-                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
-
-                    (await ethersSecurityBond.activeBalance(web3ERC20.address, 0))
-                        ._bn.should.eq.BN(7);
-                    (await ethersSecurityBond.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(3);
-                });
-            });
-        });
-
-        describe('withdraw()', () => {
-            describe('of Ether', () => {
-                beforeEach(async () => {
-                    await web3SecurityBond.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
-                    );
-                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
-                });
-
-                it('should successfully withdraw', async () => {
-                    const result = await web3SecurityBond.withdraw(
-                        web3.toWei(0.2, 'ether'), mocks.address0, 0, '', {from: glob.user_a}
+                    await web3SecurityBond.stageToBeneficiary(
+                        web3MockedBeneficiary.address, web3ERC20.address, 0, {from: glob.user_a}
                     );
 
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('WithdrawEvent');
-
-                    (await ethersSecurityBond.withdrawalsCount(glob.user_a))
-                        ._bn.should.eq.BN(1);
-
-                    (await ethersSecurityBond.stagedBalance(glob.user_a, mocks.address0, 0))
-                        ._bn.should.eq.BN(utils.parseEther('0.1')._bn);
-                });
-            });
-
-            describe('of ERC20 token', () => {
-                beforeEach(async () => {
-                    await web3ERC20.approve(
-                        web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3SecurityBond.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
-                });
-
-                it('should successfully withdraw', async () => {
-                    const result = await web3SecurityBond.withdraw(
-                        2, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('WithdrawEvent');
-
-                    (await ethersSecurityBond.withdrawalsCount(glob.user_a))
-                        ._bn.should.eq.BN(1);
-
-                    (await ethersSecurityBond.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(1);
-                });
-            });
-        });
-
-        describe('withdrawal()', () => {
-            describe('before first withdrawal', () => {
-                it('should revert', async () => {
-                    web3SecurityBond.withdrawal.call(glob.user_a, 0).should.be.rejected;
-                });
-            });
-
-            describe('of Ether', () => {
-                beforeEach(async () => {
-                    await web3SecurityBond.depositEthersTo(
-                        glob.user_a, {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
-                    );
-                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
-                    await web3SecurityBond.withdraw(
-                        web3.toWei(0.2, 'ether'), mocks.address0, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-                });
-
-                it('should successfully return withdrawal', async () => {
-                    const withdrawal = await ethersSecurityBond.withdrawal(glob.user_a, 0);
-
-                    withdrawal.amount._bn.should.eq.BN(utils.parseEther('0.2')._bn);
-                    withdrawal.blockNumber.should.exist;
-                    withdrawal.currencyCt.should.equal(mocks.address0);
-                    withdrawal.currencyId._bn.should.eq.BN(0);
-                });
-            });
-
-            describe('of ERC20 token', () => {
-                beforeEach(async () => {
-                    await web3ERC20.approve(
-                        web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3SecurityBond.depositTokensTo(
-                        glob.user_a, 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3MockedSecurityBondService.stage(glob.user_a, 3e17);
-                    await web3SecurityBond.withdraw(
-                        2, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-                });
-
-                it('should successfully return withdrawal', async () => {
-                    const withdrawal = await ethersSecurityBond.withdrawal(glob.user_a, 0);
-
-                    withdrawal.amount._bn.should.eq.BN(2);
-                    withdrawal.blockNumber.should.exist;
-                    withdrawal.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
-                    withdrawal.currencyId._bn.should.eq.BN(0);
+                    (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
+                        ._bn.should.eq.BN(5);
                 });
             });
         });

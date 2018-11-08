@@ -20,11 +20,13 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @title FraudChallengeByDuplicateDriipNonceOfTrades
 @notice Where driips are challenged wrt fraud by duplicate drip nonce of trades
 */
-contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, Challenge, Validatable, SecurityBondable {
+contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfTradesEvent(NahmiiTypesLib.Trade trade1, NahmiiTypesLib.Trade trade2, address challenger);
+    event ChallengeByDuplicateDriipNonceOfTradesEvent(bytes32 tradeHash1,
+        bytes32 tradeHash2, address challenger);
 
     //
     // Constructor
@@ -60,9 +62,11 @@ contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengab
         fraudChallenge.addFraudulentTradeHash(trade1.seal.hash);
         fraudChallenge.addFraudulentTradeHash(trade2.seal.hash);
 
-        uint256 stakeFraction = configuration.duplicateDriipNonceStake();
-        securityBond.stage(msg.sender, stakeFraction);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByDuplicateDriipNonceOfTradesEvent(trade1, trade2, msg.sender);
+        emit ChallengeByDuplicateDriipNonceOfTradesEvent(
+            trade1.seal.hash, trade2.seal.hash, msg.sender
+        );
     }
 }

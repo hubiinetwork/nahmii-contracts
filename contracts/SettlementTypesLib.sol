@@ -46,6 +46,9 @@ library SettlementTypesLib {
         NahmiiTypesLib.DriipType driipType;
         uint256 driipIndex;
 
+        // True if reward is from wallet balance
+        bool balanceReward;
+
         // Candidate info updated when calling any of the challenge functions
         CandidateType candidateType;
         uint256 candidateIndex;

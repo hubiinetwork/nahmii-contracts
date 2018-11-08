@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
+import {ClientFundable} from "./ClientFundable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -26,7 +27,8 @@ import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 @title DriipSettlementDispute
 @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
 */
-contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, FraudChallengable, CancelOrdersChallengable {
+contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, ClientFundable, FraudChallengable,
+CancelOrdersChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -40,14 +42,14 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
         DriipSettlementChallenge newDriipSettlementChallenge);
-    event ChallengeByOrderEvent(NahmiiTypesLib.Order order, uint256 nonce, NahmiiTypesLib.DriipType driipType,
-        address challenger);
-    event ChallengeByTradeEvent(address wallet, NahmiiTypesLib.Trade trade, uint256 nonce,
-        NahmiiTypesLib.DriipType driipType, address challenger);
-    event ChallengeByPaymentEvent(NahmiiTypesLib.Payment payment, uint256 nonce,
-        NahmiiTypesLib.DriipType driipType, address challenger);
+    event ChallengeByOrderEvent(bytes32 candidateHash, uint256 proposalNonce,
+        NahmiiTypesLib.DriipType proposalDriipType, address challenger);
     event UnchallengeOrderCandidateByTradeEvent(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade,
         uint256 nonce, NahmiiTypesLib.DriipType driipType, address challenger);
+    event ChallengeByTradeEvent(address wallet, bytes32 candidateHash, uint256 proposalNonce,
+        NahmiiTypesLib.DriipType proposalDriipType, address challenger);
+    event ChallengeByPaymentEvent(bytes32 candidateHash, uint256 proposalNonce,
+        NahmiiTypesLib.DriipType proposalDriipType, address challenger);
 
     //
     // Constructor
@@ -79,43 +81,11 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     onlyDriipSettlementChallenge
     onlySealedOrder(order)
     {
-        // Require that settlement challenge is ongoing
-        require(NahmiiTypesLib.ChallengePhase.Dispute == driipSettlementChallenge.challengePhase(order.wallet));
-
-        // Require that settlement has not been challenged already
-        require(SettlementTypesLib.ProposalStatus.Disqualified != driipSettlementChallenge.proposalStatus(order.wallet));
-
-        // Require that order candidate is not labelled fraudulent or cancelled
-        require(!fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
-        require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash));
-
-        // Buy order -> Conjugate currency and amount
-        // Sell order -> Intended currency and amount
-        (int256 orderAmount, MonetaryTypesLib.Currency memory orderCurrency) =
-        (NahmiiTypesLib.Intention.Sell == order.placement.intention ?
-        (order.placement.amount, order.placement.currencies.intended) :
-        (order.placement.amount.div(order.placement.rate), order.placement.currencies.conjugate));
-
-        // Get challenge target balance (balance - amount to be staged) and require that order
-        // candidate has relevant currency
-        int256 targetBalanceAmount = driipSettlementChallenge.proposalTargetBalanceAmount(order.wallet, orderCurrency);
-
-        // Require that order amount is strictly greater than target balance amount for this to be a
-        // valid challenge call
-        require(orderAmount > targetBalanceAmount);
-
-        // Store order candidate
-        driipSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash);
-
-        // Update challenge proposal
-        driipSettlementChallenge.setProposalTimeout(order.wallet, block.timestamp.add(configuration.settlementChallengeTimeout()));
-        driipSettlementChallenge.setProposalStatus(order.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
-        driipSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypesLib.CandidateType.Order);
-        driipSettlementChallenge.setProposalCandidateIndex(order.wallet, driipSettlementChallenge.challengeCandidateOrderHashesCount().sub(1));
-        driipSettlementChallenge.setProposalChallenger(order.wallet, challenger);
+        // Challenge by order
+        challengeByOrderPrivate(order, challenger);
 
         // Emit event
-        emit ChallengeByOrderEvent(order, driipSettlementChallenge.proposalNonce(order.wallet),
+        emit ChallengeByOrderEvent(order.seals.operator.hash, driipSettlementChallenge.proposalNonce(order.wallet),
             driipSettlementChallenge.proposalDriipType(order.wallet), challenger);
     }
 
@@ -163,7 +133,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         challengeByTradePrivate(wallet, trade, challenger);
 
         // Emit event
-        emit ChallengeByTradeEvent(wallet, trade, driipSettlementChallenge.proposalNonce(wallet),
+        emit ChallengeByTradeEvent(wallet, trade.seal.hash, driipSettlementChallenge.proposalNonce(wallet),
             driipSettlementChallenge.proposalDriipType(wallet), challenger);
     }
 
@@ -178,38 +148,51 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
     onlyDriipSettlementChallenge
     onlySealedPayment(payment)
     {
-        // Require that settlement challenge is ongoing
-        require(NahmiiTypesLib.ChallengePhase.Dispute == driipSettlementChallenge.challengePhase(payment.sender.wallet));
-
-        // Require that settlement has not been challenged already
-        require(SettlementTypesLib.ProposalStatus.Disqualified != driipSettlementChallenge.proposalStatus(payment.sender.wallet));
-
-        // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
-
-        // Require that payment's block number is not earlier than proposal's block number
-        require(payment.blockNumber >= driipSettlementChallenge.proposalBlockNumber(payment.sender.wallet));
-
-        // Get challenge target balance (balance - amount to be staged) and require that payment
-        // candidate has relevant currency
-        int256 targetBalanceAmount = driipSettlementChallenge.proposalTargetBalanceAmount(payment.sender.wallet, payment.currency);
-
-        // Require that single transfer is strictly greater than target balance amount for this to be a
-        // valid challenge call
-        require(payment.transfers.single.abs() > targetBalanceAmount);
-
-        // Store payment candidate
-        driipSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash);
-
-        // Update challenge proposal
-        driipSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
-        driipSettlementChallenge.setProposalCandidateType(payment.sender.wallet, SettlementTypesLib.CandidateType.Payment);
-        driipSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, driipSettlementChallenge.challengeCandidatePaymentHashesCount().sub(1));
-        driipSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
+        // Challenge by payment
+        challengeByPaymentPrivate(payment, challenger);
 
         // Emit event
-        emit ChallengeByPaymentEvent(payment, driipSettlementChallenge.proposalNonce(payment.sender.wallet),
+        emit ChallengeByPaymentEvent(payment.seals.operator.hash, driipSettlementChallenge.proposalNonce(payment.sender.wallet),
             driipSettlementChallenge.proposalDriipType(payment.sender.wallet), challenger);
+    }
+
+    function challengeByOrderPrivate(NahmiiTypesLib.Order order, address challenger)
+    private
+    {
+        // Require that settlement challenge is ongoing
+        require(NahmiiTypesLib.ChallengePhase.Dispute == driipSettlementChallenge.challengePhase(order.wallet));
+
+        // Require that settlement has not been challenged already
+        require(SettlementTypesLib.ProposalStatus.Disqualified != driipSettlementChallenge.proposalStatus(order.wallet));
+
+        // Require that order candidate is not labelled fraudulent or cancelled
+        require(!fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
+        require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash));
+
+        // Buy order -> Conjugate currency and amount
+        // Sell order -> Intended currency and amount
+        (int256 orderAmount, MonetaryTypesLib.Currency memory orderCurrency) =
+        (NahmiiTypesLib.Intention.Sell == order.placement.intention ?
+        (order.placement.amount, order.placement.currencies.intended) :
+        (order.placement.amount.div(order.placement.rate), order.placement.currencies.conjugate));
+
+        // Get challenge target balance (balance - amount to be staged) and require that order
+        // candidate has relevant currency
+        int256 targetBalanceAmount = driipSettlementChallenge.proposalTargetBalanceAmount(order.wallet, orderCurrency);
+
+        // Require that order amount is strictly greater than target balance amount for this to be a
+        // valid challenge call
+        require(orderAmount > targetBalanceAmount);
+
+        // Store order candidate hash
+        driipSettlementChallenge.addChallengeCandidateOrderHash(order.seals.operator.hash);
+
+        // Update challenge proposal
+        driipSettlementChallenge.setProposalTimeout(order.wallet, block.timestamp.add(configuration.settlementChallengeTimeout()));
+        driipSettlementChallenge.setProposalStatus(order.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
+        driipSettlementChallenge.setProposalCandidateType(order.wallet, SettlementTypesLib.CandidateType.Order);
+        driipSettlementChallenge.setProposalCandidateIndex(order.wallet, driipSettlementChallenge.challengeCandidateOrderHashesCount().sub(1));
+        driipSettlementChallenge.setProposalChallenger(order.wallet, challenger);
     }
 
     function unchallengeOrderCandidateByTradePrivate(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address unchallenger)
@@ -249,9 +232,8 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.setProposalCandidateIndex(order.wallet, 0);
         driipSettlementChallenge.setProposalChallenger(order.wallet, address(0));
 
-        // Obtain stake and stage it in SecurityBond
-        uint256 stakeFraction = configuration.unchallengeOrderCandidateByTradeStake();
-        securityBond.stage(unchallenger, stakeFraction);
+        // Reward stake fraction
+        securityBond.reward(unchallenger, configuration.walletSettlementStakeFraction());
     }
 
     function challengeByTradePrivate(address wallet, NahmiiTypesLib.Trade trade, address challenger)
@@ -295,7 +277,7 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         // valid challenge call
         require(singleTransferAmount > targetBalanceAmount);
 
-        // Store trade candidate
+        // Store trade candidate hash
         driipSettlementChallenge.addChallengeCandidateTradeHash(trade.seal.hash);
 
         // Update challenge proposal
@@ -303,6 +285,51 @@ contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityB
         driipSettlementChallenge.setProposalCandidateType(wallet, SettlementTypesLib.CandidateType.Trade);
         driipSettlementChallenge.setProposalCandidateIndex(wallet, driipSettlementChallenge.challengeCandidateTradeHashesCount().sub(1));
         driipSettlementChallenge.setProposalChallenger(wallet, challenger);
+
+        // Slash wallet's funds or reward challenger by stake fraction
+        if (driipSettlementChallenge.proposalBalanceReward(wallet))
+            clientFund.seizeAllBalances(wallet, challenger);
+        else
+            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
+    }
+
+    function challengeByPaymentPrivate(NahmiiTypesLib.Payment payment, address challenger)
+    private
+    {
+        // Require that settlement challenge is ongoing
+        require(NahmiiTypesLib.ChallengePhase.Dispute == driipSettlementChallenge.challengePhase(payment.sender.wallet));
+
+        // Require that settlement has not been challenged already
+        require(SettlementTypesLib.ProposalStatus.Disqualified != driipSettlementChallenge.proposalStatus(payment.sender.wallet));
+
+        // Require that payment candidate is not labelled fraudulent
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
+
+        // Require that payment's block number is not earlier than proposal's block number
+        require(payment.blockNumber >= driipSettlementChallenge.proposalBlockNumber(payment.sender.wallet));
+
+        // Get challenge target balance (balance - amount to be staged) and require that payment
+        // candidate has relevant currency
+        int256 targetBalanceAmount = driipSettlementChallenge.proposalTargetBalanceAmount(payment.sender.wallet, payment.currency);
+
+        // Require that single transfer is strictly greater than target balance amount for this to be a
+        // valid challenge call
+        require(payment.transfers.single.abs() > targetBalanceAmount);
+
+        // Store payment candidate hash
+        driipSettlementChallenge.addChallengeCandidatePaymentHash(payment.seals.operator.hash);
+
+        // Update challenge proposal
+        driipSettlementChallenge.setProposalStatus(payment.sender.wallet, SettlementTypesLib.ProposalStatus.Disqualified);
+        driipSettlementChallenge.setProposalCandidateType(payment.sender.wallet, SettlementTypesLib.CandidateType.Payment);
+        driipSettlementChallenge.setProposalCandidateIndex(payment.sender.wallet, driipSettlementChallenge.challengeCandidatePaymentHashesCount().sub(1));
+        driipSettlementChallenge.setProposalChallenger(payment.sender.wallet, challenger);
+
+        // Slash wallet's funds or reward challenger by stake fraction
+        if (driipSettlementChallenge.proposalBalanceReward(payment.sender.wallet))
+            clientFund.seizeAllBalances(payment.sender.wallet, challenger);
+        else
+            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
     }
 
     //

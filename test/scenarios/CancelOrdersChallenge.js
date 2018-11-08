@@ -20,7 +20,7 @@ module.exports = (glob) => {
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let provider;
-        let blockNumber0;
+        let blockNumber;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -38,10 +38,10 @@ module.exports = (glob) => {
             await ethersCancelOrdersChallenge.changeValidator(ethersValidator.address);
             await ethersCancelOrdersChallenge.changeConfiguration(ethersConfiguration.address);
 
-            // Default configuration timeouts for all tests. Particular tests override these defaults.
-            await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
+            blockNumber = await provider.getBlockNumber();
 
-            blockNumber0 = await provider.getBlockNumber();
+            // Default configuration timeouts for all tests. Particular tests override these defaults.
+            await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 1, 1e3);
         });
 
         describe('constructor', () => {
@@ -156,8 +156,8 @@ module.exports = (glob) => {
             let order0, order1, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 3e6});
-                await ethersConfiguration.reset();
+                await ethersValidator._reset({gasLimit: 3e6});
+                await ethersConfiguration._reset();
 
                 order0 = await mocks.mockOrder(glob.owner, {
                     wallet: glob.owner
@@ -173,7 +173,7 @@ module.exports = (glob) => {
 
                 topic = ethersCancelOrdersChallenge.interface.events.CancelOrdersEvent.topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -247,14 +247,14 @@ module.exports = (glob) => {
             let trade, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset({gasLimit: 1e6});
-                await ethersConfiguration.reset();
+                await ethersValidator._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset();
 
                 trade = await mocks.mockTrade(glob.owner);
 
                 topic = ethersCancelOrdersChallenge.interface.events.ChallengeEvent.topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
@@ -335,7 +335,7 @@ module.exports = (glob) => {
 
                 describe('if cancelled order challenge timeout has expired', () => {
                     beforeEach(async () => {
-                        await ethersConfiguration.setCancelOrderChallengeTimeout(0);
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 2, 0);
                         await ethersCancelOrdersChallenge.cancelOrders([order], {gasLimit: 1e6});
                     });
 
