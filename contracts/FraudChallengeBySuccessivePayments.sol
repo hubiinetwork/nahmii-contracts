@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,26 +11,28 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeBySuccessivePayments
 @notice Where driips are challenged wrt fraud by mismatch in successive payments
 */
-contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
-
+contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeBySuccessivePaymentsEvent(Types.Payment firstPayment, Types.Payment lastPayment, address challenger, address seizedWallet);
+    event ChallengeBySuccessivePaymentsEvent(bytes32 firstPaymentHash,
+        bytes32 lastPaymentHash, address challenger, address seizedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -42,11 +44,12 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Confi
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet Address of concerned wallet
     function challenge(
-        Types.Payment firstPayment,
-        Types.Payment lastPayment,
+        NahmiiTypesLib.Payment firstPayment,
+        NahmiiTypesLib.Payment lastPayment,
         address wallet
     )
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlySealedPayment(firstPayment)
     onlySealedPayment(lastPayment)
@@ -55,26 +58,30 @@ contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Confi
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(Types.isPaymentParty(firstPayment, wallet));
-        require(Types.isPaymentParty(lastPayment, wallet));
-        require(firstPayment.currency == lastPayment.currency);
+        require(validator.isPaymentParty(firstPayment, wallet));
+        require(validator.isPaymentParty(lastPayment, wallet));
+        require(firstPayment.currency.ct == lastPayment.currency.ct && firstPayment.currency.id == lastPayment.currency.id);
 
-        Types.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
-        Types.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
+        NahmiiTypesLib.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
+        NahmiiTypesLib.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
         require(
             !validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole) ||
-        !validator.isGenuineSuccessivePaymentsNetFees(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)
+        !validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)
         );
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentPayment(lastPayment);
+        fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
-        clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
-        fraudChallenge.addSeizedWallet(wallet);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeBySuccessivePaymentsEvent(firstPayment, lastPayment, msg.sender, wallet);
+        clientFund.seizeAllBalances(wallet, msg.sender);
+
+        emit ChallengeBySuccessivePaymentsEvent(
+            firstPayment.seals.operator.hash, lastPayment.seals.operator.hash, msg.sender, wallet
+        );
     }
 }

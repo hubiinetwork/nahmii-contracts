@@ -1,16 +1,19 @@
 const chai = require('chai');
-const sinonChai = require("sinon-chai");
-const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require('sinon-chai');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const cryptography = require('omphalos-commons').util.cryptography;
-const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
-const MockedConfiguration = artifacts.require("MockedConfiguration");
-const MockedValidator = artifacts.require("MockedValidator");
-const MockedSecurityBond = artifacts.require("MockedSecurityBond");
+const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedValidator = artifacts.require('MockedValidator');
+const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 let provider;
@@ -30,11 +33,11 @@ module.exports = (glob) => {
             web3FraudChallengeByDoubleSpentOrders = glob.web3FraudChallengeByDoubleSpentOrders;
             ethersFraudChallengeByDoubleSpentOrders = glob.ethersIoFraudChallengeByDoubleSpentOrders;
 
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
-            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
+            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
+            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
@@ -44,7 +47,8 @@ module.exports = (glob) => {
             await ethersFraudChallengeByDoubleSpentOrders.changeValidator(ethersValidator.address);
             await ethersFraudChallengeByDoubleSpentOrders.changeSecurityBond(ethersSecurityBond.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeByDoubleSpentOrders.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeByDoubleSpentOrders.address);
+            await ethersConfiguration.enableServiceAction(ethersFraudChallengeByDoubleSpentOrders.address, 'operational_mode');
         });
 
         beforeEach(async () => {
@@ -55,36 +59,53 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3FraudChallengeByDoubleSpentOrders.owner.call();
-                owner.should.equal(glob.owner);
+                (await web3FraudChallengeByDoubleSpentOrders.deployer.call()).should.equal(glob.owner);
+                (await web3FraudChallengeByDoubleSpentOrders.operator.call()).should.equal(glob.owner);
             });
         });
 
-        describe('owner()', () => {
-            it('should equal value initialized', async () => {
-                const owner = await ethersFraudChallengeByDoubleSpentOrders.owner();
-                owner.should.equal(utils.getAddress(glob.owner));
-            });
-        });
-
-        describe('changeOwner()', () => {
-            describe('if called with (current) owner as sender', () => {
+        describe('changeDeployer()', () => {
+            describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByDoubleSpentOrders.changeOwner(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByDoubleSpentOrders.changeDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDoubleSpentOrders.changeOwner(glob.user_a);
+                    const result = await web3FraudChallengeByDoubleSpentOrders.changeDeployer(glob.user_a);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOwnerEvent');
-                    const owner = await web3FraudChallengeByDoubleSpentOrders.owner.call();
-                    owner.should.equal(glob.user_a);
+                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+
+                    (await web3FraudChallengeByDoubleSpentOrders.deployer.call()).should.equal(glob.user_a);
                 });
             });
 
-            describe('if called with sender that is not (current) owner', () => {
+            describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDoubleSpentOrders.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDoubleSpentOrders.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('changeOperator()', () => {
+            describe('if called with (current) operator as sender', () => {
+                afterEach(async () => {
+                    await web3FraudChallengeByDoubleSpentOrders.changeOperator(glob.owner, {from: glob.user_a});
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3FraudChallengeByDoubleSpentOrders.changeOperator(glob.user_a);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+
+                    (await web3FraudChallengeByDoubleSpentOrders.operator.call()).should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called with sender that is not (current) deployer', () => {
+                it('should revert', async () => {
+                    web3FraudChallengeByDoubleSpentOrders.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -103,7 +124,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
@@ -123,7 +144,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDoubleSpentOrders.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -144,7 +165,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -164,7 +185,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDoubleSpentOrders.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -185,7 +206,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -205,7 +226,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDoubleSpentOrders.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -217,14 +238,13 @@ module.exports = (glob) => {
 
             before(async () => {
                 overrideOptions = {gasLimit: 3e6};
-                await ethersConfiguration.setDoubleSpentOrderStake(mocks.address0, utils.bigNumberify(1000));
             });
 
             beforeEach(async () => {
-                await ethersFraudChallenge.reset(overrideOptions);
-                await ethersConfiguration.reset(overrideOptions);
-                await ethersValidator.reset(overrideOptions);
-                await ethersSecurityBond.reset(overrideOptions);
+                await ethersConfiguration._reset(overrideOptions);
+                await ethersFraudChallenge._reset(overrideOptions);
+                await ethersValidator._reset(overrideOptions);
+                await ethersSecurityBond._reset(overrideOptions);
 
                 trade1 = await mocks.mockTrade(glob.owner, {
                     buyer: {
@@ -248,6 +268,18 @@ module.exports = (glob) => {
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByDoubleSpentOrders.interface.events.ChallengeByDoubleSpentOrdersEvent.topics
                 );
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                });
+
+                it('should revert', async () => {
+                    return ethersFraudChallengeByDoubleSpentOrders.challenge(
+                        trade1, trade2, overrideOptions
+                    ).should.be.rejected;
+                });
             });
 
             describe('if trades are genuine', () => {
@@ -290,7 +322,7 @@ module.exports = (glob) => {
                             wallet: glob.user_a,
                             order: {
                                 hashes: {
-                                    exchange: cryptography.hash('some buy order exchange hash')
+                                    operator: cryptography.hash('some buy order operator hash')
                                 }
                             }
                         },
@@ -304,7 +336,7 @@ module.exports = (glob) => {
                             wallet: glob.user_c,
                             order: {
                                 hashes: {
-                                    exchange: cryptography.hash('some buy order exchange hash')
+                                    operator: cryptography.hash('some buy order operator hash')
                                 }
                             }
                         },
@@ -315,25 +347,24 @@ module.exports = (glob) => {
                     });
                 });
 
-                it('should set operational mode exit, store fraudulent trades and stage in security bond', async () => {
+                it('should set operational mode exit, store fraudulent trades and reward in security bond', async () => {
                     await ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, doubleSpenderWalletsCount, rewardsCount, reward, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradesCount(),
+                        ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersFraudChallenge.doubleSpenderWalletsCount(),
-                        ethersSecurityBond.stagesCount(),
-                        ethersSecurityBond.stages(utils.bigNumberify(0)),
+                        ethersSecurityBond._rewardsCount(),
+                        ethersSecurityBond.rewards(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentTradesCount.eq(2).should.be.true;
+                    fraudulentTradeHashesCount.eq(2).should.be.true;
                     doubleSpenderWalletsCount.eq(2).should.be.true;
-                    stagesCount.eq(1).should.be.true;
-                    stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    rewardsCount.eq(1).should.be.true;
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -348,7 +379,7 @@ module.exports = (glob) => {
                             wallet: glob.user_b,
                             order: {
                                 hashes: {
-                                    exchange: cryptography.hash('some sell order exchange hash')
+                                    operator: cryptography.hash('some sell order operator hash')
                                 }
                             }
                         },
@@ -362,7 +393,7 @@ module.exports = (glob) => {
                             wallet: glob.user_d,
                             order: {
                                 hashes: {
-                                    exchange: cryptography.hash('some sell order exchange hash')
+                                    operator: cryptography.hash('some sell order operator hash')
                                 }
                             }
                         },
@@ -370,25 +401,24 @@ module.exports = (glob) => {
                     });
                 });
 
-                it('should set operational mode exit, store fraudulent trades and stage in security bond', async () => {
+                it('should set operational mode exit, store fraudulent trades and reward in security bond', async () => {
                     await ethersFraudChallengeByDoubleSpentOrders.challenge(
                         trade1, trade2, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradesCount, doubleSpenderWalletsCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, doubleSpenderWalletsCount, rewardsCount, reward, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradesCount(),
+                        ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersFraudChallenge.doubleSpenderWalletsCount(),
-                        ethersSecurityBond.stagesCount(),
-                        ethersSecurityBond.stages(utils.bigNumberify(0)),
+                        ethersSecurityBond._rewardsCount(),
+                        ethersSecurityBond.rewards(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentTradesCount.eq(2).should.be.true;
+                    fraudulentTradeHashesCount.eq(2).should.be.true;
                     doubleSpenderWalletsCount.eq(2).should.be.true;
-                    stagesCount.eq(1).should.be.true;
-                    stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    rewardsCount.eq(1).should.be.true;
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
                     logs.should.have.lengthOf(1);
                 });
             });

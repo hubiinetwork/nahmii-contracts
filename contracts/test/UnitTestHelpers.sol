@@ -1,39 +1,41 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 
 pragma solidity ^0.4.24;
 
+import {Ownable} from "../Ownable.sol";
 import {AccrualBeneficiary} from "../AccrualBeneficiary.sol";
-import {SafeMathUint} from "../SafeMathUint.sol";
-import {ERC20} from "../ERC20.sol";
+import {SafeMathUintLib} from "../SafeMathUintLib.sol";
 import {ClientFund} from "../ClientFund.sol";
 import {RevenueFund} from "../RevenueFund.sol";
 import {SecurityBond} from "../SecurityBond.sol";
 import {TokenHolderRevenueFund} from "../TokenHolderRevenueFund.sol";
+import {TransferControllerManageable} from "../TransferControllerManageable.sol";
+import {TransferController} from "../TransferController.sol";
 
 /**
 @title UnitTestHelpers
 @notice A dummy SC where several functions are added to assist in unit testing.
 */
-contract UnitTestHelpers is AccrualBeneficiary {
-    using SafeMathUint for uint256;
+contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManageable {
+    using SafeMathUintLib for uint256;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEthersWasCalled(address wallet);
-    event ReceiveTokensWasCalled(address wallet, int256 amount, address token);
+    event DepositEthersToWasCalled(address wallet, string balance);
+    event DepositTokensToWasCalled(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodWasCalled();
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor() public {
+    constructor(address _owner) public Ownable(_owner) {
     }
 
     function() public payable {
@@ -44,6 +46,7 @@ contract UnitTestHelpers is AccrualBeneficiary {
         require(target.call.value(amount)());
     }
 
+    /*
     //
     // Helpers for testing ERC20
     // -----------------------------------------------------------------------------------------------------------------
@@ -52,70 +55,30 @@ contract UnitTestHelpers is AccrualBeneficiary {
         ERC20 tok = ERC20(token);
         tok.approve(spender, value);
     }
-
-    //
-    // Helper for ClientFunds SC
-    // -----------------------------------------------------------------------------------------------------------------
-    function callToTransferFromDepositedToSettledBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.transferFromDepositedToSettledBalance(sourceWallet, destWallet, amount, token);
-    }
-
-    function callToWithdrawFromDepositedBalance_CLIENTFUND(address clientFund, address sourceWallet, address destWallet, int256 amount, address token) public {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.withdrawFromDepositedBalance(sourceWallet, destWallet, amount, token);
-    }
-
-    function callToDepositEthersToSettledBalance_CLIENTFUND(address clientFund, address destWallet) public payable {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.depositEthersToSettledBalance.value(msg.value)(destWallet);
-    }
-
-    function callToDepositTokensToSettledBalance_CLIENTFUND(address clientFund, address destWallet, address token, int256 amount) public {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.depositTokensToSettledBalance(destWallet, token, amount);
-    }
-
-    function callToSeizeDepositedAndSettledBalances_CLIENTFUND(address clientFund, address sourceWallet, address destWallet) public {
-        require(clientFund != address(0));
-        ClientFund sc = ClientFund(clientFund);
-        sc.seizeDepositedAndSettledBalances(sourceWallet, destWallet);
-    }
+    */
 
     //
     // Helpers for RevenueFund SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToDepositTokens_REVENUEFUND(address revenueFund, address token, int256 amount) public {
+    function callToDepositTokens_REVENUEFUND(address revenueFund, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
         require(revenueFund != address(0));
         RevenueFund sc = RevenueFund(revenueFund);
-        sc.depositTokens(token, amount);
+        sc.receiveTokens("", amount, currencyCt, currencyId, standard);
     }
 
-    function receiveEthers(address wallet) public payable {
-        emit ReceiveEthersWasCalled(wallet);
+    function receiveEthersTo(address wallet, string balance) public payable {
+        emit DepositEthersToWasCalled(wallet, balance);
     }
 
-    function receiveTokens(address wallet, int256 amount, address token) public {
-        ERC20 tok = ERC20(token);
-        tok.transferFrom(msg.sender, this, uint256(amount));
-        emit ReceiveTokensWasCalled(wallet, amount, token);
+    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        //execute transfer
+        TransferController controller = getTransferController(currencyCt, standard);
+        controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
+        emit DepositTokensToWasCalled(wallet, balance, amount, currencyCt, currencyId);
     }
 
     function closeAccrualPeriod() public {
         emit CloseAccrualPeriodWasCalled();
-    }
-
-    //
-    // Helpers for SecurityBond SC
-    // -----------------------------------------------------------------------------------------------------------------
-    function callToStage_SECURITYBOND(address securityBond, int256 amount, address token, address wallet) public {
-        require(securityBond != address(0));
-        SecurityBond sc = SecurityBond(securityBond);
-        sc.stage(amount, token, wallet);
     }
 
     //
@@ -124,7 +87,7 @@ contract UnitTestHelpers is AccrualBeneficiary {
     function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund, address token, int256 amount) public {
         require(tokenHolderRevenueFund != address(0));
         TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFund);
-        sc.depositTokens(token, amount);
+        sc.receiveTokens("", amount, token, 0, "");
     }
 
     function callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund) public {

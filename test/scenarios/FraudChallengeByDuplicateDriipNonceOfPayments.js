@@ -1,16 +1,19 @@
 const chai = require('chai');
-const sinonChai = require("sinon-chai");
-const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require('sinon-chai');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const cryptography = require('omphalos-commons').util.cryptography;
-const MockedFraudChallenge = artifacts.require("MockedFraudChallenge");
-const MockedConfiguration = artifacts.require("MockedConfiguration");
-const MockedValidator = artifacts.require("MockedValidator");
-const MockedSecurityBond = artifacts.require("MockedSecurityBond");
+const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedValidator = artifacts.require('MockedValidator');
+const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 let provider;
@@ -30,11 +33,11 @@ module.exports = (glob) => {
             web3FraudChallengeByDuplicateDriipNonceOfPayments = glob.web3FraudChallengeByDuplicateDriipNonceOfPayments;
             ethersFraudChallengeByDuplicateDriipNonceOfPayments = glob.ethersIoFraudChallengeByDuplicateDriipNonceOfPayments;
 
-            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
-            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner);
+            web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
+            ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
+            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
@@ -44,7 +47,15 @@ module.exports = (glob) => {
             await ethersFraudChallengeByDuplicateDriipNonceOfPayments.changeValidator(ethersValidator.address);
             await ethersFraudChallengeByDuplicateDriipNonceOfPayments.changeSecurityBond(ethersSecurityBond.address);
 
-            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfPayments.address, 'OperationalMode');
+            await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfPayments.address);
+            await ethersConfiguration.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfPayments.address, 'operational_mode', {gasLimit: 1e6}
+            );
+
+            await ethersFraudChallenge.registerService(ethersFraudChallengeByDuplicateDriipNonceOfPayments.address);
+            await ethersFraudChallenge.enableServiceAction(
+                ethersFraudChallengeByDuplicateDriipNonceOfPayments.address, 'add_fraudulent_payment', {gasLimit: 1e6}
+            );
         });
 
         beforeEach(async () => {
@@ -55,36 +66,53 @@ module.exports = (glob) => {
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3FraudChallengeByDuplicateDriipNonceOfPayments.owner.call();
-                owner.should.equal(glob.owner);
+                (await web3FraudChallengeByDuplicateDriipNonceOfPayments.deployer.call()).should.equal(glob.owner);
+                (await web3FraudChallengeByDuplicateDriipNonceOfPayments.operator.call()).should.equal(glob.owner);
             });
         });
 
-        describe('owner()', () => {
-            it('should equal value initialized', async () => {
-                const owner = await ethersFraudChallengeByDuplicateDriipNonceOfPayments.owner();
-                owner.should.equal(utils.getAddress(glob.owner));
-            });
-        });
-
-        describe('changeOwner()', () => {
-            describe('if called with (current) owner as sender', () => {
+        describe('changeDeployer()', () => {
+            describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOwner(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOwner(glob.user_a);
+                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeDeployer(glob.user_a);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOwnerEvent');
-                    const owner = await web3FraudChallengeByDuplicateDriipNonceOfPayments.owner.call();
-                    owner.should.equal(glob.user_a);
+                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+
+                    (await web3FraudChallengeByDuplicateDriipNonceOfPayments.deployer.call()).should.equal(glob.user_a);
                 });
             });
 
-            describe('if called with sender that is not (current) owner', () => {
+            describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOwner(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('changeOperator()', () => {
+            describe('if called with (current) operator as sender', () => {
+                afterEach(async () => {
+                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOperator(glob.owner, {from: glob.user_a});
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOperator(glob.user_a);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+
+                    (await web3FraudChallengeByDuplicateDriipNonceOfPayments.operator.call()).should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called with sender that is not (current) operator', () => {
+                it('should revert', async () => {
+                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -103,7 +131,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
@@ -123,7 +151,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDuplicateDriipNonceOfPayments.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -144,7 +172,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -164,7 +192,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDuplicateDriipNonceOfPayments.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -185,7 +213,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -205,7 +233,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDuplicateDriipNonceOfPayments.changeValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -226,7 +254,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
+            describe('if called with deployer as sender', () => {
                 let securityBond;
 
                 beforeEach(async () => {
@@ -246,7 +274,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDuplicateDriipNonceOfPayments.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -258,14 +286,13 @@ module.exports = (glob) => {
 
             before(async () => {
                 overrideOptions = {gasLimit: 3e6};
-                await ethersConfiguration.setDuplicateDriipNonceStake(mocks.address0, utils.bigNumberify(1000));
             });
 
             beforeEach(async () => {
-                await ethersFraudChallenge.reset(overrideOptions);
-                await ethersConfiguration.reset(overrideOptions);
-                await ethersValidator.reset(overrideOptions);
-                await ethersSecurityBond.reset(overrideOptions);
+                await ethersConfiguration._reset(overrideOptions);
+                await ethersFraudChallenge._reset(overrideOptions);
+                await ethersValidator._reset(overrideOptions);
+                await ethersSecurityBond._reset(overrideOptions);
 
                 payment1 = await mocks.mockPayment(glob.owner, {
                     nonce: utils.bigNumberify(1),
@@ -291,6 +318,18 @@ module.exports = (glob) => {
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByDuplicateDriipNonceOfPayments.interface.events.ChallengeByDuplicateDriipNonceOfPaymentsEvent.topics
                 );
+            });
+
+            describe('if operational mode is not normal', () => {
+                beforeEach(async () => {
+                    await ethersConfiguration.setOperationalModeExit();
+                });
+
+                it('should revert', async () => {
+                    return ethersFraudChallengeByDuplicateDriipNonceOfPayments.challenge(
+                        payment1, payment2, overrideOptions
+                    ).should.be.rejected;
+                });
             });
 
             describe('if payments are genuine', () => {
@@ -330,12 +369,12 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment1.seals.wallet.hash = cryptography.hash('some payment');
                     payment1.seals.wallet.signature = await mocks.createWeb3Signer(payment1.sender.wallet)(payment1.seals.wallet.hash);
-                    payment1.seals.exchange.hash = mocks.hashPaymentAsExchange(payment1);
-                    payment1.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment1.seals.exchange.hash);
+                    payment1.seals.operator.hash = mocks.hashPaymentAsOperator(payment1);
+                    payment1.seals.operator.signature = await mocks.createWeb3Signer(glob.owner)(payment1.seals.operator.hash);
                     payment2.seals.wallet.hash = cryptography.hash('some payment');
                     payment2.seals.wallet.signature = await mocks.createWeb3Signer(payment2.sender.wallet)(payment2.seals.wallet.hash);
-                    payment2.seals.exchange.hash = mocks.hashPaymentAsExchange(payment2);
-                    payment2.seals.exchange.signature = await mocks.createWeb3Signer(glob.owner)(payment2.seals.exchange.hash);
+                    payment2.seals.operator.hash = mocks.hashPaymentAsOperator(payment2);
+                    payment2.seals.operator.signature = await mocks.createWeb3Signer(glob.owner)(payment2.seals.operator.hash);
                 });
 
                 it('should revert', async () => {
@@ -357,6 +396,7 @@ module.exports = (glob) => {
                         blockNumber: utils.bigNumberify(blockNumber10)
                     });
                     payment2 = await mocks.mockPayment(glob.owner, {
+                        nonce: payment1.nonce,
                         sender: {
                             wallet: glob.user_c
                         },
@@ -367,23 +407,22 @@ module.exports = (glob) => {
                     });
                 });
 
-                it('should set operational mode exit, store fraudulent payments and stage in security bond', async () => {
+                it('should set operational mode exit, store fraudulent payments and reward in security bond', async () => {
                     await ethersFraudChallengeByDuplicateDriipNonceOfPayments.challenge(
                         payment1, payment2, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentsCount, stagesCount, stage, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, rewardsCount, reward, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentsCount(),
-                        ethersSecurityBond.stagesCount(),
-                        ethersSecurityBond.stages(utils.bigNumberify(0)),
+                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
+                        ethersSecurityBond._rewardsCount(),
+                        ethersSecurityBond.rewards(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
-                    fraudulentPaymentsCount.eq(2).should.be.true;
-                    stagesCount.eq(1).should.be.true;
-                    stage.wallet.should.equal(utils.getAddress(glob.owner));
-                    stage.currency.should.equal(mocks.address0);
-                    stage.amount.eq(utils.bigNumberify(1000)).should.be.true;
+                    fraudulentPaymentHashesCount.eq(2).should.be.true;
+                    rewardsCount.eq(1).should.be.true;
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
                     logs.should.have.lengthOf(1);
                 });
             });

@@ -1,23 +1,20 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {CommunityVote} from "./CommunityVote.sol";
 
 /**
 @title CommunityVotable
 @notice An ownable that has a community vote property
 */
-contract CommunityVotable is Ownable, Modifiable {
-
+contract CommunityVotable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -34,21 +31,29 @@ contract CommunityVotable is Ownable, Modifiable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Disable future updates of community vote contract
-    function disableUpdateOfCommunityVote() public onlyOwner {
+    function disableUpdateOfCommunityVote() 
+    public 
+    onlyDeployer 
+    {
         communityVoteUpdateDisabled = true;
     }
 
     /// @notice Change the community vote contract
     /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote)
-    public
-    onlyOwner
+    function changeCommunityVote(CommunityVote newCommunityVote) 
+    public 
+    onlyDeployer
     notNullAddress(newCommunityVote)
+    notSameAddresses(newCommunityVote, communityVote)
     {
         require(!communityVoteUpdateDisabled);
+
+        // Set new community vote
         CommunityVote oldCommunityVote = communityVote;
         communityVote = newCommunityVote;
-        emit ChangeCommunityVoteEvent(oldCommunityVote, communityVote);
+
+        // Emit event
+        emit ChangeCommunityVoteEvent(oldCommunityVote, newCommunityVote);
     }
 
     //

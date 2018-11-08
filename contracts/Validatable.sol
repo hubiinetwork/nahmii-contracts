@@ -1,25 +1,22 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {Validator} from "./Validator.sol";
-import {Types} from "./Types.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title Validatable
 @notice An ownable that has a validator property
 */
-contract Validatable is Ownable, Modifiable {
-
+contract Validatable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -28,21 +25,23 @@ contract Validatable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeValidatorEvent(Validator oldValidator, Validator newValidator);
+    event ChangeValidatorEvent(Validator oldAddress, Validator newAddress);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the validator contract
-    /// @param newValidator The (address of) Validator contract instance
-    function changeValidator(Validator newValidator)
-    public
-    onlyOwner
-    notNullAddress(newValidator)
+    /// @param newAddress The (address of) Validator contract instance
+    function changeValidator(Validator newAddress) public onlyDeployer
+    notNullAddress(newAddress)
+    notSameAddresses(newAddress, validator)
     {
-        Validator oldValidator = validator;
-        validator = newValidator;
-        emit ChangeValidatorEvent(oldValidator, validator);
+        //set new validator
+        Validator oldAddress = validator;
+        validator = newAddress;
+
+        // Emit event
+        emit ChangeValidatorEvent(oldAddress, newAddress);
     }
 
     //
@@ -53,28 +52,38 @@ contract Validatable is Ownable, Modifiable {
         _;
     }
 
-    modifier onlyExchangeSealedOrder(Types.Order order) {
-        require(validator.isGenuineOrderExchangeSeal(order, owner));
+    modifier onlyOperatorSealedOrder(NahmiiTypesLib.Order order) {
+        require(validator.isGenuineOrderOperatorSeal(order));
         _;
     }
 
-    modifier onlySealedOrder(Types.Order order) {
-        require(validator.isGenuineOrderSeals(order, owner));
+    modifier onlySealedOrder(NahmiiTypesLib.Order order) {
+        require(validator.isGenuineOrderSeals(order));
         _;
     }
 
-    modifier onlySealedTrade(Types.Trade trade) {
-        require(validator.isGenuineTradeSeal(trade, owner));
+    modifier onlySealedTrade(NahmiiTypesLib.Trade trade) {
+        require(validator.isGenuineTradeSeal(trade));
         _;
     }
 
-    modifier onlyExchangeSealedPayment(Types.Payment payment) {
-        require(validator.isGenuinePaymentExchangeSeal(payment, owner));
+    modifier onlyOperatorSealedPayment(NahmiiTypesLib.Payment payment) {
+        require(validator.isGenuinePaymentOperatorSeal(payment));
         _;
     }
 
-    modifier onlySealedPayment(Types.Payment payment) {
-        require(validator.isGenuinePaymentSeals(payment, owner));
+    modifier onlySealedPayment(NahmiiTypesLib.Payment payment) {
+        require(validator.isGenuinePaymentSeals(payment));
+        _;
+    }
+
+    modifier onlyTradeParty(NahmiiTypesLib.Trade trade, address wallet) {
+        require(validator.isTradeParty(trade, wallet));
+        _;
+    }
+
+    modifier onlyPaymentSender(NahmiiTypesLib.Payment payment, address wallet) {
+        require(validator.isPaymentParty(payment, wallet));
         _;
     }
 }

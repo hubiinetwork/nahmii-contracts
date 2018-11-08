@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,26 +11,28 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByTradeSucceedingPayment
 @notice Where driips are challenged wrt fraud by mismatch in trade succeeding payment
 */
-contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
-
+contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeSucceedingPaymentEvent(Types.Payment payment, Types.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeSucceedingPaymentEvent(bytes32 paymentHash, bytes32 tradeHash,
+        address challenger, address seizedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -41,15 +43,18 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, C
     /// @param payment Reference payment
     /// @param trade Fraudulent trade candidate
     /// @param wallet Address of concerned wallet
-    /// @param currency Address of concerned currency of trade (0 if ETH)
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
     function challenge(
-        Types.Payment payment,
-        Types.Trade trade,
+        NahmiiTypesLib.Payment payment,
+        NahmiiTypesLib.Trade trade,
         address wallet,
-        address currency
+        address currencyCt,
+        uint256 currencyId
     )
     public
     validatorInitialized
+    onlyOperationalModeNormal
     onlySealedPayment(payment)
     onlySealedTrade(trade)
     {
@@ -57,30 +62,34 @@ contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, C
         require(fraudChallenge != address(0));
         require(clientFund != address(0));
 
-        require(Types.isTradeParty(trade, wallet));
-        require(Types.isPaymentParty(payment, wallet));
-        require(currency == payment.currency);
-        require(currency == trade.currencies.intended || currency == trade.currencies.conjugate);
+        require(validator.isTradeParty(trade, wallet));
+        require(validator.isPaymentParty(payment, wallet));
+        require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
+        require((currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id)
+            || (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id));
 
-        Types.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? Types.PaymentPartyRole.Sender : Types.PaymentPartyRole.Recipient);
-        Types.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? Types.TradePartyRole.Buyer : Types.TradePartyRole.Seller);
+        NahmiiTypesLib.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
+        NahmiiTypesLib.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
 
         require(validator.isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
 
-        Types.CurrencyRole currencyRole = (currency == trade.currencies.intended ? Types.CurrencyRole.Intended : Types.CurrencyRole.Conjugate);
+        NahmiiTypesLib.CurrencyRole tradeCurrencyRole = (currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
 
         require(
-            !validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, currencyRole) ||
-        !validator.isGenuineSuccessivePaymentTradeNetFees(payment, paymentPartyRole, trade, tradePartyRole, currencyRole)
+            !validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, tradeCurrencyRole) ||
+        !validator.isGenuineSuccessivePaymentTradeTotalFees(payment, paymentPartyRole, trade, tradePartyRole)
         );
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentTrade(trade);
+        fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
-        clientFund.seizeDepositedAndSettledBalances(wallet, msg.sender);
-        fraudChallenge.addSeizedWallet(wallet);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByTradeSucceedingPaymentEvent(payment, trade, msg.sender, wallet);
+        clientFund.seizeAllBalances(wallet, msg.sender);
+
+        emit ChallengeByTradeSucceedingPaymentEvent(
+            payment.seals.operator.hash, trade.seal.hash, msg.sender, wallet
+        );
     }
-
 }

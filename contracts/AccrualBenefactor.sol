@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -9,42 +9,38 @@
 pragma solidity ^0.4.24;
 
 import {Benefactor} from "./Benefactor.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
 @title AccrualBenefactor
 @notice A benefactor whose registered beneficiaries obtain a predefined fraction of total amount
 */
 contract AccrualBenefactor is Benefactor {
-    using SafeMathUint for uint256;
-
-    //
-    // Constants
-    // -----------------------------------------------------------------------------------------------------------------
-    uint256 constant public PARTS_PER = 1e18;
+    using SafeMathIntLib for int256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => uint256) internal beneficiaryFractionMap;
-    uint256 internal totalBeneficiaryFraction;
+    mapping(address => int256) internal beneficiaryFractionMap;
+    int256 internal totalBeneficiaryFraction;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisterAccrualBeneficiaryEvent(address beneficiary, uint256 fraction);
+    event RegisterAccrualBeneficiaryEvent(address beneficiary, int256 fraction);
     event DeregisterAccrualBeneficiaryEvent(address beneficiary);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
-        return registerBeneficiary(beneficiary, PARTS_PER);
+    function registerBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
+        return registerFractionalBeneficiary(beneficiary, ConstantsLib.PARTS_PER());
     }
 
-    function registerBeneficiary(address beneficiary, uint256 fraction) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function registerFractionalBeneficiary(address beneficiary, int256 fraction) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         require(fraction > 0);
-        require(totalBeneficiaryFraction.add(fraction) <= PARTS_PER);
+        require(totalBeneficiaryFraction.add(fraction) <= ConstantsLib.PARTS_PER());
 
         if (!super.registerBeneficiary(beneficiary))
             return false;
@@ -52,30 +48,30 @@ contract AccrualBenefactor is Benefactor {
         beneficiaryFractionMap[beneficiary] = fraction;
         totalBeneficiaryFraction = totalBeneficiaryFraction.add(fraction);
 
-        //raise event
+        // Emit event
         emit RegisterAccrualBeneficiaryEvent(beneficiary, fraction);
 
         return true;
     }
 
-    function deregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
+    function deregisterBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
         if (!super.deregisterBeneficiary(beneficiary))
             return false;
 
         totalBeneficiaryFraction = totalBeneficiaryFraction.sub(beneficiaryFractionMap[beneficiary]);
         beneficiaryFractionMap[beneficiary] = 0;
 
-        //raise event
+        // Emit event
         emit DeregisterAccrualBeneficiaryEvent(beneficiary);
 
         return true;
     }
 
-    function getBeneficiaryFraction(address beneficiary) public view returns (uint256) {
+    function getBeneficiaryFraction(address beneficiary) public view returns (int256) {
         return beneficiaryFractionMap[beneficiary];
     }
 
-    function getTotalBeneficiaryFraction() public view returns (uint256) {
+    function getTotalBeneficiaryFraction() public view returns (int256) {
         return totalBeneficiaryFraction;
     }
 }

@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,49 +10,45 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {Servable} from "./Servable.sol";
-import {Types} from "./Types.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallenge
 @notice Where fraud challenge results are found
 */
-contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
+contract FraudChallenge is Ownable, Servable {
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public ADD_SEIZED_WALLET_ACTION = "add_seized_wallet";
+    string constant public ADD_DOUBLE_SPENDER_WALLET_ACTION = "add_double_spender_wallet";
+    string constant public ADD_FRAUDULENT_ORDER_ACTION = "add_fraudulent_order";
+    string constant public ADD_FRAUDULENT_TRADE_ACTION = "add_fraudulent_trade";
+    string constant public ADD_FRAUDULENT_PAYMENT_ACTION = "add_fraudulent_payment";
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    string constant ADD_SEIZED_WALLET = "add_seized_wallet";
-    string constant ADD_DOUBLE_SPENDER_WALLET = "add_double_spender_wallet";
-    string constant ADD_FRAUDULENT_ORDER = "add_fraudulent_order";
-    string constant ADD_FRAUDULENT_TRADE = "add_fraudulent_trade";
-    string constant ADD_FRAUDULENT_PAYMENT = "add_fraudulent_payment";
-
-    address[] public seizedWallets;
-    mapping(address => bool) public seizedWalletsMap;
-
     address[] public doubleSpenderWallets;
-    mapping(address => bool) public doubleSpenderWalletsMap;
+    mapping(address => bool) public doubleSpenderByWallet;
 
-    Types.Order[] public fraudulentOrders;
-    mapping(bytes32 => bool) public fraudulentOrderExchangeHashMap;
+    bytes32[] public fraudulentOrderHashes;
+    mapping(bytes32 => bool) public fraudulentByOrderHash;
 
-    Types.Trade[] public fraudulentTrades;
-    mapping(bytes32 => bool) public fraudulentTradeHashMap;
+    bytes32[] public fraudulentTradeHashes;
+    mapping(bytes32 => bool) public fraudulentByTradeHash;
 
-    Types.Payment[] public fraudulentPayments;
-    mapping(bytes32 => bool) public fraudulentPaymentExchangeHashMap;
+    bytes32[] public fraudulentPaymentHashes;
+    mapping(bytes32 => bool) public fraudulentByPaymentHash;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event AddSeizedWalletEvent(address wallet);
     event AddDoubleSpenderWalletEvent(address wallet);
-    event AddFraudulentOrderEvent(Types.Order order);
-    event AddFraudulentTradeEvent(Types.Trade trade);
-    event AddFraudulentPaymentEvent(Types.Payment payment);
+    event AddFraudulentOrderHashEvent(bytes32 hash);
+    event AddFraudulentTradeHashEvent(bytes32 hash);
+    event AddFraudulentPaymentHashEvent(bytes32 hash);
 
     //
     // Constructor
@@ -63,119 +59,129 @@ contract FraudChallenge is Ownable, Modifiable, Servable, SelfDestructible {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Get the seized status of given wallet
-    /// @param wallet The wallet address for which to check seized status
-    /// @return true if wallet is seized, false otherwise
-    function isSeizedWallet(address wallet) public view returns (bool) {
-        return seizedWalletsMap[wallet];
-    }
-
-    /// @notice Get the number of wallets whose funds have be seized
-    /// @return Number of seized wallets
-    function seizedWalletsCount() public view returns (uint256) {
-        return seizedWallets.length;
-    }
-
-    /// @notice Add given wallet to store of seized wallets if not already present
-    /// @param wallet The seized wallet
-    function addSeizedWallet(address wallet) public
-    onlyOwnerOrServiceAction(ADD_SEIZED_WALLET)
-    {
-        if (!seizedWalletsMap[wallet]) {
-            seizedWallets.push(wallet);
-            seizedWalletsMap[wallet] = true;
-            emit AddSeizedWalletEvent(wallet);
-        }
-    }
-
     /// @notice Get the double spender status of given wallet
     /// @param wallet The wallet address for which to check double spender status
     /// @return true if wallet is double spender, false otherwise
-    function isDoubleSpenderWallet(address wallet) public view returns (bool) {
-        return doubleSpenderWalletsMap[wallet];
+    function isDoubleSpenderWallet(address wallet)
+    public
+    view
+    returns (bool)
+    {
+        return doubleSpenderByWallet[wallet];
     }
 
     /// @notice Get the number of wallets tagged as double spenders
     /// @return Number of double spender wallets
-    function doubleSpenderWalletsCount() public view returns (uint256) {
+    function doubleSpenderWalletsCount()
+    public
+    view
+    returns (uint256)
+    {
         return doubleSpenderWallets.length;
     }
 
     /// @notice Add given wallets to store of double spender wallets if not already present
     /// @param wallet The first wallet to add
-    function addDoubleSpenderWallet(address wallet) public
-    onlyOwnerOrServiceAction(ADD_DOUBLE_SPENDER_WALLET)
-    {
-        if (!doubleSpenderWalletsMap[wallet]) {
+    function addDoubleSpenderWallet(address wallet)
+    public
+    onlyDeployerOrEnabledServiceAction(ADD_DOUBLE_SPENDER_WALLET_ACTION) {
+        if (!doubleSpenderByWallet[wallet]) {
             doubleSpenderWallets.push(wallet);
-            doubleSpenderWalletsMap[wallet] = true;
+            doubleSpenderByWallet[wallet] = true;
             emit AddDoubleSpenderWalletEvent(wallet);
         }
     }
 
-    /// @notice Get the number of fraudulent orders
-    function fraudulentOrdersCount() public view returns (uint256) {
-        return fraudulentOrders.length;
-    }
-
-    /// @notice Get the state about whether the given hash equals the exchange' hash of a fraudulent order
-    /// @param hash The hash to be tested
-    function isFraudulentOrderExchangeHash(bytes32 hash) public view returns (bool) {
-        return fraudulentOrderExchangeHashMap[hash];
-    }
-
-    /// @notice Add given trade to store of fraudulent trades if not already present
-    function addFraudulentOrder(Types.Order order) public
-    onlyOwnerOrServiceAction(ADD_FRAUDULENT_ORDER)
+    /// @notice Get the number of fraudulent order hashes
+    function fraudulentOrderHashesCount()
+    public
+    view
+    returns (uint256)
     {
-        if (!fraudulentOrderExchangeHashMap[order.seals.exchange.hash]) {
-            fraudulentOrders.push(order);
-            fraudulentOrderExchangeHashMap[order.seals.exchange.hash] = true;
-            emit AddFraudulentOrderEvent(order);
+        return fraudulentOrderHashes.length;
+    }
+
+    /// @notice Get the state about whether the given hash equals the hash of a fraudulent order
+    /// @param hash The hash to be tested
+    function isFraudulentOrderHash(bytes32 hash)
+    public
+    view returns (bool) {
+        return fraudulentByOrderHash[hash];
+    }
+
+    /// @notice Add given order hash to store of fraudulent order hashes if not already present
+    function addFraudulentOrderHash(bytes32 hash)
+    public
+    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION)
+    {
+        if (!fraudulentByOrderHash[hash]) {
+            fraudulentByOrderHash[hash] = true;
+            fraudulentOrderHashes.push(hash);
+            emit AddFraudulentOrderHashEvent(hash);
         }
     }
 
-    /// @notice Get the number of fraudulent trades
-    function fraudulentTradesCount() public view returns (uint256) {
-        return fraudulentTrades.length;
+    /// @notice Get the number of fraudulent trade hashes
+    function fraudulentTradeHashesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return fraudulentTradeHashes.length;
     }
 
     /// @notice Get the state about whether the given hash equals the hash of a fraudulent trade
     /// @param hash The hash to be tested
-    function isFraudulentTradeHash(bytes32 hash) public view returns (bool) {
-        return fraudulentTradeHashMap[hash];
+    /// @return true if hash is the one of a fraudulent trade, else false
+    function isFraudulentTradeHash(bytes32 hash)
+    public
+    view
+    returns (bool)
+    {
+        return fraudulentByTradeHash[hash];
     }
 
-    /// @notice Add given order to store of fraudulent orders if not already present
-    function addFraudulentTrade(Types.Trade trade) public
-    onlyOwnerOrServiceAction(ADD_FRAUDULENT_TRADE)
+    /// @notice Add given trade hash to store of fraudulent trade hashes if not already present
+    function addFraudulentTradeHash(bytes32 hash)
+    public
+    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
     {
-        if (!fraudulentTradeHashMap[trade.seal.hash]) {
-            fraudulentTrades.push(trade);
-            fraudulentTradeHashMap[trade.seal.hash] = true;
-            emit AddFraudulentTradeEvent(trade);
+        if (!fraudulentByTradeHash[hash]) {
+            fraudulentByTradeHash[hash] = true;
+            fraudulentTradeHashes.push(hash);
+            emit AddFraudulentTradeHashEvent(hash);
         }
     }
 
-    /// @notice Get the number of fraudulent payments
-    function fraudulentPaymentsCount() public view returns (uint256) {
-        return fraudulentPayments.length;
-    }
-
-    /// @notice Get the state about whether the given hash equals the exchange' hash of a fraudulent payment
-    /// @param hash The hash to be tested
-    function isFraudulentPaymentExchangeHash(bytes32 hash) public view returns (bool) {
-        return fraudulentPaymentExchangeHashMap[hash];
-    }
-
-    /// @notice Add given payment to store of fraudulent payments if not already present
-    function addFraudulentPayment(Types.Payment payment) public
-    onlyOwnerOrServiceAction(ADD_FRAUDULENT_PAYMENT)
+    /// @notice Get the number of fraudulent payment hashes
+    function fraudulentPaymentHashesCount()
+    public
+    view
+    returns (uint256)
     {
-        if (!fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash]) {
-            fraudulentPayments.push(payment);
-            fraudulentPaymentExchangeHashMap[payment.seals.exchange.hash] = true;
-            emit AddFraudulentPaymentEvent(payment);
+        return fraudulentPaymentHashes.length;
+    }
+
+    /// @notice Get the state about whether the given hash equals the hash of a fraudulent payment
+    /// @param hash The hash to be tested
+    /// @return true if hash is the one of a fraudulent payment, else null
+    function isFraudulentPaymentHash(bytes32 hash)
+    public
+    view
+    returns (bool)
+    {
+        return fraudulentByPaymentHash[hash];
+    }
+
+    /// @notice Add given payment hash to store of fraudulent payment hashes if not already present
+    function addFraudulentPaymentHash(bytes32 hash)
+    public
+    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
+    {
+        if (!fraudulentByPaymentHash[hash]) {
+            fraudulentByPaymentHash[hash] = true;
+            fraudulentPaymentHashes.push(hash);
+            emit AddFraudulentPaymentHashEvent(hash);
         }
     }
 }

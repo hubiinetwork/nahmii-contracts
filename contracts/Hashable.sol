@@ -1,25 +1,22 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {Hasher} from "./Hasher.sol";
-import {Types} from "./Types.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title Hashable
 @notice An ownable that has a hasher property
 */
-contract Hashable is Ownable, Modifiable {
-
+contract Hashable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,15 +27,28 @@ contract Hashable is Ownable, Modifiable {
     // -----------------------------------------------------------------------------------------------------------------
     event ChangeHasherEvent(Hasher oldHasher, Hasher newHasher);
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the hasher contract
-    /// @param newHasher The (address of) Hasher contract instance
-    function changeHasher(Hasher newHasher)
-    public
-    onlyOwner
-    notNullAddress(newHasher)
+    /// @param newAddress The (address of) Hasher contract instance
+    function changeHasher(Hasher newAddress) public onlyDeployer
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, hasher)
     {
-        Hasher oldHasher = hasher;
-        hasher = newHasher;
-        emit ChangeHasherEvent(oldHasher, hasher);
+        //set new hasher
+        Hasher oldAddress = hasher;
+        hasher = newAddress;
+
+        // Emit event
+        emit ChangeHasherEvent(oldAddress, newAddress);
+    }
+
+    //
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
+    modifier hasherInitialized() {
+        require(hasher != address(0));
+        _;
     }
 }

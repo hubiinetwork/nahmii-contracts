@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,26 +11,27 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByTrade
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Validatable, ClientFundable {
-
+contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(Types.Trade trade, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(bytes32 tradeHash, address challenger, address seizedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -38,8 +39,8 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Vali
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(Types.Trade trade)
-    public
+    function challenge(NahmiiTypesLib.Trade trade) public
+    onlyOperationalModeNormal
     validatorInitialized
     onlySealedTrade(trade)
     {
@@ -47,34 +48,30 @@ contract FraudChallengeByTrade is Ownable, FraudChallengable, Configurable, Vali
         require(configuration != address(0));
         require(clientFund != address(0));
 
-        // Gauge the genuineness of maker and taker fees. Depending on whether maker is buyer or seller
-        // this result is baked into genuineness by buyer and seller below.
-        bool genuineMakerFee = validator.isGenuineTradeMakerFee(trade);
-        bool genuineTakerFee = validator.isGenuineTradeTakerFee(trade);
-
         // Genuineness affected by buyer
-        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade, owner)
-        && (Types.LiquidityRole.Maker == trade.buyer.liquidityRole ? genuineMakerFee : genuineTakerFee);
+        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade)
+        && validator.isGenuineTradeBuyerFee(trade);
 
         // Genuineness affected by seller
-        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade, owner)
-        && (Types.LiquidityRole.Maker == trade.seller.liquidityRole ? genuineMakerFee : genuineTakerFee);
+        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade)
+        && validator.isGenuineTradeSellerFee(trade);
 
         require(!genuineBuyerAndFee || !genuineSellerAndFee);
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentTrade(trade);
+        fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
+
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
         address seizedWallet;
         if (!genuineBuyerAndFee)
             seizedWallet = trade.buyer.wallet;
         if (!genuineSellerAndFee)
             seizedWallet = trade.seller.wallet;
-        if (address(0) != seizedWallet) {
-            clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
-            fraudChallenge.addSeizedWallet(seizedWallet);
-        }
+        if (address(0) != seizedWallet)
+            clientFund.seizeAllBalances(seizedWallet, msg.sender);
 
-        emit ChallengeByTradeEvent(trade, msg.sender, seizedWallet);
+        emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, seizedWallet);
     }
 }

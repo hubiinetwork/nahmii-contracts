@@ -1,5 +1,6 @@
 const chai = require('chai');
 const {Wallet, utils} = require('ethers');
+const cryptography = require('omphalos-commons').util.cryptography;
 const mocks = require('../mocks');
 
 chai.should();
@@ -10,6 +11,7 @@ module.exports = function (glob) {
         let blockNumberAhead;
         let ethersHasher;
         let web3Configuration, ethersConfiguration;
+        let web3SignerManager, ethersSignerManager;
         let web3Validator, ethersValidator;
         let partsPer;
 
@@ -19,17 +21,154 @@ module.exports = function (glob) {
             ethersHasher = glob.ethersIoHasher;
             web3Configuration = glob.web3Configuration;
             ethersConfiguration = glob.ethersIoConfiguration;
+            web3SignerManager = glob.web3SignerManager;
+            ethersSignerManager = glob.ethersIoSignerManager;
             web3Validator = glob.web3Validator;
             ethersValidator = glob.ethersIoValidator;
 
+            await ethersValidator.changeSignerManager(ethersSignerManager.address);
             await ethersValidator.changeConfiguration(ethersConfiguration.address);
             await ethersValidator.changeHasher(ethersHasher.address);
 
-            partsPer = await ethersConfiguration.getPartsPer();
+            partsPer = utils.bigNumberify(1e18.toString());
         });
 
         beforeEach(async () => {
-            blockNumberAhead = await provider.getBlockNumber() + 10;
+            blockNumberAhead = await provider.getBlockNumber() + 15;
+        });
+
+        describe('deployer()', () => {
+            it('should equal value initialized', async () => {
+                (await web3Validator.deployer.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('changeDeployer()', () => {
+            describe('if called with (current) deployer as sender', () => {
+                afterEach(async () => {
+                    await web3Validator.changeDeployer(glob.owner, {from: glob.user_a});
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Validator.changeDeployer(glob.user_a);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+
+                    (await web3Validator.deployer.call()).should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called with sender that is not (current) deployer', () => {
+                it('should revert', async () => {
+                    web3Validator.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('operator()', () => {
+            it('should equal value initialized', async () => {
+                (await web3Validator.operator.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('changeOperator()', () => {
+            describe('if called with (current) operator as sender', () => {
+                afterEach(async () => {
+                    await web3Validator.changeOperator(glob.owner, {from: glob.user_a});
+                });
+
+                it('should set new value and emit event', async () => {
+                    const result = await web3Validator.changeOperator(glob.user_a);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+
+                    (await web3Validator.operator.call()).should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called with sender that is not (current) operator', () => {
+                it('should revert', async () => {
+                    web3Validator.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('ethrecover()', () => {
+            let hash, signature;
+
+            beforeEach(async () => {
+                hash = cryptography.hash('some message');
+                signature = await mocks.web3Sign(glob.user_a, hash);
+            });
+
+            describe('if called with proper hash and signature', () => {
+                it('should return proper address', async () => {
+                    (await ethersValidator.ethrecover(hash, signature.v, signature.r, signature.s))
+                        .should.equal(utils.getAddress(glob.user_a));
+                });
+            });
+
+            describe('if called with improper hash and signature', () => {
+                it('should return improper address', async () => {
+                    (await ethersValidator.ethrecover(hash, signature.v, signature.s, signature.r))
+                        .should.not.equal(glob.user_a);
+                });
+            });
+        });
+
+        describe('isSignedByRegisteredSigner()', () => {
+            let hash, signature;
+
+            beforeEach(async () => {
+                hash = cryptography.hash('some message');
+            });
+
+            describe('if called with signature from registered signer', () => {
+                beforeEach(async () => {
+                    signature = await mocks.web3Sign(glob.owner, hash);
+                });
+
+                it('should return true', async () => {
+                    (await ethersValidator.isSignedByRegisteredSigner(hash, signature.v, signature.r, signature.s))
+                        .should.be.true;
+                });
+            });
+
+            describe('if called with signature from registered signer', () => {
+                beforeEach(async () => {
+                    signature = await mocks.web3Sign(glob.user_a, hash);
+                });
+
+                it('should return true', async () => {
+                    (await ethersValidator.isSignedByRegisteredSigner(hash, signature.v, signature.r, signature.s))
+                        .should.be.false;
+                });
+            });
+        });
+
+        describe('isSignedBy()', () => {
+            let hash, signature;
+
+            beforeEach(async () => {
+                hash = cryptography.hash('some message');
+                signature = await mocks.web3Sign(glob.owner, hash);
+            });
+
+            describe('if called with signer wallet', () => {
+                it('should return true', async () => {
+                    (await ethersValidator.isSignedBy(hash, signature.v, signature.r, signature.s, glob.owner))
+                        .should.be.true;
+                });
+            });
+
+            describe('if called with non-signer wallet', () => {
+                it('should return true', async () => {
+                    (await ethersValidator.isSignedBy(hash, signature.v, signature.r, signature.s, glob.user_a))
+                        .should.be.false;
+                });
+            });
         });
 
         describe('configuration()', () => {
@@ -114,7 +253,77 @@ module.exports = function (glob) {
             });
         });
 
-        describe.skip('isGenuineTradeMakerFee()', () => {
+        describe('isGenuineTradeBuyerFee()', () => {
+            let amountIntended, trade;
+
+            before(() => {
+                amountIntended = utils.parseUnits('100', 18);
+            });
+
+            describe('if trade buyer fee is genuine', () => {
+                describe('if buyer is maker', () => {
+                    beforeEach(async () => {
+                        await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
+                        await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
+
+                        const fee = await ethersConfiguration.tradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        trade = await mocks.mockTrade(glob.owner, {
+                            buyer: {
+                                fees: {
+                                    single: {
+                                        amount: amountIntended.mul(fee).div(partsPer),
+                                        currency: {
+                                            ct: '0x0000000000000000000000000000000000000001',
+                                            id: utils.bigNumberify(0)
+                                        }
+                                    }
+                                }
+                            },
+                            blockNumber: utils.bigNumberify(blockNumberAhead)
+                        });
+                    });
+
+                    it('should successfully validate', async () => {
+                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
+                        result.should.be.true;
+                    });
+                });
+
+                describe('if buyer is taker', () => {
+                    beforeEach(async () => {
+                        await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
+                        await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
+
+                        const fee = await ethersConfiguration.tradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        trade = await mocks.mockTrade(glob.owner, {
+                            buyer: {
+                                liquidityRole: mocks.liquidityRoles.indexOf('Taker'),
+                                fees: {
+                                    single: {
+                                        amount: amountIntended.mul(fee).div(partsPer),
+                                        currency: {
+                                            ct: '0x0000000000000000000000000000000000000001',
+                                            id: utils.bigNumberify(0)
+                                        }
+                                    }
+                                }
+                            },
+                            seller: {
+                                liquidityRole: mocks.liquidityRoles.indexOf('Maker')
+                            },
+                            blockNumber: utils.bigNumberify(blockNumberAhead)
+                        });
+                    });
+
+                    it('should successfully validate', async () => {
+                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
+                        result.should.be.true;
+                    });
+                });
+            });
+        });
+
+        describe('isGenuineTradeSellerFee()', () => {
             let amountIntended, amountConjugate, trade;
 
             before(() => {
@@ -122,55 +331,68 @@ module.exports = function (glob) {
                 amountConjugate = amountIntended.div(utils.bigNumberify(1000));
             });
 
-            beforeEach(async () => {
-                await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
-                await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
-            });
-
-            describe('if trade maker fee is genuine', () => {
-                describe('if maker is buyer', () => {
+            describe('if trade seller fee is genuine', () => {
+                describe('if seller is maker', () => {
                     beforeEach(async () => {
-                        const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
+                        await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
+
+                        const fee = await ethersConfiguration.tradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
-                            singleFees: {
-                                intended: amountIntended.mul(fee).div(partsPer)
+                            seller: {
+                                fees: {
+                                    single: {
+                                        amount: amountConjugate.mul(fee).div(partsPer),
+                                        currency: {
+                                            ct: '0x0000000000000000000000000000000000000002',
+                                            id: utils.bigNumberify(0)
+                                        }
+                                    }
+                                }
                             },
                             blockNumber: utils.bigNumberify(blockNumberAhead)
                         });
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeMakerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeSellerFee(trade);
                         result.should.be.true;
                     });
                 });
 
-                describe('if maker is seller', () => {
+                describe('if seller is taker', () => {
                     beforeEach(async () => {
-                        const fee = await ethersConfiguration.getTradeMakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
+                        await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [0, 10], [1e17, 2e17]);
+                        await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
+
+                        const fee = await ethersConfiguration.tradeTakerFee(utils.bigNumberify(blockNumberAhead), utils.bigNumberify(0));
                         trade = await mocks.mockTrade(glob.owner, {
                             buyer: {
                                 liquidityRole: mocks.liquidityRoles.indexOf('Taker')
                             },
                             seller: {
-                                liquidityRole: mocks.liquidityRoles.indexOf('Maker')
-                            },
-                            singleFees: {
-                                conjugate: amountConjugate.mul(fee).div(partsPer)
+                                liquidityRole: mocks.liquidityRoles.indexOf('Maker'),
+                                fees: {
+                                    single: {
+                                        amount: amountConjugate.mul(fee).div(partsPer),
+                                        currency: {
+                                            ct: '0x0000000000000000000000000000000000000002',
+                                            id: utils.bigNumberify(0)
+                                        }
+                                    }
+                                }
                             },
                             blockNumber: utils.bigNumberify(blockNumberAhead)
                         });
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeMakerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeSellerFee(trade);
                         result.should.be.true;
                     });
                 });
             });
         });
-
-
 
         // TODO Implement corresponding tests in Validator.js
         // describe.skip('challengeByOrder()', () => {
@@ -181,13 +403,13 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.001', 18), [], [], overrideOptions);
         //         await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
         //         await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
         //         await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
-        //         await ethersConfiguration.setFalseWalletSignatureStake(mocks.address0, utils.parseUnits('100', 18));
+        //         await ethersConfiguration.setFalseWalletSignatureStake(utils.parseUnits('100', 18), mocks.address0, utils.bigNumberify(0));
         //
         //         topic = ethersFraudChallenge.interface.events.ChallengeByTradeEvent.topics[0];
         //         filter = {
@@ -206,7 +428,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (exchange) hash differs from calculated', () => {
+        //     describe('if (operator) hash differs from calculated', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             trade.seal.hash = utils.id('some non-existent hash');
@@ -217,7 +439,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if not signed (by exchange)', () => {
+        //     describe('if not signed (by operator)', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             const sign = mocks.createWeb3Signer(glob.user_a);
@@ -251,7 +473,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -277,7 +499,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -309,7 +531,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -341,7 +563,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -373,7 +595,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -405,7 +627,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -437,7 +659,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -465,7 +687,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -493,7 +715,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -521,7 +743,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -548,7 +770,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -580,7 +802,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -612,7 +834,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -644,7 +866,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -676,7 +898,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -708,7 +930,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -736,7 +958,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -764,7 +986,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -792,7 +1014,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -806,13 +1028,13 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         await ethersConfiguration.setTradeMakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.001', 18), [], [], overrideOptions);
         //         await ethersConfiguration.setTradeMakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0001', 18), overrideOptions);
         //         await ethersConfiguration.setTradeTakerFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [1], [utils.parseUnits('0.1', 18)], overrideOptions);
         //         await ethersConfiguration.setTradeTakerMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
-        //         await ethersConfiguration.setFalseWalletSignatureStake(mocks.address0, utils.parseUnits('100', 18));
+        //         await ethersConfiguration.setFalseWalletSignatureStake(utils.parseUnits('100', 18), mocks.address0, utils.bigNumberify(0));
         //
         //         topic = ethersFraudChallenge.interface.events.ChallengeByTradeEvent.topics[0];
         //         filter = {
@@ -831,7 +1053,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (exchange) hash differs from calculated', () => {
+        //     describe('if (operator) hash differs from calculated', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             trade.seal.hash = utils.id('some non-existent hash');
@@ -842,7 +1064,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if not signed (by exchange)', () => {
+        //     describe('if not signed (by operator)', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             const sign = mocks.createWeb3Signer(glob.user_a);
@@ -876,7 +1098,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -902,7 +1124,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -934,7 +1156,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -966,7 +1188,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -998,7 +1220,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1030,7 +1252,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1062,7 +1284,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1090,7 +1312,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1118,7 +1340,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1146,7 +1368,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1173,7 +1395,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1205,7 +1427,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1237,7 +1459,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1269,7 +1491,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1301,7 +1523,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1333,7 +1555,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1361,7 +1583,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1389,7 +1611,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1417,7 +1639,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1431,11 +1653,11 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         await ethersConfiguration.setPaymentFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.002', 18), [], [], overrideOptions);
         //         await ethersConfiguration.setPaymentMinimumFee(utils.bigNumberify(blockNumber10), utils.parseUnits('0.0002', 18), overrideOptions);
-        //         await ethersConfiguration.setFalseWalletSignatureStake(mocks.address0, utils.parseUnits('100', 18));
+        //         await ethersConfiguration.setFalseWalletSignatureStake(utils.parseUnits('100', 18), mocks.address0, utils.bigNumberify(0));
         //
         //         topic = ethersFraudChallenge.interface.events.ChallengeByPaymentEvent.topics[0];
         //         filter = {
@@ -1465,10 +1687,10 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if exchange hash differs from calculated', () => {
+        //     describe('if operator hash differs from calculated', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-        //             payment.seals.exchange.hash = utils.id('some non-existent hash');
+        //             payment.seals.operator.hash = utils.id('some non-existent hash');
         //         });
         //
         //         it('should revert', async () => {
@@ -1476,10 +1698,10 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if not signed by exchange', () => {
+        //     describe('if not signed by operator', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-        //             payment.seals.exchange.signature = payment.seals.wallet.signature;
+        //             payment.seals.operator.signature = payment.seals.wallet.signature;
         //         });
         //
         //         it('should revert', async () => {
@@ -1492,9 +1714,9 @@ module.exports = function (glob) {
         //             payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
         //             const signAsWallet = mocks.createWeb3Signer(glob.user_a);
         //             payment.seals.wallet.signature = await signAsWallet(payment.seals.wallet.hash);
-        //             payment.seals.exchange.hash = mocks.hashPaymentAsExchange(payment);
-        //             const signAsExchange = mocks.createWeb3Signer(glob.owner);
-        //             payment.seals.exchange.signature = await signAsExchange(payment.seals.exchange.hash);
+        //             payment.seals.operator.hash = mocks.hashPaymentAsOperator(payment);
+        //             const signAsDriipSettlement = mocks.createWeb3Signer(glob.owner);
+        //             payment.seals.operator.signature = await signAsDriipSettlement(payment.seals.operator.hash);
         //         });
         //
         //         it('should record fraudulent payment, toggle operational mode and emit event', async () => {
@@ -1532,7 +1754,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1562,7 +1784,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1588,7 +1810,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1614,7 +1836,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1640,7 +1862,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.sender.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1670,7 +1892,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedSender.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1685,7 +1907,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         firstTrade = await mocks.mockTrade(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -1730,7 +1952,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -1756,7 +1978,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -1764,11 +1986,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -1809,7 +2031,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -1835,7 +2057,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -1843,11 +2065,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -1888,7 +2110,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -1914,7 +2136,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -1922,11 +2144,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -1950,12 +2172,12 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
         //
-        //     describe('if trade party\'s net fee in last trade is not incremented by single fee in last trade relative to net fee in first trade', () => {
+        //     describe('if trade party\'s total fee in last trade is not incremented by single fee in last trade relative to total fee in first trade', () => {
         //         beforeEach(async () => {
         //             lastTrade = await mocks.mockTrade(glob.owner, {
         //                 nonce: utils.bigNumberify(20),
@@ -1980,7 +2202,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2006,7 +2228,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.4', 18), // <---- modified ----
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2014,11 +2236,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2042,7 +2264,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2056,7 +2278,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         firstPayment = await mocks.mockPayment(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -2078,7 +2300,7 @@ module.exports = function (glob) {
         //                     current: utils.parseUnits('19649.9', 18),
         //                     previous: utils.parseUnits('19700', 18)
         //                 },
-        //                 netFee: utils.parseUnits('0.1', 18)
+        //                 totalFee: utils.parseUnits('0.1', 18)
         //             },
         //             recipient: {
         //                 wallet: glob.user_a,
@@ -2087,7 +2309,7 @@ module.exports = function (glob) {
         //                     current: utils.parseUnits('9449.8', 18),
         //                     previous: utils.parseUnits('9399.8', 18)
         //                 },
-        //                 netFee: utils.parseUnits('0.2', 18)
+        //                 totalFee: utils.parseUnits('0.2', 18)
         //             },
         //             singleFee: utils.parseUnits('0.1', 18),
         //             blockNumber: utils.bigNumberify(blockNumber10)
@@ -2112,7 +2334,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19649.9', 18),
         //                         previous: utils.parseUnits('19700', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2121,11 +2343,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9449.8', 18),
         //                         previous: utils.parseUnits('9399.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2149,7 +2371,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19649.9', 18),
         //                         previous: utils.parseUnits('19700', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2158,11 +2380,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9449.8', 18),
         //                         previous: utils.parseUnits('9399.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2186,7 +2408,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19649.9', 18),
         //                         previous: utils.parseUnits('19700', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2195,11 +2417,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9449.8', 18),
         //                         previous: utils.parseUnits('1000', 18) // <---- modified ----
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2219,12 +2441,12 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastPayment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
         //
-        //     describe('if payment party\'s net fee in last payment is not incremented by single fee in last payment relative to net fee in first payment', () => {
+        //     describe('if payment party\'s total fee in last payment is not incremented by single fee in last payment relative to total fee in first payment', () => {
         //         beforeEach(async () => {
         //             lastPayment = await mocks.mockPayment(glob.owner, {
         //                 nonce: utils.bigNumberify(20),
@@ -2236,7 +2458,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19649.9', 18),
         //                         previous: utils.parseUnits('19700', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2245,11 +2467,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9449.8', 18),
         //                         previous: utils.parseUnits('9399.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.4', 18) // <---- modified ----
+        //                     totalFee: utils.parseUnits('0.4', 18) // <---- modified ----
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2269,7 +2491,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastPayment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2284,7 +2506,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         trade = await mocks.mockTrade(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -2316,7 +2538,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19449.9', 18),
         //                         previous: utils.parseUnits('19500', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2325,11 +2547,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9649.8', 18),
         //                         previous: utils.parseUnits('9599.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2353,7 +2575,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19449.9', 18),
         //                         previous: utils.parseUnits('19500', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2362,11 +2584,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9649.8', 18),
         //                         previous: utils.parseUnits('9599.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2390,7 +2612,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19449.9', 18),
         //                         previous: utils.parseUnits('19500', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2399,11 +2621,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9649.8', 18),
         //                         previous: utils.parseUnits('1000', 18) // <---- modified ----
         //                     },
-        //                     netFee: utils.parseUnits('0.2', 18)
+        //                     totalFee: utils.parseUnits('0.2', 18)
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2423,12 +2645,12 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
         //
-        //     describe('if payment party\'s net fee in payment is not incremented by single fee in payment relative to net fee in trade', () => {
+        //     describe('if payment party\'s total fee in payment is not incremented by single fee in payment relative to total fee in trade', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {
         //                 nonce: utils.bigNumberify(20),
@@ -2440,7 +2662,7 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('19449.9', 18),
         //                         previous: utils.parseUnits('19500', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.1', 18)
+        //                     totalFee: utils.parseUnits('0.1', 18)
         //                 },
         //                 recipient: {
         //                     wallet: glob.user_a,
@@ -2449,11 +2671,11 @@ module.exports = function (glob) {
         //                         current: utils.parseUnits('9649.8', 18),
         //                         previous: utils.parseUnits('9599.8', 18)
         //                     },
-        //                     netFee: utils.parseUnits('0.4', 18) // <---- modified ----
+        //                     totalFee: utils.parseUnits('0.4', 18) // <---- modified ----
         //                 },
         //                 transfers: {
         //                     single: utils.parseUnits('50', 18),
-        //                     net: utils.parseUnits('-50', 18)
+        //                     total: utils.parseUnits('-50', 18)
         //                 },
         //                 singleFee: utils.parseUnits('0.1', 18),
         //                 blockNumber: utils.bigNumberify(blockNumber10)
@@ -2473,7 +2695,7 @@ module.exports = function (glob) {
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2488,7 +2710,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         payment = await mocks.mockPayment(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -2533,7 +2755,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2559,7 +2781,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2567,11 +2789,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2612,7 +2834,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2638,7 +2860,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2646,11 +2868,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2691,7 +2913,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2717,7 +2939,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.2', 18),
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2725,11 +2947,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2753,12 +2975,12 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
         //
-        //     describe('if trade party\'s net fee in trade is not incremented by single fee in trade relative to net fee in payment', () => {
+        //     describe('if trade party\'s total fee in trade is not incremented by single fee in trade relative to total fee in payment', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 nonce: utils.bigNumberify(20),
@@ -2783,7 +3005,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.1', 18),
         //                         conjugate: utils.parseUnits('0.0004', 18)
         //                     }
@@ -2809,7 +3031,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.4', 18), // <---- modified ----
         //                         conjugate: utils.parseUnits('0.00005', 18)
         //                     }
@@ -2817,11 +3039,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('50', 18),
-        //                         net: utils.parseUnits('-50', 18)
+        //                         total: utils.parseUnits('-50', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.05', 18),
-        //                         net: utils.parseUnits('-0.05', 18)
+        //                         total: utils.parseUnits('-0.05', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2845,7 +3067,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -2860,7 +3082,7 @@ module.exports = function (glob) {
         //     });
         //
         //     beforeEach(async () => {
-        //         await ethersClientFund.reset(overrideOptions);
+        //         await ethersClientFund._reset(overrideOptions);
         //
         //         firstTrade = await mocks.mockTrade(glob.owner, {
         //             nonce: utils.bigNumberify(10),
@@ -2908,7 +3130,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -2937,7 +3159,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -2945,11 +3167,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -2993,7 +3215,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3022,7 +3244,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3030,11 +3252,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3078,7 +3300,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3107,7 +3329,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3115,11 +3337,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3163,7 +3385,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3192,7 +3414,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3200,11 +3422,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3228,7 +3450,7 @@ module.exports = function (glob) {
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
         //             seizedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.buyer.wallet));
-        //             seizure.destination.should.equal(utils.getAddress(glob.owner));
+        //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -3286,7 +3508,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3312,7 +3534,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3320,11 +3542,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3351,7 +3573,7 @@ module.exports = function (glob) {
         //                     order: {
         //                         amount: utils.parseUnits('1000', 18),
         //                         hashes: {
-        //                             exchange: firstTrade.buyer.order.hashes.exchange // <---- modified ----
+        //                             operator: firstTrade.buyer.order.hashes.operator // <---- modified ----
         //                         },
         //                         residuals: {
         //                             current: utils.parseUnits('300', 18),
@@ -3368,7 +3590,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3394,7 +3616,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3402,11 +3624,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {
@@ -3457,7 +3679,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('9.4', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.3', 18),
         //                         conjugate: utils.parseUnits('0.0', 18)
         //                     }
@@ -3469,7 +3691,7 @@ module.exports = function (glob) {
         //                     order: {
         //                         amount: utils.parseUnits('1000', 18),
         //                         hashes: {
-        //                             exchange: firstTrade.seller.order.hashes.exchange // <---- modified ----
+        //                             operator: firstTrade.seller.order.hashes.operator // <---- modified ----
         //                         },
         //                         residuals: {
         //                             current: utils.parseUnits('500', 18),
@@ -3486,7 +3708,7 @@ module.exports = function (glob) {
         //                             previous: utils.parseUnits('19.6996', 18)
         //                         }
         //                     },
-        //                     netFees: {
+        //                     totalFees: {
         //                         intended: utils.parseUnits('0.0', 18),
         //                         conjugate: utils.parseUnits('0.0006', 18)
         //                     }
@@ -3494,11 +3716,11 @@ module.exports = function (glob) {
         //                 transfers: {
         //                     intended: {
         //                         single: utils.parseUnits('100', 18),
-        //                         net: utils.parseUnits('300', 18)
+        //                         total: utils.parseUnits('300', 18)
         //                     },
         //                     conjugate: {
         //                         single: utils.parseUnits('0.1', 18),
-        //                         net: utils.parseUnits('0.3', 18)
+        //                         total: utils.parseUnits('0.3', 18)
         //                     }
         //                 },
         //                 singleFees: {

@@ -1,25 +1,22 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 
 pragma solidity ^0.4.24;
-pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {ClientFund} from "./ClientFund.sol";
-import {Types} from "./Types.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title ClientFundable
 @notice An ownable that has a client fund property
 */
-contract ClientFundable is Ownable, Modifiable {
-
+contract ClientFundable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -28,21 +25,23 @@ contract ClientFundable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
+    event ChangeClientFundEvent(ClientFund oldAddress, ClientFund newAddress);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the client fund contract
-    /// @param newClientFund The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newClientFund)
-    public
-    onlyOwner
-    notNullAddress(newClientFund)
+    /// @param newAddress The (address of) ClientFund contract instance
+    function changeClientFund(ClientFund newAddress) public onlyDeployer
+    notNullAddress(newAddress)
+    notSameAddresses(newAddress, clientFund)
     {
-        ClientFund oldClientFund = clientFund;
-        clientFund = newClientFund;
-        emit ChangeClientFundEvent(oldClientFund, clientFund);
+        //set new community vote
+        ClientFund oldAddress = clientFund;
+        clientFund = newAddress;
+
+        // Emit event
+        emit ChangeClientFundEvent(oldAddress, newAddress);
     }
 
     //

@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,26 +11,27 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {Types} from "./Types.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByDuplicateDriipNonceOfTradeAndPayment
 @notice Where driips are challenged wrt fraud by duplicate drip nonce of trade and payment
 */
-contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable {
-
+contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(Types.Trade trade, Types.Payment payment, address challenger);
+    event ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(bytes32 tradeHash,
+        bytes32 paymentHash, address challenger);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -41,10 +42,11 @@ contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudC
     /// @param trade Trade with duplicate driip nonce
     /// @param payment Payment with duplicate driip nonce
     function challenge(
-        Types.Trade trade,
-        Types.Payment payment
+        NahmiiTypesLib.Trade trade,
+        NahmiiTypesLib.Payment payment
     )
     public
+    onlyOperationalModeNormal
     validatorInitialized
     onlySealedTrade(trade)
     onlySealedPayment(payment)
@@ -56,12 +58,14 @@ contract FraudChallengeByDuplicateDriipNonceOfTradeAndPayment is Ownable, FraudC
         require(trade.nonce == payment.nonce);
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentTrade(trade);
-        fraudChallenge.addFraudulentPayment(payment);
+        fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
+        fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
-        (address stakeCurrency, int256 stakeAmount) = configuration.getDuplicateDriipNonceStake();
-        securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(trade, payment, msg.sender);
+        emit ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(
+            trade.seal.hash, payment.seals.operator.hash, msg.sender
+        );
     }
 }

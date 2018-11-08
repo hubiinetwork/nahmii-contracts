@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -19,7 +19,7 @@ contract Benefactor is Ownable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     address[] internal beneficiaries;
-    mapping(address => bool) internal beneficiaryRegisteredMap;
+    mapping(address => uint256) internal beneficiariesMap;
 
     //
     // Events
@@ -30,40 +30,67 @@ contract Benefactor is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
-        if (beneficiaryRegisteredMap[beneficiary])
+    /// @notice Register the given beneficiary
+    /// @param beneficiary Address of beneficiary to be registered
+    function registerBeneficiary(address beneficiary)
+    public
+    onlyDeployer
+    notNullAddress(beneficiary)
+    returns (bool)
+    {
+        if (beneficiariesMap[beneficiary] > 0)
             return false;
 
         beneficiaries.push(beneficiary);
-        beneficiaryRegisteredMap[beneficiary] = true;
+        beneficiariesMap[beneficiary] = beneficiaries.length;
 
-        //raise event
+        // Emit event
         emit RegisterBeneficiaryEvent(beneficiary);
 
         return true;
     }
 
-    function deregisterBeneficiary(address beneficiary) public onlyOwner notNullAddress(beneficiary) returns (bool) {
-        if (!beneficiaryRegisteredMap[beneficiary])
+    /// @notice Deregister the given beneficiary
+    /// @param beneficiary Address of beneficiary to be deregistered
+    function deregisterBeneficiary(address beneficiary)
+    public
+    onlyDeployer
+    notNullAddress(beneficiary)
+    returns (bool)
+    {
+        if (beneficiariesMap[beneficiary] == 0)
             return false;
 
-        beneficiaryRegisteredMap[beneficiary] = false;
+        uint256 idx = beneficiariesMap[beneficiary] - 1;
+        if (idx < beneficiaries.length - 1) {
+            //remap the last item in the array to this index
+            beneficiaries[idx] = beneficiaries[beneficiaries.length - 1];
+            beneficiariesMap[beneficiaries[idx]] = idx + 1;
 
-        //raise event
+            //delete the last item in the array
+            delete beneficiaries[beneficiaries.length - 1];
+        }
+        else {
+            //it is the last item in the array
+            delete beneficiaries[idx];
+        }
+        beneficiaries.length--;
+        beneficiariesMap[beneficiary] = 0;
+
+        // Emit event
         emit DeregisterBeneficiaryEvent(beneficiary);
 
         return true;
     }
 
-    function isRegisteredBeneficiary(address beneficiary) public view returns (bool) {
-        return beneficiaryRegisteredMap[beneficiary];
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
+    /// @notice Gauge whether the given address is the one of a registered beneficiary
+    /// @param beneficiary Address of beneficiary
+    /// @return true if beneficiary is registered, else false
+    function isRegisteredBeneficiary(address beneficiary)
+    public
+    view
+    returns (bool)
+    {
+        return beneficiariesMap[beneficiary] > 0;
     }
 }

@@ -1,20 +1,26 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {SafeMathUint} from "./SafeMathUint.sol";
 import {Ownable} from "./Ownable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {AccrualBenefactor} from "./AccrualBenefactor.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
-import {ERC20} from "./ERC20.sol";
+import {TransferControllerManageable} from "./TransferControllerManageable.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {TransferController} from "./TransferController.sol";
+import {BalanceLib} from "./BalanceLib.sol";
+import {TxHistoryLib} from "./TxHistoryLib.sol";
+import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
 @title RevenueFund
@@ -22,30 +28,33 @@ import {ERC20} from "./ERC20.sol";
  accrual beneficiaries. There will likely be 2 instances of this smart contract, one for revenue from trades
  and one for revenue from payments.
 */
-contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDestructible {
-    using SafeMathInt for int256;
-    using SafeMathUint for uint256;
+contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, TransferControllerManageable {
+    using BalanceLib for BalanceLib.Balance;
+    using TxHistoryLib for TxHistoryLib.TxHistory;
+    using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
+    using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
+
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public DEPOSIT_BALANCE_TYPE = "deposit";
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    int256 periodAccrualEtherBalance;
-    mapping(address => int256) periodAccrualTokenBalance;
-    address[] periodAccrualTokenList;
-    mapping(address => bool) periodAccrualTokenListMap;
+    BalanceLib.Balance periodAccrual;
+    InUseCurrencyLib.InUseCurrency inUsePeriodAccrual;
 
-    int256 aggregateAccrualEtherBalance;
-    mapping(address => int256) aggregateAccrualTokenBalance;
-    address[] aggregateAccrualTokenList;
-    mapping(address => bool) aggregateAccrualTokenListMap;
+    BalanceLib.Balance aggregateAccrual;
+    InUseCurrencyLib.InUseCurrency inUseAggregateAccrual;
 
-    mapping(address => bool) registeredServicesMap;
+    mapping(address => bool) public registeredServicesMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
-    event RecordDepositTokensEvent(address from, int256 amount, address token);
+    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
     event RegisterServiceEvent(address service);
     event DeregisterServiceEvent(address service);
@@ -60,202 +69,172 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, SelfDest
     // Deposit functions
     // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        receiveEthers(msg.sender);
+        receiveEthersTo(msg.sender, "");
     }
 
-    function receiveEthers(address wallet) public payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+    function receiveEthersTo(address wallet, string balanceType) public payable {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
 
-        //add to balances
-        periodAccrualEtherBalance = periodAccrualEtherBalance.add_nn(amount);
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
-        aggregateAccrualEtherBalance = aggregateAccrualEtherBalance.add_nn(amount);
+        // Add to balances
+        periodAccrual.add(amount, address(0), 0);
+        aggregateAccrual.add(amount, address(0), 0);
 
-        //emit event
-        emit DepositEvent(wallet, amount, address(0));
+        // Add currency to in-use list
+        inUsePeriodAccrual.addItem(address(0), 0);
+        inUseAggregateAccrual.addItem(address(0), 0);
+
+        // Emit event
+        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function depositTokens(address token, int256 amount) public {
-        receiveTokens(msg.sender, amount, token);
+    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    //NOTE: 'wallet' must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public {
-        ERC20 erc20_token = ERC20(token);
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
 
-        //record deposit
-        recordDepositTokensPrivate(erc20_token, amount);
-
-        //try to execute token transfer
-        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
-
-        //emit event
-        emit DepositEvent(wallet, amount, token);
-    }
-
-    function recordDepositTokens(ERC20 token, int256 amount) public onlyOwnerOrService notNullAddress(token) {
-        recordDepositTokensPrivate(token, amount);
-        emit RecordDepositTokensEvent(msg.sender, amount, token);
-    }
-
-    function recordDepositTokensPrivate(ERC20 token, int256 amount) private notNullAddress(token) {
         require(amount.isNonZeroPositiveInt256());
 
-        //add to balances
-        periodAccrualTokenBalance[token] = periodAccrualTokenBalance[token].add_nn(amount);
-        if (!periodAccrualTokenListMap[token]) {
-            periodAccrualTokenListMap[token] = true;
-            periodAccrualTokenList.push(token);
-        }
+        // Execute transfer
+        TransferController controller = getTransferController(currencyCt, standard);
+        if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId))
+            revert();
 
-        aggregateAccrualTokenBalance[token] = aggregateAccrualTokenBalance[token].add_nn(amount);
-        if (!aggregateAccrualTokenListMap[token]) {
-            aggregateAccrualTokenListMap[token] = true;
-            aggregateAccrualTokenList.push(token);
-        }
+        // Add to balances
+        periodAccrual.add(amount, currencyCt, currencyId);
+        aggregateAccrual.add(amount, currencyCt, currencyId);
+
+        // Add currency to in-use list
+        inUsePeriodAccrual.addItem(currencyCt, currencyId);
+        inUseAggregateAccrual.addItem(currencyCt, currencyId);
+
+        // Emit event
+        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId);
     }
 
     //
     // Balance functions
     // -----------------------------------------------------------------------------------------------------------------
-    function periodAccrualBalance(address token) public view returns (int256) {
-        return token == address(0) ? periodAccrualEtherBalance : periodAccrualTokenBalance[token];
+    function periodAccrualBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+        return periodAccrual.get(currencyCt, currencyId);
     }
 
-    function aggregateAccrualBalance(address token) public view returns (int256) {
-        return token == address(0) ? aggregateAccrualEtherBalance : aggregateAccrualTokenBalance[token];
+    function aggregateAccrualBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+        return aggregateAccrual.get(currencyCt, currencyId);
     }
 
     //
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyOwner {
-        uint256 idx;
-        uint256 tokidx;
-        uint256 remaining;
+    function closeAccrualPeriod() public onlyDeployer {
+        uint256 currencyIndex;
+        uint256 beneficiaryIndex;
+        int256 remaining;
+        int256 transferable;
         address beneficiaryAddress;
-        AccrualBeneficiary beneficiary;
-        uint256 to_transfer;
-        address token;
 
-        require(totalBeneficiaryFraction == PARTS_PER);
+        require(totalBeneficiaryFraction == ConstantsLib.PARTS_PER());
 
-        //execute ethers transfer
-        remaining = periodAccrualEtherBalance.toUInt256();
-        for (idx = 0; idx < beneficiaries.length; idx++) {
-            beneficiaryAddress = beneficiaries[idx];
+        // Execute transfer
+        for (currencyIndex = inUsePeriodAccrual.getLength(); currencyIndex > 0; currencyIndex--) {
+            MonetaryTypesLib.Currency memory currency = inUsePeriodAccrual.getAt(currencyIndex - 1);
 
-            if (!isRegisteredBeneficiary(beneficiaryAddress))
-                continue;
-
-            if (getBeneficiaryFraction(beneficiaryAddress) > 0) {
-                to_transfer = uint256(periodAccrualEtherBalance).mul(getBeneficiaryFraction(beneficiaryAddress)).div(PARTS_PER);
-                if (to_transfer > remaining)
-                    to_transfer = remaining;
-
-                if (to_transfer > 0) {
-                    beneficiary = AccrualBeneficiary(beneficiaryAddress);
-                    beneficiary.receiveEthers.value(to_transfer)(address(0));
-
-                    remaining = remaining.sub(to_transfer);
-                }
-            }
-        }
-        //roll over remaining to next accrual period
-        periodAccrualEtherBalance = int256(remaining);
-
-        //execute tokens transfer
-        for (tokidx = 0; tokidx < periodAccrualTokenList.length; tokidx++) {
-            token = periodAccrualTokenList[tokidx];
-
-            remaining = periodAccrualTokenBalance[token].toUInt256();
-            for (idx = 0; idx < beneficiaries.length; idx++) {
-                beneficiaryAddress = beneficiaries[idx];
+            remaining = periodAccrual.get(currency.ct, currency.id);
+            for (beneficiaryIndex = 0; beneficiaryIndex < beneficiaries.length; beneficiaryIndex++) {
+                beneficiaryAddress = beneficiaries[beneficiaryIndex];
 
                 if (!isRegisteredBeneficiary(beneficiaryAddress))
                     continue;
 
                 if (getBeneficiaryFraction(beneficiaryAddress) > 0) {
+                    transferable = periodAccrual.get(currency.ct, currency.id).mul(
+                        getBeneficiaryFraction(beneficiaryAddress)
+                    ).div(ConstantsLib.PARTS_PER());
 
-                    to_transfer = uint256(periodAccrualTokenBalance[token])
-                    .mul(getBeneficiaryFraction(beneficiaryAddress))
-                    .div(PARTS_PER);
-                    if (to_transfer > remaining)
-                        to_transfer = remaining;
+                    if (transferable > remaining)
+                        transferable = remaining;
 
-                    if (to_transfer > 0) {
-                        ERC20 tokenContract = ERC20(token);
-                        tokenContract.approve(beneficiaryAddress, to_transfer);
+                    if (transferable > 0) {
+                        // Transfer funds to the beneficiary
 
-                        beneficiary = AccrualBeneficiary(beneficiaryAddress);
-                        beneficiary.receiveTokens(address(0), int256(to_transfer), token);
+                        //NOTE: Setting address(0) as the target wallet is ok because the beneficiaries actually ignore the target wallet.
+                        if (currency.ct == address(0))
+                            AccrualBeneficiary(beneficiaryAddress).receiveEthersTo.value(uint256(transferable))(address(0), "");
 
-                        remaining = remaining.sub(to_transfer);
+                        else {
+                            // Execute transfer
+                            TransferController controller = getTransferController(currency.ct, "");
+                            if (!address(controller).delegatecall(controller.getApproveSignature(), beneficiaryAddress, uint256(transferable), currency.ct, currency.id))
+                                revert();
+
+                            //transfer funds to the beneficiary
+                            AccrualBeneficiary(beneficiaryAddress).receiveTokensTo(address(0), "", transferable, currency.ct, currency.id, "");
+                        }
+
+                        remaining = remaining.sub(transferable);
                     }
                 }
             }
 
-            //roll over remaining to next accrual period
-            periodAccrualTokenBalance[token] = int256(remaining);
+            // Roll over remaining to next accrual period
+            periodAccrual.set(remaining, currency.ct, currency.id);
         }
 
-        //call "closeAccrualPeriod" of beneficiaries
-        for (idx = 0; idx < beneficiaries.length; idx++) {
-            beneficiaryAddress = beneficiaries[idx];
+        // Call "closeAccrualPeriod" of beneficiaries
+        for (beneficiaryIndex = 0; beneficiaryIndex < beneficiaries.length; beneficiaryIndex++) {
+            beneficiaryAddress = beneficiaries[beneficiaryIndex];
 
             if (!isRegisteredBeneficiary(beneficiaryAddress) || 0 == getBeneficiaryFraction(beneficiaryAddress))
                 continue;
 
-            beneficiary = AccrualBeneficiary(beneficiaryAddress);
-            beneficiary.closeAccrualPeriod();
+            AccrualBeneficiary(beneficiaryAddress).closeAccrualPeriod();
         }
 
-        //emit event
+        // Emit event
         emit CloseAccrualPeriodEvent();
     }
 
     //
     // Service functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyOwner notNullAddress(service) notMySelfAddress(service) {
-        require(service != owner);
+    function registerService(address service) public onlyDeployer notNullAddress(service) notThisAddress(service) {
+        require(service != deployer);
 
-        //ensure service is not already registered
+        // Ensure service is not already registered
         require(registeredServicesMap[service] == false);
 
-        //register
+        // Register
         registeredServicesMap[service] = true;
 
-        //emit event
+        // Emit event
         emit RegisterServiceEvent(service);
     }
 
-    function deregisterService(address service) public onlyOwner notNullAddress(service) {
-        //ensure service is registered
+    function deregisterService(address service) public onlyDeployer notNullAddress(service) {
+        // Ensure service is registered
         require(registeredServicesMap[service] != false);
 
-        //remove service
+        // Remove service
         registeredServicesMap[service] = false;
 
-        //emit event
+        // Emit event
         emit DeregisterServiceEvent(service);
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
-    modifier onlyOwnerOrService() {
-        require(msg.sender == owner || registeredServicesMap[msg.sender]);
-        _;
-    }
-
-    modifier notMySelfAddress(address _address) {
-        require(_address != address(this));
+    modifier onlyDeployerOrService() {
+        require(isDeployer() || registeredServicesMap[msg.sender]);
         _;
     }
 }

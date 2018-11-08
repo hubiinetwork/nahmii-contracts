@@ -8,14 +8,14 @@ pragma solidity ^0.4.24;
  */
 
 import {ERC20} from "../ERC20.sol";
-import {SafeMathUint} from "../SafeMathUint.sol";
+import {SafeMathUintLib} from "../SafeMathUintLib.sol";
 
 /**
  * @title Standard token
  * @notice Basic implementation of the EIP20 standard token (also known as ERC20 token).
  */
 contract StandardTokenEx is ERC20 {
-    using SafeMathUint for uint;
+    using SafeMathUintLib for uint;
 
     uint private total_supply;
     mapping(address => uint) private balances;
@@ -50,6 +50,7 @@ contract StandardTokenEx is ERC20 {
      */
     function transferFrom(address from, address to, uint value) public returns (bool success) {
         uint allowance = allowed[from][msg.sender];
+        require(value <= allowance, "value is > allowance");
 
         // Check is not needed because sub(allowance, value) will already throw if this condition is not met
         // require(value <= allowance);
@@ -72,7 +73,7 @@ contract StandardTokenEx is ERC20 {
         //  allowance to zero by calling `approve(spender, 0)` if it is not
         //  already 0 to mitigate the race condition described here:
         //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-        require(value == 0 || allowed[msg.sender][spender] == 0);
+        require(value == 0 || allowed[msg.sender][spender] == 0, "previous approve without transferFrom");
 
         allowed[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);

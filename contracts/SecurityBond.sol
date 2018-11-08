@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,302 +10,235 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
+import {Configurable} from "./Configurable.sol";
 import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 import {Servable} from "./Servable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {ERC20} from "./ERC20.sol";
+import {TransferControllerManageable} from "./TransferControllerManageable.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {BalanceLib} from "./BalanceLib.sol";
+import {TxHistoryLib} from "./TxHistoryLib.sol";
+import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {Beneficiary} from "./Beneficiary.sol";
+import {TransferController} from "./TransferController.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
 @title SecurityBond
 @notice Fund that contains crypto incentive for challenging operator fraud.
 */
-contract SecurityBond is Ownable, AccrualBeneficiary, Servable, SelfDestructible {
-    using SafeMathInt for int256;
+contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, TransferControllerManageable {
+    using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
+    using BalanceLib for BalanceLib.Balance;
+    using TxHistoryLib for TxHistoryLib.TxHistory;
+    using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
 
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public stageServiceAction = "stage";
+    string constant public REWARD_ACTION = "reward";
+
+    string constant public DEPOSIT_BALANCE_TYPE = "deposit";
+
     //
-    // Structures
+    // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct DepositInfo {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
-    }
-
-    struct SubStageItem {
-        int256 available_amount;
-        uint256 start_timestamp;
-    }
-
-    struct SubStageInfo {
-        uint256 current_index;
-        SubStageItem[] list;
-    }
-
-    struct WithdrawalInfo {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
-    }
-
-    struct WalletInfo {
-        DepositInfo[] deposits;
-        WithdrawalInfo[] withdrawals;
-
-        // Staged balance of ethers and tokens.
-        int256 stagedEtherBalance;
-        mapping(address => int256) stagedTokenBalance;
-
-        SubStageInfo subStagedEtherBalances;
-        mapping(address => SubStageInfo) subStagedTokenBalances;
+    struct RewardMeta {
+        uint256 rewardFraction;
+        uint256 rewardNonce;
+        mapping(address => mapping(uint256 => uint256)) stageNonceByCurrency;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => WalletInfo) private walletInfoMap;
+    BalanceLib.Balance private deposited;
+    TxHistoryLib.TxHistory private txHistory;
+    InUseCurrencyLib.InUseCurrency private inUseCurrencies;
 
-    // Active balance of ethers and tokens shared among all wallets
-    int256 activeEtherBalance;
-    mapping(address => int256) activeTokenBalance;
-
-    uint256 private withdrawalTimeout;
+    mapping(address => RewardMeta) public rewardMetaByWallet;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
-    event StageEvent(address from, int256 amount, address token); //token==0 for ethers
-    event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
+    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
+    event RewardEvent(address wallet, uint256 rewardFraction);
+    event StageToBeneficiaryEvent(address from, Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) Servable() public {
-        withdrawalTimeout = 30 minutes;
+    constructor(address deployer) Ownable(deployer) Servable() public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setWithdrawalTimeout(uint256 timeoutInSeconds) public onlyOwner {
-        withdrawalTimeout = timeoutInSeconds;
-    }
-
-    //
-    // Deposit functions
-    // -----------------------------------------------------------------------------------------------------------------
     function() public payable {
-        receiveEthers(msg.sender);
+        receiveEthersTo(msg.sender, "");
     }
 
-    function receiveEthers(address wallet) public payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
+    function receiveEthersTo(address wallet, string balanceType)
+    public
+    payable
+    {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
 
-        //add to per-wallet active balance
-        activeEtherBalance = activeEtherBalance.add_nn(amount);
-        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
-        //emit event
-        emit DepositEvent(wallet, amount, address(0));
+        // Add to balance
+        deposited.add(amount, address(0), 0);
+        txHistory.addDeposit(amount, address(0), 0);
+
+        // Add currency to in-use list
+        inUseCurrencies.addItem(address(0), 0);
+
+        // Emit event
+        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function depositTokens(address token, int256 amount) public {
-        receiveTokens(msg.sender, amount, token);
+    function receiveTokens(string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
+    public
+    {
+        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    //NOTE: msg.sender must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public {
-        ERC20 erc20_token;
-
-        require(token != address(0));
-        require(amount.isNonZeroPositiveInt256());
-
-        //try to execute token transfer
-        erc20_token = ERC20(token);
-        require(erc20_token.transferFrom(wallet, this, uint256(amount)));
-
-        //add to per-wallet deposited balance
-        activeTokenBalance[token] = activeTokenBalance[token].add_nn(amount);
-        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, token));
-
-        //emit event
-        emit DepositEvent(wallet, amount, token);
-    }
-
-    function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
-        require(index < walletInfoMap[wallet].deposits.length);
-
-        amount = walletInfoMap[wallet].deposits[index].amount;
-        timestamp = walletInfoMap[wallet].deposits[index].timestamp;
-        token = walletInfoMap[wallet].deposits[index].token;
-    }
-
-    function depositCount(address wallet) public view onlyOwner returns (uint256) {
-        return walletInfoMap[wallet].deposits.length;
-    }
-
-    //
-    // Balance functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function activeBalance(address token) public view returns (int256) {
-        return token == address(0) ? activeEtherBalance : activeTokenBalance[token];
-    }
-
-    function stagedBalance(address wallet, address token) public view returns (int256) {
-        require(wallet != address(0));
-
-        return token == address(0) ? walletInfoMap[wallet].stagedEtherBalance : walletInfoMap[wallet].stagedTokenBalance[token];
-    }
-
-    //
-    // Staging functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function stage(int256 amount, address token, address wallet) public notNullAddress(wallet) onlyOwnerOrServiceAction(stageServiceAction) {
-        uint256 start_time;
-
-        require(amount.isPositiveInt256());
-
-        if (token == address(0)) {
-            //clamp amount to move
-            amount = amount.clampMax(activeEtherBalance);
-            if (amount <= 0)
-                return;
-
-            //move from active balance to staged
-            activeEtherBalance = activeEtherBalance.sub_nn(amount);
-            walletInfoMap[wallet].stagedEtherBalance = walletInfoMap[wallet].stagedEtherBalance.add_nn(amount);
-
-            //add substage info
-            start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0);
-            walletInfoMap[wallet].subStagedEtherBalances.list.push(SubStageItem(amount, start_time));
-        } else {
-            //clamp amount to move
-            amount = amount.clampMax(activeTokenBalance[token]);
-            if (amount <= 0)
-                return;
-
-            //move from active balance to staged
-            activeTokenBalance[token] = activeTokenBalance[token].sub_nn(amount);
-            walletInfoMap[wallet].stagedTokenBalance[token] = walletInfoMap[wallet].stagedTokenBalance[token].add_nn(amount);
-
-            //add substage info
-            start_time = block.timestamp + ((wallet == owner) ? withdrawalTimeout : 0);
-            walletInfoMap[wallet].subStagedTokenBalances[token].list.push(SubStageItem(amount, start_time));
-        }
-
-        //emit event
-        emit StageEvent(msg.sender, amount, token);
-    }
-
-    //
-    // Withdrawal functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function withdrawEthers(int256 amount) public {
-        uint256 current_index;
-        int256 to_send_amount;
-        int256 this_round_amount;
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
+    public
+    {
+        require(
+            0 == bytes(balanceType).length ||
+            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
+        );
 
         require(amount.isNonZeroPositiveInt256());
 
-        //start withdrawal from current substage
-        to_send_amount = 0;
-        while (to_send_amount < amount) {
-            current_index = walletInfoMap[msg.sender].subStagedEtherBalances.current_index;
+        // Execute transfer
+        TransferController controller = getTransferController(currencyCt, standard);
+        require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
-            if (current_index >= walletInfoMap[msg.sender].subStagedEtherBalances.list.length) {
-                break;
-            }
-            if (block.timestamp < walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].start_timestamp) {
-                break;
-            }
+        // Add to balance
+        deposited.add(amount, currencyCt, currencyId);
+        txHistory.addDeposit(amount, currencyCt, currencyId);
 
-            this_round_amount = (amount - to_send_amount).clampMax(walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].available_amount);
+        // Add currency to in-use list
+        inUseCurrencies.addItem(currencyCt, currencyId);
 
-            walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].available_amount = walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].available_amount.sub_nn(this_round_amount);
-            if (walletInfoMap[msg.sender].subStagedEtherBalances.list[current_index].available_amount == 0) {
-                walletInfoMap[msg.sender].subStagedEtherBalances.current_index++;
-            }
+        // Emit event
+        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId);
+    }
 
-            to_send_amount = to_send_amount + this_round_amount;
+    function deposit(uint index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
+        return txHistory.deposit(index);
+    }
+
+    function depositsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return txHistory.depositsCount();
+    }
+
+    function depositedBalance(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        return deposited.get(currencyCt, currencyId);
+    }
+
+    function inUseCurrenciesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return inUseCurrencies.list.length;
+    }
+
+    function inUseCurrenciesByIndices(uint256 low, uint256 up)
+    public
+    view
+    returns (MonetaryTypesLib.Currency[])
+    {
+        require(low <= up);
+
+        up = up > inUseCurrencies.list.length - 1 ? inUseCurrencies.list.length - 1 : up;
+        MonetaryTypesLib.Currency[] memory _inUseCurrencies = new MonetaryTypesLib.Currency[](up - low + 1);
+        for (uint256 i = low; i <= up; i++)
+            _inUseCurrencies[i - low] = inUseCurrencies.list[i];
+
+        return _inUseCurrencies;
+    }
+
+    function stageNonceByWalletCurrency(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return rewardMetaByWallet[wallet].stageNonceByCurrency[currencyCt][currencyId];
+    }
+
+    function reward(address wallet, uint256 _rewardFraction)
+    public
+    notNullAddress(wallet)
+    onlyDeployerOrEnabledServiceAction(REWARD_ACTION)
+    {
+        // Store reward
+        rewardMetaByWallet[wallet].rewardFraction = _rewardFraction.clampMax(uint256(ConstantsLib.PARTS_PER()));
+        rewardMetaByWallet[wallet].rewardNonce++;
+
+        // Emit event
+        emit RewardEvent(wallet, _rewardFraction);
+    }
+
+    function stageToBeneficiary(Beneficiary beneficiary, address currencyCt, uint256 currencyId)
+    public
+    {
+        require(inUseCurrencies.has(currencyCt, currencyId));
+        require(
+            rewardMetaByWallet[msg.sender].stageNonceByCurrency[currencyCt][currencyId] < rewardMetaByWallet[msg.sender].rewardNonce
+        );
+
+        // Set stage nonce of currency to the reward nonce
+        rewardMetaByWallet[msg.sender].stageNonceByCurrency[currencyCt][currencyId] = rewardMetaByWallet[msg.sender].rewardNonce;
+
+        // Calculate amount to stage
+        int256 amount = deposited
+        .get(currencyCt, currencyId)
+        .mul(SafeMathIntLib.toInt256(rewardMetaByWallet[msg.sender].rewardFraction))
+        .div(ConstantsLib.PARTS_PER());
+
+        // Move from balance to staged
+        deposited.sub(amount, currencyCt, currencyId);
+
+        // Transfer funds to the beneficiary
+        if (currencyCt == address(0) && currencyId == 0)
+            beneficiary.receiveEthersTo.value(uint256(amount))(msg.sender, "staged");
+
+        else {
+            // Approve of beneficiary
+            TransferController controller = getTransferController(currencyCt, "");
+            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
+
+            // Transfer funds to the beneficiary
+            beneficiary.receiveTokensTo(msg.sender, "staged", amount, currencyCt, currencyId, "");
         }
-        if (to_send_amount == 0)
-            return;
-        //check for sufficient balance in total staged
-        assert(to_send_amount <= walletInfoMap[msg.sender].stagedEtherBalance);
 
-        //subtract to per-wallet staged balance
-        walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub_nn(to_send_amount);
-        walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(to_send_amount, block.timestamp, address(0)));
-
-        //execute transfer
-        msg.sender.transfer(uint256(to_send_amount));
-
-        //emit event
-        emit WithdrawEvent(msg.sender, to_send_amount, address(0));
-    }
-
-    function withdrawTokens(int256 amount, address token) public {
-        ERC20 erc20_token;
-        uint256 current_index;
-        int256 to_send_amount;
-        int256 this_round_amount;
-
-        require(token != address(0));
-        require(amount.isNonZeroPositiveInt256());
-
-        //start withdrawal from current substage
-        to_send_amount = 0;
-        while (to_send_amount < amount) {
-            current_index = walletInfoMap[msg.sender].subStagedTokenBalances[token].current_index;
-
-            if (current_index >= walletInfoMap[msg.sender].subStagedTokenBalances[token].list.length) {
-                break;
-            }
-            if (block.timestamp < walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].start_timestamp) {
-                break;
-            }
-
-            this_round_amount = (amount - to_send_amount).clampMax(walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].available_amount);
-
-            walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].available_amount = walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].available_amount.sub_nn(this_round_amount);
-            if (walletInfoMap[msg.sender].subStagedTokenBalances[token].list[current_index].available_amount == 0) {
-                walletInfoMap[msg.sender].subStagedTokenBalances[token].current_index++;
-            }
-
-            to_send_amount = to_send_amount + this_round_amount;
-        }
-        if (to_send_amount == 0)
-            return;
-        //check for sufficient balance in total staged
-        assert(to_send_amount <= walletInfoMap[msg.sender].stagedTokenBalance[token]);
-
-        //subtract to per-wallet staged balance
-        walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub_nn(to_send_amount);
-        walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(to_send_amount, block.timestamp, token));
-
-        //execute transfer
-        erc20_token = ERC20(token);
-        erc20_token.transfer(msg.sender, uint256(to_send_amount));
-
-        //emit event
-        emit WithdrawEvent(msg.sender, to_send_amount, token);
-    }
-
-    function withdrawal(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
-        require(index < walletInfoMap[wallet].withdrawals.length);
-
-        amount = walletInfoMap[wallet].withdrawals[index].amount;
-        timestamp = walletInfoMap[wallet].withdrawals[index].timestamp;
-        token = walletInfoMap[wallet].withdrawals[index].token;
-    }
-
-    function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
-        return walletInfoMap[wallet].withdrawals.length;
+        // Emit event
+        emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
     }
 
     //

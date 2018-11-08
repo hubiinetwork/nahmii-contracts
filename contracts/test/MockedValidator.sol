@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -10,14 +10,14 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../Ownable.sol";
-//import {Validator} from "../Validator.sol";
-import {Types} from "../Types.sol";
+import {SignerManageable} from "../SignerManageable.sol";
+import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
 @title MockedValidator
 @notice Mocked implementation of validator contract
 */
-contract MockedValidator is Ownable /*, Validator*/ {
+contract MockedValidator is Ownable, SignerManageable {
 
     //
     // Types
@@ -28,33 +28,41 @@ contract MockedValidator is Ownable /*, Validator*/ {
     // -----------------------------------------------------------------------------------------------------------------
     bool orderWalletHash;
     bool orderWalletSeal;
-    bool orderExchangeSeal;
+    bool orderOperatorSeal;
     bool orderSeals;
-    bool tradeMakerFee;
-    bool tradeTakerFee;
+    bool tradeBuyerFee;
+    bool tradeSellerFee;
+    bool tradeBuyerGenuine;
+    bool tradeSellerGenuine;
+    bool[] tradeSeals;
+    bool tradeParty;
     bool tradeBuyer;
     bool tradeSeller;
-    bool[] tradeSeals;
+    bool tradeOrder;
     bool paymentFee;
-    bool paymentSender;
-    bool paymentRecipient;
+    bool paymentSenderGenuine;
+    bool paymentRecipientGenuine;
     bool paymentWalletHash;
     bool paymentWalletSeal;
-    bool paymentExchangeSeal;
+    bool paymentOperatorSeal;
     bool[] paymentSeals;
+    bool paymentParty;
+    bool paymentSender;
+    bool paymentRecipient;
     bool successiveTradesPartyNonces;
     bool successiveTradesBalances;
-    bool successiveTradesNetFees;
+    bool successiveTradesTotalFees;
     bool successivePaymentsPartyNonces;
     bool successivePaymentsBalances;
-    bool successivePaymentsNetFees;
+    bool successivePaymentsTotalFees;
     bool successiveTradePaymentPartyNonces;
     bool successiveTradePaymentBalances;
-    bool successiveTradePaymentNetFees;
+    bool successiveTradePaymentTotalFees;
     bool successivePaymentTradePartyNonces;
     bool successivePaymentTradeBalances;
-    bool successivePaymentTradeNetFees;
+    bool successivePaymentTradeTotalFees;
     bool successiveTradeOrderResiduals;
+    bool walletSignature;
 
     uint256 tradeSealsIndex;
     uint256 paymentSealsIndex;
@@ -66,45 +74,53 @@ contract MockedValidator is Ownable /*, Validator*/ {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) public Ownable(owner) /*Validator(owner)*/ {
-        reset();
+    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) public {
+        _reset();
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         orderWalletHash = true;
         orderWalletSeal = true;
-        orderExchangeSeal = true;
+        orderOperatorSeal = true;
         orderSeals = true;
-        tradeMakerFee = true;
-        tradeTakerFee = true;
-        tradeBuyer = true;
-        tradeSeller = true;
+        tradeBuyerFee = true;
+        tradeSellerFee = true;
+        tradeBuyerGenuine = true;
+        tradeSellerGenuine = true;
         tradeSeals.length = 0;
         tradeSeals.push(true);
+        tradeParty = true;
+        tradeBuyer = true;
+        tradeSeller = true;
+        tradeOrder = true;
         paymentFee = true;
-        paymentSender = true;
-        paymentRecipient = true;
+        paymentSenderGenuine = true;
+        paymentRecipientGenuine = true;
         paymentWalletHash = true;
         paymentWalletSeal = true;
-        paymentExchangeSeal = true;
+        paymentOperatorSeal = true;
         paymentSeals.length = 0;
         paymentSeals.push(true);
+        paymentParty = true;
+        paymentSender = true;
+        paymentRecipient = true;
         successiveTradesPartyNonces = true;
         successiveTradesBalances = true;
-        successiveTradesNetFees = true;
+        successiveTradesTotalFees = true;
         successivePaymentsPartyNonces = true;
         successivePaymentsBalances = true;
-        successivePaymentsNetFees = true;
+        successivePaymentsTotalFees = true;
         successiveTradePaymentPartyNonces = true;
         successiveTradePaymentBalances = true;
-        successiveTradePaymentNetFees = true;
+        successiveTradePaymentTotalFees = true;
         successivePaymentTradePartyNonces = true;
         successivePaymentTradeBalances = true;
-        successivePaymentTradeNetFees = true;
+        successivePaymentTradeTotalFees = true;
         successiveTradeOrderResiduals = true;
+        walletSignature = true;
 
         tradeSealsIndex = 1;
         paymentSealsIndex = 1;
@@ -114,7 +130,7 @@ contract MockedValidator is Ownable /*, Validator*/ {
         orderWalletHash = genuine;
     }
 
-    function isGenuineOrderWalletHash(Types.Order order) public view returns (bool) {
+    function isGenuineOrderWalletHash(NahmiiTypesLib.Order order) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(order.nonce == order.nonce);
         return orderWalletHash;
@@ -124,84 +140,79 @@ contract MockedValidator is Ownable /*, Validator*/ {
         orderWalletSeal = genuine;
     }
 
-    function isGenuineOrderWalletSeal(Types.Order order) public view returns (bool) {
+    function isGenuineOrderWalletSeal(NahmiiTypesLib.Order order) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(order.nonce == order.nonce);
         return orderWalletSeal;
     }
 
-    function setGenuineOrderExchangeSeal(bool genuine) public {
-        orderExchangeSeal = genuine;
+    function setGenuineOrderOperatorSeal(bool genuine) public {
+        orderOperatorSeal = genuine;
     }
 
-    function isGenuineOrderExchangeSeal(Types.Order order, address exchange) public view returns (bool) {
+    function isGenuineOrderOperatorSeal(NahmiiTypesLib.Order order) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(order.nonce == order.nonce);
-        require(exchange == exchange);
-        return orderExchangeSeal;
+        return orderOperatorSeal;
     }
 
     function setGenuineOrderSeals(bool genuine) public {
         orderSeals = genuine;
     }
 
-    function isGenuineOrderSeals(Types.Order order, address exchange) public view returns (bool) {
+    function isGenuineOrderSeals(NahmiiTypesLib.Order order) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(order.nonce == order.nonce);
-        require(exchange == exchange);
         return orderSeals;
     }
 
-    function setGenuineTradeMakerFee(bool genuine) public {
-        tradeMakerFee = genuine;
+    function setGenuineTradeBuyerFee(bool genuine) public {
+        tradeBuyerFee = genuine;
     }
 
-    function isGenuineTradeMakerFee(Types.Trade trade) public view returns (bool) {
+    function isGenuineTradeBuyerFee(NahmiiTypesLib.Trade trade) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(trade.nonce == trade.nonce);
-        return tradeMakerFee;
+        return tradeBuyerFee;
     }
 
-    function setGenuineTradeTakerFee(bool genuine) public {
-        tradeTakerFee = genuine;
+    function setGenuineTradeSellerFee(bool genuine) public {
+        tradeSellerFee = genuine;
     }
 
-    function isGenuineTradeTakerFee(Types.Trade trade) public view returns (bool) {
+    function isGenuineTradeSellerFee(NahmiiTypesLib.Trade trade) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(trade.nonce == trade.nonce);
-        return tradeTakerFee;
+        return tradeSellerFee;
     }
 
     function setGenuineTradeBuyer(bool genuine) public {
-        tradeBuyer = genuine;
+        tradeBuyerGenuine = genuine;
     }
 
-    function isGenuineTradeBuyer(Types.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeBuyer(NahmiiTypesLib.Trade trade) public view returns (bool) {
         // To silence unused function parameter compiler warnings
         require(trade.nonce == trade.nonce);
-        require(exchange == exchange);
-        return tradeBuyer;
+        return tradeBuyerGenuine;
     }
 
     function setGenuineTradeSeller(bool genuine) public {
-        tradeSeller = genuine;
+        tradeSellerGenuine = genuine;
     }
 
-    function isGenuineTradeSeller(Types.Trade trade, address exchange) public view returns (bool) {
+    function isGenuineTradeSeller(NahmiiTypesLib.Trade trade) public view returns (bool) {
         // To silence unused function parameter compiler warnings
         require(trade.nonce == trade.nonce);
-        require(exchange == exchange);
-        return tradeSeller;
+        return tradeSellerGenuine;
     }
 
     function setGenuineTradeSeal(bool genuine) public {
         tradeSeals.push(genuine);
     }
 
-    function isGenuineTradeSeal(Types.Trade trade, address exchange) public returns (bool) {
+    function isGenuineTradeSeal(NahmiiTypesLib.Trade trade) public returns (bool) {
         // To silence unused function parameter compiler warnings
         require(trade.nonce == trade.nonce);
-        require(exchange == exchange);
         if (tradeSeals.length == 1)
             return tradeSeals[0];
         else {
@@ -210,41 +221,85 @@ contract MockedValidator is Ownable /*, Validator*/ {
         }
     }
 
+    function setTradeParty(bool _tradeParty) public {
+        tradeParty = _tradeParty;
+    }
+
+    function isTradeParty(NahmiiTypesLib.Trade trade, address wallet) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(trade.nonce == trade.nonce);
+        require(wallet == wallet);
+        return tradeParty;
+    }
+
+    function setTradeBuyer(bool _tradeBuyer) public {
+        tradeBuyer = _tradeBuyer;
+    }
+
+    function isTradeBuyer(NahmiiTypesLib.Trade trade, address wallet) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(trade.nonce == trade.nonce);
+        require(wallet == wallet);
+        return tradeBuyer;
+    }
+
+    function setTradeSeller(bool _tradeSeller) public {
+        tradeSeller = _tradeSeller;
+    }
+
+    function isTradeSeller(NahmiiTypesLib.Trade trade, address wallet) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(trade.nonce == trade.nonce);
+        require(wallet == wallet);
+        return tradeSeller;
+    }
+
+    function setTradeOrder(bool _tradeOrder) public {
+        tradeOrder = _tradeOrder;
+    }
+
+    function isTradeOrder(NahmiiTypesLib.Trade trade, NahmiiTypesLib.Order order) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(trade.nonce == trade.nonce);
+        require(order.nonce == order.nonce);
+        return tradeOrder;
+    }
+
     function setGenuinePaymentFee(bool genuine) public {
         paymentFee = genuine;
     }
 
-    function isGenuinePaymentFee(Types.Payment payment) public view returns (bool) {
+    function isGenuinePaymentFee(NahmiiTypesLib.Payment payment) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(payment.nonce == payment.nonce);
         return paymentFee;
     }
 
     function setGenuinePaymentSender(bool genuine) public {
-        paymentSender = genuine;
+        paymentSenderGenuine = genuine;
     }
 
-    function isGenuinePaymentSender(Types.Payment payment) public view returns (bool) {
+    function isGenuinePaymentSender(NahmiiTypesLib.Payment payment) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(payment.nonce == payment.nonce);
-        return paymentSender;
+        return paymentSenderGenuine;
     }
 
     function setGenuinePaymentRecipient(bool genuine) public {
-        paymentRecipient = genuine;
+        paymentRecipientGenuine = genuine;
     }
 
-    function isGenuinePaymentRecipient(Types.Payment payment) public view returns (bool) {
+    function isGenuinePaymentRecipient(NahmiiTypesLib.Payment payment) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(payment.nonce == payment.nonce);
-        return paymentRecipient;
+        return paymentRecipientGenuine;
     }
 
     function setGenuinePaymentWalletHash(bool genuine) public {
         paymentWalletHash = genuine;
     }
 
-    function isGenuinePaymentWalletHash(Types.Payment payment) public view returns (bool) {
+    function isGenuinePaymentWalletHash(NahmiiTypesLib.Payment payment) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(payment.nonce == payment.nonce);
         return paymentWalletHash;
@@ -254,31 +309,29 @@ contract MockedValidator is Ownable /*, Validator*/ {
         paymentWalletSeal = genuine;
     }
 
-    function isGenuinePaymentWalletSeal(Types.Payment payment) public view returns (bool) {
+    function isGenuinePaymentWalletSeal(NahmiiTypesLib.Payment payment) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(payment.nonce == payment.nonce);
         return paymentWalletSeal;
     }
 
-    function setGenuinePaymentExchangeSeal(bool genuine) public {
-        paymentExchangeSeal = genuine;
+    function setGenuinePaymentOperatorSeal(bool genuine) public {
+        paymentOperatorSeal = genuine;
     }
 
-    function isGenuinePaymentExchangeSeal(Types.Payment payment, address exchange) public view returns (bool) {
+    function isGenuinePaymentOperatorSeal(NahmiiTypesLib.Payment payment) public view returns (bool) {
         // To silence unused function parameter compiler warning
         require(payment.nonce == payment.nonce);
-        require(exchange == exchange);
-        return paymentExchangeSeal;
+        return paymentOperatorSeal;
     }
 
     function setGenuinePaymentSeals(bool genuine) public {
         paymentSeals.push(genuine);
     }
 
-    function isGenuinePaymentSeals(Types.Payment payment, address exchange) public returns (bool) {
+    function isGenuinePaymentSeals(NahmiiTypesLib.Payment payment) public returns (bool) {
         // To silence unused function parameter compiler warnings
         require(payment.nonce == payment.nonce);
-        require(exchange == exchange);
         if (paymentSeals.length == 1)
             return paymentSeals[0];
         else {
@@ -287,15 +340,48 @@ contract MockedValidator is Ownable /*, Validator*/ {
         }
     }
 
+    function setPaymentParty(bool _paymentParty) public {
+        paymentParty = _paymentParty;
+    }
+
+    function isPaymentParty(NahmiiTypesLib.Payment payment, address wallet) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(payment.nonce == payment.nonce);
+        require(wallet == wallet);
+        return paymentParty;
+    }
+
+    function setPaymentSender(bool _paymentSender) public {
+        paymentSender = _paymentSender;
+    }
+
+    function isPaymentSender(NahmiiTypesLib.Payment payment, address wallet) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(payment.nonce == payment.nonce);
+        require(wallet == wallet);
+        return paymentSender;
+    }
+
+    function setPaymentRecipient(bool _paymentRecipient) public {
+        paymentRecipient = _paymentRecipient;
+    }
+
+    function isPaymentRecipient(NahmiiTypesLib.Payment payment, address wallet) public view returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(payment.nonce == payment.nonce);
+        require(wallet == wallet);
+        return paymentRecipient;
+    }
+
     function setSuccessiveTradesPartyNonces(bool genuine) public {
         successiveTradesPartyNonces = genuine;
     }
 
     function isSuccessiveTradesPartyNonces(
-        Types.Trade firstTrade,
-        Types.TradePartyRole firstTradePartyRole,
-        Types.Trade lastTrade,
-        Types.TradePartyRole lastTradePartyRole
+        NahmiiTypesLib.Trade firstTrade,
+        NahmiiTypesLib.TradePartyRole firstTradePartyRole,
+        NahmiiTypesLib.Trade lastTrade,
+        NahmiiTypesLib.TradePartyRole lastTradePartyRole
     )
     public
     view
@@ -314,12 +400,12 @@ contract MockedValidator is Ownable /*, Validator*/ {
     }
 
     function isGenuineSuccessiveTradesBalances(
-        Types.Trade firstTrade,
-        Types.TradePartyRole firstTradePartyRole,
-        Types.CurrencyRole firstCurrencyRole,
-        Types.Trade lastTrade,
-        Types.TradePartyRole lastTradePartyRole,
-        Types.CurrencyRole lastCurrencyRole
+        NahmiiTypesLib.Trade firstTrade,
+        NahmiiTypesLib.TradePartyRole firstTradePartyRole,
+        NahmiiTypesLib.CurrencyRole firstCurrencyRole,
+        NahmiiTypesLib.Trade lastTrade,
+        NahmiiTypesLib.TradePartyRole lastTradePartyRole,
+        NahmiiTypesLib.CurrencyRole lastCurrencyRole
     )
     public
     view
@@ -335,17 +421,15 @@ contract MockedValidator is Ownable /*, Validator*/ {
         return successiveTradesBalances;
     }
 
-    function setGenuineSuccessiveTradesNetFees(bool genuine) public {
-        successiveTradesNetFees = genuine;
+    function setGenuineSuccessiveTradesTotalFees(bool genuine) public {
+        successiveTradesTotalFees = genuine;
     }
 
-    function isGenuineSuccessiveTradesNetFees(
-        Types.Trade firstTrade,
-        Types.TradePartyRole firstTradePartyRole,
-        Types.CurrencyRole firstCurrencyRole,
-        Types.Trade lastTrade,
-        Types.TradePartyRole lastTradePartyRole,
-        Types.CurrencyRole lastCurrencyRole
+    function isGenuineSuccessiveTradesTotalFees(
+        NahmiiTypesLib.Trade firstTrade,
+        NahmiiTypesLib.TradePartyRole firstTradePartyRole,
+        NahmiiTypesLib.Trade lastTrade,
+        NahmiiTypesLib.TradePartyRole lastTradePartyRole
     )
     public
     view
@@ -354,11 +438,9 @@ contract MockedValidator is Ownable /*, Validator*/ {
         // To silence unused function parameter compiler warning
         require(firstTrade.nonce == firstTrade.nonce);
         require(firstTradePartyRole == firstTradePartyRole);
-        require(firstCurrencyRole == firstCurrencyRole);
         require(lastTrade.nonce == lastTrade.nonce);
         require(lastTradePartyRole == lastTradePartyRole);
-        require(lastCurrencyRole == lastCurrencyRole);
-        return successiveTradesNetFees;
+        return successiveTradesTotalFees;
     }
 
     function setSuccessivePaymentsPartyNonces(bool genuine) public {
@@ -366,10 +448,10 @@ contract MockedValidator is Ownable /*, Validator*/ {
     }
 
     function isSuccessivePaymentsPartyNonces(
-        Types.Payment firstPayment,
-        Types.PaymentPartyRole firstPaymentPartyRole,
-        Types.Payment lastPayment,
-        Types.PaymentPartyRole lastPaymentPartyRole
+        NahmiiTypesLib.Payment firstPayment,
+        NahmiiTypesLib.PaymentPartyRole firstPaymentPartyRole,
+        NahmiiTypesLib.Payment lastPayment,
+        NahmiiTypesLib.PaymentPartyRole lastPaymentPartyRole
     )
     public
     view
@@ -388,10 +470,10 @@ contract MockedValidator is Ownable /*, Validator*/ {
     }
 
     function isGenuineSuccessivePaymentsBalances(
-        Types.Payment firstPayment,
-        Types.PaymentPartyRole firstPaymentPartyRole,
-        Types.Payment lastPayment,
-        Types.PaymentPartyRole lastPaymentPartyRole
+        NahmiiTypesLib.Payment firstPayment,
+        NahmiiTypesLib.PaymentPartyRole firstPaymentPartyRole,
+        NahmiiTypesLib.Payment lastPayment,
+        NahmiiTypesLib.PaymentPartyRole lastPaymentPartyRole
     )
     public
     view
@@ -405,15 +487,13 @@ contract MockedValidator is Ownable /*, Validator*/ {
         return successivePaymentsBalances;
     }
 
-    function setGenuineSuccessivePaymentsNetFees(bool genuine) public {
-        successivePaymentsNetFees = genuine;
+    function setGenuineSuccessivePaymentsTotalFees(bool genuine) public {
+        successivePaymentsTotalFees = genuine;
     }
 
-    function isGenuineSuccessivePaymentsNetFees(
-        Types.Payment firstPayment,
-        Types.PaymentPartyRole firstPaymentPartyRole,
-        Types.Payment lastPayment,
-        Types.PaymentPartyRole lastPaymentPartyRole
+    function isGenuineSuccessivePaymentsTotalFees(
+        NahmiiTypesLib.Payment firstPayment,
+        NahmiiTypesLib.Payment lastPayment
     )
     public
     view
@@ -421,10 +501,8 @@ contract MockedValidator is Ownable /*, Validator*/ {
     {
         // To silence unused function parameter compiler warning
         require(firstPayment.nonce == firstPayment.nonce);
-        require(firstPaymentPartyRole == firstPaymentPartyRole);
         require(lastPayment.nonce == lastPayment.nonce);
-        require(lastPaymentPartyRole == lastPaymentPartyRole);
-        return successivePaymentsNetFees;
+        return successivePaymentsTotalFees;
     }
 
     function setSuccessiveTradePaymentPartyNonces(bool genuine) public {
@@ -432,10 +510,10 @@ contract MockedValidator is Ownable /*, Validator*/ {
     }
 
     function isSuccessiveTradePaymentPartyNonces(
-        Types.Trade trade,
-        Types.TradePartyRole tradePartyRole,
-        Types.Payment payment,
-        Types.PaymentPartyRole paymentPartyRole
+        NahmiiTypesLib.Trade trade,
+        NahmiiTypesLib.TradePartyRole tradePartyRole,
+        NahmiiTypesLib.Payment payment,
+        NahmiiTypesLib.PaymentPartyRole paymentPartyRole
     )
     public
     view
@@ -454,11 +532,11 @@ contract MockedValidator is Ownable /*, Validator*/ {
     }
 
     function isGenuineSuccessiveTradePaymentBalances(
-        Types.Trade trade,
-        Types.TradePartyRole tradePartyRole,
-        Types.CurrencyRole tradeCurrencyRole,
-        Types.Payment payment,
-        Types.PaymentPartyRole paymentPartyRole
+        NahmiiTypesLib.Trade trade,
+        NahmiiTypesLib.TradePartyRole tradePartyRole,
+        NahmiiTypesLib.CurrencyRole tradeCurrencyRole,
+        NahmiiTypesLib.Payment payment,
+        NahmiiTypesLib.PaymentPartyRole paymentPartyRole
     )
     public
     view
@@ -473,16 +551,14 @@ contract MockedValidator is Ownable /*, Validator*/ {
         return successiveTradePaymentBalances;
     }
 
-    function setGenuineSuccessiveTradePaymentNetFees(bool genuine) public {
-        successiveTradePaymentNetFees = genuine;
+    function setGenuineSuccessiveTradePaymentTotalFees(bool genuine) public {
+        successiveTradePaymentTotalFees = genuine;
     }
 
-    function isGenuineSuccessiveTradePaymentNetFees(
-        Types.Trade trade,
-        Types.TradePartyRole tradePartyRole,
-        Types.CurrencyRole tradeCurrencyRole,
-        Types.Payment payment,
-        Types.PaymentPartyRole paymentPartyRole
+    function isGenuineSuccessiveTradePaymentTotalFees(
+        NahmiiTypesLib.Trade trade,
+        NahmiiTypesLib.TradePartyRole tradePartyRole,
+        NahmiiTypesLib.Payment payment
     )
     public
     view
@@ -491,10 +567,8 @@ contract MockedValidator is Ownable /*, Validator*/ {
         // To silence unused function parameter compiler warning
         require(trade.nonce == trade.nonce);
         require(tradePartyRole == tradePartyRole);
-        require(tradeCurrencyRole == tradeCurrencyRole);
         require(payment.nonce == payment.nonce);
-        require(paymentPartyRole == paymentPartyRole);
-        return successiveTradePaymentNetFees;
+        return successiveTradePaymentTotalFees;
     }
 
     function setSuccessivePaymentTradePartyNonces(bool genuine) public {
@@ -502,10 +576,10 @@ contract MockedValidator is Ownable /*, Validator*/ {
     }
 
     function isSuccessivePaymentTradePartyNonces(
-        Types.Payment payment,
-        Types.PaymentPartyRole paymentPartyRole,
-        Types.Trade trade,
-        Types.TradePartyRole tradePartyRole
+        NahmiiTypesLib.Payment payment,
+        NahmiiTypesLib.PaymentPartyRole paymentPartyRole,
+        NahmiiTypesLib.Trade trade,
+        NahmiiTypesLib.TradePartyRole tradePartyRole
     )
     public
     view
@@ -524,11 +598,11 @@ contract MockedValidator is Ownable /*, Validator*/ {
     }
 
     function isGenuineSuccessivePaymentTradeBalances(
-        Types.Payment payment,
-        Types.PaymentPartyRole paymentPartyRole,
-        Types.Trade trade,
-        Types.TradePartyRole tradePartyRole,
-        Types.CurrencyRole tradeCurrencyRole
+        NahmiiTypesLib.Payment payment,
+        NahmiiTypesLib.PaymentPartyRole paymentPartyRole,
+        NahmiiTypesLib.Trade trade,
+        NahmiiTypesLib.TradePartyRole tradePartyRole,
+        NahmiiTypesLib.CurrencyRole tradeCurrencyRole
     )
     public
     view
@@ -543,16 +617,15 @@ contract MockedValidator is Ownable /*, Validator*/ {
         return successivePaymentTradeBalances;
     }
 
-    function setGenuineSuccessivePaymentTradeNetFees(bool genuine) public {
-        successivePaymentTradeNetFees = genuine;
+    function setGenuineSuccessivePaymentTradeTotalFees(bool genuine) public {
+        successivePaymentTradeTotalFees = genuine;
     }
 
-    function isGenuineSuccessivePaymentTradeNetFees(
-        Types.Payment payment,
-        Types.PaymentPartyRole paymentPartyRole,
-        Types.Trade trade,
-        Types.TradePartyRole tradePartyRole,
-        Types.CurrencyRole tradeCurrencyRole
+    function isGenuineSuccessivePaymentTradeTotalFees(
+        NahmiiTypesLib.Payment payment,
+        NahmiiTypesLib.PaymentPartyRole paymentPartyRole,
+        NahmiiTypesLib.Trade trade,
+        NahmiiTypesLib.TradePartyRole tradePartyRole
     )
     public
     view
@@ -563,8 +636,7 @@ contract MockedValidator is Ownable /*, Validator*/ {
         require(paymentPartyRole == paymentPartyRole);
         require(trade.nonce == trade.nonce);
         require(tradePartyRole == tradePartyRole);
-        require(tradeCurrencyRole == tradeCurrencyRole);
-        return successivePaymentTradeNetFees;
+        return successivePaymentTradeTotalFees;
     }
 
     function setGenuineSuccessiveTradeOrderResiduals(bool genuine) public {
@@ -572,9 +644,9 @@ contract MockedValidator is Ownable /*, Validator*/ {
     }
 
     function isGenuineSuccessiveTradeOrderResiduals(
-        Types.Trade firstTrade,
-        Types.Trade lastTrade,
-        Types.TradePartyRole tradePartyRole
+        NahmiiTypesLib.Trade firstTrade,
+        NahmiiTypesLib.Trade lastTrade,
+        NahmiiTypesLib.TradePartyRole tradePartyRole
     )
     public
     view
@@ -585,5 +657,25 @@ contract MockedValidator is Ownable /*, Validator*/ {
         require(lastTrade.nonce == lastTrade.nonce);
         require(tradePartyRole == tradePartyRole);
         return successiveTradeOrderResiduals;
+    }
+
+    function setGenuineWalletSignature(bool genuine) public {
+        walletSignature = genuine;
+    }
+
+    function isGenuineWalletSignature(
+        bytes32 hash,
+        NahmiiTypesLib.Signature signature,
+        address wallet
+    )
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(hash == hash);
+        require(signature.v == signature.v);
+        require(wallet == wallet);
+        return walletSignature;
     }
 }

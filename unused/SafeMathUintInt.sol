@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
-import "../SafeMathUint.sol";
-import "../SafeMathInt.sol";
+import "../SafeMathUintLib.sol";
+import "../SafeMathIntLib.sol";
 
 /**
  * @title     SafeMathUIntInt
@@ -16,23 +16,23 @@ library SafeMathUintInt {
 
     function u_add(uint256 a, int256 b) internal pure returns (uint256) {
         if (b >= 0) {
-            return SafeMathUint.add(a, uint256(b));
+            return SafeMathUintLib.add(a, uint256(b));
         }
         uint256 b1 = ~uint256(b) + 1;
-        return SafeMathUint.sub(a, b1);
+        return SafeMathUintLib.sub(a, b1);
     }
 
     function u_sub(uint256 a, int256 b) internal pure returns (uint256) {
         if (b >= 0) {
-            return SafeMathUint.sub(a, uint256(b));
+            return SafeMathUintLib.sub(a, uint256(b));
         }
         uint256 b1 = ~uint256(b) + 1;
-        return SafeMathUint.add(a, b1);
+        return SafeMathUintLib.add(a, b1);
     }
 
     function s_add(int256 a, uint256 b) internal pure returns (int256) {
         if (b < UINT256_HALF_MAX) {
-            return SafeMathInt.add(a, int256(b));
+            return SafeMathIntLib.add(a, int256(b));
         }
         assert(a < 0);
         uint256 a1 = ~uint256(a) + 1;
@@ -42,7 +42,7 @@ library SafeMathUintInt {
 
     function s_sub(int256 a, uint256 b) internal pure returns (int256) {
         if (b < UINT256_HALF_MAX) {
-            return SafeMathInt.sub(a, int256(b));
+            return SafeMathIntLib.sub(a, int256(b));
         }
         assert(a >= 0);
         assert(b <= UINT256_HALF_MAX + uint256(a));

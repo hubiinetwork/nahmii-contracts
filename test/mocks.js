@@ -7,35 +7,43 @@ exports.intentions = ['Buy', 'Sell'];
 exports.driipTypes = ['Trade', 'Payment'];
 exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
-exports.challengeResults = ['Unknown', 'Qualified', 'Disqualified'];
-exports.challengeCandidateTypes = ['None', 'Order', 'Trade', 'Payment'];
+exports.proposalStatuses = ['Unknown', 'Qualified', 'Disqualified'];
+exports.candidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
 exports.address0 = '0x0000000000000000000000000000000000000000';
 
-exports.mockOrder = async (exchange, params) => {
+let globalNonce = 1;
+
+exports.mockOrder = async (operator, params) => {
     const wallet = Wallet.createRandom();
 
     const order = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
+        nonce: utils.bigNumberify(globalNonce++),
         wallet: wallet.address,
         placement: {
             intention: exports.intentions.indexOf('Buy'),
-            immediateSettlement: true,
-            amount: utils.parseUnits('100', 18),
-            rate: utils.bigNumberify(1000),
+            amount: utils.parseUnits('1000', 18),
             currencies: {
-                intended: '0x0000000000000000000000000000000000000001',
-                conjugate: '0x0000000000000000000000000000000000000002'
+                intended: {
+                    ct: '0x0000000000000000000000000000000000000001',
+                    id: utils.bigNumberify(0)
+                },
+                conjugate: {
+                    ct: '0x0000000000000000000000000000000000000002',
+                    id: utils.bigNumberify(0)
+                }
             },
+            rate: utils.bigNumberify(1000),
             residuals: {
                 current: utils.parseUnits('400', 18),
                 previous: utils.parseUnits('500', 18)
             }
         },
-        blockNumber: utils.bigNumberify(0)
+        blockNumber: utils.bigNumberify(0),
+        operatorId: utils.bigNumberify(0)
     }, params);
 
-    const exchangeSigner = exports.createWeb3Signer(exchange);
+    const operatorSigner = exports.createWeb3Signer(operator);
 
     const walletSigner = (
         order.wallet === wallet.address ?
@@ -43,19 +51,24 @@ exports.mockOrder = async (exchange, params) => {
             exports.createWeb3Signer(order.wallet)
     );
 
-    return await exports.augmentOrderSeals(order, exchangeSigner, walletSigner);
+    return await exports.augmentOrderSeals(order, operatorSigner, walletSigner);
 };
 
-exports.mockTrade = async (exchange, params) => {
+exports.mockTrade = async (operator, params) => {
     const trade = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
-        immediateSettlement: true,
+        nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
-        rate: utils.bigNumberify(1000),
         currencies: {
-            intended: '0x0000000000000000000000000000000000000001',
-            conjugate: '0x0000000000000000000000000000000000000002'
+            intended: {
+                ct: '0x0000000000000000000000000000000000000001',
+                id: utils.bigNumberify(0)
+            },
+            conjugate: {
+                ct: '0x0000000000000000000000000000000000000002',
+                id: utils.bigNumberify(0)
+            }
         },
+        rate: utils.bigNumberify(1000),
         buyer: {
             wallet: Wallet.createRandom().address,
             nonce: utils.bigNumberify(1),
@@ -65,7 +78,7 @@ exports.mockTrade = async (exchange, params) => {
                 amount: utils.parseUnits('1000', 18),
                 hashes: {
                     wallet: cryptography.hash(Wallet.createRandom().address),
-                    exchange: cryptography.hash(Wallet.createRandom().address)
+                    operator: cryptography.hash(Wallet.createRandom().address)
                 },
                 residuals: {
                     current: utils.parseUnits('400', 18),
@@ -82,9 +95,23 @@ exports.mockTrade = async (exchange, params) => {
                     previous: utils.parseUnits('9.5', 18)
                 }
             },
-            netFees: {
-                intended: utils.parseUnits('0.2', 18),
-                conjugate: utils.parseUnits('0.0', 18)
+            fees: {
+                single: {
+                    amount: utils.parseUnits('0.1', 18),
+                    currency: {
+                        ct: '0x0000000000000000000000000000000000000001',
+                        id: utils.bigNumberify(0)
+                    }
+                },
+                total: [
+                    {
+                        amount: utils.parseUnits('0.2', 18),
+                        currency: {
+                            ct: '0x0000000000000000000000000000000000000001',
+                            id: utils.bigNumberify(0)
+                        }
+                    }
+                ]
             }
         },
         seller: {
@@ -96,7 +123,7 @@ exports.mockTrade = async (exchange, params) => {
                 amount: utils.parseUnits('1000', 18),
                 hashes: {
                     wallet: cryptography.hash(Wallet.createRandom().address),
-                    exchange: cryptography.hash(Wallet.createRandom().address)
+                    operator: cryptography.hash(Wallet.createRandom().address)
                 },
                 residuals: {
                     current: utils.parseUnits('600', 18),
@@ -113,42 +140,55 @@ exports.mockTrade = async (exchange, params) => {
                     previous: utils.parseUnits('19.5998', 18)
                 }
             },
-            netFees: {
-                intended: utils.parseUnits('0.0', 18),
-                conjugate: utils.parseUnits('0.0004', 18)
+            fees: {
+                single: {
+                    amount: utils.parseUnits('0.0002', 18),
+                    currency: {
+                        ct: '0x0000000000000000000000000000000000000002',
+                        id: utils.bigNumberify(0)
+                    }
+                },
+                total: [
+                    {
+                        amount: utils.parseUnits('0.0004', 18),
+                        currency: {
+                            ct: '0x0000000000000000000000000000000000000002',
+                            id: utils.bigNumberify(0)
+                        }
+                    }
+                ]
             }
         },
         transfers: {
             intended: {
                 single: utils.parseUnits('100', 18),
-                net: utils.parseUnits('200', 18)
+                total: utils.parseUnits('200', 18)
             },
             conjugate: {
                 single: utils.parseUnits('0.1', 18),
-                net: utils.parseUnits('0.2', 18)
+                total: utils.parseUnits('0.2', 18)
             }
         },
-        singleFees: {
-            intended: utils.parseUnits('0.1', 18),
-            conjugate: utils.parseUnits('0.0002', 18)
-        },
-        blockNumber: utils.bigNumberify(0)
+        blockNumber: utils.bigNumberify(0),
+        operatorId: utils.bigNumberify(0)
     }, params);
 
-    const exchangeSigner = exports.createWeb3Signer(exchange);
+    const operatorSigner = exports.createWeb3Signer(operator);
 
-    return await exports.augmentTradeSeal(trade, exchangeSigner);
+    return await exports.augmentTradeSeal(trade, operatorSigner);
 };
 
-exports.mockPayment = async (exchange, params) => {
+exports.mockPayment = async (operator, params) => {
     const senderWallet = Wallet.createRandom();
     const recipientWallet = Wallet.createRandom();
 
     const payment = exports.mergeDeep({
-        nonce: utils.bigNumberify(1),
-        immediateSettlement: true,
+        nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
-        currency: '0x0000000000000000000000000000000000000001',
+        currency: {
+            ct: '0x0000000000000000000000000000000000000001',
+            id: utils.bigNumberify(0)
+        },
         sender: {
             wallet: senderWallet.address,
             nonce: utils.bigNumberify(1),
@@ -156,7 +196,24 @@ exports.mockPayment = async (exchange, params) => {
                 current: utils.parseUnits('9399.8', 18),
                 previous: utils.parseUnits('9500', 18)
             },
-            netFee: utils.parseUnits('0.2', 18)
+            fees: {
+                single: {
+                    amount: utils.parseUnits('0.2', 18),
+                    currency: {
+                        ct: '0x0000000000000000000000000000000000000001',
+                        id: utils.bigNumberify(0)
+                    }
+                },
+                total: [
+                    {
+                        amount: utils.parseUnits('0.2', 18),
+                        currency: {
+                            ct: '0x0000000000000000000000000000000000000001',
+                            id: utils.bigNumberify(0)
+                        }
+                    }
+                ]
+            }
         },
         recipient: {
             wallet: recipientWallet.address,
@@ -165,17 +222,27 @@ exports.mockPayment = async (exchange, params) => {
                 current: utils.parseUnits('19700', 18),
                 previous: utils.parseUnits('19600', 18)
             },
-            netFee: utils.parseUnits('0.0', 18)
+            fees: {
+                total: [
+                    // {
+                    //     amount: utils.parseUnits('0.0', 18),
+                    //     currency: {
+                    //         ct: '0x0000000000000000000000000000000000000001',
+                    //         id: utils.bigNumberify(0)
+                    //     }
+                    // }
+                ]
+            }
         },
         transfers: {
             single: utils.parseUnits('100', 18),
-            net: utils.parseUnits('200', 18)
+            total: utils.parseUnits('200', 18)
         },
-        singleFee: utils.parseUnits('0.2', 18),
-        blockNumber: utils.bigNumberify(0)
+        blockNumber: utils.bigNumberify(0),
+        operatorId: utils.bigNumberify(0)
     }, params);
 
-    const exchangeSigner = exports.createWeb3Signer(exchange);
+    const operatorSigner = exports.createWeb3Signer(operator);
 
     const walletSigner = (
         payment.sender.wallet === senderWallet.address ?
@@ -183,7 +250,7 @@ exports.mockPayment = async (exchange, params) => {
             exports.createWeb3Signer(payment.sender.wallet)
     );
 
-    return await exports.augmentPaymentSeals(payment, exchangeSigner, walletSigner);
+    return await exports.augmentPaymentSeals(payment, operatorSigner, walletSigner);
 };
 
 exports.mergeDeep = (target, sender) => {
@@ -220,7 +287,12 @@ exports.createWeb3Signer = (address) => {
     };
 };
 
-exports.augmentOrderSeals = async (order, exchangeSign, walletSign) => {
+exports.web3Sign = async (address, hash) => {
+    const sig = await web3.eth.sign(address, hash);
+    return exports.rpcToStdSig(sig);
+};
+
+exports.augmentOrderSeals = async (order, operatorSign, walletSign) => {
     const walletHash = exports.hashOrderAsWallet(order);
     order.seals = {
         wallet: {
@@ -228,24 +300,24 @@ exports.augmentOrderSeals = async (order, exchangeSign, walletSign) => {
             signature: await walletSign(walletHash)
         },
     };
-    const exchangeHash = exports.hashOrderAsExchange(order);
-    order.seals.exchange = {
-        hash: exchangeHash,
-        signature: await exchangeSign(exchangeHash)
+    const operatorHash = exports.hashOrderAsOperator(order);
+    order.seals.operator = {
+        hash: operatorHash,
+        signature: await operatorSign(operatorHash)
     };
     return order;
 };
 
-exports.augmentTradeSeal = async (trade, exchangeSign) => {
+exports.augmentTradeSeal = async (trade, operatorSign) => {
     const hash = exports.hashTrade(trade);
     trade.seal = {
         hash: hash,
-        signature: await exchangeSign(hash)
+        signature: await operatorSign(hash)
     };
     return trade;
 };
 
-exports.augmentPaymentSeals = async (payment, exchangeSign, walletSign) => {
+exports.augmentPaymentSeals = async (payment, operatorSign, walletSign) => {
     const walletHash = exports.hashPaymentAsWallet(payment);
     payment.seals = {
         wallet: {
@@ -253,10 +325,10 @@ exports.augmentPaymentSeals = async (payment, exchangeSign, walletSign) => {
             signature: await walletSign(walletHash)
         }
     };
-    const exchangeHash = exports.hashPaymentAsExchange(payment);
-    payment.seals.exchange = {
-        hash: exchangeHash,
-        signature: await exchangeSign(exchangeHash)
+    const operatorHash = exports.hashPaymentAsOperator(payment);
+    payment.seals.operator = {
+        hash: operatorHash,
+        signature: await operatorSign(operatorHash)
     };
     return payment;
 };
@@ -269,14 +341,16 @@ exports.hashOrderAsWallet = (order) => {
     const placementHash = cryptography.hash(
         {type: 'uint8', value: order.placement.intention},
         order.placement.amount,
-        order.placement.currencies.intended,
-        order.placement.currencies.conjugate,
+        order.placement.currencies.intended.ct,
+        order.placement.currencies.intended.id,
+        order.placement.currencies.conjugate.ct,
+        order.placement.currencies.conjugate.id,
         order.placement.rate
     );
     return cryptography.hash(globalHash, placementHash);
 };
 
-exports.hashOrderAsExchange = (order) => {
+exports.hashOrderAsOperator = (order) => {
     const walletSignatureHash = cryptography.hash(
         {type: 'uint8', value: order.seals.wallet.signature.v},
         order.seals.wallet.signature.r,
@@ -293,15 +367,20 @@ exports.hashTrade = (trade) => {
     const globalHash = cryptography.hash(
         trade.nonce,
         trade.amount,
-        trade.currencies.intended,
-        trade.currencies.conjugate,
+        trade.currencies.intended.ct,
+        trade.currencies.intended.id,
+        trade.currencies.conjugate.ct,
+        trade.currencies.conjugate.id,
         trade.rate
     );
     const buyerHash = cryptography.hash(
         trade.buyer.nonce,
         trade.buyer.wallet,
+        // TODO Consider adding 'trade.buyer.rollingVolume' and 'trade.buyer.liquidityRole' to hash
+        // trade.buyer.rollingVolume,
+        // {type: 'uint8', value: trade.buyer.liquidityRole},
         trade.buyer.order.hashes.wallet,
-        trade.buyer.order.hashes.exchange,
+        trade.buyer.order.hashes.operator,
         trade.buyer.order.amount,
         trade.buyer.order.residuals.current,
         trade.buyer.order.residuals.previous,
@@ -309,14 +388,20 @@ exports.hashTrade = (trade) => {
         trade.buyer.balances.intended.previous,
         trade.buyer.balances.conjugate.current,
         trade.buyer.balances.conjugate.previous,
-        trade.buyer.netFees.intended,
-        trade.buyer.netFees.conjugate
+        trade.buyer.fees.single.amount,
+        trade.buyer.fees.single.currency.ct,
+        trade.buyer.fees.single.currency.id
+        // TODO Consider adding dynamic size 'trade.buyer.fees.total' to hash
+        // trade.buyer.fees.total
     );
     const sellerHash = cryptography.hash(
         trade.seller.nonce,
         trade.seller.wallet,
+        // TODO Consider adding 'trade.seller.rollingVolume' and 'trade.seller.liquidityRole' to hash
+        // trade.seller.rollingVolume,
+        // {type: 'uint8', value: trade.seller.liquidityRole},
         trade.seller.order.hashes.wallet,
-        trade.seller.order.hashes.exchange,
+        trade.seller.order.hashes.operator,
         trade.seller.order.amount,
         trade.seller.order.residuals.current,
         trade.seller.order.residuals.previous,
@@ -324,51 +409,38 @@ exports.hashTrade = (trade) => {
         trade.seller.balances.intended.previous,
         trade.seller.balances.conjugate.current,
         trade.seller.balances.conjugate.previous,
-        trade.seller.netFees.intended,
-        trade.seller.netFees.conjugate
+        trade.seller.fees.single.amount,
+        trade.seller.fees.single.currency.ct,
+        trade.seller.fees.single.currency.id
+        // TODO Consider adding dynamic size 'trade.seller.fees.total' to hash
+        // trade.seller.fees.total
     );
     const transfersHash = cryptography.hash(
         trade.transfers.intended.single,
-        trade.transfers.intended.net,
+        trade.transfers.intended.total,
         trade.transfers.conjugate.single,
-        trade.transfers.conjugate.net
+        trade.transfers.conjugate.total
     );
-    const singleFeesHash = cryptography.hash(
-        trade.singleFees.intended,
-        trade.singleFees.conjugate
-    );
-    return cryptography.hash(globalHash, buyerHash, sellerHash, transfersHash, singleFeesHash);
+    return cryptography.hash(globalHash, buyerHash, sellerHash, transfersHash);
 };
 
 exports.hashPaymentAsWallet = (payment) => {
-    const amountHash = cryptography.hash(
-        payment.amount
+    const amountCurrencyHash = cryptography.hash(
+        payment.amount,
+        payment.currency.ct,
+        payment.currency.id
     );
     const senderHash = cryptography.hash(
-        payment.sender.nonce,
-        payment.sender.wallet,
-        payment.sender.balances.current,
-        payment.sender.balances.previous,
-        payment.sender.netFee
+        payment.sender.wallet
     );
     const recipientHash = cryptography.hash(
-        payment.recipient.nonce,
-        payment.recipient.wallet,
-        payment.recipient.balances.current,
-        payment.recipient.balances.previous,
-        payment.recipient.netFee
+        payment.recipient.wallet
     );
-    const transfersHash = cryptography.hash(
-        payment.transfers.single,
-        payment.transfers.net
-    );
-    const singleFeeHash = cryptography.hash(
-        payment.singleFee
-    );
-    return cryptography.hash(amountHash, senderHash, recipientHash, transfersHash, singleFeeHash);
+
+    return cryptography.hash(amountCurrencyHash, senderHash, recipientHash);
 };
 
-exports.hashPaymentAsExchange = (payment) => {
+exports.hashPaymentAsOperator = (payment) => {
     const walletSignatureHash = cryptography.hash(
         {type: 'uint8', value: payment.seals.wallet.signature.v},
         payment.seals.wallet.signature.r,
@@ -377,7 +449,29 @@ exports.hashPaymentAsExchange = (payment) => {
     const nonceHash = cryptography.hash(
         payment.nonce
     );
-    return cryptography.hash(walletSignatureHash, nonceHash);
+    const senderHash = cryptography.hash(
+        payment.sender.nonce,
+        payment.sender.balances.current,
+        payment.sender.balances.previous,
+        payment.sender.fees.single.amount,
+        payment.sender.fees.single.currency.ct,
+        payment.sender.fees.single.currency.id
+        // TODO Consider adding dynamic size 'payment.sender.fees.total' to operator hash
+        // payment.sender.fees.total
+    );
+    const recipientHash = cryptography.hash(
+        payment.recipient.nonce,
+        payment.recipient.balances.current,
+        payment.recipient.balances.previous
+        // TODO Consider adding dynamic size 'payment.recipient.fees.total' to operator hash
+        // payment.recipient.fees.total
+    );
+    const transfersHash = cryptography.hash(
+        payment.transfers.single,
+        payment.transfers.total
+    );
+
+    return cryptography.hash(walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash);
 };
 
 exports.ethutilToStdSig = (sig) => {

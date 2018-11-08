@@ -1,0 +1,58 @@
+/*
+ * Hubii Nahmii
+ *
+ * Compliant with the Hubii Nahmii specification v0.12.
+ *
+ * Copyright (C) 2017-2018 Hubii AS
+ */
+
+pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
+
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+
+/**
+ * @title     DriipSettlementTypes
+ * @dev       Types for driip settlement challenge
+ */
+// TODO Remove as it is obsoleted by SettlementTypesLib
+library DriipSettlementTypes {
+    //
+    // Structures
+    // -----------------------------------------------------------------------------------------------------------------
+    enum ChallengeStatus {Unknown, Qualified, Disqualified}
+    enum ChallengeCandidateType {None, Order, Trade, Payment}
+    enum SettlementRole {Origin, Target}
+
+    struct OptionalFigure {
+        MonetaryTypesLib.Figure figure;
+        bool set;
+    }
+
+    struct Challenge {
+        uint256 nonce; // TODO Consider removal of nonce in place of operator hash
+        uint256 timeout;
+        ChallengeStatus status;
+
+        // Driip info
+        //        bytes32 driipOperatorHash; // TODO Add operator hash
+        NahmiiTypesLib.DriipType driipType;
+        uint256 driipIndex;
+
+        // Stage info
+        MonetaryTypesLib.Figure intendedStage;
+        MonetaryTypesLib.Figure conjugateStage;
+
+        // Balances after amounts have been staged
+        OptionalFigure intendedTargetBalance;
+        OptionalFigure conjugateTargetBalance;
+
+        // Candidate info updated when calling any of the challenge functions
+        ChallengeCandidateType candidateType;
+        uint256 candidateIndex;
+
+        // Address of wallet that successfully challenged
+        address challenger;
+    }
+}

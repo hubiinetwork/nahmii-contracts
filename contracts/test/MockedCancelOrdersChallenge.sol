@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -9,14 +9,13 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-//import {CancelOrdersChallenge} from "../CancelOrdersChallenge.sol";
-import {Types} from "../Types.sol";
+import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
 @title MockedCancelOrdersChallenge
 @notice Mocked implementation of cancel orders challenge contract
 */
-contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
+contract MockedCancelOrdersChallenge {
 
     //
     // Variables
@@ -27,28 +26,28 @@ contract MockedCancelOrdersChallenge /*is CancelOrdersChallenge*/ {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CancelOrdersEvent(Types.Order[] orders, address wallet);
+    event CancelOrdersEvent(NahmiiTypesLib.Order[] orders, address wallet);
     event CancelOrdersByHashEvent(bytes32[] orders, address wallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*CancelOrdersChallenge(owner)*/ {
+    constructor() public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
+    function _reset() public {
         for (uint256 i = 0; i < cancelledOrderHashes.length; i++)
             orderHashCancelledMap[cancelledOrderHashes[i]] = false;
         cancelledOrderHashes.length = 0;
     }
 
-    function cancelOrders(Types.Order[] orders) public {
+    function cancelOrders(NahmiiTypesLib.Order[] orders) public {
         for (uint256 i = 0; i < orders.length; i++) {
-            cancelledOrderHashes.push(orders[i].seals.exchange.hash);
-            orderHashCancelledMap[orders[i].seals.exchange.hash] = true;
+            cancelledOrderHashes.push(orders[i].seals.operator.hash);
+            orderHashCancelledMap[orders[i].seals.operator.hash] = true;
         }
 
         emit CancelOrdersEvent(orders, msg.sender);

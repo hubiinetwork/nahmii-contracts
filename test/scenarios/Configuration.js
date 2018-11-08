@@ -1,94 +1,35 @@
 const chai = require('chai');
-const chaiAsPromised = require("chai-as-promised");
-const {Wallet, utils} = require('ethers');
-const address0 = require('../mocks').address0;
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
+const {Wallet, Contract} = require('ethers');
+const Configuration = artifacts.require('Configuration');
 
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
+
     describe('Configuration', () => {
-        let web3Configuration, provider, blockNumberAhead, blockNumberBehind;
-        const feeUpdates = {
-            tradeMakerFee: 0,
-            tradeTakerFee: 0,
-            paymentFee: 0,
-            tradeMakerMinimumFee: 0,
-            tradeTakerMinimumFee: 0,
-            paymentMininumFee: 0
-        };
+        let web3Configuration, ethersConfiguration;
+        let provider, blockNumber;
 
         before(async () => {
-            web3Configuration = glob.web3Configuration;
             provider = glob.signer_owner.provider;
         });
 
         beforeEach(async () => {
-            const blockNumber = await provider.getBlockNumber();
-            blockNumberAhead = blockNumber + 10;
-            blockNumberBehind = blockNumber - 10;
+            web3Configuration = await Configuration.new(glob.owner);
+            ethersConfiguration = new Contract(web3Configuration.address, Configuration.abi, glob.signer_owner);
+
+            blockNumber = await provider.getBlockNumber();
         });
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3Configuration.owner.call();
-                owner.should.equal(glob.owner);
-            });
-        });
-
-        describe('isRegisteredService', () => {
-            it('should equal value initialized', async () => {
-                const address = Wallet.createRandom().address;
-                const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
-                registered.should.be.false;
-            });
-        });
-
-        describe('registerService()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called with owner as sender', () => {
-                it('should register service and emit event', async () => {
-                    const result = await web3Configuration.registerService(address, 'some_action');
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('RegisterServiceEvent');
-                    const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
-                    registered.should.be.true;
-                });
-            });
-
-            describe('if called with sender that is not owner', () => {
-                it('should revert', async () => {
-                    web3Configuration.registerService(address, 'some_action', {from: glob.user_a}).should.be.rejected;
-                });
-            });
-        });
-
-        describe('deregisterService()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called with owner as sender', () => {
-                it('should deregister service and emit event', async () => {
-                    const result = await web3Configuration.deregisterService(address, 'some_action');
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('DeregisterServiceEvent');
-                    const registered = await web3Configuration.isRegisteredService.call(address, 'some_action');
-                    registered.should.be.false;
-                });
-            });
-
-            describe('if called with sender that is not owner', () => {
-                it('should revert', async () => {
-                    web3Configuration.deregisterService(address, 'some_action', {from: glob.user_a}).should.be.rejected;
-                });
+                (await web3Configuration.deployer.call()).should.equal(glob.owner);
+                (await web3Configuration.operator.call()).should.equal(glob.owner);
             });
         });
 
@@ -114,17 +55,10 @@ module.exports = (glob) => {
         });
 
         describe('setOperationalModeExit()', () => {
-            describe('if called with owner as sender', () => {
-                it('should set exit operational mode', async () => {
-                    await web3Configuration.setOperationalModeExit();
-                    const operationalModeExit = await web3Configuration.isOperationalModeExit.call();
-                    operationalModeExit.should.be.true;
-                });
-            });
-
             describe('if called with registered service as sender', () => {
-                before(async () => {
-                    await web3Configuration.registerService(glob.user_a, 'OperationalMode');
+                beforeEach(async () => {
+                    await web3Configuration.registerService(glob.user_a);
+                    await web3Configuration.enableServiceAction(glob.user_a, 'operational_mode');
                 });
 
                 it('should set exit operational mode', async () => {
@@ -134,733 +68,755 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not owner or registered service', () => {
+            describe('if called by non-deployer or registered service', () => {
                 it('should revert', async () => {
                     web3Configuration.setOperationalModeExit({from: glob.user_b}).should.be.rejected;
                 });
             });
-        });
 
-        describe('getPartsPer()', () => {
-            it('should get the value initialized at construction time', async () => {
-                const partsPer = await web3Configuration.PARTS_PER.call();
-                partsPer.toNumber().should.equal(1e18);
+            describe('if within operational constraints', () => {
+                it('should set exit operational mode', async () => {
+                    await web3Configuration.setOperationalModeExit();
+                    const operationalModeExit = await web3Configuration.isOperationalModeExit.call();
+                    operationalModeExit.should.be.true;
+                });
             });
         });
 
-        describe('getTradeMakerFee()', () => {
-            beforeEach(async () => {
-                await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
-                feeUpdates.tradeMakerFee++;
+        describe('updateDelayBlocks()', () => {
+            it('should revert', async () => {
+                (await ethersConfiguration.updateDelayBlocks())
+                    ._bn.should.eq.BN(0);
             });
+        });
 
-            describe('if called with non-existent discount key', () => {
-                it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e15);
+        describe('updateDelayBlocksCount()', () => {
+            it('should revert', async () => {
+                (await ethersConfiguration.updateDelayBlocksCount())
+                    ._bn.should.eq.BN(1);
+            });
+        });
+
+        describe('setUpdateDelayBlocks()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setUpdateDelayBlocks(
+                        blockNumber + 1, 1, {from: glob.user_a}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called with existent discount key', () => {
-                it('should get the discounted value', async () => {
-                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 1);
-                    value.toNumber().should.equal(9e14);
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setUpdateDelayBlocks(
+                        blockNumber, 1
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set new value and emit event', async () => {
+                    const result = await web3Configuration.setUpdateDelayBlocks(
+                        blockNumber + 1, 1
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetUpdateDelayBlocksEvent');
+
+                    (await ethersConfiguration.updateDelayBlocks())
+                        ._bn.should.eq.BN(1);
+                    (await ethersConfiguration.updateDelayBlocksCount())
+                        ._bn.should.eq.BN(2);
+                });
+            });
+        });
+
+        describe('confirmationBlocks()', () => {
+            it('should revert', async () => {
+                (await ethersConfiguration.confirmationBlocks())
+                    ._bn.should.eq.BN(12);
+            });
+        });
+
+        describe('confirmationBlocksCount()', () => {
+            it('should revert', async () => {
+                (await ethersConfiguration.confirmationBlocksCount())
+                    ._bn.should.eq.BN(1);
+            });
+        });
+
+        describe('setConfirmationBlocks()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setConfirmationBlocks(
+                        blockNumber + 1, 1, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setConfirmationBlocks(
+                        blockNumber, 1
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if provided with correct parameter and called with sender that is deployer', () => {
+                it('should successfully set new value and emit event', async () => {
+                    const result = await web3Configuration.setConfirmationBlocks(
+                        blockNumber + 1, 1
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetConfirmationBlocksEvent');
+
+                    (await ethersConfiguration.confirmationBlocks())
+                        ._bn.should.eq.BN(1);
+                    (await ethersConfiguration.confirmationBlocksCount())
+                        ._bn.should.eq.BN(2);
+                });
+            });
+        });
+
+        describe('tradeMakerFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.tradeMakerFeesCount())
+                    ._bn.should.eq.BN(1);
+            });
+        });
+
+        describe('tradeMakerFee()', () => {
+            describe('if called with non-existent discount key', () => {
+                it('should get the nominal value', async () => {
+                    (await ethersConfiguration.tradeMakerFee(blockNumber + 1, 0))
+                        ._bn.should.eq.BN(1e15.toString());
                 });
             });
         });
 
         describe('setTradeMakerFee()', () => {
-            describe('if provided with correct parameters and called with sender that is owner', () => {
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
-                    feeUpdates.tradeMakerFee++;
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetTradeMakerFeeEvent');
-                    const value = await web3Configuration.getTradeMakerFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e18);
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setTradeMakerFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called with block number behind the current one', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeMakerFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setTradeMakerFee(
+                        blockNumber, 1e18, [1, 10], [1e17, 2e17]
+                    ).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeMakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                it('should revert', async () => {
+                    web3Configuration.setTradeMakerFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17, 3e17]
+                    ).should.be.rejected;
                 });
             });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set new values and emit event', async () => {
+                    const result = await web3Configuration.setTradeMakerFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17]
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetTradeMakerFeeEvent');
+
+                    (await ethersConfiguration.tradeMakerFee(blockNumber + 1, 1))
+                        ._bn.should.eq.BN(9e17.toString());
+                    (await ethersConfiguration.tradeMakerFeesCount())
+                        ._bn.should.eq.BN(2);
+                });
+            })
         });
 
-        describe('getTradeMakerFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getTradeMakerFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.tradeMakerFee);
+        describe('tradeTakerFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.tradeTakerFeesCount())
+                    ._bn.should.eq.BN(1);
             });
         });
 
-        describe('getTradeTakerFee()', () => {
-            before(async () => {
-                await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
-                feeUpdates.tradeTakerFee++;
-            });
-
+        describe('tradeTakerFee()', () => {
             describe('if called with non-existent discount key', () => {
                 it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e15);
-                });
-            });
-
-            describe('if called with existent discount key', () => {
-                it('should get the discounted value', async () => {
-                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 1);
-                    value.toNumber().should.equal(9e14);
+                    (await ethersConfiguration.tradeTakerFee(blockNumber + 1, 0))
+                        ._bn.should.eq.BN(2e15.toString());
                 });
             });
         });
 
         describe('setTradeTakerFee()', () => {
-            describe('if provided with correct parameters and called with sender that is owner', () => {
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
-                    feeUpdates.tradeTakerFee++;
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetTradeTakerFeeEvent');
-                    const value = await web3Configuration.getTradeTakerFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e18);
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setTradeTakerFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called with block number behind the current one', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeTakerFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setTradeTakerFee(
+                        blockNumber, 1e18, [1, 10], [1e17, 2e17]
+                    ).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeTakerFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                it('should revert', async () => {
+                    web3Configuration.setTradeTakerFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17, 3e17]
+                    ).should.be.rejected;
                 });
             });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set new values and emit event', async () => {
+                    const result = await web3Configuration.setTradeTakerFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17]
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetTradeTakerFeeEvent');
+
+                    (await ethersConfiguration.tradeTakerFee(blockNumber + 1, 1))
+                        ._bn.should.eq.BN(9e17.toString());
+                    (await ethersConfiguration.tradeTakerFeesCount())
+                        ._bn.should.eq.BN(2);
+                });
+            })
         });
 
-        describe('getTradeTakerFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getTradeTakerFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.tradeTakerFee);
+        describe('paymentFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.paymentFeesCount())
+                    ._bn.should.eq.BN(1);
             });
         });
 
-        describe('getPaymentFee()', () => {
-            before(async () => {
-                await web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
-                feeUpdates.paymentFee++;
-            });
-
+        describe('paymentFee()', () => {
             describe('if called with non-existent discount key', () => {
                 it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e15);
-                });
-            });
-
-            describe('if called with existent discount key', () => {
-                it('should get the discounted value', async () => {
-                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 1);
-                    value.toNumber().should.equal(9e14);
+                    (await ethersConfiguration.paymentFee(blockNumber + 1, 0))
+                        ._bn.should.eq.BN(1e15.toString());
                 });
             });
         });
 
         describe('setPaymentFee()', () => {
-            describe('if provided with correct parameters and called with sender that is owner', () => {
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setPaymentFee(blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
-                    feeUpdates.paymentFee++;
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetPaymentFeeEvent');
-                    const value = await web3Configuration.getPaymentFee.call(blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e18);
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setPaymentFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called with block number behind the current one', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setPaymentFee(blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setPaymentFee(
+                        blockNumber, 1e18, [1, 10], [1e17, 2e17]
+                    ).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                it('should revert', async () => {
+                    web3Configuration.setPaymentFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17, 3e17]
+                    ).should.be.rejected;
                 });
             });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set new values and emit event', async () => {
+                    const result = await web3Configuration.setPaymentFee(
+                        blockNumber + 1, 1e18, [1, 10], [1e17, 2e17]
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetPaymentFeeEvent');
+
+                    (await ethersConfiguration.paymentFee(blockNumber + 1, 1))
+                        ._bn.should.eq.BN(9e17.toString());
+                    (await ethersConfiguration.paymentFeesCount())
+                        ._bn.should.eq.BN(2);
+                });
+            })
         });
 
-        describe('getPaymentFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getPaymentFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.paymentFee);
+        describe('currencyPaymentFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.currencyPaymentFeesCount(Wallet.createRandom().address, 0))
+                    ._bn.should.eq.BN(0);
             });
         });
 
-        describe('getCurrencyPaymentFee()', () => {
-            let currency;
+        describe('currencyPaymentFee()', () => {
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             beforeEach(async () => {
-                await web3Configuration.setPaymentFee(blockNumberAhead, 1e15, [1, 10], [1e17, 2e17]);
-                await web3Configuration.setCurrencyPaymentFee(currency, blockNumberAhead, 2e15, [1, 10], [1e17, 2e17]);
+                await web3Configuration.setPaymentFee(
+                    blockNumber + 1, 1e15, [1, 10], [1e17, 2e17]
+                );
+                await web3Configuration.setCurrencyPaymentFee(
+                    currencyCt, currencyId, blockNumber + 2, 2e15, [1, 10], [1e17, 2e17]
+                );
             });
 
             describe('if called with non-existent currency', () => {
-                it('should get the currency agnostic value', async () => {
-                    const value = await web3Configuration.getCurrencyPaymentFee.call(Wallet.createRandom().address, blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e15);
+                describe('if called with non-existent currency contract', () => {
+                    it('should get the currency agnostic value', async () => {
+                        (await ethersConfiguration.currencyPaymentFee(
+                            Wallet.createRandom().address, currencyId, blockNumber + 2, 0
+                        ))._bn.should.eq.BN(1e15.toString());
+                    });
+                });
+
+                describe('if called with non-existent currency ID', () => {
+                    it('should get the currency agnostic value', async () => {
+                        (await ethersConfiguration.currencyPaymentFee(currencyCt, 1, blockNumber + 2, 0))
+                            ._bn.should.eq.BN(1e15.toString());
+                    });
                 });
             });
 
             describe('if called with existent currency', () => {
                 describe('if called with non-existent discount key', () => {
                     it('should get the nominal value', async () => {
-                        const value = await web3Configuration.getCurrencyPaymentFee.call(currency, blockNumberAhead, 0);
-                        value.toNumber().should.equal(2e15);
+                        (await ethersConfiguration.currencyPaymentFee(currencyCt, currencyId, blockNumber + 2, 0))
+                            ._bn.should.eq.BN(2e15.toString());
                     });
                 });
 
                 describe('if called with existent discount key', () => {
                     it('should get the discounted value', async () => {
-                        const value = await web3Configuration.getCurrencyPaymentFee.call(currency, blockNumberAhead, 1);
-                        value.toNumber().should.equal(18e14);
+                        (await ethersConfiguration.currencyPaymentFee(currencyCt, currencyId, blockNumber + 2, 1))
+                            ._bn.should.eq.BN(18e14.toString());
                     });
                 });
             });
         });
 
         describe('setCurrencyPaymentFee()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
-            before(() => {
-                currency = Wallet.createRandom().address;
+            before(async () => {
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
-            describe('if provided with correct parameters and called with sender that is owner', () => {
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setCurrencyPaymentFee(currency, blockNumberAhead, 1e18, [1, 10], [1e17, 2e17]);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetCurrencyPaymentFeeEvent');
-                    const value = await web3Configuration.getCurrencyPaymentFee.call(currency, blockNumberAhead, 0);
-                    value.toNumber().should.equal(1e18);
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setCurrencyPaymentFee(
+                        currencyCt, currencyId, blockNumber + 1, 1e15, [1, 10], [1e17, 2e17], {from: glob.user_a}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentFee(currency, blockNumberAhead, 1e15, [1, 10], [1e17, 2e17], {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called with block number behind the current one', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentFee(currency, blockNumberBehind, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumber, 1e18, [1, 10], [1e17, 2e17]).should.be.rejected;
                 });
             });
 
             describe('if lengths of discount keys and values differ', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentFee(currency, blockNumberAhead, 1e15, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                it('should revert', async () => {
+                    web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumber + 1, 1e15, [1, 10], [1e17, 2e17, 3e17]).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set new values and emit event', async () => {
+                    const result = await web3Configuration.setCurrencyPaymentFee(currencyCt, currencyId, blockNumber + 1, 1e18, [1, 10], [1e17, 2e17]);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetCurrencyPaymentFeeEvent');
+
+                    (await ethersConfiguration.currencyPaymentFee(currencyCt, currencyId, blockNumber + 1, 0))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.currencyPaymentFeesCount(currencyCt, currencyId))
+                        ._bn.should.eq.BN(1);
                 });
             });
         });
 
-        describe('getCurrencyPaymentFeesCount()', () => {
-            let currency;
-
-            before(() => {
-                currency = Wallet.createRandom().address;
-            });
-
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getCurrencyPaymentFeesCount.call(currency);
-                value.toNumber().should.equal(0);
+        describe('tradeMakerMinimumFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.tradeMakerMinimumFeesCount())
+                    ._bn.should.eq.BN(1);
             });
         });
 
-        describe('getTradeMakerMinimumFee()', () => {
-            before(async () => {
-                await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14);
-                feeUpdates.tradeMakerMinimumFee++;
-            });
-
-            it('should get the nominal value', async () => {
-                const value = await web3Configuration.getTradeMakerMinimumFee.call(blockNumberAhead);
-                value.toNumber().should.equal(1e14);
+        describe('tradeMakerMinimumFee()', () => {
+            it('should get the initial value', async () => {
+                (await ethersConfiguration.tradeMakerMinimumFee(blockNumber + 1))
+                    ._bn.should.eq.BN(1e14.toString());
             });
         });
 
         describe('setTradeMakerMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e18);
-                    feeUpdates.tradeMakerMinimumFee++;
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setTradeMakerMinimumFee(
+                        blockNumber + 1, 1e14, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setTradeMakerMinimumFee(blockNumber, 1e18)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set new value and emit event', async () => {
+                    const result = await web3Configuration.setTradeMakerMinimumFee(
+                        blockNumber + 1, 1e18
+                    );
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeMakerMinimumFeeEvent');
-                    const value = await web3Configuration.getTradeMakerMinimumFee.call(blockNumberAhead);
-                    value.toNumber().should.equal(1e18);
-                });
-            });
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeMakerMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called with block number behind the current one', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeMakerMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    (await ethersConfiguration.tradeMakerMinimumFee(blockNumber + 1))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.tradeMakerMinimumFeesCount())
+                        ._bn.should.eq.BN(2);
                 });
             });
         });
 
-        describe('getTradeMakerMinimumFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getTradeMakerMinimumFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.tradeMakerMinimumFee);
+        describe('tradeTakerMinimumFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.tradeTakerMinimumFeesCount())
+                    ._bn.should.eq.BN(1);
             });
         });
 
-        describe('getTradeTakerMinimumFee()', () => {
-            before(async () => {
-                await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14);
-                feeUpdates.tradeTakerMinimumFee++;
-            });
-
-            it('should get the nominal value', async () => {
-                const value = await web3Configuration.getTradeTakerMinimumFee.call(blockNumberAhead);
-                value.toNumber().should.equal(1e14);
+        describe('tradeTakerMinimumFee()', () => {
+            it('should get the initial value', async () => {
+                (await ethersConfiguration.tradeTakerMinimumFee(blockNumber + 1))
+                    ._bn.should.eq.BN(2e14.toString());
             });
         });
 
         describe('setTradeTakerMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e18);
-                    feeUpdates.tradeTakerMinimumFee++;
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setTradeTakerMinimumFee(
+                        blockNumber + 1, 1e14, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setTradeTakerMinimumFee(blockNumber, 1e18)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set new value and emit event', async () => {
+                    const result = await web3Configuration.setTradeTakerMinimumFee(
+                        blockNumber + 1, 1e18
+                    );
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeTakerMinimumFeeEvent');
-                    const value = await web3Configuration.getTradeTakerMinimumFee.call(blockNumberAhead);
-                    value.toNumber().should.equal(1e18);
-                });
-            });
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeTakerMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called with block number behind the current one', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setTradeTakerMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    (await ethersConfiguration.tradeTakerMinimumFee(blockNumber + 1))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.tradeTakerMinimumFeesCount())
+                        ._bn.should.eq.BN(2);
                 });
             });
         });
 
-        describe('getTradeTakerMinimumFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getTradeTakerMinimumFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.tradeTakerMinimumFee);
+        describe('paymentMinimumFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.paymentMinimumFeesCount())
+                    ._bn.should.eq.BN(1);
             });
         });
 
-        describe('getPaymentMinimumFee()', () => {
-            before(async () => {
-                await web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e14);
-                feeUpdates.paymentMininumFee++;
-
-            });
-
-            it('should get the nominal value', async () => {
-                const value = await web3Configuration.getPaymentMinimumFee.call(blockNumberAhead);
-                value.toNumber().should.equal(1e14);
+        describe('paymentMinimumFee()', () => {
+            it('should get the initial value', async () => {
+                (await ethersConfiguration.paymentMinimumFee(blockNumber + 1))
+                    ._bn.should.eq.BN(1e14.toString());
             });
         });
 
         describe('setPaymentMinimumFee()', () => {
-            describe('if called with sender that is owner', () => {
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e18);
-                    feeUpdates.paymentMininumFee++;
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setPaymentMinimumFee(
+                        blockNumber + 1, 1e14, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setPaymentMinimumFee(blockNumber, 1e18)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set new value and emit event', async () => {
+                    const result = await web3Configuration.setPaymentMinimumFee(
+                        blockNumber + 1, 1e18
+                    );
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetPaymentMinimumFeeEvent');
-                    const value = await web3Configuration.getPaymentMinimumFee.call(blockNumberAhead);
-                    value.toNumber().should.equal(1e18);
-                });
-            });
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setPaymentMinimumFee(blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called with block number behind the current one', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setPaymentMinimumFee(blockNumberBehind, 1e18).should.be.rejected;
+                    (await ethersConfiguration.paymentMinimumFee(blockNumber + 1))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.paymentMinimumFeesCount())
+                        ._bn.should.eq.BN(2);
                 });
             });
         });
 
-        describe('getPaymentMinimumFeesCount()', () => {
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getPaymentMinimumFeesCount.call();
-                value.toNumber().should.equal(feeUpdates.paymentMininumFee);
+        describe('currencyPaymentMinimumFeesCount()', () => {
+            it('should return the initial value', async () => {
+                (await ethersConfiguration.currencyPaymentMinimumFeesCount(Wallet.createRandom().address, 0))
+                    ._bn.should.eq.BN(0);
             });
         });
 
-        describe('getCurrencyPaymentMinimumFee()', () => {
-            let currency;
+        describe('currencyPaymentMinimumFee()', () => {
+            let currencyCt, currencyId;
 
             before(() => {
-                currency = Wallet.createRandom().address;
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
             beforeEach(async () => {
-                await web3Configuration.setCurrencyPaymentMinimumFee(currency, blockNumberAhead, 1e14);
+                await web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumber + 1, 1e14);
             });
 
             describe('if called with non-existent currency', () => {
-                it('should be reverted', () => {
-                    web3Configuration.getCurrencyPaymentMinimumFee.call(Wallet.createRandom().address, blockNumberAhead, 0).should.be.rejected;
+                describe('if called with non-existent currency contract', () => {
+                    it('should be reverted', () => {
+                        web3Configuration.currencyPaymentMinimumFee.call(
+                            Wallet.createRandom().address, currencyId, blockNumber + 1, 0
+                        ).should.be.rejected;
+                    });
+                });
+
+                describe('if called with non-existent currency ID', () => {
+                    it('should be reverted', () => {
+                        web3Configuration.currencyPaymentMinimumFee.call(
+                            currencyCt, 1, blockNumber + 1, 0
+                        ).should.be.rejected;
+                    });
                 });
             });
 
             describe('if called with existent currency', () => {
-                it('should get the nominal value', async () => {
-                    const value = await web3Configuration.getCurrencyPaymentMinimumFee.call(currency, blockNumberAhead);
-                    value.toNumber().should.equal(1e14);
+                it('should get the initial value', async () => {
+                    (await ethersConfiguration.currencyPaymentMinimumFee(currencyCt, currencyId, blockNumber + 1))
+                        ._bn.should.eq.BN(1e14.toString());
                 });
             });
         });
 
         describe('setCurrencyPaymentMinimumFee()', () => {
-            let currency;
+            let currencyCt, currencyId;
 
-            before(() => {
-                currency = Wallet.createRandom().address;
+            before(async () => {
+                currencyCt = Wallet.createRandom().address;
+                currencyId = 0;
             });
 
-            describe('if called with sender that is owner', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setCurrencyPaymentMinimumFee(
+                        currencyCt, currencyId, blockNumber + 1, 1e14, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with block number below constraints', () => {
+                it('should revert', async () => {
+                    web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumber, 1e18).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setCurrencyPaymentMinimumFee(currency, blockNumberAhead, 1e18);
+                    const result = await web3Configuration.setCurrencyPaymentMinimumFee(currencyCt, currencyId, blockNumber + 1, 1e18);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetCurrencyPaymentMinimumFeeEvent');
-                    const value = await web3Configuration.getCurrencyPaymentMinimumFee.call(currency, blockNumberAhead);
-                    value.toNumber().should.equal(1e18);
-                });
-            });
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentMinimumFee(currency, blockNumberAhead, 1e14, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-
-            describe('if called with block number behind the current one', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setCurrencyPaymentMinimumFee(currency, blockNumberBehind, 1e18).should.be.rejected;
+                    (await ethersConfiguration.currencyPaymentMinimumFee(currencyCt, currencyId, blockNumber + 1))
+                        ._bn.should.eq.BN(1e18.toString());
+                    (await ethersConfiguration.currencyPaymentMinimumFeesCount(currencyCt, currencyId))
+                        ._bn.should.eq.BN(1);
                 });
             });
         });
 
-        describe('getCurrencyPaymentMinimumFeesCount()', () => {
-            let currency;
-
-            before(() => {
-                currency = Wallet.createRandom().address;
-            });
-
-            it('should return the number of block number dependent fee configurations', async () => {
-                const value = await web3Configuration.getCurrencyPaymentMinimumFeesCount.call(currency);
-                value.toNumber().should.equal(0);
-            });
-        });
-
-        describe('getCancelOrderChallengeTimeout()', () => {
-            it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
-                value.toNumber().should.equal(60 * 60 * 3);
+        describe('cancelOrderChallengeTimeout()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersConfiguration.cancelOrderChallengeTimeout())
+                    ._bn.should.eq.BN(60 * 60 * 24 * 3);
             });
         });
 
         describe('setCancelOrderChallengeTimeout()', () => {
-            describe('if called with sender that is owner', () => {
-                let initialValue;
-
-                before(async () => {
-                    initialValue = await web3Configuration.getCancelOrderChallengeTimeout.call();
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setCancelOrderChallengeTimeout(
+                        blockNumber + 1, 100, {from: glob.user_a}
+                    ).should.be.rejected;
                 });
+            });
 
-                after(async () => {
-                    await web3Configuration.setCancelOrderChallengeTimeout(initialValue);
-                });
-
+            describe('if within operational constraints', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setCancelOrderChallengeTimeout(100);
+                    const result = await web3Configuration.setCancelOrderChallengeTimeout(blockNumber + 1, 100);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetCancelOrderChallengeTimeout');
-                    const value = await web3Configuration.getCancelOrderChallengeTimeout.call();
-                    value.toNumber().should.equal(100);
-                });
-            });
+                    result.logs[0].event.should.equal('SetCancelOrderChallengeTimeoutEvent');
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setCancelOrderChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
+                    (await ethersConfiguration.cancelOrderChallengeTimeout())
+                        ._bn.should.eq.BN(100);
                 });
             });
         });
 
-        describe('getDriipSettlementChallengeTimeout()', () => {
-            it('should equal value initialized at construction time', async () => {
-                const value = await web3Configuration.driipSettlementChallengeTimeout.call();
-                value.toNumber().should.equal(60 * 60 * 5);
+        describe('settlementChallengeTimeout()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersConfiguration.settlementChallengeTimeout())
+                    ._bn.should.eq.BN(60 * 60 * 24 * 5);
             });
         });
 
-        describe('setDriipSettlementChallengeTimeout()', () => {
-            describe('if called with sender that is owner', () => {
-                let initialValue;
-
-                before(async () => {
-                    initialValue = await web3Configuration.driipSettlementChallengeTimeout.call();
+        describe('setSettlementChallengeTimeout()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setSettlementChallengeTimeout(
+                        blockNumber + 1, 100, {from: glob.user_a}
+                    ).should.be.rejected;
                 });
+            });
 
-                after(async () => {
-                    await web3Configuration.setDriipSettlementChallengeTimeout(initialValue);
-                });
-
+            describe('if within operational constraints', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDriipSettlementChallengeTimeout(100);
+                    const result = await web3Configuration.setSettlementChallengeTimeout(
+                        blockNumber + 1, 100
+                    );
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDriipSettlementChallengeTimeout');
-                    const value = await web3Configuration.driipSettlementChallengeTimeout.call();
-                    value.toNumber().should.equal(100);
-                });
-            });
+                    result.logs[0].event.should.equal('SetSettlementChallengeTimeoutEvent');
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setDriipSettlementChallengeTimeout(100, {from: glob.user_a}).should.be.rejected;
+                    (await ethersConfiguration.settlementChallengeTimeout())
+                        ._bn.should.eq.BN(100);
                 });
             });
         });
 
-        describe('getUnchallengeOrderCandidateByTradeStake()', () => {
-            it('should equal values initialized at construction time', async () => {
-                const values = await web3Configuration.getUnchallengeOrderCandidateByTradeStake.call();
-                values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal(address0);
-                values[1].toNumber().should.equal(0);
+        describe('walletSettlementStakeFraction()', () => {
+            it('should return initial value', async () => {
+                (await ethersConfiguration.walletSettlementStakeFraction())
+                    ._bn.should.eq.BN(1e17.toString());
             });
         });
 
-        describe('setUnchallengeOrderCandidateByTradeStake()', () => {
-            let currency;
-
-            before(() => {
-                currency = Wallet.createRandom().address;
+        describe('setWalletSettlementStakeFraction()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setWalletSettlementStakeFraction(blockNumber + 1, 1e18, {from: glob.user_a})
+                        .should.be.rejected;
+                });
             });
 
-            describe('if called with sender that is owner', () => {
-                let initialValues;
-
-                before(async () => {
-                    initialValues = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
-                });
-
-                after(async () => {
-                    await web3Configuration.setUnchallengeOrderCandidateByTradeStake(initialValues[0], initialValues[1]);
-                });
-
+            describe('if within operational constraints', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setUnchallengeOrderCandidateByTradeStake(currency, 1e18);
+                    const result = await web3Configuration.setWalletSettlementStakeFraction(blockNumber + 1, 1e18);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetUnchallengeDriipSettlementOrderByTradeStakeEvent');
-                    const values = await web3Configuration.unchallengeOrderCandidateByTradeStake.call();
-                    utils.getAddress(values[0]).should.equal(currency);
-                    values[1].toNumber().should.equal(1e18);
-                });
-            });
+                    result.logs[0].event.should.equal('SetWalletSettlementStakeFractionEvent');
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setUnchallengeOrderCandidateByTradeStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    (await ethersConfiguration.walletSettlementStakeFraction())
+                        ._bn.should.eq.BN(1e18.toString());
                 });
             });
         });
 
-        describe('getFalseWalletSignatureStake()', () => {
-            it('should equal values initialized at construction time', async () => {
-                const values = await web3Configuration.getFalseWalletSignatureStake.call();
-                values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal(address0);
-                values[1].toNumber().should.equal(0);
+        describe('operatorSettlementStakeFraction()', () => {
+            it('should return initial value', async () => {
+                (await ethersConfiguration.operatorSettlementStakeFraction())
+                    ._bn.should.eq.BN(5e17.toString());
             });
         });
 
-        describe('setFalseWalletSignatureStake()', () => {
-            let currency;
-
-            before(() => {
-                currency = Wallet.createRandom().address;
+        describe('setOperatorSettlementStakeFraction()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setOperatorSettlementStakeFraction(blockNumber + 1, 1e18, {from: glob.user_a})
+                        .should.be.rejected;
+                });
             });
 
-            describe('if called with sender that is owner', () => {
-                let initialValues;
-
-                before(async () => {
-                    initialValues = await web3Configuration.falseWalletSignatureStake.call();
-                });
-
-                after(async () => {
-                    await web3Configuration.setFalseWalletSignatureStake(initialValues[0], initialValues[1]);
-                });
-
+            describe('if within operational constraints', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setFalseWalletSignatureStake(currency, 1e18);
+                    const result = await web3Configuration.setOperatorSettlementStakeFraction(blockNumber + 1, 1e18);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetFalseWalletSignatureStakeEvent');
-                    const values = await web3Configuration.falseWalletSignatureStake.call();
-                    utils.getAddress(values[0]).should.equal(currency);
-                    values[1].toNumber().should.equal(1e18);
-                });
-            });
+                    result.logs[0].event.should.equal('SetOperatorSettlementStakeFractionEvent');
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setFalseWalletSignatureStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    (await ethersConfiguration.operatorSettlementStakeFraction())
+                        ._bn.should.eq.BN(1e18.toString());
                 });
             });
         });
 
-        describe('getDuplicateDriipNonceStake()', () => {
-            it('should equal values initialized at construction time', async () => {
-                const values = await web3Configuration.getDuplicateDriipNonceStake.call();
-                values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal(address0);
-                values[1].toNumber().should.equal(0);
+        describe('fraudStakeFraction()', () => {
+            it('should return initial value', async () => {
+                (await ethersConfiguration.fraudStakeFraction())
+                    ._bn.should.eq.BN(5e17.toString());
             });
         });
 
-        describe('setDuplicateDriipNonceStake()', () => {
-            let currency;
-
-            before(() => {
-                currency = Wallet.createRandom().address;
+        describe('setFraudStakeFraction()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3Configuration.setFraudStakeFraction(blockNumber + 1, 1e18, {from: glob.user_a})
+                        .should.be.rejected;
+                });
             });
 
-            describe('if called with sender that is owner', () => {
-                let initialValues;
-
-                before(async () => {
-                    initialValues = await web3Configuration.duplicateDriipNonceStake.call();
-                });
-
-                after(async () => {
-                    await web3Configuration.setDuplicateDriipNonceStake(initialValues[0], initialValues[1]);
-                });
-
+            describe('if within operational constraints', () => {
                 it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDuplicateDriipNonceStake(currency, 1e18);
+                    const result = await web3Configuration.setFraudStakeFraction(blockNumber + 1, 1e18);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDuplicateDriipNonceStakeEvent');
-                    const values = await web3Configuration.duplicateDriipNonceStake.call();
-                    utils.getAddress(values[0]).should.equal(currency);
-                    values[1].toNumber().should.equal(1e18);
-                });
-            });
+                    result.logs[0].event.should.equal('SetFraudStakeFractionEvent');
 
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setDuplicateDriipNonceStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
-                });
-            });
-        });
-
-        describe('getDoubleSpentOrderStake()', () => {
-            it('should equal values initialized at construction time', async () => {
-                const values = await web3Configuration.getDoubleSpentOrderStake.call();
-                values.should.be.an('array').and.have.lengthOf(2);
-                values[0].should.equal(address0);
-                values[1].toNumber().should.equal(0);
-            });
-        });
-
-        describe('setDoubleSpentOrderStake()', () => {
-            let currency;
-
-            before(() => {
-                currency = Wallet.createRandom().address;
-            });
-
-            describe('if called with sender that is owner', () => {
-                let initialValues;
-
-                before(async () => {
-                    initialValues = await web3Configuration.doubleSpentOrderStake.call();
-                });
-
-                after(async () => {
-                    await web3Configuration.setDoubleSpentOrderStake(initialValues[0], initialValues[1]);
-                });
-
-                it('should successfully set new values and emit event', async () => {
-                    const result = await web3Configuration.setDoubleSpentOrderStake(currency, 1e18);
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDoubleSpentOrderStakeEvent');
-                    const values = await web3Configuration.doubleSpentOrderStake.call();
-                    utils.getAddress(values[0]).should.equal(currency);
-                    values[1].toNumber().should.equal(1e18);
-                });
-            });
-
-            describe('if called with sender that is not owner', () => {
-                it('should fail to set new values', async () => {
-                    web3Configuration.setDoubleSpentOrderStake(currency, 1e18, {from: glob.user_a}).should.be.rejected;
+                    (await ethersConfiguration.fraudStakeFraction())
+                        ._bn.should.eq.BN(1e18.toString());
                 });
             });
         });

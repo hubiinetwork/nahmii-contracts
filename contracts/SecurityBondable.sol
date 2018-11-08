@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -9,15 +9,13 @@
 pragma solidity ^0.4.24;
 
 import {Ownable} from "./Ownable.sol";
-import {Modifiable} from "./Modifiable.sol";
 import {SecurityBond} from "./SecurityBond.sol";
 
 /**
 @title SecurityBondable
 @notice An ownable that has a security bond property
 */
-contract SecurityBondable is Ownable, Modifiable {
-
+contract SecurityBondable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -26,20 +24,30 @@ contract SecurityBondable is Ownable, Modifiable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
+    event ChangeSecurityBondEvent(SecurityBond oldAddress, SecurityBond newAddress);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Change the security bond contract
-    /// @param newSecurityBond The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newSecurityBond)
-    public
-    onlyOwner
-    notNullAddress(newSecurityBond)
+    /// @param newAddress The (address of) SecurityBond contract instance
+    function changeSecurityBond(SecurityBond newAddress) public onlyDeployer
+        notNullAddress(newAddress)
+        notSameAddresses(newAddress, securityBond)
     {
-        SecurityBond oldSecurityBond = securityBond;
-        securityBond = newSecurityBond;
-        emit ChangeSecurityBondEvent(oldSecurityBond, securityBond);
+        //set new security bond
+        SecurityBond oldAddress = securityBond;
+        securityBond = newAddress;
+
+        // Emit event
+        emit ChangeSecurityBondEvent(oldAddress, newAddress);
+    }
+
+    //
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
+    modifier securityBondInitialized() {
+        require(securityBond != address(0));
+        _;
     }
 }

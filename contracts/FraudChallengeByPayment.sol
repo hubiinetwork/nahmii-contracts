@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -11,27 +11,28 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Configurable} from "./Configurable.sol";
+import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
-import {Types} from "./Types.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title FraudChallengeByPayment
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
-contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Validatable, SecurityBondable, ClientFundable {
-
+contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Validatable,
+SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByPaymentEvent(Types.Payment payment, address challenger, address seizedWallet);
+    event ChallengeByPaymentEvent(bytes32 paymentHash, address challenger,
+        address seizedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) FraudChallengable(owner) public {
+    constructor(address owner) Ownable(owner) public {
     }
 
     //
@@ -39,10 +40,11 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challenge(Types.Payment payment)
+    function challenge(NahmiiTypesLib.Payment payment)
     public
+    onlyOperationalModeNormal
     validatorInitialized
-    onlyExchangeSealedPayment(payment)
+    onlyOperatorSealedPayment(payment)
     {
         require(fraudChallenge != address(0));
         require(configuration != address(0));
@@ -52,7 +54,9 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
         require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
-        bool genuineWalletSignature = Types.isGenuineSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
+        bool genuineWalletSignature = validator.isGenuineWalletSignature(
+            payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet
+        );
 
         // Genuineness affected by sender
         bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&
@@ -64,23 +68,19 @@ contract FraudChallengeByPayment is Ownable, FraudChallengable, Configurable, Va
         require(!genuineWalletSignature || !genuineSenderAndFee || !genuineRecipient);
 
         configuration.setOperationalModeExit();
-        fraudChallenge.addFraudulentPayment(payment);
+        fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
-        if (!genuineWalletSignature) {
-            (address stakeCurrency, int256 stakeAmount) = configuration.getFalseWalletSignatureStake();
-            securityBond.stage(stakeAmount, stakeCurrency, msg.sender);
-        } else {
-            address seizedWallet;
-            if (!genuineSenderAndFee)
-                seizedWallet = payment.sender.wallet;
-            if (!genuineRecipient)
-                seizedWallet = payment.recipient.wallet;
-            if (address(0) != seizedWallet) {
-                clientFund.seizeDepositedAndSettledBalances(seizedWallet, msg.sender);
-                fraudChallenge.addSeizedWallet(seizedWallet);
-            }
-        }
+        // Reward stake fraction
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        emit ChallengeByPaymentEvent(payment, msg.sender, seizedWallet);
+        address seizedWallet;
+        if (!genuineSenderAndFee)
+            seizedWallet = payment.sender.wallet;
+        if (!genuineRecipient)
+            seizedWallet = payment.recipient.wallet;
+        if (address(0) != seizedWallet)
+            clientFund.seizeAllBalances(seizedWallet, msg.sender);
+
+        emit ChallengeByPaymentEvent(payment.seals.operator.hash, msg.sender, seizedWallet);
     }
 }

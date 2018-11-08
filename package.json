@@ -1,35 +1,49 @@
 {
-  "name": "omphalos-exchange-smart-contracts",
+  "name": "nahmii-contracts",
   "version": "1.0.0",
-  "description": "Smart Contracts for Hubii Omphalos",
+  "description": "Smart Contracts for Nahmii",
   "main": "truffle.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "build": "truffle compile --all",
-    "test": "node run_tests.js",
+    "build": "truffle compile",
+    "build:all": "truffle compile --all",
+    "test": "concurrently -r -s first --kill-others 'ganache-cli -e 1000 >/dev/null' 'truffle compile && truffle test'",
     "deploy": "npm run deploy:test",
     "deploy:test": "truffle migrate --network testnet",
     "deploy:main": "truffle migrate --network mainnet",
+    "deploy:ganache": "truffle compile && truffle migrate --network ganache",
     "deploy:ci": "truffle migrate",
+    "exec:script:mainnet": "truffle compile && truffle exec scripts/common/script_template.js --network mainnet-infura",
+    "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
+    "docs": "soldoc",
     "version:compiler": "solcjs --version"
   },
   "author": "Hubii",
-  "license": "Commercial",
+  "license": "LGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hubiinetwork/nahmii-contracts.git"
+  },
   "dependencies": {
     "async": "^2.6.0",
     "augmented-keccak256": "git+https://github.com/CoinFabrik/augmented-keccak256.git",
     "ethers": "^3.0.7",
     "ganache-cli": "^6.1.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
-    "truffle": "^4.1.11"
+    "openzeppelin-solidity": "^2.0.0",
+    "truffle": "^4.1.11",
+    "truffle-hdwallet-provider": "0.0.6"
   },
   "devDependencies": {
     "bluebird": "^3.5.1",
+    "bn-chai": "^1.0.1",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
+    "concurrently": "^4.0.1",
     "ethereumjs-util": "^5.2.0",
+    "mocha-teamcity-reporter": "^2.5.0",
     "sinon": "^5.0.1",
     "sinon-chai": "^3.0.0",
     "solhint": "^1.1.10"

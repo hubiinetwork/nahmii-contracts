@@ -1,623 +1,638 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
-import {Ownable} from "./Ownable.sol";
-import {ERC20} from "./ERC20.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
-import {ReserveFund} from "./ReserveFund.sol";
-import {Servable} from "./Servable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {AuthorizableServable} from "./AuthorizableServable.sol";
+import {Ownable} from "./Ownable.sol";
+import {TransferControllerManageable} from "./TransferControllerManageable.sol";
+import {TransferController} from "./TransferController.sol";
+import {BalanceLib} from "./BalanceLib.sol";
+import {BalanceLogLib} from "./BalanceLogLib.sol";
+import {TxHistoryLib} from "./TxHistoryLib.sol";
+import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 */
-contract ClientFund is Ownable, Beneficiary, Benefactor, Servable, SelfDestructible {
-    using SafeMathInt for int256;
+contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
+    using BalanceLib for BalanceLib.Balance;
+    using BalanceLogLib for BalanceLogLib.BalanceLog;
+    using TxHistoryLib for TxHistoryLib.TxHistory;
+    using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
+    using SafeMathIntLib for int256;
 
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public reserveFundGetFromDepositedAction = "reserve_fund_get_from_deposited_action";
-    string constant public reserveFundAddToStagedAction = "reserve_fun_add_to_stage_action";
+    string constant public DEPOSITED_BALANCE_TYPE = "deposited";
+    string constant public SETTLED_BALANCE_TYPE = "settled";
+    string constant public STAGED_BALANCE_TYPE = "staged";
 
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct DepositInfo {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
-    }
+    struct Wallet {
+        BalanceLib.Balance deposited;
+        BalanceLib.Balance staged;
+        BalanceLib.Balance settled;
+        BalanceLogLib.BalanceLog active;
 
-    struct WithdrawalInfo {
-        int256 amount;
-        uint256 timestamp;
-        address token;      //0 for ethers
-    }
+        TxHistoryLib.TxHistory txHistory;
 
-    struct WalletInfo {
-        DepositInfo[] deposits;
-        WithdrawalInfo[] withdrawals;
-
-        // Deposited balance of ethers and tokens.
-        int256 depositedEtherBalance;
-        mapping(address => int256) depositedTokenBalance;
-
-        // Staged balance of ethers and tokens.
-        int256 stagedEtherBalance;
-        mapping(address => int256) stagedTokenBalance;
-
-        // Settled balance of ethers and tokens.
-        int256 settledEtherBalance;
-        mapping(address => int256) settledTokenBalance;
-
-        address[] inUseTokenList;
-        mapping(address => bool) inUseTokenMap;
+        InUseCurrencyLib.InUseCurrency inUseCurrencies;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => WalletInfo) private walletInfoMap;
+    mapping(address => Wallet) private walletMap;
 
-    uint256 public serviceActivationTimeout;
-    mapping(address => uint256) private registeredServicesMap;
-    mapping(address => mapping(address => bool)) private disabledServicesMap;
+    address[] public seizedWallets;
+    mapping(address => bool) public seizuresByWallet;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event DepositEvent(address from, int256 amount, address token); //token==0 for ethers
-    event TransferFromDepositedToSettledBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
-    event WithdrawFromDepositedBalanceEvent(address from, address to, int256 amount, address token); //token==0 for ethers
-    event DepositToSettledBalance(address to, int256 amount, address token); //token==0 for ethers
-    event StageEvent(address from, int256 amount, address token); //token==0 for ethers
-    event StageToEvent(address from, int256 amount, address token, address beneficiary); //token==0 for ethers
-    event UnstageEvent(address from, int256 amount, address token); //token==0 for ethers
-    event SeizeDepositedAndSettledBalancesEvent(address sourceWallet, address targetWallet);
-    event WithdrawEvent(address to, int256 amount, address token);  //token==0 for ethers
-    event RegisterServiceEvent(address service);
-    event EnableRegisteredServiceEvent(address wallet, address service);
-    event DisableRegisteredServiceEvent(address wallet, address service);
+    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard);
+    event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
+    event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event UnstageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 amount, address currencyCt,
+        uint256 currencyId);
+    event StageToBeneficiaryUntargetedEvent(address sourceWallet, address beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId);
+    event SeizeAllBalancesEvent(address sourceWallet, address targetWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) Beneficiary() Benefactor() public {
+    constructor(address owner) Ownable(owner) Beneficiary() Benefactor()
+    public
+    {
         serviceActivationTimeout = 1 weeks;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setServiceActivationTimeout(uint256 timeoutInSeconds) public onlyOwner {
-        serviceActivationTimeout = timeoutInSeconds;
+    /// @notice Fallback function that deposits ethers to msg.sender's deposited balance
+    function()
+    public
+    payable
+    {
+        receiveEthersTo(msg.sender, DEPOSITED_BALANCE_TYPE);
     }
 
-    //
-    // Deposit functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function() public payable {
-        receiveEthers(msg.sender);
+    /// @notice Deposit ethers to the given wallet's deposited balance
+    /// @param wallet The address of the concerned wallet
+    /// @param balanceType The target balance ty
+    function receiveEthersTo(address wallet, string balanceType)
+    public
+    payable
+    {
+        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
+
+        if (0 == bytes(balanceType).length)
+            balanceType = DEPOSITED_BALANCE_TYPE;
+
+        bytes32 balanceHash = keccak256(abi.encodePacked(balanceType));
+
+        if (keccak256(abi.encodePacked(STAGED_BALANCE_TYPE)) == balanceHash)
+            walletMap[wallet].staged.add(amount, address(0), 0);
+
+        else if (keccak256(abi.encodePacked(DEPOSITED_BALANCE_TYPE)) == balanceHash) {
+            // Add to per-wallet deposited balance
+            walletMap[wallet].deposited.add(amount, address(0), 0);
+            walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
+
+            // Add active balance log entry
+            walletMap[wallet].active.add(activeBalance(wallet, address(0), 0), address(0), 0);
+
+        } else
+            revert();
+
+        // Add currency to in-use list
+        walletMap[wallet].inUseCurrencies.addItem(address(0), 0);
+
+        // Emit event
+        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0, "");
     }
 
-    function receiveEthers(address wallet) public payable {
-        int256 amount = SafeMathInt.toNonZeroInt256(msg.value);
-
-        //add to per-wallet deposited balance
-        walletInfoMap[wallet].depositedEtherBalance = walletInfoMap[wallet].depositedEtherBalance.add_nn(amount);
-        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, address(0)));
-
-        //emit event
-        emit DepositEvent(wallet, amount, address(0));
+    /// @notice Receive token to msg.sender's given balance
+    /// @dev The wallet must approve of this ClientFund's transfer prior to calling this function
+    /// @param balanceType The target balance type
+    /// @param amount The amount to deposit
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of token ("ERC20", "ERC721")
+    function receiveTokens(string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
+    public
+    {
+        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function depositTokens(address token, int256 amount) public {
-        receiveTokens(msg.sender, amount, token);
-    }
-
-    //NOTE: 'wallet' must call ERC20.approve first
-    function receiveTokens(address wallet, int256 amount, address token) public {
-
-        require(token != address(0));
+    /// @notice Receive token to the given wallet's given balance
+    /// @dev The wallet must approve of this ClientFund's transfer prior to calling this function
+    /// @param wallet The address of the concerned wallet
+    /// @param balanceType The target balance type
+    /// @param amount The amount to deposit
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of the token ("ERC20", "ERC721")
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
+    public
+    {
         require(amount.isNonZeroPositiveInt256());
 
-        //try to execute token transfer
-        ERC20 erc20 = ERC20(token);
-        require(erc20.transferFrom(wallet, this, uint256(amount)));
+        // Execute transfer
+        TransferController controller = getTransferController(currencyCt, standard);
+        require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
-        //add to per-wallet deposited balance
-        walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].add_nn(amount);
-        walletInfoMap[wallet].deposits.push(DepositInfo(amount, block.timestamp, token));
+        if (0 == bytes(balanceType).length)
+            balanceType = DEPOSITED_BALANCE_TYPE;
 
-        //add token to in-use list
-        if (!walletInfoMap[wallet].inUseTokenMap[token]) {
-            walletInfoMap[wallet].inUseTokenMap[token] = true;
-            walletInfoMap[wallet].inUseTokenList.push(token);
-        }
+        bytes32 balanceHash = keccak256(abi.encodePacked(balanceType));
 
-        //emit event
-        emit DepositEvent(wallet, amount, token);
+        if (keccak256(abi.encodePacked(STAGED_BALANCE_TYPE)) == balanceHash)
+            walletMap[wallet].staged.add(amount, currencyCt, currencyId);
+
+        else if (keccak256(abi.encodePacked(DEPOSITED_BALANCE_TYPE)) == balanceHash) {
+            // Add to per-wallet deposited balance
+            walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
+            walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
+
+            // Add active balance log entry
+            walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+
+        } else
+            revert();
+
+        // Add currency to in-use list
+        walletMap[wallet].inUseCurrencies.addItem(currencyCt, currencyId);
+
+        // Emit event
+        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function deposit(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
-        require(index < walletInfoMap[wallet].deposits.length);
-
-        amount = walletInfoMap[wallet].deposits[index].amount;
-        timestamp = walletInfoMap[wallet].deposits[index].timestamp;
-        token = walletInfoMap[wallet].deposits[index].token;
+    /// @notice Get metadata of the given wallet's deposit at the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param index The index of wallet's deposit
+    /// @return The deposit metadata
+    function deposit(address wallet, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
+        return walletMap[wallet].txHistory.deposit(index);
     }
 
-    function depositCount(address wallet) public view onlyOwner returns (uint256) {
-        return walletInfoMap[wallet].deposits.length;
+    /// @notice Get the count of the given wallet's deposits
+    /// @param wallet The address of the concerned wallet
+    /// @return The count of the concerned wallet's deposits
+    function depositsCount(address wallet) public view returns (uint256) {
+        return walletMap[wallet].txHistory.depositsCount();
     }
 
-    //
-    // Balance functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function depositedBalance(address wallet, address token) public view returns (int256) {
-        require(wallet != address(0));
-
-        return token == address(0) ? walletInfoMap[wallet].depositedEtherBalance : walletInfoMap[wallet].depositedTokenBalance[token];
+    /// @notice Get metadata of the given wallet's deposit in the given currency at the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param index The index of wallet's deposit in the given currency
+    /// @return The deposit metadata
+    function depositOfCurrency(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        return walletMap[wallet].txHistory.currencyDeposit(currencyCt, currencyId, index);
     }
 
-    function stagedBalance(address wallet, address token) public view returns (int256) {
-        require(wallet != address(0));
-
-        return token == address(0) ? walletInfoMap[wallet].stagedEtherBalance : walletInfoMap[wallet].stagedTokenBalance[token];
+    /// @notice Get the count of the given wallet's deposits in the given currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of the concerned wallet's deposits in the given currency
+    function depositsOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return walletMap[wallet].txHistory.currencyDepositsCount(currencyCt, currencyId);
     }
 
-    function settledBalance(address wallet, address token) public view returns (int256) {
-        require(wallet != address(0));
-
-        return token == address(0) ? walletInfoMap[wallet].settledEtherBalance : walletInfoMap[wallet].settledTokenBalance[token];
+    /// @notice Get deposited balance of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The deposited balance of the concerned wallet and currency
+    function depositedBalance(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        return walletMap[wallet].deposited.get(currencyCt, currencyId);
     }
 
-    //
-    // Transfers functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function transferFromDepositedToSettledBalance(address sourceWallet, address destWallet, int256 amount, address token) public notOwner {
-        require(isAcceptedServiceForWallet(msg.sender, sourceWallet));
-        require(isAcceptedServiceForWallet(msg.sender, destWallet));
-        require(sourceWallet != address(0));
-        require(destWallet != address(0));
-        require(sourceWallet != destWallet);
-        require(SafeMathInt.isNonZeroPositiveInt256(amount));
-
-        if (token == address(0)) {
-            //move from deposited balance to settled (sub_nn will check for sufficient balance)
-            walletInfoMap[sourceWallet].depositedEtherBalance = walletInfoMap[sourceWallet].depositedEtherBalance.sub_nn(amount);
-            walletInfoMap[destWallet].settledEtherBalance = walletInfoMap[destWallet].stagedEtherBalance.add(amount);
-        } else {
-            //move from deposited balance to settled (sub_nn will check for sufficient balance)
-            walletInfoMap[sourceWallet].depositedTokenBalance[token] = walletInfoMap[sourceWallet].depositedTokenBalance[token].sub_nn(amount);
-            walletInfoMap[destWallet].settledTokenBalance[token] = walletInfoMap[destWallet].settledTokenBalance[token].add(amount);
-        }
-
-        //emit event
-        emit TransferFromDepositedToSettledBalanceEvent(sourceWallet, destWallet, amount, token);
+    /// @notice Get settled balance of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The settled balance of the concerned wallet and currency
+    function settledBalance(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        return walletMap[wallet].settled.get(currencyCt, currencyId);
     }
 
-    function withdrawFromDepositedBalance(address sourceWallet, address destWallet, int256 amount, address token) public notOwner {
-        require(isAcceptedServiceForWallet(msg.sender, sourceWallet));
-        require(isAcceptedServiceForWallet(msg.sender, destWallet));
-        require(sourceWallet != address(0));
-        require(destWallet != address(0));
-        require(sourceWallet != destWallet);
+    /// @notice Get staged balance of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The staged balance of the concerned wallet and currency
+    function stagedBalance(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        return walletMap[wallet].staged.get(currencyCt, currencyId);
+    }
+
+    /// @notice Get active balance (sum of deposited and settled balances) of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The active balance of the concerned wallet and currency
+    function activeBalance(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        return walletMap[wallet].deposited.get(currencyCt, currencyId)
+        .add(walletMap[wallet].staged.get(currencyCt, currencyId));
+    }
+
+    /// @notice Get active balance log entry of the given wallet and currency at the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param index The index of wallet's active balance log entry in the given currency
+    /// @return The active balance log entry of the concerned wallet and currency
+    function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        return walletMap[wallet].active.get(currencyCt, currencyId, index);
+    }
+
+    /// @notice Get the count of entries of the given wallet's active balance log in the given currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of the concerned wallet's active balance log entries in the given currency
+    function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return walletMap[wallet].active.count(currencyCt, currencyId);
+    }
+
+    /// @notice Update the settled balance by the difference between provided amount and deposited on-chain balance
+    /// @param wallet The address of the concerned wallet
+    /// @param amount The off-chain balance amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    public
+    onlyRegisteredActiveService
+    notNullAddress(wallet)
+    {
+        require(isAuthorizedRegisteredService(msg.sender, wallet));
+        require(amount.isPositiveInt256());
+
+        int256 settledBalanceAmount = amount.sub(walletMap[wallet].deposited.get(currencyCt, currencyId));
+        walletMap[wallet].settled.set(settledBalanceAmount, currencyCt, currencyId);
+
+        // Emit event
+        emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
+    }
+
+    /// @notice Stage the amount for subsequent withdrawal
+    /// @param wallet The address of the concerned wallet
+    /// @param amount The concerned amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    public
+    onlyRegisteredActiveService
+    {
+        require(isAuthorizedRegisteredService(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
-        if (token == address(0)) {
-            //(sub_nn will check for sufficient balance)
-            walletInfoMap[sourceWallet].depositedEtherBalance = walletInfoMap[sourceWallet].depositedEtherBalance.sub_nn(amount);
+        // Subtract stage amount from settled, possibly also from deposited
+        stageSubtract(wallet, amount, currencyCt, currencyId);
 
-            //execute transfer
-            destWallet.transfer(uint256(amount));
-        } else {
-            //(sub_nn will check for sufficient balance)
-            walletInfoMap[sourceWallet].depositedTokenBalance[token] = walletInfoMap[sourceWallet].depositedTokenBalance[token].sub_nn(amount);
+        // Add active balance log entry
+        walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
 
-            //execute transfer
-            ERC20 erc20 = ERC20(token);
-            erc20.transfer(destWallet, uint256(amount));
-        }
+        // Add to staged
+        walletMap[wallet].staged.add(amount, currencyCt, currencyId);
 
-        //emit event
-        emit WithdrawFromDepositedBalanceEvent(sourceWallet, destWallet, amount, token);
+        // Emit event
+        emit StageEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function depositEthersToSettledBalance(address destWallet) public payable notOwner {
+    /// @notice Unstage a staged amount
+    /// @param amount The concerned balance amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function unstage(int256 amount, address currencyCt, uint256 currencyId)
+    public
+    notDeployer
+    {
+        require(amount.isNonZeroPositiveInt256());
+
+        // Clamp amount to move
+        amount = amount.clampMax(walletMap[msg.sender].staged.get(currencyCt, currencyId));
+        if (amount == 0)
+            return;
+
+        // Move from staged balance to deposited
+        walletMap[msg.sender].staged.transfer(walletMap[msg.sender].deposited, amount, currencyCt, currencyId);
+
+        // Add active balance log entry
+        walletMap[msg.sender].active.add(activeBalance(msg.sender, currencyCt, currencyId), currencyCt, currencyId);
+
+        // Emit event
+        emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
+    }
+
+    /// @notice Stage the amount from msg.sender to the given beneficiary and targeted to msg.sender
+    /// @param beneficiary The (address of) concerned beneficiary contract
+    /// @param amount The concerned amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
+    public
+    notDeployer
+    {
+        stageToBeneficiaryPrivate(msg.sender, msg.sender, beneficiary, amount, currencyCt, currencyId);
+
+        // Emit event
+        emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
+    }
+
+    /// @notice Stage the amount from the given source wallet to the given beneficiary without target wallet
+    /// @param sourceWallet The address of concerned source wallet
+    /// @param beneficiary The (address of) concerned beneficiary contract
+    /// @param amount The concerned amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId)
+    public
+    notNullAddress(sourceWallet)
+    notNullAddress(beneficiary)
+    {
+        require(isAuthorizedRegisteredService(msg.sender, sourceWallet));
+
+        stageToBeneficiaryPrivate(sourceWallet, address(0), beneficiary, amount, currencyCt, currencyId);
+
+        // Emit event
+        emit StageToBeneficiaryUntargetedEvent(sourceWallet, beneficiary, amount, currencyCt, currencyId);
+    }
+
+    /// @notice Transfer all balances of the given source wallet to the given target wallet
+    /// @param sourceWallet The address of concerned source wallet
+    /// @param targetWallet The address of concerned target wallet
+    function seizeAllBalances(address sourceWallet, address targetWallet)
+    public
+    notNullAddress(sourceWallet)
+    notNullAddress(targetWallet)
+    {
+        require(isAuthorizedRegisteredService(msg.sender, sourceWallet));
+
+        // Seize all balances
+        uint256 len = walletMap[sourceWallet].inUseCurrencies.getLength();
         int256 amount;
+        for (uint256 i = 0; i < len; i++) {
+            MonetaryTypesLib.Currency memory currency = walletMap[sourceWallet].inUseCurrencies.getAt(i);
 
-        require(isAcceptedServiceForWallet(msg.sender, destWallet));
-        require(destWallet != address(0));
-        amount = SafeMathInt.toNonZeroInt256(msg.value);
-
-        //add to per-wallet staged balance
-        walletInfoMap[destWallet].settledEtherBalance = walletInfoMap[destWallet].settledEtherBalance.add_nn(amount);
-
-        //emit event
-        emit DepositToSettledBalance(destWallet, amount, address(0));
-    }
-
-    //NOTE: msg.sender must call ERC20.approve first
-    function depositTokensToSettledBalance(address destWallet, address token, int256 amount) public notOwner {
-        require(isAcceptedServiceForWallet(msg.sender, destWallet));
-        require(destWallet != address(0));
-        require(amount.isNonZeroPositiveInt256());
-
-        //add to per-wallet settled balance
-        walletInfoMap[destWallet].settledTokenBalance[token] = walletInfoMap[destWallet].settledTokenBalance[token].add_nn(amount);
-
-        //add token to in-use list
-        if (!walletInfoMap[destWallet].inUseTokenMap[token]) {
-            walletInfoMap[destWallet].inUseTokenMap[token] = true;
-            walletInfoMap[destWallet].inUseTokenList.push(token);
-        }
-
-        //try to execute token transfer
-        ERC20 erc20 = ERC20(token);
-        require(erc20.transferFrom(msg.sender, destWallet, uint256(amount)));
-
-        //emit event
-        emit DepositToSettledBalance(destWallet, amount, token);
-    }
-
-    function stage(int256 amount, address token) public notOwner {
-        int256 amount_copy;
-        int256 to_move;
-
-        require(amount.isPositiveInt256());
-
-        if (token == address(0)) {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[msg.sender].depositedEtherBalance.add(walletInfoMap[msg.sender].settledEtherBalance));
-            if (amount <= 0)
-                return;
-
-            amount_copy = amount;
-
-            //move from settled balance to staged, if balance greater than zero
-            if (walletInfoMap[msg.sender].settledEtherBalance > 0) {
-                to_move = amount.clampMax(walletInfoMap[msg.sender].settledEtherBalance);
-
-                walletInfoMap[msg.sender].settledEtherBalance = walletInfoMap[msg.sender].settledEtherBalance.sub(to_move);
-                amount = amount.sub(to_move);
-            }
-
-            //move (remaining) from deposited balance to staged
-            walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.sub_nn(amount);
-
-            //add to staged balance
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.add_nn(amount_copy);
-        } else {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[msg.sender].depositedTokenBalance[token].add(walletInfoMap[msg.sender].settledTokenBalance[token]));
-            if (amount <= 0)
-                return;
-
-            amount_copy = amount;
-
-            //move from settled balance to staged, if balance greater than zero
-            if (walletInfoMap[msg.sender].settledTokenBalance[token] > 0) {
-                to_move = amount.clampMax(walletInfoMap[msg.sender].settledTokenBalance[token]);
-
-                walletInfoMap[msg.sender].settledTokenBalance[token] = walletInfoMap[msg.sender].settledTokenBalance[token].sub(to_move);
-                amount = amount.sub(to_move);
-            }
-
-            //move (remaining) from deposited balance to staged
-            walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].sub_nn(amount);
-
-            //add to staged balance
-            walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].add_nn(amount_copy);
-        }
-
-        //emit event
-        emit StageEvent(msg.sender, amount, token);
-    }
-
-    function stageTo(int256 amount, address token, address beneficiary) public notOwner {
-        int256 amount_copy;
-        int256 to_move;
-        Beneficiary beneficiary_sc;
-
-        require(amount.isPositiveInt256());
-        require(isRegisteredBeneficiary(beneficiary));
-
-        beneficiary_sc = Beneficiary(beneficiary);
-
-        if (token == address(0)) {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[msg.sender].depositedEtherBalance.add(walletInfoMap[msg.sender].settledEtherBalance));
-            if (amount <= 0)
-                return;
-
-            amount_copy = amount;
-
-            //move from settled balance to staged, if balance greater than zero
-            if (walletInfoMap[msg.sender].settledEtherBalance > 0) {
-                to_move = amount.clampMax(walletInfoMap[msg.sender].settledEtherBalance);
-
-                walletInfoMap[msg.sender].settledEtherBalance = walletInfoMap[msg.sender].settledEtherBalance.sub(to_move);
-                amount = amount.sub(to_move);
-            }
-
-            //move (remaining) from deposited balance
-            walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.sub_nn(amount);
-
-            //transfer funds to the beneficiary
-            beneficiary_sc.receiveEthers.value(uint256(amount))(msg.sender);
-        } else {
-
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[msg.sender].depositedTokenBalance[token].add(walletInfoMap[msg.sender].settledTokenBalance[token]));
-            if (amount <= 0)
-                return;
-
-            amount_copy = amount;
-
-            //move from settled balance to staged, if balance greater than zero
-            if (walletInfoMap[msg.sender].settledTokenBalance[token] > 0) {
-                to_move = amount.clampMax(walletInfoMap[msg.sender].settledTokenBalance[token]);
-
-                walletInfoMap[msg.sender].settledTokenBalance[token] = walletInfoMap[msg.sender].settledTokenBalance[token].sub(to_move);
-                amount = amount.sub(to_move);
-            }
-
-            //move (remaining) from deposited balance to staged
-            walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].sub_nn(amount);
-
-            //first approve token transfer
-            ERC20 erc20 = ERC20(token);
-            require(erc20.approve(beneficiary, uint256(amount)));
-
-            //transfer funds to the beneficiary
-            beneficiary_sc.receiveTokens(msg.sender, amount, token);
-        }
-
-        //emit event
-        emit StageToEvent(msg.sender, amount, token, beneficiary);
-    }
-
-    function unstage(int256 amount, address token) public notOwner {
-        require(amount.isPositiveInt256());
-
-        if (token == address(0)) {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[msg.sender].stagedEtherBalance);
-            if (amount == 0)
-                return;
-
-            //move from staged balance to deposited
-            walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub_nn(amount);
-            walletInfoMap[msg.sender].depositedEtherBalance = walletInfoMap[msg.sender].depositedEtherBalance.add_nn(amount);
-        } else {
-            //clamp amount to move
-            amount = amount.clampMax(walletInfoMap[msg.sender].stagedTokenBalance[token]);
-            if (amount == 0)
-                return;
-
-            //move between balances
-            walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub_nn(amount);
-            walletInfoMap[msg.sender].depositedTokenBalance[token] = walletInfoMap[msg.sender].depositedTokenBalance[token].add_nn(amount);
-        }
-
-        //emit event
-        emit UnstageEvent(msg.sender, amount, token);
-    }
-
-    function seizeDepositedAndSettledBalances(address sourceWallet, address targetWallet) public onlyRegisteredService notNullAddress(sourceWallet) notNullAddress(targetWallet) {
-        int256 amount;
-        uint256 i;
-        uint256 len;
-
-        //seize ethers
-        amount = walletInfoMap[sourceWallet].depositedEtherBalance.add(walletInfoMap[sourceWallet].settledEtherBalance);
-        assert(amount >= 0);
-
-        walletInfoMap[sourceWallet].depositedEtherBalance = 0;
-        walletInfoMap[sourceWallet].settledEtherBalance = 0;
-        //add to staged balance
-        walletInfoMap[targetWallet].stagedEtherBalance = walletInfoMap[targetWallet].stagedEtherBalance.add_nn(amount);
-
-        //seize tokens
-        len = walletInfoMap[sourceWallet].inUseTokenList.length;
-        for (i = 0; i < len; i++) {
-            address token = walletInfoMap[sourceWallet].inUseTokenList[i];
-
-            amount = walletInfoMap[sourceWallet].depositedTokenBalance[token].add(walletInfoMap[sourceWallet].settledTokenBalance[token]);
+            amount = sumAllBalancesOfWalletAndCurrency(sourceWallet, currency.ct, currency.id);
             assert(amount >= 0);
 
-            walletInfoMap[sourceWallet].depositedTokenBalance[token] = 0;
-            walletInfoMap[sourceWallet].settledTokenBalance[token] = 0;
+            zeroAllBalancesOfWalletAndCurrency(sourceWallet, currency.ct, currency.id);
 
-            //add to staged balance
-            walletInfoMap[targetWallet].stagedTokenBalance[token] = walletInfoMap[targetWallet].stagedTokenBalance[token].add_nn(amount);
+            // Add to staged balance
+            walletMap[targetWallet].staged.add(amount, currency.ct, currency.id);
 
-            //add token to in-use list
-            if (!walletInfoMap[targetWallet].inUseTokenMap[token]) {
-                walletInfoMap[targetWallet].inUseTokenMap[token] = true;
-                walletInfoMap[targetWallet].inUseTokenList.push(token);
-            }
+            // Add currencyCt to in-use list
+            walletMap[targetWallet].inUseCurrencies.addItem(currency.ct, currency.id);
         }
 
-        //emit event
-        emit SeizeDepositedAndSettledBalancesEvent(sourceWallet, targetWallet);
+        // Add to the store of seized wallets
+        addToSeizedWallets(sourceWallet);
+
+        // Emit event
+        emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
     }
 
-    //
-    // Reserve funds functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function reserveFundGetFromDeposited(address wallet, int256 amount, address token) public onlyOwnerOrServiceAction(reserveFundGetFromDepositedAction) {
-        require(wallet != address(0));
-        require(amount.isPositiveInt256());
-
-        ReserveFund reserveFund = ReserveFund(msg.sender);
-
-        if (token == address(0)) {
-            walletInfoMap[wallet].depositedEtherBalance = walletInfoMap[wallet].depositedEtherBalance.sub_nn(amount);
-
-            reserveFund.receiveEthers.value(uint256(amount))(wallet);
-        } else {
-            walletInfoMap[wallet].depositedTokenBalance[token] = walletInfoMap[wallet].depositedTokenBalance[token].sub_nn(amount);
-
-            ERC20 erc20 = ERC20(token);
-            erc20.transfer(reserveFund, uint256(amount));
-
-            reserveFund.registerReceivedTokens(wallet, amount, token);
-        }
-    }
-
-    function reserveFundAddToStaged(address wallet, int256 amount, address token) public payable onlyOwnerOrServiceAction(reserveFundAddToStagedAction) {
-        require(wallet != address(0));
-        require(amount.isPositiveInt256());
-
-        if (token == address(0)) {
-            walletInfoMap[wallet].settledEtherBalance = walletInfoMap[wallet].settledEtherBalance.add(amount);
-        } else {
-            ERC20 erc20 = ERC20(token);
-            erc20.transferFrom(msg.sender, this, uint256(amount));
-
-            walletInfoMap[wallet].settledTokenBalance[token] = walletInfoMap[wallet].settledTokenBalance[token].add(amount);
-        }
-    }
-
-    //
-    // Withdrawal functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function withdrawEthers(int256 amount) public notOwner {
+    /// @notice Withdraw the given amount from staged balance
+    /// @param amount The concerned amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of token ("ERC20", "ERC721")
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(amount.isNonZeroPositiveInt256());
 
-        //check for sufficient balance
-        require(amount <= walletInfoMap[msg.sender].stagedEtherBalance);
+        amount = amount.clampMax(walletMap[msg.sender].staged.get(currencyCt, currencyId));
+        if (amount <= 0)
+            return;
 
-        //subtract to per-wallet staged balance
-        walletInfoMap[msg.sender].stagedEtherBalance = walletInfoMap[msg.sender].stagedEtherBalance.sub_nn(amount);
-        walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, address(0)));
+        // Subtract to per-wallet staged balance
+        walletMap[msg.sender].staged.sub(amount, currencyCt, currencyId);
+        walletMap[msg.sender].txHistory.addWithdrawal(amount, currencyCt, currencyId);
 
-        //execute transfer
-        msg.sender.transfer(uint256(amount));
+        // Execute transfer
+        if (currencyCt == address(0) && currencyId == 0)
+            msg.sender.transfer(uint256(amount));
 
-        //emit event
-        emit WithdrawEvent(msg.sender, amount, address(0));
+        else {
+            TransferController controller = getTransferController(currencyCt, standard);
+            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
+        }
+
+        // Emit event
+        emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId, standard);
     }
 
-    function withdrawTokens(int256 amount, address token) public notOwner {
-        require(token != address(0));
+    /// @notice Get metadata of the given wallet's withdrawal at the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param index The index of wallet's withdrawal
+    /// @return The withdrawal metadata
+    function withdrawal(address wallet, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
+        return walletMap[wallet].txHistory.withdrawal(index);
+    }
+
+    /// @notice Get the count of the given wallet's withdrawals
+    /// @param wallet The address of the concerned wallet
+    /// @return The count of the concerned wallet's withdrawals
+    function withdrawalsCount(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return walletMap[wallet].txHistory.withdrawalsCount();
+    }
+
+    /// @notice Get metadata of the given wallet's withdrawal in the given currency at the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param index The index of wallet's withdrawal in the given currency
+    /// @return The withdrawal metadata
+    function withdrawalOfCurrency(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        return walletMap[wallet].txHistory.currencyWithdrawal(currencyCt, currencyId, index);
+    }
+
+    /// @notice Get the count of the given wallet's withdrawals in the given currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of the concerned wallet's withdrawals in the given currency
+    function withdrawalsOfCurrencyCount(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return walletMap[wallet].txHistory.currencyWithdrawalsCount(currencyCt, currencyId);
+    }
+
+    /// @notice Get the seized status of given wallet
+    /// @return true if wallet is seized, false otherwise
+    function isSeizedWallet(address wallet) public view returns (bool) {
+        return seizuresByWallet[wallet];
+    }
+
+    /// @notice Get the number of wallets whose funds have been seized
+    /// @return Number of wallets
+    function seizedWalletsCount() public view returns (uint256) {
+        return seizedWallets.length;
+    }
+
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
+        int256 amount, address currencyCt, uint256 currencyId)
+    private
+    {
         require(amount.isNonZeroPositiveInt256());
+        require(isRegisteredBeneficiary(beneficiary));
 
-        //check for sufficient balance
-        require(amount <= walletInfoMap[msg.sender].stagedTokenBalance[token]);
+        // Subtract stage amount from settled, possibly also from deposited
+        stageSubtract(sourceWallet, amount, currencyCt, currencyId);
 
-        //subtract to per-wallet staged balance
-        walletInfoMap[msg.sender].stagedTokenBalance[token] = walletInfoMap[msg.sender].stagedTokenBalance[token].sub_nn(amount);
-        walletInfoMap[msg.sender].withdrawals.push(WithdrawalInfo(amount, block.timestamp, token));
+        // Add active balance log entry
+        walletMap[sourceWallet].active.add(activeBalance(sourceWallet, currencyCt, currencyId), currencyCt, currencyId);
 
-        //execute transfer
-        ERC20 erc20 = ERC20(token);
-        erc20.transfer(msg.sender, uint256(amount));
-
-        //emit event
-        emit WithdrawEvent(msg.sender, amount, token);
+        transferToBeneficiary(destWallet, beneficiary, amount, currencyCt, currencyId);
     }
 
-    function withdrawal(address wallet, uint index) public view onlyOwner returns (int256 amount, uint256 timestamp, address token) {
-        require(index < walletInfoMap[wallet].withdrawals.length);
+    function stageSubtract(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    private
+    {
+        // Clamp amount to stage
+        amount = amount.clampMax(activeBalance(wallet, currencyCt, currencyId));
+        if (amount <= 0)
+            return;
 
-        amount = walletInfoMap[wallet].withdrawals[index].amount;
-        timestamp = walletInfoMap[wallet].withdrawals[index].timestamp;
-        token = walletInfoMap[wallet].withdrawals[index].token;
+        // Subtract from settled, possibly also from deposited
+        walletMap[wallet].deposited.sub(
+            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
+            0 :
+            amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)),
+            currencyCt, currencyId
+        );
+        walletMap[wallet].settled.sub_allow_neg(
+            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
+            amount :
+            walletMap[wallet].settled.get(currencyCt, currencyId),
+            currencyCt, currencyId
+        );
     }
 
-    function withdrawalCount(address wallet) public view onlyOwner returns (uint256) {
-        return walletInfoMap[wallet].withdrawals.length;
+    // TODO Update this function with 'standard' parameter as in deposits and withdrawals
+    function transferToBeneficiary(address destWallet, Beneficiary beneficiary,
+        int256 amount, address currencyCt, uint256 currencyId)
+    private
+    {
+        // Transfer funds to the beneficiary
+        if (currencyCt == address(0) && currencyId == 0)
+            beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, "");
+
+        else {
+            // Approve of beneficiary
+            TransferController controller = getTransferController(currencyCt, "");
+            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
+
+            // Transfer funds to the beneficiary
+            beneficiary.receiveTokensTo(destWallet, "", amount, currencyCt, currencyId, "");
+        }
     }
 
-    //
-    // Service functions
-    // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyOwner notNullAddress(service) notMySelfAddress(service) {
-        require(service != owner);
-
-        //ensure service is not already registered
-        require(registeredServicesMap[service] == 0);
-
-        //register and set activation time
-        registeredServicesMap[service] = block.timestamp + serviceActivationTimeout;
-
-        //emit event
-        emit RegisterServiceEvent(service);
+    function sumAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId)
+    private
+    view
+    returns (int256)
+    {
+        return walletMap[wallet].deposited.get(currencyCt, currencyId)
+        .add(walletMap[wallet].settled.get(currencyCt, currencyId))
+        .add(walletMap[wallet].staged.get(currencyCt, currencyId));
     }
 
-    function enableRegisteredService(address service) public notOwner notNullAddress(service) {
-        require(msg.sender != service);
-
-        //ensure service is registered
-        require(registeredServicesMap[service] != 0);
-
-        //enable service for given wallet
-        disabledServicesMap[service][msg.sender] = false;
-
-        //emit event
-        emit EnableRegisteredServiceEvent(msg.sender, service);
+    function zeroAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId)
+    private
+    {
+        walletMap[wallet].deposited.set(0, currencyCt, currencyId);
+        walletMap[wallet].settled.set(0, currencyCt, currencyId);
+        walletMap[wallet].staged.set(0, currencyCt, currencyId);
     }
 
-    function disableRegisteredService(address service) public notOwner notNullAddress(service) {
-        require(msg.sender != service);
-
-        //ensure service is registered
-        require(registeredServicesMap[service] != 0);
-
-        //disable service for given wallet
-        disabledServicesMap[service][msg.sender] = true;
-
-        //emit event
-        emit DisableRegisteredServiceEvent(msg.sender, service);
-    }
-
-    //
-    // Private methods
-    // -----------------------------------------------------------------------------------------------------------------
-
-    function isWalletServiceDisabled(address wallet, address service) private view returns (bool) {
-        return disabledServicesMap[service][wallet];
-    }
-
-    function isAcceptedServiceForWallet(address service, address wallet) private view returns (bool) {
-        if (service == wallet)
-            return false;
-        if (registeredServicesMap[service] == 0)
-            return false;
-        if (block.timestamp < registeredServicesMap[service])
-            return false;
-        return !disabledServicesMap[service][wallet];
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
-    modifier onlyRegisteredService() {
-        require(registeredServicesMap[msg.sender] != 0);
-        _;
-    }
-
-    modifier notMySelfAddress(address _address) {
-        require(_address != address(this));
-        _;
+    function addToSeizedWallets(address wallet)
+    private
+    {
+        if (!seizuresByWallet[wallet]) {
+            seizuresByWallet[wallet] = true;
+            seizedWallets.push(wallet);
+        }
     }
 }

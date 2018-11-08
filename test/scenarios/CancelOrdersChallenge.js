@@ -1,65 +1,60 @@
 const chai = require('chai');
-const sinonChai = require("sinon-chai");
-const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require('sinon-chai');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const MockedValidator = artifacts.require("MockedValidator");
+const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedValidator = artifacts.require('MockedValidator');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
     describe('CancelOrdersChallenge', () => {
-        let web3CancelOrdersChallenge, ethersCancelOrdersChallengeOwner;
+        let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let provider;
-        let ethersCancelOrdersChallengeUserA, ethersCancelOrdersChallengeUserB,
-            ethersCancelOrdersChallengeUserC, ethersCancelOrdersChallengeUserD;
-        let blockNumber0, blockNumber10, blockNumber20, blockNumber30;
+        let blockNumber;
 
         before(async () => {
             provider = glob.signer_owner.provider;
 
-            web3CancelOrdersChallenge = glob.web3CancelOrdersChallenge;
-            ethersCancelOrdersChallengeOwner = glob.ethersIoCancelOrdersChallenge;
-            web3Configuration = glob.web3Configuration;
-            ethersConfiguration = glob.ethersIoConfiguration;
-
-            web3Validator = await MockedValidator.new(glob.owner);
+            web3Configuration = await MockedConfiguration.new(glob.owner);
+            ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
+            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
-
-            ethersCancelOrdersChallengeUserA = ethersCancelOrdersChallengeOwner.connect(glob.signer_a);
-            ethersCancelOrdersChallengeUserB = ethersCancelOrdersChallengeOwner.connect(glob.signer_b);
-            ethersCancelOrdersChallengeUserC = ethersCancelOrdersChallengeOwner.connect(glob.signer_c);
-            ethersCancelOrdersChallengeUserD = ethersCancelOrdersChallengeOwner.connect(glob.signer_d);
-
-            await ethersCancelOrdersChallengeOwner.changeConfiguration(ethersConfiguration.address);
-            await ethersCancelOrdersChallengeOwner.changeValidator(ethersValidator.address);
         });
 
         beforeEach(async () => {
-            // Default configuration timeouts for all tests. Particular tests override these defaults.
-            await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
+            web3CancelOrdersChallenge = await CancelOrdersChallenge.new(glob.owner);
+            ethersCancelOrdersChallenge = new Contract(web3CancelOrdersChallenge.address, CancelOrdersChallenge.abi, glob.signer_owner);
 
-            blockNumber0 = await provider.getBlockNumber();
-            blockNumber10 = blockNumber0 + 10;
-            blockNumber20 = blockNumber0 + 20;
-            blockNumber30 = blockNumber0 + 30;
+            await ethersCancelOrdersChallenge.changeValidator(ethersValidator.address);
+            await ethersCancelOrdersChallenge.changeConfiguration(ethersConfiguration.address);
+
+            blockNumber = await provider.getBlockNumber();
+
+            // Default configuration timeouts for all tests. Particular tests override these defaults.
+            await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 1, 1e3);
         });
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                const owner = await web3CancelOrdersChallenge.owner.call();
-                owner.should.equal(glob.owner);
+                (await web3CancelOrdersChallenge.deployer.call()).should.equal(glob.owner);
+                (await web3CancelOrdersChallenge.operator.call()).should.equal(glob.owner);
             });
         });
 
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
-                const configuration = await ethersCancelOrdersChallengeOwner.configuration();
-                configuration.should.equal(utils.getAddress(ethersConfiguration.address));
+                (await web3CancelOrdersChallenge.configuration.call())
+                    .should.equal(web3Configuration.address);
             });
         });
 
@@ -70,37 +65,30 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
-                let configuration;
-
-                beforeEach(async () => {
-                    configuration = await web3CancelOrdersChallenge.configuration.call();
-                });
-
-                afterEach(async () => {
-                    await web3CancelOrdersChallenge.changeConfiguration(configuration);
-                });
-
+            describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3CancelOrdersChallenge.changeConfiguration(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeConfigurationEvent');
-                    const configuration = await web3CancelOrdersChallenge.configuration();
-                    utils.getAddress(configuration).should.equal(address);
+
+                    (await ethersCancelOrdersChallenge.configuration())
+                        .should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3CancelOrdersChallenge.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3CancelOrdersChallenge.changeConfiguration(address, {from: glob.user_a})
+                        .should.be.rejected;
                 });
             });
         });
 
         describe('validator()', () => {
             it('should equal value initialized', async () => {
-                const validator = await ethersCancelOrdersChallengeOwner.validator();
-                validator.should.equal(utils.getAddress(ethersValidator.address));
+                (await web3CancelOrdersChallenge.validator.call())
+                    .should.equal(web3Validator.address);
             });
         });
 
@@ -111,107 +99,123 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with owner as sender', () => {
-                let validator;
-
-                beforeEach(async () => {
-                    validator = await web3CancelOrdersChallenge.validator.call();
-                });
-
-                afterEach(async () => {
-                    await web3CancelOrdersChallenge.changeValidator(validator);
-                });
-
+            describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3CancelOrdersChallenge.changeValidator(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ChangeValidatorEvent');
-                    const validator = await web3CancelOrdersChallenge.validator();
-                    utils.getAddress(validator).should.equal(address);
+
+                    (await ethersCancelOrdersChallenge.validator())
+                        .should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not owner', () => {
+            describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3CancelOrdersChallenge.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3CancelOrdersChallenge.changeValidator(address, {from: glob.user_a})
+                        .should.be.rejected;
                 });
             });
         });
 
-        describe('getCancelledOrdersCount()', () => {
+        describe('cancellingWalletsCount()', () => {
             it('should equal value initialized', async () => {
-                const address = Wallet.createRandom().address;
-                const count = await ethersCancelOrdersChallengeOwner.getCancelledOrdersCount(address);
-                count.toNumber().should.equal(0);
+                (await ethersCancelOrdersChallenge.cancellingWalletsCount())
+                    ._bn.should.eq.BN(0);
             });
         });
 
-        describe('getCancelledOrders()', () => {
+        describe('cancelledOrdersCount()', () => {
             it('should equal value initialized', async () => {
-                const address = Wallet.createRandom().address;
-                const orders = await ethersCancelOrdersChallengeOwner.getCancelledOrders(address, 0);
-                orders.should.be.an('array').that.has.lengthOf(10);
-                orders[0][0].toNumber().should.equal(0);
+                (await ethersCancelOrdersChallenge.cancelledOrdersCount(
+                    Wallet.createRandom().address
+                ))._bn.should.eq.BN(0);
             });
         });
 
         describe('isOrderCancelled()', () => {
             it('should equal value initialized', async () => {
-                const address = Wallet.createRandom().address;
-                const orderCancelled = await ethersCancelOrdersChallengeOwner.isOrderCancelled(address, address);
-                orderCancelled.should.be.false;
+                (await ethersCancelOrdersChallenge.isOrderCancelled(
+                        Wallet.createRandom().address, Wallet.createRandom().address)
+                ).should.be.false;
+            });
+        });
+
+        describe('cancelledOrderHashesByIndices()', () => {
+            describe('before first cancellation', () => {
+                it('should revert', async () => {
+                    await ethersCancelOrdersChallenge.cancelledOrderHashesByIndices(
+                        Wallet.createRandom().address, 0, 0
+                    ).should.be.rejected;
+                });
             });
         });
 
         describe('cancelOrders()', () => {
-            let overrideOptions, order1, order2, topic, filter;
-
-            before(() => {
-                overrideOptions = {gasLimit: 3e6};
-            });
+            let order0, order1, topic, filter;
 
             beforeEach(async () => {
-                await ethersValidator.reset(overrideOptions);
+                await ethersValidator._reset({gasLimit: 3e6});
+                await ethersConfiguration._reset();
 
-                order1 = await mocks.mockOrder(glob.owner, {
-                    wallet: glob.user_a,
-                    blockNumber: utils.bigNumberify(blockNumber10)
+                order0 = await mocks.mockOrder(glob.owner, {
+                    wallet: glob.owner
                 });
-                order2 = await mocks.mockOrder(glob.owner, {
+                order1 = await mocks.mockOrder(glob.owner, {
                     nonce: utils.bigNumberify(2),
-                    wallet: glob.user_a,
+                    wallet: glob.owner,
                     residuals: {
                         current: utils.parseUnits('600', 18),
                         previous: utils.parseUnits('700', 18)
-                    },
-                    blockNumber: utils.bigNumberify(blockNumber20)
+                    }
                 });
 
-                topic = ethersCancelOrdersChallengeOwner.interface.events.CancelOrdersEvent.topics[0];
+                topic = ethersCancelOrdersChallenge.interface.events.CancelOrdersEvent.topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
 
-            describe('if orders are genuine', () => {
-                it('should successfully cancel orders', async () => {
-                    await ethersCancelOrdersChallengeUserA.cancelOrders([order1, order2], overrideOptions);
-                    const count = await ethersCancelOrdersChallengeOwner.getCancelledOrdersCount(glob.user_a);
-                    count.toNumber().should.equal(2);
-                    const orders = await ethersCancelOrdersChallengeOwner.getCancelledOrders(glob.user_a, 0);
-                    orders[0][0].toNumber().should.equal(order1.nonce.toNumber());
-                    orders[1][0].toNumber().should.equal(order2.nonce.toNumber());
-                });
-            });
-
-            describe('if wallet differs from msg.sender', () => {
+            describe('if operational mode is not normal', () => {
                 beforeEach(async () => {
-                    order1 = await mocks.mockOrder(glob.owner, {wallet: glob.user_c});
+                    await web3Configuration.setOperationalModeExit();
                 });
 
                 it('should revert', async () => {
-                    ethersCancelOrdersChallengeUserA.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
+                    web3CancelOrdersChallenge.cancelOrders([order0, order1], {gasLimit: 3e6}).should.be.rejected;
+                });
+            });
+
+            describe('if validator contract is not initialized', () => {
+                beforeEach(async () => {
+                    web3CancelOrdersChallenge = await CancelOrdersChallenge.new(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    web3CancelOrdersChallenge.cancelOrders([order0, order1], {gasLimit: 3e6}).should.be.rejected;
+                });
+            });
+
+            describe('if configuration contract is not initialized', () => {
+                beforeEach(async () => {
+                    web3CancelOrdersChallenge = await CancelOrdersChallenge.new(glob.owner);
+                    await web3CancelOrdersChallenge.changeValidator(web3Validator.address);
+                });
+
+                it('should revert', async () => {
+                    web3CancelOrdersChallenge.cancelOrders([order0, order1], {gasLimit: 3e6}).should.be.rejected;
+                });
+            });
+
+            describe('if order wallet differs from msg.sender', () => {
+                beforeEach(async () => {
+                    order0 = await mocks.mockOrder(glob.owner, {wallet: glob.user_a});
+                });
+
+                it('should revert', async () => {
+                    web3CancelOrdersChallenge.cancelOrders([order0, order1], {gasLimit: 3e6}).should.be.rejected;
                 });
             });
 
@@ -221,154 +225,134 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersCancelOrdersChallengeUserA.cancelOrders([order1, order2], overrideOptions).should.be.rejected;
+                    web3CancelOrdersChallenge.cancelOrders([order0, order1], {gasLimit: 3e6}).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully cancel orders', async () => {
+                    await ethersCancelOrdersChallenge.cancelOrders([order0, order1], {gasLimit: 3e6});
+
+                    (await ethersCancelOrdersChallenge.cancelledOrdersCount(glob.owner))
+                        ._bn.should.eq.BN(2);
+
+                    const hashes = await ethersCancelOrdersChallenge.cancelledOrderHashesByIndices(glob.owner, 0, 1);
+                    hashes[0].should.equal(order0.seals.operator.hash);
+                    hashes[1].should.equal(order1.seals.operator.hash);
                 });
             });
         });
 
-        describe('challengeCancelledOrder()', () => {
-            let overrideOptions, order, trade, topic, filter;
-
-            before(async () => {
-                overrideOptions = {gasLimit: 3e6};
-            });
+        describe('challenge()', () => {
+            let trade, topic, filter;
 
             beforeEach(async () => {
-                ethersValidator.reset(overrideOptions);
+                await ethersValidator._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset();
 
-                topic = ethersCancelOrdersChallengeOwner.interface.events.ChallengeCancelledOrderEvent.topics[0];
+                trade = await mocks.mockTrade(glob.owner);
+
+                topic = ethersCancelOrdersChallenge.interface.events.ChallengeEvent.topics[0];
                 filter = {
-                    fromBlock: blockNumber0,
+                    fromBlock: blockNumber,
                     topics: [topic]
                 };
             });
 
-            describe('if order has been cancelled', () => {
-                describe('if cancel order challenge timeout has not expired', () => {
-                    beforeEach(async () => {
-                        order = await mocks.mockOrder(glob.owner, {
-                            wallet: glob.user_b,
-                            blockNumber: utils.bigNumberify(blockNumber10)
-                        });
-
-                        await ethersCancelOrdersChallengeUserB.cancelOrders([order], overrideOptions);
-
-                        trade = await mocks.mockTrade(glob.owner, {
-                            buyer: {
-                                wallet: order.wallet,
-                                order: {
-                                    hashes: {
-                                        wallet: order.seals.wallet.hash,
-                                        exchange: order.seals.exchange.hash
-                                    }
-                                }
-                            },
-                            blockNumber: utils.bigNumberify(blockNumber20)
-                        });
-                    });
-
-                    it('should successfully accept the challenge candidate trade', async () => {
-                        await ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, order.wallet, overrideOptions);
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(topic);
-                    });
-                });
-
-                describe('if cancel order challenge timeout has expired', () => {
-                    beforeEach(async () => {
-                        await ethersConfiguration.setCancelOrderChallengeTimeout(0);
-
-                        order = await mocks.mockOrder(glob.owner, {
-                            wallet: glob.user_c
-                        });
-
-                        await ethersCancelOrdersChallengeUserC.cancelOrders([order], overrideOptions);
-
-                        trade = await mocks.mockTrade(glob.owner, {
-                            buyer: {
-                                wallet: order.wallet,
-                                order: {
-                                    hashes: {
-                                        wallet: order.seals.wallet.hash,
-                                        exchange: order.seals.exchange.hash
-                                    }
-                                }
-                            }
-                        });
-                    });
-
-                    it('should revert', async () => {
-                        ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, order.wallet, overrideOptions).should.be.rejected;
-                    });
-                });
-            });
-
-            describe('if order has not been cancelled', () => {
+            describe('if operational mode is not normal', () => {
                 beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner);
+                    await ethersConfiguration.setOperationalModeExit();
                 });
 
                 it('should revert', async () => {
-                    ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersCancelOrdersChallenge.challenge(trade, trade.buyer.wallet, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
 
             describe('if trade is not sealed', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineTradeSeal(false);
-
-                    trade = await mocks.mockTrade(glob.owner);
                 });
 
                 it('should revert', async () => {
-                    ethersCancelOrdersChallengeOwner.challengeCancelledOrder(trade, trade.buyer.wallet, overrideOptions).should.be.rejected;
+                    ethersCancelOrdersChallenge.challenge(trade, trade.buyer.wallet, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
-            })
+            });
+
+            describe('if cancel order challenge timeout has expired', () => {
+                it('should revert', async () => {
+                    ethersCancelOrdersChallenge.challenge(trade, trade.buyer.wallet, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if order has not been cancelled', () => {
+                it('should revert', async () => {
+                    ethersCancelOrdersChallenge.challenge(trade, trade.buyer.wallet, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                beforeEach(async () => {
+                    const order = await mocks.mockOrder(glob.owner, {wallet: glob.owner});
+
+                    await ethersCancelOrdersChallenge.cancelOrders([order], {gasLimit: 1e6});
+
+                    trade = await mocks.mockTrade(glob.owner, {
+                        buyer: {
+                            wallet: order.wallet,
+                            order: {hashes: {operator: order.seals.operator.hash}}
+                        }
+                    });
+                });
+
+                it('should successfully accept the challenge candidate trade', async () => {
+                    await ethersCancelOrdersChallenge.challenge(trade, trade.buyer.wallet, {gasLimit: 5e6});
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+                });
+            });
         });
 
         describe('challengePhase()', () => {
             describe('if no order has been cancelled for wallet', () => {
                 it('should return value corresponding to Closed', async () => {
-                    const address = Wallet.createRandom().address;
-                    const phase = await ethersCancelOrdersChallengeOwner.challengePhase(address);
-                    phase.should.equal(mocks.challengePhases.indexOf('Closed'));
+                    (await ethersCancelOrdersChallenge.challengePhase(Wallet.createRandom().address))
+                        .should.equal(mocks.challengePhases.indexOf('Closed'));
                 });
             });
 
             describe('if order has been cancelled for wallet', () => {
-                let overrideOptions, order;
-
-                before(() => {
-                    overrideOptions = {gasLimit: 1e6};
-                });
+                let order;
 
                 beforeEach(async () => {
-                    order = await mocks.mockOrder(glob.owner, {
-                        wallet: glob.user_d
-                    });
+                    order = await mocks.mockOrder(glob.owner, {wallet: glob.owner});
                 });
 
                 describe('if cancelled order challenge timeout has expired', () => {
                     beforeEach(async () => {
-                        await ethersConfiguration.setCancelOrderChallengeTimeout(0);
-                        await ethersCancelOrdersChallengeUserD.cancelOrders([order], overrideOptions);
+                        await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 2, 0);
+                        await ethersCancelOrdersChallenge.cancelOrders([order], {gasLimit: 1e6});
                     });
 
                     it('should return value corresponding to Closed', async () => {
-                        const phase = await ethersCancelOrdersChallengeOwner.challengePhase(order.wallet);
-                        phase.should.equal(mocks.challengePhases.indexOf('Closed'));
+                        (await ethersCancelOrdersChallenge.challengePhase(order.wallet))
+                            .should.equal(mocks.challengePhases.indexOf('Closed'));
                     });
                 });
 
                 describe('if cancelled order challenge timeout has not expired', () => {
                     beforeEach(async () => {
-                        await ethersConfiguration.setCancelOrderChallengeTimeout(1e3);
-                        await ethersCancelOrdersChallengeUserD.cancelOrders([order], overrideOptions);
+                        await ethersCancelOrdersChallenge.cancelOrders([order], {gasLimit: 1e6});
                     });
 
                     it('should return value corresponding to Dispute', async () => {
-                        const phase = await ethersCancelOrdersChallengeOwner.challengePhase(order.wallet);
-                        phase.should.equal(mocks.challengePhases.indexOf('Dispute'));
+                        (await ethersCancelOrdersChallenge.challengePhase(order.wallet))
+                            .should.equal(mocks.challengePhases.indexOf('Dispute'));
                     });
                 });
             });

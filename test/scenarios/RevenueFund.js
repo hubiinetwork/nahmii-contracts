@@ -1,13 +1,14 @@
 const Helpers = require('../helpers');
 const chai = require('chai');
+const {utils} = require('ethers');
 
 chai.should();
 
 module.exports = function (glob) {
     var testCounter = Helpers.TestCounter();
 
-    describe("RevenueFund", function () {
-        it(testCounter.next() + ": MUST SUCCEED [payable]: UnitTestHelpers_MISC_1 'collaborates' with 1.2 Ethers", async () => {
+    describe.skip('RevenueFund', function () {
+        it(testCounter.next() + ': MUST SUCCEED [payable]: UnitTestHelpers_MISC_1 \'collaborates\' with 1.2 Ethers', async () => {
             try {
                 let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
                 let oldAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
@@ -27,7 +28,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [payable]: UnitTestHelpers_MISC_2 'collaborates' with 0.6 Ethers", async () => {
+        it(testCounter.next() + ': MUST SUCCEED [payable]: UnitTestHelpers_MISC_2 \'collaborates\' with 0.6 Ethers', async () => {
             try {
                 let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
                 let oldAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
@@ -45,7 +46,7 @@ module.exports = function (glob) {
             }
         });
 
-        // it(testCounter.next() + ": MUST FAIL [payable]: Cannot be called from owner", async () => {
+        // it(testCounter.next() + ': MUST FAIL [payable]: Cannot be called from owner', async () => {
         //     try {
         //         await web3.eth.sendTransactionPromise({
         //             from: glob.owner,
@@ -62,7 +63,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [payable]: cannot be called with 0 ethers", async () => {
+        it(testCounter.next() + ': MUST FAIL [payable]: cannot be called with 0 ethers', async () => {
             try {
                 await web3.eth.sendTransactionPromise({
                     from: glob.user_d,
@@ -79,7 +80,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [depositTokens]: UnitTestHelpers_MISC_1 'collaborates' with 10 tokens", async () => {
+        it(testCounter.next() + ': MUST SUCCEED [receiveTokens]: UnitTestHelpers_MISC_1 \'collaborates\' with 10 tokens', async () => {
             try {
                 await glob.web3UnitTestHelpers_MISC_1.callToApprove_ERC20(glob.web3Erc20.address, glob.web3RevenueFund.address, 10);
             }
@@ -105,9 +106,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called from owner", async () => {
+        it(testCounter.next() + ': MUST FAIL [receiveTokens]: Cannot be called from owner', async () => {
             try {
-                await glob.web3RevenueFund.depositTokens(glob.web3Erc20.address, 0, {from: glob.owner});
+                await glob.web3RevenueFund.receiveTokens('', glob.web3Erc20.address, 0, {from: glob.owner});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -117,7 +118,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: cannot be called with 0 tokens", async () => {
+        it(testCounter.next() + ': MUST FAIL [receiveTokens]: cannot be called with 0 tokens', async () => {
             try {
                 await glob.web3UnitTestHelpers_MISC_2.callToDepositTokens_REVENUEFUND(glob.web3RevenueFund.address, glob.web3Erc20.address, 0);
                 assert(false, 'This test must fail.');
@@ -129,9 +130,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [depositTokens]: Cannot be called with zero address", async () => {
+        it(testCounter.next() + ': MUST FAIL [receiveTokens]: Cannot be called with null address', async () => {
             try {
-                await glob.web3RevenueFund.depositTokens(0, 5, {from: glob.user_a});
+                await glob.web3RevenueFund.receiveTokens('', 0, 5, {from: glob.user_a});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -141,11 +142,11 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [registerBeneficiary]: Register UnitTestHelpers_MISC_1 as 60% beneficiary", async () => {
+        it(testCounter.next() + ': MUST SUCCEED [registerFractionalBeneficiary]: Register UnitTestHelpers_MISC_1 as 60% beneficiary', async () => {
             try {
-                let fraction = await glob.web3RevenueFund.PARTS_PER();
+                let fraction = utils.bigNumberify(1e18);
                 fraction = fraction.mul(0.6);
-                await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction);
+                await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction);
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -154,11 +155,11 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [registerBeneficiary]: Cannot be called from non-owner", async () => {
+        it(testCounter.next() + ': MUST FAIL [registerFractionalBeneficiary]: Cannot be called from non-owner', async () => {
             try {
-                let fraction = await glob.web3RevenueFund.PARTS_PER();
+                let fraction = utils.bigNumberify(1e18);
                 fraction = fraction.mul(0.6);
-                await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction, {from: glob.user_a});
+                await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction, {from: glob.user_a});
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -168,11 +169,11 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        // it(testCounter.next() + ": MUST FAIL [registerBeneficiary]: Cannot register UnitTestHelpers_MISC_1 twice", async () => {
+        // it(testCounter.next() + ': MUST FAIL [registerFractionalBeneficiary]: Cannot register UnitTestHelpers_MISC_1 twice', async () => {
         //     try {
         //         let fraction = await glob.web3RevenueFund.PARTS_PER();
         //         fraction = fraction.mul(0.4);
-        //         await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction);
+        //         await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction);
         //         assert(false, 'This test must fail.');
         //     }
         //     catch (err) {
@@ -182,11 +183,11 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [registerBeneficiary]: Trying to register UnitTestHelpers_MISC_2 as 50% beneficiary", async () => {
+        it(testCounter.next() + ': MUST FAIL [registerFractionalBeneficiary]: Trying to register UnitTestHelpers_MISC_2 as 50% beneficiary', async () => {
             try {
-                let fraction = await glob.web3RevenueFund.PARTS_PER();
+                let fraction = utils.bigNumberify(1e18);
                 fraction = fraction.mul(0.5);
-                await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_2.address, fraction);
+                await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_2.address, fraction);
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -196,7 +197,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [closeAccrualPeriod]: Calling without 100% beneficiaries", async () => {
+        it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Calling without 100% beneficiaries', async () => {
             try {
                 await glob.web3RevenueFund.closeAccrualPeriod();
                 assert(false, 'This test must fail.');
@@ -208,12 +209,12 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [registerBeneficiary]: Register UnitTestHelpers_MISC_2 as 40% beneficiary", async () => {
+        it(testCounter.next() + ': MUST SUCCEED [registerFractionalBeneficiary]: Register UnitTestHelpers_MISC_2 as 40% beneficiary', async () => {
             try {
-                let fraction = await glob.web3RevenueFund.PARTS_PER();
+                let fraction = utils.bigNumberify(1e18);
                 fraction = fraction.mul(0.4);
 
-                await glob.web3RevenueFund.registerBeneficiary(glob.web3UnitTestHelpers_MISC_2.address, fraction);
+                await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_2.address, fraction);
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -222,7 +223,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [closeAccrualPeriod]: Cannot be called from non-owner", async () => {
+        it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Cannot be called from non-owner', async () => {
             try {
                 await glob.web3RevenueFund.closeAccrualPeriod({from: glob.user_a});
                 assert(false, 'This test must fail.');
@@ -234,7 +235,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [closeAccrualPeriod]: Calling with 100% beneficiaries", async () => {
+        it(testCounter.next() + ': MUST SUCCEED [closeAccrualPeriod]: Calling with 100% beneficiaries', async () => {
             try {
                 let oldPeriodAccrualBalanceForEthers = await glob.web3RevenueFund.periodAccrualBalance(0);
                 let oldAggregateAccrualBalanceForEthers = await glob.web3RevenueFund.aggregateAccrualBalance(0);
@@ -274,7 +275,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [deregisterBeneficiary]: Unregister UnitTestHelpers_MISC_2 as beneficiary", async () => {
+        it(testCounter.next() + ': MUST SUCCEED [deregisterBeneficiary]: Unregister UnitTestHelpers_MISC_2 as beneficiary', async () => {
             try {
                 await glob.web3RevenueFund.deregisterBeneficiary(glob.web3UnitTestHelpers_MISC_2.address);
             }
@@ -285,7 +286,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [registerService]: Register UnitTestHelpers_FAIL SC as a service from non-owner", async () => {
+        it(testCounter.next() + ': MUST FAIL [registerService]: Register UnitTestHelpers_FAIL SC as a service from non-owner', async () => {
             try {
                 await glob.web3RevenueFund.registerService(glob.web3UnitTestHelpers_FAIL_TESTS.address, {from: glob.user_a});
                 assert(false, 'This test must fail.');
@@ -297,7 +298,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [registerService]: Register UnitTestHelpers_SUCCESS SC as a service", async () => {
+        it(testCounter.next() + ': MUST SUCCEED [registerService]: Register UnitTestHelpers_SUCCESS SC as a service', async () => {
             try {
                 await glob.web3RevenueFund.registerService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
             }
@@ -308,7 +309,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [deregisterService]: Deregister UnitTestHelpers_FAIL SC as a service from non-owner", async () => {
+        it(testCounter.next() + ': MUST FAIL [deregisterService]: Deregister UnitTestHelpers_FAIL SC as a service from non-owner', async () => {
             try {
                 await glob.web3RevenueFund.deregisterService(glob.web3UnitTestHelpers_FAIL_TESTS.address, {from: glob.user_a});
                 assert(false, 'This test must fail.');
@@ -320,7 +321,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST SUCCEED [deregisterService]: Deregister UnitTestHelpers_SUCCESS SC as a service", async () => {
+        it(testCounter.next() + ': MUST SUCCEED [deregisterService]: Deregister UnitTestHelpers_SUCCESS SC as a service', async () => {
             try {
                 await glob.web3RevenueFund.deregisterService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
             }
@@ -331,7 +332,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ": MUST FAIL [closeAccrualPeriod]: Calling without 100% beneficiaries again", async () => {
+        it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Calling without 100% beneficiaries again', async () => {
             try {
                 await glob.web3RevenueFund.closeAccrualPeriod();
                 assert(false, 'This test must fail.');

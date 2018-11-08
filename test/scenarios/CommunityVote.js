@@ -1,8 +1,11 @@
 const chai = require('chai');
-const chaiAsPromised = require("chai-as-promised");
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, utils} = require('ethers');
 
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
@@ -16,22 +19,29 @@ module.exports = function (glob) {
         describe('isDoubleSpenderWallet()', () => {
             it('should return false', async () => {
                 const address = Wallet.createRandom().address;
-                const result = await ethersInstance.isDoubleSpenderWallet(address);
-                result.should.be.false;
+                (await ethersInstance.isDoubleSpenderWallet(address))
+                    .should.be.false;
             });
         });
 
-        describe('getHighestAbsoluteDriipNonce()', () => {
+        describe('getMaxDriipNonce()', () => {
             it('should return 0', async () => {
-                const result = await ethersInstance.getHighestAbsoluteDriipNonce();
-                result.eq(utils.bigNumberify(0)).should.be.true;
+                (await ethersInstance.getMaxDriipNonce())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('getMaxNullNonce()', () => {
+            it('should return 0', async () => {
+                (await ethersInstance.getMaxNullNonce())
+                    ._bn.should.eq.BN(0);
             });
         });
 
         describe('isDataAvailable()', () => {
             it('should return true', async () => {
-                const result = await ethersInstance.isDataAvailable();
-                result.should.be.true;
+                (await ethersInstance.isDataAvailable())
+                    .should.be.true;
             });
         });
     });

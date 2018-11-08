@@ -1,60 +1,59 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 
 pragma solidity ^0.4.24;
+
 pragma experimental ABIEncoderV2;
 
-//import {SecurityBond} from "../SecurityBond.sol";
+import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 
 /**
 @title MockedSecurityBond
 @notice Mocked implementation of security bond contract
 */
-contract MockedSecurityBond /*is SecurityBond*/ {
-
+contract MockedSecurityBond {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct Stage {
+    struct Reward {
         address wallet;
-        address currency;
-        int256 amount;
+        uint256 rewardFraction;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Stage[] public stages;
+    Reward[] public rewards;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event StageEvent(address from, int256 amount, address token); //token==0 for ethers
+    event RewardEvent(address wallet, uint256 rewardFraction);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*SecurityBond(owner)*/ {
+    constructor() public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
-        stages.length = 0;
+    function _reset() public {
+        rewards.length = 0;
     }
 
-    function stagesCount() public view returns (uint256) {
-        return stages.length;
+    function _rewardsCount() public view returns (uint256) {
+        return rewards.length;
     }
 
-    function stage(int256 amount, address token, address wallet) public {
-        stages.push(Stage(wallet, token, amount));
-        emit StageEvent(msg.sender, amount, token);
+    function reward(address wallet, uint256 rewardFraction) public {
+        rewards.push(Reward(wallet, rewardFraction));
+        emit RewardEvent(msg.sender, rewardFraction);
     }
 }

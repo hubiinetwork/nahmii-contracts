@@ -1,7 +1,7 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
@@ -9,16 +9,29 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathInt} from "./SafeMathInt.sol";
+import {Modifiable} from "./Modifiable.sol";
 import {Ownable} from "./Ownable.sol";
-import {SelfDestructible} from "./SelfDestructible.sol";
+import {Servable} from "./Servable.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {BlockNumbUintsLib} from "./BlockNumbUintsLib.sol";
+import {BlockNumbIntsLib} from "./BlockNumbIntsLib.sol";
+import {BlockNumbDisdIntsLib} from "./BlockNumbDisdIntsLib.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
 @title Configuration
 @notice An oracle for configurations values
 */
-contract Configuration is Ownable, SelfDestructible {
-    using SafeMathInt for int256;
+contract Configuration is Modifiable, Ownable, Servable {
+    using SafeMathIntLib for int256;
+    using BlockNumbUintsLib for BlockNumbUintsLib.BlockNumbUints;
+    using BlockNumbIntsLib for BlockNumbIntsLib.BlockNumbInts;
+    using BlockNumbDisdIntsLib for BlockNumbDisdIntsLib.BlockNumbDisdInts;
+
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public OPERATIONAL_MODE_ACTION = "operational_mode";
 
     //
     // Enums
@@ -26,559 +39,573 @@ contract Configuration is Ownable, SelfDestructible {
     enum OperationalMode {Normal, Exit}
 
     //
-    // Custom types
-    // -----------------------------------------------------------------------------------------------------------------
-    struct TieredDiscount {
-        int256 tier;
-        int256 value;
-    }
-
-    struct DiscountableFee {
-        uint256 blockNumber;
-        int256 nominal;
-        TieredDiscount[] discounts;
-    }
-
-    struct StaticFee {
-        uint256 blockNumber;
-        int256 nominal;
-    }
-
-    struct Lot {
-        address currency;
-        int256 amount;
-    }
-
-    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     OperationalMode public operationalMode = OperationalMode.Normal;
 
-    mapping(address => mapping(bytes32 => bool)) public registeredServiceActionMap;
+    BlockNumbUintsLib.BlockNumbUints updateDelayBlocksByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints confirmationBlocksByBlockNumber;
 
-    int256 constant public PARTS_PER = 1e18;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts tradeMakerFeeByBlockNumber;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts tradeTakerFeeByBlockNumber;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts paymentFeeByBlockNumber;
+    mapping(address => mapping(uint256 => BlockNumbDisdIntsLib.BlockNumbDisdInts)) currencyPaymentFeeByBlockNumber;
 
-    mapping(uint256 => DiscountableFee) tradeMakerFees;
-    mapping(uint256 => DiscountableFee) tradeTakerFees;
-    mapping(uint256 => DiscountableFee) paymentFees;
-    mapping(address => mapping(uint256 => DiscountableFee)) currencyPaymentFees;
-    uint256[] public tradeMakerFeeBlockNumbers;
-    uint256[] public tradeTakerFeeBlockNumbers;
-    uint256[] public paymentFeeBlockNumbers;
-    mapping(address => uint256[]) public currencyPaymentFeeBlockNumbers;
+    BlockNumbIntsLib.BlockNumbInts tradeMakerMinimumFeeByBlockNumber;
+    BlockNumbIntsLib.BlockNumbInts tradeTakerMinimumFeeByBlockNumber;
+    BlockNumbIntsLib.BlockNumbInts paymentMinimumFeeByBlockNumber;
+    mapping(address => mapping(uint256 => BlockNumbIntsLib.BlockNumbInts)) currencyPaymentMinimumFeeByBlockNumber;
 
-    mapping(uint256 => StaticFee) tradeMakerMinimumFees;
-    mapping(uint256 => StaticFee) tradeTakerMinimumFees;
-    mapping(uint256 => StaticFee) paymentMinimumFees;
-    mapping(address => mapping(uint256 => StaticFee)) currencyPaymentMinimumFees;
-    uint256[] public tradeMakerMinimumFeeBlockNumbers;
-    uint256[] public tradeTakerMinimumFeeBlockNumbers;
-    uint256[] public paymentMinimumFeeBlockNumbers;
-    mapping(address => uint256[]) public currencyPaymentMinimumFeeBlockNumbers;
+    BlockNumbUintsLib.BlockNumbUints cancelOrderChallengeTimeoutByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints settlementChallengeTimeoutByBlockNumber;
 
-    uint256 public cancelOrderChallengeTimeout;
-    uint256 public driipSettlementChallengeTimeout;
-
-    Lot public unchallengeOrderCandidateByTradeStake;
-    Lot public falseWalletSignatureStake;
-    Lot public duplicateDriipNonceStake;
-    Lot public doubleSpentOrderStake;
+    BlockNumbUintsLib.BlockNumbUints walletSettlementStakeFractionByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints operatorSettlementStakeFractionByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints fraudStakeFractionByBlockNumber;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisterServiceEvent(address service, string action);
-    event DeregisterServiceEvent(address service, string action);
     event SetOperationalModeExitEvent();
-    event SetPartsPerEvent(int256 partsPer);
+    event SetUpdateDelayBlocksEvent(uint256 blockNumber, uint256 newBlocks);
+    event SetConfirmationBlocksEvent(uint256 blockNumber, uint256 newBlocks);
     event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetTradeTakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
     event SetPaymentFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
-    event SetCurrencyPaymentFeeEvent(address currency, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
+    event SetCurrencyPaymentFeeEvent(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal,
+        int256[] discountTiers, int256[] discountValues);
     event SetTradeMakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetTradeTakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
     event SetPaymentMinimumFeeEvent(uint256 blockNumber, int256 nominal);
-    event SetCurrencyPaymentMinimumFeeEvent(address currency, uint256 blockNumber, int256 nominal);
-    event SetCancelOrderChallengeTimeout(uint256 timeout);
-    event SetDriipSettlementChallengeTimeout(uint256 timeout);
-    event SetUnchallengeDriipSettlementOrderByTradeStakeEvent(address currency, int256 amount);
-    event SetFalseWalletSignatureStakeEvent(address currency, int256 amount);
-    event SetDuplicateDriipNonceStakeEvent(address currency, int256 amount);
-    event SetDoubleSpentOrderStakeEvent(address currency, int256 amount);
+    event SetCurrencyPaymentMinimumFeeEvent(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal);
+    event SetCancelOrderChallengeTimeoutEvent(uint256 blockNumber, uint256 timeoutInSeconds);
+    event SetSettlementChallengeTimeoutEvent(uint256 blockNumber, uint256 timeoutInSeconds);
+    event SetWalletSettlementStakeFractionEvent(uint256 blockNumber, uint256 stakeFraction);
+    event SetOperatorSettlementStakeFractionEvent(uint256 blockNumber, uint256 stakeFraction);
+    event SetFraudStakeFractionEvent(uint256 blockNumber, uint256 stakeFraction);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) Ownable(owner) public {
-        cancelOrderChallengeTimeout = 3 hours;
-        driipSettlementChallengeTimeout = 5 hours;
+        updateDelayBlocksByBlockNumber.addEntry(block.number, 0);
+        confirmationBlocksByBlockNumber.addEntry(block.number, 12);
+
+        tradeMakerFeeByBlockNumber.addNominalEntry(block.number, 1e15);
+        tradeTakerFeeByBlockNumber.addNominalEntry(block.number, 2e15);
+        paymentFeeByBlockNumber.addNominalEntry(block.number, 1e15);
+        tradeMakerMinimumFeeByBlockNumber.addEntry(block.number, 1e14);
+        tradeTakerMinimumFeeByBlockNumber.addEntry(block.number, 2e14);
+        paymentMinimumFeeByBlockNumber.addEntry(block.number, 1e14);
+
+        cancelOrderChallengeTimeoutByBlockNumber.addEntry(block.number, 3 days);
+        settlementChallengeTimeoutByBlockNumber.addEntry(block.number, 5 days);
+
+        walletSettlementStakeFractionByBlockNumber.addEntry(block.number, 1e17);
+        operatorSettlementStakeFractionByBlockNumber.addEntry(block.number, 5e17);
+        fraudStakeFractionByBlockNumber.addEntry(block.number, 5e17);
     }
 
     //
-    // Functions
+    // Public functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Returns the service status of an address and an action
-    /// @param service The address of contract
-    /// @param action The action in question
-    function isRegisteredService(address service, string action) public view returns (bool) {
-        return registeredServiceActionMap[service][keccak256(abi.encode(action))];
-    }
-
-    /// @notice Register a contract as a service that may carry out an action
-    /// @param service The address of service contract
-    /// @param action The action that the service may carry out
-    function registerService(address service, string action) public onlyOwner {
-        registeredServiceActionMap[service][keccak256(abi.encode(action))] = true;
-        emit RegisterServiceEvent(service, action);
-    }
-
-    /// @notice Deregister a contract from the set of services that may carry out an action
-    /// @param service The address of service contract
-    /// @param action The action that the service may carry out
-    function deregisterService(address service, string action) public onlyOwner {
-        registeredServiceActionMap[service][keccak256(abi.encode(action))] = false;
-        emit DeregisterServiceEvent(service, action);
-    }
-
     /// @notice Set operational mode to Exit
     /// @dev Once operational mode is set to Exit it may not be set back to Normal
-    function setOperationalModeExit() public onlyOwnerOrServiceAction('OperationalMode') {
+    function setOperationalModeExit()
+    public
+    onlyDeployerOrEnabledServiceAction(OPERATIONAL_MODE_ACTION)
+    {
         operationalMode = OperationalMode.Exit;
         emit SetOperationalModeExitEvent();
     }
 
     /// @notice Return true if operational mode is Normal
-    function isOperationalModeNormal() public view returns (bool) {
+    function isOperationalModeNormal()
+    public
+    view
+    returns (bool)
+    {
         return OperationalMode.Normal == operationalMode;
     }
 
     /// @notice Return true if operational mode is Exit
-    function isOperationalModeExit() public view returns (bool) {
+    function isOperationalModeExit()
+    public
+    view
+    returns (bool)
+    {
         return OperationalMode.Exit == operationalMode;
     }
 
-    /// @notice Return the parts per constant
-    function getPartsPer() public pure returns (int256) {
-        return PARTS_PER;
+    /// @notice Get the current value of update delay blocks
+    /// @return The value of update delay blocks
+    function updateDelayBlocks()
+    public
+    view
+    returns (uint256)
+    {
+        return updateDelayBlocksByBlockNumber.currentValue();
+    }
+
+    /// @notice Get the count of update delay blocks values
+    /// @return The count of update delay blocks values
+    function updateDelayBlocksCount()
+    public
+    view
+    returns (uint256)
+    {
+        return updateDelayBlocksByBlockNumber.count();
+    }
+
+    /// @notice Set the number of update delay blocks
+    /// @param blockNumber Block number from which the update applies
+    /// @param newUpdateDelayBlocks The new update delay blocks value
+    function setUpdateDelayBlocks(uint256 blockNumber, uint256 newUpdateDelayBlocks)
+    public
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
+    {
+        updateDelayBlocksByBlockNumber.addEntry(blockNumber, newUpdateDelayBlocks);
+        emit SetUpdateDelayBlocksEvent(blockNumber, newUpdateDelayBlocks);
+    }
+
+    /// @notice Get the current value of confirmation blocks
+    /// @return The value of confirmation blocks
+    function confirmationBlocks()
+    public
+    view
+    returns (uint256)
+    {
+        return confirmationBlocksByBlockNumber.currentValue();
+    }
+
+    /// @notice Get the count of confirmation blocks values
+    /// @return The count of confirmation blocks values
+    function confirmationBlocksCount()
+    public
+    view
+    returns (uint256)
+    {
+        return confirmationBlocksByBlockNumber.count();
+    }
+
+    /// @notice Set the number of confirmation blocks
+    /// @param blockNumber Block number from which the update applies
+    /// @param newConfirmationBlocks The new confirmation blocks value
+    function setConfirmationBlocks(uint256 blockNumber, uint256 newConfirmationBlocks)
+    public
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
+    {
+        confirmationBlocksByBlockNumber.addEntry(blockNumber, newConfirmationBlocks);
+        emit SetConfirmationBlocksEvent(blockNumber, newConfirmationBlocks);
+    }
+
+    /// @notice Get number of trade maker fee block number tiers
+    function tradeMakerFeesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return tradeMakerFeeByBlockNumber.count();
     }
 
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value
-    /// @param blockNumber Lower block number for the tier
+    /// @param blockNumber Block number from which the update applies
     /// @param discountTier Tiered value that determines discount
-    function getTradeMakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
-        require(0 < tradeMakerFeeBlockNumbers.length);
-        uint256 index = getIndexOfLower(tradeMakerFeeBlockNumbers, blockNumber);
-        if (0 < index) {
-            uint256 setBlockNumber = tradeMakerFeeBlockNumbers[index - 1];
-            DiscountableFee storage fee = tradeMakerFees[setBlockNumber];
-            return getDiscountableFee(fee, discountTier);
-        } else
-            return 0;
+    function tradeMakerFee(uint256 blockNumber, int256 discountTier)
+    public
+    view
+    returns (int256)
+    {
+        return tradeMakerFeeByBlockNumber.discountedValueAt(blockNumber, discountTier);
     }
 
     /// @notice Set trade maker nominal relative fee and discount tiers and values at given block number tier
-    /// @param blockNumber Lower block number tier
+    /// @param blockNumber Block number from which the update applies
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
     function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
     {
-        DiscountableFee storage fee = tradeMakerFees[blockNumber];
-        setDiscountableFee(fee, tradeMakerFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
+        tradeMakerFeeByBlockNumber.addDiscountedEntry(blockNumber, nominal, discountTiers, discountValues);
         emit SetTradeMakerFeeEvent(blockNumber, nominal, discountTiers, discountValues);
     }
 
-    /// @notice Get number of trade maker fee tiers
-    function getTradeMakerFeesCount() public view returns (uint256) {
-        return tradeMakerFeeBlockNumbers.length;
+    /// @notice Get number of trade taker fee block number tiers
+    function tradeTakerFeesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return tradeTakerFeeByBlockNumber.count();
     }
 
     /// @notice Get trade taker relative fee at given block number, possibly discounted by discount tier value
-    /// @param blockNumber Lower block number for the tier
+    /// @param blockNumber Block number from which the update applies
     /// @param discountTier Tiered value that determines discount
-    function getTradeTakerFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
-        require(0 < tradeTakerFeeBlockNumbers.length);
-        uint256 index = getIndexOfLower(tradeTakerFeeBlockNumbers, blockNumber);
-        if (0 < index) {
-            uint256 setBlockNumber = tradeTakerFeeBlockNumbers[index - 1];
-            DiscountableFee storage fee = tradeTakerFees[setBlockNumber];
-            return getDiscountableFee(fee, discountTier);
-        } else
-            return 0;
+    function tradeTakerFee(uint256 blockNumber, int256 discountTier)
+    public
+    view
+    returns (int256)
+    {
+        return tradeTakerFeeByBlockNumber.discountedValueAt(blockNumber, discountTier);
     }
 
     /// @notice Set trade taker nominal relative fee and discount tiers and values at given block number tier
-    /// @param blockNumber Lower block number tier
+    /// @param blockNumber Block number from which the update applies
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
     function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
     {
-        DiscountableFee storage fee = tradeTakerFees[blockNumber];
-        setDiscountableFee(fee, tradeTakerFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
+        tradeTakerFeeByBlockNumber.addDiscountedEntry(blockNumber, nominal, discountTiers, discountValues);
         emit SetTradeTakerFeeEvent(blockNumber, nominal, discountTiers, discountValues);
     }
 
-    /// @notice Get number of trade taker fee tiers
-    function getTradeTakerFeesCount() public view returns (uint256) {
-        return tradeTakerFeeBlockNumbers.length;
+    /// @notice Get number of payment fee block number tiers
+    function paymentFeesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return paymentFeeByBlockNumber.count();
     }
 
     /// @notice Get payment relative fee at given block number, possibly discounted by discount tier value
-    /// @param blockNumber Lower block number for the tier
+    /// @param blockNumber Block number from which the update applies
     /// @param discountTier Tiered value that determines discount
-    function getPaymentFee(uint256 blockNumber, int256 discountTier) public view returns (int256) {
-        require(0 < paymentFeeBlockNumbers.length);
-        uint256 index = getIndexOfLower(paymentFeeBlockNumbers, blockNumber);
-        if (0 < index) {
-            uint256 setBlockNumber = paymentFeeBlockNumbers[index - 1];
-            DiscountableFee storage fee = paymentFees[setBlockNumber];
-            return getDiscountableFee(fee, discountTier);
-        } else
-            return 0;
+    function paymentFee(uint256 blockNumber, int256 discountTier)
+    public
+    view
+    returns (int256)
+    {
+        return paymentFeeByBlockNumber.discountedValueAt(blockNumber, discountTier);
     }
 
     /// @notice Set payment nominal relative fee and discount tiers and values at given block number tier
-    /// @param blockNumber Lower block number tier
+    /// @param blockNumber Block number from which the update applies
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
     function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
     {
-        DiscountableFee storage fee = paymentFees[blockNumber];
-        setDiscountableFee(fee, paymentFeeBlockNumbers, blockNumber, nominal, discountTiers, discountValues);
+        paymentFeeByBlockNumber.addDiscountedEntry(blockNumber, nominal, discountTiers, discountValues);
         emit SetPaymentFeeEvent(blockNumber, nominal, discountTiers, discountValues);
     }
 
-    /// @notice Get number of payment fee tiers
-    function getPaymentFeesCount() public view returns (uint256) {
-        return paymentFeeBlockNumbers.length;
+    /// @notice Get number of payment fee block number tiers of given currency
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    function currencyPaymentFeesCount(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return currencyPaymentFeeByBlockNumber[currencyCt][currencyId].count();
     }
 
-    /// @notice Get payment relative fee for given currency at given block number, possibly discounted by discount tier value
-    /// @param currency Concerned currency (address(0) == ETH)
-    /// @param blockNumber Lower block number for the tier
+    /// @notice Get payment relative fee for given currency at given block number, possibly discounted by
+    /// discount tier value
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param blockNumber Block number from which the update applies
     /// @param discountTier Tiered value that determines discount
-    function getCurrencyPaymentFee(address currency, uint256 blockNumber, int256 discountTier) public view returns (int256) {
-        // If no currency specific fee has not been set the currency agnostic one should be used
-        if (0 == currencyPaymentFeeBlockNumbers[currency].length)
-            return getPaymentFee(blockNumber, discountTier);
-
-        uint256 index = getIndexOfLower(currencyPaymentFeeBlockNumbers[currency], blockNumber);
-        if (0 < index) {
-            uint256 setBlockNumber = currencyPaymentFeeBlockNumbers[currency][index - 1];
-            DiscountableFee storage fee = currencyPaymentFees[currency][setBlockNumber];
-            return getDiscountableFee(fee, discountTier);
-        } else
-            return getCurrencyPaymentMinimumFee(currency, blockNumber);
+    function currencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 discountTier)
+    public
+    view
+    returns (int256)
+    {
+        if (0 < currencyPaymentFeeByBlockNumber[currencyCt][currencyId].count())
+            return currencyPaymentFeeByBlockNumber[currencyCt][currencyId].discountedValueAt(
+                blockNumber, discountTier
+            );
+        else
+            return paymentFee(blockNumber, discountTier);
     }
 
-    /// @notice Set payment nominal relative fee and discount tiers and values for given currency at given block number tier
-    /// @param currency Concerned currency (address(0) == ETH)
-    /// @param blockNumber Lower block number tier
+    /// @notice Set payment nominal relative fee and discount tiers and values for given currency at given
+    /// block number tier
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param blockNumber Block number from which the update applies
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setCurrencyPaymentFee(address currency, uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    function setCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal,
+        int256[] discountTiers, int256[] discountValues)
     public
-    onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
     {
-        DiscountableFee storage fee = currencyPaymentFees[currency][blockNumber];
-        setDiscountableFee(fee, currencyPaymentFeeBlockNumbers[currency], blockNumber, nominal, discountTiers, discountValues);
-        emit SetCurrencyPaymentFeeEvent(currency, blockNumber, nominal, discountTiers, discountValues);
+        currencyPaymentFeeByBlockNumber[currencyCt][currencyId].addDiscountedEntry(
+            blockNumber, nominal, discountTiers, discountValues
+        );
+        emit SetCurrencyPaymentFeeEvent(
+            currencyCt, currencyId, blockNumber, nominal, discountTiers, discountValues
+        );
     }
 
-    /// @notice Get number of payment fee tiers of given currency
-    /// @param currency Concerned currency (address(0) == ETH)
-    function getCurrencyPaymentFeesCount(address currency) public view returns (uint256) {
-        return currencyPaymentFeeBlockNumbers[currency].length;
+    /// @notice Get number of minimum trade maker fee block number tiers
+    function tradeMakerMinimumFeesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return tradeMakerMinimumFeeByBlockNumber.count();
     }
 
     /// @notice Get trade maker minimum relative fee at given block number
-    /// @param blockNumber Lower block number for the tier
-    function getTradeMakerMinimumFee(uint256 blockNumber) public view returns (int256) {
-        require(0 < tradeMakerMinimumFeeBlockNumbers.length);
-        uint256 index = getIndexOfLower(tradeMakerMinimumFeeBlockNumbers, blockNumber);
-        if (0 < index) {
-            uint256 setBlockNumber = tradeMakerMinimumFeeBlockNumbers[index - 1];
-            StaticFee storage fee = tradeMakerMinimumFees[setBlockNumber];
-            return fee.nominal;
-        } else
-            return 0;
+    /// @param blockNumber Block number from which the update applies
+    function tradeMakerMinimumFee(uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
+        return tradeMakerMinimumFeeByBlockNumber.valueAt(blockNumber);
     }
 
     /// @notice Set trade maker minimum relative fee at given block number tier
-    /// @param blockNumber Lower block number tier
+    /// @param blockNumber Block number from which the update applies
     /// @param nominal Minimum relative fee
     function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal)
     public
-    onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
     {
-        StaticFee storage fee = tradeMakerMinimumFees[blockNumber];
-        setStaticFee(fee, tradeMakerMinimumFeeBlockNumbers, blockNumber, nominal);
+        tradeMakerMinimumFeeByBlockNumber.addEntry(blockNumber, nominal);
         emit SetTradeMakerMinimumFeeEvent(blockNumber, nominal);
     }
 
-    /// @notice Get number of minimum trade maker fee tiers
-    function getTradeMakerMinimumFeesCount() public view returns (uint256) {
-        return tradeMakerMinimumFeeBlockNumbers.length;
+    /// @notice Get number of minimum trade taker fee block number tiers
+    function tradeTakerMinimumFeesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return tradeTakerMinimumFeeByBlockNumber.count();
     }
 
     /// @notice Get trade taker minimum relative fee at given block number
-    /// @param blockNumber Lower block number for the tier
-    function getTradeTakerMinimumFee(uint256 blockNumber) public view returns (int256) {
-        require(0 < tradeTakerMinimumFeeBlockNumbers.length);
-        uint256 index = getIndexOfLower(tradeTakerMinimumFeeBlockNumbers, blockNumber);
-        if (0 < index) {
-            uint256 setBlockNumber = tradeTakerMinimumFeeBlockNumbers[index - 1];
-            StaticFee storage fee = tradeTakerMinimumFees[setBlockNumber];
-            return fee.nominal;
-        } else
-            return 0;
+    /// @param blockNumber Block number from which the update applies
+    function tradeTakerMinimumFee(uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
+        return tradeTakerMinimumFeeByBlockNumber.valueAt(blockNumber);
     }
 
     /// @notice Set trade taker minimum relative fee at given block number tier
-    /// @param blockNumber Lower block number tier
+    /// @param blockNumber Block number from which the update applies
     /// @param nominal Minimum relative fee
     function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal)
     public
-    onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
     {
-        StaticFee storage fee = tradeTakerMinimumFees[blockNumber];
-        setStaticFee(fee, tradeTakerMinimumFeeBlockNumbers, blockNumber, nominal);
+        tradeTakerMinimumFeeByBlockNumber.addEntry(blockNumber, nominal);
         emit SetTradeTakerMinimumFeeEvent(blockNumber, nominal);
     }
 
-    /// @notice Get number of minimum trade taker fee tiers
-    function getTradeTakerMinimumFeesCount() public view returns (uint256) {
-        return tradeTakerMinimumFeeBlockNumbers.length;
+    /// @notice Get number of minimum payment fee block number tiers
+    function paymentMinimumFeesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return paymentMinimumFeeByBlockNumber.count();
     }
 
     /// @notice Get payment minimum relative fee at given block number
-    /// @param blockNumber Lower block number for the tier
-    function getPaymentMinimumFee(uint256 blockNumber) public view returns (int256) {
-        require(0 < paymentMinimumFeeBlockNumbers.length);
-        uint256 index = getIndexOfLower(paymentMinimumFeeBlockNumbers, blockNumber);
-        if (0 < index) {
-            uint256 setBlockNumber = paymentMinimumFeeBlockNumbers[index - 1];
-            StaticFee storage fee = paymentMinimumFees[setBlockNumber];
-            return fee.nominal;
-        } else
-            return 0;
+    /// @param blockNumber Block number from which the update applies
+    function paymentMinimumFee(uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
+        return paymentMinimumFeeByBlockNumber.valueAt(blockNumber);
     }
 
     /// @notice Set payment minimum relative fee at given block number tier
-    /// @param blockNumber Lower block number tier
+    /// @param blockNumber Block number from which the update applies
     /// @param nominal Minimum relative fee
     function setPaymentMinimumFee(uint256 blockNumber, int256 nominal)
     public
-    onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
     {
-        StaticFee storage fee = paymentMinimumFees[blockNumber];
-        setStaticFee(fee, paymentMinimumFeeBlockNumbers, blockNumber, nominal);
+        paymentMinimumFeeByBlockNumber.addEntry(blockNumber, nominal);
         emit SetPaymentMinimumFeeEvent(blockNumber, nominal);
     }
 
-    /// @notice Get number of minimum payment fee tiers
-    function getPaymentMinimumFeesCount() public view returns (uint256) {
-        return paymentMinimumFeeBlockNumbers.length;
+    /// @notice Get number of minimum payment fee block number tiers for given currency
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    function currencyPaymentMinimumFeesCount(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].count();
     }
 
     /// @notice Get payment minimum relative fee for given currency at given block number
-    /// @param currency Concerned currency (address(0) == ETH)
-    /// @param blockNumber Lower block number for the tier
-    function getCurrencyPaymentMinimumFee(address currency, uint256 blockNumber) public view returns (int256) {
-        // If no currency specific fee has been set the currency agnostic one should be used
-        if (0 == currencyPaymentMinimumFeeBlockNumbers[currency].length)
-            return getPaymentMinimumFee(blockNumber);
-
-        uint256 index = getIndexOfLower(currencyPaymentMinimumFeeBlockNumbers[currency], blockNumber);
-        if (0 < index) {
-            uint256 setBlockNumber = currencyPaymentMinimumFeeBlockNumbers[currency][index - 1];
-            StaticFee storage fee = currencyPaymentMinimumFees[currency][setBlockNumber];
-            return fee.nominal;
-        } else
-            return 0;
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param blockNumber Block number from which the update applies
+    function currencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
+        if (0 < currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].count())
+            return currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].valueAt(blockNumber);
+        else
+            return paymentMinimumFee(blockNumber);
     }
 
     /// @notice Set payment minimum relative fee for given currency at given block number tier
-    /// @param currency Concerned currency (address(0) == ETH)
-    /// @param blockNumber Lower block number tier
+    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
+    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param blockNumber Block number from which the update applies
     /// @param nominal Minimum relative fee
-    function setCurrencyPaymentMinimumFee(address currency, uint256 blockNumber, int256 nominal)
+    function setCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal)
     public
-    onlyOwner
-    onlyLaterBlockNumber(blockNumber)
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
     {
-        StaticFee storage fee = currencyPaymentMinimumFees[currency][blockNumber];
-        setStaticFee(fee, currencyPaymentMinimumFeeBlockNumbers[currency], blockNumber, nominal);
-        emit SetCurrencyPaymentMinimumFeeEvent(currency, blockNumber, nominal);
+        currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].addEntry(blockNumber, nominal);
+        emit SetCurrencyPaymentMinimumFeeEvent(currencyCt, currencyId, blockNumber, nominal);
     }
 
-    /// @notice Get number of minimum payment fee tiers for given currency
-    /// @param currency Concerned currency (address(0) == ETH)
-    function getCurrencyPaymentMinimumFeesCount(address currency) public view returns (uint256) {
-        return currencyPaymentMinimumFeeBlockNumbers[currency].length;
+    /// @notice Get the current value of cancel order challenge timeout
+    /// @return The value of cancel order challenge timeout
+    function cancelOrderChallengeTimeout()
+    public
+    view
+    returns (uint256)
+    {
+        return cancelOrderChallengeTimeoutByBlockNumber.currentValue();
     }
 
     /// @notice Set timeout of cancel order challenge
-    /// @param timeout Timeout duration
-    function setCancelOrderChallengeTimeout(uint256 timeout) public onlyOwner {
-        cancelOrderChallengeTimeout = timeout;
-        emit SetCancelOrderChallengeTimeout(timeout);
+    /// @param blockNumber Block number from which the update applies
+    /// @param timeoutInSeconds Timeout duration in seconds
+    function setCancelOrderChallengeTimeout(uint256 blockNumber, uint256 timeoutInSeconds)
+    public
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
+    {
+        cancelOrderChallengeTimeoutByBlockNumber.addEntry(blockNumber, timeoutInSeconds);
+        emit SetCancelOrderChallengeTimeoutEvent(blockNumber, timeoutInSeconds);
     }
 
-    /// @notice Get timeout of cancel order challenge
-    function getCancelOrderChallengeTimeout() public view returns (uint256) {
-        return cancelOrderChallengeTimeout;
+    /// @notice Get the current value of settlement challenge timeout
+    /// @return The value of settlement challenge timeout
+    function settlementChallengeTimeout()
+    public
+    view
+    returns (uint256)
+    {
+        return settlementChallengeTimeoutByBlockNumber.currentValue();
     }
 
-    /// @notice Set timeout of driip challenge
-    /// @param timeout Timeout duration
-    function setDriipSettlementChallengeTimeout(uint256 timeout) public onlyOwner {
-        driipSettlementChallengeTimeout = timeout;
-        emit SetDriipSettlementChallengeTimeout(timeout);
+    /// @notice Set timeout of settlement challenges
+    /// @param blockNumber Block number from which the update applies
+    /// @param timeoutInSeconds Timeout duration in seconds
+    function setSettlementChallengeTimeout(uint256 blockNumber, uint256 timeoutInSeconds)
+    public
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
+    {
+        settlementChallengeTimeoutByBlockNumber.addEntry(blockNumber, timeoutInSeconds);
+        emit SetSettlementChallengeTimeoutEvent(blockNumber, timeoutInSeconds);
     }
 
-    /// @notice Get timeout of driip challenge
-    function getDriipSettlementChallengeTimeout() public view returns (uint256) {
-        return driipSettlementChallengeTimeout;
+    /// @notice Get the current value of wallet settlement stake fraction
+    /// @return The value of wallet settlement stake fraction
+    function walletSettlementStakeFraction()
+    public
+    view
+    returns (uint256)
+    {
+        return walletSettlementStakeFractionByBlockNumber.currentValue();
     }
 
-    /// @notice Set currency and amount that will be gained when someone successfully unchallenges
-    /// (driip settlement) order candidate by trade
-    /// @param currency Address of currency gained (0 represents ETH)
-    /// @param amount Amount gained
-    function setUnchallengeOrderCandidateByTradeStake(address currency, int256 amount) public onlyOwner {
-        unchallengeOrderCandidateByTradeStake = Lot({currency : currency, amount : amount});
-        emit SetUnchallengeDriipSettlementOrderByTradeStakeEvent(currency, amount);
+    /// @notice Set fraction of security bond that will be gained from successfully challenging
+    /// in settlement challenge triggered by wallet
+    /// @param blockNumber Block number from which the update applies
+    /// @param stakeFraction The fraction gained
+    function setWalletSettlementStakeFraction(uint256 blockNumber, uint256 stakeFraction)
+    public
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
+    {
+        walletSettlementStakeFractionByBlockNumber.addEntry(blockNumber, stakeFraction);
+        emit SetWalletSettlementStakeFractionEvent(blockNumber, stakeFraction);
     }
 
-    /// @notice Get the currency and amount that will be gained when someone successfully
-    /// unchallenges (driip settlement) order candidate by trade
-    function getUnchallengeOrderCandidateByTradeStake() public view returns (address, int256) {
-        return (unchallengeOrderCandidateByTradeStake.currency, unchallengeOrderCandidateByTradeStake.amount);
+    /// @notice Get the current value of operator settlement stake fraction
+    /// @return The value of operator settlement stake fraction
+    function operatorSettlementStakeFraction()
+    public
+    view
+    returns (uint256)
+    {
+        return operatorSettlementStakeFractionByBlockNumber.currentValue();
     }
 
-    /// @notice Set currency and amount that will be gained when someone successfully challenges
-    /// false wallet signature on order or payment
-    /// @param currency Address of currency gained (0 represents ETH)
-    /// @param amount Amount gained
-    function setFalseWalletSignatureStake(address currency, int256 amount) public onlyOwner {
-        falseWalletSignatureStake = Lot({currency : currency, amount : amount});
-        emit SetFalseWalletSignatureStakeEvent(currency, amount);
+    /// @notice Set fraction of security bond that will be gained from successfully challenging
+    /// in settlement challenge triggered by operator
+    /// @param blockNumber Block number from which the update applies
+    /// @param stakeFraction The fraction gained
+    function setOperatorSettlementStakeFraction(uint256 blockNumber, uint256 stakeFraction)
+    public
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
+    {
+        operatorSettlementStakeFractionByBlockNumber.addEntry(blockNumber, stakeFraction);
+        emit SetOperatorSettlementStakeFractionEvent(blockNumber, stakeFraction);
     }
 
-    /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
-    /// false wallet signature on order or payment
-    function getFalseWalletSignatureStake() public view returns (address, int256) {
-        return (falseWalletSignatureStake.currency, falseWalletSignatureStake.amount);
+    /// @notice Get the current value of fraud stake fraction
+    /// @return The value of fraud stake fraction
+    function fraudStakeFraction()
+    public
+    view
+    returns (uint256)
+    {
+        return fraudStakeFractionByBlockNumber.currentValue();
     }
 
-    /// @notice Set currency and amount that will be gained when someone successfully challenges
-    /// duplicate driip nonce
-    /// @param currency Address of currency gained (0 represents ETH)
-    /// @param amount Amount gained
-    function setDuplicateDriipNonceStake(address currency, int256 amount) public onlyOwner {
-        duplicateDriipNonceStake = Lot({currency : currency, amount : amount});
-        emit SetDuplicateDriipNonceStakeEvent(currency, amount);
-    }
-
-    /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
-    /// duplicate driip nonce
-    function getDuplicateDriipNonceStake() public view returns (address, int256) {
-        return (duplicateDriipNonceStake.currency, duplicateDriipNonceStake.amount);
-    }
-
-    /// @notice Set currency and amount that will be gained when someone successfully challenges
-    /// double spent order
-    /// @param currency Address of currency gained (0 represents ETH)
-    /// @param amount Amount gained
-    function setDoubleSpentOrderStake(address currency, int256 amount) public onlyOwner {
-        doubleSpentOrderStake = Lot({currency : currency, amount : amount});
-        emit SetDoubleSpentOrderStakeEvent(currency, amount);
-    }
-
-    /// @notice Get the lot currency and amount that will be gained when someone successfully challenges
-    /// double spent order
-    function getDoubleSpentOrderStake() public view returns (address, int256) {
-        return (doubleSpentOrderStake.currency, doubleSpentOrderStake.amount);
-    }
-
-    function setDiscountableFee(DiscountableFee storage fee, uint256[] storage feeBlockNumbers,
-        uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues) internal onlyOwner {
-        require(discountTiers.length == discountValues.length);
-
-        feeBlockNumbers.push(blockNumber);
-
-        fee.blockNumber = blockNumber;
-        fee.nominal = nominal;
-
-        fee.discounts.length = 0;
-        for (uint256 i = 0; i < discountTiers.length; i++)
-            fee.discounts.push(TieredDiscount({tier : discountTiers[i], value : discountValues[i]}));
-    }
-
-    function getDiscountableFee(DiscountableFee storage fee, int discountTier) internal view returns (int256) {
-        uint256 index = getIndexOfLowerTier(fee.discounts, discountTier);
-        if (0 < index) {
-            TieredDiscount storage discount = fee.discounts[index - 1];
-            return fee.nominal.mul(PARTS_PER.sub(discount.value)).div(PARTS_PER);
-        } else
-            return fee.nominal;
-    }
-
-    function setStaticFee(StaticFee storage fee, uint256[] storage feeBlockNumbers,
-        uint256 blockNumber, int256 nominal) internal onlyOwner {
-
-        feeBlockNumbers.push(blockNumber);
-
-        fee.blockNumber = blockNumber;
-        fee.nominal = nominal;
-    }
-
-    function getIndexOfLower(uint256[] arr, uint256 num) internal pure returns (uint256) {
-        for (uint256 i = arr.length; i > 0; i--)
-            if (num >= arr[i - 1])
-                return i;
-        return 0;
-    }
-
-    function getIndexOfLowerTier(TieredDiscount[] arr, int256 num) internal pure returns (uint256) {
-        for (uint256 i = arr.length; i > 0; i--)
-            if (num >= arr[i - 1].tier)
-                return i;
-        return 0;
+    /// @notice Set fraction of security bond that will be gained from successfully challenging
+    /// in fraud challenge
+    /// @param blockNumber Block number from which the update applies
+    /// @param stakeFraction The fraction gained
+    function setFraudStakeFraction(uint256 blockNumber, uint256 stakeFraction)
+    public
+    onlyDeployer
+    onlyDelayedBlockNumber(blockNumber)
+    {
+        fraudStakeFractionByBlockNumber.addEntry(blockNumber, stakeFraction);
+        emit SetFraudStakeFractionEvent(blockNumber, stakeFraction);
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
-    modifier onlyLaterBlockNumber(uint256 blockNumber) {
-        require(blockNumber > block.number);
-        _;
-    }
-
-    modifier onlyOwnerOrServiceAction(string action) {
-        require(msg.sender == owner || registeredServiceActionMap[msg.sender][keccak256(abi.encode(action))]);
+    modifier onlyDelayedBlockNumber(uint256 blockNumber) {
+        require(0 == updateDelayBlocksByBlockNumber.count() || blockNumber >= block.number + updateDelayBlocksByBlockNumber.currentValue());
         _;
     }
 }

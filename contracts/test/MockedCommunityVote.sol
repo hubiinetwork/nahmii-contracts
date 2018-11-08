@@ -1,56 +1,69 @@
 /*
- * Hubii Striim
+ * Hubii Nahmii
  *
- * Compliant with the Hubii Striim specification v0.12.
+ * Compliant with the Hubii Nahmii specification v0.12.
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
 pragma solidity ^0.4.24;
 
-//import {CommunityVote} from "../CommunityVote.sol";
-
 /**
 @title MockedCommunityVote
 @notice Mocked implementation of community vote contract
 */
-contract MockedCommunityVote /* is CommunityVote*/ {
+contract MockedCommunityVote {
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => bool) internal doubleSpenderWalletsMap;
-    uint256 internal highestAbsoluteDriipNonce;
-    bool internal dataAvailable;
+    bool[] public doubleSpenderWalletStats;
+    uint256 public doubleSpenderWalletStatsIndex;
+    uint256 public maxDriipNonce;
+    uint256 public maxNullNonce;
+    bool public dataAvailable;
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(/*address owner*/) public /*CommunityVote(owner)*/ {
-        reset();
+    constructor() public {
+        _reset();
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reset() public {
-        highestAbsoluteDriipNonce = 0;
+    function _reset() public {
+        maxDriipNonce = 0;
+        maxNullNonce = 0;
         dataAvailable = true;
+        doubleSpenderWalletStats.length = 0;
+        doubleSpenderWalletStatsIndex = 0;
     }
 
-    function setDoubleSpenderWallet(address wallet, bool doubleSpender) public returns (address[3]) {
-        doubleSpenderWalletsMap[wallet] = doubleSpender;
+    function addDoubleSpenderWallet(bool doubleSpender) public returns (address[3]) {
+        doubleSpenderWalletStats.push(doubleSpender);
     }
 
-    function isDoubleSpenderWallet(address wallet) public view returns (bool) {
-        return doubleSpenderWalletsMap[wallet];
+    function isDoubleSpenderWallet(address wallet) public returns (bool) {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        return doubleSpenderWalletStats.length == 0 ? false : doubleSpenderWalletStats[doubleSpenderWalletStatsIndex++];
     }
 
-    function setHighestAbsoluteDriipNonce(uint256 _highestAbsoluteDriipNonce) public returns (uint256) {
-        return highestAbsoluteDriipNonce = _highestAbsoluteDriipNonce;
+    function setMaxDriipNonce(uint256 _maxDriipNonce) public returns (uint256) {
+        return maxDriipNonce = _maxDriipNonce;
     }
 
-    function getHighestAbsoluteDriipNonce() public view returns (uint256) {
-        return highestAbsoluteDriipNonce;
+    function getMaxDriipNonce() public view returns (uint256) {
+        return maxDriipNonce;
+    }
+
+    function setMaxNullNonce(uint256 _maxNullNonce) public returns (uint256) {
+        return maxNullNonce = _maxNullNonce;
+    }
+
+    function getMaxNullNonce() public view returns (uint256) {
+        return maxNullNonce;
     }
 
     function setDataAvailable(bool _dataAvailable) public returns (bool) {
