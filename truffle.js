@@ -50,7 +50,7 @@ module.exports = {
         },
         mainnet: {
             host: "geth-homestead.ethereum",
-            port: 8545,
+            port: 80,
             network_id: "1",
             gas: 6500000
         },
