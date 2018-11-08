@@ -15,6 +15,7 @@
     "deploy:main": "truffle migrate --network mainnet",
     "deploy:ganache": "truffle compile && truffle migrate --network ganache",
     "deploy:ci": "truffle migrate",
+    "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
     "docs": "soldoc",
     "version:compiler": "solcjs --version"
   },
@@ -31,7 +32,8 @@
     "ganache-cli": "^6.1.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.0.0",
-    "truffle": "^4.1.11"
+    "truffle": "^4.1.11",
+    "truffle-hdwallet-provider": "0.0.6"
   },
   "devDependencies": {
     "bluebird": "^3.5.1",

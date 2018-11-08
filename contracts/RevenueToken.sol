@@ -105,6 +105,26 @@ contract RevenueToken is ERC20Mintable {
     }
 
     /**
+     * @notice Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
+     * @dev Beware that to change the approve amount you first have to reduce the addresses'
+     * allowance to zero by calling `approve(spender, 0)` if it is not already 0 to mitigate the race
+     * condition described here:
+     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     * @param spender The address which will spend the funds.
+     * @param value The amount of tokens to be spent.
+     */
+    function approve(address spender, uint256 value)
+    public
+    returns (bool)
+    {
+        // Prevent the update of non-zero allowance
+        require(0 == value || 0 == allowance(msg.sender, spender));
+
+        // Call super's approve, including event emission
+        return super.approve(spender, value);
+    }
+
+    /**
      * @dev Transfer tokens from one address to another
      * @param from address The address which you want to send tokens from
      * @param to address The address which you want to transfer to

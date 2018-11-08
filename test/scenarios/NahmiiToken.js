@@ -175,6 +175,31 @@ module.exports = function (glob) {
             });
         });
 
+        describe('approve()', () => {
+            describe('if allowance is zero', () => {
+                it('should successfully approve', async () => {
+                    const result = await web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a});
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('Approval');
+
+                    (await ethersNahmiiToken.allowance(glob.user_a, glob.user_b))
+                        ._bn.should.eq.BN(1000);
+                });
+            });
+
+            describe('if allowance is non-zero', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a});
+                });
+
+                it('should revert', async () => {
+                    web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+        });
+
         describe('transferFrom()', () => {
             beforeEach(async () => {
                 await web3NahmiiToken.mint(glob.user_a, 1000);

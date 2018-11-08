@@ -53,7 +53,7 @@ const ConstantsLib = artifacts.require('ConstantsLib');
 const Validator = artifacts.require('Validator');
 
 const path = require('path');
-const helpers = require('./helpers.js');
+const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
 
 // -----------------------------------------------------------------------------------------------------------------

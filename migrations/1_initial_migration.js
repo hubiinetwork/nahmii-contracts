@@ -5,7 +5,7 @@
  */
 
 const Migrations = artifacts.require('Migrations');
-const helpers = require('./helpers.js');
+const helpers = require('../scripts/common/helpers.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 

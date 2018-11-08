@@ -8,7 +8,7 @@ const SafeMath = artifacts.require('SafeMath');
 const NahmiiToken = artifacts.require('NahmiiToken');
 
 const path = require('path');
-const helpers = require('./helpers.js');
+const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
 
 // -----------------------------------------------------------------------------------------------------------------
