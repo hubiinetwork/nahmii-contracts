@@ -53,6 +53,13 @@ module.exports = {
             port: 8545,
             network_id: "1",
             gas: 6500000
+        },
+        "mainnet-infura": {
+            provider: function() {
+                return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3");
+            },
+            network_id: "*",
+            gas: 6500000
         }
     },
     solc: {
