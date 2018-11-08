@@ -1,6 +1,6 @@
 {
   "name": "nahmii-contracts",
-  "version": "1.0.0-pre.5",
+  "version": "1.0.0",
   "description": "Smart Contracts for Nahmii",
   "main": "truffle.js",
   "directories": {
@@ -15,12 +15,13 @@
     "deploy:main": "truffle migrate --network mainnet",
     "deploy:ganache": "truffle compile && truffle migrate --network ganache",
     "deploy:ci": "truffle migrate",
+    "exec:script:mainnet": "truffle compile && truffle exec scripts/common/script_template.js --network mainnet-infura",
     "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
     "docs": "soldoc",
     "version:compiler": "solcjs --version"
   },
   "author": "Hubii",
-  "license": "Commercial",
+  "license": "LGPL-3.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hubiinetwork/nahmii-contracts.git"
