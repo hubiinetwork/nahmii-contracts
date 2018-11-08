@@ -175,7 +175,6 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     {
         require(low <= up);
 
-        low = low < 0 ? 0 : low;
         up = up > inUseCurrencies.list.length - 1 ? inUseCurrencies.list.length - 1 : up;
         MonetaryTypesLib.Currency[] memory _inUseCurrencies = new MonetaryTypesLib.Currency[](up - low + 1);
         for (uint256 i = low; i <= up; i++)

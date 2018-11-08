@@ -53,13 +53,17 @@ const ConstantsLib = artifacts.require('ConstantsLib');
 const Validator = artifacts.require('Validator');
 
 const path = require('path');
-const helpers = require('./helpers.js');
+const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
+
+        // TODO Remove
+        return;
+
         let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
         let ownerAccount;
         let instance, tx;
@@ -284,7 +288,6 @@ module.exports = (deployer, network, accounts) => {
             // tx = await instance.disableInitialServiceAuthorization();
             tx = await instance.registerBeneficiary(addressStorage.get('PaymentsRevenueFund'));
             tx = await instance.registerBeneficiary(addressStorage.get('TradesRevenueFund'));
-            // TODO Whitelist all ClientFundable contracts in ClientFund
 
             instance = await DriipSettlement.at(addressStorage.get('DriipSettlement'));
             tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
@@ -473,6 +476,7 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            tx = await instance.changeRevenueToken(addressStorage.get('NahmiiToken'));
 
             instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
             tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));

@@ -1,3 +1,8 @@
+const HDWalletProvider = require("truffle-hdwallet-provider");
+
+// For read-only interaction
+const mnemonic = 'paddle envelope cage erupt lake unaware genre captain thunder spread hollow hybrid notice kangaroo wasp';
+
 module.exports = {
     networks: {
         development: {
@@ -27,6 +32,13 @@ module.exports = {
         ropsten: {
             host: "geth-ropsten.ethereum",
             port: 80,
+            network_id: "*",
+            gas: 6500000
+        },
+        "ropsten-infura": {
+            provider: function() {
+                return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3");
+            },
             network_id: "*",
             gas: 6500000
         },

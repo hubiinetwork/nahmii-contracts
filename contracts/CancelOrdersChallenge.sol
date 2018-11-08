@@ -103,7 +103,6 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
         require(0 < walletCancelledOrderOperatorHashes[wallet].length);
         require(low <= up);
 
-        low = low < 0 ? 0 : low;
         up = up > walletCancelledOrderOperatorHashes[wallet].length - 1 ? walletCancelledOrderOperatorHashes[wallet].length - 1 : up;
         bytes32[] memory hashes = new bytes32[](up - low + 1);
         for (uint256 i = low; i <= up; i++)
