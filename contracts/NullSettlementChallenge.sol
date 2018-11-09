@@ -412,6 +412,9 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     private
     configurationInitialized
     {
+        // Require that current block number is beyond the earliest settlement challenge block number
+        require(block.number >= configuration.earliestSettlementBlockNumber());
+
         require(amount.isPositiveInt256());
 
         // Require that wallet has no overlap with ongoing challenge

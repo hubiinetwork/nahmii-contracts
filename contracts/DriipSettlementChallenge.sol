@@ -526,6 +526,9 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     configurationInitialized
     onlySealedTrade(trade)
     {
+        // Require that current block number is beyond the earliest settlement challenge block number
+        require(block.number >= configuration.earliestSettlementBlockNumber());
+
         require(intendedStageAmount.isPositiveInt256());
         require(conjugateStageAmount.isPositiveInt256());
 
@@ -574,6 +577,9 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     configurationInitialized
     onlySealedPayment(payment)
     {
+        // Require that current block number is beyond the earliest settlement challenge block number
+        require(block.number >= configuration.earliestSettlementBlockNumber());
+
         require(stageAmount.isPositiveInt256());
 
         require(validator.isPaymentParty(payment, wallet));
