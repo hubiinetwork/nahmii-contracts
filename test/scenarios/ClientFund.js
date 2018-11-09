@@ -36,7 +36,7 @@ module.exports = function (glob) {
             web3ClientFund = await ClientFund.new(glob.owner);
             ethersClientFund = new Contract(web3ClientFund.address, ClientFund.abi, glob.signer_owner);
 
-            await web3ClientFund.changeTransferControllerManager(web3TransferControllerManager.address);
+            await web3ClientFund.setTransferControllerManager(web3TransferControllerManager.address);
 
             web3MockedClientFundAuthorizedService = await MockedClientFundService.new(glob.owner);
             ethersMockedClientFundAuthorizedService = new Contract(web3MockedClientFundAuthorizedService.address, MockedClientFundService.abi, glob.signer_owner);
@@ -48,10 +48,10 @@ module.exports = function (glob) {
             // Fully wire the mocked authorized service
             await web3ClientFund.registerService(web3MockedClientFundAuthorizedService.address);
             await web3ClientFund.authorizeRegisteredService(web3MockedClientFundAuthorizedService.address, {from: glob.user_a});
-            await web3MockedClientFundAuthorizedService.changeClientFund(web3ClientFund.address);
+            await web3MockedClientFundAuthorizedService.setClientFund(web3ClientFund.address);
 
             // Partially wire the mocked unauthorized service
-            await web3MockedClientFundUnauthorizedService.changeClientFund(web3ClientFund.address);
+            await web3MockedClientFundUnauthorizedService.setClientFund(web3ClientFund.address);
 
             await web3ClientFund.registerBeneficiary(web3MockedBeneficiary.address);
         });

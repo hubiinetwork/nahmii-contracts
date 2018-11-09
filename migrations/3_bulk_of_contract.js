@@ -255,10 +255,10 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.registerTransferController('ERC721', addressStorage.get('ERC721TransferController'), {from: ownerAccount});
 
             instance = await Validator.at(addressStorage.get('Validator'));
-            tx = await instance.changeHasher(addressStorage.get('Hasher'));
+            tx = await instance.setHasher(addressStorage.get('Hasher'));
 
             instance = await ClientFund.at(addressStorage.get('ClientFund'));
-            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            tx = await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerService(addressStorage.get('DriipSettlement'));
             tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('DriipSettlement'));
             tx = await instance.registerService(addressStorage.get('DriipSettlementDispute'));
@@ -286,52 +286,52 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.registerBeneficiary(addressStorage.get('TradesRevenueFund'));
 
             instance = await DriipSettlement.at(addressStorage.get('DriipSettlement'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeCommunityVote(addressStorage.get('CommunityVote'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
-            tx = await instance.changeTradesRevenueFund(addressStorage.get('TradesRevenueFund'));
-            tx = await instance.changePaymentsRevenueFund(addressStorage.get('PaymentsRevenueFund'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setCommunityVote(addressStorage.get('CommunityVote'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
+            tx = await instance.setTradesRevenueFund(addressStorage.get('TradesRevenueFund'));
+            tx = await instance.setPaymentsRevenueFund(addressStorage.get('PaymentsRevenueFund'));
 
             instance = await NullSettlement.at(addressStorage.get('NullSettlement'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
-            tx = await instance.changeCommunityVote(addressStorage.get('CommunityVote'));
-            tx = await instance.changeNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setCommunityVote(addressStorage.get('CommunityVote'));
+            tx = await instance.setNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
 
             instance = await CancelOrdersChallenge.at(addressStorage.get('CancelOrdersChallenge'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
 
             instance = await DriipSettlementChallenge.at(addressStorage.get('DriipSettlementChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeDriipSettlementDispute(addressStorage.get('DriipSettlementDispute'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setDriipSettlementDispute(addressStorage.get('DriipSettlementDispute'));
 
             instance = await DriipSettlementDispute.at(addressStorage.get('DriipSettlementDispute'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
-            tx = await instance.changeDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+            tx = await instance.setDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
 
             instance = await NullSettlementChallenge.at(addressStorage.get('NullSettlementChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
-            tx = await instance.changeNullSettlementDispute(addressStorage.get('NullSettlementDispute'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setNullSettlementDispute(addressStorage.get('NullSettlementDispute'));
 
             instance = await NullSettlementDispute.at(addressStorage.get('NullSettlementDispute'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
-            tx = await instance.changeNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+            tx = await instance.setNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
 
             instance = await FraudChallenge.at(addressStorage.get('FraudChallenge'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
@@ -362,97 +362,97 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'), 'add_fraudulent_payment');
 
             instance = await FraudChallengeByOrder.at(addressStorage.get('FraudChallengeByOrder'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
 
             instance = await FraudChallengeByTrade.at(addressStorage.get('FraudChallengeByTrade'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
 
             instance = await FraudChallengeByPayment.at(addressStorage.get('FraudChallengeByPayment'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
 
             instance = await FraudChallengeBySuccessiveTrades.at(addressStorage.get('FraudChallengeBySuccessiveTrades'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
 
             instance = await FraudChallengeBySuccessivePayments.at(addressStorage.get('FraudChallengeBySuccessivePayments'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
 
             instance = await FraudChallengeByPaymentSucceedingTrade.at(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
 
             instance = await FraudChallengeByTradeSucceedingPayment.at(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
 
             instance = await FraudChallengeByTradeOrderResiduals.at(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
-            tx = await instance.changeClientFund(addressStorage.get('ClientFund'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setClientFund(addressStorage.get('ClientFund'));
 
             instance = await FraudChallengeByDoubleSpentOrders.at(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
 
             instance = await FraudChallengeByDuplicateDriipNonceOfTrades.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
 
             instance = await FraudChallengeByDuplicateDriipNonceOfPayments.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
 
             instance = await FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
-            tx = await instance.changeFraudChallenge(addressStorage.get('FraudChallenge'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeValidator(addressStorage.get('Validator'));
-            tx = await instance.changeSecurityBond(addressStorage.get('SecurityBond'));
+            tx = await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setValidator(addressStorage.get('Validator'));
+            tx = await instance.setSecurityBond(addressStorage.get('SecurityBond'));
 
             instance = await RevenueFund.at(addressStorage.get('TradesRevenueFund'));
-            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            tx = await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
             tx = await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), 1e16);
 
             instance = await RevenueFund.at(addressStorage.get('PaymentsRevenueFund'));
-            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            tx = await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
             tx = await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), 1e16);
 
             instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
-            tx = await instance.changeConfiguration(addressStorage.get('Configuration'));
-            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
+            tx = await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
             tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), 'reward');
             tx = await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
@@ -471,11 +471,11 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.enableServiceAction(addressStorage.get('NullSettlementDispute'), 'reward');
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
-            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            tx = await instance.changeRevenueToken(addressStorage.get('NahmiiToken'));
+            tx = await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            tx = await instance.setRevenueToken(addressStorage.get('NahmiiToken'));
 
             instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
-            tx = await instance.changeTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            tx = await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
 
             console.log('Saving addresses...');
             await addressStorage.save();

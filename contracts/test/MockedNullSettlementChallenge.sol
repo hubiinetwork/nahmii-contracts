@@ -287,7 +287,7 @@ contract MockedNullSettlementChallenge {
         return _challengeCandidatePaymentHashesCount;
     }
 
-    function changeNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
+    function setNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
     public
     {
         _nullSettlementDispute = nullSettlementDispute;

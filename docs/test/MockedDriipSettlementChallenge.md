@@ -421,7 +421,7 @@ Returns:
 1. **output_0** *of type `tuple`*
 
 --- 
-### changeDriipSettlementDispute(address)
+### setDriipSettlementDispute(address)
 
 
 **Execution cost**: less than 21202 gas

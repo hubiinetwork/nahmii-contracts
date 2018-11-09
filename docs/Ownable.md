@@ -42,7 +42,7 @@ Params:
 
 
 ## Methods
-### changeDeployer(address)
+### setDeployer(address)
 
 
 **Execution cost**: No bound available
@@ -54,7 +54,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 
 
 **Execution cost**: No bound available

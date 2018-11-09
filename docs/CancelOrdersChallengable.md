@@ -62,7 +62,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeCancelOrdersChallenge(address)
+### setCancelOrdersChallenge(address)
 
 
 **Execution cost**: No bound available
@@ -74,7 +74,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 
 
 **Execution cost**: No bound available
@@ -86,7 +86,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 
 
 **Execution cost**: No bound available

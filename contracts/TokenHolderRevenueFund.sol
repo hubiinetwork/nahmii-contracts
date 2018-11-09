@@ -76,7 +76,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
    //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
+    event SetRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
     event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
@@ -91,16 +91,16 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the revenue token contract
+    /// @notice Set the revenue token contract
     /// @param newRevenueToken The (address of) RevenueToken contract instance
-    function changeRevenueToken(RevenueToken newRevenueToken) public onlyDeployer notNullAddress(newRevenueToken) {
+    function setRevenueToken(RevenueToken newRevenueToken) public onlyDeployer notNullAddress(newRevenueToken) {
         if (newRevenueToken != revenueToken) {
             //set new revenue token
             RevenueToken oldRevenueToken = revenueToken;
             revenueToken = newRevenueToken;
 
             // Emit event
-            emit ChangeRevenueTokenEvent(oldRevenueToken, newRevenueToken);
+            emit SetRevenueTokenEvent(oldRevenueToken, newRevenueToken);
         }
     }
 

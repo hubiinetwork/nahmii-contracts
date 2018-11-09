@@ -116,7 +116,7 @@ Params:
 
 
 ## Methods
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 
@@ -133,7 +133,7 @@ Params:
 
 
 --- 
-### changeNullSettlementChallenge(address)
+### setNullSettlementChallenge(address)
 >
 >Change the null settlement challenge contract
 
@@ -150,7 +150,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -167,7 +167,7 @@ Params:
 
 
 --- 
-### changeCommunityVote(address)
+### setCommunityVote(address)
 >
 >Change the community vote contract
 
@@ -184,7 +184,7 @@ Params:
 
 
 --- 
-### changeClientFund(address)
+### setClientFund(address)
 >
 >Change the client fund contract
 
@@ -231,7 +231,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 

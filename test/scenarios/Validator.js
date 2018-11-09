@@ -26,9 +26,9 @@ module.exports = function (glob) {
             web3Validator = glob.web3Validator;
             ethersValidator = glob.ethersIoValidator;
 
-            await ethersValidator.changeSignerManager(ethersSignerManager.address);
-            await ethersValidator.changeConfiguration(ethersConfiguration.address);
-            await ethersValidator.changeHasher(ethersHasher.address);
+            await ethersValidator.setSignerManager(ethersSignerManager.address);
+            await ethersValidator.setConfiguration(ethersConfiguration.address);
+            await ethersValidator.setHasher(ethersHasher.address);
 
             partsPer = utils.bigNumberify(1e18.toString());
         });
@@ -43,17 +43,17 @@ module.exports = function (glob) {
             });
         });
 
-        describe('changeDeployer()', () => {
+        describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3Validator.changeDeployer(glob.owner, {from: glob.user_a});
+                    await web3Validator.setDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3Validator.changeDeployer(glob.user_a);
+                    const result = await web3Validator.setDeployer(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+                    result.logs[0].event.should.equal('SetDeployerEvent');
 
                     (await web3Validator.deployer.call()).should.equal(glob.user_a);
                 });
@@ -61,7 +61,7 @@ module.exports = function (glob) {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3Validator.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3Validator.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -72,17 +72,17 @@ module.exports = function (glob) {
             });
         });
 
-        describe('changeOperator()', () => {
+        describe('setOperator()', () => {
             describe('if called with (current) operator as sender', () => {
                 afterEach(async () => {
-                    await web3Validator.changeOperator(glob.owner, {from: glob.user_a});
+                    await web3Validator.setOperator(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3Validator.changeOperator(glob.user_a);
+                    const result = await web3Validator.setOperator(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+                    result.logs[0].event.should.equal('SetOperatorEvent');
 
                     (await web3Validator.operator.call()).should.equal(glob.user_a);
                 });
@@ -90,7 +90,7 @@ module.exports = function (glob) {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3Validator.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3Validator.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -178,7 +178,7 @@ module.exports = function (glob) {
             })
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
@@ -193,13 +193,13 @@ module.exports = function (glob) {
                 });
 
                 afterEach(async () => {
-                    await web3Validator.changeConfiguration(configuration);
+                    await web3Validator.setConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3Validator.changeConfiguration(address);
+                    const result = await web3Validator.setConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
                     const configuration = await web3Validator.configuration();
                     utils.getAddress(configuration).should.equal(utils.getAddress(address));
                 });
@@ -207,7 +207,7 @@ module.exports = function (glob) {
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Validator.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3Validator.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -219,7 +219,7 @@ module.exports = function (glob) {
             })
         });
 
-        describe('changeHasher()', () => {
+        describe('setHasher()', () => {
             let address;
 
             before(() => {
@@ -234,13 +234,13 @@ module.exports = function (glob) {
                 });
 
                 afterEach(async () => {
-                    await web3Validator.changeHasher(hasher);
+                    await web3Validator.setHasher(hasher);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3Validator.changeHasher(address);
+                    const result = await web3Validator.setHasher(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeHasherEvent');
+                    result.logs[0].event.should.equal('SetHasherEvent');
                     const hasher = await web3Validator.hasher();
                     utils.getAddress(hasher).should.equal(utils.getAddress(address));
                 });
@@ -248,7 +248,7 @@ module.exports = function (glob) {
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Validator.changeHasher(address, {from: glob.user_a}).should.be.rejected;
+                    web3Validator.setHasher(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

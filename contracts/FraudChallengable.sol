@@ -24,14 +24,14 @@ contract FraudChallengable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
+    event SetFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the fraud challenge contract
+    /// @notice Set the fraud challenge contract
     /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge) public onlyDeployer
+    function setFraudChallenge(FraudChallenge newFraudChallenge) public onlyDeployer
     notNullAddress(newFraudChallenge)
     notSameAddresses(newFraudChallenge, fraudChallenge)
     {
@@ -40,7 +40,7 @@ contract FraudChallengable is Ownable {
         fraudChallenge = newFraudChallenge;
 
         // Emit event
-        emit ChangeFraudChallengeEvent(oldFraudChallenge, newFraudChallenge);
+        emit SetFraudChallengeEvent(oldFraudChallenge, newFraudChallenge);
     }
 
     //

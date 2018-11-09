@@ -25,14 +25,14 @@ contract ClientFundable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeClientFundEvent(ClientFund oldAddress, ClientFund newAddress);
+    event SetClientFundEvent(ClientFund oldAddress, ClientFund newAddress);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the client fund contract
+    /// @notice Set the client fund contract
     /// @param newAddress The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newAddress) public onlyDeployer
+    function setClientFund(ClientFund newAddress) public onlyDeployer
     notNullAddress(newAddress)
     notSameAddresses(newAddress, clientFund)
     {
@@ -41,7 +41,7 @@ contract ClientFundable is Ownable {
         clientFund = newAddress;
 
         // Emit event
-        emit ChangeClientFundEvent(oldAddress, newAddress);
+        emit SetClientFundEvent(oldAddress, newAddress);
     }
 
     //

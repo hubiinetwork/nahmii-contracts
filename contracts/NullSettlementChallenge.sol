@@ -45,7 +45,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeNullSettlementDisputeEvent(NullSettlementDispute oldNullSettlementDispute,
+    event SetNullSettlementDisputeEvent(NullSettlementDispute oldNullSettlementDispute,
         NullSettlementDispute newNullSettlementDispute);
     event StartChallengeEvent(address wallet, int256 amount, address stageCurrencyCt,
         uint stageCurrencyId);
@@ -61,16 +61,16 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the settlement dispute contract
+    /// @notice Set the settlement dispute contract
     /// @param newNullSettlementDispute The (address of) NullSettlementDispute contract instance
-    function changeNullSettlementDispute(NullSettlementDispute newNullSettlementDispute)
+    function setNullSettlementDispute(NullSettlementDispute newNullSettlementDispute)
     public
     onlyDeployer
     notNullAddress(newNullSettlementDispute)
     {
         NullSettlementDispute oldNullSettlementDispute = nullSettlementDispute;
         nullSettlementDispute = newNullSettlementDispute;
-        emit ChangeNullSettlementDisputeEvent(oldNullSettlementDispute, nullSettlementDispute);
+        emit SetNullSettlementDisputeEvent(oldNullSettlementDispute, nullSettlementDispute);
     }
 
     /// @notice Get the number of challenged wallets

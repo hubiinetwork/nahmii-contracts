@@ -171,7 +171,7 @@ module.exports = function (glob) {
 
                 var fee_5_pct = (new BN(_1e18)).div(100).mul(5);
 
-                await glob.web3PartnerFund.changePartnerFee(dummyTag, fee_5_pct);
+                await glob.web3PartnerFund.setPartnerFee(dummyTag, fee_5_pct);
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -187,7 +187,7 @@ module.exports = function (glob) {
 
                 var fee_5_pct = (new BN(_1e18)).div(100).mul(5);
 
-                await glob.web3PartnerFund.changePartnerFee(userBTag, fee_5_pct, { from: glob.user_b });
+                await glob.web3PartnerFund.setPartnerFee(userBTag, fee_5_pct, { from: glob.user_b });
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -203,7 +203,7 @@ module.exports = function (glob) {
 
                 var fee_3_pct = (new BN(_1e18)).div(100).mul(3);
 
-                await glob.web3PartnerFund.changePartnerFee(userBTag, fee_3_pct);
+                await glob.web3PartnerFund.setPartnerFee(userBTag, fee_3_pct);
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');

@@ -55,14 +55,14 @@ module.exports = (glob) => {
             web3DriipSettlement = await DriipSettlement.new(glob.owner);
             ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-            await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
-            await ethersDriipSettlement.changeValidator(web3Validator.address);
-            await ethersDriipSettlement.changeClientFund(web3ClientFund.address);
-            await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-            await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-            await ethersDriipSettlement.changeDriipSettlementChallenge(web3DriipSettlementChallenge.address);
-            await ethersDriipSettlement.changeTradesRevenueFund(web3RevenueFund.address);
-            await ethersDriipSettlement.changePaymentsRevenueFund(web3RevenueFund.address);
+            await ethersDriipSettlement.setConfiguration(web3Configuration.address);
+            await ethersDriipSettlement.setValidator(web3Validator.address);
+            await ethersDriipSettlement.setClientFund(web3ClientFund.address);
+            await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+            await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+            await ethersDriipSettlement.setDriipSettlementChallenge(web3DriipSettlementChallenge.address);
+            await ethersDriipSettlement.setTradesRevenueFund(web3RevenueFund.address);
+            await ethersDriipSettlement.setPaymentsRevenueFund(web3RevenueFund.address);
         });
 
         describe('constructor', () => {
@@ -77,17 +77,17 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeDeployer()', () => {
+        describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3DriipSettlement.changeDeployer(glob.owner, {from: glob.user_a});
+                    await web3DriipSettlement.setDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changeDeployer(glob.user_a);
+                    const result = await web3DriipSettlement.setDeployer(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+                    result.logs[0].event.should.equal('SetDeployerEvent');
 
                     (await web3DriipSettlement.deployer.call()).should.equal(glob.user_a);
                 });
@@ -95,7 +95,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -106,17 +106,17 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeOperator()', () => {
+        describe('setOperator()', () => {
             describe('if called with (current) operator as sender', () => {
                 afterEach(async () => {
-                    await web3DriipSettlement.changeOperator(glob.owner, {from: glob.user_a});
+                    await web3DriipSettlement.setOperator(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changeOperator(glob.user_a);
+                    const result = await web3DriipSettlement.setOperator(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+                    result.logs[0].event.should.equal('SetOperatorEvent');
 
                     (await web3DriipSettlement.operator.call()).should.equal(glob.user_a);
                 });
@@ -124,7 +124,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -135,7 +135,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
@@ -150,14 +150,14 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlement.changeConfiguration(configuration);
+                    await web3DriipSettlement.setConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changeConfiguration(address);
+                    const result = await web3DriipSettlement.setConfiguration(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
 
                     utils.getAddress(await web3DriipSettlement.configuration.call()).should.equal(address);
                 });
@@ -165,7 +165,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -176,7 +176,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeValidator()', () => {
+        describe('setValidator()', () => {
             let address;
 
             before(() => {
@@ -191,14 +191,14 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlement.changeValidator(validator);
+                    await web3DriipSettlement.setValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changeValidator(address);
+                    const result = await web3DriipSettlement.setValidator(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    result.logs[0].event.should.equal('SetValidatorEvent');
 
                     utils.getAddress(await web3DriipSettlement.validator.call()).should.equal(address);
                 });
@@ -206,7 +206,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -217,7 +217,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeDriipSettlementChallenge()', () => {
+        describe('setDriipSettlementChallenge()', () => {
             let address;
 
             before(() => {
@@ -232,14 +232,14 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlement.changeDriipSettlementChallenge(driipSettlementChallenge);
+                    await web3DriipSettlement.setDriipSettlementChallenge(driipSettlementChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changeDriipSettlementChallenge(address);
+                    const result = await web3DriipSettlement.setDriipSettlementChallenge(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDriipSettlementChallengeEvent');
+                    result.logs[0].event.should.equal('SetDriipSettlementChallengeEvent');
 
                     utils.getAddress(await web3DriipSettlement.driipSettlementChallenge.call()).should.equal(address);
                 });
@@ -247,12 +247,12 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changeDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('changeClientFund()', () => {
+        describe('setClientFund()', () => {
             let address;
 
             before(() => {
@@ -267,26 +267,26 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlement.changeClientFund(clientFund);
+                    await web3DriipSettlement.setClientFund(clientFund);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changeClientFund(address);
+                    const result = await web3DriipSettlement.setClientFund(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeClientFundEvent');
+                    result.logs[0].event.should.equal('SetClientFundEvent');
                     utils.getAddress(await web3DriipSettlement.clientFund.call()).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changeClientFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setClientFund(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('changeTradesRevenueFund()', () => {
+        describe('setTradesRevenueFund()', () => {
             let address;
 
             before(() => {
@@ -301,14 +301,14 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlement.changeTradesRevenueFund(tradesRevenueFund);
+                    await web3DriipSettlement.setTradesRevenueFund(tradesRevenueFund);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changeTradesRevenueFund(address);
+                    const result = await web3DriipSettlement.setTradesRevenueFund(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeTradesRevenueFundEvent');
+                    result.logs[0].event.should.equal('SetTradesRevenueFundEvent');
 
                     utils.getAddress(await web3DriipSettlement.tradesRevenueFund.call()).should.equal(address);
                 });
@@ -316,12 +316,12 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changeTradesRevenueFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setTradesRevenueFund(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('changePaymentsRevenueFund()', () => {
+        describe('setPaymentsRevenueFund()', () => {
             let address;
 
             before(() => {
@@ -336,13 +336,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlement.changePaymentsRevenueFund(paymentsRevenueFund);
+                    await web3DriipSettlement.setPaymentsRevenueFund(paymentsRevenueFund);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changePaymentsRevenueFund(address);
+                    const result = await web3DriipSettlement.setPaymentsRevenueFund(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangePaymentsRevenueFundEvent');
+                    result.logs[0].event.should.equal('SetPaymentsRevenueFundEvent');
 
                     utils.getAddress(await web3DriipSettlement.paymentsRevenueFund.call()).should.equal(address);
                 });
@@ -350,7 +350,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changePaymentsRevenueFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setPaymentsRevenueFund(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -362,7 +362,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeCommunityVote()', () => {
+        describe('setCommunityVote()', () => {
             let address;
 
             before(() => {
@@ -377,14 +377,14 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3DriipSettlement.changeCommunityVote(communityVote);
+                    await web3DriipSettlement.setCommunityVote(communityVote);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlement.changeCommunityVote(address);
+                    const result = await web3DriipSettlement.setCommunityVote(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeCommunityVoteEvent');
+                    result.logs[0].event.should.equal('SetCommunityVoteEvent');
 
                     utils.getAddress(await web3DriipSettlement.communityVote.call()).should.equal(address);
                 });
@@ -392,7 +392,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlement.changeCommunityVote(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlement.setCommunityVote(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -413,7 +413,7 @@ module.exports = (glob) => {
 
                 it('should disable changing community vote', async () => {
                     await web3DriipSettlement.disableUpdateOfCommunityVote();
-                    web3DriipSettlement.changeCommunityVote(address).should.be.rejected;
+                    web3DriipSettlement.setCommunityVote(address).should.be.rejected;
                 });
             });
         });
@@ -546,7 +546,7 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
                 });
 
                 it('should revert', async () => {
@@ -559,8 +559,8 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
                 });
 
                 it('should revert', async () => {
@@ -573,9 +573,9 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
                 });
 
                 it('should revert', async () => {
@@ -588,10 +588,10 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
                 });
 
                 it('should revert', async () => {
@@ -604,11 +604,11 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
-                    await ethersDriipSettlement.changeClientFund(web3ClientFund.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
+                    await ethersDriipSettlement.setClientFund(web3ClientFund.address);
                 });
 
                 it('should revert', async () => {
@@ -881,7 +881,7 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
                 });
 
                 it('should revert', async () => {
@@ -894,8 +894,8 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
                 });
 
                 it('should revert', async () => {
@@ -908,9 +908,9 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
                 });
 
                 it('should revert', async () => {
@@ -923,10 +923,10 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
                 });
 
                 it('should revert', async () => {
@@ -939,11 +939,11 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
-                    await ethersDriipSettlement.changeClientFund(web3ClientFund.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
+                    await ethersDriipSettlement.setClientFund(web3ClientFund.address);
                 });
 
                 it('should revert', async () => {
@@ -1204,7 +1204,7 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
                 });
 
                 it('should revert', async () => {
@@ -1217,8 +1217,8 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
                 });
 
                 it('should revert', async () => {
@@ -1231,9 +1231,9 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
                 });
 
                 it('should revert', async () => {
@@ -1246,10 +1246,10 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
                 });
 
                 it('should revert', async () => {
@@ -1262,11 +1262,11 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
-                    await ethersDriipSettlement.changeClientFund(web3ClientFund.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
+                    await ethersDriipSettlement.setClientFund(web3ClientFund.address);
                 });
 
                 it('should revert', async () => {
@@ -1505,7 +1505,7 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
                 });
 
                 it('should revert', async () => {
@@ -1518,8 +1518,8 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
                 });
 
                 it('should revert', async () => {
@@ -1532,9 +1532,9 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
                 });
 
                 it('should revert', async () => {
@@ -1547,10 +1547,10 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
                 });
 
                 it('should revert', async () => {
@@ -1563,11 +1563,11 @@ module.exports = (glob) => {
                     web3DriipSettlement = await DriipSettlement.new(glob.owner);
                     ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
 
-                    await ethersDriipSettlement.changeValidator(web3Validator.address);
-                    await ethersDriipSettlement.changeFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.changeCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.changeConfiguration(web3Configuration.address);
-                    await ethersDriipSettlement.changeClientFund(web3ClientFund.address);
+                    await ethersDriipSettlement.setValidator(web3Validator.address);
+                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
+                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
+                    await ethersDriipSettlement.setClientFund(web3ClientFund.address);
                 });
 
                 it('should revert', async () => {

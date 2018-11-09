@@ -52,15 +52,15 @@ module.exports = (glob) => {
             web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
             ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-            await ethersNullSettlementDispute.changeConfiguration(ethersConfiguration.address);
-            await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
-            await ethersNullSettlementDispute.changeSecurityBond(ethersSecurityBond.address);
-            await ethersNullSettlementDispute.changeClientFund(ethersClientFund.address);
-            await ethersNullSettlementDispute.changeFraudChallenge(ethersFraudChallenge.address);
-            await ethersNullSettlementDispute.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
-            await ethersNullSettlementDispute.changeNullSettlementChallenge(ethersNullSettlementChallenge.address);
+            await ethersNullSettlementDispute.setConfiguration(ethersConfiguration.address);
+            await ethersNullSettlementDispute.setValidator(ethersValidator.address);
+            await ethersNullSettlementDispute.setSecurityBond(ethersSecurityBond.address);
+            await ethersNullSettlementDispute.setClientFund(ethersClientFund.address);
+            await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
+            await ethersNullSettlementDispute.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
+            await ethersNullSettlementDispute.setNullSettlementChallenge(ethersNullSettlementChallenge.address);
 
-            await ethersNullSettlementChallenge.changeNullSettlementDispute(ethersNullSettlementDispute.address);
+            await ethersNullSettlementChallenge.setNullSettlementDispute(ethersNullSettlementDispute.address);
 
             blockNumber0 = await provider.getBlockNumber();
         });
@@ -79,7 +79,7 @@ module.exports = (glob) => {
             })
         });
 
-        describe('changeValidator()', () => {
+        describe('setValidator()', () => {
             let address;
 
             before(() => {
@@ -88,10 +88,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlementDispute.changeValidator(address);
+                    const result = await web3NullSettlementDispute.setValidator(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    result.logs[0].event.should.equal('SetValidatorEvent');
 
                     (await ethersNullSettlementDispute.validator())
                         .should.equal(address);
@@ -100,7 +100,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlementDispute.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlementDispute.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -112,7 +112,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeFraudChallenge()', () => {
+        describe('setFraudChallenge()', () => {
             let address;
 
             before(() => {
@@ -121,10 +121,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlementDispute.changeFraudChallenge(address);
+                    const result = await web3NullSettlementDispute.setFraudChallenge(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeFraudChallengeEvent');
+                    result.logs[0].event.should.equal('SetFraudChallengeEvent');
 
                     (await ethersNullSettlementDispute.fraudChallenge())
                         .should.equal(address);
@@ -133,7 +133,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlementDispute.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlementDispute.setFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -145,7 +145,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeCancelOrdersChallenge()', () => {
+        describe('setCancelOrdersChallenge()', () => {
             let address;
 
             before(() => {
@@ -154,10 +154,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlementDispute.changeCancelOrdersChallenge(address);
+                    const result = await web3NullSettlementDispute.setCancelOrdersChallenge(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeCancelOrdersChallengeEvent');
+                    result.logs[0].event.should.equal('SetCancelOrdersChallengeEvent');
 
                     (await ethersNullSettlementDispute.cancelOrdersChallenge())
                         .should.equal(address);
@@ -166,7 +166,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlementDispute.changeCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlementDispute.setCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -178,7 +178,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeNullSettlementChallenge()', () => {
+        describe('setNullSettlementChallenge()', () => {
             let address;
 
             before(() => {
@@ -187,10 +187,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlementDispute.changeNullSettlementChallenge(address);
+                    const result = await web3NullSettlementDispute.setNullSettlementChallenge(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeNullSettlementChallengeEvent');
+                    result.logs[0].event.should.equal('SetNullSettlementChallengeEvent');
 
                     (await ethersNullSettlementDispute.nullSettlementChallenge())
                         .should.equal(address);
@@ -199,7 +199,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlementDispute.changeNullSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlementDispute.setNullSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -236,7 +236,7 @@ module.exports = (glob) => {
                     web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
                     ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-                    await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
+                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
                 });
 
                 it('should revert', async () => {
@@ -249,8 +249,8 @@ module.exports = (glob) => {
                     web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
                     ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-                    await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.changeFraudChallenge(ethersFraudChallenge.address);
+                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
+                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
                 });
 
                 it('should revert', async () => {
@@ -263,9 +263,9 @@ module.exports = (glob) => {
                     web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
                     ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-                    await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.changeFraudChallenge(ethersFraudChallenge.address);
-                    await ethersNullSettlementDispute.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
+                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
+                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
+                    await ethersNullSettlementDispute.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
                 });
 
                 it('should revert', async () => {
@@ -447,7 +447,7 @@ module.exports = (glob) => {
                     web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
                     ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-                    await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
+                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
                 });
 
                 it('should revert', async () => {
@@ -460,8 +460,8 @@ module.exports = (glob) => {
                     web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
                     ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-                    await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.changeFraudChallenge(ethersFraudChallenge.address);
+                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
+                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
                 });
 
                 it('should revert', async () => {
@@ -474,9 +474,9 @@ module.exports = (glob) => {
                     web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
                     ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-                    await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.changeFraudChallenge(ethersFraudChallenge.address);
-                    await ethersNullSettlementDispute.changeCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
+                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
+                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
+                    await ethersNullSettlementDispute.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
                 });
 
                 it('should revert', async () => {
@@ -667,7 +667,7 @@ module.exports = (glob) => {
                     web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
                     ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-                    await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
+                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
                 });
 
                 it('should revert', async () => {
@@ -680,8 +680,8 @@ module.exports = (glob) => {
                     web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
                     ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
 
-                    await ethersNullSettlementDispute.changeValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.changeFraudChallenge(ethersFraudChallenge.address);
+                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
+                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
                 });
 
                 it('should revert', async () => {

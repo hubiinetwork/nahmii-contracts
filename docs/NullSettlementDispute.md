@@ -131,7 +131,7 @@ Params:
 
 
 ## Methods
-### changeCancelOrdersChallenge(address)
+### setCancelOrdersChallenge(address)
 >
 >Change the cancel orders challenge contract
 
@@ -148,7 +148,7 @@ Params:
 
 
 --- 
-### changeNullSettlementChallenge(address)
+### setNullSettlementChallenge(address)
 >
 >Change the settlement challenge contract
 
@@ -194,7 +194,7 @@ Params:
 
 
 --- 
-### changeFraudChallenge(address)
+### setFraudChallenge(address)
 >
 >Change the fraud challenge contract
 
@@ -211,7 +211,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -254,7 +254,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -271,7 +271,7 @@ Params:
 
 
 --- 
-### changeValidator(address)
+### setValidator(address)
 >
 >Change the validator contract
 

@@ -351,7 +351,7 @@ contract MockedDriipSettlementChallenge {
         return _challengeCandidatePaymentHashesCount;
     }
 
-    function changeDriipSettlementDispute(DriipSettlementDispute driipSettlementDispute)
+    function setDriipSettlementDispute(DriipSettlementDispute driipSettlementDispute)
     public
     {
         _driipSettlementDispute = driipSettlementDispute;

@@ -130,22 +130,22 @@ contract('Smart contract checks', function () {
             glob.web3UnitTestHelpers_SUCCESS_TESTS = await UnitTestHelpers.new(glob.owner);
             assert.notEqual(glob.web3UnitTestHelpers_SUCCESS_TESTS, null);
             glob.ethersUnitTestHelpers_SUCCESS_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
-            await glob.web3UnitTestHelpers_SUCCESS_TESTS.changeTransferControllerManager(instance.address);
+            await glob.web3UnitTestHelpers_SUCCESS_TESTS.setTransferControllerManager(instance.address);
 
             glob.web3UnitTestHelpers_FAIL_TESTS = await UnitTestHelpers.new(glob.owner);
             assert.notEqual(glob.web3UnitTestHelpers_FAIL_TESTS, null);
             glob.ethersUnitTestHelpers_FAIL_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_FAIL_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
-            await glob.ethersUnitTestHelpers_FAIL_TESTS.changeTransferControllerManager(instance.address);
+            await glob.ethersUnitTestHelpers_FAIL_TESTS.setTransferControllerManager(instance.address);
 
             glob.web3UnitTestHelpers_MISC_1 = await UnitTestHelpers.new(glob.owner);
             assert.notEqual(glob.web3UnitTestHelpers_MISC_1, null);
             glob.web3UnitTestHelpers_MISC_1 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_1.address, UnitTestHelpers.abi, glob.signer_owner);
-            await glob.web3UnitTestHelpers_MISC_1.changeTransferControllerManager(instance.address);
+            await glob.web3UnitTestHelpers_MISC_1.setTransferControllerManager(instance.address);
 
             glob.web3UnitTestHelpers_MISC_2 = await UnitTestHelpers.new(glob.owner);
             assert.notEqual(glob.web3UnitTestHelpers_MISC_2, null);
             glob.web3UnitTestHelpers_MISC_2 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_2.address, UnitTestHelpers.abi, glob.signer_owner);
-            await glob.web3UnitTestHelpers_MISC_2.changeTransferControllerManager(instance.address);
+            await glob.web3UnitTestHelpers_MISC_2.setTransferControllerManager(instance.address);
         }
         catch (err) {
             assert(false, 'Failed to create an instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
@@ -491,7 +491,7 @@ contract('Smart contract checks', function () {
             glob.web3RevenueToken = await RevenueToken.new();
             assert.notEqual(glob.web3RevenueToken, null);
             console.log('Sample RevenueToken deployed at address: ' + glob.web3RevenueToken.address);
-            glob.web3TokenHolderRevenueFund.changeRevenueToken(glob.web3RevenueToken.address);
+            glob.web3TokenHolderRevenueFund.setRevenueToken(glob.web3RevenueToken.address);
         }
         catch (err) {
             assert(false, 'Failed to instantiate TokenHolderRevenueFund contract address. [Error: ' + err.toString() + ']');

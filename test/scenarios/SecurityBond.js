@@ -42,8 +42,8 @@ module.exports = function (glob) {
             web3SecurityBond = await SecurityBond.new(glob.owner);
             ethersSecurityBond = new Contract(web3SecurityBond.address, SecurityBond.abi, glob.signer_owner);
 
-            await web3SecurityBond.changeConfiguration(web3Configuration.address);
-            await web3SecurityBond.changeTransferControllerManager(web3TransferControllerManager.address);
+            await web3SecurityBond.setConfiguration(web3Configuration.address);
+            await web3SecurityBond.setTransferControllerManager(web3TransferControllerManager.address);
 
             web3MockedSecurityBondService = await MockedSecurityBondService.new(glob.owner);
             ethersMockedSecurityBondService = new Contract(web3MockedSecurityBondService.address, MockedSecurityBondService.abi, glob.signer_owner);
@@ -51,7 +51,7 @@ module.exports = function (glob) {
             // Fully wire the mocked service
             await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
             await web3SecurityBond.enableServiceAction(web3MockedSecurityBondService.address, 'reward');
-            await web3MockedSecurityBondService.changeSecurityBond(web3SecurityBond.address);
+            await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
         });
 
         describe('constructor()', () => {
@@ -460,7 +460,7 @@ module.exports = function (glob) {
             describe('if called by service that is not registered', () => {
                 beforeEach(async () => {
                     web3SecurityBond = await SecurityBond.new(glob.owner);
-                    await web3MockedSecurityBondService.changeSecurityBond(web3SecurityBond.address);
+                    await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
                 });
 
                 it('should revert', async () => {
@@ -474,7 +474,7 @@ module.exports = function (glob) {
                 beforeEach(async () => {
                     web3SecurityBond = await SecurityBond.new(glob.owner);
                     await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
-                    await web3MockedSecurityBondService.changeSecurityBond(web3SecurityBond.address);
+                    await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
                 });
 
                 it('should revert', async () => {

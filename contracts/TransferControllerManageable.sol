@@ -25,14 +25,14 @@ contract TransferControllerManageable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeTransferControllerManagerEvent(TransferControllerManager oldTransferControllerManager, TransferControllerManager newTransferControllerManager);
+    event SetTransferControllerManagerEvent(TransferControllerManager oldTransferControllerManager, TransferControllerManager newTransferControllerManager);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the currency manager contract
+    /// @notice Set the currency manager contract
     /// @param newAddress The (address of) TransferControllerManager contract instance
-    function changeTransferControllerManager(TransferControllerManager newAddress) public onlyDeployer
+    function setTransferControllerManager(TransferControllerManager newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, transferControllerManager)
     {
@@ -41,7 +41,7 @@ contract TransferControllerManageable is Ownable {
         transferControllerManager = newAddress;
 
         // Emit event
-        emit ChangeTransferControllerManagerEvent(oldAddress, newAddress);
+        emit SetTransferControllerManagerEvent(oldAddress, newAddress);
     }
 
     /// @notice Get the transfer controller of the given currency contract address and standard
