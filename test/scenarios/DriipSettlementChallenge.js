@@ -58,6 +58,7 @@ module.exports = (glob) => {
             blockNumber = await provider.getBlockNumber();
 
             await ethersConfiguration.setSettlementChallengeTimeout(blockNumber + 1, 1e4);
+            await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
 
         describe('constructor', () => {
@@ -257,6 +258,18 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if current block number is below earliest settlement challenge block', () => {
+                beforeEach(async () => {
+                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.startChallengeFromTrade(
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called with improperly sealed trade', () => {
                 beforeEach(async () => {
                     await web3Validator.setGenuineTradeSeal(false);
@@ -316,7 +329,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 it('should start challenge successfully', async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromTrade(
-                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 2e6}
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
                     );
 
                     const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(trade.buyer.wallet);
@@ -340,7 +353,7 @@ module.exports = (glob) => {
             describe('if called before an ongoing settlement challenge has expired', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromTrade(
-                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 4e6}
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
                     );
                 });
 
@@ -407,6 +420,18 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if current block number is below earliest settlement challenge block', () => {
+                beforeEach(async () => {
+                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.startChallengeFromTradeByProxy(
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called with improperly sealed trade', () => {
                 beforeEach(async () => {
                     await web3Validator.setGenuineTradeSeal(false);
@@ -462,7 +487,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 it('should start challenge successfully', async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromTradeByProxy(
-                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 2e6}
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
                     );
 
                     const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(trade.buyer.wallet);
@@ -486,7 +511,7 @@ module.exports = (glob) => {
             describe('if called before an ongoing settlement challenge has expired', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromTradeByProxy(
-                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 4e6}
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
                     );
                 });
 
@@ -541,6 +566,18 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if current block number is below earliest settlement challenge block', () => {
+                beforeEach(async () => {
+                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.startChallengeFromPayment(
+                        payment, payment.sender.balances.current
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called with improperly sealed payment', () => {
                 beforeEach(async () => {
                     await web3Validator.setGenuinePaymentSeals(false);
@@ -584,7 +621,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 it('should start challenge successfully', async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
 
                     const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(payment.sender.wallet);
@@ -608,13 +645,13 @@ module.exports = (glob) => {
             describe('if called before an ongoing settlement challenge has expired', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -651,6 +688,18 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     web3DriipSettlementChallenge = await DriipSettlementChallenge.new(glob.owner);
                     ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, DriipSettlementChallenge.abi, glob.signer_owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.startChallengeFromPaymentByProxy(
+                        payment.sender.wallet, payment, payment.sender.balances.current
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if current block number is below earliest settlement challenge block', () => {
+                beforeEach(async () => {
+                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
                 });
 
                 it('should revert', async () => {
@@ -714,7 +763,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 it('should start challenge successfully', async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
 
                     const proposal = await ethersDriipSettlementChallenge.proposalsByWallet(payment.sender.wallet);
@@ -738,13 +787,13 @@ module.exports = (glob) => {
             describe('if called before an ongoing settlement challenge has expired', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -767,7 +816,7 @@ module.exports = (glob) => {
 
                 describe('if settlement challenge has completed for given wallet', () => {
                     beforeEach(async () => {
-                        await web3Configuration.setSettlementChallengeTimeout(blockNumber + 2, 0);
+                        await web3Configuration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 0);
                         await ethersDriipSettlementChallenge.startChallengeFromPayment(
                             payment, payment.sender.balances.current, {gasLimit: 2e6}
                         );
@@ -807,7 +856,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
@@ -831,7 +880,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
@@ -855,7 +904,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     const payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
 
                     const blockNumber = await provider.getBlockNumber();
@@ -882,7 +931,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     const payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
@@ -905,7 +954,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     const payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
@@ -929,7 +978,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
@@ -957,7 +1006,7 @@ module.exports = (glob) => {
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
@@ -984,7 +1033,7 @@ module.exports = (glob) => {
             describe('if settlement challenge has been started for given wallet', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 2e6}
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 

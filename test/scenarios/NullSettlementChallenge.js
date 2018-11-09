@@ -61,9 +61,9 @@ module.exports = (glob) => {
 
             blockNumber = await provider.getBlockNumber();
 
-            // Default configuration timeouts for all tests. Particular tests override these defaults.
             await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 1, 1e3);
             await ethersConfiguration.setSettlementChallengeTimeout(blockNumber + 2, 1e4);
+            await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
 
         describe('constructor', () => {
@@ -183,6 +183,16 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if current block number is below earliest settlement challenge block', () => {
+                beforeEach(async () => {
+                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                });
+
+                it('should revert', async () => {
+                    web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
             describe('if amount to be staged is negative', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.startChallenge(-1, mocks.address0, 0).should.be.rejected;
@@ -219,7 +229,7 @@ module.exports = (glob) => {
                 });
 
                 it('should start challenge successfully', async () => {
-                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 1e6});
+                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
 
                     const proposal = await ethersNullSettlementChallenge.proposalsByWallet(glob.owner);
                     proposal.nonce._bn.should.eq.BN(1);
@@ -242,11 +252,11 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
-                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 1e6});
+                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
 
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 1e6})
+                    web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6})
                         .should.be.rejected;
                 });
             });
@@ -270,6 +280,16 @@ module.exports = (glob) => {
             describe('if configuration contract is not initialized', () => {
                 beforeEach(async () => {
                     web3NullSettlementChallenge = await NullSettlementChallenge.new(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('if current block number is below earliest settlement challenge block', () => {
+                beforeEach(async () => {
+                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
                 });
 
                 it('should revert', async () => {
@@ -313,7 +333,7 @@ module.exports = (glob) => {
                 });
 
                 it('should start challenge successfully', async () => {
-                    await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 1e6});
+                    await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 3e6});
 
                     const proposal = await ethersNullSettlementChallenge.proposalsByWallet(wallet);
                     proposal.nonce._bn.should.eq.BN(1);
@@ -336,11 +356,11 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3ClientFund._addActiveBalanceLogEntry(10, 1);
 
-                    await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 1e6});
+                    await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 3e6});
                 });
 
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 1e6})
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 3e6})
                         .should.be.rejected;
                 });
             });
@@ -366,7 +386,7 @@ module.exports = (glob) => {
                         await web3Configuration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 0);
                         await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                             from: glob.user_d,
-                            gas: 1e6
+                            gas: 3e6
                         });
                     });
 
@@ -380,7 +400,7 @@ module.exports = (glob) => {
                     beforeEach(async () => {
                         await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                             from: glob.user_d,
-                            gas: 1e6
+                            gas: 3e6
                         });
                     });
 
@@ -407,7 +427,7 @@ module.exports = (glob) => {
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_e,
-                        gas: 1e6
+                        gas: 3e6
                     });
                 });
 
@@ -432,7 +452,7 @@ module.exports = (glob) => {
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_e,
-                        gas: 1e6
+                        gas: 3e6
                     });
 
                 });
@@ -460,7 +480,7 @@ module.exports = (glob) => {
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_e,
-                        gas: 1e6
+                        gas: 3e6
                     });
 
                     const blockNumber = await provider.getBlockNumber();
@@ -491,7 +511,7 @@ module.exports = (glob) => {
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_f,
-                        gas: 1e6
+                        gas: 3e6
                     });
                 });
 
@@ -518,7 +538,7 @@ module.exports = (glob) => {
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_g,
-                        gas: 1e6
+                        gas: 3e6
                     });
                 });
 
@@ -549,7 +569,7 @@ module.exports = (glob) => {
 
                     await web3NullSettlementChallenge.startChallenge(1, currencyCt, currencyId, {
                         from: glob.user_h,
-                        gas: 1e6
+                        gas: 3e6
                     });
                 });
 
@@ -579,7 +599,7 @@ module.exports = (glob) => {
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_i,
-                        gas: 1e6
+                        gas: 3e6
                     });
                 });
 
@@ -608,7 +628,7 @@ module.exports = (glob) => {
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {
                         from: glob.user_a,
-                        gas: 1e6
+                        gas: 3e6
                     });
                 });
 
