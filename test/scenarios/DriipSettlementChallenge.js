@@ -28,7 +28,6 @@ module.exports = (glob) => {
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
-        let blockNumber;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -55,9 +54,7 @@ module.exports = (glob) => {
             await ethersDriipSettlementChallenge.changeValidator(ethersValidator.address);
             await ethersDriipSettlementChallenge.changeDriipSettlementDispute(ethersDriipSettlementDispute.address);
 
-            blockNumber = await provider.getBlockNumber();
-
-            await ethersConfiguration.setSettlementChallengeTimeout(blockNumber + 1, 1e4);
+            await ethersConfiguration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 1e4);
             await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
 
@@ -225,7 +222,7 @@ module.exports = (glob) => {
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber,
+                    fromBlock: await provider.getBlockNumber(),
                     topics: [topic]
                 };
             });
@@ -260,7 +257,7 @@ module.exports = (glob) => {
 
             describe('if current block number is below earliest settlement challenge block', () => {
                 beforeEach(async () => {
-                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                    web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
                 });
 
                 it('should revert', async () => {
@@ -375,7 +372,7 @@ module.exports = (glob) => {
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeByProxyEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber,
+                    fromBlock: await provider.getBlockNumber(),
                     topics: [topic]
                 };
             });
@@ -422,7 +419,7 @@ module.exports = (glob) => {
 
             describe('if current block number is below earliest settlement challenge block', () => {
                 beforeEach(async () => {
-                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                    web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
                 });
 
                 it('should revert', async () => {
@@ -533,7 +530,7 @@ module.exports = (glob) => {
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber,
+                    fromBlock: await provider.getBlockNumber(),
                     topics: [topic]
                 };
             });
@@ -568,7 +565,7 @@ module.exports = (glob) => {
 
             describe('if current block number is below earliest settlement challenge block', () => {
                 beforeEach(async () => {
-                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                    web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
                 });
 
                 it('should revert', async () => {
@@ -667,7 +664,7 @@ module.exports = (glob) => {
 
                 topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentByProxyEvent'].topics[0];
                 filter = {
-                    fromBlock: blockNumber,
+                    fromBlock: await provider.getBlockNumber(),
                     topics: [topic]
                 };
             });
@@ -699,7 +696,7 @@ module.exports = (glob) => {
 
             describe('if current block number is below earliest settlement challenge block', () => {
                 beforeEach(async () => {
-                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                    web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
                 });
 
                 it('should revert', async () => {

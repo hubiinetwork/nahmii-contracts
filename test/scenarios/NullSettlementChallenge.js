@@ -61,8 +61,8 @@ module.exports = (glob) => {
 
             blockNumber = await provider.getBlockNumber();
 
-            await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 1, 1e3);
-            await ethersConfiguration.setSettlementChallengeTimeout(blockNumber + 2, 1e4);
+            await ethersConfiguration.setCancelOrderChallengeTimeout((await provider.getBlockNumber()) + 1, 1e3);
+            await ethersConfiguration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 1e4);
             await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
 
@@ -185,7 +185,7 @@ module.exports = (glob) => {
 
             describe('if current block number is below earliest settlement challenge block', () => {
                 beforeEach(async () => {
-                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                    web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
                 });
 
                 it('should revert', async () => {
@@ -289,7 +289,7 @@ module.exports = (glob) => {
 
             describe('if current block number is below earliest settlement challenge block', () => {
                 beforeEach(async () => {
-                    web3Configuration.setEarliestSettlementBlockNumber(blockNumber + 1000);
+                    web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
                 });
 
                 it('should revert', async () => {

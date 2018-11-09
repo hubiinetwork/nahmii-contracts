@@ -20,7 +20,6 @@ module.exports = (glob) => {
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let provider;
-        let blockNumber;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -38,10 +37,8 @@ module.exports = (glob) => {
             await ethersCancelOrdersChallenge.changeValidator(ethersValidator.address);
             await ethersCancelOrdersChallenge.changeConfiguration(ethersConfiguration.address);
 
-            blockNumber = await provider.getBlockNumber();
-
             // Default configuration timeouts for all tests. Particular tests override these defaults.
-            await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 1, 1e3);
+            await ethersConfiguration.setCancelOrderChallengeTimeout((await provider.getBlockNumber()) + 1, 1e3);
         });
 
         describe('constructor', () => {
@@ -173,7 +170,7 @@ module.exports = (glob) => {
 
                 topic = ethersCancelOrdersChallenge.interface.events.CancelOrdersEvent.topics[0];
                 filter = {
-                    fromBlock: blockNumber,
+                    fromBlock: await provider.getBlockNumber(),
                     topics: [topic]
                 };
             });
@@ -254,7 +251,7 @@ module.exports = (glob) => {
 
                 topic = ethersCancelOrdersChallenge.interface.events.ChallengeEvent.topics[0];
                 filter = {
-                    fromBlock: blockNumber,
+                    fromBlock: await provider.getBlockNumber(),
                     topics: [topic]
                 };
             });
@@ -335,7 +332,7 @@ module.exports = (glob) => {
 
                 describe('if cancelled order challenge timeout has expired', () => {
                     beforeEach(async () => {
-                        await ethersConfiguration.setCancelOrderChallengeTimeout(blockNumber + 2, 0);
+                        await ethersConfiguration.setCancelOrderChallengeTimeout((await provider.getBlockNumber()) + 1, 0);
                         await ethersCancelOrdersChallenge.cancelOrders([order], {gasLimit: 1e6});
                     });
 
