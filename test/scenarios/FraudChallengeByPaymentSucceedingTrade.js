@@ -48,8 +48,13 @@ module.exports = (glob) => {
             await ethersFraudChallengeByPaymentSucceedingTrade.setSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallengeByPaymentSucceedingTrade.setClientFund(ethersClientFund.address);
 
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
+
             await ethersConfiguration.registerService(ethersFraudChallengeByPaymentSucceedingTrade.address);
-            await ethersConfiguration.enableServiceAction(ethersFraudChallengeByPaymentSucceedingTrade.address, 'operational_mode');
+            await ethersConfiguration.enableServiceAction(
+                ethersFraudChallengeByPaymentSucceedingTrade.address, 'operational_mode', {gasLimit: 1e6}
+            );
         });
 
         beforeEach(async () => {

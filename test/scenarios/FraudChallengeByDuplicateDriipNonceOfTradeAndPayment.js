@@ -46,6 +46,9 @@ module.exports = (glob) => {
             await ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.setValidator(ethersValidator.address);
             await ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.setSecurityBond(ethersSecurityBond.address);
 
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
+
             await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address);
             await ethersConfiguration.enableServiceAction(
                 ethersFraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address, 'operational_mode', {gasLimit: 1e6}

@@ -48,7 +48,7 @@ contract MockedBeneficiary is Beneficiary {
                     int256(msg.value),
                     MonetaryTypesLib.Currency(address(0), 0)
                 ),
-                "ether"
+                ""
             )
         );
     }

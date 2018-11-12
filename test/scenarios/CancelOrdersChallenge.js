@@ -28,6 +28,9 @@ module.exports = (glob) => {
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
+
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
         });
 
         beforeEach(async () => {
@@ -37,7 +40,6 @@ module.exports = (glob) => {
             await ethersCancelOrdersChallenge.setValidator(ethersValidator.address);
             await ethersCancelOrdersChallenge.setConfiguration(ethersConfiguration.address);
 
-            // Default configuration timeouts for all tests. Particular tests override these defaults.
             await ethersConfiguration.setCancelOrderChallengeTimeout((await provider.getBlockNumber()) + 1, 1e3);
         });
 

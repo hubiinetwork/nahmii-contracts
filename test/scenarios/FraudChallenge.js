@@ -56,15 +56,7 @@ module.exports = (glob) => {
                 wallet = Wallet.createRandom().address;
             });
 
-            describe('if called as deployer', () => {
-                it('should add double spender wallet', async () => {
-                    await ethersFraudChallengeOwner.addDoubleSpenderWallet(wallet);
-                    const doubleSpender = await ethersFraudChallengeOwner.isDoubleSpenderWallet(wallet);
-                    doubleSpender.should.be.true;
-                });
-            });
-
-            describe('if called as registered service action', () => {
+            describe('if called as registered service and relevant action enabled', () => {
                 before(async () => {
                     await ethersFraudChallengeOwner.registerService(glob.user_a);
                     await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_double_spender_wallet', {gasLimit: 1e6});
@@ -77,7 +69,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither deployer nor registered service action', () => {
+            describe('if called as non-registered service', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addDoubleSpenderWallet(wallet).should.be.rejected;
                 });
@@ -116,15 +108,7 @@ module.exports = (glob) => {
                 order = await mocks.mockOrder(glob.owner);
             });
 
-            describe('if called as deployer', () => {
-                it('should add fraudulent order', async () => {
-                    await ethersFraudChallengeOwner.addFraudulentOrderHash(order.seals.operator.hash, overrideOptions);
-                    const fraudulentOrderHash = await ethersFraudChallengeOwner.isFraudulentOrderHash(order.seals.operator.hash);
-                    fraudulentOrderHash.should.be.true;
-                });
-            });
-
-            describe('if called as registered service action', () => {
+            describe('if called as registered service and relevant action enabled', () => {
                 before(async () => {
                     await ethersFraudChallengeOwner.registerService(glob.user_a);
                     await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_fraudulent_order', {gasLimit: 1e6});
@@ -137,7 +121,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither deployer nor registered service action', () => {
+            describe('if called as non-registered service', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addFraudulentOrderHash(order.seals.operator.hash, overrideOptions).should.be.rejected;
                 });
@@ -176,15 +160,7 @@ module.exports = (glob) => {
                 trade = await mocks.mockTrade(glob.owner);
             });
 
-            describe('if called as deployer', () => {
-                it('should add fraudulent trade', async () => {
-                    await ethersFraudChallengeOwner.addFraudulentTradeHash(trade.seal.hash, overrideOptions);
-                    const fraudulentTradeDriipSettlementHash = await ethersFraudChallengeOwner.isFraudulentTradeHash(trade.seal.hash);
-                    fraudulentTradeDriipSettlementHash.should.be.true;
-                });
-            });
-
-            describe('if called as registered service action', () => {
+            describe('if called as registered service and relevant action enabled', () => {
                 before(async () => {
                     await ethersFraudChallengeOwner.registerService(glob.user_a);
                     await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_fraudulent_trade', {gasLimit: 1e6});
@@ -197,7 +173,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither deployer nor registered service action', () => {
+            describe('if called as non-registered service', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addFraudulentTradeHash(trade.seal.hash, overrideOptions).should.be.rejected;
                 });
@@ -236,15 +212,7 @@ module.exports = (glob) => {
                 payment = await mocks.mockPayment(glob.owner);
             });
 
-            describe('if called as deployer', () => {
-                it('should add fraudulent payment', async () => {
-                    await ethersFraudChallengeOwner.addFraudulentPaymentHash(payment.seals.operator.hash, overrideOptions);
-                    const fraudulentPaymentHash = await ethersFraudChallengeOwner.isFraudulentPaymentHash(payment.seals.operator.hash);
-                    fraudulentPaymentHash.should.be.true;
-                });
-            });
-
-            describe('if called as registered service action', () => {
+            describe('if called as registered service and relevant action enabled', () => {
                 before(async () => {
                     await ethersFraudChallengeOwner.registerService(glob.user_a);
                     await ethersFraudChallengeOwner.enableServiceAction(glob.user_a, 'add_fraudulent_payment', {gasLimit: 1e6});
@@ -257,7 +225,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called as neither deployer nor registered service action', () => {
+            describe('if called as non-registered service', () => {
                 it('should revert', async () => {
                     ethersFraudChallengeUserB.addFraudulentPaymentHash(payment.seals.operator.hash, overrideOptions).should.be.rejected;
                 });

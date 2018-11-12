@@ -45,6 +45,9 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3NullSettlementChallenge = await MockedNullSettlementChallenge.new();
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, MockedNullSettlementChallenge.abi, glob.signer_owner);
+
+            await web3Configuration.registerService(glob.owner);
+            await web3Configuration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
         });
 
         beforeEach(async () => {

@@ -25,10 +25,11 @@ contract MockedClientFund {
         address target;
     }
 
-    struct WalletUpdate {
+    struct Update {
         address sourceWallet;
         address targetWallet;
         MonetaryTypesLib.Figure figure;
+        string standard;
     }
 
     struct BalanceLogEntry {
@@ -43,8 +44,9 @@ contract MockedClientFund {
     address[] public seizedWallets;
     mapping(address => bool) public seizuresByWallet;
 
-    WalletUpdate[] public settledBalanceUpdates;
-    WalletUpdate[] public stages;
+    Update[] public settledBalanceUpdates;
+    Update[] public stages;
+    Update[] public beneficiaryTransfers;
     BalanceLogEntry[] public activeBalanceLogEntries;
 
     //
@@ -71,6 +73,7 @@ contract MockedClientFund {
 
         settledBalanceUpdates.length = 0;
         stages.length = 0;
+        beneficiaryTransfers.length = 0;
         activeBalanceLogEntries.length = 0;
     }
 
@@ -99,16 +102,25 @@ contract MockedClientFund {
     public
     {
         settledBalanceUpdates.push(
-            WalletUpdate(
+            Update(
                 wallet,
                 address(0),
                 MonetaryTypesLib.Figure(
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
-                )
+                ),
+                ""
             )
         );
         emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
+    }
+
+    function _settledBalanceUpdatesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return settledBalanceUpdates.length;
     }
 
     function _settledBalanceUpdates(uint256 index)
@@ -127,48 +139,78 @@ contract MockedClientFund {
     public
     {
         stages.push(
-            WalletUpdate(
+            Update(
                 wallet,
                 address(0),
                 MonetaryTypesLib.Figure(
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
-                )
+                ),
+                ""
             )
         );
         emit StageEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId)
+    function _stagesCount()
     public
+    view
+    returns (uint256)
     {
-        stages.push(
-            WalletUpdate(
-                sourceWallet,
-                address(beneficiary),
-                MonetaryTypesLib.Figure(
-                    amount,
-                    MonetaryTypesLib.Currency(currencyCt, currencyId)
-                )
-            )
-        );
-    }
-
-    function _stagesCount() public view returns (uint256) {
         return stages.length;
     }
 
     function _stages(uint256 index)
     public
     view
-    returns (address, address, int256, address, uint256) {
+    returns (address, address, int256, address, uint256)
+    {
         return (
         stages[index].sourceWallet,
         stages[index].targetWallet,
         stages[index].figure.amount,
         stages[index].figure.currency.ct,
         stages[index].figure.currency.id
+        );
+    }
+
+    function transferToBeneficiary(Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
+    public
+    {
+        beneficiaryTransfers.push(
+            Update(
+                address(0),
+                address(beneficiary),
+                MonetaryTypesLib.Figure(
+                    amount,
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
+                ),
+                standard
+            )
+        );
+    }
+
+    function _beneficiaryTransfersCount()
+    public
+    view
+    returns (uint256)
+    {
+        return beneficiaryTransfers.length;
+    }
+
+    function _beneficiaryTransfers(uint256 index)
+    public
+    view
+    returns (address, address, int256, address, uint256, string)
+    {
+        return (
+        beneficiaryTransfers[index].sourceWallet,
+        beneficiaryTransfers[index].targetWallet,
+        beneficiaryTransfers[index].figure.amount,
+        beneficiaryTransfers[index].figure.currency.ct,
+        beneficiaryTransfers[index].figure.currency.id,
+        beneficiaryTransfers[index].standard
         );
     }
 
