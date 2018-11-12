@@ -461,7 +461,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### changeNullSettlementDispute(address)
+### setNullSettlementDispute(address)
 
 
 **Execution cost**: less than 21136 gas

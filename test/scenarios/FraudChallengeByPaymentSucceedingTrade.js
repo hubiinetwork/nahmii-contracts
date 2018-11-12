@@ -42,14 +42,19 @@ module.exports = (glob) => {
             web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
             ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
 
-            await ethersFraudChallengeByPaymentSucceedingTrade.changeFraudChallenge(ethersFraudChallenge.address);
-            await ethersFraudChallengeByPaymentSucceedingTrade.changeConfiguration(ethersConfiguration.address);
-            await ethersFraudChallengeByPaymentSucceedingTrade.changeValidator(ethersValidator.address);
-            await ethersFraudChallengeByPaymentSucceedingTrade.changeSecurityBond(ethersSecurityBond.address);
-            await ethersFraudChallengeByPaymentSucceedingTrade.changeClientFund(ethersClientFund.address);
+            await ethersFraudChallengeByPaymentSucceedingTrade.setFraudChallenge(ethersFraudChallenge.address);
+            await ethersFraudChallengeByPaymentSucceedingTrade.setConfiguration(ethersConfiguration.address);
+            await ethersFraudChallengeByPaymentSucceedingTrade.setValidator(ethersValidator.address);
+            await ethersFraudChallengeByPaymentSucceedingTrade.setSecurityBond(ethersSecurityBond.address);
+            await ethersFraudChallengeByPaymentSucceedingTrade.setClientFund(ethersClientFund.address);
+
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
 
             await ethersConfiguration.registerService(ethersFraudChallengeByPaymentSucceedingTrade.address);
-            await ethersConfiguration.enableServiceAction(ethersFraudChallengeByPaymentSucceedingTrade.address, 'operational_mode');
+            await ethersConfiguration.enableServiceAction(
+                ethersFraudChallengeByPaymentSucceedingTrade.address, 'operational_mode', {gasLimit: 1e6}
+            );
         });
 
         beforeEach(async () => {
@@ -65,17 +70,17 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeDeployer()', () => {
+        describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByPaymentSucceedingTrade.changeDeployer(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByPaymentSucceedingTrade.setDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeDeployer(glob.user_a);
+                    const result = await web3FraudChallengeByPaymentSucceedingTrade.setDeployer(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+                    result.logs[0].event.should.equal('SetDeployerEvent');
 
                     (await web3FraudChallengeByPaymentSucceedingTrade.deployer.call()).should.equal(glob.user_a);
                 });
@@ -83,22 +88,22 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByPaymentSucceedingTrade.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByPaymentSucceedingTrade.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('changeOperator()', () => {
+        describe('setOperator()', () => {
             describe('if called with (current) operator as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByPaymentSucceedingTrade.changeOperator(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByPaymentSucceedingTrade.setOperator(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeOperator(glob.user_a);
+                    const result = await web3FraudChallengeByPaymentSucceedingTrade.setOperator(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+                    result.logs[0].event.should.equal('SetOperatorEvent');
 
                     (await web3FraudChallengeByPaymentSucceedingTrade.operator.call()).should.equal(glob.user_a);
                 });
@@ -106,7 +111,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByPaymentSucceedingTrade.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByPaymentSucceedingTrade.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -118,7 +123,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeFraudChallenge()', () => {
+        describe('setFraudChallenge()', () => {
             let address;
 
             before(() => {
@@ -133,13 +138,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByPaymentSucceedingTrade.changeFraudChallenge(fraudChallenge);
+                    await web3FraudChallengeByPaymentSucceedingTrade.setFraudChallenge(fraudChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeFraudChallenge(address);
+                    const result = await web3FraudChallengeByPaymentSucceedingTrade.setFraudChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeFraudChallengeEvent');
+                    result.logs[0].event.should.equal('SetFraudChallengeEvent');
                     const fraudChallenge = await web3FraudChallengeByPaymentSucceedingTrade.fraudChallenge();
                     utils.getAddress(fraudChallenge).should.equal(address);
                 });
@@ -147,7 +152,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByPaymentSucceedingTrade.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByPaymentSucceedingTrade.setFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -159,7 +164,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
@@ -174,13 +179,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByPaymentSucceedingTrade.changeConfiguration(configuration);
+                    await web3FraudChallengeByPaymentSucceedingTrade.setConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeConfiguration(address);
+                    const result = await web3FraudChallengeByPaymentSucceedingTrade.setConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
                     const configuration = await web3FraudChallengeByPaymentSucceedingTrade.configuration();
                     utils.getAddress(configuration).should.equal(address);
                 });
@@ -188,7 +193,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByPaymentSucceedingTrade.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByPaymentSucceedingTrade.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -200,7 +205,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeValidator()', () => {
+        describe('setValidator()', () => {
             let address;
 
             before(() => {
@@ -215,13 +220,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByPaymentSucceedingTrade.changeValidator(validator);
+                    await web3FraudChallengeByPaymentSucceedingTrade.setValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeValidator(address);
+                    const result = await web3FraudChallengeByPaymentSucceedingTrade.setValidator(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    result.logs[0].event.should.equal('SetValidatorEvent');
                     const validator = await web3FraudChallengeByPaymentSucceedingTrade.validator();
                     utils.getAddress(validator).should.equal(address);
                 });
@@ -229,7 +234,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByPaymentSucceedingTrade.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByPaymentSucceedingTrade.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -241,7 +246,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeClientFund()', () => {
+        describe('setClientFund()', () => {
             let address;
 
             before(() => {
@@ -256,13 +261,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByPaymentSucceedingTrade.changeClientFund(clientFund);
+                    await web3FraudChallengeByPaymentSucceedingTrade.setClientFund(clientFund);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByPaymentSucceedingTrade.changeClientFund(address);
+                    const result = await web3FraudChallengeByPaymentSucceedingTrade.setClientFund(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeClientFundEvent');
+                    result.logs[0].event.should.equal('SetClientFundEvent');
                     const clientFund = await web3FraudChallengeByPaymentSucceedingTrade.clientFund();
                     utils.getAddress(clientFund).should.equal(address);
                 });
@@ -270,7 +275,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByPaymentSucceedingTrade.changeClientFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByPaymentSucceedingTrade.setClientFund(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

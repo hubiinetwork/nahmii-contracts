@@ -118,7 +118,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @dev Once operational mode is set to Exit it may not be set back to Normal
     function setOperationalModeExit()
     public
-    onlyDeployerOrEnabledServiceAction(OPERATIONAL_MODE_ACTION)
+    onlyEnabledServiceAction(OPERATIONAL_MODE_ACTION)
     {
         operationalMode = OperationalMode.Exit;
         emit SetOperationalModeExitEvent();

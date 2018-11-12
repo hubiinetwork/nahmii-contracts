@@ -196,18 +196,13 @@ contract Servable is Ownable {
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyRegisteredActiveService() {
+    modifier onlyActiveService() {
         require(isRegisteredActiveService(msg.sender));
         _;
     }
 
     modifier onlyEnabledServiceAction(string action) {
         require(isEnabledServiceAction(msg.sender, action));
-        _;
-    }
-
-    modifier onlyDeployerOrEnabledServiceAction(string action) {
-        require(isDeployer() || isEnabledServiceAction(msg.sender, action));
         _;
     }
 }

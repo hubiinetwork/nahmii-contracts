@@ -188,7 +188,7 @@ Returns:
 9. **operatorId** *of type `uint256`*
 
 --- 
-### changeValidator(address)
+### setValidator(address)
 >
 >Change the validator contract
 
@@ -379,7 +379,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -507,7 +507,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeDriipSettlementDispute(address)
+### setDriipSettlementDispute(address)
 >
 >Change the settlement dispute contract
 
@@ -654,7 +654,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -671,7 +671,7 @@ Params:
 
 
 --- 
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 

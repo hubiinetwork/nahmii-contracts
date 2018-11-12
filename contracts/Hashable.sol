@@ -25,14 +25,14 @@ contract Hashable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeHasherEvent(Hasher oldHasher, Hasher newHasher);
+    event SetHasherEvent(Hasher oldHasher, Hasher newHasher);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the hasher contract
+    /// @notice Set the hasher contract
     /// @param newAddress The (address of) Hasher contract instance
-    function changeHasher(Hasher newAddress) public onlyDeployer
+    function setHasher(Hasher newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, hasher)
     {
@@ -41,7 +41,7 @@ contract Hashable is Ownable {
         hasher = newAddress;
 
         // Emit event
-        emit ChangeHasherEvent(oldAddress, newAddress);
+        emit SetHasherEvent(oldAddress, newAddress);
     }
 
     //

@@ -111,7 +111,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -151,7 +151,7 @@ Returns:
 1. **output_0** *of type `uint8`*
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -193,7 +193,7 @@ Params:
 
 
 --- 
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 
@@ -227,7 +227,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeValidator(address)
+### setValidator(address)
 >
 >Change the validator contract
 

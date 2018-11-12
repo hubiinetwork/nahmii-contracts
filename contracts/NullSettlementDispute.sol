@@ -41,7 +41,7 @@ FraudChallengable, CancelOrdersChallengable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
+    event SetNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
         NullSettlementChallenge newNullSettlementChallenge);
     event ChallengeByOrderEvent(bytes32 candidateHash, uint256 proposalNonce, address challenger);
     event ChallengeByTradeEvent(address wallet, bytes32 candidateHash, uint256 proposalNonce,
@@ -54,15 +54,15 @@ FraudChallengable, CancelOrdersChallengable {
     constructor(address owner) Ownable(owner) public {
     }
 
-    /// @notice Change the settlement challenge contract
+    /// @notice Set the settlement challenge contract
     /// @param newNullSettlementChallenge The (address of) NullSettlementChallenge contract instance
-    function changeNullSettlementChallenge(NullSettlementChallenge newNullSettlementChallenge) public
+    function setNullSettlementChallenge(NullSettlementChallenge newNullSettlementChallenge) public
     onlyDeployer
     notNullAddress(newNullSettlementChallenge)
     {
         NullSettlementChallenge oldNullSettlementChallenge = nullSettlementChallenge;
         nullSettlementChallenge = newNullSettlementChallenge;
-        emit ChangeNullSettlementChallengeEvent(oldNullSettlementChallenge, nullSettlementChallenge);
+        emit SetNullSettlementChallengeEvent(oldNullSettlementChallenge, nullSettlementChallenge);
     }
 
     /// @notice Challenge the settlement by providing order candidate

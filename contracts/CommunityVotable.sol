@@ -25,7 +25,7 @@ contract CommunityVotable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
+    event SetCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
 
     //
     // Functions
@@ -38,9 +38,9 @@ contract CommunityVotable is Ownable {
         communityVoteUpdateDisabled = true;
     }
 
-    /// @notice Change the community vote contract
+    /// @notice Set the community vote contract
     /// @param newCommunityVote The (address of) CommunityVote contract instance
-    function changeCommunityVote(CommunityVote newCommunityVote) 
+    function setCommunityVote(CommunityVote newCommunityVote) 
     public 
     onlyDeployer
     notNullAddress(newCommunityVote)
@@ -53,7 +53,7 @@ contract CommunityVotable is Ownable {
         communityVote = newCommunityVote;
 
         // Emit event
-        emit ChangeCommunityVoteEvent(oldCommunityVote, newCommunityVote);
+        emit SetCommunityVoteEvent(oldCommunityVote, newCommunityVote);
     }
 
     //

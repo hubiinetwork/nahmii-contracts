@@ -25,8 +25,8 @@ contract Ownable is Modifiable, SelfDestructible {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeDeployerEvent(address oldDeployer, address newDeployer);
-    event ChangeOperatorEvent(address oldOperator, address newOperator);
+    event SetDeployerEvent(address oldDeployer, address newDeployer);
+    event SetOperatorEvent(address oldOperator, address newOperator);
 
     //
     // Constructor
@@ -44,9 +44,9 @@ contract Ownable is Modifiable, SelfDestructible {
         return deployer;
     }
 
-    /// @notice Change the deployer of this contract
+    /// @notice Set the deployer of this contract
     /// @param newDeployer The address of the new deployer
-    function changeDeployer(address newDeployer)
+    function setDeployer(address newDeployer)
     public
     onlyDeployer
     notNullOrThisAddress(newDeployer)
@@ -57,13 +57,13 @@ contract Ownable is Modifiable, SelfDestructible {
             deployer = newDeployer;
 
             // Emit event
-            emit ChangeDeployerEvent(oldDeployer, newDeployer);
+            emit SetDeployerEvent(oldDeployer, newDeployer);
         }
     }
 
-    /// @notice Change the operator of this contract
+    /// @notice Set the operator of this contract
     /// @param newOperator The address of the new operator
-    function changeOperator(address newOperator)
+    function setOperator(address newOperator)
     public
     onlyOperator
     notNullOrThisAddress(newOperator)
@@ -74,7 +74,7 @@ contract Ownable is Modifiable, SelfDestructible {
             operator = newOperator;
 
             // Emit event
-            emit ChangeOperatorEvent(oldOperator, newOperator);
+            emit SetOperatorEvent(oldOperator, newOperator);
         }
     }
 

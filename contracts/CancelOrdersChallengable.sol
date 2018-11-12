@@ -24,14 +24,14 @@ contract CancelOrdersChallengable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
+    event SetCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the cancel orders challenge contract
+    /// @notice Set the cancel orders challenge contract
     /// @param newCancelOrdersChallenge The (address of) CancelOrdersChallenge contract instance
-    function changeCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
+    function setCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
     public
     onlyDeployer
     notNullAddress(newCancelOrdersChallenge)
@@ -42,7 +42,7 @@ contract CancelOrdersChallengable is Ownable {
         cancelOrdersChallenge = newCancelOrdersChallenge;
 
         // Emit event
-        emit ChangeCancelOrdersChallengeEvent(oldCancelOrdersChallenge, newCancelOrdersChallenge);
+        emit SetCancelOrdersChallengeEvent(oldCancelOrdersChallenge, newCancelOrdersChallenge);
     }
 
     //

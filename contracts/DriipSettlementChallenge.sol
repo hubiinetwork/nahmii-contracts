@@ -49,7 +49,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute,
+    event SetDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute,
         DriipSettlementDispute newDriipSettlementDispute);
     event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
@@ -68,16 +68,16 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the settlement dispute contract
+    /// @notice Set the settlement dispute contract
     /// @param newDriipSettlementDispute The (address of) DriipSettlementDispute contract instance
-    function changeDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute)
+    function setDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute)
     public
     onlyDeployer
     notNullAddress(newDriipSettlementDispute)
     {
         DriipSettlementDispute oldDriipSettlementDispute = driipSettlementDispute;
         driipSettlementDispute = newDriipSettlementDispute;
-        emit ChangeDriipSettlementDisputeEvent(oldDriipSettlementDispute, driipSettlementDispute);
+        emit SetDriipSettlementDisputeEvent(oldDriipSettlementDispute, driipSettlementDispute);
     }
 
     /// @notice Get the number of challenged wallets

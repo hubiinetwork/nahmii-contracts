@@ -45,16 +45,19 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3NullSettlementChallenge = await MockedNullSettlementChallenge.new();
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, MockedNullSettlementChallenge.abi, glob.signer_owner);
+
+            await web3Configuration.registerService(glob.owner);
+            await web3Configuration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
         });
 
         beforeEach(async () => {
             web3NullSettlement = await NullSettlement.new(glob.owner);
             ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
 
-            await ethersNullSettlement.changeConfiguration(web3Configuration.address);
-            await ethersNullSettlement.changeClientFund(web3ClientFund.address);
-            await ethersNullSettlement.changeCommunityVote(web3CommunityVote.address);
-            await ethersNullSettlement.changeNullSettlementChallenge(web3NullSettlementChallenge.address);
+            await ethersNullSettlement.setConfiguration(web3Configuration.address);
+            await ethersNullSettlement.setClientFund(web3ClientFund.address);
+            await ethersNullSettlement.setCommunityVote(web3CommunityVote.address);
+            await ethersNullSettlement.setNullSettlementChallenge(web3NullSettlementChallenge.address);
         });
 
         describe('constructor', () => {
@@ -70,13 +73,13 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeDeployer()', () => {
+        describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeDeployer(glob.user_a);
+                    const result = await web3NullSettlement.setDeployer(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+                    result.logs[0].event.should.equal('SetDeployerEvent');
 
                     (await web3NullSettlement.deployer.call()).should.equal(glob.user_a);
                 });
@@ -84,7 +87,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -95,13 +98,13 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeOperator()', () => {
+        describe('setOperator()', () => {
             describe('if called with (current) operator as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeOperator(glob.user_a);
+                    const result = await web3NullSettlement.setOperator(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+                    result.logs[0].event.should.equal('SetOperatorEvent');
 
                     (await web3NullSettlement.operator.call()).should.equal(glob.user_a);
                 });
@@ -109,7 +112,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -121,7 +124,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
@@ -130,10 +133,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeConfiguration(address);
+                    const result = await web3NullSettlement.setConfiguration(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
 
                     (await ethersNullSettlement.configuration()).should.equal(address);
                 });
@@ -141,7 +144,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -153,7 +156,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeNullSettlementChallenge()', () => {
+        describe('setNullSettlementChallenge()', () => {
             let address;
 
             before(() => {
@@ -162,10 +165,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeNullSettlementChallenge(address);
+                    const result = await web3NullSettlement.setNullSettlementChallenge(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeNullSettlementChallengeEvent');
+                    result.logs[0].event.should.equal('SetNullSettlementChallengeEvent');
 
                     (await ethersNullSettlement.nullSettlementChallenge()).should.equal(address);
                 });
@@ -173,7 +176,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeNullSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setNullSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -185,7 +188,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeClientFund()', () => {
+        describe('setClientFund()', () => {
             let address;
 
             before(() => {
@@ -194,10 +197,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeClientFund(address);
+                    const result = await web3NullSettlement.setClientFund(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeClientFundEvent');
+                    result.logs[0].event.should.equal('SetClientFundEvent');
 
                     (await ethersNullSettlement.clientFund()).should.equal(address);
                 });
@@ -205,7 +208,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeClientFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setClientFund(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -217,7 +220,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeCommunityVote()', () => {
+        describe('setCommunityVote()', () => {
             let address;
 
             before(() => {
@@ -226,10 +229,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeCommunityVote(address);
+                    const result = await web3NullSettlement.setCommunityVote(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeCommunityVoteEvent');
+                    result.logs[0].event.should.equal('SetCommunityVoteEvent');
 
                     (await ethersNullSettlement.communityVote()).should.equal(address);
                 });
@@ -237,7 +240,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeCommunityVote(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setCommunityVote(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -261,7 +264,7 @@ module.exports = (glob) => {
                 });
 
                 it('should disable changing community vote', async () => {
-                    web3NullSettlement.changeCommunityVote(address).should.be.rejected;
+                    web3NullSettlement.setCommunityVote(address).should.be.rejected;
                 });
             });
         });
@@ -330,7 +333,7 @@ module.exports = (glob) => {
                     web3NullSettlement = await NullSettlement.new(glob.owner);
                     ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
 
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
+                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
                 });
 
                 it('should revert', async () => {
@@ -343,8 +346,8 @@ module.exports = (glob) => {
                     web3NullSettlement = await NullSettlement.new(glob.owner);
                     ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
 
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.changeClientFund(ethersClientFund.address);
+                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
+                    await ethersNullSettlement.setClientFund(ethersClientFund.address);
                 });
 
                 it('should revert', async () => {
@@ -357,9 +360,9 @@ module.exports = (glob) => {
                     web3NullSettlement = await NullSettlement.new(glob.owner);
                     ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
 
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.changeClientFund(ethersClientFund.address);
-                    await ethersNullSettlement.changeCommunityVote(ethersCommunityVote.address);
+                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
+                    await ethersNullSettlement.setClientFund(ethersClientFund.address);
+                    await ethersNullSettlement.setCommunityVote(ethersCommunityVote.address);
                 });
 
                 it('should revert', async () => {
@@ -503,7 +506,7 @@ module.exports = (glob) => {
                     web3NullSettlement = await NullSettlement.new(glob.owner);
                     ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
 
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
+                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
                 });
 
                 it('should revert', async () => {
@@ -516,8 +519,8 @@ module.exports = (glob) => {
                     web3NullSettlement = await NullSettlement.new(glob.owner);
                     ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
 
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.changeClientFund(ethersClientFund.address);
+                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
+                    await ethersNullSettlement.setClientFund(ethersClientFund.address);
                 });
 
                 it('should revert', async () => {
@@ -530,9 +533,9 @@ module.exports = (glob) => {
                     web3NullSettlement = await NullSettlement.new(glob.owner);
                     ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
 
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.changeClientFund(ethersClientFund.address);
-                    await ethersNullSettlement.changeCommunityVote(ethersCommunityVote.address);
+                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
+                    await ethersNullSettlement.setClientFund(ethersClientFund.address);
+                    await ethersNullSettlement.setCommunityVote(ethersCommunityVote.address);
                 });
 
                 it('should revert', async () => {

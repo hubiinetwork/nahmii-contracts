@@ -121,7 +121,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -197,7 +197,7 @@ Returns:
 1. **output_0** *of type `uint8`*
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -295,7 +295,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### changeClientFund(address)
+### setClientFund(address)
 >
 >Change the client fund contract
 
@@ -363,7 +363,7 @@ Returns:
 9. **operatorId** *of type `uint256`*
 
 --- 
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 
@@ -380,7 +380,7 @@ Params:
 
 
 --- 
-### changeNullSettlementDispute(address)
+### setNullSettlementDispute(address)
 >
 >Change the settlement dispute contract
 

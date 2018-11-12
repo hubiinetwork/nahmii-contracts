@@ -42,7 +42,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
+    event SetNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
         NullSettlementChallenge newNullSettlementChallenge);
     event SettleNullEvent(address wallet, SettlementTypesLib.ProposalStatus proposalStatus);
     event SettleNullByProxyEvent(address proxy, address wallet, SettlementTypesLib.ProposalStatus proposalStatus);
@@ -56,16 +56,16 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the null settlement challenge contract
+    /// @notice Set the null settlement challenge contract
     /// @param newNullSettlementChallenge The (address of) NullSettlementChallenge contract instance
-    function changeNullSettlementChallenge(NullSettlementChallenge newNullSettlementChallenge)
+    function setNullSettlementChallenge(NullSettlementChallenge newNullSettlementChallenge)
     public
     onlyDeployer
     notNullAddress(newNullSettlementChallenge)
     {
         NullSettlementChallenge oldNullSettlementChallenge = nullSettlementChallenge;
         nullSettlementChallenge = newNullSettlementChallenge;
-        emit ChangeNullSettlementChallengeEvent(oldNullSettlementChallenge, nullSettlementChallenge);
+        emit SetNullSettlementChallengeEvent(oldNullSettlementChallenge, nullSettlementChallenge);
     }
 
     /// @notice Update the max null settlement nonce property from CommunityVote contract

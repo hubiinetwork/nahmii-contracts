@@ -55,9 +55,9 @@ module.exports = (glob) => {
             web3NullSettlementChallenge = await NullSettlementChallenge.new(glob.owner);
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, NullSettlementChallenge.abi, glob.signer_owner);
 
-            await ethersNullSettlementChallenge.changeConfiguration(ethersConfiguration.address);
-            await ethersNullSettlementChallenge.changeClientFund(ethersClientFund.address);
-            await ethersNullSettlementChallenge.changeNullSettlementDispute(ethersNullSettlementDispute.address);
+            await ethersNullSettlementChallenge.setConfiguration(ethersConfiguration.address);
+            await ethersNullSettlementChallenge.setClientFund(ethersClientFund.address);
+            await ethersNullSettlementChallenge.setNullSettlementDispute(ethersNullSettlementDispute.address);
 
             blockNumber = await provider.getBlockNumber();
 
@@ -80,7 +80,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
@@ -89,10 +89,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlementChallenge.changeConfiguration(address);
+                    const result = await web3NullSettlementChallenge.setConfiguration(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
 
                     utils.getAddress(await web3NullSettlementChallenge.configuration()).should.equal(address);
                 });
@@ -100,7 +100,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlementChallenge.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -112,7 +112,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeNullSettlementDispute()', () => {
+        describe('setNullSettlementDispute()', () => {
             let address;
 
             before(() => {
@@ -121,10 +121,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlementChallenge.changeNullSettlementDispute(address);
+                    const result = await web3NullSettlementChallenge.setNullSettlementDispute(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeNullSettlementDisputeEvent');
+                    result.logs[0].event.should.equal('SetNullSettlementDisputeEvent');
 
                     utils.getAddress(await web3NullSettlementChallenge.nullSettlementDispute.call())
                         .should.equal(address);
@@ -133,7 +133,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.changeNullSettlementDispute(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlementChallenge.setNullSettlementDispute(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -682,7 +682,7 @@ module.exports = (glob) => {
 
             describe('if called from settlement dispute', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
+                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
                 });
 
                 it('should successfully set the new value', async () => {
@@ -712,7 +712,7 @@ module.exports = (glob) => {
 
             describe('if called from settlement dispute', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
+                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
                 });
 
                 it('should successfully set the new value', async () => {
@@ -740,7 +740,7 @@ module.exports = (glob) => {
 
             describe('if called from settlement dispute', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
+                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
                 });
 
                 it('should successfully set the new value', async () => {
@@ -769,7 +769,7 @@ module.exports = (glob) => {
 
             describe('if called from settlement dispute', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
+                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
                 });
 
                 it('should successfully set the new value', async () => {
@@ -854,7 +854,7 @@ module.exports = (glob) => {
                 let challengeCandidateOrderHashesCountBefore;
 
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
+                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
                     challengeCandidateOrderHashesCountBefore = await ethersNullSettlementChallenge.challengeCandidateOrderHashesCount();
                 });
 
@@ -891,7 +891,7 @@ module.exports = (glob) => {
                 let challengeCandidateTradeHashesCountBefore;
 
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
+                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
                     challengeCandidateTradeHashesCountBefore = await ethersNullSettlementChallenge.challengeCandidateTradeHashesCount();
                 });
 
@@ -928,7 +928,7 @@ module.exports = (glob) => {
                 let challengeCandidatePaymentHashesCountBefore;
 
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.changeNullSettlementDispute(glob.owner);
+                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
                     challengeCandidatePaymentHashesCountBefore = await ethersNullSettlementChallenge.challengeCandidatePaymentHashesCount();
                 });
 

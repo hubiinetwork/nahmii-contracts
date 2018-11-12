@@ -52,7 +52,7 @@ module.exports = (glob) => {
             });
 
             describe('setOperationalModeExit()', () => {
-                describe('if called with registered service as sender', () => {
+                describe('if called as registered service and relevant action enabled', () => {
                     beforeEach(async () => {
                         await web3Configuration.registerService(glob.user_a);
                         await web3Configuration.enableServiceAction(glob.user_a, 'operational_mode');
@@ -65,17 +65,9 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if called by non-deployer or registered service', () => {
+                describe('if called as non-registered service', () => {
                     it('should revert', async () => {
                         web3Configuration.setOperationalModeExit({from: glob.user_b}).should.be.rejected;
-                    });
-                });
-
-                describe('if within operational constraints', () => {
-                    it('should set exit operational mode', async () => {
-                        await web3Configuration.setOperationalModeExit();
-                        const operationalModeExit = await web3Configuration.isOperationalModeExit.call();
-                        operationalModeExit.should.be.true;
                     });
                 });
             });

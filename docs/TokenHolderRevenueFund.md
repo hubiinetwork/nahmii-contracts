@@ -208,7 +208,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -244,7 +244,7 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -470,7 +470,7 @@ Params:
 
 
 --- 
-### changeRevenueToken(address)
+### setRevenueToken(address)
 >
 >Change the revenue token contract
 
@@ -487,7 +487,7 @@ Params:
 
 
 --- 
-### changeTransferControllerManager(address)
+### setTransferControllerManager(address)
 >
 >Change the currency manager contract
 

@@ -186,7 +186,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -217,7 +217,7 @@ Params:
 
 
 --- 
-### changeFraudChallenge(address)
+### setFraudChallenge(address)
 >
 >Change the fraud challenge contract
 
@@ -234,7 +234,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -251,7 +251,7 @@ Params:
 
 
 --- 
-### changeDriipSettlementChallenge(address)
+### setDriipSettlementChallenge(address)
 >
 >Change the driip settlement challenge contract
 
@@ -281,7 +281,7 @@ Params:
 
 
 --- 
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 
@@ -298,7 +298,7 @@ Params:
 
 
 --- 
-### changeCancelOrdersChallenge(address)
+### setCancelOrdersChallenge(address)
 >
 >Change the cancel orders challenge contract
 
@@ -330,7 +330,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeSecurityBond(address)
+### setSecurityBond(address)
 >
 >Change the security bond contract
 
@@ -362,7 +362,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeValidator(address)
+### setValidator(address)
 >
 >Change the validator contract
 

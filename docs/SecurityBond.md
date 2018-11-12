@@ -209,7 +209,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -241,7 +241,7 @@ Returns:
 1. **output_0** *of type `string`*
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -475,7 +475,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeTransferControllerManager(address)
+### setTransferControllerManager(address)
 >
 >Change the currency manager contract
 

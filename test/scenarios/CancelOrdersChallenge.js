@@ -28,16 +28,18 @@ module.exports = (glob) => {
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
+
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
         });
 
         beforeEach(async () => {
             web3CancelOrdersChallenge = await CancelOrdersChallenge.new(glob.owner);
             ethersCancelOrdersChallenge = new Contract(web3CancelOrdersChallenge.address, CancelOrdersChallenge.abi, glob.signer_owner);
 
-            await ethersCancelOrdersChallenge.changeValidator(ethersValidator.address);
-            await ethersCancelOrdersChallenge.changeConfiguration(ethersConfiguration.address);
+            await ethersCancelOrdersChallenge.setValidator(ethersValidator.address);
+            await ethersCancelOrdersChallenge.setConfiguration(ethersConfiguration.address);
 
-            // Default configuration timeouts for all tests. Particular tests override these defaults.
             await ethersConfiguration.setCancelOrderChallengeTimeout((await provider.getBlockNumber()) + 1, 1e3);
         });
 
@@ -55,7 +57,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
@@ -64,10 +66,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3CancelOrdersChallenge.changeConfiguration(address);
+                    const result = await web3CancelOrdersChallenge.setConfiguration(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
 
                     (await ethersCancelOrdersChallenge.configuration())
                         .should.equal(address);
@@ -76,7 +78,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3CancelOrdersChallenge.changeConfiguration(address, {from: glob.user_a})
+                    web3CancelOrdersChallenge.setConfiguration(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -89,7 +91,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeValidator()', () => {
+        describe('setValidator()', () => {
             let address;
 
             before(() => {
@@ -98,10 +100,10 @@ module.exports = (glob) => {
 
             describe('if called with deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3CancelOrdersChallenge.changeValidator(address);
+                    const result = await web3CancelOrdersChallenge.setValidator(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    result.logs[0].event.should.equal('SetValidatorEvent');
 
                     (await ethersCancelOrdersChallenge.validator())
                         .should.equal(address);
@@ -110,7 +112,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3CancelOrdersChallenge.changeValidator(address, {from: glob.user_a})
+                    web3CancelOrdersChallenge.setValidator(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -198,7 +200,7 @@ module.exports = (glob) => {
             describe('if configuration contract is not initialized', () => {
                 beforeEach(async () => {
                     web3CancelOrdersChallenge = await CancelOrdersChallenge.new(glob.owner);
-                    await web3CancelOrdersChallenge.changeValidator(web3Validator.address);
+                    await web3CancelOrdersChallenge.setValidator(web3Validator.address);
                 });
 
                 it('should revert', async () => {

@@ -24,14 +24,14 @@ contract SecurityBondable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeSecurityBondEvent(SecurityBond oldAddress, SecurityBond newAddress);
+    event SetSecurityBondEvent(SecurityBond oldAddress, SecurityBond newAddress);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the security bond contract
+    /// @notice Set the security bond contract
     /// @param newAddress The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newAddress) public onlyDeployer
+    function setSecurityBond(SecurityBond newAddress) public onlyDeployer
         notNullAddress(newAddress)
         notSameAddresses(newAddress, securityBond)
     {
@@ -40,7 +40,7 @@ contract SecurityBondable is Ownable {
         securityBond = newAddress;
 
         // Emit event
-        emit ChangeSecurityBondEvent(oldAddress, newAddress);
+        emit SetSecurityBondEvent(oldAddress, newAddress);
     }
 
     //

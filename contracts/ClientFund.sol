@@ -65,15 +65,15 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard);
+    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId,
+        string standard);
     event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event UnstageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 amount, address currencyCt,
-        uint256 currencyId);
-    event StageToBeneficiaryUntargetedEvent(address sourceWallet, address beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId);
+        uint256 currencyId, string standard);
+    event TransferToBeneficiaryEvent(address beneficiary, int256 amount, address currencyCt, uint256 currencyId);
     event SeizeAllBalancesEvent(address sourceWallet, address targetWallet);
 
     //
@@ -322,10 +322,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
-    onlyRegisteredActiveService
+    onlyAuthorizedService(wallet)
     notNullAddress(wallet)
     {
-        require(isAuthorizedRegisteredService(msg.sender, wallet));
         require(amount.isPositiveInt256());
 
         int256 settledBalanceAmount = amount.sub(walletMap[wallet].deposited.get(currencyCt, currencyId));
@@ -342,9 +341,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
-    onlyRegisteredActiveService
+    onlyAuthorizedService(wallet)
     {
-        require(isAuthorizedRegisteredService(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
         // Subtract stage amount from settled, possibly also from deposited
@@ -366,7 +364,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function unstage(int256 amount, address currencyCt, uint256 currencyId)
     public
-    notDeployer
     {
         require(amount.isNonZeroPositiveInt256());
 
@@ -385,39 +382,48 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    /// @notice Stage the amount from msg.sender to the given beneficiary and targeted to msg.sender
+    /// @notice Stage the amount from wallet to the given beneficiary and targeted to wallet
+    /// @param wallet The address of the concerned wallet
     /// @param beneficiary The (address of) concerned beneficiary contract
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
+    /// @param standard The standard of token ("ERC20", "ERC721")
+    function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
     public
-    notDeployer
+    onlyAuthorizedService(wallet)
     {
-        stageToBeneficiaryPrivate(msg.sender, msg.sender, beneficiary, amount, currencyCt, currencyId);
+        // Subtract stage amount from settled, possibly also from deposited
+        stageSubtract(wallet, amount, currencyCt, currencyId);
+
+        // Add active balance log entry
+        walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+
+        // Transfer to beneficiary
+        transferToBeneficiaryPrivate(wallet, beneficiary, amount, currencyCt, currencyId, standard);
 
         // Emit event
-        emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
+        emit StageToBeneficiaryEvent(wallet, beneficiary, amount, currencyCt, currencyId, standard);
     }
 
-    /// @notice Stage the amount from the given source wallet to the given beneficiary without target wallet
-    /// @param sourceWallet The address of concerned source wallet
+    /// @notice Transfer the given amount of currency to the given beneficiary without target wallet
     /// @param beneficiary The (address of) concerned beneficiary contract
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId)
+    /// @param standard The standard of token ("ERC20", "ERC721")
+    function transferToBeneficiary(Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
     public
-    notNullAddress(sourceWallet)
     notNullAddress(beneficiary)
+    onlyActiveService
     {
-        require(isAuthorizedRegisteredService(msg.sender, sourceWallet));
-
-        stageToBeneficiaryPrivate(sourceWallet, address(0), beneficiary, amount, currencyCt, currencyId);
+        // Transfer to beneficiary
+        transferToBeneficiaryPrivate(address(0), beneficiary, amount, currencyCt, currencyId, standard);
 
         // Emit event
-        emit StageToBeneficiaryUntargetedEvent(sourceWallet, beneficiary, amount, currencyCt, currencyId);
+        emit TransferToBeneficiaryEvent(beneficiary, amount, currencyCt, currencyId);
     }
 
     /// @notice Transfer all balances of the given source wallet to the given target wallet
@@ -427,9 +433,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     public
     notNullAddress(sourceWallet)
     notNullAddress(targetWallet)
+    onlyAuthorizedService(sourceWallet)
     {
-        require(isAuthorizedRegisteredService(msg.sender, sourceWallet));
-
         // Seize all balances
         uint256 len = walletMap[sourceWallet].inUseCurrencies.getLength();
         int256 amount;
@@ -551,22 +556,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
-        int256 amount, address currencyCt, uint256 currencyId)
-    private
-    {
-        require(amount.isNonZeroPositiveInt256());
-        require(isRegisteredBeneficiary(beneficiary));
-
-        // Subtract stage amount from settled, possibly also from deposited
-        stageSubtract(sourceWallet, amount, currencyCt, currencyId);
-
-        // Add active balance log entry
-        walletMap[sourceWallet].active.add(activeBalance(sourceWallet, currencyCt, currencyId), currencyCt, currencyId);
-
-        transferToBeneficiary(destWallet, beneficiary, amount, currencyCt, currencyId);
-    }
-
     function stageSubtract(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     private
     {
@@ -590,22 +579,24 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         );
     }
 
-    // TODO Update this function with 'standard' parameter as in deposits and withdrawals
-    function transferToBeneficiary(address destWallet, Beneficiary beneficiary,
-        int256 amount, address currencyCt, uint256 currencyId)
+    function transferToBeneficiaryPrivate(address destWallet, Beneficiary beneficiary,
+        int256 amount, address currencyCt, uint256 currencyId, string standard)
     private
     {
+        require(amount.isNonZeroPositiveInt256());
+        require(isRegisteredBeneficiary(beneficiary));
+
         // Transfer funds to the beneficiary
         if (currencyCt == address(0) && currencyId == 0)
             beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, "");
 
         else {
             // Approve of beneficiary
-            TransferController controller = getTransferController(currencyCt, "");
+            TransferController controller = getTransferController(currencyCt, standard);
             require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 
             // Transfer funds to the beneficiary
-            beneficiary.receiveTokensTo(destWallet, "", amount, currencyCt, currencyId, "");
+            beneficiary.receiveTokensTo(destWallet, "", amount, currencyCt, currencyId, standard);
         }
     }
 

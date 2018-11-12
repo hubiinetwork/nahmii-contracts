@@ -21,7 +21,7 @@ module.exports = function (glob) {
         let web3ClientFund, ethersClientFund;
         let web3MockedClientFundAuthorizedService, ethersMockedClientFundAuthorizedService;
         let web3MockedClientFundUnauthorizedService, ethersMockedClientFundUnauthorizedService;
-        let web3MockedBeneficiary, ethersBeneficiary;
+        let web3MockedBeneficiary, ethersMockedBeneficiary;
 
         before(async () => {
             web3TransferControllerManager = await TransferControllerManager.deployed();
@@ -36,22 +36,22 @@ module.exports = function (glob) {
             web3ClientFund = await ClientFund.new(glob.owner);
             ethersClientFund = new Contract(web3ClientFund.address, ClientFund.abi, glob.signer_owner);
 
-            await web3ClientFund.changeTransferControllerManager(web3TransferControllerManager.address);
+            await web3ClientFund.setTransferControllerManager(web3TransferControllerManager.address);
 
             web3MockedClientFundAuthorizedService = await MockedClientFundService.new(glob.owner);
             ethersMockedClientFundAuthorizedService = new Contract(web3MockedClientFundAuthorizedService.address, MockedClientFundService.abi, glob.signer_owner);
             web3MockedClientFundUnauthorizedService = await MockedClientFundService.new(glob.owner);
             ethersMockedClientFundUnauthorizedService = new Contract(web3MockedClientFundUnauthorizedService.address, MockedClientFundService.abi, glob.signer_owner);
             web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
-            ethersBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
+            ethersMockedBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
 
             // Fully wire the mocked authorized service
             await web3ClientFund.registerService(web3MockedClientFundAuthorizedService.address);
             await web3ClientFund.authorizeRegisteredService(web3MockedClientFundAuthorizedService.address, {from: glob.user_a});
-            await web3MockedClientFundAuthorizedService.changeClientFund(web3ClientFund.address);
+            await web3MockedClientFundAuthorizedService.setClientFund(web3ClientFund.address);
 
             // Partially wire the mocked unauthorized service
-            await web3MockedClientFundUnauthorizedService.changeClientFund(web3ClientFund.address);
+            await web3MockedClientFundUnauthorizedService.setClientFund(web3ClientFund.address);
 
             await web3ClientFund.registerBeneficiary(web3MockedBeneficiary.address);
         });
@@ -1043,13 +1043,6 @@ module.exports = function (glob) {
         });
 
         describe('unstage()', () => {
-            describe('called by owner', () => {
-                it('should revert', async () => {
-                    web3ClientFund.unstage(web3.toWei(1), mocks.address0, 0, {from: glob.owner})
-                        .should.be.rejected;
-                });
-            });
-
             describe('of Ether', () => {
                 beforeEach(async () => {
                     await web3ClientFund.receiveEthersTo(
@@ -1103,11 +1096,30 @@ module.exports = function (glob) {
         });
 
         describe('stageToBeneficiary()', () => {
-            describe('of negative amount', () => {
+            describe('by sender other than registered active service', () => {
                 it('should revert', async () => {
                     web3ClientFund.stageToBeneficiary(
-                        web3MockedBeneficiary.address, web3.toWei(-1, 'ether'), mocks.address0, 0, {
-                            from: glob.user_a,
+                        glob.user_a, web3MockedBeneficiary.address, web3.toWei(-1, 'ether'), mocks.address0, 0, '', {
+                            gas: 1e6
+                        }
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('called by unauthorized service', () => {
+                it('should revert', async () => {
+                    web3MockedClientFundUnauthorizedService.stageToBeneficiary(
+                        glob.user_a, web3MockedBeneficiary.address, web3.toWei(-1, 'ether'), mocks.address0, 0, '', {
+                            gas: 1e6
+                        }
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('of negative amount', () => {
+                it('should revert', async () => {
+                    web3MockedClientFundAuthorizedService.stageToBeneficiary(
+                        glob.user_a, web3MockedBeneficiary.address, web3.toWei(-1, 'ether'), mocks.address0, 0, '', {
                             gas: 1e6
                         }
                     ).should.be.rejected;
@@ -1116,9 +1128,8 @@ module.exports = function (glob) {
 
             describe('to unregistered beneficiary', () => {
                 it('should revert', async () => {
-                    web3ClientFund.stageToBeneficiary(
-                        Wallet.createRandom().address, web3.toWei(1, 'ether'), mocks.address0, 0, {
-                            from: glob.user_a,
+                    web3MockedClientFundAuthorizedService.stageToBeneficiary(
+                        glob.user_a, Wallet.createRandom().address, web3.toWei(1, 'ether'), mocks.address0, 0, '', {
                             gas: 1e6
                         }
                     ).should.be.rejected;
@@ -1127,6 +1138,8 @@ module.exports = function (glob) {
 
             describe('of Ether', () => {
                 beforeEach(async () => {
+                    await web3MockedBeneficiary._reset();
+
                     await web3ClientFund.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
@@ -1140,9 +1153,8 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully stage by deducting from settled', async () => {
-                        await web3ClientFund.stageToBeneficiary(
-                            web3MockedBeneficiary.address, web3.toWei(0.3, 'ether'), mocks.address0, 0, {
-                                from: glob.user_a,
+                        await web3MockedClientFundAuthorizedService.stageToBeneficiary(
+                            glob.user_a, web3MockedBeneficiary.address, web3.toWei(0.3, 'ether'), mocks.address0, 0, '', {
                                 gas: 1e6
                             }
                         );
@@ -1153,6 +1165,14 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(utils.parseEther('0.1')._bn);
                         (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
                             ._bn.should.eq.BN(0);
+
+                        const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        benefit.balance.should.be.a('string').that.is.empty;
+                        benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
+                        benefit.currencyCt.should.equal(mocks.address0);
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
                     });
                 });
 
@@ -1164,9 +1184,8 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully stage by deducting from deposited and rebalance settled to 0', async () => {
-                        await web3ClientFund.stageToBeneficiary(
-                            web3MockedBeneficiary.address, web3.toWei(0.3, 'ether'), mocks.address0, 0, {
-                                from: glob.user_a,
+                        await web3MockedClientFundAuthorizedService.stageToBeneficiary(
+                            glob.user_a, web3MockedBeneficiary.address, web3.toWei(0.3, 'ether'), mocks.address0, 0, '', {
                                 gas: 1e6
                             }
                         );
@@ -1177,12 +1196,22 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(0);
                         (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
                             ._bn.should.eq.BN(0);
+
+                        const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        benefit.balance.should.be.a('string').that.is.empty;
+                        benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
+                        benefit.currencyCt.should.equal(mocks.address0);
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
                     });
                 });
             });
 
             describe('of ERC20 token', () => {
                 beforeEach(async () => {
+                    await web3MockedBeneficiary._reset();
+
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
@@ -1199,8 +1228,8 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully stage by deducting from settled', async () => {
-                        await web3ClientFund.stageToBeneficiary(
-                            web3MockedBeneficiary.address, 3, web3ERC20.address, 0, {from: glob.user_a, gas: 1e6}
+                        await web3MockedClientFundAuthorizedService.stageToBeneficiary(
+                            glob.user_a, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
 
                         (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
@@ -1209,6 +1238,14 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(1);
                         (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
                             ._bn.should.eq.BN(0);
+                        
+                        const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        benefit.balance.should.be.a('string').that.is.empty;
+                        benefit.amount._bn.should.eq.BN(3);
+                        benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
                     });
                 });
 
@@ -1220,8 +1257,8 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully stage by deducting from deposited and rebalance settled to 0', async () => {
-                        await web3ClientFund.stageToBeneficiary(
-                            web3MockedBeneficiary.address, 3, web3ERC20.address, 0, {from: glob.user_a, gas: 1e6}
+                        await web3MockedClientFundAuthorizedService.stageToBeneficiary(
+                            glob.user_a, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
 
                         (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
@@ -1230,99 +1267,72 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(0);
                         (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
                             ._bn.should.eq.BN(0);
+
+                        const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        benefit.balance.should.be.a('string').that.is.empty;
+                        benefit.amount._bn.should.eq.BN(3);
+                        benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
                     });
                 });
             });
         });
 
-        describe('stageToBeneficiaryUntargeted()', () => {
-            describe('with zero source wallet', () => {
+        describe('transferToBeneficiary()', () => {
+            describe('with zero beneficiary address', () => {
                 it('should revert', async () => {
-                    web3MockedClientFundAuthorizedService.stageToBeneficiaryUntargeted(
-                        mocks.address0, web3MockedBeneficiary.address, web3.toWei(1, 'ether'), mocks.address0, 0, {gas: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('with zero target wallet', () => {
-                it('should revert', async () => {
-                    web3MockedClientFundAuthorizedService.stageToBeneficiaryUntargeted(
-                        glob.user_a, mocks.address0, web3.toWei(1, 'ether'), mocks.address0, 0, {gas: 1e6}
+                    web3MockedClientFundAuthorizedService.transferToBeneficiary(
+                        mocks.address0, web3.toWei(1, 'ether'), mocks.address0, 0, '', {gas: 1e6}
                     ).should.be.rejected;
                 });
             });
 
             describe('called by unauthorized service', () => {
                 it('should revert', async () => {
-                    web3MockedClientFundUnauthorizedService.stageToBeneficiaryUntargeted(
-                        glob.user_a, web3MockedBeneficiary.address, web3.toWei(1, 'ether'), mocks.address0, 0, {gas: 1e6}
+                    web3MockedClientFundUnauthorizedService.transferToBeneficiary(
+                        web3MockedBeneficiary.address, web3.toWei(1, 'ether'), mocks.address0, 0, '', {gas: 1e6}
                     ).should.be.rejected;
                 });
             });
 
             describe('of 0 or negative amount', () => {
                 it('should revert', async () => {
-                    web3MockedClientFundAuthorizedService.stageToBeneficiaryUntargeted(
-                        glob.user_a, web3MockedBeneficiary.address, web3.toWei(-1, 'ether'), mocks.address0, 0, {gas: 1e6}
+                    web3MockedClientFundAuthorizedService.transferToBeneficiary(
+                        web3MockedBeneficiary.address, web3.toWei(-1, 'ether'), mocks.address0, 0, '', {gas: 1e6}
                     ).should.be.rejected;
                 });
             });
 
             describe('of Ether', () => {
                 beforeEach(async () => {
+                    await web3MockedBeneficiary._reset();
+
                     await web3ClientFund.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                 });
 
-                describe('of amount less than settled balance', () => {
-                    beforeEach(async () => {
-                        await web3MockedClientFundAuthorizedService.updateSettledBalance(
-                            glob.user_a, web3.toWei(1.4, 'ether'), mocks.address0, 0
-                        );
-                    });
+                it('should successfully transfer', async () => {
+                    await web3MockedClientFundAuthorizedService.transferToBeneficiary(
+                        web3MockedBeneficiary.address, web3.toWei(0.3, 'ether'), mocks.address0, 0, '', {gas: 1e6}
+                    );
 
-                    it('should successfully stage by deducting from settled', async () => {
-                        await web3MockedClientFundAuthorizedService.stageToBeneficiaryUntargeted(
-                            glob.user_a, web3MockedBeneficiary.address, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gas: 1e6}
-                        );
-
-                        (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
-                            ._bn.should.eq.BN(utils.parseEther('1')._bn);
-                        (await ethersClientFund.settledBalance(glob.user_a, mocks.address0, 0))
-                            ._bn.should.eq.BN(utils.parseEther('0.1')._bn);
-                        (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
-                            ._bn.should.eq.BN(0);
-                    });
-                });
-
-                describe('of amount greater than or equal to settled balance', () => {
-                    beforeEach(async () => {
-                        await web3MockedClientFundAuthorizedService.updateSettledBalance(
-                            glob.user_a, web3.toWei(0.4, 'ether'), mocks.address0, 0
-                        );
-                    });
-
-                    it('should successfully stage by deducting from deposited and rebalance settled to 0', async () => {
-                        await web3MockedClientFundAuthorizedService.stageToBeneficiaryUntargeted(
-                            glob.user_a, web3MockedBeneficiary.address, web3.toWei(0.3, 'ether'), mocks.address0, 0, {
-                                from: glob.user_a,
-                                gas: 1e6
-                            }
-                        );
-
-                        (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
-                            ._bn.should.eq.BN(utils.parseEther('0.1')._bn);
-                        (await ethersClientFund.settledBalance(glob.user_a, mocks.address0, 0))
-                            ._bn.should.eq.BN(0);
-                        (await ethersClientFund.stagedBalance(glob.user_a, mocks.address0, 0))
-                            ._bn.should.eq.BN(0);
-                    });
+                    const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                    benefit.wallet.should.equal(mocks.address0);
+                    benefit.balance.should.be.a('string').that.is.empty;
+                    benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
+                    benefit.currencyCt.should.equal(mocks.address0);
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
                 });
             });
 
             describe('of ERC20 token', () => {
                 beforeEach(async () => {
+                    await web3MockedBeneficiary._reset();
+
                     await web3ERC20.approve(
                         web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
                     );
@@ -1331,52 +1341,21 @@ module.exports = function (glob) {
                     );
                 });
 
-                describe('of amount less than settled balance', () => {
-                    beforeEach(async () => {
-                        await ethersMockedClientFundAuthorizedService.updateSettledBalance(
-                            glob.user_a, 14, web3ERC20.address, 0
-                        );
-                    });
+                it('should successfully stage by deducting from settled', async () => {
+                    await web3MockedClientFundAuthorizedService.transferToBeneficiary(
+                        web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {
+                            from: glob.user_a,
+                            gas: 1e6
+                        }
+                    );
 
-                    it('should successfully stage by deducting from settled', async () => {
-                        await web3MockedClientFundAuthorizedService.stageToBeneficiaryUntargeted(
-                            glob.user_a, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, {
-                                from: glob.user_a,
-                                gas: 1e6
-                            }
-                        );
-
-                        (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(10);
-                        (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(1);
-                        (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(0);
-                    });
-                });
-
-                describe('of amount greater than or equal to settled balance', () => {
-                    beforeEach(async () => {
-                        await ethersMockedClientFundAuthorizedService.updateSettledBalance(
-                            glob.user_a, 4, web3ERC20.address, 0
-                        );
-                    });
-
-                    it('should successfully stage by deducting from deposited and rebalance settled to 0', async () => {
-                        await web3MockedClientFundAuthorizedService.stageToBeneficiaryUntargeted(
-                            glob.user_a, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, {
-                                from: glob.user_a,
-                                gas: 1e6
-                            }
-                        );
-
-                        (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(1);
-                        (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(0);
-                        (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(0);
-                    });
+                    const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                    benefit.wallet.should.equal(mocks.address0);
+                    benefit.balance.should.be.a('string').that.is.empty;
+                    benefit.amount._bn.should.eq.BN(3);
+                    benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
                 });
             });
         });

@@ -40,7 +40,7 @@ CancelOrdersChallengable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
+    event SetDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
         DriipSettlementChallenge newDriipSettlementChallenge);
     event ChallengeByOrderEvent(bytes32 candidateHash, uint256 proposalNonce,
         NahmiiTypesLib.DriipType proposalDriipType, address challenger);
@@ -57,15 +57,15 @@ CancelOrdersChallengable {
     constructor(address owner) Ownable(owner) public {
     }
 
-    /// @notice Change the driip settlement challenge contract
+    /// @notice Set the driip settlement challenge contract
     /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
-    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
+    function setDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
     onlyDeployer
     notNullAddress(newDriipSettlementChallenge)
     {
         DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
         driipSettlementChallenge = newDriipSettlementChallenge;
-        emit ChangeDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
+        emit SetDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
     }
 
     /// @notice Challenge the driip settlement by providing order candidate

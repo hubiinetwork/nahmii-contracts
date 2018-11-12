@@ -209,7 +209,7 @@ Params:
 
 
 --- 
-### changeTransferControllerManager(address)
+### setTransferControllerManager(address)
 >
 >Change the currency manager contract
 
@@ -242,7 +242,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -259,7 +259,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
