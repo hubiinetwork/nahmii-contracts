@@ -84,7 +84,7 @@ contract FraudChallenge is Ownable, Servable {
     /// @param wallet The first wallet to add
     function addDoubleSpenderWallet(address wallet)
     public
-    onlyDeployerOrEnabledServiceAction(ADD_DOUBLE_SPENDER_WALLET_ACTION) {
+    onlyEnabledServiceAction(ADD_DOUBLE_SPENDER_WALLET_ACTION) {
         if (!doubleSpenderByWallet[wallet]) {
             doubleSpenderWallets.push(wallet);
             doubleSpenderByWallet[wallet] = true;
@@ -112,7 +112,7 @@ contract FraudChallenge is Ownable, Servable {
     /// @notice Add given order hash to store of fraudulent order hashes if not already present
     function addFraudulentOrderHash(bytes32 hash)
     public
-    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION)
+    onlyEnabledServiceAction(ADD_FRAUDULENT_ORDER_ACTION)
     {
         if (!fraudulentByOrderHash[hash]) {
             fraudulentByOrderHash[hash] = true;
@@ -144,7 +144,7 @@ contract FraudChallenge is Ownable, Servable {
     /// @notice Add given trade hash to store of fraudulent trade hashes if not already present
     function addFraudulentTradeHash(bytes32 hash)
     public
-    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
+    onlyEnabledServiceAction(ADD_FRAUDULENT_TRADE_ACTION)
     {
         if (!fraudulentByTradeHash[hash]) {
             fraudulentByTradeHash[hash] = true;
@@ -176,7 +176,7 @@ contract FraudChallenge is Ownable, Servable {
     /// @notice Add given payment hash to store of fraudulent payment hashes if not already present
     function addFraudulentPaymentHash(bytes32 hash)
     public
-    onlyDeployerOrEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
+    onlyEnabledServiceAction(ADD_FRAUDULENT_PAYMENT_ACTION)
     {
         if (!fraudulentByPaymentHash[hash]) {
             fraudulentByPaymentHash[hash] = true;

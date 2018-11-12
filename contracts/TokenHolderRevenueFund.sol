@@ -197,7 +197,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Accrual functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyDeployerOrEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
+    function closeAccrualPeriod() public onlyEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
         uint256 i;
         uint256 len;
 

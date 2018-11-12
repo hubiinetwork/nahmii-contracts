@@ -194,7 +194,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     function reward(address wallet, uint256 _rewardFraction)
     public
     notNullAddress(wallet)
-    onlyDeployerOrEnabledServiceAction(REWARD_ACTION)
+    onlyEnabledServiceAction(REWARD_ACTION)
     {
         // Store reward
         rewardMetaByWallet[wallet].rewardFraction = _rewardFraction.clampMax(uint256(ConstantsLib.PARTS_PER()));

@@ -221,4 +221,17 @@ contract AuthorizableServable is Servable {
     {
         return initialServiceAuthorizedMap[service] ? !initialServiceWalletUnauthorizedMap[service][wallet] : false;
     }
+
+    //
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
+    modifier onlyAuthorizedService(address wallet) {
+        require(isAuthorizedRegisteredService(msg.sender, wallet));
+        _;
+    }
+
+    modifier onlyAuthorizedServiceAction(string action, address wallet) {
+        require(isAuthorizedRegisteredServiceAction(msg.sender, action, wallet));
+        _;
+    }
 }

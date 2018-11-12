@@ -300,15 +300,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
-                wallet,
-                driipSettlementChallenge.proposalStageAmount(wallet, trade.currencies.conjugate),
-                trade.currencies.conjugate.ct,
-                trade.currencies.conjugate.id
+                wallet, driipSettlementChallenge.proposalStageAmount(wallet, trade.currencies.conjugate),
+                trade.currencies.conjugate.ct, trade.currencies.conjugate.id
             );
         }
 
         // Stage fees to revenue fund
-        if (address(tradesRevenueFund) != address(0))
+        if (address(0) != address(tradesRevenueFund))
             stageFees(wallet, party.fees.total, tradesRevenueFund, trade.nonce);
 
         // If payment nonce is beyond max driip nonce then update max driip nonce
@@ -383,15 +381,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
-                wallet,
-                driipSettlementChallenge.proposalStageAmount(wallet, payment.currency),
-                payment.currency.ct,
-                payment.currency.id
+                wallet, driipSettlementChallenge.proposalStageAmount(wallet, payment.currency),
+                payment.currency.ct, payment.currency.id
             );
         }
 
         // Stage fees to revenue fund
-        if (address(paymentsRevenueFund) != address(0))
+        if (address(0) != address(paymentsRevenueFund))
             stageFees(wallet, totalFees, paymentsRevenueFund, payment.nonce);
 
         // If payment nonce is beyond max driip nonce then update max driip nonce
@@ -465,10 +461,9 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
                 walletCurrencyFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] = nonce;
 
                 // Stage delta of fee to beneficiary
-                clientFund.stageToBeneficiaryUntargeted(
-                    wallet, beneficiary,
-                    fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
-                    fees[i].currency.ct, fees[i].currency.id
+                clientFund.transferToBeneficiary(
+                    beneficiary, fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
+                    fees[i].currency.ct, fees[i].currency.id, ""
                 );
 
                 // Update fee charged
