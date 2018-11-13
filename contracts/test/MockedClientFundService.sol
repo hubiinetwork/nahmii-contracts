@@ -54,9 +54,9 @@ contract MockedClientFundService is Ownable, ClientFundable {
         clientFund.transferToBeneficiary(beneficiary, amount, currencyCt, currencyId, standard);
     }
 
-    function seizeAllBalances(address sourceWallet, address targetWallet)
+    function lockBalances(address sourceWallet, address targetWallet)
     public
     {
-        clientFund.seizeAllBalances(sourceWallet, targetWallet);
+        clientFund.lockBalances(sourceWallet, targetWallet);
     }
 }

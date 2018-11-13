@@ -20,7 +20,7 @@ contract MockedClientFund {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct Seizure {
+    struct Lock {
         address source;
         address target;
     }
@@ -40,9 +40,9 @@ contract MockedClientFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Seizure[] public seizures;
-    address[] public seizedWallets;
-    mapping(address => bool) public seizuresByWallet;
+    Lock[] public locks;
+    address[] public lockedWallets;
+    mapping(address => bool) public lockedByWallet;
 
     Update[] public settledBalanceUpdates;
     Update[] public stages;
@@ -52,24 +52,18 @@ contract MockedClientFund {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SeizeAllBalancesEvent(address sourceWallet, address targetWallet);
+    event LockBalancesEvent(address sourceWallet, address targetWallet);
     event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
-
-    //
-    // Constructor
-    // -----------------------------------------------------------------------------------------------------------------
-    constructor() public {
-    }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function _reset() public {
-        seizures.length = 0;
-        for (uint256 i = 0; i < seizedWallets.length; i++)
-            seizuresByWallet[seizedWallets[i]] = false;
-        seizedWallets.length = 0;
+        locks.length = 0;
+        for (uint256 i = 0; i < lockedWallets.length; i++)
+            lockedByWallet[lockedWallets[i]] = false;
+        lockedWallets.length = 0;
 
         settledBalanceUpdates.length = 0;
         stages.length = 0;
@@ -77,25 +71,25 @@ contract MockedClientFund {
         activeBalanceLogEntries.length = 0;
     }
 
-    function seizeAllBalances(address sourceWallet, address targetWallet)
+    function lockBalances(address sourceWallet, address targetWallet)
     public
     {
-        seizures.push(Seizure(sourceWallet, targetWallet));
+        locks.push(Lock(sourceWallet, targetWallet));
 
-        if (!seizuresByWallet[sourceWallet]) {
-            seizuresByWallet[sourceWallet] = true;
-            seizedWallets.push(sourceWallet);
+        if (!lockedByWallet[sourceWallet]) {
+            lockedByWallet[sourceWallet] = true;
+            lockedWallets.push(sourceWallet);
         }
 
-        emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
+        emit LockBalancesEvent(sourceWallet, targetWallet);
     }
 
-    function seizedWalletsCount()
+    function lockedWalletsCount()
     public
     view
     returns (uint256)
     {
-        return seizedWallets.length;
+        return lockedWallets.length;
     }
 
     function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)

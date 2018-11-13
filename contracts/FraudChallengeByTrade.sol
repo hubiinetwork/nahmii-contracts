@@ -26,7 +26,7 @@ SecurityBondable, ClientFundable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(bytes32 tradeHash, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(bytes32 tradeHash, address challenger, address lockedWallet);
 
     //
     // Constructor
@@ -64,14 +64,14 @@ SecurityBondable, ClientFundable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        address seizedWallet;
+        address lockedWallet;
         if (!genuineBuyerAndFee)
-            seizedWallet = trade.buyer.wallet;
+            lockedWallet = trade.buyer.wallet;
         if (!genuineSellerAndFee)
-            seizedWallet = trade.seller.wallet;
-        if (address(0) != seizedWallet)
-            clientFund.seizeAllBalances(seizedWallet, msg.sender);
+            lockedWallet = trade.seller.wallet;
+        if (address(0) != lockedWallet)
+            clientFund.lockBalances(lockedWallet, msg.sender);
 
-        emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, seizedWallet);
+        emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, lockedWallet);
     }
 }

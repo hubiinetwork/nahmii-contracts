@@ -118,7 +118,7 @@ module.exports = (deployer, network, accounts) => {
                 SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathUintLib, [
-                CancelOrdersChallenge, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
+                CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
                 NullSettlementChallenge, NullSettlementDispute, /*RevenueFund, */, SecurityBond, TokenHolderRevenueFund,
                 Validator
             ]);
@@ -258,6 +258,7 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.setHasher(addressStorage.get('Hasher'));
 
             instance = await ClientFund.at(addressStorage.get('ClientFund'));
+            tx = await instance.setConfiguration(addressStorage.get('Configuration'));
             tx = await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             tx = await instance.registerService(addressStorage.get('DriipSettlement'));
             tx = await instance.authorizeInitiallyRegisteredService(addressStorage.get('DriipSettlement'));

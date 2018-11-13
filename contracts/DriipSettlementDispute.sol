@@ -288,7 +288,7 @@ CancelOrdersChallengable {
 
         // Slash wallet's funds or reward challenger by stake fraction
         if (driipSettlementChallenge.proposalBalanceReward(wallet))
-            clientFund.seizeAllBalances(wallet, challenger);
+            clientFund.lockBalances(wallet, challenger);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
     }
@@ -327,7 +327,7 @@ CancelOrdersChallengable {
 
         // Slash wallet's funds or reward challenger by stake fraction
         if (driipSettlementChallenge.proposalBalanceReward(payment.sender.wallet))
-            clientFund.seizeAllBalances(payment.sender.wallet, challenger);
+            clientFund.lockBalances(payment.sender.wallet, challenger);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
     }
