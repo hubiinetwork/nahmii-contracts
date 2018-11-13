@@ -27,7 +27,7 @@ SecurityBondable, ClientFundable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChallengeBySuccessiveTradesEvent(bytes32 firstTradeHash, bytes32 lastTradeHash,
-        address challenger, address seizedWallet);
+        address challenger, address lockedWallet);
 
     //
     // Constructor
@@ -88,7 +88,7 @@ SecurityBondable, ClientFundable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction());
 
-        clientFund.seizeAllBalances(wallet, msg.sender);
+        clientFund.lockBalances(wallet, msg.sender);
 
         emit ChallengeBySuccessiveTradesEvent(
             firstTrade.seal.hash, lastTrade.seal.hash, msg.sender, wallet

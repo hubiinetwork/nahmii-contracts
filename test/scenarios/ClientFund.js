@@ -7,6 +7,7 @@ const mocks = require('../mocks');
 const ERC20Token = artifacts.require('StandardTokenEx');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const ClientFund = artifacts.require('ClientFund');
+const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedClientFundService = artifacts.require('MockedClientFundService');
 const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 
@@ -19,12 +20,16 @@ module.exports = function (glob) {
         let web3TransferControllerManager;
         let web3ERC20;
         let web3ClientFund, ethersClientFund;
+        let web3Configuration, ethersConfiguration;
         let web3MockedClientFundAuthorizedService, ethersMockedClientFundAuthorizedService;
         let web3MockedClientFundUnauthorizedService, ethersMockedClientFundUnauthorizedService;
         let web3MockedBeneficiary, ethersMockedBeneficiary;
 
         before(async () => {
             web3TransferControllerManager = await TransferControllerManager.deployed();
+
+            web3Configuration = await MockedConfiguration.new(glob.owner);
+            ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
         });
 
         beforeEach(async () => {
@@ -36,6 +41,7 @@ module.exports = function (glob) {
             web3ClientFund = await ClientFund.new(glob.owner);
             ethersClientFund = new Contract(web3ClientFund.address, ClientFund.abi, glob.signer_owner);
 
+            await web3ClientFund.setConfiguration(web3Configuration.address);
             await web3ClientFund.setTransferControllerManager(web3TransferControllerManager.address);
 
             web3MockedClientFundAuthorizedService = await MockedClientFundService.new(glob.owner);

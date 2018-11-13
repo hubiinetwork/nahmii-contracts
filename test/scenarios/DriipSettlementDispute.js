@@ -893,7 +893,7 @@ module.exports = (glob) => {
                         (await web3DriipSettlementChallenge._proposalChallenger())
                             .should.equal(glob.owner);
 
-                        (await ethersClientFund.seizedWalletsCount())
+                        (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
@@ -918,7 +918,7 @@ module.exports = (glob) => {
                         (await web3DriipSettlementChallenge._proposalChallenger())
                             .should.equal(glob.owner);
 
-                        (await ethersClientFund.seizedWalletsCount())
+                        (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(1);
@@ -1085,7 +1085,7 @@ module.exports = (glob) => {
                         (await web3DriipSettlementChallenge._proposalChallenger())
                             .should.equal(glob.owner);
 
-                        (await ethersClientFund.seizedWalletsCount())
+                        (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
@@ -1110,7 +1110,7 @@ module.exports = (glob) => {
                         (await web3DriipSettlementChallenge._proposalChallenger())
                             .should.equal(glob.owner);
 
-                        (await ethersClientFund.seizedWalletsCount())
+                        (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(1);

@@ -462,18 +462,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -488,18 +488,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -520,18 +520,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -552,18 +552,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -584,18 +584,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -616,18 +616,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -648,18 +648,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -676,18 +676,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -704,18 +704,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -732,18 +732,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedBuyer, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedBuyer.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -759,18 +759,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -791,18 +791,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -823,18 +823,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -855,18 +855,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -887,18 +887,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -919,18 +919,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -947,18 +947,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -975,18 +975,18 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
-        //             seizure.target.should.equal(utils.getAddress(glob.owner));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
         //     });
@@ -1003,17 +1003,17 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trade, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTrade(trade, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedSeller, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, seizedSeller, lock, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
         //             seizedSeller.should.be.true;
-        //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
+        //             lock.source.should.equal(utils.getAddress(trade.seller.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
         //         });
@@ -1091,7 +1091,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1117,7 +1117,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1149,7 +1149,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1181,7 +1181,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1213,7 +1213,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1245,7 +1245,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1277,7 +1277,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1305,7 +1305,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1333,7 +1333,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1361,7 +1361,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1388,7 +1388,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1420,7 +1420,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1452,7 +1452,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1484,7 +1484,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1516,7 +1516,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1548,7 +1548,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1576,7 +1576,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1604,7 +1604,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1632,7 +1632,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1747,7 +1747,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(payment.sender.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1777,7 +1777,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(payment.sender.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1803,7 +1803,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(payment.sender.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1829,7 +1829,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(payment.sender.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1855,7 +1855,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(payment.sender.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -1885,7 +1885,7 @@ module.exports = function (glob) {
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(payment.recipient.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
@@ -2161,16 +2161,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeBySuccessiveTrades(firstTrade, lastTrade, glob.user_a, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(lastTrade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.seller.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
@@ -2253,16 +2253,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeBySuccessiveTrades(firstTrade, lastTrade, glob.user_a, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(lastTrade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.seller.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
@@ -2430,16 +2430,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeBySuccessivePayments(firstPayment, lastPayment, glob.user_a, overrideOptions);
-        //             const [operationalModeExit, fraudulentPayment, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentPayment, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(lastPayment.recipient.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastPayment.recipient.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
@@ -2480,16 +2480,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeBySuccessivePayments(firstPayment, lastPayment, glob.user_a, overrideOptions);
-        //             const [operationalModeExit, fraudulentPayment, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentPayment, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(lastPayment.recipient.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentPayment[0].toNumber().should.equal(lastPayment.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastPayment.recipient.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
@@ -2634,16 +2634,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByPaymentSucceedingTrade(trade, payment, payment.recipient.wallet, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentPayment, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentPayment, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(payment.recipient.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
@@ -2684,16 +2684,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByPaymentSucceedingTrade(trade, payment, payment.recipient.wallet, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentPayment, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentPayment, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentPayment(),
         //                 ethersFraudChallenge.isSeizedWallet(payment.recipient.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentPayment[0].toNumber().should.equal(payment.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(payment.recipient.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
@@ -2964,16 +2964,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTradeSucceedingPayment(payment, trade, trade.seller.wallet, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
@@ -3056,16 +3056,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTradeSucceedingPayment(payment, trade, trade.seller.wallet, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(trade.seller.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(trade.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(trade.seller.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);
@@ -3439,16 +3439,16 @@ module.exports = function (glob) {
         //
         //         it('should toggle operational mode, record fraudulent trades, seize wallet and emit event', async () => {
         //             await ethersFraudChallenge.challengeByTradeOrderResiduals(firstTrade, lastTrade, lastTrade.buyer.wallet, currency, overrideOptions);
-        //             const [operationalModeExit, fraudulentTrade, seizedWallet, seizure, logs] = await Promise.all([
+        //             const [operationalModeExit, fraudulentTrade, lockedWallet, seizure, logs] = await Promise.all([
         //                 ethersConfiguration.isOperationalModeExit(),
         //                 ethersFraudChallenge.fraudulentTrade(),
         //                 ethersFraudChallenge.isSeizedWallet(lastTrade.buyer.wallet),
-        //                 ethersClientFund.seizures(0),
+        //                 ethersClientFund.locks(0),
         //                 provider.getLogs(filter)
         //             ]);
         //             operationalModeExit.should.be.true;
         //             fraudulentTrade[0].toNumber().should.equal(lastTrade.nonce.toNumber());
-        //             seizedWallet.should.be.true;
+        //             lockedWallet.should.be.true;
         //             seizure.source.should.equal(utils.getAddress(lastTrade.buyer.wallet));
         //             seizure.target.should.equal(utils.getAddress(glob.owner));
         //             logs[logs.length - 1].topics[0].should.equal(topic);

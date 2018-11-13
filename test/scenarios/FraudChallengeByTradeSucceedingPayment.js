@@ -455,20 +455,20 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByTradeSucceedingPayment.challenge(
                         payment, trade, payment.sender.wallet, payment.currency.ct, payment.currency.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersClientFund.seizedWalletsCount(),
-                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
-                        ethersClientFund.seizures(utils.bigNumberify(0)),
+                        ethersClientFund.lockedWalletsCount(),
+                        ethersClientFund.lockedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
-                    seizedWalletsCount.eq(1).should.be.true;
-                    seizedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.target.should.equal(utils.getAddress(glob.owner));
+                    lockedWalletsCount.eq(1).should.be.true;
+                    lockedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                    lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    lock.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -482,20 +482,20 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByTradeSucceedingPayment.challenge(
                         payment, trade, payment.sender.wallet, payment.currency.ct, payment.currency.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersClientFund.seizedWalletsCount(),
-                        ethersClientFund.seizedWallets(utils.bigNumberify(0)),
-                        ethersClientFund.seizures(utils.bigNumberify(0)),
+                        ethersClientFund.lockedWalletsCount(),
+                        ethersClientFund.lockedWallets(utils.bigNumberify(0)),
+                        ethersClientFund.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
-                    seizedWalletsCount.eq(1).should.be.true;
-                    seizedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.target.should.equal(utils.getAddress(glob.owner));
+                    lockedWalletsCount.eq(1).should.be.true;
+                    lockedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                    lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    lock.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });

@@ -464,20 +464,20 @@ module.exports = (glob) => {
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
                         trade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersClientFund.seizedWalletsCount(),
-                        ethersClientFund.seizedWallets(0),
-                        ethersClientFund.seizures(0),
+                        ethersClientFund.lockedWalletsCount(),
+                        ethersClientFund.lockedWallets(0),
+                        ethersClientFund.locks(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    seizedWalletsCount.eq(1).should.be.true;
-                    seizedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.target.should.equal(utils.getAddress(glob.owner));
+                    lockedWalletsCount.eq(1).should.be.true;
+                    lockedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                    lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    lock.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -492,20 +492,20 @@ module.exports = (glob) => {
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
                         trade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersClientFund.seizedWalletsCount(),
-                        ethersClientFund.seizedWallets(0),
-                        ethersClientFund.seizures(0),
+                        ethersClientFund.lockedWalletsCount(),
+                        ethersClientFund.lockedWallets(0),
+                        ethersClientFund.locks(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    seizedWalletsCount.eq(1).should.be.true;
-                    seizedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.source.should.equal(utils.getAddress(trade.buyer.wallet));
-                    seizure.target.should.equal(utils.getAddress(glob.owner));
+                    lockedWalletsCount.eq(1).should.be.true;
+                    lockedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                    lock.source.should.equal(utils.getAddress(trade.buyer.wallet));
+                    lock.target.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
