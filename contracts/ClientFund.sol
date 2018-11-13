@@ -466,7 +466,10 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     public
     {
         // Require that release timeout has expired
-        require(block.timestamp >= walletMap[msg.sender].releaseTime);
+        require(
+            address(0) != walletMap[msg.sender].locker &&
+            block.timestamp >= walletMap[msg.sender].releaseTime
+        );
 
         // Unlock and release
         address locker = walletMap[msg.sender].locker;
@@ -593,6 +596,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     }
 
     /// @notice Get the locked status of given wallet
+    /// @param wallet The address of the concerned wallet
     /// @return true if wallet is locked, false otherwise
     function isLockedWallet(address wallet) public view returns (bool) {
         return 0 != lockedWalletIndexByWallet[wallet];
@@ -604,7 +608,22 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         return lockedWallets.length;
     }
 
+    /// @notice Get the address of the wallet that locks the balances of the given wallet
+    /// @param wallet The address of the concerned wallet
+    /// @return The locking wallet's address
+    function locker(address wallet) public view returns (address) {
+        return walletMap[wallet].locker;
+    }
+
+    /// @notice Get the timestamp at which the wallet's locked balances will be released
+    /// @param wallet The address of the concerned wallet
+    /// @return The balances release timestamp
+    function releaseTime(address wallet) public view returns (uint256) {
+        return walletMap[wallet].releaseTime;
+    }
+
     /// @notice Get the seized status of given wallet
+    /// @param wallet The address of the concerned wallet
     /// @return true if wallet is seized, false otherwise
     function isSeizedWallet(address wallet) public view returns (bool) {
         return seizedByWallet[wallet];

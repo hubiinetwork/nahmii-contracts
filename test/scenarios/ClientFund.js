@@ -17,6 +17,7 @@ chai.should();
 
 module.exports = function (glob) {
     describe('ClientFund', function () {
+        let provider;
         let web3TransferControllerManager;
         let web3ERC20;
         let web3ClientFund, ethersClientFund;
@@ -26,6 +27,8 @@ module.exports = function (glob) {
         let web3MockedBeneficiary, ethersMockedBeneficiary;
 
         before(async () => {
+            provider = glob.signer_owner.provider;
+
             web3TransferControllerManager = await TransferControllerManager.deployed();
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
@@ -60,6 +63,8 @@ module.exports = function (glob) {
             await web3MockedClientFundUnauthorizedService.setClientFund(web3ClientFund.address);
 
             await web3ClientFund.registerBeneficiary(web3MockedBeneficiary.address);
+
+            await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 60);
         });
 
         describe('constructor()', () => {
@@ -97,6 +102,33 @@ module.exports = function (glob) {
             });
         });
 
+        describe('isLockedWallet()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersClientFund.isLockedWallet(glob.user_a)).should.be.false;
+            });
+        });
+
+        describe('lockedWalletsCount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersClientFund.lockedWalletsCount())
+                    ._bn.should.eq.BN(0);
+            })
+        });
+
+        describe('locker()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersClientFund.locker(glob.user_a))
+                    .should.equal(mocks.address0);
+            })
+        });
+
+        describe('releaseTime()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersClientFund.releaseTime(glob.user_a))
+                    ._bn.should.eq.BN(0);
+            })
+        });
+
         describe('isSeizedWallet()', () => {
             it('should equal value initialized', async () => {
                 (await ethersClientFund.isSeizedWallet(glob.user_a)).should.be.false;
@@ -105,7 +137,8 @@ module.exports = function (glob) {
 
         describe('seizedWalletsCount()', () => {
             it('should equal value initialized', async () => {
-                (await ethersClientFund.seizedWalletsCount()).toNumber().should.equal(0);
+                (await ethersClientFund.seizedWalletsCount())
+                    ._bn.should.eq.BN(0);
             })
         });
 
@@ -1235,7 +1268,10 @@ module.exports = function (glob) {
 
                     it('should successfully stage by deducting from settled', async () => {
                         await web3MockedClientFundAuthorizedService.stageToBeneficiary(
-                            glob.user_a, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            glob.user_a, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {
+                                from: glob.user_a,
+                                gas: 1e6
+                            }
                         );
 
                         (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
@@ -1244,7 +1280,7 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(1);
                         (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
                             ._bn.should.eq.BN(0);
-                        
+
                         const benefit = await ethersMockedBeneficiary.getBenefit(0);
                         benefit.wallet.should.equal(utils.getAddress(glob.user_a));
                         benefit.balance.should.be.a('string').that.is.empty;
@@ -1264,7 +1300,10 @@ module.exports = function (glob) {
 
                     it('should successfully stage by deducting from deposited and rebalance settled to 0', async () => {
                         await web3MockedClientFundAuthorizedService.stageToBeneficiary(
-                            glob.user_a, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            glob.user_a, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {
+                                from: glob.user_a,
+                                gas: 1e6
+                            }
                         );
 
                         (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
@@ -1366,10 +1405,10 @@ module.exports = function (glob) {
             });
         });
 
-        describe('seizeAllBalances()', () => {
+        describe('lockBalances()', () => {
             describe('with zero source wallet', () => {
                 it('should revert', async () => {
-                    web3MockedClientFundAuthorizedService.seizeAllBalances(
+                    web3MockedClientFundAuthorizedService.lockBalances(
                         mocks.address0, glob.user_b, {gas: 1e6}
                     ).should.be.rejected;
                 });
@@ -1377,7 +1416,7 @@ module.exports = function (glob) {
 
             describe('with zero target wallet', () => {
                 it('should revert', async () => {
-                    web3MockedClientFundAuthorizedService.seizeAllBalances(
+                    web3MockedClientFundAuthorizedService.lockBalances(
                         glob.user_a, mocks.address0, {gas: 1e6}
                     ).should.be.rejected;
                 });
@@ -1385,13 +1424,108 @@ module.exports = function (glob) {
 
             describe('called by unauthorized service', () => {
                 it('should revert', async () => {
-                    web3MockedClientFundUnauthorizedService.seizeAllBalances(
+                    web3MockedClientFundUnauthorizedService.lockBalances(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     ).should.be.rejected;
                 });
             });
 
-            describe('of Ether', () => {
+            describe('if within operational constraints', () => {
+                it('should successfully lock balances', async () => {
+                    await web3MockedClientFundAuthorizedService.lockBalances(
+                        glob.user_a, glob.user_b, {gas: 1e6}
+                    );
+
+                    (await ethersClientFund.lockedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersClientFund.isLockedWallet(glob.user_a))
+                        .should.be.true;
+                    (await ethersClientFund.locker(glob.user_a))
+                        .should.equal(utils.getAddress(glob.user_b));
+                    (await ethersClientFund.releaseTime(glob.user_a))
+                        ._bn.should.be.gt.BN(Math.round(Date.now() / 1000));
+                });
+            });
+        });
+
+        describe('unlockBalances()', () => {
+            describe('if balances are not locked', () => {
+                it('should revert', async () => {
+                    web3ClientFund.unlockBalances({from: glob.user_a, gas: 1e6}).should.be.rejected;
+                });
+            });
+
+            describe('if release timeout has not expired', () => {
+                beforeEach(async () => {
+                    await web3MockedClientFundAuthorizedService.lockBalances(
+                        glob.user_a, glob.user_b, {gas: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3ClientFund.unlockBalances({from: glob.user_a, gas: 1e6}).should.be.rejected;
+                });
+            });
+
+            describe('if release timeout has expired', () => {
+                beforeEach(async () => {
+                    await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 0);
+
+                    await web3MockedClientFundAuthorizedService.lockBalances(
+                        glob.user_a, glob.user_b, {gas: 1e6}
+                    );
+                });
+
+                it('should successfully unlock balances', async () => {
+                    const result = await web3ClientFund.unlockBalances({from: glob.user_a, gas: 1e6});
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('UnlockBalancesEvent');
+
+                    (await ethersClientFund.lockedWalletsCount())
+                        ._bn.should.eq.BN(0);
+                    (await ethersClientFund.isLockedWallet(glob.user_a))
+                        .should.be.false;
+                    (await ethersClientFund.locker(glob.user_a))
+                        .should.equal(mocks.address0);
+                    (await ethersClientFund.releaseTime(glob.user_a))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('seizeBalances()', () => {
+            describe('if balances are locked by another wallet', () => {
+                beforeEach(async () => {
+                    await web3MockedClientFundAuthorizedService.lockBalances(
+                        glob.user_a, glob.user_b, {gas: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3ClientFund.seizeBalances(
+                        glob.user_a, mocks.address0, 0, {from: glob.user_c, gas: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if release timeout has expired', () => {
+                beforeEach(async () => {
+                    await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 0);
+
+                    await web3MockedClientFundAuthorizedService.lockBalances(
+                        glob.user_a, glob.user_b, {gas: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3ClientFund.seizeBalances(
+                        glob.user_a, mocks.address0, 0, {from: glob.user_b, gas: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
                 beforeEach(async () => {
                     await web3ClientFund.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
@@ -1400,14 +1534,20 @@ module.exports = function (glob) {
                         glob.user_a, web3.toWei(1.4, 'ether'), mocks.address0, 0
                     );
                     await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gasLimit: 1e6}
+                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gas: 1e6}
+                    );
+                    await web3MockedClientFundAuthorizedService.lockBalances(
+                        glob.user_a, glob.user_b, {gas: 1e6}
                     );
                 });
 
-                it('should successfully seize all balances', async () => {
-                    await web3MockedClientFundAuthorizedService.seizeAllBalances(
-                        glob.user_a, glob.user_b, {gas: 1e6}
+                it('should successfully seize balances', async () => {
+                    const result = await web3ClientFund.seizeBalances(
+                        glob.user_a, mocks.address0, 0, {from: glob.user_b, gas: 1e6}
                     );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SeizeBalancesEvent');
 
                     (await ethersClientFund.depositedBalance(glob.user_a, mocks.address0, 0))
                         ._bn.should.eq.BN(0);
@@ -1424,43 +1564,6 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(utils.parseEther('1.4')._bn);
                 });
             });
-
-            describe('of ERC20 token', () => {
-                beforeEach(async () => {
-                    await web3ERC20.approve(
-                        web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3ClientFund.receiveTokensTo(
-                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3MockedClientFundAuthorizedService.updateSettledBalance(
-                        glob.user_a, 14, web3ERC20.address, 0
-                    );
-                    await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, 3, web3ERC20.address, 0, {gas: 1e6}
-                    );
-                });
-
-                it('should successfully seize all balances', async () => {
-                    await web3MockedClientFundAuthorizedService.seizeAllBalances(
-                        glob.user_a, glob.user_b, {gas: 1e6}
-                    );
-
-                    (await ethersClientFund.depositedBalance(glob.user_a, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(0);
-                    (await ethersClientFund.settledBalance(glob.user_a, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(0);
-                    (await ethersClientFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(0);
-
-                    (await ethersClientFund.depositedBalance(glob.user_b, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(0);
-                    (await ethersClientFund.settledBalance(glob.user_b, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(0);
-                    (await ethersClientFund.stagedBalance(glob.user_b, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(14);
-                });
-            });
         });
 
         describe('seizedWallets()', () => {
@@ -1475,9 +1578,12 @@ module.exports = function (glob) {
                     await web3ClientFund.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedClientFundAuthorizedService.seizeAllBalances(
+                    await web3MockedClientFundAuthorizedService.lockBalances(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     );
+                    await web3ClientFund.seizeBalances(
+                        glob.user_a, mocks.address0, 0, {from: glob.user_b, gas: 1e6}
+                    )
                 });
 
                 it('should revert', async () => {
