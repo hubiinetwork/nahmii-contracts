@@ -452,7 +452,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
 
         // Lock and set release time
         walletMap[lockedWallet].locker = lockerWallet;
-        walletMap[lockedWallet].releaseTime = block.timestamp.add(configuration.settlementChallengeTimeout/*seizureTimeout*/());
+        walletMap[lockedWallet].releaseTime = block.timestamp.add(configuration.balanceLockTimeout());
 
         // Add to the store of locked wallets
         addToLockedWallets(lockedWallet);

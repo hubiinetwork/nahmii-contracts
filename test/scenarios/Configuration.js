@@ -666,6 +666,35 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('balanceLockTimeout()', () => {
+                it('should equal value initialized', async () => {
+                    (await ethersConfiguration.balanceLockTimeout())
+                        ._bn.should.eq.BN(60 * 60 * 24 * 30);
+                });
+            });
+
+            describe('setBalanceLockTimeout()', () => {
+                describe('if called by non-deployer', () => {
+                    it('should revert', async () => {
+                        web3Configuration.setBalanceLockTimeout(
+                            (await provider.getBlockNumber()) + 1, 100, {from: glob.user_a}
+                        ).should.be.rejected;
+                    });
+                });
+
+                describe('if within operational constraints', () => {
+                    it('should successfully set new values and emit event', async () => {
+                        const result = await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 100);
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('SetBalanceLockTimeoutEvent');
+
+                        (await ethersConfiguration.balanceLockTimeout())
+                            ._bn.should.eq.BN(100);
+                    });
+                });
+            });
+
             describe('cancelOrderChallengeTimeout()', () => {
                 it('should equal value initialized', async () => {
                     (await ethersConfiguration.cancelOrderChallengeTimeout())

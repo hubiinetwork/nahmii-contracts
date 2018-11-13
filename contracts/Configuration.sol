@@ -56,6 +56,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     BlockNumbIntsLib.BlockNumbInts paymentMinimumFeeByBlockNumber;
     mapping(address => mapping(uint256 => BlockNumbIntsLib.BlockNumbInts)) currencyPaymentMinimumFeeByBlockNumber;
 
+    BlockNumbUintsLib.BlockNumbUints balanceLockTimeoutByBlockNumber;
     BlockNumbUintsLib.BlockNumbUints cancelOrderChallengeTimeoutByBlockNumber;
     BlockNumbUintsLib.BlockNumbUints settlementChallengeTimeoutByBlockNumber;
 
@@ -81,6 +82,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     event SetTradeTakerMinimumFeeEvent(uint256 fromBlockNumber, int256 nominal);
     event SetPaymentMinimumFeeEvent(uint256 fromBlockNumber, int256 nominal);
     event SetCurrencyPaymentMinimumFeeEvent(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal);
+    event SetBalanceLockTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
     event SetCancelOrderChallengeTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
     event SetSettlementChallengeTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
     event SetWalletSettlementStakeFractionEvent(uint256 fromBlockNumber, uint256 stakeFraction);
@@ -103,6 +105,7 @@ contract Configuration is Modifiable, Ownable, Servable {
         tradeTakerMinimumFeeByBlockNumber.addEntry(block.number, 2e14);
         paymentMinimumFeeByBlockNumber.addEntry(block.number, 1e14);
 
+        balanceLockTimeoutByBlockNumber.addEntry(block.number, 30 days);
         cancelOrderChallengeTimeoutByBlockNumber.addEntry(block.number, 3 days);
         settlementChallengeTimeoutByBlockNumber.addEntry(block.number, 5 days);
 
@@ -491,6 +494,28 @@ contract Configuration is Modifiable, Ownable, Servable {
     {
         currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].addEntry(fromBlockNumber, nominal);
         emit SetCurrencyPaymentMinimumFeeEvent(fromBlockNumber, currencyCt, currencyId, nominal);
+    }
+
+    /// @notice Get the current value of balance lock timeout
+    /// @return The value of balance lock timeout
+    function balanceLockTimeout()
+    public
+    view
+    returns (uint256)
+    {
+        return balanceLockTimeoutByBlockNumber.currentValue();
+    }
+
+    /// @notice Set timeout of balance lock timeout
+    /// @param fromBlockNumber Block number from which the update applies
+    /// @param timeoutInSeconds Timeout duration in seconds
+    function setBalanceLockTimeout(uint256 fromBlockNumber, uint256 timeoutInSeconds)
+    public
+    onlyDeployer
+    onlyDelayedBlockNumber(fromBlockNumber)
+    {
+        balanceLockTimeoutByBlockNumber.addEntry(fromBlockNumber, timeoutInSeconds);
+        emit SetBalanceLockTimeoutEvent(fromBlockNumber, timeoutInSeconds);
     }
 
     /// @notice Get the current value of cancel order challenge timeout
