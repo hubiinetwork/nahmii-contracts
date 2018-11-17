@@ -59,7 +59,7 @@ CancelOrdersChallengable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     /// @notice Set the driip settlement challenge contract

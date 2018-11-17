@@ -74,7 +74,7 @@ contract MockedValidator is Ownable, SignerManageable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) public {
+    constructor(address deployer, address signerManager) Ownable(deployer) SignerManageable(signerManager) public {
         _reset();
     }
 

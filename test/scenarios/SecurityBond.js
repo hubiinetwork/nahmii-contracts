@@ -16,7 +16,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe('SecurityBond', function () {
+    describe.only('SecurityBond', function () {
         let web3TransferControllerManager;
         let web3Configuration, ethersConfiguration;
         let web3ERC20;
@@ -541,7 +541,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe.only('stageToBeneficiary()', () => {
+        describe('stageToBeneficiary()', () => {
             describe('if called without in-use currencies present', () => {
                 it('should revert', async () => {
                     web3SecurityBond.stageToBeneficiary(

@@ -50,7 +50,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //

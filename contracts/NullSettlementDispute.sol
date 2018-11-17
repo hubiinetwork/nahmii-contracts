@@ -51,7 +51,7 @@ FraudChallengable, CancelOrdersChallengable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     /// @notice Set the settlement challenge contract

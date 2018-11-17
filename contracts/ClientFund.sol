@@ -91,7 +91,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) Beneficiary() Benefactor()
+    constructor(address deployer) Ownable(deployer) Beneficiary() Benefactor()
     public
     {
         serviceActivationTimeout = 1 weeks;

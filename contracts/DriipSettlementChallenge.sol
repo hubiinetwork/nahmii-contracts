@@ -70,7 +70,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //

@@ -22,7 +22,7 @@ contract MockedClientFundService is Ownable, ClientFundable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //

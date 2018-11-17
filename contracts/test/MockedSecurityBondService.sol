@@ -21,7 +21,7 @@ contract MockedSecurityBondService is Ownable, SecurityBondable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
