@@ -459,12 +459,4 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     {
         return wallet == payment.recipient.wallet;
     }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
 }

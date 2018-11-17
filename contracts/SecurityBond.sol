@@ -259,12 +259,4 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         // Emit event
         emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
     }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
 }

@@ -541,55 +541,108 @@ module.exports = function (glob) {
             });
         });
 
-        describe('stageToBeneficiary()', () => {
+        describe.only('stageToBeneficiary()', () => {
             describe('if called without in-use currencies present', () => {
                 it('should revert', async () => {
                     web3SecurityBond.stageToBeneficiary(
-                        web3MockedBeneficiary.address, mocks.address0, 0
+                        web3MockedBeneficiary.address, mocks.address0, 0, {from: glob.user_a}
                     ).should.be.rejected;
                 });
             });
 
-            describe('of Ether', () => {
+            describe('if no reward has been granted', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.receiveEthersTo(
+                        mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3SecurityBond.stageToBeneficiary(
+                        web3MockedBeneficiary.address, mocks.address0, 0, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called before reward has been unlocked', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.receiveEthersTo(
+                        mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                    await web3MockedSecurityBondService.reward(
+                        glob.user_a, 5e17, 1e3
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3SecurityBond.stageToBeneficiary(
+                        web3MockedBeneficiary.address, mocks.address0, 0, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                describe('of Ether', () => {
+                    beforeEach(async () => {
+                        await web3SecurityBond.receiveEthersTo(
+                            mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                        );
+                        await web3MockedSecurityBondService.reward(
+                            glob.user_a, 5e17, 0
+                        );
+                    });
+
+                    it('should successfully stage', async () => {
+                        await web3SecurityBond.stageToBeneficiary(
+                            web3MockedBeneficiary.address, mocks.address0, 0, {from: glob.user_a}
+                        );
+
+                        (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.5')._bn);
+                    });
+                });
+
+                describe('of ERC20 token', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3SecurityBond.receiveTokensTo(
+                            mocks.address0, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3MockedSecurityBondService.reward(
+                            glob.user_a, 5e17, 0
+                        );
+                    });
+
+                    it('should successfully stage', async () => {
+                        await web3SecurityBond.stageToBeneficiary(
+                            web3MockedBeneficiary.address, web3ERC20.address, 0, {from: glob.user_a}
+                        );
+
+                        (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(5);
+                    });
+                });
+            });
+
+            describe('if called twice on the same nonce', () => {
                 beforeEach(async () => {
                     await web3SecurityBond.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedSecurityBondService.reward(
-                        glob.user_a, 5e17
+                        glob.user_a, 5e17, 0
                     );
-                });
-
-                it('should successfully stage', async () => {
                     await web3SecurityBond.stageToBeneficiary(
                         web3MockedBeneficiary.address, mocks.address0, 0, {from: glob.user_a}
                     );
-
-                    (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
-                        ._bn.should.eq.BN(utils.parseEther('0.5')._bn);
-                });
-            });
-
-            describe('of ERC20 token', () => {
-                beforeEach(async () => {
-                    await web3ERC20.approve(
-                        web3SecurityBond.address, 10, {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3SecurityBond.receiveTokensTo(
-                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3MockedSecurityBondService.reward(
-                        glob.user_a, 5e17
-                    );
                 });
 
-                it('should successfully stage', async () => {
-                    await web3SecurityBond.stageToBeneficiary(
-                        web3MockedBeneficiary.address, web3ERC20.address, 0, {from: glob.user_a}
-                    );
-
-                    (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
-                        ._bn.should.eq.BN(5);
+                it('should revert', async () => {
+                    web3SecurityBond.stageToBeneficiary(
+                        web3MockedBeneficiary.address, mocks.address0, 0, {from: glob.user_a}
+                    ).should.be.rejected;
                 });
             });
         });
