@@ -52,13 +52,13 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyOperatorSealedOrder(NahmiiTypesLib.Order order) {
-        require(validator.isGenuineOrderOperatorSeal(order));
+    modifier onlySealedOrder(NahmiiTypesLib.Order order) {
+        require(validator.isGenuineOrderSeals(order));
         _;
     }
 
-    modifier onlySealedOrder(NahmiiTypesLib.Order order) {
-        require(validator.isGenuineOrderSeals(order));
+    modifier onlyOperatorSealedOrder(NahmiiTypesLib.Order order) {
+        require(validator.isGenuineOrderOperatorSeal(order));
         _;
     }
 
@@ -82,7 +82,7 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyPaymentSender(NahmiiTypesLib.Payment payment, address wallet) {
+    modifier onlyPaymentParty(NahmiiTypesLib.Payment payment, address wallet) {
         require(validator.isPaymentParty(payment, wallet));
         _;
     }

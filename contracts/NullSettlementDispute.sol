@@ -115,9 +115,9 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's funds or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(order.wallet))
-            clientFund.lockBalances(order.wallet, challenger);
+            clientFund.lockBalancesByProxy(order.wallet, challenger);
         else
-            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
+            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
         // Emit event
         emit ChallengeByOrderEvent(order.seals.operator.hash, nullSettlementChallenge.proposalNonce(order.wallet), challenger);
@@ -185,9 +185,9 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's funds or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(wallet))
-            clientFund.lockBalances(wallet, challenger);
+            clientFund.lockBalancesByProxy(wallet, challenger);
         else
-            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
+            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
         // Emit event
         emit ChallengeByTradeEvent(wallet, trade.seal.hash, nullSettlementChallenge.proposalNonce(wallet), challenger);
@@ -233,9 +233,9 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's funds or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(payment.sender.wallet))
-            clientFund.lockBalances(payment.sender.wallet, challenger);
+            clientFund.lockBalancesByProxy(payment.sender.wallet, challenger);
         else
-            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction());
+            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
         // Emit event
         emit ChallengeByPaymentEvent(payment.seals.operator.hash, nullSettlementChallenge.proposalNonce(payment.sender.wallet), challenger);

@@ -84,9 +84,9 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        clientFund.lockBalances(wallet, msg.sender);
+        clientFund.lockBalancesByProxy(wallet, msg.sender);
 
         emit ChallengeByTradeOrderResidualsEvent(
             firstTrade.seal.hash, lastTrade.seal.hash, msg.sender, wallet

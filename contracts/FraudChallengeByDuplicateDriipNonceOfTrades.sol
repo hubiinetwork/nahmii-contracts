@@ -63,7 +63,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentTradeHash(trade2.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
         emit ChallengeByDuplicateDriipNonceOfTradesEvent(
             trade1.seal.hash, trade2.seal.hash, msg.sender

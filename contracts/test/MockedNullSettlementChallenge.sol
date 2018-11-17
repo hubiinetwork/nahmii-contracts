@@ -31,9 +31,9 @@ contract MockedNullSettlementChallenge {
     SettlementTypesLib.CandidateType public _proposalCandidateType;
     uint256 public _proposalCandidateIndex;
     address public _proposalChallenger;
-    uint256 public _challengeCandidateOrderHashesCount;
-    uint256 public _challengeCandidateTradeHashesCount;
-    uint256 public _challengeCandidatePaymentHashesCount;
+    uint256 public _candidateOrderHashesCount;
+    uint256 public _candidateTradeHashesCount;
+    uint256 public _candidatePaymentHashesCount;
     NullSettlementDispute public _nullSettlementDispute;
 
     function _reset()
@@ -48,9 +48,9 @@ contract MockedNullSettlementChallenge {
         delete _proposalCandidateType;
         delete _proposalCandidateIndex;
         delete _proposalChallenger;
-        delete _challengeCandidateOrderHashesCount;
-        delete _challengeCandidateTradeHashesCount;
-        delete _challengeCandidatePaymentHashesCount;
+        delete _candidateOrderHashesCount;
+        delete _candidateTradeHashesCount;
+        delete _candidatePaymentHashesCount;
     }
 
     function _setChallengePhase(NahmiiTypesLib.ChallengePhase challengePhase)
@@ -239,52 +239,52 @@ contract MockedNullSettlementChallenge {
         return _proposalChallenger;
     }
 
-    function addChallengeCandidateOrderHash(bytes32 hash)
+    function addCandidateOrderHash(bytes32 hash)
     public
     {
         // To silence unused function parameter compiler warning
         require(hash == hash);
-        _challengeCandidateOrderHashesCount++;
+        _candidateOrderHashesCount++;
     }
 
-    function challengeCandidateOrderHashesCount()
+    function candidateOrderHashesCount()
     public
     view
     returns (uint256)
     {
-        return _challengeCandidateOrderHashesCount;
+        return _candidateOrderHashesCount;
     }
 
-    function addChallengeCandidateTradeHash(bytes32 hash)
+    function addCandidateTradeHash(bytes32 hash)
     public
     {
         // To silence unused function parameter compiler warning
         require(hash == hash);
-        _challengeCandidateTradeHashesCount++;
+        _candidateTradeHashesCount++;
     }
 
-    function challengeCandidateTradeHashesCount()
+    function candidateTradeHashesCount()
     public
     view
     returns (uint256)
     {
-        return _challengeCandidateTradeHashesCount;
+        return _candidateTradeHashesCount;
     }
 
-    function addChallengeCandidatePaymentHash(bytes32 hash)
+    function addCandidatePaymentHash(bytes32 hash)
     public
     {
         // To silence unused function parameter compiler warning
         require(hash == hash);
-        _challengeCandidatePaymentHashesCount++;
+        _candidatePaymentHashesCount++;
     }
 
-    function challengeCandidatePaymentHashesCount()
+    function candidatePaymentHashesCount()
     public
     view
     returns (uint256)
     {
-        return _challengeCandidatePaymentHashesCount;
+        return _candidatePaymentHashesCount;
     }
 
     function setNullSettlementDispute(NullSettlementDispute nullSettlementDispute)

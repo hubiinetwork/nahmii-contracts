@@ -666,17 +666,17 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('balanceLockTimeout()', () => {
+            describe('walletLockTimeout()', () => {
                 it('should equal value initialized', async () => {
-                    (await ethersConfiguration.balanceLockTimeout())
+                    (await ethersConfiguration.walletLockTimeout())
                         ._bn.should.eq.BN(60 * 60 * 24 * 30);
                 });
             });
 
-            describe('setBalanceLockTimeout()', () => {
+            describe('setWalletLockTimeout()', () => {
                 describe('if called by non-deployer', () => {
                     it('should revert', async () => {
-                        web3Configuration.setBalanceLockTimeout(
+                        web3Configuration.setWalletLockTimeout(
                             (await provider.getBlockNumber()) + 1, 100, {from: glob.user_a}
                         ).should.be.rejected;
                     });
@@ -684,12 +684,12 @@ module.exports = (glob) => {
 
                 describe('if within operational constraints', () => {
                     it('should successfully set new values and emit event', async () => {
-                        const result = await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 100);
+                        const result = await web3Configuration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 100);
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('SetBalanceLockTimeoutEvent');
+                        result.logs[0].event.should.equal('SetWalletLockTimeoutEvent');
 
-                        (await ethersConfiguration.balanceLockTimeout())
+                        (await ethersConfiguration.walletLockTimeout())
                             ._bn.should.eq.BN(100);
                     });
                 });

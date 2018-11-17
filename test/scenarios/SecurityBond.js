@@ -51,6 +51,7 @@ module.exports = function (glob) {
             // Fully wire the mocked service
             await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
             await web3SecurityBond.enableServiceAction(web3MockedSecurityBondService.address, 'reward');
+            await web3SecurityBond.enableServiceAction(web3MockedSecurityBondService.address, 'deprive');
             await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
         });
 
@@ -452,7 +453,7 @@ module.exports = function (glob) {
             describe('if called with null address', () => {
                 it('should revert', async () => {
                     web3MockedSecurityBondService.reward(
-                        mocks.address0, 1e18
+                        mocks.address0, 1e18, 0
                     ).should.be.rejected;
                 });
             });
@@ -465,7 +466,7 @@ module.exports = function (glob) {
 
                 it('should revert', async () => {
                     web3MockedSecurityBondService.reward(
-                        glob.user_a, 1e18
+                        glob.user_a, 1e18, 0
                     ).should.be.rejected;
                 });
             });
@@ -479,7 +480,7 @@ module.exports = function (glob) {
 
                 it('should revert', async () => {
                     web3MockedSecurityBondService.reward(
-                        glob.user_a, 1e18
+                        glob.user_a, 1e18, 0
                     ).should.be.rejected;
                 });
             });
@@ -487,12 +488,55 @@ module.exports = function (glob) {
             describe('if within operational constraints', () => {
                 it('should successfully reward', async () => {
                     await web3MockedSecurityBondService.reward(
-                        glob.user_a, 1e18
+                        glob.user_a, 1e18, 0
                     );
 
                     const meta = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
                     meta.rewardFraction._bn.should.eq.BN(1e18.toString());
                     meta.rewardNonce._bn.should.eq.BN(1);
+                    meta.unlockTime._bn.should.be.gt.BN(0);
+                });
+            });
+        });
+
+        describe('deprive()', () => {
+            describe('if called by service that is not registered', () => {
+                beforeEach(async () => {
+                    web3SecurityBond = await SecurityBond.new(glob.owner);
+                    await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
+                });
+
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.deprive(glob.user_a).should.be.rejected;
+                });
+            });
+
+            describe('if called by registered service with action not enabled', () => {
+                beforeEach(async () => {
+                    web3SecurityBond = await SecurityBond.new(glob.owner);
+                    await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
+                    await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
+                });
+
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.deprive(glob.user_a).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3MockedSecurityBondService.reward(
+                        glob.user_a, 1e18, 0
+                    );
+                });
+
+                it('should successfully reward', async () => {
+                    await web3MockedSecurityBondService.deprive(glob.user_a);
+
+                    const meta = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
+                    meta.rewardFraction._bn.should.eq.BN(0);
+                    meta.rewardNonce._bn.should.eq.BN(2);
+                    meta.unlockTime._bn.should.eq.BN(0);
                 });
             });
         });

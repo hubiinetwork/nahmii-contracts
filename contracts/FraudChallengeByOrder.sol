@@ -60,7 +60,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentOrderHash(order.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
         emit ChallengeByOrderEvent(order.seals.operator.hash, msg.sender);
     }

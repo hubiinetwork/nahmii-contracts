@@ -20,9 +20,9 @@ contract MockedClientFund {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct Lock {
-        address source;
-        address target;
+    struct LockUnlock {
+        address lockedWallet;
+        address lockerWallet;
     }
 
     struct Update {
@@ -40,9 +40,8 @@ contract MockedClientFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Lock[] public locks;
-    address[] public lockedWallets;
-    mapping(address => bool) public lockedByWallet;
+    LockUnlock[] public locks;
+    LockUnlock[] public unlocks;
 
     Update[] public settledBalanceUpdates;
     Update[] public stages;
@@ -52,7 +51,8 @@ contract MockedClientFund {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event LockBalancesEvent(address sourceWallet, address targetWallet);
+    event LockBalancesEvent(address lockedWallet, address lockerWallet);
+    event UnlockBalancesEvent(address lockedWallet, address lockerWallet);
     event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
 
@@ -61,9 +61,7 @@ contract MockedClientFund {
     // -----------------------------------------------------------------------------------------------------------------
     function _reset() public {
         locks.length = 0;
-        for (uint256 i = 0; i < lockedWallets.length; i++)
-            lockedByWallet[lockedWallets[i]] = false;
-        lockedWallets.length = 0;
+        unlocks.length = 0;
 
         settledBalanceUpdates.length = 0;
         stages.length = 0;
@@ -71,17 +69,18 @@ contract MockedClientFund {
         activeBalanceLogEntries.length = 0;
     }
 
-    function lockBalances(address sourceWallet, address targetWallet)
+    function lockBalancesByProxy(address sourceWallet, address targetWallet)
     public
     {
-        locks.push(Lock(sourceWallet, targetWallet));
-
-        if (!lockedByWallet[sourceWallet]) {
-            lockedByWallet[sourceWallet] = true;
-            lockedWallets.push(sourceWallet);
-        }
-
+        locks.push(LockUnlock(sourceWallet, targetWallet));
         emit LockBalancesEvent(sourceWallet, targetWallet);
+    }
+
+    function unlockBalancesByProxy(address wallet)
+    public
+    {
+        unlocks.push(LockUnlock(wallet, address(0)));
+        emit UnlockBalancesEvent(wallet, address(0));
     }
 
     function lockedWalletsCount()
@@ -89,7 +88,15 @@ contract MockedClientFund {
     view
     returns (uint256)
     {
-        return lockedWallets.length;
+        return locks.length;
+    }
+
+    function _unlocksCount()
+    public
+    view
+    returns (uint256)
+    {
+        return unlocks.length;
     }
 
     function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)

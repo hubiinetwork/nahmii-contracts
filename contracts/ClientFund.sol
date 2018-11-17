@@ -57,7 +57,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         InUseCurrencyLib.InUseCurrency inUseCurrencies;
 
         address locker;
-        uint256 releaseTime;
+        uint256 unlockTime;
     }
 
     //
@@ -85,6 +85,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     event TransferToBeneficiaryEvent(address beneficiary, int256 amount, address currencyCt, uint256 currencyId);
     event LockBalancesEvent(address lockedWallet, address lockerWallet);
     event UnlockBalancesEvent(address lockedWallet, address lockerWallet);
+    event UnlockBalancesByProxyEvent(address lockedWallet, address lockerWallet);
     event SeizeBalancesEvent(address lockedWallet, address lockerWallet);
 
     //
@@ -437,22 +438,21 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         emit TransferToBeneficiaryEvent(beneficiary, amount, currencyCt, currencyId);
     }
 
-    /// @notice Lock balances of the given source wallet allowing them to be seized by
-    /// the given target wallet
-    /// @param lockedWallet The address of concerned wallet whose balances are locked
+    /// @notice Lock balances of the given locked wallet allowing them to be seized by
+    /// the given locker wallet
+    /// @param lockedWallet The address of concerned wallet whose balances will be locked
     /// @param lockerWallet The address of concerned wallet that locks
-    function lockBalances(address lockedWallet, address lockerWallet)
+    function lockBalancesByProxy(address lockedWallet, address lockerWallet)
     public
-    notNullAddress(lockedWallet)
     notNullAddress(lockerWallet)
     onlyAuthorizedService(lockedWallet)
     {
         // Require that the wallet to be locked is not locked by other wallet
-        require(address(0) == walletMap[lockedWallet].locker);
+        require(address(0) == walletMap[lockedWallet].locker || lockerWallet == walletMap[lockedWallet].locker);
 
         // Lock and set release time
         walletMap[lockedWallet].locker = lockerWallet;
-        walletMap[lockedWallet].releaseTime = block.timestamp.add(configuration.balanceLockTimeout());
+        walletMap[lockedWallet].unlockTime = block.timestamp.add(configuration.walletLockTimeout());
 
         // Add to the store of locked wallets
         addToLockedWallets(lockedWallet);
@@ -468,19 +468,33 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         // Require that release timeout has expired
         require(
             address(0) != walletMap[msg.sender].locker &&
-            block.timestamp >= walletMap[msg.sender].releaseTime
+            block.timestamp >= walletMap[msg.sender].unlockTime
         );
 
-        // Unlock and release
+        // Store locker
         address locker = walletMap[msg.sender].locker;
-        walletMap[msg.sender].locker = address(0);
-        walletMap[msg.sender].releaseTime = 0;
 
-        // Remove from the store of locked wallets
-        removeFromLockedWallets(msg.sender);
+        // Unlock balances
+        unlockBalancesPrivate(msg.sender);
 
         // Emit event
         emit UnlockBalancesEvent(msg.sender, locker);
+    }
+
+    /// @notice Unlock balances of the given wallet
+    /// @param wallet The address of concerned wallet whose balances will be unlocked
+    function unlockBalancesByProxy(address wallet)
+    public
+    onlyAuthorizedService(wallet)
+    {
+        // Store locker
+        address locker = walletMap[msg.sender].locker;
+
+        // Unlock balances
+        unlockBalancesPrivate(wallet);
+
+        // Emit event
+        emit UnlockBalancesByProxyEvent(msg.sender, locker);
     }
 
     /// @notice Seize balances in the given currency of the given locked wallet, provided that the
@@ -493,7 +507,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     {
         require(
             msg.sender == walletMap[lockedWallet].locker &&
-            block.timestamp < walletMap[lockedWallet].releaseTime
+            block.timestamp < walletMap[lockedWallet].unlockTime
         );
 
         int256 amount = sumAllBalancesOfWalletAndCurrency(lockedWallet, currencyCt, currencyId);
@@ -599,7 +613,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     /// @param wallet The address of the concerned wallet
     /// @return true if wallet is locked, false otherwise
     function isLockedWallet(address wallet) public view returns (bool) {
-        return 0 != lockedWalletIndexByWallet[wallet];
+        return block.timestamp < walletMap[wallet].unlockTime;
     }
 
     /// @notice Get the number of wallets whose funds have been locked
@@ -618,8 +632,8 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     /// @notice Get the timestamp at which the wallet's locked balances will be released
     /// @param wallet The address of the concerned wallet
     /// @return The balances release timestamp
-    function releaseTime(address wallet) public view returns (uint256) {
-        return walletMap[wallet].releaseTime;
+    function unlockTime(address wallet) public view returns (uint256) {
+        return walletMap[wallet].unlockTime;
     }
 
     /// @notice Get the seized status of given wallet
@@ -698,6 +712,17 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         walletMap[wallet].deposited.set(0, currencyCt, currencyId);
         walletMap[wallet].settled.set(0, currencyCt, currencyId);
         walletMap[wallet].staged.set(0, currencyCt, currencyId);
+    }
+
+    function unlockBalancesPrivate(address wallet)
+    private
+    {
+        // Unlock and release
+        walletMap[wallet].locker = address(0);
+        walletMap[wallet].unlockTime = 0;
+
+        // Remove from the store of locked wallets
+        removeFromLockedWallets(wallet);
     }
 
     function addToLockedWallets(address wallet)
