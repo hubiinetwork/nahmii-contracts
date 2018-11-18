@@ -95,8 +95,8 @@ CancelOrdersChallengable {
     (order.placement.amount.div(order.placement.rate), order.placement.currencies.conjugate)
         );
 
-        // Require that challenge is ongoing
-        require(driipSettlementChallenge.isChallengeOngoing(order.wallet, currency.ct, currency.id));
+        // Require that proposal has not expired
+        require(!driipSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
         // Require that proposal has not been disqualified already
         require(SettlementTypesLibNew.ChallengeStatus.Disqualified != driipSettlementChallenge.proposalStatus(
@@ -115,7 +115,7 @@ CancelOrdersChallengable {
         ));
 
         // Update proposal
-        driipSettlementChallenge.setProposalEndTime(
+        driipSettlementChallenge.setProposalExpirationTime(
             order.wallet, currency.ct, currency.id, block.timestamp.add(configuration.settlementChallengeTimeout())
         );
         driipSettlementChallenge.setProposalStatus(
@@ -171,8 +171,8 @@ CancelOrdersChallengable {
         order.placement.currencies.conjugate
         );
 
-        // Require that challenge is ongoing
-        require(driipSettlementChallenge.isChallengeOngoing(order.wallet, currency.ct, currency.id));
+        // Require that proposal has not expired
+        require(!driipSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
         // Require that proposal has been disqualified
         require(SettlementTypesLibNew.ChallengeStatus.Disqualified == driipSettlementChallenge.proposalStatus(
@@ -271,8 +271,8 @@ CancelOrdersChallengable {
     (trade.transfers.intended.single.abs(), trade.currencies.intended)
         );
 
-        // Require that challenge is ongoing
-        require(driipSettlementChallenge.isChallengeOngoing(wallet, currency.ct, currency.id));
+        // Require that proposal has not expired
+        require(!driipSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
         // Require that proposal has not been disqualified already
         require(SettlementTypesLibNew.ChallengeStatus.Disqualified != driipSettlementChallenge.proposalStatus(
@@ -335,8 +335,8 @@ CancelOrdersChallengable {
         // Require that payment candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
 
-        // Require that challenge is ongoing
-        require(driipSettlementChallenge.isChallengeOngoing(wallet, payment.currency.ct, payment.currency.id));
+        // Require that proposal has not expired
+        require(!driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
         // Require that proposal has not been disqualified already
         require(SettlementTypesLibNew.ChallengeStatus.Disqualified != driipSettlementChallenge.proposalStatus(

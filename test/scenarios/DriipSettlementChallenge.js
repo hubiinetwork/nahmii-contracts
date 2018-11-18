@@ -787,11 +787,11 @@ module.exports = (glob) => {
             });
         });
 
-        describe('isChallengeOngoing()', () => {
+        describe('hasProposalExpired()', () => {
             describe('if no settlement challenge has been started for the wallet and currency', () => {
-                it('should return false', async () => {
-                    (await ethersDriipSettlementChallenge.isChallengeOngoing(glob.owner, mocks.address0, 0))
-                        .should.be.false;
+                it('should return true', async () => {
+                    (await ethersDriipSettlementChallenge.hasProposalExpired(glob.owner, mocks.address0, 0))
+                        .should.be.true;
                 });
             });
 
@@ -811,10 +811,10 @@ module.exports = (glob) => {
                         );
                     });
 
-                    it('should return false', async () => {
-                        (await ethersDriipSettlementChallenge.isChallengeOngoing(
+                    it('should return true', async () => {
+                        (await ethersDriipSettlementChallenge.hasProposalExpired(
                             glob.owner, payment.currency.ct, payment.currency.id
-                        )).should.be.false;
+                        )).should.be.true;
                     });
                 });
 
@@ -825,10 +825,10 @@ module.exports = (glob) => {
                         );
                     });
 
-                    it('should return true', async () => {
-                        (await ethersDriipSettlementChallenge.isChallengeOngoing(
+                    it('should return false', async () => {
+                        (await ethersDriipSettlementChallenge.hasProposalExpired(
                             glob.owner, payment.currency.ct, payment.currency.id
-                        )).should.be.true;
+                        )).should.be.false;
                     });
                 });
             });
@@ -890,10 +890,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalEndTime()', () => {
+        describe('proposalExpirationTime()', () => {
             describe('if no settlement challenge has been started for the wallet and currency', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementChallenge.proposalEndTime(
+                    ethersDriipSettlementChallenge.proposalExpirationTime(
                         glob.owner, mocks.address0, 0
                     ).should.be.rejected
                 });
@@ -915,7 +915,7 @@ module.exports = (glob) => {
                 });
 
                 it('should return end time of proposal', async () => {
-                    (await ethersDriipSettlementChallenge.proposalEndTime(
+                    (await ethersDriipSettlementChallenge.proposalExpirationTime(
                         payment.sender.wallet, payment.currency.ct, payment.currency.id
                     ))._bn.should.be.gt.BN(timestampBefore);
                 });
@@ -1108,10 +1108,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('setProposalEndTime()', () => {
+        describe('setProposalExpirationTime()', () => {
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallenge.setProposalEndTime(
+                    web3DriipSettlementChallenge.setProposalExpirationTime(
                         glob.owner, mocks.address0, 0, 1000
                     ).should.be.rejected
                 });
@@ -1123,7 +1123,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallenge.setProposalEndTime(
+                    ethersDriipSettlementChallenge.setProposalExpirationTime(
                         glob.owner, mocks.address0, 0, 1000
                     ).should.be.rejected
                 });
@@ -1143,11 +1143,11 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully set end time of proposal', async () => {
-                    await ethersDriipSettlementChallenge.setProposalEndTime(
+                    await ethersDriipSettlementChallenge.setProposalExpirationTime(
                         payment.sender.wallet, payment.currency.ct, payment.currency.id, 1000
                     );
 
-                    (await ethersDriipSettlementChallenge.proposalEndTime(
+                    (await ethersDriipSettlementChallenge.proposalExpirationTime(
                         payment.sender.wallet, payment.currency.ct, payment.currency.id
                     ))._bn.should.eq.BN(1000);
                 });

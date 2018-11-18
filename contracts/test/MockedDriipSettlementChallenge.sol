@@ -20,13 +20,13 @@ import {SettlementTypesLibNew} from "../SettlementTypesLibNew.sol";
 */
 contract MockedDriipSettlementChallenge {
 
-    bool public _challengeOngoing;
+    bool public _proposalExpired;
     uint256 public _proposalNonce;
     uint256 public _proposalBlockNumber;
     int256[] public _proposalStageAmounts;
     uint256 public _proposalStageAmountIndex;
     int256 public _proposalTargetBalanceAmount;
-    uint256 public _proposalEndTime;
+    uint256 public _proposalExpirationTime;
     SettlementTypesLibNew.ChallengeStatus public _proposalStatus;
     NahmiiTypesLib.DriipType public _proposalDriipType;
     bytes32 public _proposalDriipHash;
@@ -41,11 +41,11 @@ contract MockedDriipSettlementChallenge {
     function _reset()
     public
     {
-        delete _challengeOngoing;
+        delete _proposalExpired;
         delete _proposalNonce;
         delete _proposalBlockNumber;
         delete _proposalTargetBalanceAmount;
-        delete _proposalEndTime;
+        delete _proposalExpirationTime;
         delete _proposalStatus;
         delete _proposalDriipType;
         delete _proposalDriipHash;
@@ -60,13 +60,13 @@ contract MockedDriipSettlementChallenge {
         _proposalStageAmountIndex = 0;
     }
 
-    function _setChallengeOngoing(bool challengeOngoing)
+    function _setProposalExpired(bool proposalExpired)
     public
     {
-        _challengeOngoing = challengeOngoing;
+        _proposalExpired = proposalExpired;
     }
 
-    function isChallengeOngoing(address wallet, address currencyCt, uint256 currencyId)
+    function hasProposalExpired(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bool) {
@@ -74,7 +74,7 @@ contract MockedDriipSettlementChallenge {
         require(wallet == wallet);
         require(currencyCt == currencyCt);
         require(currencyId == currencyId);
-        return _challengeOngoing;
+        return _proposalExpired;
     }
 
     function _setProposalNonce(uint256 proposalNonce)
@@ -148,18 +148,18 @@ contract MockedDriipSettlementChallenge {
         return _proposalTargetBalanceAmount;
     }
 
-    function setProposalEndTime(address wallet, address currencyCt, uint256 currencyId,
-        uint256 endTime)
+    function setProposalExpirationTime(address wallet, address currencyCt, uint256 currencyId,
+        uint256 expirationTime)
     public
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
         require(currencyCt == currencyCt);
         require(currencyId == currencyId);
-        _proposalEndTime = endTime;
+        _proposalExpirationTime = expirationTime;
     }
 
-    function proposalEndTime(address wallet, address currencyCt, uint256 currencyId)
+    function proposalExpirationTime(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
@@ -168,7 +168,7 @@ contract MockedDriipSettlementChallenge {
         require(wallet == wallet);
         require(currencyCt == currencyCt);
         require(currencyId == currencyId);
-        return _proposalEndTime;
+        return _proposalExpirationTime;
     }
 
     function setProposalStatus(address wallet, address currencyCt, uint256 currencyId,

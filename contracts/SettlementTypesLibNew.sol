@@ -29,7 +29,7 @@ library SettlementTypesLibNew {
         uint256 nonce;
         uint256 blockNumber;
 
-        uint256 endTime;
+        uint256 expirationTime;
 
         // Status
         ChallengeStatus status;

@@ -222,9 +222,9 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         // Require that wallet is not locked
         require(!driipSettlementChallenge.isLockedWallet(wallet));
 
-        // Require that challenge is closed
-        require(!driipSettlementChallenge.isChallengeOngoing(wallet, trade.currencies.intended.ct, trade.currencies.intended.id));
-        require(!driipSettlementChallenge.isChallengeOngoing(wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id));
+        // Require that proposal has expired
+        require(driipSettlementChallenge.hasProposalExpired(wallet, trade.currencies.intended.ct, trade.currencies.intended.id));
+        require(driipSettlementChallenge.hasProposalExpired(wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id));
 
         // Require that driip settlement challenge proposals qualified
         require(SettlementTypesLibNew.ChallengeStatus.Qualified == driipSettlementChallenge.proposalStatus(
@@ -330,8 +330,8 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         // Require that wallet is not locked
         require(!driipSettlementChallenge.isLockedWallet(wallet));
 
-        // Require that challenge is closed
-        require(!driipSettlementChallenge.isChallengeOngoing(wallet, payment.currency.ct, payment.currency.id));
+        // Require that proposal has expired
+        require(driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
         // Require that driip settlement challenge proposal qualified
         require(SettlementTypesLibNew.ChallengeStatus.Qualified == driipSettlementChallenge.proposalStatus(

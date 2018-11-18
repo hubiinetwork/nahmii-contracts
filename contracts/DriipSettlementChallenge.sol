@@ -236,19 +236,19 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
     }
 
-    /// @notice Gauge whether there is an ongoing challenge for the given wallet and currency
+    /// @notice Gauge whether the proposal for the given wallet and currency has expired
     /// @param wallet The concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return true if challenge is ongoing, else false
-    function isChallengeOngoing(address wallet, address currencyCt, uint256 currencyId)
+    /// @return true if proposal has expired, else false
+    function hasProposalExpired(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bool)
     {
         // 1-based index
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
-        return (0 != index && 0 < proposals[index - 1].nonce && block.timestamp < proposals[index - 1].endTime);
+        return (0 == index || 0 == proposals[index - 1].nonce || block.timestamp >= proposals[index - 1].expirationTime);
     }
 
     /// @notice Get the challenge nonce of the given wallet
@@ -286,14 +286,14 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal end time
-    function proposalEndTime(address wallet, address currencyCt, uint256 currencyId)
+    function proposalExpirationTime(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
-        return proposals[index - 1].endTime;
+        return proposals[index - 1].expirationTime;
     }
 
     /// @notice Get the challenge status of the given wallet
@@ -434,15 +434,15 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     /// @notice Set settlement proposal end time property of the given wallet
     /// @dev This function can only be called by this contract's dispute instance
     /// @param wallet The concerned wallet
-    /// @param endTime The end time value
-    function setProposalEndTime(address wallet, address currencyCt, uint256 currencyId,
-        uint256 endTime)
+    /// @param expirationTime The end time value
+    function setProposalExpirationTime(address wallet, address currencyCt, uint256 currencyId,
+        uint256 expirationTime)
     public
     onlyDriipSettlementDispute
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
-        proposals[index - 1].endTime = endTime;
+        proposals[index - 1].expirationTime = expirationTime;
     }
 
     /// @notice Set settlement proposal status property of the given wallet
@@ -604,11 +604,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         // Require that given wallet is a trade party
         require(validator.isTradeParty(trade, wallet));
 
-        // Require that wallet has no overlap with ongoing challenges
-        require(!isChallengeOngoing(
+        // Require that wallet has no overlap with active proposals
+        require(hasProposalExpired(
             wallet, trade.currencies.intended.ct, trade.currencies.intended.id
         ));
-        require(!isChallengeOngoing(
+        require(hasProposalExpired(
             wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
         ));
 
@@ -635,8 +635,8 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         // Require that given wallet is a payment party
         require(validator.isPaymentParty(payment, wallet));
 
-        // Require that wallet has no overlap with ongoing challenge
-        require(!isChallengeOngoing(
+        // Require that wallet has no overlap with active proposal
+        require(hasProposalExpired(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
@@ -687,7 +687,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         proposals[proposals.length - 1].wallet = wallet;
         proposals[proposals.length - 1].nonce = trade.nonce;
         proposals[proposals.length - 1].blockNumber = trade.blockNumber;
-        proposals[proposals.length - 1].endTime = block.timestamp.add(configuration.settlementChallengeTimeout());
+        proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementTypesLibNew.ChallengeStatus.Qualified;
         proposals[proposals.length - 1].currencyCt = currency.ct;
         proposals[proposals.length - 1].currencyId = currency.id;
@@ -725,7 +725,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         proposals[proposals.length - 1].wallet = wallet;
         proposals[proposals.length - 1].nonce = payment.nonce;
         proposals[proposals.length - 1].blockNumber = payment.blockNumber;
-        proposals[proposals.length - 1].endTime = block.timestamp.add(configuration.settlementChallengeTimeout());
+        proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementTypesLibNew.ChallengeStatus.Qualified;
         proposals[proposals.length - 1].currencyCt = payment.currency.ct;
         proposals[proposals.length - 1].currencyId = payment.currency.id;

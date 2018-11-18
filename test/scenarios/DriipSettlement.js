@@ -22,7 +22,7 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe('DriipSettlement', () => {
+    describe.only('DriipSettlement', () => {
         let web3DriipSettlement, ethersDriipSettlement;
         let web3Configuration, ethersConfiguration;
         let web3ClientFund, ethersClientFund;
@@ -530,6 +530,7 @@ module.exports = (glob) => {
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
+                await ethersDriipSettlementChallenge._setProposalExpired(true);
                 await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
             });
 
@@ -573,6 +574,26 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if wallet is locked', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement proposal nonce is not the one of trade', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalNonce(0);
@@ -591,7 +612,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -607,7 +630,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Qualified')
+                    );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.intended.current);
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.conjugate.current);
                 });
@@ -772,6 +797,7 @@ module.exports = (glob) => {
 
                 trade = await mocks.mockTrade(glob.owner);
 
+                await ethersDriipSettlementChallenge._setProposalExpired(true);
                 await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
             });
 
@@ -825,6 +851,26 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if wallet is locked', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement proposal nonce is not the one of trade', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalNonce(0);
@@ -842,7 +888,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -857,7 +905,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Qualified')
+                    );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.intended.current);
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.conjugate.current);
                 });
@@ -1022,6 +1072,7 @@ module.exports = (glob) => {
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
+                await ethersDriipSettlementChallenge._setProposalExpired(true);
                 await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
             });
 
@@ -1065,6 +1116,26 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if wallet is locked', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
@@ -1073,7 +1144,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -1089,7 +1162,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Qualified')
+                    );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(payment.sender.balances.current);
                 });
 
@@ -1230,6 +1305,7 @@ module.exports = (glob) => {
 
                 payment = await mocks.mockPayment(glob.owner);
 
+                await ethersDriipSettlementChallenge._setProposalExpired(true);
                 await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
             });
 
@@ -1283,6 +1359,26 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if wallet is locked', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
@@ -1290,7 +1386,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -1305,7 +1403,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Qualified')
+                    );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(payment.sender.balances.current);
                 });
 

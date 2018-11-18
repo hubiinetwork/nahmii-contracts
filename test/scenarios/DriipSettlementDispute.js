@@ -289,7 +289,6 @@ module.exports = (glob) => {
 
                 order = await mocks.mockOrder(glob.owner);
 
-                await ethersDriipSettlementChallenge._setChallengeOngoing(true);
                 await ethersDriipSettlementChallenge._setProposalTargetBalanceAmount(
                     order.placement.amount.div(order.placement.rate).div(2)
                 );
@@ -336,9 +335,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on closed driip settlement challenge', () => {
+            describe('if called on expired proposal', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge._setChallengeOngoing(false);
+                    await ethersDriipSettlementChallenge._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
@@ -458,7 +457,6 @@ module.exports = (glob) => {
                     }
                 });
 
-                await web3DriipSettlementChallenge._setChallengeOngoing(true);
                 await web3DriipSettlementChallenge.setProposalStatus(
                     glob.user_a, mocks.address0, 0, mocks.challengeStatuses.indexOf('Disqualified')
                 );
@@ -527,9 +525,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on closed driip settlement challenge', () => {
+            describe('if called on expired proposal', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setChallengeOngoing(false);
+                    await web3DriipSettlementChallenge._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
@@ -688,7 +686,6 @@ module.exports = (glob) => {
 
                 trade = await mocks.mockTrade(glob.owner);
 
-                await ethersDriipSettlementChallenge._setChallengeOngoing(true);
                 await ethersDriipSettlementChallenge._setProposalTargetBalanceAmount(
                     trade.transfers.conjugate.single.div(2)
                 );
@@ -763,9 +760,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on closed driip settlement challenge', () => {
+            describe('if called on expired proposal', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setChallengeOngoing(false);
+                    await web3DriipSettlementChallenge._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
@@ -880,7 +877,6 @@ module.exports = (glob) => {
 
                 payment = await mocks.mockPayment(glob.owner);
 
-                await ethersDriipSettlementChallenge._setChallengeOngoing(true);
                 await ethersDriipSettlementChallenge._setProposalTargetBalanceAmount(
                     payment.transfers.single.div(2)
                 );
@@ -931,9 +927,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on closed driip settlement challenge', () => {
+            describe('if called on expired proposal', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setChallengeOngoing(false);
+                    await web3DriipSettlementChallenge._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
