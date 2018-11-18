@@ -317,59 +317,6 @@ module.exports = (glob) => {
         });
 
         describe('settleNull()', () => {
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNull().should.be.rejected;
-                });
-            });
-
-            describe('if client fund contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNull().should.be.rejected;
-                });
-            });
-
-            describe('if community vote contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.setClientFund(ethersClientFund.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNull().should.be.rejected;
-                });
-            });
-
-            describe('if null settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.setClientFund(ethersClientFund.address);
-                    await ethersNullSettlement.setCommunityVote(ethersCommunityVote.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNull().should.be.rejected;
-                });
-            });
-
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
                     await ethersClientFund._reset({gasLimit: 1e6});
@@ -483,59 +430,6 @@ module.exports = (glob) => {
             describe('if called from non-deployer', () => {
                 beforeEach(async () => {
                     ethersNullSettlement = ethersNullSettlement.connect(glob.signer_a);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
-                });
-            });
-
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
-                });
-            });
-
-            describe('if client fund contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
-                });
-            });
-
-            describe('if community vote contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.setClientFund(ethersClientFund.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
-                });
-            });
-
-            describe('if null settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.setConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.setClientFund(ethersClientFund.address);
-                    await ethersNullSettlement.setCommunityVote(ethersCommunityVote.address);
                 });
 
                 it('should revert', async () => {

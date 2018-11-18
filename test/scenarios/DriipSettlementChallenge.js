@@ -242,22 +242,19 @@ module.exports = (glob) => {
         });
 
         describe('startChallengeFromTrade()', () => {
-            let trade, topic, filter;
+            let trade;
 
             beforeEach(async () => {
                 await ethersValidator._reset({gasLimit: 4e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
-
-                topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeEvent'].topics[0];
-                filter = {
-                    fromBlock: await provider.getBlockNumber(),
-                    topics: [topic]
-                };
             });
 
             describe('if wallet has previous disqualified driip settlement challenge', () => {
                 beforeEach(async () => {
+                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
+
+                    await web3DriipSettlementChallenge.lockWallet(glob.owner);
                 });
 
                 it('should revert', async () => {
@@ -336,6 +333,16 @@ module.exports = (glob) => {
             });
 
             describe('if within operational constraints', () => {
+                let topic, filter;
+
+                beforeEach( async () => {
+                    topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeEvent'].topics[0];
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: [topic]
+                    };
+                });
+
                 it('should start challenge successfully', async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromTrade(
                         trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
@@ -377,6 +384,9 @@ module.exports = (glob) => {
                         ._bn.should.eq.BN(1);
                     (await ethersDriipSettlementChallenge.challengeTradeHashesCount())
                         ._bn.should.eq.BN(1);
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
 
@@ -396,18 +406,12 @@ module.exports = (glob) => {
         });
 
         describe('startChallengeFromTradeByProxy()', () => {
-            let trade, topic, filter;
+            let trade;
 
             beforeEach(async () => {
                 await ethersValidator._reset({gasLimit: 4e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
-
-                topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeByProxyEvent'].topics[0];
-                filter = {
-                    fromBlock: await provider.getBlockNumber(),
-                    topics: [topic]
-                };
             });
 
             describe('if called from non-deployer', () => {
@@ -487,6 +491,16 @@ module.exports = (glob) => {
             });
 
             describe('if within operational constraints', () => {
+                let topic, filter;
+
+                beforeEach( async () => {
+                    topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeByProxyEvent'].topics[0];
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: [topic]
+                    };
+                });
+
                 it('should start challenge successfully', async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromTradeByProxy(
                         trade.buyer.wallet, trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
@@ -528,6 +542,9 @@ module.exports = (glob) => {
                         ._bn.should.eq.BN(1);
                     (await ethersDriipSettlementChallenge.challengeTradeHashesCount())
                         ._bn.should.eq.BN(1);
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
 
@@ -547,22 +564,19 @@ module.exports = (glob) => {
         });
 
         describe('startChallengeFromPayment()', () => {
-            let payment, topic, filter;
+            let payment;
 
             beforeEach(async () => {
                 await ethersValidator._reset({gasLimit: 4e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
-
-                topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentEvent'].topics[0];
-                filter = {
-                    fromBlock: await provider.getBlockNumber(),
-                    topics: [topic]
-                };
             });
 
             describe('if wallet has previous disqualified driip settlement challenge', () => {
                 beforeEach(async () => {
+                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
+
+                    await web3DriipSettlementChallenge.lockWallet(glob.owner);
                 });
 
                 it('should revert', async () => {
@@ -625,6 +639,16 @@ module.exports = (glob) => {
             });
 
             describe('if within operational constraints', () => {
+                let topic, filter;
+
+                beforeEach( async () => {
+                    topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentEvent'].topics[0];
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: [topic]
+                    };
+                });
+
                 it('should start challenge successfully', async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
                         payment, payment.sender.balances.current, {gasLimit: 3e6}
@@ -650,6 +674,9 @@ module.exports = (glob) => {
                         ._bn.should.eq.BN(1);
                     (await ethersDriipSettlementChallenge.challengePaymentHashesCount())
                         ._bn.should.eq.BN(1);
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
 
@@ -669,18 +696,12 @@ module.exports = (glob) => {
         });
 
         describe('startChallengeFromPaymentByProxy()', () => {
-            let payment, topic, filter;
+            let payment;
 
             beforeEach(async () => {
                 await ethersValidator._reset({gasLimit: 4e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
-
-                topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentByProxyEvent'].topics[0];
-                filter = {
-                    fromBlock: await provider.getBlockNumber(),
-                    topics: [topic]
-                };
             });
 
             describe('if called from non-deployer', () => {
@@ -744,6 +765,16 @@ module.exports = (glob) => {
             });
 
             describe('if within operational constraints', () => {
+                let topic, filter;
+
+                beforeEach( async () => {
+                    topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentByProxyEvent'].topics[0];
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: [topic]
+                    };
+                });
+
                 it('should start challenge successfully', async () => {
                     await ethersDriipSettlementChallenge.startChallengeFromPaymentByProxy(
                         payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
@@ -769,6 +800,9 @@ module.exports = (glob) => {
                         ._bn.should.eq.BN(1);
                     (await ethersDriipSettlementChallenge.challengePaymentHashesCount())
                         ._bn.should.eq.BN(1);
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
 
@@ -1541,10 +1575,9 @@ module.exports = (glob) => {
                 });
 
                 it('should return default value', async () => {
-                    console.log('noop');
-                    // (await ethersDriipSettlementChallenge.disqualificationChallenger(
-                    //     payment.sender.wallet, mocks.address0, 0
-                    // )).should.equal(glob.user_a);
+                    (await ethersDriipSettlementChallenge.disqualificationChallenger(
+                        payment.sender.wallet, payment.currency.ct, payment.currency.id,
+                    )).should.equal(utils.getAddress(glob.user_a));
                 });
             });
         });

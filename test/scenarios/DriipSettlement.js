@@ -22,7 +22,7 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe.only('DriipSettlement', () => {
+    describe('DriipSettlement', () => {
         let web3DriipSettlement, ethersDriipSettlement;
         let web3Configuration, ethersConfiguration;
         let web3ClientFund, ethersClientFund;

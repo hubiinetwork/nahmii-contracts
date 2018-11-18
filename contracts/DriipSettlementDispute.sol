@@ -290,7 +290,7 @@ CancelOrdersChallengable {
             wallet, currency.ct, currency.id
         ));
 
-        // Update proposal
+        // Update proposal status
         driipSettlementChallenge.setProposalStatus(
             wallet, currency.ct, currency.id, SettlementTypesLibNew.ChallengeStatus.Disqualified
         );
@@ -357,7 +357,7 @@ CancelOrdersChallengable {
             wallet, payment.currency.ct, payment.currency.id
         ));
 
-        // Update proposal
+        // Update proposal status
         driipSettlementChallenge.setProposalStatus(
             wallet, payment.currency.ct, payment.currency.id, SettlementTypesLibNew.ChallengeStatus.Disqualified
         );

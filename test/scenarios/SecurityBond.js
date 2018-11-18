@@ -2,7 +2,7 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
-const {Wallet, Contract, utils} = require('ethers');
+const {Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const ERC20Token = artifacts.require('StandardTokenEx');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
@@ -16,7 +16,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe.only('SecurityBond', function () {
+    describe('SecurityBond', function () {
         let web3TransferControllerManager;
         let web3Configuration, ethersConfiguration;
         let web3ERC20;

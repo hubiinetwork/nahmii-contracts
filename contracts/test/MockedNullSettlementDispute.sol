@@ -47,10 +47,11 @@ contract MockedNullSettlementDispute {
         _challengeByTradeCount++;
     }
 
-    function challengeByPayment(NahmiiTypesLib.Payment payment, address challenger)
+    function challengeByPayment(address wallet, NahmiiTypesLib.Payment payment, address challenger)
     public
     {
         // To silence unused function parameter compiler warning
+        require(wallet == wallet);
         require(payment.nonce == payment.nonce);
         require(challenger == challenger);
         _challengeByPaymentCount++;

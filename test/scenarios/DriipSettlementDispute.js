@@ -295,11 +295,6 @@ module.exports = (glob) => {
             });
 
             describe('if called from other than driip settlement challenge', () => {
-                beforeEach(async () => {
-                    web3DriipSettlementDispute = await DriipSettlementDispute.new(glob.owner);
-                    ethersDriipSettlementDispute = new Contract(web3DriipSettlementDispute.address, DriipSettlementDispute.abi, glob.signer_owner);
-                });
-
                 it('should revert', async () => {
                     ethersDriipSettlementDispute.challengeByOrder(order, glob.user_a).should.be.rejected;
                 });
@@ -360,7 +355,7 @@ module.exports = (glob) => {
             describe('if called on order whose block number is smaller than the proposal block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBlockNumber(
-                        order.blockNumber.mul(10)
+                        order.blockNumber.add(10)
                     );
                 });
 
@@ -392,24 +387,6 @@ module.exports = (glob) => {
                     };
                 });
 
-                describe('if balance reward is false', () => {
-                    it('should successfully challenge and reward security bond', async () => {
-                        await ethersDriipSettlementChallenge.challengeByOrder(order, {gasLimit: 1e6});
-
-                        (await ethersDriipSettlementChallenge._proposalStatus())
-                            .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
-                        (await ethersDriipSettlementChallenge.disqualificationsCount())
-                            ._bn.should.eq.BN(1);
-                        (await ethersClientFund.lockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-                        (await ethersSecurityBond._rewardsCount())
-                            ._bn.should.eq.BN(1);
-
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(topic);
-                    });
-                });
-
                 describe('if balance reward is true', () => {
                     beforeEach(async () => {
                         await web3DriipSettlementChallenge._setProposalBalanceReward(true);
@@ -426,6 +403,24 @@ module.exports = (glob) => {
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
+
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(topic);
+                    });
+                });
+
+                describe('if balance reward is false', () => {
+                    it('should successfully challenge and reward security bond', async () => {
+                        await ethersDriipSettlementChallenge.challengeByOrder(order, {gasLimit: 1e6});
+
+                        (await ethersDriipSettlementChallenge._proposalStatus())
+                            .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
+                        (await ethersDriipSettlementChallenge.disqualificationsCount())
+                            ._bn.should.eq.BN(1);
+                        (await ethersClientFund.lockedWalletsCount())
+                            ._bn.should.eq.BN(0);
+                        (await ethersSecurityBond._rewardsCount())
+                            ._bn.should.eq.BN(1);
 
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(topic);
@@ -656,7 +651,7 @@ module.exports = (glob) => {
 
                     it('should successfully unchallenge and unlock client fund balances', async () => {
                         await ethersDriipSettlementChallenge.unchallengeOrderCandidateByTrade(
-                            order, trade, {gasLimit: 4e6}
+                            order, trade, {gasLimit: 3e6}
                         );
 
                         (await ethersDriipSettlementChallenge._proposalStatus())
@@ -788,7 +783,9 @@ module.exports = (glob) => {
 
             describe('if called on trade whose block number is lower than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setProposalBlockNumber(1e6);
+                    await ethersDriipSettlementChallenge._setProposalBlockNumber(
+                        trade.blockNumber.add(10)
+                    );
                 });
 
                 it('should revert', async () => {
@@ -955,7 +952,9 @@ module.exports = (glob) => {
 
             describe('if called on payment whose block number is lower than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setProposalBlockNumber(1e6);
+                    await ethersDriipSettlementChallenge._setProposalBlockNumber(
+                        payment.blockNumber.add(10)
+                    );
                 });
 
                 it('should revert', async () => {

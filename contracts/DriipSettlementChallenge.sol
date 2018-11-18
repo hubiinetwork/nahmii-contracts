@@ -248,7 +248,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     {
         // 1-based index
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
-        return (0 == index || 0 == proposals[index - 1].nonce || block.timestamp >= proposals[index - 1].expirationTime);
+        return (
+        0 == index ||
+        0 == proposals[index - 1].nonce ||
+        block.timestamp >= proposals[index - 1].expirationTime
+        );
     }
 
     /// @notice Get the challenge nonce of the given wallet
@@ -606,11 +610,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
 
         // Require that wallet has no overlap with active proposals
         require(hasProposalExpired(
-            wallet, trade.currencies.intended.ct, trade.currencies.intended.id
-        ));
+                wallet, trade.currencies.intended.ct, trade.currencies.intended.id
+            ));
         require(hasProposalExpired(
-            wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
-        ));
+                wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+            ));
 
         // Create proposals
         addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, balanceReward);
@@ -637,8 +641,8 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
 
         // Require that wallet has no overlap with active proposal
         require(hasProposalExpired(
-            wallet, payment.currency.ct, payment.currency.id
-        ));
+                wallet, payment.currency.ct, payment.currency.id
+            ));
 
         // Create proposal
         addProposalFromPayment(wallet, payment, stageAmount, balanceReward);

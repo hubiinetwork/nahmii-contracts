@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const chaiAsPromised = require('chai-as-promised');
-const {Wallet, Contract, utils} = require('ethers');
+const {Wallet, Contract} = require('ethers');
 const mocks = require('../mocks');
 const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const MockedNullSettlementChallenge = artifacts.require('MockedNullSettlementChallenge');
@@ -207,10 +207,6 @@ module.exports = (glob) => {
         describe('challengeByOrder()', () => {
             let order;
 
-            before(async () => {
-                order = await mocks.mockOrder(glob.owner);
-            });
-
             beforeEach(async () => {
                 await web3Validator._reset();
                 await web3FraudChallenge._reset();
@@ -218,59 +214,12 @@ module.exports = (glob) => {
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
                 await web3ClientFund._reset();
-            });
 
-            describe('if validator contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-                });
+                order = await mocks.mockOrder(glob.owner);
 
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
-                });
-            });
-
-            describe('if fraud challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-
-                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
-                });
-            });
-
-            describe('if cancel order challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-
-                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
-                });
-            });
-
-            describe('if null settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-
-                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
-                    await ethersNullSettlementDispute.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
-                });
+                await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(
+                    order.placement.amount.div(order.placement.rate).div(2)
+                );
             });
 
             describe('if called from other than null settlement challenge', () => {
@@ -281,17 +230,21 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementDispute.challengeByOrder(order, challenger).should.be.rejected;
+                    ethersNullSettlementDispute.challengeByOrder(
+                        order, challenger, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
             describe('if called with improperly sealed order', () => {
                 beforeEach(async () => {
-                    await web3Validator.setGenuineOrderWalletSeal(false);
+                    await web3Validator.setGenuineOrderSeals(false);
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByOrder(
+                        order, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -301,7 +254,9 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByOrder(
+                        order, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -311,37 +266,63 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByOrder(
+                        order, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called on closed null settlement challenge', () => {
+            describe('if called on expired proposal', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge._setChallengePhase(mocks.challengePhases.indexOf('Closed'));
+                    await ethersNullSettlementChallenge._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByOrder(
+                        order, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called on order whose block number is lower than the one of the proposal', () => {
+            describe('if called on settlement that has already been challenged', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge._setProposalBlockNumber(1e6);
+                    await web3NullSettlementChallenge.setProposalStatus(
+                        order.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByOrder(
+                        order, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called on order whose block number is smaller than the one of the proposal', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallenge._setProposalBlockNumber(
+                        order.blockNumber.add(10)
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallenge.challengeByOrder(
+                        order, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
             describe('if called on order whose amount is smaller than the proposal target balance amount', () => {
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(utils.parseUnits('10000', 18));
+                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(
+                        order.placement.amount.div(order.placement.rate).mul(2)
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByOrder(order).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByOrder(
+                        order, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -349,9 +330,6 @@ module.exports = (glob) => {
                 let topic, filter;
 
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setChallengePhase(mocks.challengePhases.indexOf('Dispute'));
-                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(utils.parseUnits('1000', 14));
-
                     topic = ethersNullSettlementDispute.interface.events['ChallengeByOrderEvent'].topics[0];
                     filter = {
                         fromBlock: blockNumber0,
@@ -367,17 +345,10 @@ module.exports = (glob) => {
                     it('should successfully challenge', async () => {
                         await ethersNullSettlementChallenge.challengeByOrder(order, {gasLimit: 1e6});
 
-                        (await ethersNullSettlementChallenge._challengeCandidateOrderHashesCount())
-                            ._bn.should.eq.BN(1);
                         (await ethersNullSettlementChallenge._proposalStatus())
                             .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
-                        (await ethersNullSettlementChallenge._proposalCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Order'));
-                        (await ethersNullSettlementChallenge._proposalCandidateIndex())
-                            ._bn.should.eq.BN(0);
-                        (await web3NullSettlementChallenge._proposalChallenger())
-                            .should.equal(glob.owner);
-
+                        (await ethersNullSettlementChallenge.disqualificationsCount())
+                            ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
@@ -392,17 +363,10 @@ module.exports = (glob) => {
                     it('should successfully challenge', async () => {
                         await ethersNullSettlementChallenge.challengeByOrder(order, {gasLimit: 1e6});
 
-                        (await ethersNullSettlementChallenge._challengeCandidateOrderHashesCount())
-                            ._bn.should.eq.BN(1);
                         (await ethersNullSettlementChallenge._proposalStatus())
                             .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
-                        (await ethersNullSettlementChallenge._proposalCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Order'));
-                        (await ethersNullSettlementChallenge._proposalCandidateIndex())
-                            ._bn.should.eq.BN(0);
-                        (await web3NullSettlementChallenge._proposalChallenger())
-                            .should.equal(glob.owner);
-
+                        (await ethersNullSettlementChallenge.disqualificationsCount())
+                            ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
@@ -418,10 +382,6 @@ module.exports = (glob) => {
         describe('challengeByTrade()', () => {
             let trade;
 
-            before(async () => {
-                trade = await mocks.mockTrade(glob.owner);
-            });
-
             beforeEach(async () => {
                 await web3Validator._reset();
                 await web3FraudChallenge._reset();
@@ -429,64 +389,19 @@ module.exports = (glob) => {
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
                 await web3ClientFund._reset();
-            });
 
-            describe('if validator contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-                });
+                trade = await mocks.mockTrade(glob.owner);
 
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
-                });
-            });
-
-            describe('if fraud challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-
-                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
-                });
-            });
-
-            describe('if cancel orders challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-
-                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
-                });
-            });
-
-            describe('if null settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-
-                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
-                    await ethersNullSettlementDispute.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
-                });
+                await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(
+                    trade.transfers.conjugate.single.div(2)
+                );
             });
 
             describe('if called from other than null settlement challenge', () => {
                 it('should revert', async () => {
-                    ethersNullSettlementDispute.challengeByTrade(trade.buyer.wallet, trade, Wallet.createRandom().address).should.be.rejected;
+                    ethersNullSettlementDispute.challengeByTrade(
+                        trade.buyer.wallet, trade, Wallet.createRandom().address, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -496,13 +411,21 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
             describe('if called with wallet that is not trade party', () => {
+                beforeEach(async () => {
+                    await web3Validator.setTradeParty(false);
+                });
+
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(Wallet.createRandom().address, trade).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        Wallet.createRandom().address, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -512,7 +435,9 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -522,7 +447,9 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -532,37 +459,63 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called on closed null settlement challenge', () => {
+            describe('if called on expired proposal', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge._setChallengePhase(mocks.challengePhases.indexOf('Closed'));
+                    await web3NullSettlementChallenge._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called on trade whose block number is lower than the one of the proposal', () => {
+            describe('if called on settlement that has already been challenged', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge._setProposalBlockNumber(1e6);
+                    await web3NullSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called on trade whose block number is smaller than the one of the proposal', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallenge._setProposalBlockNumber(
+                        trade.blockNumber.add(10)
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
             describe('if called on trade whose single transfer is smaller than the proposal target balance amount', () => {
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(utils.parseUnits('2', 17));
+                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(
+                        trade.transfers.conjugate.single.mul(2)
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -570,9 +523,6 @@ module.exports = (glob) => {
                 let topic, filter;
 
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setChallengePhase(mocks.challengePhases.indexOf('Dispute'));
-                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(utils.parseUnits('5', 16));
-
                     topic = ethersNullSettlementDispute.interface.events['ChallengeByTradeEvent'].topics[0];
                     filter = {
                         fromBlock: blockNumber0,
@@ -586,19 +536,14 @@ module.exports = (glob) => {
                     });
 
                     it('should successfully challenge', async () => {
-                        await ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade, {gasLimit: 1e6});
+                        await ethersNullSettlementChallenge.challengeByTrade(
+                            trade.buyer.wallet, trade, {gasLimit: 1e6}
+                        );
 
-                        (await ethersNullSettlementChallenge._challengeCandidateTradeHashesCount())
-                            ._bn.should.eq.BN(1);
                         (await ethersNullSettlementChallenge._proposalStatus())
                             .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
-                        (await ethersNullSettlementChallenge._proposalCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Trade'));
-                        (await ethersNullSettlementChallenge._proposalCandidateIndex())
-                            ._bn.should.eq.BN(0);
-                        (await web3NullSettlementChallenge._proposalChallenger())
-                            .should.equal(glob.owner);
-
+                        (await ethersNullSettlementChallenge.disqualificationsCount())
+                            ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
@@ -611,19 +556,14 @@ module.exports = (glob) => {
 
                 describe('if called with balance reward false', () => {
                     it('should successfully challenge', async () => {
-                        await ethersNullSettlementChallenge.challengeByTrade(trade.buyer.wallet, trade, {gasLimit: 1e6});
+                        await ethersNullSettlementChallenge.challengeByTrade(
+                            trade.buyer.wallet, trade, {gasLimit: 1e6}
+                        );
 
-                        (await ethersNullSettlementChallenge._challengeCandidateTradeHashesCount())
-                            ._bn.should.eq.BN(1);
                         (await ethersNullSettlementChallenge._proposalStatus())
                             .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
-                        (await ethersNullSettlementChallenge._proposalCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Trade'));
-                        (await ethersNullSettlementChallenge._proposalCandidateIndex())
-                            ._bn.should.eq.BN(0);
-                        (await web3NullSettlementChallenge._proposalChallenger())
-                            .should.equal(glob.owner);
-
+                        (await ethersNullSettlementChallenge.disqualificationsCount())
+                            ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
@@ -639,59 +579,25 @@ module.exports = (glob) => {
         describe('challengeByPayment()', () => {
             let payment;
 
-            before(async () => {
-                payment = await mocks.mockPayment(glob.owner);
-            });
-
             beforeEach(async () => {
                 await web3Validator._reset();
                 await web3FraudChallenge._reset();
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
                 await web3ClientFund._reset();
-            });
 
-            describe('if validator contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-                });
+                payment = await mocks.mockPayment(glob.owner);
 
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
-                });
-            });
-
-            describe('if fraud challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-
-                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
-                });
-            });
-
-            describe('if null settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlementDispute = await NullSettlementDispute.new(glob.owner);
-                    ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-
-                    await ethersNullSettlementDispute.setValidator(ethersValidator.address);
-                    await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
-                });
+                await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(
+                    payment.transfers.single.div(2)
+                );
             });
 
             describe('if called from other than null settlement challenge', () => {
                 it('should revert', async () => {
-                    ethersNullSettlementDispute.challengeByPayment(payment, Wallet.createRandom().address).should.be.rejected;
+                    ethersNullSettlementDispute.challengeByPayment(
+                        payment.sender.wallet, payment, Wallet.createRandom().address, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -701,7 +607,21 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(
+                        payment.sender.wallet, payment, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with wallet that is not payment party', () => {
+                beforeEach(async () => {
+                    await web3Validator.setPaymentParty(false);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallenge.challengeByPayment(
+                        Wallet.createRandom().address, payment, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -711,37 +631,63 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(
+                        payment.sender.wallet, payment, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called on closed null settlement challenge', () => {
+            describe('if called on expired proposal', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge._setChallengePhase(mocks.challengePhases.indexOf('Closed'));
+                    await web3NullSettlementChallenge._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(
+                        payment.sender.wallet, payment, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
-            describe('if called on payment whose block number is lower than the one of the proposal', () => {
+            describe('if called on settlement that has already been challenged', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge._setProposalBlockNumber(1e6);
+                    await web3NullSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(
+                        payment.sender.wallet, payment, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called on payment whose block number is smaller than the one of the proposal', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallenge._setProposalBlockNumber(
+                        payment.blockNumber.add(10)
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallenge.challengeByPayment(
+                        payment.sender.wallet, payment, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
             describe('if called on payment whose single transfer is smaller than the proposal target balance amount', () => {
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(utils.parseUnits('2', 17));
+                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(
+                        payment.transfers.single.mul(2)
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallenge.challengeByPayment(payment).should.be.rejected;
+                    ethersNullSettlementChallenge.challengeByPayment(
+                        payment.sender.wallet, payment, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
 
@@ -749,9 +695,6 @@ module.exports = (glob) => {
                 let topic, filter;
 
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setChallengePhase(mocks.challengePhases.indexOf('Dispute'));
-                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(utils.parseUnits('5', 16));
-
                     topic = ethersNullSettlementDispute.interface.events['ChallengeByPaymentEvent'].topics[0];
                     filter = {
                         fromBlock: blockNumber0,
@@ -765,19 +708,14 @@ module.exports = (glob) => {
                     });
 
                     it('should successfully challenge', async () => {
-                        await ethersNullSettlementChallenge.challengeByPayment(payment, {gasLimit: 1e6});
+                        await ethersNullSettlementChallenge.challengeByPayment(
+                            payment.sender.wallet, payment, {gasLimit: 1e6}
+                        );
 
-                        (await ethersNullSettlementChallenge._challengeCandidatePaymentHashesCount())
-                            ._bn.should.eq.BN(1);
                         (await ethersNullSettlementChallenge._proposalStatus())
                             .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
-                        (await ethersNullSettlementChallenge._proposalCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Payment'));
-                        (await ethersNullSettlementChallenge._proposalCandidateIndex())
-                            ._bn.should.eq.BN(0);
-                        (await web3NullSettlementChallenge._proposalChallenger())
-                            .should.equal(glob.owner);
-
+                        (await ethersNullSettlementChallenge.disqualificationsCount())
+                            ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
@@ -790,19 +728,14 @@ module.exports = (glob) => {
 
                 describe('if called with balance reward false', () => {
                     it('should successfully challenge', async () => {
-                        await ethersNullSettlementChallenge.challengeByPayment(payment, {gasLimit: 1e6});
+                        await ethersNullSettlementChallenge.challengeByPayment(
+                            payment.sender.wallet, payment, {gasLimit: 1e6}
+                        );
 
-                        (await ethersNullSettlementChallenge._challengeCandidatePaymentHashesCount())
-                            ._bn.should.eq.BN(1);
                         (await ethersNullSettlementChallenge._proposalStatus())
                             .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
-                        (await ethersNullSettlementChallenge._proposalCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Payment'));
-                        (await ethersNullSettlementChallenge._proposalCandidateIndex())
-                            ._bn.should.eq.BN(0);
-                        (await web3NullSettlementChallenge._proposalChallenger())
-                            .should.equal(glob.owner);
-
+                        (await ethersNullSettlementChallenge.disqualificationsCount())
+                            ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())

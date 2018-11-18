@@ -11,8 +11,8 @@ pragma experimental ABIEncoderV2;
 
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
-import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
 import {SettlementTypesLibNew} from "../SettlementTypesLibNew.sol";
+import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
 
 /**
 @title MockedDriipSettlementChallenge
