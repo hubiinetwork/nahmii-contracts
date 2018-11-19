@@ -421,20 +421,18 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent payment and reward', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.lockedWallets(0),
                         ethersClientFund.locks(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentPaymentHashesCount.eq(1).should.be.true;
                     lockedWalletsCount.eq(1).should.be.true;
-                    lockedWallet.should.equal(payment.sender.wallet);
-                    lock.source.should.equal(payment.sender.wallet);
-                    lock.target.should.equal(utils.getAddress(glob.owner));
+                    lock.lockedWallet.should.equal(payment.sender.wallet);
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -447,20 +445,19 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent payment and reward', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
+
+                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.lockedWallets(0),
                         ethersClientFund.locks(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentPaymentHashesCount.eq(1).should.be.true;
                     lockedWalletsCount.eq(1).should.be.true;
-                    lockedWallet.should.equal(payment.sender.wallet);
-                    lock.source.should.equal(payment.sender.wallet);
-                    lock.target.should.equal(utils.getAddress(glob.owner));
+                    lock.lockedWallet.should.equal(payment.sender.wallet);
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -473,20 +470,19 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent payment and seize seller\'s funds', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
+
+                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
                         ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.lockedWallets(0),
                         ethersClientFund.locks(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentPaymentHashesCount.eq(1).should.be.true;
                     lockedWalletsCount.eq(1).should.be.true;
-                    lockedWallet.should.equal(payment.recipient.wallet);
-                    lock.source.should.equal(payment.recipient.wallet);
-                    lock.target.should.equal(utils.getAddress(glob.owner));
+                    lock.lockedWallet.should.equal(payment.recipient.wallet);
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });

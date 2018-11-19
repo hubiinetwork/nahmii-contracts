@@ -345,20 +345,18 @@ module.exports = (glob) => {
                 it('should set operational mode exit, store fraudulent trade and reward', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
 
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.lockedWallets(utils.bigNumberify(0)),
                         ethersClientFund.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
                     lockedWalletsCount.eq(1).should.be.true;
-                    lockedWallet.should.equal(trade.buyer.wallet);
-                    lock.source.should.equal(trade.buyer.wallet);
-                    lock.target.should.equal(utils.getAddress(glob.owner));
+                    lock.lockedWallet.should.equal(trade.buyer.wallet);
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -374,20 +372,18 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent trade and seize seller\'s funds', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.lockedWallets(utils.bigNumberify(0)),
                         ethersClientFund.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
                     lockedWalletsCount.eq(1).should.be.true;
-                    lockedWallet.should.equal(trade.seller.wallet);
-                    lock.source.should.equal(trade.seller.wallet);
-                    lock.target.should.equal(utils.getAddress(glob.owner));
+                    lock.lockedWallet.should.equal(trade.seller.wallet);
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -400,20 +396,18 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent trade and reward', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.lockedWallets(utils.bigNumberify(0)),
                         ethersClientFund.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
                     lockedWalletsCount.eq(1).should.be.true;
-                    lockedWallet.should.equal(trade.buyer.wallet);
-                    lock.source.should.equal(trade.buyer.wallet);
-                    lock.target.should.equal(utils.getAddress(glob.owner));
+                    lock.lockedWallet.should.equal(trade.buyer.wallet);
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -426,20 +420,18 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent trade and seize seller\'s funds', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.lockedWallets(utils.bigNumberify(0)),
                         ethersClientFund.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
                     lockedWalletsCount.eq(1).should.be.true;
-                    lockedWallet.should.equal(trade.seller.wallet);
-                    lock.source.should.equal(trade.seller.wallet);
-                    lock.target.should.equal(utils.getAddress(glob.owner));
+                    lock.lockedWallet.should.equal(trade.seller.wallet);
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
