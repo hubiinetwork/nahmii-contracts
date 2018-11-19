@@ -20,6 +20,6 @@ contract TestServable is Ownable, Servable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 }

@@ -64,7 +64,7 @@ module.exports = function (glob) {
 
             await web3ClientFund.registerBeneficiary(web3MockedBeneficiary.address);
 
-            await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 60);
+            await web3Configuration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 60);
         });
 
         describe('constructor()', () => {
@@ -122,9 +122,9 @@ module.exports = function (glob) {
             })
         });
 
-        describe('releaseTime()', () => {
+        describe('unlockTime()', () => {
             it('should equal value initialized', async () => {
-                (await ethersClientFund.releaseTime(glob.user_a))
+                (await ethersClientFund.unlockTime(glob.user_a))
                     ._bn.should.eq.BN(0);
             })
         });
@@ -1405,26 +1405,18 @@ module.exports = function (glob) {
             });
         });
 
-        describe('lockBalances()', () => {
-            describe('with zero source wallet', () => {
+        describe('lockBalancesByProxy()', () => {
+            describe('if called with zero locker wallet', () => {
                 it('should revert', async () => {
-                    web3MockedClientFundAuthorizedService.lockBalances(
-                        mocks.address0, glob.user_b, {gas: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('with zero target wallet', () => {
-                it('should revert', async () => {
-                    web3MockedClientFundAuthorizedService.lockBalances(
+                    web3MockedClientFundAuthorizedService.lockBalancesByProxy(
                         glob.user_a, mocks.address0, {gas: 1e6}
                     ).should.be.rejected;
                 });
             });
 
-            describe('called by unauthorized service', () => {
+            describe('if called by unauthorized service', () => {
                 it('should revert', async () => {
-                    web3MockedClientFundUnauthorizedService.lockBalances(
+                    web3MockedClientFundUnauthorizedService.lockBalancesByProxy(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     ).should.be.rejected;
                 });
@@ -1432,7 +1424,7 @@ module.exports = function (glob) {
 
             describe('if within operational constraints', () => {
                 it('should successfully lock balances', async () => {
-                    await web3MockedClientFundAuthorizedService.lockBalances(
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     );
 
@@ -1442,8 +1434,22 @@ module.exports = function (glob) {
                         .should.be.true;
                     (await ethersClientFund.locker(glob.user_a))
                         .should.equal(utils.getAddress(glob.user_b));
-                    (await ethersClientFund.releaseTime(glob.user_a))
+                    (await ethersClientFund.unlockTime(glob.user_a))
                         ._bn.should.be.gt.BN(Math.round(Date.now() / 1000));
+                });
+            });
+
+            describe('if already locked by other wallet', () => {
+                beforeEach(async () => {
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
+                        glob.user_a, glob.user_b, {gas: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3MockedClientFundUnauthorizedService.lockBalancesByProxy(
+                        glob.user_a, glob.user_c, {gas: 1e6}
+                    ).should.be.rejected;
                 });
             });
         });
@@ -1451,27 +1457,29 @@ module.exports = function (glob) {
         describe('unlockBalances()', () => {
             describe('if balances are not locked', () => {
                 it('should revert', async () => {
-                    web3ClientFund.unlockBalances({from: glob.user_a, gas: 1e6}).should.be.rejected;
+                    web3ClientFund.unlockBalances({from: glob.user_a, gas: 1e6})
+                        .should.be.rejected;
                 });
             });
 
             describe('if release timeout has not expired', () => {
                 beforeEach(async () => {
-                    await web3MockedClientFundAuthorizedService.lockBalances(
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     );
                 });
 
                 it('should revert', async () => {
-                    web3ClientFund.unlockBalances({from: glob.user_a, gas: 1e6}).should.be.rejected;
+                    web3ClientFund.unlockBalances({from: glob.user_a, gas: 1e6})
+                        .should.be.rejected;
                 });
             });
 
             describe('if release timeout has expired', () => {
                 beforeEach(async () => {
-                    await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 0);
+                    await web3Configuration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 0);
 
-                    await web3MockedClientFundAuthorizedService.lockBalances(
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     );
                 });
@@ -1488,7 +1496,40 @@ module.exports = function (glob) {
                         .should.be.false;
                     (await ethersClientFund.locker(glob.user_a))
                         .should.equal(mocks.address0);
-                    (await ethersClientFund.releaseTime(glob.user_a))
+                    (await ethersClientFund.unlockTime(glob.user_a))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('unlockBalancesByProxy()', () => {
+            describe('called by unauthorized service', () => {
+                it('should revert', async () => {
+                    web3MockedClientFundUnauthorizedService.unlockBalancesByProxy(
+                        glob.user_a, {gas: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
+                        glob.user_a, glob.user_b, {gas: 1e6}
+                    );
+                });
+
+                it('should successfully unlock balances', async () => {
+                    await web3MockedClientFundAuthorizedService.unlockBalancesByProxy(
+                        glob.user_a, {gas: 1e6}
+                    );
+
+                    (await ethersClientFund.lockedWalletsCount())
+                        ._bn.should.eq.BN(0);
+                    (await ethersClientFund.isLockedWallet(glob.user_a))
+                        .should.be.false;
+                    (await ethersClientFund.locker(glob.user_a))
+                        .should.equal(mocks.address0);
+                    (await ethersClientFund.unlockTime(glob.user_a))
                         ._bn.should.eq.BN(0);
                 });
             });
@@ -1497,7 +1538,7 @@ module.exports = function (glob) {
         describe('seizeBalances()', () => {
             describe('if balances are locked by another wallet', () => {
                 beforeEach(async () => {
-                    await web3MockedClientFundAuthorizedService.lockBalances(
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     );
                 });
@@ -1511,9 +1552,9 @@ module.exports = function (glob) {
 
             describe('if release timeout has expired', () => {
                 beforeEach(async () => {
-                    await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 0);
+                    await web3Configuration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 0);
 
-                    await web3MockedClientFundAuthorizedService.lockBalances(
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     );
                 });
@@ -1536,7 +1577,7 @@ module.exports = function (glob) {
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gas: 1e6}
                     );
-                    await web3MockedClientFundAuthorizedService.lockBalances(
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     );
                 });
@@ -1578,7 +1619,7 @@ module.exports = function (glob) {
                     await web3ClientFund.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedClientFundAuthorizedService.lockBalances(
+                    await web3MockedClientFundAuthorizedService.lockBalancesByProxy(
                         glob.user_a, glob.user_b, {gas: 1e6}
                     );
                     await web3ClientFund.seizeBalances(

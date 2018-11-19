@@ -73,14 +73,14 @@ module.exports = (glob) => {
             });
 
             describe('updateDelayBlocks()', () => {
-                it('should revert', async () => {
+                it('should return the initial value', async () => {
                     (await ethersConfiguration.updateDelayBlocks())
                         ._bn.should.eq.BN(0);
                 });
             });
 
             describe('updateDelayBlocksCount()', () => {
-                it('should revert', async () => {
+                it('should return the initial value', async () => {
                     (await ethersConfiguration.updateDelayBlocksCount())
                         ._bn.should.eq.BN(1);
                 });
@@ -122,15 +122,15 @@ module.exports = (glob) => {
 
             describe('confirmationBlocks()', () => {
                 it('should revert', async () => {
-                    (await ethersConfiguration.confirmationBlocks())
-                        ._bn.should.eq.BN(12);
+                    ethersConfiguration.confirmationBlocks()
+                        .should.be.rejected;
                 });
             });
 
             describe('confirmationBlocksCount()', () => {
-                it('should revert', async () => {
+                it('should return the initial value', async () => {
                     (await ethersConfiguration.confirmationBlocksCount())
-                        ._bn.should.eq.BN(1);
+                        ._bn.should.eq.BN(0);
                 });
             });
 
@@ -151,7 +151,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if provided with correct parameter and called with sender that is deployer', () => {
+                describe('if within operational constraints', () => {
                     it('should successfully set new value and emit event', async () => {
                         const result = await web3Configuration.setConfirmationBlocks(
                             (await provider.getBlockNumber()) + 1, 1
@@ -163,7 +163,7 @@ module.exports = (glob) => {
                         (await ethersConfiguration.confirmationBlocks())
                             ._bn.should.eq.BN(1);
                         (await ethersConfiguration.confirmationBlocksCount())
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(1);
                     });
                 });
             });
@@ -171,16 +171,14 @@ module.exports = (glob) => {
             describe('tradeMakerFeesCount()', () => {
                 it('should return the initial value', async () => {
                     (await ethersConfiguration.tradeMakerFeesCount())
-                        ._bn.should.eq.BN(1);
+                        ._bn.should.eq.BN(0);
                 });
             });
 
             describe('tradeMakerFee()', () => {
-                describe('if called with non-existent discount key', () => {
-                    it('should get the nominal value', async () => {
-                        (await ethersConfiguration.tradeMakerFee((await provider.getBlockNumber()) + 1, 0))
-                            ._bn.should.eq.BN(1e15.toString());
-                    });
+                it('should revert', async () => {
+                    ethersConfiguration.tradeMakerFee((await provider.getBlockNumber()) + 1, 0)
+                        .should.be.rejected;
                 });
             });
 
@@ -221,7 +219,7 @@ module.exports = (glob) => {
                         (await ethersConfiguration.tradeMakerFee((await provider.getBlockNumber()) + 1, 1))
                             ._bn.should.eq.BN(9e17.toString());
                         (await ethersConfiguration.tradeMakerFeesCount())
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(1);
                     });
                 })
             });
@@ -229,16 +227,14 @@ module.exports = (glob) => {
             describe('tradeTakerFeesCount()', () => {
                 it('should return the initial value', async () => {
                     (await ethersConfiguration.tradeTakerFeesCount())
-                        ._bn.should.eq.BN(1);
+                        ._bn.should.eq.BN(0);
                 });
             });
 
             describe('tradeTakerFee()', () => {
-                describe('if called with non-existent discount key', () => {
-                    it('should get the nominal value', async () => {
-                        (await ethersConfiguration.tradeTakerFee((await provider.getBlockNumber()) + 1, 0))
-                            ._bn.should.eq.BN(2e15.toString());
-                    });
+                it('should revert', async () => {
+                    ethersConfiguration.tradeTakerFee((await provider.getBlockNumber()) + 1, 0)
+                        .should.be.rejected;
                 });
             });
 
@@ -279,7 +275,7 @@ module.exports = (glob) => {
                         (await ethersConfiguration.tradeTakerFee((await provider.getBlockNumber()) + 1, 1))
                             ._bn.should.eq.BN(9e17.toString());
                         (await ethersConfiguration.tradeTakerFeesCount())
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(1);
                     });
                 })
             });
@@ -287,16 +283,14 @@ module.exports = (glob) => {
             describe('paymentFeesCount()', () => {
                 it('should return the initial value', async () => {
                     (await ethersConfiguration.paymentFeesCount())
-                        ._bn.should.eq.BN(1);
+                        ._bn.should.eq.BN(0);
                 });
             });
 
             describe('paymentFee()', () => {
-                describe('if called with non-existent discount key', () => {
-                    it('should get the nominal value', async () => {
-                        (await ethersConfiguration.paymentFee((await provider.getBlockNumber()) + 1, 0))
-                            ._bn.should.eq.BN(1e15.toString());
-                    });
+                it('should revert', async () => {
+                    ethersConfiguration.paymentFee((await provider.getBlockNumber()) + 1, 0)
+                        .should.be.rejected;
                 });
             });
 
@@ -337,7 +331,7 @@ module.exports = (glob) => {
                         (await ethersConfiguration.paymentFee((await provider.getBlockNumber()) + 1, 1))
                             ._bn.should.eq.BN(9e17.toString());
                         (await ethersConfiguration.paymentFeesCount())
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(1);
                     });
                 })
             });
@@ -446,14 +440,14 @@ module.exports = (glob) => {
             describe('tradeMakerMinimumFeesCount()', () => {
                 it('should return the initial value', async () => {
                     (await ethersConfiguration.tradeMakerMinimumFeesCount())
-                        ._bn.should.eq.BN(1);
+                        ._bn.should.eq.BN(0);
                 });
             });
 
             describe('tradeMakerMinimumFee()', () => {
-                it('should get the initial value', async () => {
-                    (await ethersConfiguration.tradeMakerMinimumFee((await provider.getBlockNumber()) + 1))
-                        ._bn.should.eq.BN(1e14.toString());
+                it('should revert', async () => {
+                    ethersConfiguration.tradeMakerMinimumFee((await provider.getBlockNumber()) + 1)
+                        .should.be.rejected;
                 });
             });
 
@@ -485,7 +479,7 @@ module.exports = (glob) => {
                         (await ethersConfiguration.tradeMakerMinimumFee((await provider.getBlockNumber()) + 1))
                             ._bn.should.eq.BN(1e18.toString());
                         (await ethersConfiguration.tradeMakerMinimumFeesCount())
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(1);
                     });
                 });
             });
@@ -493,14 +487,14 @@ module.exports = (glob) => {
             describe('tradeTakerMinimumFeesCount()', () => {
                 it('should return the initial value', async () => {
                     (await ethersConfiguration.tradeTakerMinimumFeesCount())
-                        ._bn.should.eq.BN(1);
+                        ._bn.should.eq.BN(0);
                 });
             });
 
             describe('tradeTakerMinimumFee()', () => {
-                it('should get the initial value', async () => {
-                    (await ethersConfiguration.tradeTakerMinimumFee((await provider.getBlockNumber()) + 1))
-                        ._bn.should.eq.BN(2e14.toString());
+                it('should revert', async () => {
+                    ethersConfiguration.tradeTakerMinimumFee((await provider.getBlockNumber()) + 1)
+                        .should.be.rejected;
                 });
             });
 
@@ -532,7 +526,7 @@ module.exports = (glob) => {
                         (await ethersConfiguration.tradeTakerMinimumFee((await provider.getBlockNumber()) + 1))
                             ._bn.should.eq.BN(1e18.toString());
                         (await ethersConfiguration.tradeTakerMinimumFeesCount())
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(1);
                     });
                 });
             });
@@ -540,14 +534,14 @@ module.exports = (glob) => {
             describe('paymentMinimumFeesCount()', () => {
                 it('should return the initial value', async () => {
                     (await ethersConfiguration.paymentMinimumFeesCount())
-                        ._bn.should.eq.BN(1);
+                        ._bn.should.eq.BN(0);
                 });
             });
 
             describe('paymentMinimumFee()', () => {
-                it('should get the initial value', async () => {
-                    (await ethersConfiguration.paymentMinimumFee((await provider.getBlockNumber()) + 1))
-                        ._bn.should.eq.BN(1e14.toString());
+                it('should revert', async () => {
+                    ethersConfiguration.paymentMinimumFee((await provider.getBlockNumber()) + 1)
+                        .should.be.rejected;
                 });
             });
 
@@ -579,7 +573,7 @@ module.exports = (glob) => {
                         (await ethersConfiguration.paymentMinimumFee((await provider.getBlockNumber()) + 1))
                             ._bn.should.eq.BN(1e18.toString());
                         (await ethersConfiguration.paymentMinimumFeesCount())
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(1);
                     });
                 });
             });
@@ -647,13 +641,17 @@ module.exports = (glob) => {
 
                 describe('if called with block number below constraints', () => {
                     it('should revert', async () => {
-                        web3Configuration.setCurrencyPaymentMinimumFee(await provider.getBlockNumber(), currencyCt, currencyId, 1e18).should.be.rejected;
+                        web3Configuration.setCurrencyPaymentMinimumFee(
+                            await provider.getBlockNumber(), currencyCt, currencyId, 1e18
+                        ).should.be.rejected;
                     });
                 });
 
                 describe('if within operational constraints', () => {
                     it('should successfully set new values and emit event', async () => {
-                        const result = await web3Configuration.setCurrencyPaymentMinimumFee((await provider.getBlockNumber()) + 1, currencyCt, currencyId, 1e18);
+                        const result = await web3Configuration.setCurrencyPaymentMinimumFee(
+                            (await provider.getBlockNumber()) + 1, currencyCt, currencyId, 1e18
+                        );
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('SetCurrencyPaymentMinimumFeeEvent');
@@ -666,17 +664,17 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('balanceLockTimeout()', () => {
-                it('should equal value initialized', async () => {
-                    (await ethersConfiguration.balanceLockTimeout())
-                        ._bn.should.eq.BN(60 * 60 * 24 * 30);
+            describe('walletLockTimeout()', () => {
+                it('should revert', async () => {
+                    ethersConfiguration.walletLockTimeout()
+                        .should.be.rejected;
                 });
             });
 
-            describe('setBalanceLockTimeout()', () => {
+            describe('setWalletLockTimeout()', () => {
                 describe('if called by non-deployer', () => {
                     it('should revert', async () => {
-                        web3Configuration.setBalanceLockTimeout(
+                        web3Configuration.setWalletLockTimeout(
                             (await provider.getBlockNumber()) + 1, 100, {from: glob.user_a}
                         ).should.be.rejected;
                     });
@@ -684,21 +682,21 @@ module.exports = (glob) => {
 
                 describe('if within operational constraints', () => {
                     it('should successfully set new values and emit event', async () => {
-                        const result = await web3Configuration.setBalanceLockTimeout((await provider.getBlockNumber()) + 1, 100);
+                        const result = await web3Configuration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 100);
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('SetBalanceLockTimeoutEvent');
+                        result.logs[0].event.should.equal('SetWalletLockTimeoutEvent');
 
-                        (await ethersConfiguration.balanceLockTimeout())
+                        (await ethersConfiguration.walletLockTimeout())
                             ._bn.should.eq.BN(100);
                     });
                 });
             });
 
             describe('cancelOrderChallengeTimeout()', () => {
-                it('should equal value initialized', async () => {
-                    (await ethersConfiguration.cancelOrderChallengeTimeout())
-                        ._bn.should.eq.BN(60 * 60 * 24 * 3);
+                it('should revert', async () => {
+                    ethersConfiguration.cancelOrderChallengeTimeout()
+                        .should.be.rejected;
                 });
             });
 
@@ -725,9 +723,9 @@ module.exports = (glob) => {
             });
 
             describe('settlementChallengeTimeout()', () => {
-                it('should equal value initialized', async () => {
-                    (await ethersConfiguration.settlementChallengeTimeout())
-                        ._bn.should.eq.BN(60 * 60 * 24 * 5);
+                it('should revert', async () => {
+                    ethersConfiguration.settlementChallengeTimeout()
+                        .should.be.rejected;
                 });
             });
 
@@ -756,9 +754,9 @@ module.exports = (glob) => {
             });
 
             describe('walletSettlementStakeFraction()', () => {
-                it('should return initial value', async () => {
-                    (await ethersConfiguration.walletSettlementStakeFraction())
-                        ._bn.should.eq.BN(1e17.toString());
+                it('should revert', async () => {
+                    ethersConfiguration.walletSettlementStakeFraction()
+                        .should.be.rejected;
                 });
             });
 
@@ -784,9 +782,9 @@ module.exports = (glob) => {
             });
 
             describe('operatorSettlementStakeFraction()', () => {
-                it('should return initial value', async () => {
-                    (await ethersConfiguration.operatorSettlementStakeFraction())
-                        ._bn.should.eq.BN(5e17.toString());
+                it('should revert', async () => {
+                    ethersConfiguration.operatorSettlementStakeFraction()
+                        .should.be.rejected;
                 });
             });
 
@@ -812,9 +810,9 @@ module.exports = (glob) => {
             });
 
             describe('fraudStakeFraction()', () => {
-                it('should return initial value', async () => {
-                    (await ethersConfiguration.fraudStakeFraction())
-                        ._bn.should.eq.BN(5e17.toString());
+                it('should revert', async () => {
+                    ethersConfiguration.fraudStakeFraction()
+                        .should.be.rejected;
                 });
             });
 

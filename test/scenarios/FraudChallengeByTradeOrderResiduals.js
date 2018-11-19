@@ -54,6 +54,8 @@ module.exports = (glob) => {
 
             await ethersConfiguration.registerService(ethersFraudChallengeByTradeOrderResiduals.address);
             await ethersConfiguration.enableServiceAction(ethersFraudChallengeByTradeOrderResiduals.address, 'operational_mode', {gasLimit: 1e6});
+
+            await web3Configuration.setFraudStakeFraction(web3.eth.blockNumber + 1, 5e17);
         });
 
         beforeEach(async () => {
@@ -595,20 +597,18 @@ module.exports = (glob) => {
                         firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
                         firstTrade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lockedWallet, lock, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
                         ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.lockedWallets(utils.bigNumberify(0)),
                         ethersClientFund.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
                     lockedWalletsCount.eq(1).should.be.true;
-                    lockedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    lock.source.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    lock.target.should.equal(utils.getAddress(glob.owner));
+                    lock.lockedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });

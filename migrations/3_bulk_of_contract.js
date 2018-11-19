@@ -139,6 +139,7 @@ module.exports = (deployer, network, accounts) => {
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
             await deployer.link(SettlementTypesLib, [
+                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
                 NullSettlement, NullSettlementChallenge, NullSettlementDispute
             ]);
             await deployer.link(BlockNumbUintsLib, [
@@ -224,6 +225,29 @@ module.exports = (deployer, network, accounts) => {
 
             //configure smart contracts
             instance = Configuration.at(addressStorage.get('Configuration'));
+            tx = await instance.setConfirmationBlocks(web3.eth.blockNumber + 1, 12);
+            tx = await instance.setTradeMakerFee(web3.eth.blockNumber + 1, 1e15, [], []);                       // 0.1%
+            tx = await instance.setTradeMakerMinimumFee(web3.eth.blockNumber + 1, 1e14);                        // 0.01%
+            tx = await instance.setTradeTakerFee(web3.eth.blockNumber + 1, 2e15, [], []);                       // 0.2%
+            tx = await instance.setTradeTakerMinimumFee(web3.eth.blockNumber + 1, 2e14);                        // 0.02%
+            tx = await instance.setPaymentFee(web3.eth.blockNumber + 1, 1e15, [], []);                          // 0.1%
+            tx = await instance.setPaymentMinimumFee(web3.eth.blockNumber + 1, 1e14);                           // 0.01%
+            tx = await instance.setWalletLockTimeout(web3.eth.blockNumber + 1, 60 * 60 * 24 * 30);              // 30 days
+            if (network.startsWith('ropsten')) {
+                tx = await instance.setCancelOrderChallengeTimeout(web3.eth.blockNumber + 1, 60 * 3);           // 3 minutes
+                tx = await instance.setSettlementChallengeTimeout(web3.eth.blockNumber + 1, 60 * 5);            // 5 minutes
+            } else {
+                tx = await instance.setCancelOrderChallengeTimeout(web3.eth.blockNumber + 1, 60 * 60 * 24 * 3); // 3 days
+                tx = await instance.setSettlementChallengeTimeout(web3.eth.blockNumber + 1, 60 * 60 * 24 * 5);  // 5 days
+            }
+            tx = await instance.setWalletSettlementStakeFraction(web3.eth.blockNumber + 1, 1e17);               // 10%
+            tx = await instance.setOperatorSettlementStakeFraction(web3.eth.blockNumber + 1, 5e17);             // 50%
+            tx = await instance.setFraudStakeFraction(web3.eth.blockNumber + 1, 5e17);                          // 50%
+            if (network.startsWith('mainnet')) {
+                tx = await instance.setUpdateDelayBlocks(web3.eth.blockNumber + 1, 2880);                       // ~12 hours
+                tx = await instance.setEarliestSettlementBlockNumber(web3.eth.blockNumber + 172800);            // In ~30 days
+                // tx = await instance.disableEarliestSettlementBlockNumberUpdate();
+            }
             tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
             tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), 'operational_mode');
             tx = await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
@@ -468,6 +492,7 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), 'reward');
             tx = await instance.registerService(addressStorage.get('DriipSettlementDispute'));
             tx = await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'reward');
+            tx = await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'deprive');
             tx = await instance.registerService(addressStorage.get('NullSettlementDispute'));
             tx = await instance.enableServiceAction(addressStorage.get('NullSettlementDispute'), 'reward');
 

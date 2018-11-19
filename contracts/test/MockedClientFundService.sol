@@ -22,7 +22,7 @@ contract MockedClientFundService is Ownable, ClientFundable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -54,9 +54,15 @@ contract MockedClientFundService is Ownable, ClientFundable {
         clientFund.transferToBeneficiary(beneficiary, amount, currencyCt, currencyId, standard);
     }
 
-    function lockBalances(address sourceWallet, address targetWallet)
+    function lockBalancesByProxy(address lockedWallet, address lockerWallet)
     public
     {
-        clientFund.lockBalances(sourceWallet, targetWallet);
+        clientFund.lockBalancesByProxy(lockedWallet, lockerWallet);
+    }
+
+    function unlockBalancesByProxy(address wallet)
+    public
+    {
+        clientFund.unlockBalancesByProxy(wallet);
     }
 }

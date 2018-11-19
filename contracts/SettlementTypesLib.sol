@@ -20,38 +20,49 @@ library SettlementTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    enum ProposalStatus {Unknown, Qualified, Disqualified}
+    enum Status {Qualified, Disqualified}
     enum CandidateType {None, Order, Trade, Payment}
     enum SettlementRole {Origin, Target}
 
     struct Proposal {
-        uint256 nonce; // TODO Consider removal of nonce in place of operator hash
+        address wallet;
+        uint256 nonce;
         uint256 blockNumber;
-        uint256 timeout;
+
+        uint256 expirationTime;
 
         // Status
-        ProposalStatus status;
+        Status status;
 
-        // Currencies
-        MonetaryTypesLib.Currency[] currencies;
+        // Currency
+        address currencyCt;
+        uint256 currencyId;
 
         // Stage info
-        int256[] stageAmounts;
+        int256 stageAmount;
 
         // Balances after amounts have been staged
-        int256[] targetBalanceAmounts;
+        int256 targetBalanceAmount;
 
         // Driip info
-        //        bytes32 driipOperatorHash; // TODO Consider addition of operator hash
+        bytes32 driipHash;
         NahmiiTypesLib.DriipType driipType;
-        uint256 driipIndex;
 
         // True if reward is from wallet balance
         bool balanceReward;
+    }
 
-        // Candidate info updated when calling any of the challenge functions
+    struct Disqualification {
+        address wallet;
+        uint256 nonce;
+
+        // Currency
+        address currencyCt;
+        uint256 currencyId;
+
+        // Candidate info
+        bytes32 candidateHash;
         CandidateType candidateType;
-        uint256 candidateIndex;
 
         // Address of wallet that successfully challenged
         address challenger;

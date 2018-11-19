@@ -30,7 +30,7 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) public {
+    constructor(address deployer, address signerManager) Ownable(deployer) SignerManageable(signerManager) public {
     }
 
     //
@@ -458,13 +458,5 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     returns (bool)
     {
         return wallet == payment.recipient.wallet;
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
     }
 }

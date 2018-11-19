@@ -31,7 +31,7 @@ SecurityBondable, ClientFundable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -62,7 +62,7 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
         address lockedWallet;
         if (!genuineBuyerAndFee)
@@ -70,7 +70,7 @@ SecurityBondable, ClientFundable {
         if (!genuineSellerAndFee)
             lockedWallet = trade.seller.wallet;
         if (address(0) != lockedWallet)
-            clientFund.lockBalances(lockedWallet, msg.sender);
+            clientFund.lockBalancesByProxy(lockedWallet, msg.sender);
 
         emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, lockedWallet);
     }

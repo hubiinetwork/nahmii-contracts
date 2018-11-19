@@ -59,6 +59,8 @@ module.exports = (glob) => {
             await ethersFraudChallenge.enableServiceAction(
                 ethersFraudChallengeByDuplicateDriipNonceOfTrades.address, 'add_fraudulent_trade', {gasLimit: 1e6}
             );
+
+            await web3Configuration.setFraudStakeFraction(web3.eth.blockNumber + 1, 5e17);
         });
 
         beforeEach(async () => {

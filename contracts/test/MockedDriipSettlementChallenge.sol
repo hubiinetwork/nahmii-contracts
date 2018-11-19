@@ -11,8 +11,8 @@ pragma experimental ABIEncoderV2;
 
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
-import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
 import {SettlementTypesLib} from "../SettlementTypesLib.sol";
+import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
 
 /**
 @title MockedDriipSettlementChallenge
@@ -20,64 +20,61 @@ import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 */
 contract MockedDriipSettlementChallenge {
 
-    NahmiiTypesLib.ChallengePhase public _challengePhase;
+    bool public _proposalExpired;
     uint256 public _proposalNonce;
     uint256 public _proposalBlockNumber;
-    MonetaryTypesLib.Currency _proposalCurrency;
     int256[] public _proposalStageAmounts;
     uint256 public _proposalStageAmountIndex;
     int256 public _proposalTargetBalanceAmount;
-    uint256 public _proposalTimeout;
-    SettlementTypesLib.ProposalStatus public _proposalStatus;
+    uint256 public _proposalExpirationTime;
+    SettlementTypesLib.Status public _proposalStatus;
     NahmiiTypesLib.DriipType public _proposalDriipType;
-    uint256 public _proposalDriipIndex;
+    bytes32 public _proposalDriipHash;
     bool public _proposalBalanceReward;
-    SettlementTypesLib.CandidateType public _proposalCandidateType;
-    uint256 public _proposalCandidateIndex;
-    address public _proposalChallenger;
-    uint256 public _challengeCandidateOrderHashesCount;
-    uint256 public _challengeCandidateTradeHashesCount;
-    uint256 public _challengeCandidatePaymentHashesCount;
-    bytes32 _challengeCandidateOrderHash;
+    SettlementTypesLib.CandidateType public _disqualificationCandidateType;
+    bytes32 public _disqualificationCandidateHash;
+    address public _disqualificationChallenger;
     DriipSettlementDispute public _driipSettlementDispute;
+    bool _lockedWallet;
+    uint256 _disqualificationsCount;
 
     function _reset()
     public
     {
-        delete _challengePhase;
+        delete _proposalExpired;
         delete _proposalNonce;
         delete _proposalBlockNumber;
         delete _proposalTargetBalanceAmount;
-        delete _proposalTimeout;
+        delete _proposalExpirationTime;
         delete _proposalStatus;
         delete _proposalDriipType;
-        delete _proposalDriipIndex;
+        delete _proposalDriipHash;
         delete _proposalBalanceReward;
-        delete _proposalCandidateType;
-        delete _proposalCandidateIndex;
-        delete _proposalChallenger;
-        delete _challengeCandidateOrderHashesCount;
-        delete _challengeCandidateTradeHashesCount;
-        delete _challengeCandidatePaymentHashesCount;
-        delete _challengeCandidateOrderHash;
+        delete _disqualificationCandidateType;
+        delete _disqualificationCandidateHash;
+        delete _disqualificationChallenger;
+        delete _lockedWallet;
+        delete _disqualificationsCount;
 
         _proposalStageAmounts.length = 0;
         _proposalStageAmountIndex = 0;
     }
 
-    function _setChallengePhase(NahmiiTypesLib.ChallengePhase challengePhase)
+    function _setProposalExpired(bool proposalExpired)
     public
     {
-        _challengePhase = challengePhase;
+        _proposalExpired = proposalExpired;
     }
 
-    function challengePhase(address wallet)
+    function hasProposalExpired(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (NahmiiTypesLib.ChallengePhase) {
+    returns (bool) {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        return _challengePhase;
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        return _proposalExpired;
     }
 
     function _setProposalNonce(uint256 proposalNonce)
@@ -86,13 +83,15 @@ contract MockedDriipSettlementChallenge {
         _proposalNonce = proposalNonce;
     }
 
-    function proposalNonce(address wallet)
+    function proposalNonce(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         return _proposalNonce;
     }
 
@@ -102,31 +101,16 @@ contract MockedDriipSettlementChallenge {
         _proposalBlockNumber = proposalBlockNumber;
     }
 
-    function proposalBlockNumber(address wallet)
+    function proposalBlockNumber(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         return _proposalBlockNumber;
-    }
-
-    function _setProposalCurrency(MonetaryTypesLib.Currency proposalCurrency)
-    public
-    {
-        _proposalCurrency = proposalCurrency;
-    }
-
-    function proposalCurrency(address wallet, uint256 index)
-    public
-    view
-    returns (MonetaryTypesLib.Currency)
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(index == index);
-        return _proposalCurrency;
     }
 
     function _addProposalStageAmount(int256 proposalStageAmount)
@@ -135,13 +119,14 @@ contract MockedDriipSettlementChallenge {
         _proposalStageAmounts.push(proposalStageAmount);
     }
 
-    function proposalStageAmount(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalStageAmount(address wallet, address currencyCt, uint256 currencyId)
     public
     returns (int256)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        require(currency.ct == currency.ct);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         return _proposalStageAmounts.length == 0 ? 0 : _proposalStageAmounts[_proposalStageAmountIndex++];
     }
 
@@ -151,71 +136,86 @@ contract MockedDriipSettlementChallenge {
         _proposalTargetBalanceAmount = proposalTargetBalanceAmount;
     }
 
-    function proposalTargetBalanceAmount(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalTargetBalanceAmount(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        require(currency.ct == currency.ct);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         return _proposalTargetBalanceAmount;
     }
 
-    function setProposalTimeout(address wallet, uint256 timeout)
+    function setProposalExpirationTime(address wallet, address currencyCt, uint256 currencyId,
+        uint256 expirationTime)
     public
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        _proposalTimeout = timeout;
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        _proposalExpirationTime = expirationTime;
     }
 
-    function proposalTimeout(address wallet)
+    function proposalExpirationTime(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        return _proposalTimeout;
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        return _proposalExpirationTime;
     }
 
-    function setProposalStatus(address wallet, SettlementTypesLib.ProposalStatus status)
+    function setProposalStatus(address wallet, address currencyCt, uint256 currencyId,
+        SettlementTypesLib.Status status)
     public
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         _proposalStatus = status;
     }
 
-    function proposalStatus(address wallet)
+    function proposalStatus(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.ProposalStatus)
+    returns (SettlementTypesLib.Status)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         return _proposalStatus;
     }
 
-    function proposalDriipType(address wallet)
+    function proposalDriipType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (NahmiiTypesLib.DriipType)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         return _proposalDriipType;
     }
 
-    function proposalDriipIndex(address wallet)
+    function proposalDriipHash(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (uint256)
+    returns (bytes32)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        return _proposalDriipIndex;
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        return _proposalDriipHash;
     }
 
     function _setProposalBalanceReward(bool balanceReward)
@@ -224,131 +224,70 @@ contract MockedDriipSettlementChallenge {
         _proposalBalanceReward = balanceReward;
     }
 
-    function proposalBalanceReward(address wallet)
+    function proposalBalanceReward(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bool)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
         return _proposalBalanceReward;
     }
 
-    function setProposalCandidateType(address wallet, SettlementTypesLib.CandidateType candidateType)
+    function _setDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalCandidateType = candidateType;
+        _disqualificationCandidateType = candidateType;
     }
 
-    function proposalCandidateType(address wallet)
+    function disqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (SettlementTypesLib.CandidateType)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        return _proposalCandidateType;
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        return _disqualificationCandidateType;
     }
 
-    function setProposalCandidateIndex(address wallet, uint256 candidateIndex)
+    function _setDisqualificationCandidateHash(bytes32 candidateHash)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalCandidateIndex = candidateIndex;
+        _disqualificationCandidateHash = candidateHash;
     }
 
-    function proposalCandidateIndex(address wallet)
+    function disqualificationCandidateHash(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (uint256)
+    returns (bytes32)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        return _proposalCandidateIndex;
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        return _disqualificationCandidateHash;
     }
 
-    function setProposalChallenger(address wallet, address challenger)
+    function _setDisqualificationChallenger(address challenger)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalChallenger = challenger;
+        _disqualificationChallenger = challenger;
     }
 
-    function proposalChallenger(address wallet)
+    function disqualificationChallenger(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (address)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
-        return _proposalChallenger;
-    }
-
-    function addChallengeCandidateOrderHash(bytes32 hash)
-    public
-    {
-        // To silence unused function parameter compiler warning
-        require(hash == hash);
-        _challengeCandidateOrderHashesCount++;
-    }
-
-    function challengeCandidateOrderHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return _challengeCandidateOrderHashesCount;
-    }
-
-    function _setChallengeCandidateOrderHash(bytes32 hash)
-    public
-    {
-        _challengeCandidateOrderHash = hash;
-    }
-
-    function challengeCandidateOrderHashes(uint256 index)
-    public
-    view
-    returns (bytes32)
-    {
-        // To silence unused function parameter compiler warning
-        require(index == index);
-        return _challengeCandidateOrderHash;
-    }
-
-    function addChallengeCandidateTradeHash(bytes32 hash)
-    public
-    {
-        // To silence unused function parameter compiler warning
-        require(hash == hash);
-        _challengeCandidateTradeHashesCount++;
-    }
-
-    function challengeCandidateTradeHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return _challengeCandidateTradeHashesCount;
-    }
-
-    function addChallengeCandidatePaymentHash(bytes32 hash)
-    public
-    {
-        require(hash == hash);
-        _challengeCandidatePaymentHashesCount++;
-    }
-
-    function challengeCandidatePaymentHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return _challengeCandidatePaymentHashesCount;
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        return _disqualificationChallenger;
     }
 
     function setDriipSettlementDispute(DriipSettlementDispute driipSettlementDispute)
@@ -375,9 +314,65 @@ contract MockedDriipSettlementChallenge {
         _driipSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
-    function challengeByPayment(NahmiiTypesLib.Payment payment)
+    function challengeByPayment(address wallet, NahmiiTypesLib.Payment payment)
     public
     {
-        _driipSettlementDispute.challengeByPayment(payment, msg.sender);
+        _driipSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
+    }
+
+    function disqualificationsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _disqualificationsCount;
+    }
+
+    function lockWallet(address wallet)
+    public
+    {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        _lockedWallet = true;
+    }
+
+    function isLockedWallet(address wallet)
+    public
+    view
+    returns (bool)
+    {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        return _lockedWallet;
+    }
+
+    function _setDisqualificationsCount(uint256 count)
+    public
+    {
+        _disqualificationsCount = count;
+    }
+
+    function addDisqualification(address wallet, address currencyCt, uint256 currencyId, bytes32 candidateHash,
+        SettlementTypesLib.CandidateType candidateType, address challenger)
+    public
+    {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        require(candidateHash == candidateHash);
+        require(candidateType == candidateType);
+        require(challenger == challenger);
+        _disqualificationsCount++;
+    }
+
+    function removeDisqualification(address wallet, address currencyCt, uint256 currencyId)
+    public
+    {
+        // To silence unused function parameter compiler warning
+        require(wallet == wallet);
+        require(currencyCt == currencyCt);
+        require(currencyId == currencyId);
+        _disqualificationsCount--;
     }
 }

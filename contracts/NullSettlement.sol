@@ -44,13 +44,14 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     // -----------------------------------------------------------------------------------------------------------------
     event SetNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
         NullSettlementChallenge newNullSettlementChallenge);
-    event SettleNullEvent(address wallet, SettlementTypesLib.ProposalStatus proposalStatus);
-    event SettleNullByProxyEvent(address proxy, address wallet, SettlementTypesLib.ProposalStatus proposalStatus);
+    event SettleNullEvent(address wallet, address currencyCt, uint256 currencyId);
+    event SettleNullByProxyEvent(address proxy, address wallet, address currencyCt,
+        uint256 currencyId);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -78,40 +79,42 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     }
 
     /// @notice Settle null
-    function settleNull()
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function settleNull(address currencyCt, uint256 currencyId)
     public
     {
         // Settle null
-        settleNullPrivate(msg.sender);
+        settleNullPrivate(msg.sender, currencyCt, currencyId);
 
         // Emit event
-        emit SettleNullEvent(msg.sender, nullSettlementChallenge.proposalStatus(msg.sender));
+        emit SettleNullEvent(msg.sender, currencyCt, currencyId);
     }
 
     /// @notice Settle null by proxy
     /// @param wallet The concerned wallet
-    function settleNullByProxy(address wallet)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function settleNullByProxy(address wallet, address currencyCt, uint256 currencyId)
     public
     onlyDeployer
     {
         // Settle null of wallet
-        settleNullPrivate(wallet);
+        settleNullPrivate(wallet, currencyCt, currencyId);
 
         // Emit event
-        emit SettleNullByProxyEvent(msg.sender, wallet, nullSettlementChallenge.proposalStatus(wallet));
+        emit SettleNullByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
     }
 
-    function settleNullPrivate(address wallet)
+    function settleNullPrivate(address wallet, address currencyCt, uint256 currencyId)
     private
-    configurationInitialized
-    clientFundInitialized
-    communityVoteInitialized
-    nullSettlementChallengeInitialized
     {
         // Require that driip settlement challenge qualified
-        require(nullSettlementChallenge.proposalStatus(wallet) == SettlementTypesLib.ProposalStatus.Qualified);
+        require(SettlementTypesLib.Status.Qualified == nullSettlementChallenge.proposalStatus(
+            wallet, currencyCt, currencyId
+        ));
 
-        uint256 nonce = nullSettlementChallenge.proposalNonce(wallet);
+        uint256 nonce = nullSettlementChallenge.proposalNonce(wallet, currencyCt, currencyId);
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce
@@ -120,32 +123,27 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
 
         // If wallet has previously settled balance of the concerned currency with higher
         // null settlement nonce, then don't settle again
-        require(nonce > walletCurrencyMaxNullNonce[wallet][currency.ct][currency.id]);
+        require(nonce > walletCurrencyMaxNullNonce[wallet][currencyCt][currencyId]);
 
         // Update settled nonce of wallet and currency
-        walletCurrencyMaxNullNonce[wallet][currency.ct][currency.id] = nonce;
+        walletCurrencyMaxNullNonce[wallet][currencyCt][currencyId] = nonce;
 
-        // Get proposal's currency, target balance amount and stage amount. (Null settlement proposals only have one of each.)
-        MonetaryTypesLib.Currency memory currency = nullSettlementChallenge.proposalCurrency(wallet, 0);
-        int256 stageAmount = nullSettlementChallenge.proposalStageAmount(wallet, currency);
-        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(wallet, currency);
+        // Get proposal's stage amount and target balance amount.
+        int256 stageAmount = nullSettlementChallenge.proposalStageAmount(
+            wallet, currencyCt, currencyId
+        );
+        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(
+            wallet, currencyCt, currencyId
+        );
 
         // Update settled balance
-        clientFund.updateSettledBalance(wallet, targetBalanceAmount, currency.ct, currency.id);
+        clientFund.updateSettledBalance(wallet, targetBalanceAmount, currencyCt, currencyId);
 
         // Stage the proposed amount
-        clientFund.stage(wallet, stageAmount, currency.ct, currency.id);
+        clientFund.stage(wallet, stageAmount, currencyCt, currencyId);
 
         // If payment nonce is beyond max null settlement nonce then update max null nonce
         if (nonce > maxNullNonce)
             maxNullNonce = nonce;
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier nullSettlementChallengeInitialized() {
-        require(nullSettlementChallenge != address(0));
-        _;
     }
 }

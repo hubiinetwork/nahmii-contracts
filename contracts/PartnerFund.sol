@@ -75,7 +75,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //

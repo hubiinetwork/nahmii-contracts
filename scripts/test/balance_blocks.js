@@ -126,6 +126,13 @@ describe('balanceBlocksIn()', () => {
                 result.should.equal(900)
             });
         });
+
+        describe('(0, 100)', () => {
+            it('should equal 35000', () => {
+                const result = balanceBlocksIn(0, 100, n, b, beta);
+                result.should.equal(35000);
+            });
+        });
     });
 
     describe('N = 1', () => {

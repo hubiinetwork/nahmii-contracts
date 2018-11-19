@@ -32,7 +32,7 @@ SecurityBondable, ClientFundable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -76,9 +76,9 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        clientFund.lockBalances(wallet, msg.sender);
+        clientFund.lockBalancesByProxy(wallet, msg.sender);
 
         emit ChallengeBySuccessivePaymentsEvent(
             firstPayment.seals.operator.hash, lastPayment.seals.operator.hash, msg.sender, wallet

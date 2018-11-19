@@ -530,93 +530,8 @@ module.exports = (glob) => {
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
+                await ethersDriipSettlementChallenge._setProposalExpired(true);
                 await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-            });
-
-            describe('if validator contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if fraud challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if community vote contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if client fund contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if driip settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
-                    await ethersDriipSettlement.setClientFund(web3ClientFund.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
-                });
             });
 
             describe('if trade is not sealed', () => {
@@ -659,6 +574,26 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if wallet is locked', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement proposal nonce is not the one of trade', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalNonce(0);
@@ -677,7 +612,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -693,7 +630,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.intended.current);
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.conjugate.current);
                 });
@@ -858,98 +797,13 @@ module.exports = (glob) => {
 
                 trade = await mocks.mockTrade(glob.owner);
 
+                await ethersDriipSettlementChallenge._setProposalExpired(true);
                 await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
             });
 
             describe('if called from non-deployer', () => {
                 beforeEach(async () => {
                     ethersDriipSettlement = ethersDriipSettlement.connect(glob.signer_a);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if validator contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if fraud challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if community vote contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if client fund contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if driip settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
-                    await ethersDriipSettlement.setClientFund(web3ClientFund.address);
                 });
 
                 it('should revert', async () => {
@@ -997,6 +851,26 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if wallet is locked', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement proposal nonce is not the one of trade', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalNonce(0);
@@ -1014,7 +888,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -1029,7 +905,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(trade.buyer.wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.intended.current);
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.conjugate.current);
                 });
@@ -1194,93 +1072,8 @@ module.exports = (glob) => {
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
+                await ethersDriipSettlementChallenge._setProposalExpired(true);
                 await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-            });
-
-            describe('if validator contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if fraud challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if community vote contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if client fund contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if driip settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
-                    await ethersDriipSettlement.setClientFund(web3ClientFund.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
-                });
             });
 
             describe('if payment is not sealed', () => {
@@ -1323,6 +1116,26 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if wallet is locked', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
@@ -1331,7 +1144,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -1347,7 +1162,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(payment.sender.balances.current);
                 });
 
@@ -1488,98 +1305,13 @@ module.exports = (glob) => {
 
                 payment = await mocks.mockPayment(glob.owner);
 
+                await ethersDriipSettlementChallenge._setProposalExpired(true);
                 await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
             });
 
             describe('if called from non-deployer', () => {
                 beforeEach(async () => {
                     ethersDriipSettlement = ethersDriipSettlement.connect(glob.signer_a);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if validator contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if fraud challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if community vote contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if client fund contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
-                });
-            });
-
-            describe('if driip settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3DriipSettlement = await DriipSettlement.new(glob.owner);
-                    ethersDriipSettlement = new Contract(web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-
-                    await ethersDriipSettlement.setValidator(web3Validator.address);
-                    await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
-                    await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
-                    await ethersDriipSettlement.setConfiguration(web3Configuration.address);
-                    await ethersDriipSettlement.setClientFund(web3ClientFund.address);
                 });
 
                 it('should revert', async () => {
@@ -1627,6 +1359,26 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if wallet is locked', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlement.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
             describe('if driip settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
                     payment = await mocks.mockPayment(glob.owner, {
@@ -1634,7 +1386,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -1649,7 +1403,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(payment.sender.wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersDriipSettlementChallenge.setProposalStatus(
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(payment.sender.balances.current);
                 });
 

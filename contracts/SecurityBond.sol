@@ -39,6 +39,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
     string constant public REWARD_ACTION = "reward";
+    string constant public DEPRIVE_ACTION = "deprive";
 
     string constant public DEPOSIT_BALANCE_TYPE = "deposit";
 
@@ -48,6 +49,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     struct RewardMeta {
         uint256 rewardFraction;
         uint256 rewardNonce;
+        uint256 unlockTime;
         mapping(address => mapping(uint256 => uint256)) stageNonceByCurrency;
     }
 
@@ -64,7 +66,8 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
-    event RewardEvent(address wallet, uint256 rewardFraction);
+    event RewardEvent(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds);
+    event DepriveEvent(address wallet);
     event StageToBeneficiaryEvent(address from, Beneficiary beneficiary, int256 amount,
         address currencyCt, uint256 currencyId);
 
@@ -191,23 +194,39 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         return rewardMetaByWallet[wallet].stageNonceByCurrency[currencyCt][currencyId];
     }
 
-    function reward(address wallet, uint256 _rewardFraction)
+    function reward(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds)
     public
     notNullAddress(wallet)
     onlyEnabledServiceAction(REWARD_ACTION)
     {
-        // Store reward
-        rewardMetaByWallet[wallet].rewardFraction = _rewardFraction.clampMax(uint256(ConstantsLib.PARTS_PER()));
+        // Update reward
+        rewardMetaByWallet[wallet].rewardFraction = rewardFraction.clampMax(uint256(ConstantsLib.PARTS_PER()));
         rewardMetaByWallet[wallet].rewardNonce++;
+        rewardMetaByWallet[wallet].unlockTime = block.timestamp.add(unlockTimeoutInSeconds);
 
         // Emit event
-        emit RewardEvent(wallet, _rewardFraction);
+        emit RewardEvent(wallet, rewardFraction, unlockTimeoutInSeconds);
+    }
+
+    function deprive(address wallet)
+    public
+    onlyEnabledServiceAction(DEPRIVE_ACTION)
+    {
+        // Update reward
+        rewardMetaByWallet[wallet].rewardFraction = 0;
+        rewardMetaByWallet[wallet].rewardNonce++;
+        rewardMetaByWallet[wallet].unlockTime = 0;
+
+        // Emit event
+        emit DepriveEvent(wallet);
     }
 
     function stageToBeneficiary(Beneficiary beneficiary, address currencyCt, uint256 currencyId)
     public
     {
         require(inUseCurrencies.has(currencyCt, currencyId));
+        require(0 < rewardMetaByWallet[msg.sender].rewardFraction);
+        require(block.timestamp >= rewardMetaByWallet[msg.sender].unlockTime);
         require(
             rewardMetaByWallet[msg.sender].stageNonceByCurrency[currencyCt][currencyId] < rewardMetaByWallet[msg.sender].rewardNonce
         );
@@ -239,13 +258,5 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
 
         // Emit event
         emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
     }
 }
