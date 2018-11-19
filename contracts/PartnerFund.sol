@@ -66,8 +66,8 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event RegisterParnerEvent(address tag, uint256 fee);
-    event ChangedFeeEvent(address tag, uint256 fee);
-    event ChangedWalletEvent(address tag, address oldWallet, address newWallet);
+    event SetdFeeEvent(address tag, uint256 fee);
+    event SetdWalletEvent(address tag, address oldWallet, address newWallet);
     event ReceiveEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
     event StageEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address tag, address to, int256 amount, address currencyCt, uint256 currencyId);
@@ -75,7 +75,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -95,13 +95,13 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit RegisterParnerEvent(tag, fee);
     }
 
-    function changePartnerFee(address tag, uint256 fee) public onlyDeployer isRegisteredTag(tag) {
+    function setPartnerFee(address tag, uint256 fee) public onlyDeployer isRegisteredTag(tag) {
         require(fee > 0);
 
         walletMap[tag].fee = fee;
 
         // Emit event
-        emit ChangedFeeEvent(tag, fee);
+        emit SetdFeeEvent(tag, fee);
     }
 
     function getPartnerFee(address tag) public view isRegisteredTag(tag) returns (uint256) {
@@ -144,7 +144,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
             addressTagMap[newWallet] = tag;
 
         // Emit event
-        emit ChangedWalletEvent(tag, oldWallet, newWallet);
+        emit SetdWalletEvent(tag, oldWallet, newWallet);
     }
 
     function getPartnerAddress(address tag) public view returns (address) {

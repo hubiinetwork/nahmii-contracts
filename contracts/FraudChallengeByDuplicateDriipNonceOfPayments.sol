@@ -31,7 +31,7 @@ SecurityBondable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -63,7 +63,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentPaymentHash(payment2.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
         emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(
             payment1.seals.operator.hash, payment2.seals.operator.hash, msg.sender

@@ -101,7 +101,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeSignerManager(address)
+### setSignerManager(address)
 >
 >Change the signer manager of this contract
 
@@ -118,7 +118,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -135,7 +135,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -152,7 +152,7 @@ Params:
 
 
 --- 
-### changeHasher(address)
+### setHasher(address)
 >
 >Change the hasher contract
 
@@ -169,7 +169,7 @@ Params:
 
 
 --- 
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 

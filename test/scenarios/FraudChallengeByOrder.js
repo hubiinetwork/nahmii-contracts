@@ -41,13 +41,20 @@ module.exports = (glob) => {
             web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
-            await ethersFraudChallengeByOrder.changeFraudChallenge(ethersFraudChallenge.address);
-            await ethersFraudChallengeByOrder.changeConfiguration(ethersConfiguration.address);
-            await ethersFraudChallengeByOrder.changeValidator(ethersValidator.address);
-            await ethersFraudChallengeByOrder.changeSecurityBond(ethersSecurityBond.address);
+            await ethersFraudChallengeByOrder.setFraudChallenge(ethersFraudChallenge.address);
+            await ethersFraudChallengeByOrder.setConfiguration(ethersConfiguration.address);
+            await ethersFraudChallengeByOrder.setValidator(ethersValidator.address);
+            await ethersFraudChallengeByOrder.setSecurityBond(ethersSecurityBond.address);
+
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
 
             await ethersConfiguration.registerService(ethersFraudChallengeByOrder.address);
-            await ethersConfiguration.enableServiceAction(ethersFraudChallengeByOrder.address, 'operational_mode');
+            await ethersConfiguration.enableServiceAction(
+                ethersFraudChallengeByOrder.address, 'operational_mode', {gasLimit: 1e6}
+            );
+
+            await web3Configuration.setFraudStakeFraction(web3.eth.blockNumber + 1, 5e17);
         });
 
         beforeEach(async () => {
@@ -63,17 +70,17 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeDeployer()', () => {
+        describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByOrder.changeDeployer(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByOrder.setDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByOrder.changeDeployer(glob.user_a);
+                    const result = await web3FraudChallengeByOrder.setDeployer(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+                    result.logs[0].event.should.equal('SetDeployerEvent');
 
                     (await web3FraudChallengeByOrder.deployer.call()).should.equal(glob.user_a);
                 });
@@ -81,22 +88,22 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByOrder.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByOrder.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('changeOperator()', () => {
+        describe('setOperator()', () => {
             describe('if called with (current) operator as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByOrder.changeOperator(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByOrder.setOperator(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByOrder.changeOperator(glob.user_a);
+                    const result = await web3FraudChallengeByOrder.setOperator(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+                    result.logs[0].event.should.equal('SetOperatorEvent');
 
                     (await web3FraudChallengeByOrder.operator.call()).should.equal(glob.user_a);
                 });
@@ -104,7 +111,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByOrder.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByOrder.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -116,7 +123,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeFraudChallenge()', () => {
+        describe('setFraudChallenge()', () => {
             let address;
 
             before(() => {
@@ -131,13 +138,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByOrder.changeFraudChallenge(fraudChallenge);
+                    await web3FraudChallengeByOrder.setFraudChallenge(fraudChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByOrder.changeFraudChallenge(address);
+                    const result = await web3FraudChallengeByOrder.setFraudChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeFraudChallengeEvent');
+                    result.logs[0].event.should.equal('SetFraudChallengeEvent');
                     const fraudChallenge = await web3FraudChallengeByOrder.fraudChallenge();
                     utils.getAddress(fraudChallenge).should.equal(address);
                 });
@@ -145,7 +152,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByOrder.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByOrder.setFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -157,7 +164,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
@@ -172,13 +179,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByOrder.changeConfiguration(configuration);
+                    await web3FraudChallengeByOrder.setConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByOrder.changeConfiguration(address);
+                    const result = await web3FraudChallengeByOrder.setConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
                     const configuration = await web3FraudChallengeByOrder.configuration();
                     utils.getAddress(configuration).should.equal(address);
                 });
@@ -186,7 +193,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByOrder.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByOrder.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -198,7 +205,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeValidator()', () => {
+        describe('setValidator()', () => {
             let address;
 
             before(() => {
@@ -213,13 +220,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByOrder.changeValidator(validator);
+                    await web3FraudChallengeByOrder.setValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByOrder.changeValidator(address);
+                    const result = await web3FraudChallengeByOrder.setValidator(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    result.logs[0].event.should.equal('SetValidatorEvent');
                     const validator = await web3FraudChallengeByOrder.validator();
                     utils.getAddress(validator).should.equal(address);
                 });
@@ -227,7 +234,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByOrder.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByOrder.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -239,7 +246,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeSecurityBond()', () => {
+        describe('setSecurityBond()', () => {
             let address;
 
             before(() => {
@@ -254,13 +261,13 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByOrder.changeSecurityBond(securityBond);
+                    await web3FraudChallengeByOrder.setSecurityBond(securityBond);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByOrder.changeSecurityBond(address);
+                    const result = await web3FraudChallengeByOrder.setSecurityBond(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeSecurityBondEvent');
+                    result.logs[0].event.should.equal('SetSecurityBondEvent');
                     const securityBond = await web3FraudChallengeByOrder.securityBond();
                     utils.getAddress(securityBond).should.equal(address);
                 });
@@ -268,7 +275,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByOrder.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByOrder.setSecurityBond(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

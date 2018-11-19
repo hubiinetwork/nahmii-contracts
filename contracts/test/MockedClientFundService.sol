@@ -22,7 +22,7 @@ contract MockedClientFundService is Ownable, ClientFundable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -40,16 +40,29 @@ contract MockedClientFundService is Ownable, ClientFundable {
         clientFund.stage(wallet, amount, currencyCt, currencyId);
     }
 
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId)
+    function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
     public
     {
-        clientFund.stageToBeneficiaryUntargeted(sourceWallet, beneficiary, amount, currencyCt, currencyId);
+        clientFund.stageToBeneficiary(wallet, beneficiary, amount, currencyCt, currencyId, standard);
     }
 
-    function seizeAllBalances(address sourceWallet, address targetWallet)
+    function transferToBeneficiary(Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
     public
     {
-        clientFund.seizeAllBalances(sourceWallet, targetWallet);
+        clientFund.transferToBeneficiary(beneficiary, amount, currencyCt, currencyId, standard);
+    }
+
+    function lockBalancesByProxy(address lockedWallet, address lockerWallet)
+    public
+    {
+        clientFund.lockBalancesByProxy(lockedWallet, lockerWallet);
+    }
+
+    function unlockBalancesByProxy(address wallet)
+    public
+    {
+        clientFund.unlockBalancesByProxy(wallet);
     }
 }

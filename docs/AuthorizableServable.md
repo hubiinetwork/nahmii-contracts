@@ -392,7 +392,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 
 
 **Execution cost**: No bound available
@@ -435,7 +435,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 
 
 **Execution cost**: No bound available

@@ -119,7 +119,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -136,7 +136,7 @@ Params:
 
 
 --- 
-### changeFraudChallenge(address)
+### setFraudChallenge(address)
 >
 >Change the fraud challenge contract
 
@@ -153,7 +153,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -170,7 +170,7 @@ Params:
 
 
 --- 
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 
@@ -199,7 +199,7 @@ Params:
 
 
 --- 
-### changeClientFund(address)
+### setClientFund(address)
 >
 >Change the client fund contract
 
@@ -216,7 +216,7 @@ Params:
 
 
 --- 
-### changeValidator(address)
+### setValidator(address)
 >
 >Change the validator contract
 

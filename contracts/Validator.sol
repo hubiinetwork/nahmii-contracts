@@ -30,7 +30,7 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) public {
+    constructor(address deployer, address signerManager) Ownable(deployer) SignerManageable(signerManager) public {
     }
 
     //
@@ -160,9 +160,9 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     // TODO Implement support for NFT. Current logics only applies to FT.
     function isGenuinePaymentFee(NahmiiTypesLib.Payment payment) public view returns (bool) {
         int256 feePartsPer = int256(ConstantsLib.PARTS_PER());
-        return (payment.sender.fees.single.amount <= payment.amount.mul(configuration.currencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, 0)).div(feePartsPer))
-        && (payment.sender.fees.single.amount == payment.amount.mul(configuration.currencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, payment.amount)).div(feePartsPer))
-        && (payment.sender.fees.single.amount >= payment.amount.mul(configuration.currencyPaymentMinimumFee(payment.currency.ct, payment.currency.id, payment.blockNumber)).div(feePartsPer));
+        return (payment.sender.fees.single.amount <= payment.amount.mul(configuration.currencyPaymentFee(payment.blockNumber, payment.currency.ct, payment.currency.id, 0)).div(feePartsPer))
+        && (payment.sender.fees.single.amount == payment.amount.mul(configuration.currencyPaymentFee(payment.blockNumber, payment.currency.ct, payment.currency.id, payment.amount)).div(feePartsPer))
+        && (payment.sender.fees.single.amount >= payment.amount.mul(configuration.currencyPaymentMinimumFee(payment.blockNumber, payment.currency.ct, payment.currency.id)).div(feePartsPer));
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
@@ -458,13 +458,5 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     returns (bool)
     {
         return wallet == payment.recipient.wallet;
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
     }
 }

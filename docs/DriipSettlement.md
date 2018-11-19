@@ -208,7 +208,7 @@ Params:
 
 
 ## Methods
-### changeDriipSettlementChallenge(address)
+### setDriipSettlementChallenge(address)
 >
 >Change the driip settlement challenge contract
 
@@ -225,7 +225,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -242,7 +242,7 @@ Params:
 
 
 --- 
-### changeFraudChallenge(address)
+### setFraudChallenge(address)
 >
 >Change the fraud challenge contract
 
@@ -259,7 +259,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -276,7 +276,7 @@ Params:
 
 
 --- 
-### changeCommunityVote(address)
+### setCommunityVote(address)
 >
 >Change the community vote contract
 
@@ -293,7 +293,7 @@ Params:
 
 
 --- 
-### changeClientFund(address)
+### setClientFund(address)
 >
 >Change the client fund contract
 
@@ -310,7 +310,7 @@ Params:
 
 
 --- 
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 
@@ -355,7 +355,7 @@ Returns:
 1. **output_0** *of type `tuple`*
 
 --- 
-### changeTradesRevenueFund(address)
+### setTradesRevenueFund(address)
 >
 >Change the trades revenue fund contract
 
@@ -372,7 +372,7 @@ Params:
 
 
 --- 
-### changePaymentsRevenueFund(address)
+### setPaymentsRevenueFund(address)
 >
 >Change the payments revenue fund contract
 
@@ -419,7 +419,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeValidator(address)
+### setValidator(address)
 >
 >Change the validator contract
 

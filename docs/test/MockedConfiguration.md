@@ -820,7 +820,7 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -1123,7 +1123,7 @@ Returns:
 1. **output_0** *of type `uint8`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 

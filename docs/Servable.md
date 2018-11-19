@@ -119,7 +119,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 
 
 **Execution cost**: No bound available
@@ -131,7 +131,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 
 
 **Execution cost**: No bound available

@@ -76,7 +76,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
    //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
+    event SetRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
     event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
@@ -85,22 +85,22 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the revenue token contract
+    /// @notice Set the revenue token contract
     /// @param newRevenueToken The (address of) RevenueToken contract instance
-    function changeRevenueToken(RevenueToken newRevenueToken) public onlyDeployer notNullAddress(newRevenueToken) {
+    function setRevenueToken(RevenueToken newRevenueToken) public onlyDeployer notNullAddress(newRevenueToken) {
         if (newRevenueToken != revenueToken) {
             //set new revenue token
             RevenueToken oldRevenueToken = revenueToken;
             revenueToken = newRevenueToken;
 
             // Emit event
-            emit ChangeRevenueTokenEvent(oldRevenueToken, newRevenueToken);
+            emit SetRevenueTokenEvent(oldRevenueToken, newRevenueToken);
         }
     }
 
@@ -197,7 +197,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Accrual functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyDeployerOrEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
+    function closeAccrualPeriod() public onlyEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
         uint256 i;
         uint256 len;
 

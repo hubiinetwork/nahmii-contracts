@@ -10,7 +10,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe.only('NahmiiToken', function () {
+    describe('NahmiiToken', function () {
         let provider, web3NahmiiToken, ethersNahmiiToken;
 
         before(() => {

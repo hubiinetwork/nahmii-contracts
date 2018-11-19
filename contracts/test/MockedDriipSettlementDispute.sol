@@ -39,13 +39,13 @@ contract MockedDriipSettlementDispute {
         _challengeByOrderCount++;
     }
 
-    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address challenger)
+    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address unchallenger)
     public
     {
         // To silence unused function parameter compiler warning
         require(order.nonce == order.nonce);
         require(trade.nonce == trade.nonce);
-        require(challenger == challenger);
+        require(unchallenger == unchallenger);
         _unchallengeOrderCandidateByTradeCount++;
     }
 
@@ -59,10 +59,11 @@ contract MockedDriipSettlementDispute {
         _challengeByTradeCount++;
     }
 
-    function challengeByPayment(NahmiiTypesLib.Payment payment, address challenger)
+    function challengeByPayment(address wallet, NahmiiTypesLib.Payment payment, address challenger)
     public
     {
         // To silence unused function parameter compiler warning
+        require(wallet == wallet);
         require(payment.nonce == payment.nonce);
         require(challenger == challenger);
         _challengeByPaymentCount++;

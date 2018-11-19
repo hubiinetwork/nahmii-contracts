@@ -104,7 +104,7 @@ Params:
 
 
 ## Methods
-### changeConfiguration(address)
+### setConfiguration(address)
 >
 >Change the configuration contract
 
@@ -121,7 +121,7 @@ Params:
 
 
 --- 
-### changeOperator(address)
+### setOperator(address)
 >
 >Change the operator of this contract
 
@@ -138,7 +138,7 @@ Params:
 
 
 --- 
-### changeFraudChallenge(address)
+### setFraudChallenge(address)
 >
 >Change the fraud challenge contract
 
@@ -155,7 +155,7 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### setDeployer(address)
 >
 >Change the deployer of this contract
 
@@ -185,7 +185,7 @@ Params:
 
 
 --- 
-### changeSecurityBond(address)
+### setSecurityBond(address)
 >
 >Change the security bond contract
 
@@ -202,7 +202,7 @@ Params:
 
 
 --- 
-### changeValidator(address)
+### setValidator(address)
 >
 >Change the validator contract
 

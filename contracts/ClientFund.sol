@@ -9,29 +9,32 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {Ownable} from "./Ownable.sol";
+import {Configurable} from "./Configurable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
-import {Ownable} from "./Ownable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {BalanceLogLib} from "./BalanceLogLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 */
-contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
+contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using BalanceLogLib for BalanceLogLib.BalanceLog;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
     using SafeMathIntLib for int256;
+    using SafeMathUintLib for uint256;
 
     //
     // Constants
@@ -52,6 +55,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         TxHistoryLib.TxHistory txHistory;
 
         InUseCurrencyLib.InUseCurrency inUseCurrencies;
+
+        address locker;
+        uint256 unlockTime;
     }
 
     //
@@ -59,27 +65,33 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     // -----------------------------------------------------------------------------------------------------------------
     mapping(address => Wallet) private walletMap;
 
+    address[] public lockedWallets;
+    mapping(address => uint256) public lockedWalletIndexByWallet;
+
     address[] public seizedWallets;
-    mapping(address => bool) public seizuresByWallet;
+    mapping(address => bool) public seizedByWallet;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard);
+    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId,
+        string standard);
     event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event UnstageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 amount, address currencyCt,
-        uint256 currencyId);
-    event StageToBeneficiaryUntargetedEvent(address sourceWallet, address beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId);
-    event SeizeAllBalancesEvent(address sourceWallet, address targetWallet);
+        uint256 currencyId, string standard);
+    event TransferToBeneficiaryEvent(address beneficiary, int256 amount, address currencyCt, uint256 currencyId);
+    event LockBalancesEvent(address lockedWallet, address lockerWallet);
+    event UnlockBalancesEvent(address lockedWallet, address lockerWallet);
+    event UnlockBalancesByProxyEvent(address lockedWallet, address lockerWallet);
+    event SeizeBalancesEvent(address lockedWallet, address lockerWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) Beneficiary() Benefactor()
+    constructor(address deployer) Ownable(deployer) Beneficiary() Benefactor()
     public
     {
         serviceActivationTimeout = 1 weeks;
@@ -322,10 +334,9 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
-    onlyRegisteredActiveService
+    onlyAuthorizedService(wallet)
     notNullAddress(wallet)
     {
-        require(isAuthorizedRegisteredService(msg.sender, wallet));
         require(amount.isPositiveInt256());
 
         int256 settledBalanceAmount = amount.sub(walletMap[wallet].deposited.get(currencyCt, currencyId));
@@ -342,9 +353,8 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
-    onlyRegisteredActiveService
+    onlyAuthorizedService(wallet)
     {
-        require(isAuthorizedRegisteredService(msg.sender, wallet));
         require(amount.isNonZeroPositiveInt256());
 
         // Subtract stage amount from settled, possibly also from deposited
@@ -366,7 +376,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function unstage(int256 amount, address currencyCt, uint256 currencyId)
     public
-    notDeployer
     {
         require(amount.isNonZeroPositiveInt256());
 
@@ -385,74 +394,138 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    /// @notice Stage the amount from msg.sender to the given beneficiary and targeted to msg.sender
+    /// @notice Stage the amount from wallet to the given beneficiary and targeted to wallet
+    /// @param wallet The address of the concerned wallet
     /// @param beneficiary The (address of) concerned beneficiary contract
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stageToBeneficiary(Beneficiary beneficiary, int256 amount, address currencyCt, uint256 currencyId)
+    /// @param standard The standard of token ("ERC20", "ERC721")
+    function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
     public
-    notDeployer
+    onlyAuthorizedService(wallet)
     {
-        stageToBeneficiaryPrivate(msg.sender, msg.sender, beneficiary, amount, currencyCt, currencyId);
+        // Subtract stage amount from settled, possibly also from deposited
+        stageSubtract(wallet, amount, currencyCt, currencyId);
+
+        // Add active balance log entry
+        walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+
+        // Transfer to beneficiary
+        transferToBeneficiaryPrivate(wallet, beneficiary, amount, currencyCt, currencyId, standard);
 
         // Emit event
-        emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
+        emit StageToBeneficiaryEvent(wallet, beneficiary, amount, currencyCt, currencyId, standard);
     }
 
-    /// @notice Stage the amount from the given source wallet to the given beneficiary without target wallet
-    /// @param sourceWallet The address of concerned source wallet
+    /// @notice Transfer the given amount of currency to the given beneficiary without target wallet
     /// @param beneficiary The (address of) concerned beneficiary contract
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId)
+    /// @param standard The standard of token ("ERC20", "ERC721")
+    function transferToBeneficiary(Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
     public
-    notNullAddress(sourceWallet)
     notNullAddress(beneficiary)
+    onlyActiveService
     {
-        require(isAuthorizedRegisteredService(msg.sender, sourceWallet));
-
-        stageToBeneficiaryPrivate(sourceWallet, address(0), beneficiary, amount, currencyCt, currencyId);
+        // Transfer to beneficiary
+        transferToBeneficiaryPrivate(address(0), beneficiary, amount, currencyCt, currencyId, standard);
 
         // Emit event
-        emit StageToBeneficiaryUntargetedEvent(sourceWallet, beneficiary, amount, currencyCt, currencyId);
+        emit TransferToBeneficiaryEvent(beneficiary, amount, currencyCt, currencyId);
     }
 
-    /// @notice Transfer all balances of the given source wallet to the given target wallet
-    /// @param sourceWallet The address of concerned source wallet
-    /// @param targetWallet The address of concerned target wallet
-    function seizeAllBalances(address sourceWallet, address targetWallet)
+    /// @notice Lock balances of the given locked wallet allowing them to be seized by
+    /// the given locker wallet
+    /// @param lockedWallet The address of concerned wallet whose balances will be locked
+    /// @param lockerWallet The address of concerned wallet that locks
+    function lockBalancesByProxy(address lockedWallet, address lockerWallet)
     public
-    notNullAddress(sourceWallet)
-    notNullAddress(targetWallet)
+    notNullAddress(lockerWallet)
+    onlyAuthorizedService(lockedWallet)
     {
-        require(isAuthorizedRegisteredService(msg.sender, sourceWallet));
+        // Require that the wallet to be locked is not locked by other wallet
+        require(address(0) == walletMap[lockedWallet].locker || lockerWallet == walletMap[lockedWallet].locker);
 
-        // Seize all balances
-        uint256 len = walletMap[sourceWallet].inUseCurrencies.getLength();
-        int256 amount;
-        for (uint256 i = 0; i < len; i++) {
-            MonetaryTypesLib.Currency memory currency = walletMap[sourceWallet].inUseCurrencies.getAt(i);
+        // Lock and set release time
+        walletMap[lockedWallet].locker = lockerWallet;
+        walletMap[lockedWallet].unlockTime = block.timestamp.add(configuration.walletLockTimeout());
 
-            amount = sumAllBalancesOfWalletAndCurrency(sourceWallet, currency.ct, currency.id);
-            assert(amount >= 0);
+        // Add to the store of locked wallets
+        addToLockedWallets(lockedWallet);
 
-            zeroAllBalancesOfWalletAndCurrency(sourceWallet, currency.ct, currency.id);
+        // Emit event
+        emit LockBalancesEvent(lockedWallet, lockerWallet);
+    }
 
-            // Add to staged balance
-            walletMap[targetWallet].staged.add(amount, currency.ct, currency.id);
+    /// @notice Unlock balances of msg.sender if release timeout has expired
+    function unlockBalances()
+    public
+    {
+        // Require that release timeout has expired
+        require(
+            address(0) != walletMap[msg.sender].locker &&
+            block.timestamp >= walletMap[msg.sender].unlockTime
+        );
 
-            // Add currencyCt to in-use list
-            walletMap[targetWallet].inUseCurrencies.addItem(currency.ct, currency.id);
-        }
+        // Store locker
+        address locker = walletMap[msg.sender].locker;
+
+        // Unlock balances
+        unlockBalancesPrivate(msg.sender);
+
+        // Emit event
+        emit UnlockBalancesEvent(msg.sender, locker);
+    }
+
+    /// @notice Unlock balances of the given wallet
+    /// @param wallet The address of concerned wallet whose balances will be unlocked
+    function unlockBalancesByProxy(address wallet)
+    public
+    onlyAuthorizedService(wallet)
+    {
+        // Store locker
+        address locker = walletMap[msg.sender].locker;
+
+        // Unlock balances
+        unlockBalancesPrivate(wallet);
+
+        // Emit event
+        emit UnlockBalancesByProxyEvent(msg.sender, locker);
+    }
+
+    /// @notice Seize balances in the given currency of the given locked wallet, provided that the
+    /// function is called by the wallet that locked and it is done before expiration of release timeout
+    /// @param lockedWallet The address of concerned wallet whose balances are locked
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function seizeBalances(address lockedWallet, address currencyCt, uint256 currencyId)
+    public
+    {
+        require(
+            msg.sender == walletMap[lockedWallet].locker &&
+            block.timestamp < walletMap[lockedWallet].unlockTime
+        );
+
+        int256 amount = sumAllBalancesOfWalletAndCurrency(lockedWallet, currencyCt, currencyId);
+        assert(amount >= 0);
+
+        zeroAllBalancesOfWalletAndCurrency(lockedWallet, currencyCt, currencyId);
+
+        // Add to staged balance
+        walletMap[msg.sender].staged.add(amount, currencyCt, currencyId);
+
+        // Add currencyCt to in-use list
+        walletMap[msg.sender].inUseCurrencies.addItem(currencyCt, currencyId);
 
         // Add to the store of seized wallets
-        addToSeizedWallets(sourceWallet);
+        addToSeizedWallets(lockedWallet);
 
         // Emit event
-        emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
+        emit SeizeBalancesEvent(lockedWallet, msg.sender);
     }
 
     /// @notice Withdraw the given amount from staged balance
@@ -536,10 +609,38 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         return walletMap[wallet].txHistory.currencyWithdrawalsCount(currencyCt, currencyId);
     }
 
+    /// @notice Get the locked status of given wallet
+    /// @param wallet The address of the concerned wallet
+    /// @return true if wallet is locked, false otherwise
+    function isLockedWallet(address wallet) public view returns (bool) {
+        return block.timestamp < walletMap[wallet].unlockTime;
+    }
+
+    /// @notice Get the number of wallets whose funds have been locked
+    /// @return Number of wallets
+    function lockedWalletsCount() public view returns (uint256) {
+        return lockedWallets.length;
+    }
+
+    /// @notice Get the address of the wallet that locks the balances of the given wallet
+    /// @param wallet The address of the concerned wallet
+    /// @return The locking wallet's address
+    function locker(address wallet) public view returns (address) {
+        return walletMap[wallet].locker;
+    }
+
+    /// @notice Get the timestamp at which the wallet's locked balances will be released
+    /// @param wallet The address of the concerned wallet
+    /// @return The balances release timestamp
+    function unlockTime(address wallet) public view returns (uint256) {
+        return walletMap[wallet].unlockTime;
+    }
+
     /// @notice Get the seized status of given wallet
+    /// @param wallet The address of the concerned wallet
     /// @return true if wallet is seized, false otherwise
     function isSeizedWallet(address wallet) public view returns (bool) {
-        return seizuresByWallet[wallet];
+        return seizedByWallet[wallet];
     }
 
     /// @notice Get the number of wallets whose funds have been seized
@@ -551,22 +652,6 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stageToBeneficiaryPrivate(address sourceWallet, address destWallet, Beneficiary beneficiary,
-        int256 amount, address currencyCt, uint256 currencyId)
-    private
-    {
-        require(amount.isNonZeroPositiveInt256());
-        require(isRegisteredBeneficiary(beneficiary));
-
-        // Subtract stage amount from settled, possibly also from deposited
-        stageSubtract(sourceWallet, amount, currencyCt, currencyId);
-
-        // Add active balance log entry
-        walletMap[sourceWallet].active.add(activeBalance(sourceWallet, currencyCt, currencyId), currencyCt, currencyId);
-
-        transferToBeneficiary(destWallet, beneficiary, amount, currencyCt, currencyId);
-    }
-
     function stageSubtract(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     private
     {
@@ -590,22 +675,24 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         );
     }
 
-    // TODO Update this function with 'standard' parameter as in deposits and withdrawals
-    function transferToBeneficiary(address destWallet, Beneficiary beneficiary,
-        int256 amount, address currencyCt, uint256 currencyId)
+    function transferToBeneficiaryPrivate(address destWallet, Beneficiary beneficiary,
+        int256 amount, address currencyCt, uint256 currencyId, string standard)
     private
     {
+        require(amount.isNonZeroPositiveInt256());
+        require(isRegisteredBeneficiary(beneficiary));
+
         // Transfer funds to the beneficiary
         if (currencyCt == address(0) && currencyId == 0)
             beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, "");
 
         else {
             // Approve of beneficiary
-            TransferController controller = getTransferController(currencyCt, "");
+            TransferController controller = getTransferController(currencyCt, standard);
             require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 
             // Transfer funds to the beneficiary
-            beneficiary.receiveTokensTo(destWallet, "", amount, currencyCt, currencyId, "");
+            beneficiary.receiveTokensTo(destWallet, "", amount, currencyCt, currencyId, standard);
         }
     }
 
@@ -627,11 +714,44 @@ contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, T
         walletMap[wallet].staged.set(0, currencyCt, currencyId);
     }
 
+    function unlockBalancesPrivate(address wallet)
+    private
+    {
+        // Unlock and release
+        walletMap[wallet].locker = address(0);
+        walletMap[wallet].unlockTime = 0;
+
+        // Remove from the store of locked wallets
+        removeFromLockedWallets(wallet);
+    }
+
+    function addToLockedWallets(address wallet)
+    private
+    {
+        if (0 == lockedWalletIndexByWallet[wallet]) {
+            lockedWallets.push(wallet);
+            lockedWalletIndexByWallet[wallet] = lockedWallets.length;
+        }
+    }
+
+    function removeFromLockedWallets(address wallet)
+    private
+    {
+        if (0 != lockedWalletIndexByWallet[wallet]) {
+            if (lockedWalletIndexByWallet[wallet] < lockedWallets.length) {
+                lockedWalletIndexByWallet[lockedWallets[lockedWallets.length - 1]] = lockedWalletIndexByWallet[wallet];
+                lockedWallets[lockedWalletIndexByWallet[wallet]] = lockedWallets[lockedWallets.length - 1];
+            }
+            lockedWallets.length--;
+            lockedWalletIndexByWallet[wallet] = 0;
+        }
+    }
+
     function addToSeizedWallets(address wallet)
     private
     {
-        if (!seizuresByWallet[wallet]) {
-            seizuresByWallet[wallet] = true;
+        if (!seizedByWallet[wallet]) {
+            seizedByWallet[wallet] = true;
             seizedWallets.push(wallet);
         }
     }
