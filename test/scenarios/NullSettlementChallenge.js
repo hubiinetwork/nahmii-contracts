@@ -48,8 +48,10 @@ module.exports = (glob) => {
             web3NullSettlementDispute = await MockedNullSettlementDispute.new();
             ethersNullSettlementDispute = new Contract(web3NullSettlementDispute.address, MockedNullSettlementDispute.abi, glob.signer_owner);
 
-            await ethersConfiguration.registerService(glob.owner);
-            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
+            await web3Configuration.registerService(glob.owner);
+            await web3Configuration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
+            await web3Configuration.setSettlementChallengeTimeout(web3.eth.blockNumber + 1, 1000);
+            await web3Configuration.setWalletSettlementStakeFraction(web3.eth.blockNumber + 1, 1e17);
         });
 
         beforeEach(async () => {
@@ -67,6 +69,7 @@ module.exports = (glob) => {
 
             await ethersConfiguration.setCancelOrderChallengeTimeout((await provider.getBlockNumber()) + 1, 1e3);
             await ethersConfiguration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 1e4);
+            await ethersConfiguration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 1e4);
             await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
 

@@ -96,22 +96,6 @@ contract Configuration is Modifiable, Ownable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address deployer) Ownable(deployer) public {
         updateDelayBlocksByBlockNumber.addEntry(block.number, 0);
-        confirmationBlocksByBlockNumber.addEntry(block.number, 12);
-
-        tradeMakerFeeByBlockNumber.addNominalEntry(block.number, 1e15);
-        tradeTakerFeeByBlockNumber.addNominalEntry(block.number, 2e15);
-        paymentFeeByBlockNumber.addNominalEntry(block.number, 1e15);
-        tradeMakerMinimumFeeByBlockNumber.addEntry(block.number, 1e14);
-        tradeTakerMinimumFeeByBlockNumber.addEntry(block.number, 2e14);
-        paymentMinimumFeeByBlockNumber.addEntry(block.number, 1e14);
-
-        walletLockTimeoutByBlockNumber.addEntry(block.number, 30 days);
-        cancelOrderChallengeTimeoutByBlockNumber.addEntry(block.number, 3 days);
-        settlementChallengeTimeoutByBlockNumber.addEntry(block.number, 5 days);
-
-        walletSettlementStakeFractionByBlockNumber.addEntry(block.number, 1e17);
-        operatorSettlementStakeFractionByBlockNumber.addEntry(block.number, 5e17);
-        fraudStakeFractionByBlockNumber.addEntry(block.number, 5e17);
     }
 
     //
