@@ -70,30 +70,6 @@ Params:
 2. **service** *of type `address`*
 
 --- 
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
-
---- 
 ### DeregisterServiceEvent(address)
 
 
@@ -140,6 +116,30 @@ Params:
 1. **timeoutInSeconds** *of type `uint256`*
 
 --- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
+
+--- 
 ### UnauthorizeRegisteredServiceActionEvent(address,address,string)
 
 
@@ -166,7 +166,7 @@ Params:
 
 
 ## Methods
-### isEnabledServiceAction(address,string)
+### initialServiceWalletUnauthorizedMap(address,address)
 
 
 **Execution cost**: No bound available
@@ -176,8 +176,8 @@ Params:
 
 Params:
 
-1. **service** *of type `address`*
-2. **action** *of type `string`*
+1. **param_0** *of type `address`*
+2. **param_1** *of type `address`*
 
 Returns:
 
@@ -209,7 +209,7 @@ Params:
 
 
 --- 
-### initialServiceWalletUnauthorizedMap(address,address)
+### serviceWalletAuthorizedMap(address,address)
 
 
 **Execution cost**: No bound available
@@ -226,18 +226,6 @@ Returns:
 
 
 1. **output_0** *of type `bool`*
-
---- 
-### registerService(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-
 
 --- 
 ### initialServiceAuthorizedMap(address)
@@ -258,20 +246,16 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### enableServiceAction(address,string)
+### disableInitialServiceAuthorization()
 
 
 **Execution cost**: No bound available
 
 
-Params:
-
-1. **service** *of type `address`*
-2. **action** *of type `string`*
 
 
 --- 
-### isRegisteredService(address)
+### deployer()
 
 
 **Execution cost**: No bound available
@@ -279,34 +263,11 @@ Params:
 **Attributes**: constant
 
 
-Params:
-
-1. **service** *of type `address`*
 
 Returns:
 
 
-1. **output_0** *of type `bool`*
-
---- 
-### isAuthorizedRegisteredServiceAction(address,string,address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **service** *of type `address`*
-2. **action** *of type `string`*
-3. **wallet** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
+1. **output_0** *of type `address`*
 
 --- 
 ### disableServiceAction(address,string)
@@ -322,13 +283,19 @@ Params:
 
 
 --- 
-### disableInitialServiceAuthorization()
+### initialServiceAuthorizationDisabled()
 
 
 **Execution cost**: No bound available
 
+**Attributes**: constant
 
 
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
 
 --- 
 ### destructor()
@@ -358,7 +325,45 @@ Params:
 
 
 --- 
-### operator()
+### enableServiceAction(address,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+2. **action** *of type `string`*
+
+
+--- 
+### authorizeRegisteredServiceAction(address,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+2. **action** *of type `string`*
+
+
+--- 
+### registerServiceDeferred(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+
+--- 
+### isEnabledServiceAction(address,string)
 
 
 **Execution cost**: No bound available
@@ -366,11 +371,35 @@ Params:
 **Attributes**: constant
 
 
+Params:
+
+1. **service** *of type `address`*
+2. **action** *of type `string`*
 
 Returns:
 
 
-1. **output_0** *of type `address`*
+1. **output_0** *of type `bool`*
+
+--- 
+### isAuthorizedRegisteredServiceAction(address,string,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **service** *of type `address`*
+2. **action** *of type `string`*
+3. **wallet** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
 
 --- 
 ### isAuthorizedRegisteredService(address,address)
@@ -392,7 +421,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### setOperator(address)
+### setDeployer(address)
 
 
 **Execution cost**: No bound available
@@ -400,21 +429,41 @@ Returns:
 
 Params:
 
-1. **newOperator** *of type `address`*
+1. **newDeployer** *of type `address`*
 
 
 --- 
-### authorizeRegisteredServiceAction(address,string)
+### operator()
 
 
 **Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### isRegisteredService(address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
 
 
 Params:
 
 1. **service** *of type `address`*
-2. **action** *of type `string`*
 
+Returns:
+
+
+1. **output_0** *of type `bool`*
 
 --- 
 ### isRegisteredActiveService(address)
@@ -435,49 +484,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### setDeployer(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-
---- 
-### deployer()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### initialServiceAuthorizationDisabled()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### registerServiceDeferred(address)
+### registerService(address)
 
 
 **Execution cost**: No bound available
@@ -489,7 +496,7 @@ Params:
 
 
 --- 
-### serviceActionWalletTouchedMap(address,bytes32,address)
+### serviceActionWalletAuthorizedMap(address,bytes32,address)
 
 
 **Execution cost**: No bound available
@@ -509,7 +516,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### serviceActionWalletUnauthorizedMap(address,bytes32,address)
+### serviceActionWalletTouchedMap(address,bytes32,address)
 
 
 **Execution cost**: No bound available
@@ -564,23 +571,16 @@ Returns:
 1. **output_0** *of type `bytes32`*
 
 --- 
-### serviceWalletUnauthorizedMap(address,address)
+### setOperator(address)
 
 
 **Execution cost**: No bound available
 
-**Attributes**: constant
-
 
 Params:
 
-1. **param_0** *of type `address`*
-2. **param_1** *of type `address`*
+1. **newOperator** *of type `address`*
 
-Returns:
-
-
-1. **output_0** *of type `bool`*
 
 --- 
 ### setServiceActivationTimeout(uint256)

@@ -3,11 +3,11 @@
 > PartnerFund
 
 
-**Execution cost**: less than 43033 gas
+**Execution cost**: less than 43307 gas
 
-**Deployment cost**: less than 1827800 gas
+**Deployment cost**: less than 2067800 gas
 
-**Combined cost**: less than 1870833 gas
+**Combined cost**: less than 2111107 gas
 
 ## Constructor
 
@@ -15,71 +15,10 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
-
---- 
-### ChangeTransferControllerManagerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldTransferControllerManager** *of type `address`*
-2. **newTransferControllerManager** *of type `address`*
-
---- 
-### ChangedFeeEvent(address,uint256)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **tag** *of type `address`*
-2. **fee** *of type `uint256`*
-
---- 
-### ChangedWalletEvent(address,address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **tag** *of type `address`*
-2. **oldWallet** *of type `address`*
-3. **newWallet** *of type `address`*
-
---- 
-### DepositEvent(address,address,int256,address,uint256)
+### ReceiveEvent(address,address,int256,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -104,6 +43,67 @@ Params:
 
 1. **tag** *of type `address`*
 2. **fee** *of type `uint256`*
+
+--- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
+
+--- 
+### SetTransferControllerManagerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldTransferControllerManager** *of type `address`*
+2. **newTransferControllerManager** *of type `address`*
+
+--- 
+### SetdFeeEvent(address,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **tag** *of type `address`*
+2. **fee** *of type `uint256`*
+
+--- 
+### SetdWalletEvent(address,address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **tag** *of type `address`*
+2. **oldWallet** *of type `address`*
+3. **newWallet** *of type `address`*
 
 --- 
 ### StageEvent(address,address,int256,address,uint256)
@@ -138,14 +138,16 @@ Params:
 ## Fallback
 
 
-**Execution cost**: less than 701 gas
+**Execution cost**: less than 723 gas
 
 **Attributes**: payable
 
 
 
 ## Methods
-### setPartnerFee(address,uint256)
+### setDeployer(address)
+>
+>Set the deployer of this contract
 
 
 **Execution cost**: No bound available
@@ -153,8 +155,10 @@ Params:
 
 Params:
 
-1. **tag** *of type `address`*
-2. **fee** *of type `uint256`*
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
 
 
 --- 
@@ -178,10 +182,75 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
-### depositsCount(address)
+### ACTIVE_BALANCE()
 
 
-**Execution cost**: less than 1718 gas
+**Execution cost**: less than 1087 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
+### stagedBalanceFromAddress(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `int256`*
+
+--- 
+### setPartnerFee(address,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **tag** *of type `address`*
+2. **fee** *of type `uint256`*
+
+
+--- 
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
+
+
+**Execution cost**: less than 808 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### getPartnerFee(address)
+
+
+**Execution cost**: less than 1542 gas
 
 **Attributes**: constant
 
@@ -196,9 +265,59 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### setOperator(address)
->
->Change the operator of this contract
+### deposit(address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **tag** *of type `address`*
+2. **index** *of type `uint256`*
+
+Returns:
+
+
+1. **balance** *of type `int256`*
+2. **blockNumber** *of type `uint256`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
+
+--- 
+### deployer()
+
+
+**Execution cost**: less than 1248 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### operator()
+
+
+**Execution cost**: less than 896 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### receiveTokensTo(address,string,int256,address,uint256,string)
 
 
 **Execution cost**: No bound available
@@ -206,28 +325,53 @@ Returns:
 
 Params:
 
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
+1. **tag** *of type `address`*
+2. **balance** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
 
 
 --- 
-### setDeployer(address)
->
->Change the deployer of this contract
+### depositsCount(address)
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 1652 gas
+
+**Attributes**: constant
 
 
 Params:
 
-1. **newDeployer** *of type `address`*
+1. **tag** *of type `address`*
 
-    > The address of the new deployer
+Returns:
 
 
+1. **output_0** *of type `uint256`*
+
+--- 
+### depositFromAddress(address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **index** *of type `uint256`*
+
+Returns:
+
+
+1. **balance** *of type `int256`*
+2. **blockNumber** *of type `uint256`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
 
 --- 
 ### activeBalanceFromAddress(address,address,uint256)
@@ -268,111 +412,6 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### depositTokens(int256,address,uint256,string)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **amount** *of type `int256`*
-2. **currencyCt** *of type `address`*
-3. **currencyId** *of type `uint256`*
-4. **standard** *of type `string`*
-
-
---- 
-### depositEthersTo(address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: payable
-
-
-Params:
-
-1. **tag** *of type `address`*
-
-
---- 
-### deposit(address,uint256)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **tag** *of type `address`*
-2. **index** *of type `uint256`*
-
-Returns:
-
-
-1. **balance** *of type `int256`*
-2. **blockNumber** *of type `uint256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-
---- 
-### deployer()
-
-
-**Execution cost**: less than 1204 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### depositFromAddress(address,uint256)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **index** *of type `uint256`*
-
-Returns:
-
-
-1. **balance** *of type `int256`*
-2. **blockNumber** *of type `uint256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-
---- 
-### setTransferControllerManager(address)
->
->Change the currency manager contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) TransferControllerManager contract instance
-
-
-
---- 
 ### depositCountFromAddress(address)
 
 
@@ -391,19 +430,35 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### operator()
+### receiveEthersTo(address,string)
 
 
-**Execution cost**: less than 962 gas
+**Execution cost**: No bound available
 
-**Attributes**: constant
-
-
-
-Returns:
+**Attributes**: payable
 
 
-1. **output_0** *of type `address`*
+Params:
+
+1. **tag** *of type `address`*
+2. **balance** *of type `string`*
+
+
+--- 
+### receiveTokens(string,int256,address,uint256,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **balance** *of type `string`*
+2. **amount** *of type `int256`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
+5. **standard** *of type `string`*
+
 
 --- 
 ### registerPartner(address,uint256,bool,bool)
@@ -421,42 +476,9 @@ Params:
 
 
 --- 
-### destructor()
+### setOperator(address)
 >
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 852 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### getPartnerFee(address)
-
-
-**Execution cost**: less than 1586 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **tag** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### depositTokensTo(address,int256,address,uint256,string)
+>Set the operator of this contract
 
 
 **Execution cost**: No bound available
@@ -464,11 +486,10 @@ Returns:
 
 Params:
 
-1. **tag** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-5. **standard** *of type `string`*
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
 
 
 --- 
@@ -482,6 +503,23 @@ Params:
 
 1. **tag** *of type `address`*
 2. **newWallet** *of type `address`*
+
+
+--- 
+### setTransferControllerManager(address)
+>
+>Set the currency manager contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) TransferControllerManager contract instance
+
 
 
 --- 
@@ -510,26 +548,6 @@ Params:
 Params:
 
 1. **tag** *of type `address`*
-2. **currencyCt** *of type `address`*
-3. **currencyId** *of type `uint256`*
-
-Returns:
-
-
-1. **output_0** *of type `int256`*
-
---- 
-### stagedBalanceFromAddress(address,address,uint256)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
 2. **currencyCt** *of type `address`*
 3. **currencyId** *of type `uint256`*
 

@@ -15,33 +15,9 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
-
---- 
 ### DeregisterServiceEvent(address)
 
 
@@ -110,57 +86,32 @@ Params:
 
 1. **timeoutInSeconds** *of type `uint256`*
 
+--- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
+
 
 ## Methods
-### operator()
-
-
-**Execution cost**: less than 811 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### setOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### setDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
 ### isEnabledServiceAction(address,string)
 >
 >Gauge whether a service contract action is enabled which implies also registered and active
@@ -188,12 +139,12 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isRegisteredService(address)
+### isRegisteredActiveService(address)
 >
->Gauge whether a service contract is registered
+>Gauge whether a service contract is registered and active
 
 
-**Execution cost**: less than 938 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -207,9 +158,45 @@ Params:
 
 Returns:
 
-> true if service is registered, else false
+> true if service is registered and activate, else false
 
 1. **output_0** *of type `bool`*
+
+--- 
+### deployer()
+
+
+**Execution cost**: less than 943 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### disableServiceAction(address,string)
+>
+>Enable a named action in a service contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the service contract
+
+2. **action** *of type `string`*
+
+    > The name of the action to be disabled
+
+
 
 --- 
 ### enableServiceAction(address,string)
@@ -238,7 +225,7 @@ Params:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 767 gas
+**Execution cost**: less than 745 gas
 
 **Attributes**: constant
 
@@ -267,12 +254,12 @@ Params:
 
 
 --- 
-### isRegisteredActiveService(address)
+### isRegisteredService(address)
 >
->Gauge whether a service contract is registered and active
+>Gauge whether a service contract is registered
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 916 gas
 
 **Attributes**: constant
 
@@ -286,36 +273,15 @@ Params:
 
 Returns:
 
-> true if service is registered and activate, else false
+> true if service is registered, else false
 
 1. **output_0** *of type `bool`*
 
 --- 
-### disableServiceAction(address,string)
->
->Enable a named action in a service contract
+### operator()
 
 
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-
-    > The address of the service contract
-
-2. **action** *of type `string`*
-
-    > The name of the action to be disabled
-
-
-
---- 
-### deployer()
-
-
-**Execution cost**: less than 921 gas
+**Execution cost**: less than 789 gas
 
 **Attributes**: constant
 
@@ -364,7 +330,7 @@ Params:
 ### serviceActivationTimeout()
 
 
-**Execution cost**: less than 595 gas
+**Execution cost**: less than 573 gas
 
 **Attributes**: constant
 
@@ -374,6 +340,40 @@ Returns:
 
 
 1. **output_0** *of type `uint256`*
+
+--- 
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
 
 --- 
 ### setServiceActivationTimeout(uint256)

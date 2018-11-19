@@ -17,7 +17,7 @@ Params:
 1. **manager** *of type `address`*
 
 ## Events
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -29,7 +29,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -41,7 +41,7 @@ Params:
 2. **newOperator** *of type `address`*
 
 --- 
-### ChangeSignerManagerEvent(address,address)
+### SetSignerManagerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -54,60 +54,12 @@ Params:
 
 
 ## Methods
-### ethrecover(bytes32,uint8,bytes32,bytes32)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **hash** *of type `bytes32`*
-2. **v** *of type `uint8`*
-3. **r** *of type `bytes32`*
-4. **s** *of type `bytes32`*
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### setOperator(address)
+### triggerDestroy()
 
 
 **Execution cost**: No bound available
 
 
-Params:
-
-1. **newOperator** *of type `address`*
-
-
---- 
-### setDeployer(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-
---- 
-### setSignerManager(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newSignerManager** *of type `address`*
 
 
 --- 
@@ -134,6 +86,27 @@ Returns:
 **Attributes**: constant
 
 
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### ethrecover(bytes32,uint8,bytes32,bytes32)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **hash** *of type `bytes32`*
+2. **v** *of type `uint8`*
+3. **r** *of type `bytes32`*
+4. **s** *of type `bytes32`*
 
 Returns:
 
@@ -199,6 +172,42 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### setDeployer(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+
+--- 
+### setOperator(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+
+--- 
+### setSignerManager(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newSignerManager** *of type `address`*
+
+
+--- 
 ### signerManager()
 
 
@@ -212,14 +221,5 @@ Returns:
 
 
 1. **output_0** *of type `address`*
-
---- 
-### triggerDestroy()
-
-
-**Execution cost**: No bound available
-
-
-
 
 [Back to the top ↑](#signermanageable)

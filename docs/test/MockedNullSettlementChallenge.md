@@ -3,29 +3,32 @@
 > MockedNullSettlementChallenge
 
 
-**Execution cost**: less than 1617 gas
+**Execution cost**: less than 1729 gas
 
-**Deployment cost**: less than 1548400 gas
+**Deployment cost**: less than 1646200 gas
 
-**Combined cost**: less than 1550017 gas
+**Combined cost**: less than 1647929 gas
 
 
 
 
 ## Methods
-### _proposalBlockNumber()
+### _proposalStageAmounts(uint256)
 
 
-**Execution cost**: less than 969 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
 
+Params:
+
+1. **param_0** *of type `uint256`*
 
 Returns:
 
 
-1. **output_0** *of type `uint256`*
+1. **output_0** *of type `int256`*
 
 --- 
 ### _proposalStatus()
@@ -43,25 +46,10 @@ Returns:
 1. **output_0** *of type `uint8`*
 
 --- 
-### _challengeCandidatePaymentsCount()
+### _disqualificationCandidateHash()
 
 
-**Execution cost**: less than 1299 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### _proposalStageAmount()
-
-
-**Execution cost**: less than 1211 gas
+**Execution cost**: less than 1431 gas
 
 **Attributes**: constant
 
@@ -70,13 +58,43 @@ Returns:
 Returns:
 
 
-1. **output_0** *of type `int256`*
+1. **output_0** *of type `bytes32`*
 
 --- 
-### _proposalChallenger()
+### _proposalExpired()
 
 
-**Execution cost**: less than 1273 gas
+**Execution cost**: less than 563 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### _proposalBalanceReward()
+
+
+**Execution cost**: less than 1410 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### _disqualificationChallenger()
+
+
+**Execution cost**: less than 1405 gas
 
 **Attributes**: constant
 
@@ -88,7 +106,64 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### _proposalCandidateType()
+### _proposalExpirationTime()
+
+
+**Execution cost**: less than 1233 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### _proposalBlockNumber()
+
+
+**Execution cost**: less than 1057 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### _proposalStageAmountIndex()
+
+
+**Execution cost**: less than 859 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### _addProposalStageAmount(int256)
+
+
+**Execution cost**: less than 40726 gas
+
+
+Params:
+
+1. **proposalStageAmount** *of type `int256`*
+
+
+--- 
+### _disqualificationCandidateType()
 
 
 **Execution cost**: No bound available
@@ -101,21 +176,6 @@ Returns:
 
 
 1. **output_0** *of type `uint8`*
-
---- 
-### _proposalCandidateIndex()
-
-
-**Execution cost**: less than 991 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
 
 --- 
 ### _nullSettlementDispute()
@@ -136,7 +196,7 @@ Returns:
 ### _proposalNonce()
 
 
-**Execution cost**: less than 661 gas
+**Execution cost**: less than 815 gas
 
 **Attributes**: constant
 
@@ -148,14 +208,31 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### _challengeCandidateTradesCount()
+### _setDisqualificationChallenger(address)
 
 
-**Execution cost**: less than 837 gas
+**Execution cost**: less than 21316 gas
+
+
+Params:
+
+1. **challenger** *of type `address`*
+
+
+--- 
+### proposalBlockNumber(address,address,uint256)
+
+
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
 
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
 
 Returns:
 
@@ -163,7 +240,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### _challengePhase()
+### disqualificationsCount()
 
 
 **Execution cost**: No bound available
@@ -175,103 +252,25 @@ Returns:
 Returns:
 
 
-1. **output_0** *of type `uint8`*
-
---- 
-### _challengeCandidateOrdersCount()
-
-
-**Execution cost**: less than 771 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
 1. **output_0** *of type `uint256`*
 
 --- 
-### challengeCandidateOrdersCount()
+### _setProposalBalanceReward(bool)
 
 
-**Execution cost**: less than 1101 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### _setProposalCurrency(tuple)
-
-
-**Execution cost**: No bound available
+**Execution cost**: less than 20900 gas
 
 
 Params:
 
-1. **proposalCurrency** *of type `tuple`*
+1. **balanceReward** *of type `bool`*
 
 
 --- 
-### _setProposalBlockNumber(uint256)
+### isLockedWallet(address)
 
 
-**Execution cost**: less than 20512 gas
-
-
-Params:
-
-1. **proposalBlockNumber** *of type `uint256`*
-
-
---- 
-### _proposalTargetBalanceAmount()
-
-
-**Execution cost**: less than 1365 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `int256`*
-
---- 
-### _setChallengePhase(uint8)
-
-
-**Execution cost**: less than 20786 gas
-
-
-Params:
-
-1. **challengePhase** *of type `uint8`*
-
-
---- 
-### _reset()
-
-
-**Execution cost**: less than 95929 gas
-
-
-
-
---- 
-### proposalChallenger(address)
-
-
-**Execution cost**: No bound available
+**Execution cost**: less than 788 gas
 
 **Attributes**: constant
 
@@ -283,22 +282,51 @@ Params:
 Returns:
 
 
-1. **output_0** *of type `address`*
+1. **output_0** *of type `bool`*
 
 --- 
-### challengeCandidatePaymentsCount()
+### _setDisqualificationCandidateType(uint8)
 
 
-**Execution cost**: less than 749 gas
+**Execution cost**: less than 20984 gas
+
+
+Params:
+
+1. **candidateType** *of type `uint8`*
+
+
+--- 
+### _setProposalBlockNumber(uint256)
+
+
+**Execution cost**: less than 20710 gas
+
+
+Params:
+
+1. **proposalBlockNumber** *of type `uint256`*
+
+
+--- 
+### hasProposalExpired(address,address,uint256)
+
+
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
 
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
 
 Returns:
 
 
-1. **output_0** *of type `uint256`*
+1. **output_0** *of type `bool`*
 
 --- 
 ### _setProposalTargetBalanceAmount(int256)
@@ -326,6 +354,176 @@ Params:
 
 
 --- 
+### disqualificationChallenger(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### proposalBalanceReward(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### challengeByPayment(address,tuple)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **payment** *of type `tuple`*
+
+
+--- 
+### _reset()
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### _setProposalExpired(bool)
+
+
+**Execution cost**: less than 21414 gas
+
+
+Params:
+
+1. **proposalExpired** *of type `bool`*
+
+
+--- 
+### _setProposalNonce(uint256)
+
+
+**Execution cost**: less than 20908 gas
+
+
+Params:
+
+1. **proposalNonce** *of type `uint256`*
+
+
+--- 
+### _setDisqualificationCandidateHash(bytes32)
+
+
+**Execution cost**: less than 20600 gas
+
+
+Params:
+
+1. **candidateHash** *of type `bytes32`*
+
+
+--- 
+### disqualificationCandidateType(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `uint8`*
+
+--- 
+### _proposalTargetBalanceAmount()
+
+
+**Execution cost**: less than 1343 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `int256`*
+
+--- 
+### disqualificationCandidateHash(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
+### addDisqualification(address,address,uint256,bytes32,uint8,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+4. **candidateHash** *of type `bytes32`*
+5. **candidateType** *of type `uint8`*
+6. **challenger** *of type `address`*
+
+
+--- 
 ### challengeByOrder(tuple)
 
 
@@ -338,43 +536,31 @@ Params:
 
 
 --- 
-### _setProposalStageAmount(int256)
+### _setDisqualificationsCount(uint256)
 
 
-**Execution cost**: less than 20336 gas
-
-
-Params:
-
-1. **proposalStageAmount** *of type `int256`*
-
-
---- 
-### _setProposalNonce(uint256)
-
-
-**Execution cost**: less than 20820 gas
+**Execution cost**: less than 21128 gas
 
 
 Params:
 
-1. **proposalNonce** *of type `uint256`*
+1. **count** *of type `uint256`*
 
 
 --- 
-### challengeByPayment(tuple)
+### lockWallet(address)
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 21382 gas
 
 
 Params:
 
-1. **payment** *of type `tuple`*
+1. **wallet** *of type `address`*
 
 
 --- 
-### proposalStatus(address)
+### proposalExpirationTime(address,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -385,6 +571,66 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### proposalNonce(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### proposalStageAmount(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `int256`*
+
+--- 
+### proposalStatus(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
 
 Returns:
 
@@ -392,25 +638,7 @@ Returns:
 1. **output_0** *of type `uint8`*
 
 --- 
-### proposalCandidateIndex(address)
-
-
-**Execution cost**: less than 1117 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### challengePhase(address)
+### proposalTargetBalanceAmount(address,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -421,50 +649,33 @@ Returns:
 Params:
 
 1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
 
 Returns:
 
 
-1. **output_0** *of type `uint8`*
+1. **output_0** *of type `int256`*
 
 --- 
-### proposalBlockNumber(address)
+### removeDisqualification(address,address,uint256)
 
 
-**Execution cost**: less than 1579 gas
-
-**Attributes**: constant
+**Execution cost**: No bound available
 
 
 Params:
 
 1. **wallet** *of type `address`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
 
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### challengeCandidateTradesCount()
-
-
-**Execution cost**: less than 1189 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
 
 --- 
 ### setNullSettlementDispute(address)
 
 
-**Execution cost**: less than 21136 gas
+**Execution cost**: less than 21004 gas
 
 
 Params:
@@ -473,7 +684,7 @@ Params:
 
 
 --- 
-### setProposalCandidateIndex(address,uint256)
+### setProposalExpirationTime(address,address,uint256,uint256)
 
 
 **Execution cost**: No bound available
@@ -482,140 +693,13 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
-2. **candidateIndex** *of type `uint256`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+4. **expirationTime** *of type `uint256`*
 
 
 --- 
-### pushChallengeCandidateTrade(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-
---- 
-### pushChallengeCandidateOrder(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **order** *of type `tuple`*
-
-
---- 
-### pushChallengeCandidatePayment(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-
---- 
-### proposalTargetBalanceAmount(address,tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **currency** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `int256`*
-
---- 
-### proposalCandidateType(address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `uint8`*
-
---- 
-### proposalCurrency(address,uint256)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **index** *of type `uint256`*
-
-Returns:
-
-
-1. **output_0** *of type `tuple`*
-
---- 
-### proposalStageAmount(address,tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **currency** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `int256`*
-
---- 
-### proposalNonce(address)
-
-
-**Execution cost**: less than 1183 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### setProposalCandidateType(address,uint8)
+### setProposalStatus(address,address,uint256,uint8)
 
 
 **Execution cost**: No bound available
@@ -624,42 +708,9 @@ Returns:
 Params:
 
 1. **wallet** *of type `address`*
-2. **candidateType** *of type `uint8`*
-
-
---- 
-### setProposalChallenger(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **challenger** *of type `address`*
-
-
---- 
-### setProposalStatus(address,uint8)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **status** *of type `uint8`*
-
-
---- 
-### _setProposalCurrency((address,uint256))
-
-
-**Execution cost**: No bound available
-
-
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
+4. **status** *of type `uint8`*
 
 
 --- 
@@ -672,7 +723,7 @@ Params:
 
 
 --- 
-### challengeByPayment((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
+### challengeByPayment(address,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
 
 
 **Execution cost**: No bound available
@@ -682,51 +733,6 @@ Params:
 
 --- 
 ### challengeByTrade(address,(uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### proposalStageAmount(address,(address,uint256))
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### proposalTargetBalanceAmount(address,(address,uint256))
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### pushChallengeCandidateOrder((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### pushChallengeCandidatePayment((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256))
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### pushChallengeCandidateTrade((uint256,int256,((address,uint256),(address,uint256)),int256,(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,uint256,uint8,(int256,(bytes32,bytes32),(int256,int256)),((int256,int256),(int256,int256)),((int256,(address,uint256)),(int256,(address,uint256))[])),((int256,int256),(int256,int256)),(bytes32,(bytes32,bytes32,uint8)),uint256,uint256))
 
 
 **Execution cost**: No bound available

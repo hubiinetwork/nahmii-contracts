@@ -10,30 +10,6 @@
 
 
 ## Events
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
-
---- 
 ### DeregisterAccrualBeneficiaryEvent(address)
 
 
@@ -56,7 +32,7 @@ Params:
 1. **beneficiary** *of type `address`*
 
 --- 
-### RegisterAccrualBeneficiaryEvent(address,uint256)
+### RegisterAccrualBeneficiaryEvent(address,int256)
 
 
 **Execution cost**: No bound available
@@ -65,7 +41,7 @@ Params:
 Params:
 
 1. **beneficiary** *of type `address`*
-2. **fraction** *of type `uint256`*
+2. **fraction** *of type `int256`*
 
 --- 
 ### RegisterBeneficiaryEvent(address)
@@ -78,9 +54,33 @@ Params:
 
 1. **beneficiary** *of type `address`*
 
+--- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
+
 
 ## Methods
-### destructor()
+### operator()
 
 
 **Execution cost**: No bound available
@@ -93,60 +93,6 @@ Returns:
 
 
 1. **output_0** *of type `address`*
-
---- 
-### PARTS_PER()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### getTotalBeneficiaryFraction()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### setDeployer(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-
---- 
-### setOperator(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
 
 --- 
 ### deployer()
@@ -180,6 +126,21 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### destructor()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
 ### getBeneficiaryFraction(address)
 
 
@@ -195,7 +156,22 @@ Params:
 Returns:
 
 
-1. **output_0** *of type `uint256`*
+1. **output_0** *of type `int256`*
+
+--- 
+### getTotalBeneficiaryFraction()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `int256`*
 
 --- 
 ### isRegisteredBeneficiary(address)
@@ -216,21 +192,6 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### operator()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### registerBeneficiary(address)
 
 
@@ -247,7 +208,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### registerFractionalBeneficiary(address,uint256)
+### registerFractionalBeneficiary(address,int256)
 
 
 **Execution cost**: No bound available
@@ -256,12 +217,36 @@ Returns:
 Params:
 
 1. **beneficiary** *of type `address`*
-2. **fraction** *of type `uint256`*
+2. **fraction** *of type `int256`*
 
 Returns:
 
 
 1. **output_0** *of type `bool`*
+
+--- 
+### setDeployer(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+
+--- 
+### setOperator(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
 
 --- 
 ### triggerDestroy()

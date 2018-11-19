@@ -5,9 +5,9 @@
 
 **Execution cost**: less than 689 gas
 
-**Deployment cost**: less than 653200 gas
+**Deployment cost**: less than 654000 gas
 
-**Combined cost**: less than 653889 gas
+**Combined cost**: less than 654689 gas
 
 
 
@@ -95,7 +95,7 @@ Params:
 
 
 --- 
-### challengeByPayment(tuple,address)
+### challengeByPayment(address,tuple,address)
 
 
 **Execution cost**: No bound available
@@ -103,8 +103,9 @@ Params:
 
 Params:
 
-1. **payment** *of type `tuple`*
-2. **challenger** *of type `address`*
+1. **wallet** *of type `address`*
+2. **payment** *of type `tuple`*
+3. **challenger** *of type `address`*
 
 
 --- 
@@ -132,7 +133,7 @@ Params:
 
 1. **order** *of type `tuple`*
 2. **trade** *of type `tuple`*
-3. **challenger** *of type `address`*
+3. **unchallenger** *of type `address`*
 
 
 --- 
@@ -145,7 +146,7 @@ Params:
 
 
 --- 
-### challengeByPayment((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address)
+### challengeByPayment(address,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address)
 
 
 **Execution cost**: No bound available

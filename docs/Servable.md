@@ -10,30 +10,6 @@
 
 
 ## Events
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
-
---- 
 ### DeregisterServiceEvent(address)
 
 
@@ -102,47 +78,32 @@ Params:
 
 1. **timeoutInSeconds** *of type `uint256`*
 
+--- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
+
 
 ## Methods
-### operator()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### setOperator(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-
---- 
-### setDeployer(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-
---- 
 ### isEnabledServiceAction(address,string)
 
 
@@ -162,7 +123,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isRegisteredService(address)
+### isRegisteredActiveService(address)
 
 
 **Execution cost**: No bound available
@@ -178,6 +139,34 @@ Returns:
 
 
 1. **output_0** *of type `bool`*
+
+--- 
+### deployer()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### disableServiceAction(address,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+2. **action** *of type `string`*
+
 
 --- 
 ### enableServiceAction(address,string)
@@ -220,7 +209,7 @@ Params:
 
 
 --- 
-### isRegisteredActiveService(address)
+### isRegisteredService(address)
 
 
 **Execution cost**: No bound available
@@ -238,20 +227,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### disableServiceAction(address,string)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-2. **action** *of type `string`*
-
-
---- 
-### deployer()
+### operator()
 
 
 **Execution cost**: No bound available
@@ -303,6 +279,30 @@ Returns:
 
 
 1. **output_0** *of type `uint256`*
+
+--- 
+### setDeployer(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+
+--- 
+### setOperator(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
 
 --- 
 ### setServiceActivationTimeout(uint256)

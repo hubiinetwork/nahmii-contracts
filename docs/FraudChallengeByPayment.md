@@ -3,11 +3,11 @@
 > FraudChallengeByPayment
 
 
-**Execution cost**: less than 42551 gas
+**Execution cost**: less than 42510 gas
 
-**Deployment cost**: less than 1384600 gas
+**Deployment cost**: less than 1346400 gas
 
-**Combined cost**: less than 1427151 gas
+**Combined cost**: less than 1388910 gas
 
 ## Constructor
 
@@ -15,10 +15,10 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### ChallengeByPaymentEvent(tuple,address,address)
+### ChallengeByPaymentEvent(bytes32,address,address)
 
 
 **Execution cost**: No bound available
@@ -26,12 +26,12 @@ Params:
 
 Params:
 
-1. **payment** *of type `tuple`*
+1. **paymentHash** *of type `bytes32`*
 2. **challenger** *of type `address`*
-3. **seizedWallet** *of type `address`*
+3. **lockedWallet** *of type `address`*
 
 --- 
-### ChangeClientFundEvent(address,address)
+### SetClientFundEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -43,7 +43,7 @@ Params:
 2. **newAddress** *of type `address`*
 
 --- 
-### ChangeConfigurationEvent(address,address)
+### SetConfigurationEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -55,7 +55,7 @@ Params:
 2. **newConfiguration** *of type `address`*
 
 --- 
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -67,7 +67,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeFraudChallengeEvent(address,address)
+### SetFraudChallengeEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -79,7 +79,7 @@ Params:
 2. **newFraudChallenge** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -91,7 +91,7 @@ Params:
 2. **newOperator** *of type `address`*
 
 --- 
-### ChangeSecurityBondEvent(address,address)
+### SetSecurityBondEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -103,7 +103,7 @@ Params:
 2. **newAddress** *of type `address`*
 
 --- 
-### ChangeValidatorEvent(address,address)
+### SetValidatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -116,121 +116,9 @@ Params:
 
 
 ## Methods
-### configuration()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### setOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### setClientFund(address)
->
->Change the client fund contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) ClientFund contract instance
-
-
-
---- 
-### setFraudChallenge(address)
->
->Change the fraud challenge contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newFraudChallenge** *of type `address`*
-
-    > The (address of) FraudChallenge contract instance
-
-
-
---- 
-### setDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
-### setConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
-
-
-
---- 
-### challenge(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-
---- 
 ### setSecurityBond(address)
 >
->Change the security bond contract
+>Set the security bond contract
 
 
 **Execution cost**: No bound available
@@ -241,23 +129,6 @@ Params:
 1. **newAddress** *of type `address`*
 
     > The (address of) SecurityBond contract instance
-
-
-
---- 
-### setValidator(address)
->
->Change the validator contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) Validator contract instance
 
 
 
@@ -277,10 +148,22 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### deployer()
+### challenge(tuple)
 
 
-**Execution cost**: less than 962 gas
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+
+--- 
+### configuration()
+
+
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -290,6 +173,23 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### setFraudChallenge(address)
+>
+>Set the fraud challenge contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newFraudChallenge** *of type `address`*
+
+    > The (address of) FraudChallenge contract instance
+
+
 
 --- 
 ### destructor()
@@ -298,21 +198,6 @@ Returns:
 
 
 **Execution cost**: less than 808 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### fraudChallenge()
-
-
-**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -339,6 +224,38 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### setConfiguration(address)
+>
+>Set the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### deployer()
+
+
+**Execution cost**: less than 1028 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
 ### securityBond()
 
 
@@ -352,6 +269,89 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### fraudChallenge()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### setClientFund(address)
+>
+>Set the client fund contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) ClientFund contract instance
+
+
+
+--- 
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
+
+--- 
+### setValidator(address)
+>
+>Set the validator contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) Validator contract instance
+
+
 
 --- 
 ### triggerDestroy()

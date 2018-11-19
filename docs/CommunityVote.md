@@ -18,7 +18,7 @@ Params:
 1. **_owner** *of type `address`*
 
 ## Events
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -30,7 +30,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -43,44 +43,10 @@ Params:
 
 
 ## Methods
-### setDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: less than 22932 gas
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
-### setOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: less than 22735 gas
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
 ### deployer()
 
 
-**Execution cost**: less than 713 gas
+**Execution cost**: less than 735 gas
 
 **Attributes**: constant
 
@@ -97,7 +63,7 @@ Returns:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 581 gas
+**Execution cost**: less than 559 gas
 
 **Attributes**: constant
 
@@ -114,7 +80,7 @@ Returns:
 >Get the max driip nonce to be accepted in settlements
 
 
-**Execution cost**: less than 406 gas
+**Execution cost**: less than 384 gas
 
 **Attributes**: constant
 
@@ -132,7 +98,7 @@ Returns:
 >Get the max null settlement nonce to be accepted in settlements
 
 
-**Execution cost**: less than 538 gas
+**Execution cost**: less than 560 gas
 
 **Attributes**: constant
 
@@ -168,7 +134,7 @@ Returns:
 >Get the double spender status of given wallet
 
 
-**Execution cost**: less than 706 gas
+**Execution cost**: less than 684 gas
 
 **Attributes**: constant
 
@@ -190,7 +156,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 603 gas
+**Execution cost**: less than 581 gas
 
 **Attributes**: constant
 
@@ -200,6 +166,40 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: less than 22845 gas
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: less than 22888 gas
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
 
 --- 
 ### triggerDestroy()

@@ -17,7 +17,7 @@ Params:
 1. **_deployer** *of type `address`*
 
 ## Events
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -29,7 +29,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -42,30 +42,6 @@ Params:
 
 
 ## Methods
-### setDeployer(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-
---- 
-### setOperator(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-
---- 
 ### deployer()
 
 
@@ -109,6 +85,30 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### setDeployer(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+
+--- 
+### setOperator(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
 
 --- 
 ### triggerDestroy()

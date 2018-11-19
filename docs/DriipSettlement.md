@@ -3,11 +3,11 @@
 > DriipSettlement
 
 
-**Execution cost**: less than 45620 gas
+**Execution cost**: less than 45436 gas
 
-**Deployment cost**: less than 3958200 gas
+**Deployment cost**: less than 3819000 gas
 
-**Combined cost**: less than 4003820 gas
+**Combined cost**: less than 3864436 gas
 
 ## Constructor
 
@@ -33,7 +33,7 @@ Params:
 5. **currencyId** *of type `uint256`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -45,7 +45,7 @@ Params:
 2. **newOperator** *of type `address`*
 
 --- 
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -57,7 +57,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeConfigurationEvent(address,address)
+### SetConfigurationEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -69,7 +69,7 @@ Params:
 2. **newConfiguration** *of type `address`*
 
 --- 
-### ChangeDriipSettlementChallengeEvent(address,address)
+### SetDriipSettlementChallengeEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -81,7 +81,7 @@ Params:
 2. **newDriipSettlementChallenge** *of type `address`*
 
 --- 
-### ChangeClientFundEvent(address,address)
+### SetClientFundEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -93,7 +93,7 @@ Params:
 2. **newAddress** *of type `address`*
 
 --- 
-### ChangeCommunityVoteEvent(address,address)
+### SetCommunityVoteEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -105,7 +105,7 @@ Params:
 2. **newCommunityVote** *of type `address`*
 
 --- 
-### ChangeFraudChallengeEvent(address,address)
+### SetFraudChallengeEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -117,7 +117,7 @@ Params:
 2. **newFraudChallenge** *of type `address`*
 
 --- 
-### ChangePaymentsRevenueFundEvent(address,address)
+### SetPaymentsRevenueFundEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -129,7 +129,7 @@ Params:
 2. **newRevenueFund** *of type `address`*
 
 --- 
-### ChangeTradesRevenueFundEvent(address,address)
+### SetTradesRevenueFundEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -141,7 +141,7 @@ Params:
 2. **newRevenueFund** *of type `address`*
 
 --- 
-### ChangeValidatorEvent(address,address)
+### SetValidatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -153,7 +153,7 @@ Params:
 2. **newAddress** *of type `address`*
 
 --- 
-### SettlePaymentByProxyEvent(address,address,tuple,uint8)
+### SettlePaymentByProxyEvent(address,address,tuple)
 
 
 **Execution cost**: No bound available
@@ -164,10 +164,9 @@ Params:
 1. **proxy** *of type `address`*
 2. **wallet** *of type `address`*
 3. **payment** *of type `tuple`*
-4. **proposalStatus** *of type `uint8`*
 
 --- 
-### SettlePaymentEvent(address,tuple,uint8)
+### SettlePaymentEvent(address,tuple)
 
 
 **Execution cost**: No bound available
@@ -177,10 +176,9 @@ Params:
 
 1. **wallet** *of type `address`*
 2. **payment** *of type `tuple`*
-3. **proposalStatus** *of type `uint8`*
 
 --- 
-### SettleTradeByProxyEvent(address,address,tuple,uint8)
+### SettleTradeByProxyEvent(address,address,tuple)
 
 
 **Execution cost**: No bound available
@@ -191,10 +189,9 @@ Params:
 1. **proxy** *of type `address`*
 2. **wallet** *of type `address`*
 3. **trade** *of type `tuple`*
-4. **proposalStatus** *of type `uint8`*
 
 --- 
-### SettleTradeEvent(address,tuple,uint8)
+### SettleTradeEvent(address,tuple)
 
 
 **Execution cost**: No bound available
@@ -204,13 +201,32 @@ Params:
 
 1. **wallet** *of type `address`*
 2. **trade** *of type `tuple`*
-3. **proposalStatus** *of type `uint8`*
 
 
 ## Methods
+### walletCurrencyFeeNonce(address,address,uint256)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `address`*
+3. **param_2** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
 ### setDriipSettlementChallenge(address)
 >
->Change the driip settlement challenge contract
+>Set the driip settlement challenge contract
 
 
 **Execution cost**: No bound available
@@ -225,60 +241,24 @@ Params:
 
 
 --- 
-### setOperator(address)
->
->Change the operator of this contract
+### driipSettlementChallenge()
 
 
 **Execution cost**: No bound available
 
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
+**Attributes**: constant
 
 
 
---- 
-### setFraudChallenge(address)
->
->Change the fraud challenge contract
+Returns:
 
 
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newFraudChallenge** *of type `address`*
-
-    > The (address of) FraudChallenge contract instance
-
-
-
---- 
-### setDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
+1. **output_0** *of type `address`*
 
 --- 
 ### setCommunityVote(address)
 >
->Change the community vote contract
+>Set the community vote contract
 
 
 **Execution cost**: No bound available
@@ -289,149 +269,6 @@ Params:
 1. **newCommunityVote** *of type `address`*
 
     > The (address of) CommunityVote contract instance
-
-
-
---- 
-### setClientFund(address)
->
->Change the client fund contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) ClientFund contract instance
-
-
-
---- 
-### setConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
-
-
-
---- 
-### settlementByWalletAndIndex(address,uint256)
->
->Get settlement of given wallet and index
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-    > The address for which to return settlement
-
-2. **index** *of type `uint256`*
-
-    > The wallet's settlement index
-
-
-Returns:
-
-> settlement for the provided wallet and index
-
-1. **output_0** *of type `tuple`*
-
---- 
-### setTradesRevenueFund(address)
->
->Change the trades revenue fund contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newTradesRevenueFund** *of type `address`*
-
-    > The (address of) trades RevenueFund contract instance
-
-
-
---- 
-### setPaymentsRevenueFund(address)
->
->Change the payments revenue fund contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newPaymentsRevenueFund** *of type `address`*
-
-    > The (address of) payments RevenueFund contract instance
-
-
-
---- 
-### tradesRevenueFund()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### configuration()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### setValidator(address)
->
->Change the validator contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) Validator contract instance
 
 
 
@@ -451,25 +288,10 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### communityVoteUpdateDisabled()
+### deployer()
 
 
-**Execution cost**: less than 1272 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### communityVote()
-
-
-**Execution cost**: No bound available
+**Execution cost**: less than 1380 gas
 
 **Attributes**: constant
 
@@ -481,15 +303,30 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### updateMaxDriipNonce()
+### disableUpdateOfCommunityVote()
 >
->Update the max driip nonce property from CommunityVote contract
+>Disable future updates of community vote contract
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 21013 gas
 
 
 
+
+--- 
+### communityVoteUpdateDisabled()
+
+
+**Execution cost**: less than 1250 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
 
 --- 
 ### fraudChallenge()
@@ -507,42 +344,12 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### driipSettlementChallenge()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### deployer()
-
-
-**Execution cost**: less than 1424 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### destructor()
 >
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 874 gas
+**Execution cost**: less than 896 gas
 
 **Attributes**: constant
 
@@ -554,34 +361,122 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### disableUpdateOfCommunityVote()
+### operator()
+
+
+**Execution cost**: less than 918 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### setConfiguration(address)
 >
->Disable future updates of community vote contract
+>Set the configuration contract
 
 
-**Execution cost**: less than 20969 gas
+**Execution cost**: No bound available
 
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
 
 
 
 --- 
-### walletNonceSettlementIndex(address,uint256)
+### configuration()
 
 
 **Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### hasSettlementByNonce(uint256)
+>
+>Return boolean indicating whether there is already a settlement for the given (global) nonce
+
+
+**Execution cost**: less than 1068 gas
 
 **Attributes**: constant
 
 
 Params:
 
-1. **param_0** *of type `address`*
-2. **param_1** *of type `uint256`*
+1. **nonce** *of type `uint256`*
+
+    > The nonce for which to check for settlement
+
+
+Returns:
+
+> true if there exists a settlement for the provided nonce, false otherwise
+
+1. **output_0** *of type `bool`*
+
+--- 
+### maxDriipNonce()
+
+
+**Execution cost**: less than 856 gas
+
+**Attributes**: constant
+
+
 
 Returns:
 
 
 1. **output_0** *of type `uint256`*
+
+--- 
+### communityVote()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### setClientFund(address)
+>
+>Set the client fund contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) ClientFund contract instance
+
+
 
 --- 
 ### paymentsRevenueFund()
@@ -599,19 +494,21 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### operator()
+### setDeployer(address)
+>
+>Set the deployer of this contract
 
 
-**Execution cost**: less than 896 gas
-
-**Attributes**: constant
+**Execution cost**: No bound available
 
 
+Params:
 
-Returns:
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
 
 
-1. **output_0** *of type `address`*
 
 --- 
 ### nonceSettlementIndex(uint256)
@@ -632,14 +529,87 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### maxDriipNonce()
+### setTradesRevenueFund(address)
+>
+>Set the trades revenue fund contract
 
 
-**Execution cost**: less than 878 gas
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newTradesRevenueFund** *of type `address`*
+
+    > The (address of) trades RevenueFund contract instance
+
+
+
+--- 
+### setPaymentsRevenueFund(address)
+>
+>Set the payments revenue fund contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newPaymentsRevenueFund** *of type `address`*
+
+    > The (address of) payments RevenueFund contract instance
+
+
+
+--- 
+### setFraudChallenge(address)
+>
+>Set the fraud challenge contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newFraudChallenge** *of type `address`*
+
+    > The (address of) FraudChallenge contract instance
+
+
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
+
+--- 
+### walletCurrencyMaxDriipNonce(address,address,uint256)
+
+
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
 
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `address`*
+3. **param_2** *of type `uint256`*
 
 Returns:
 
@@ -647,33 +617,12 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### isSeizedWallet(address)
+### settlementByNonce(uint256)
 >
->Get the seized status of given wallet
+>Get the settlement for the given (global) nonce
 
 
-**Execution cost**: less than 1595 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-Returns:
-
-> true if wallet is seized, false otherwise
-
-1. **output_0** *of type `bool`*
-
---- 
-### hasSettlementByNonce(uint256)
->
->Return boolean indicating whether there is already a settlement for the given (global) nonce
-
-
-**Execution cost**: less than 1090 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -682,14 +631,55 @@ Params:
 
 1. **nonce** *of type `uint256`*
 
-    > The nonce for which to check for settlement
+    > The nonce of the settlement
 
 
 Returns:
 
-> true if there exists a settlement for the provided nonce, false otherwise
+> settlement of the provided nonce
 
-1. **output_0** *of type `bool`*
+1. **output_0** *of type `tuple`*
+
+--- 
+### settleTrade(tuple)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+
+--- 
+### settlePayment(tuple)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+
+--- 
+### setValidator(address)
+>
+>Set the validator contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) Validator contract instance
+
+
 
 --- 
 ### settlePaymentByProxy(address,tuple)
@@ -705,30 +695,23 @@ Params:
 
 
 --- 
-### seizedWalletsMap(address)
+### settleTradeByProxy(address,tuple)
 
 
-**Execution cost**: less than 1102 gas
-
-**Attributes**: constant
+**Execution cost**: No bound available
 
 
 Params:
 
-1. **param_0** *of type `address`*
+1. **wallet** *of type `address`*
+2. **trade** *of type `tuple`*
 
-Returns:
-
-
-1. **output_0** *of type `bool`*
 
 --- 
-### seizedWalletsCount()
->
->Get the number of wallets whose funds have be seized
+### validator()
 
 
-**Execution cost**: less than 592 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -736,15 +719,44 @@ Returns:
 
 Returns:
 
-> Number of wallets
+
+1. **output_0** *of type `address`*
+
+--- 
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### settlementsCount()
+>
+>Get the count of settlements
+
+
+**Execution cost**: less than 878 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
 
 1. **output_0** *of type `uint256`*
 
 --- 
-### seizedWallets(uint256)
+### settlements(uint256)
 
 
-**Execution cost**: less than 1701 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -756,19 +768,10 @@ Params:
 Returns:
 
 
-1. **output_0** *of type `address`*
-
---- 
-### settlePayment(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
+1. **nonce** *of type `uint256`*
+2. **driipType** *of type `uint8`*
+3. **origin** *of type `tuple`*
+4. **target** *of type `tuple`*
 
 --- 
 ### settlementByWalletAndNonce(address,uint256)
@@ -799,91 +802,32 @@ Returns:
 1. **output_0** *of type `tuple`*
 
 --- 
-### settleTrade(tuple)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-
---- 
-### settlementByNonce(uint256)
+### settlementByWalletAndIndex(address,uint256)
 >
->Get the settlement for the given (global) nonce
+>Get settlement of given wallet and index
 
 
 **Execution cost**: No bound available
 
 **Attributes**: constant
-
-
-Params:
-
-1. **nonce** *of type `uint256`*
-
-    > The nonce of the settlement
-
-
-Returns:
-
-> settlement of the provided nonce
-
-1. **output_0** *of type `tuple`*
-
---- 
-### settleTradeByProxy(address,tuple)
-
-
-**Execution cost**: No bound available
 
 
 Params:
 
 1. **wallet** *of type `address`*
-2. **trade** *of type `tuple`*
 
+    > The address for which to return settlement
 
---- 
-### settlements(uint256)
+2. **index** *of type `uint256`*
 
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `uint256`*
-
-Returns:
-
-
-1. **nonce** *of type `uint256`*
-2. **driipType** *of type `uint8`*
-3. **origin** *of type `tuple`*
-4. **target** *of type `tuple`*
-
---- 
-### settlementsCount()
->
->Get the count of settlements
-
-
-**Execution cost**: less than 900 gas
-
-**Attributes**: constant
-
+    > The wallet's settlement index
 
 
 Returns:
 
+> settlement for the provided wallet and index
 
-1. **output_0** *of type `uint256`*
+1. **output_0** *of type `tuple`*
 
 --- 
 ### settlementsCountByWallet(address)
@@ -891,7 +835,7 @@ Returns:
 >Get the count of settlements for given wallet
 
 
-**Execution cost**: less than 1825 gas
+**Execution cost**: less than 1781 gas
 
 **Attributes**: constant
 
@@ -910,20 +854,7 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### triggerDestroy()
->
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### validator()
+### tradesRevenueFund()
 
 
 **Execution cost**: No bound available
@@ -936,6 +867,17 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### updateMaxDriipNonce()
+>
+>Update the max driip nonce property from CommunityVote contract
+
+
+**Execution cost**: No bound available
+
+
+
 
 --- 
 ### walletCurrencyFeeCharged(address,address,uint256)
@@ -958,7 +900,7 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
-### walletCurrencyFeeNonce(address,address,uint256)
+### walletNonceSettlementIndex(address,uint256)
 
 
 **Execution cost**: No bound available
@@ -969,28 +911,7 @@ Returns:
 Params:
 
 1. **param_0** *of type `address`*
-2. **param_1** *of type `address`*
-3. **param_2** *of type `uint256`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### walletCurrencyMaxDriipNonce(address,address,uint256)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-2. **param_1** *of type `address`*
-3. **param_2** *of type `uint256`*
+2. **param_1** *of type `uint256`*
 
 Returns:
 

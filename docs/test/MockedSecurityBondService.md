@@ -1,13 +1,21 @@
-# SecurityBondable
-[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/SecurityBondable.sol)
+# MockedSecurityBondService
+[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/test/MockedSecurityBondService.sol)
+> MockedSecurityBondService
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 41512 gas
 
-**Deployment cost**: No bound available
+**Deployment cost**: less than 371200 gas
 
-**Combined cost**: No bound available
+**Combined cost**: less than 412712 gas
 
+## Constructor
+
+
+
+Params:
+
+1. **deployer** *of type `address`*
 
 ## Events
 ### SetDeployerEvent(address,address)
@@ -50,7 +58,7 @@ Params:
 ### deployer()
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 833 gas
 
 **Attributes**: constant
 
@@ -62,10 +70,24 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### destructor()
+### deprive(address)
 
 
 **Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+
+--- 
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
+
+
+**Execution cost**: less than 635 gas
 
 **Attributes**: constant
 
@@ -80,7 +102,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 679 gas
 
 **Attributes**: constant
 
@@ -90,6 +112,20 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### reward(address,uint256,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **rewardFraction** *of type `uint256`*
+3. **unlockTimeoutInSeconds** *of type `uint256`*
+
 
 --- 
 ### securityBond()
@@ -108,6 +144,8 @@ Returns:
 
 --- 
 ### setDeployer(address)
+>
+>Set the deployer of this contract
 
 
 **Execution cost**: No bound available
@@ -117,9 +155,14 @@ Params:
 
 1. **newDeployer** *of type `address`*
 
+    > The address of the new deployer
+
+
 
 --- 
 ### setOperator(address)
+>
+>Set the operator of this contract
 
 
 **Execution cost**: No bound available
@@ -129,9 +172,14 @@ Params:
 
 1. **newOperator** *of type `address`*
 
+    > The address of the new operator
+
+
 
 --- 
 ### setSecurityBond(address)
+>
+>Set the security bond contract
 
 
 **Execution cost**: No bound available
@@ -141,9 +189,16 @@ Params:
 
 1. **newAddress** *of type `address`*
 
+    > The (address of) SecurityBond contract instance
+
+
 
 --- 
 ### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
 
 
 **Execution cost**: No bound available
@@ -151,4 +206,4 @@ Params:
 
 
 
-[Back to the top ↑](#securitybondable)
+[Back to the top ↑](#mockedsecuritybondservice)

@@ -3,11 +3,11 @@
 > NullSettlement
 
 
-**Execution cost**: less than 42415 gas
+**Execution cost**: less than 42088 gas
 
-**Deployment cost**: less than 1256800 gas
+**Deployment cost**: less than 946000 gas
 
-**Combined cost**: less than 1299215 gas
+**Combined cost**: less than 988088 gas
 
 ## Constructor
 
@@ -15,10 +15,10 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### ChangeClientFundEvent(address,address)
+### SetClientFundEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -30,7 +30,7 @@ Params:
 2. **newAddress** *of type `address`*
 
 --- 
-### ChangeCommunityVoteEvent(address,address)
+### SetCommunityVoteEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -42,7 +42,7 @@ Params:
 2. **newCommunityVote** *of type `address`*
 
 --- 
-### ChangeConfigurationEvent(address,address)
+### SetConfigurationEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -54,7 +54,7 @@ Params:
 2. **newConfiguration** *of type `address`*
 
 --- 
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -66,7 +66,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeNullSettlementChallengeEvent(address,address)
+### SetNullSettlementChallengeEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -78,7 +78,7 @@ Params:
 2. **newNullSettlementChallenge** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -90,7 +90,7 @@ Params:
 2. **newOperator** *of type `address`*
 
 --- 
-### SettleNullByProxyEvent(address,address,uint8)
+### SettleNullByProxyEvent(address,address,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -100,10 +100,11 @@ Params:
 
 1. **proxy** *of type `address`*
 2. **wallet** *of type `address`*
-3. **proposalStatus** *of type `uint8`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
 
 --- 
-### SettleNullEvent(address,uint8)
+### SettleNullEvent(address,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -112,95 +113,11 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
-2. **proposalStatus** *of type `uint8`*
+2. **currencyCt** *of type `address`*
+3. **currencyId** *of type `uint256`*
 
 
 ## Methods
-### setConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
-
-
-
---- 
-### setNullSettlementChallenge(address)
->
->Change the null settlement challenge contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newNullSettlementChallenge** *of type `address`*
-
-    > The (address of) NullSettlementChallenge contract instance
-
-
-
---- 
-### setDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
-### setCommunityVote(address)
->
->Change the community vote contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newCommunityVote** *of type `address`*
-
-    > The (address of) CommunityVote contract instance
-
-
-
---- 
-### setClientFund(address)
->
->Change the client fund contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) ClientFund contract instance
-
-
-
---- 
 ### nullSettlementChallenge()
 
 
@@ -216,10 +133,40 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### clientFund()
+### setCommunityVote(address)
+>
+>Set the community vote contract
 
 
 **Execution cost**: No bound available
+
+
+Params:
+
+1. **newCommunityVote** *of type `address`*
+
+    > The (address of) CommunityVote contract instance
+
+
+
+--- 
+### disableUpdateOfCommunityVote()
+>
+>Disable future updates of community vote contract
+
+
+**Execution cost**: less than 20791 gas
+
+
+
+
+--- 
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
+
+
+**Execution cost**: less than 764 gas
 
 **Attributes**: constant
 
@@ -231,29 +178,10 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### setOperator(address)
->
->Change the operator of this contract
+### operator()
 
 
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### seizedWalletsCount()
->
->Get the number of wallets whose funds have be seized
-
-
-**Execution cost**: less than 614 gas
+**Execution cost**: less than 786 gas
 
 **Attributes**: constant
 
@@ -261,15 +189,29 @@ Params:
 
 Returns:
 
-> Number of wallets
+
+1. **output_0** *of type `address`*
+
+--- 
+### maxNullNonce()
+
+
+**Execution cost**: less than 658 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
 
 1. **output_0** *of type `uint256`*
 
 --- 
-### operator()
+### clientFund()
 
 
-**Execution cost**: less than 874 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -299,7 +241,7 @@ Returns:
 ### deployer()
 
 
-**Execution cost**: less than 1182 gas
+**Execution cost**: less than 1094 gas
 
 **Attributes**: constant
 
@@ -309,50 +251,12 @@ Returns:
 
 
 1. **output_0** *of type `address`*
-
---- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 852 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### isSeizedWallet(address)
->
->Get the seized status of given wallet
-
-
-**Execution cost**: less than 1397 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-Returns:
-
-> true if wallet is seized, false otherwise
-
-1. **output_0** *of type `bool`*
 
 --- 
 ### communityVoteUpdateDisabled()
 
 
-**Execution cost**: less than 1011 gas
+**Execution cost**: less than 923 gas
 
 **Attributes**: constant
 
@@ -362,32 +266,6 @@ Returns:
 
 
 1. **output_0** *of type `bool`*
-
---- 
-### disableUpdateOfCommunityVote()
->
->Disable future updates of community vote contract
-
-
-**Execution cost**: less than 20835 gas
-
-
-
-
---- 
-### maxNullNonce()
-
-
-**Execution cost**: less than 746 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
 
 --- 
 ### communityVote()
@@ -405,43 +283,92 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### seizedWallets(uint256)
+### setClientFund(address)
+>
+>Set the client fund contract
 
 
-**Execution cost**: less than 1525 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `uint256`*
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### seizedWalletsMap(address)
-
-
-**Execution cost**: less than 1102 gas
-
-**Attributes**: constant
+**Execution cost**: No bound available
 
 
 Params:
 
-1. **param_0** *of type `address`*
+1. **newAddress** *of type `address`*
 
-Returns:
+    > The (address of) ClientFund contract instance
 
 
-1. **output_0** *of type `bool`*
 
 --- 
-### settleNull()
+### setConfiguration(address)
+>
+>Set the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setNullSettlementChallenge(address)
+>
+>Set the null settlement challenge contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newNullSettlementChallenge** *of type `address`*
+
+    > The (address of) NullSettlementChallenge contract instance
+
+
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
+
+--- 
+### settleNull(address,uint256)
 >
 >Settle null
 
@@ -449,10 +376,20 @@ Returns:
 **Execution cost**: No bound available
 
 
+Params:
+
+1. **currencyCt** *of type `address`*
+
+    > The address of the concerned currency contract (address(0) == ETH)
+
+2. **currencyId** *of type `uint256`*
+
+    > The ID of the concerned currency (0 for ETH and ERC20)
+
 
 
 --- 
-### settleNullByProxy(address)
+### settleNullByProxy(address,address,uint256)
 >
 >Settle null by proxy
 
@@ -465,6 +402,14 @@ Params:
 1. **wallet** *of type `address`*
 
     > The concerned wallet
+
+2. **currencyCt** *of type `address`*
+
+    > The address of the concerned currency contract (address(0) == ETH)
+
+3. **currencyId** *of type `uint256`*
+
+    > The ID of the concerned currency (0 for ETH and ERC20)
 
 
 

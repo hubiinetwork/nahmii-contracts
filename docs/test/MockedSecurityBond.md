@@ -3,11 +3,11 @@
 > MockedSecurityBond
 
 
-**Execution cost**: less than 306 gas
+**Execution cost**: less than 343 gas
 
-**Deployment cost**: less than 266600 gas
+**Deployment cost**: less than 303000 gas
 
-**Combined cost**: less than 266906 gas
+**Combined cost**: less than 303343 gas
 
 ## Constructor
 
@@ -15,7 +15,7 @@
 
 
 ## Events
-### StageEvent(address,int256,address,uint256)
+### DepriveEvent(address)
 
 
 **Execution cost**: No bound available
@@ -24,13 +24,38 @@
 Params:
 
 1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
+
+--- 
+### RewardEvent(address,uint256,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **rewardFraction** *of type `uint256`*
+3. **unlockTimeoutInSeconds** *of type `uint256`*
 
 
 ## Methods
-### reset()
+### _deprivalsCount()
+
+
+**Execution cost**: less than 595 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### _reset()
 
 
 **Execution cost**: No bound available
@@ -39,7 +64,40 @@ Params:
 
 
 --- 
-### stage(address,int256,address,uint256)
+### _rewardsCount()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### deprivals(uint256)
+
+
+**Execution cost**: less than 994 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### deprive(address)
 
 
 **Execution cost**: No bound available
@@ -48,13 +106,24 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
 
 
 --- 
-### stages(uint256)
+### reward(address,uint256,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **rewardFraction** *of type `uint256`*
+3. **unlockTimeoutInSeconds** *of type `uint256`*
+
+
+--- 
+### rewards(uint256)
 
 
 **Execution cost**: No bound available
@@ -70,21 +139,7 @@ Returns:
 
 
 1. **wallet** *of type `address`*
-2. **figure** *of type `tuple`*
-
---- 
-### stagesCount()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
+2. **rewardFraction** *of type `uint256`*
+3. **unlockTimeoutInSeconds** *of type `uint256`*
 
 [Back to the top ↑](#mockedsecuritybond)

@@ -3,11 +3,11 @@
 > NullSettlementDispute
 
 
-**Execution cost**: less than 44207 gas
+**Execution cost**: less than 44822 gas
 
-**Deployment cost**: less than 2837800 gas
+**Deployment cost**: less than 3337600 gas
 
-**Combined cost**: less than 2882007 gas
+**Combined cost**: less than 3382422 gas
 
 ## Constructor
 
@@ -15,10 +15,10 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### ChallengeByOrderEvent(tuple,uint256,address)
+### SetClientFundEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -26,75 +26,11 @@ Params:
 
 Params:
 
-1. **order** *of type `tuple`*
-2. **nonce** *of type `uint256`*
-3. **challenger** *of type `address`*
+1. **oldAddress** *of type `address`*
+2. **newAddress** *of type `address`*
 
 --- 
-### ChallengeByPaymentEvent(tuple,uint256,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-2. **nonce** *of type `uint256`*
-3. **challenger** *of type `address`*
-
---- 
-### ChallengeByTradeEvent(address,tuple,uint256,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **trade** *of type `tuple`*
-3. **nonce** *of type `uint256`*
-4. **challenger** *of type `address`*
-
---- 
-### ChangeCancelOrdersChallengeEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldCancelOrdersChallenge** *of type `address`*
-2. **newCancelOrdersChallenge** *of type `address`*
-
---- 
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeFraudChallengeEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldFraudChallenge** *of type `address`*
-2. **newFraudChallenge** *of type `address`*
-
---- 
-### ChangeNullSettlementChallengeEvent(address,address)
+### SetNullSettlementChallengeEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -106,7 +42,97 @@ Params:
 2. **newNullSettlementChallenge** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### ChallengeByTradeEvent(address,uint256,bytes32,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **nonce** *of type `uint256`*
+3. **candidateHash** *of type `bytes32`*
+4. **challenger** *of type `address`*
+
+--- 
+### ChallengeByPaymentEvent(address,uint256,bytes32,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **nonce** *of type `uint256`*
+3. **candidateHash** *of type `bytes32`*
+4. **challenger** *of type `address`*
+
+--- 
+### SetCancelOrdersChallengeEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldCancelOrdersChallenge** *of type `address`*
+2. **newCancelOrdersChallenge** *of type `address`*
+
+--- 
+### SetFraudChallengeEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldFraudChallenge** *of type `address`*
+2. **newFraudChallenge** *of type `address`*
+
+--- 
+### ChallengeByOrderEvent(address,uint256,bytes32,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **nonce** *of type `uint256`*
+3. **candidateHash** *of type `bytes32`*
+4. **challenger** *of type `address`*
+
+--- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetConfigurationEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldConfiguration** *of type `address`*
+2. **newConfiguration** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -118,7 +144,19 @@ Params:
 2. **newOperator** *of type `address`*
 
 --- 
-### ChangeValidatorEvent(address,address)
+### SetSecurityBondEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldAddress** *of type `address`*
+2. **newAddress** *of type `address`*
+
+--- 
+### SetValidatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -131,9 +169,9 @@ Params:
 
 
 ## Methods
-### setCancelOrdersChallenge(address)
+### setSecurityBond(address)
 >
->Change the cancel orders challenge contract
+>Set the security bond contract
 
 
 **Execution cost**: No bound available
@@ -141,31 +179,14 @@ Params:
 
 Params:
 
-1. **newCancelOrdersChallenge** *of type `address`*
+1. **newAddress** *of type `address`*
 
-    > The (address of) CancelOrdersChallenge contract instance
-
-
-
---- 
-### setNullSettlementChallenge(address)
->
->Change the settlement challenge contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newNullSettlementChallenge** *of type `address`*
-
-    > The (address of) NullSettlementChallenge contract instance
+    > The (address of) SecurityBond contract instance
 
 
 
 --- 
-### cancelOrdersChallenge()
+### clientFund()
 
 
 **Execution cost**: No bound available
@@ -194,40 +215,6 @@ Params:
 
 
 --- 
-### setFraudChallenge(address)
->
->Change the fraud challenge contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newFraudChallenge** *of type `address`*
-
-    > The (address of) FraudChallenge contract instance
-
-
-
---- 
-### setDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
 ### challengeByOrder(tuple,address)
 
 
@@ -241,7 +228,7 @@ Params:
 
 
 --- 
-### challengeByPayment(tuple,address)
+### challengeByPayment(address,tuple,address)
 
 
 **Execution cost**: No bound available
@@ -249,14 +236,30 @@ Params:
 
 Params:
 
-1. **payment** *of type `tuple`*
-2. **challenger** *of type `address`*
+1. **wallet** *of type `address`*
+2. **payment** *of type `tuple`*
+3. **challenger** *of type `address`*
 
 
 --- 
-### setOperator(address)
+### cancelOrdersChallenge()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### setNullSettlementChallenge(address)
 >
->Change the operator of this contract
+>Set the settlement challenge contract
 
 
 **Execution cost**: No bound available
@@ -264,34 +267,17 @@ Params:
 
 Params:
 
-1. **newOperator** *of type `address`*
+1. **newNullSettlementChallenge** *of type `address`*
 
-    > The address of the new operator
+    > The (address of) NullSettlementChallenge contract instance
 
 
 
 --- 
-### setValidator(address)
->
->Change the validator contract
+### fraudChallenge()
 
 
 **Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) Validator contract instance
-
-
-
---- 
-### deployer()
-
-
-**Execution cost**: less than 984 gas
 
 **Attributes**: constant
 
@@ -308,7 +294,7 @@ Returns:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 830 gas
+**Execution cost**: less than 874 gas
 
 **Attributes**: constant
 
@@ -320,7 +306,137 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### fraudChallenge()
+### deployer()
+
+
+**Execution cost**: less than 1160 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### configuration()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setFraudChallenge(address)
+>
+>Set the fraud challenge contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newFraudChallenge** *of type `address`*
+
+    > The (address of) FraudChallenge contract instance
+
+
+
+--- 
+### setConfiguration(address)
+>
+>Set the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### setCancelOrdersChallenge(address)
+>
+>Set the cancel orders challenge contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newCancelOrdersChallenge** *of type `address`*
+
+    > The (address of) CancelOrdersChallenge contract instance
+
+
+
+--- 
+### operator()
+
+
+**Execution cost**: less than 896 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### setClientFund(address)
+>
+>Set the client fund contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) ClientFund contract instance
+
+
+
+--- 
+### securityBond()
 
 
 **Execution cost**: No bound available
@@ -350,19 +466,38 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### operator()
+### setOperator(address)
+>
+>Set the operator of this contract
 
 
-**Execution cost**: less than 852 gas
-
-**Attributes**: constant
+**Execution cost**: No bound available
 
 
+Params:
 
-Returns:
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
 
 
-1. **output_0** *of type `address`*
+
+--- 
+### setValidator(address)
+>
+>Set the validator contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) Validator contract instance
+
+
 
 --- 
 ### triggerDestroy()
@@ -416,7 +551,7 @@ Params:
 
 
 --- 
-### challengeByPayment((uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address)
+### challengeByPayment(address,(uint256,int256,(address,uint256),(uint256,address,(int256,int256),((int256,(address,uint256)),(int256,(address,uint256))[])),(uint256,address,(int256,int256),((int256,(address,uint256))[])),(int256,int256),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256),address)
 >
 >Challenge the settlement by providing payment candidate
 >
@@ -435,6 +570,10 @@ Params:
 2. **payment** *of type `undefined`*
 
     > The payment candidate that challenges
+
+3. **wallet** *of type `undefined`*
+
+    > The wallet whose settlement is being challenged
 
 
 

@@ -10,7 +10,7 @@
 
 
 ## Events
-### ChangeClientFundEvent(address,address)
+### SetClientFundEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -22,7 +22,7 @@ Params:
 2. **newAddress** *of type `address`*
 
 --- 
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -34,7 +34,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -47,42 +47,6 @@ Params:
 
 
 ## Methods
-### setClientFund(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-
---- 
-### setDeployer(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-
---- 
-### setOperator(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-
---- 
 ### clientFund()
 
 
@@ -141,6 +105,42 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### setClientFund(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+
+--- 
+### setDeployer(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+
+--- 
+### setOperator(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
 
 --- 
 ### triggerDestroy()

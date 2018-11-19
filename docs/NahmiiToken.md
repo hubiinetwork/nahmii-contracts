@@ -1,11 +1,11 @@
-# RevenueToken
-[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/RevenueToken.sol)
-> RevenueToken
+# NahmiiToken
+[see the source](git+https://github.com/hubiinetwork/nahmii-contracts/tree/master/contracts/NahmiiToken.sol)
+> NahmiiToken
 
 
 **Execution cost**: No bound available
 
-**Deployment cost**: less than 1123800 gas
+**Deployment cost**: less than 1371400 gas
 
 **Combined cost**: No bound available
 
@@ -54,6 +54,28 @@ Params:
 1. **account** *of type `address`*
 
 --- 
+### SetName(string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **name** *of type `string`*
+
+--- 
+### SetSymbol(string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **symbol** *of type `string`*
+
+--- 
 ### Transfer(address,address,uint256)
 
 
@@ -68,23 +90,17 @@ Params:
 
 
 ## Methods
-### balanceBlocks(address,uint256)
+### disableMinting()
+>
+>Disable further minting
+>
+> This operation can not be undone
 
 
-**Execution cost**: less than 1077 gas
-
-**Attributes**: constant
+**Execution cost**: No bound available
 
 
-Params:
 
-1. **param_0** *of type `address`*
-2. **param_1** *of type `uint256`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
 
 --- 
 ### allowance(address,address)
@@ -92,7 +108,7 @@ Returns:
 > Function to check the amount of tokens that an owner allowed to a spender.
 
 
-**Execution cost**: less than 1192 gas
+**Execution cost**: less than 1302 gas
 
 **Attributes**: constant
 
@@ -127,10 +143,25 @@ Params:
 
 
 --- 
+### symbol()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `string`*
+
+--- 
 ### balanceBlockNumbers(address,uint256)
 
 
-**Execution cost**: less than 879 gas
+**Execution cost**: less than 901 gas
 
 **Attributes**: constant
 
@@ -153,7 +184,7 @@ Returns:
 > Beware that to change the approve amount you first have to reduce the addresses' allowance to zero by calling `approve(spender, 0)` if it is not already 0 to mitigate the race condition described here: https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
 
 
-**Execution cost**: less than 22992 gas
+**Execution cost**: less than 23014 gas
 
 
 Params:
@@ -182,12 +213,10 @@ Returns:
 
 
 --- 
-### totalSupply()
->
-> Total number of tokens in existence
+### name()
 
 
-**Execution cost**: less than 450 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
@@ -196,7 +225,22 @@ Returns:
 Returns:
 
 
-1. **output_0** *of type `uint256`*
+1. **output_0** *of type `string`*
+
+--- 
+### decimals()
+
+
+**Execution cost**: less than 369 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint8`*
 
 --- 
 ### increaseAllowance(address,uint256)
@@ -255,7 +299,7 @@ Returns:
 >Get the count of holders
 
 
-**Execution cost**: less than 582 gas
+**Execution cost**: less than 626 gas
 
 **Attributes**: constant
 
@@ -273,7 +317,7 @@ Returns:
 > Gets the balance of the specified address.
 
 
-**Execution cost**: less than 829 gas
+**Execution cost**: less than 873 gas
 
 **Attributes**: constant
 
@@ -292,10 +336,63 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
+### balanceBlocks(address,uint256)
+
+
+**Execution cost**: less than 1121 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### mintingDisabled()
+
+
+**Execution cost**: less than 506 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### balances(address,uint256)
+
+
+**Execution cost**: less than 1407 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
 ### holdersMap(address)
 
 
-**Execution cost**: less than 565 gas
+**Execution cost**: less than 587 gas
 
 **Attributes**: constant
 
@@ -310,38 +407,10 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### disableMinting()
->
->Disable further minting
->
-> This operation can not be undone
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### mintingDisabled()
-
-
-**Execution cost**: less than 484 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### holders(uint256)
 
 
-**Execution cost**: less than 969 gas
+**Execution cost**: less than 991 gas
 
 **Attributes**: constant
 
@@ -415,64 +484,6 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### balances(address,uint256)
-
-
-**Execution cost**: less than 1297 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-2. **param_1** *of type `uint256`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### isMinter(address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **account** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### balanceUpdatesCount(address)
->
->Get the count of balance updates for the given account
-
-
-**Execution cost**: less than 1024 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **account** *of type `address`*
-
-Returns:
-
-> The count of balance updates
-
-1. **output_0** *of type `uint256`*
-
---- 
 ### holdersByIndices(uint256,uint256,bool)
 >
 >Get the subset of holders (optionally with positive balance only) in the given 0 based index range
@@ -503,6 +514,96 @@ Returns:
 > The subset of positive balance registered holders in the given range
 
 1. **output_0** *of type `address[]`*
+
+--- 
+### isMinter(address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **account** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### balanceUpdatesCount(address)
+>
+>Get the count of balance updates for the given account
+
+
+**Execution cost**: less than 1090 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **account** *of type `address`*
+
+Returns:
+
+> The count of balance updates
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### setName(string)
+>
+> Set the name of the token
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **_name** *of type `string`*
+
+    > The new token name
+
+
+
+--- 
+### setSymbol(string)
+>
+> Set the symbol of the token
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **_symbol** *of type `string`*
+
+    > The new token symbol
+
+
+
+--- 
+### totalSupply()
+>
+> Total number of tokens in existence
+
+
+**Execution cost**: less than 473 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
 
 --- 
 ### transfer(address,uint256)
@@ -560,4 +661,4 @@ Returns:
 
 1. **output_0** *of type `bool`*
 
-[Back to the top ↑](#revenuetoken)
+[Back to the top ↑](#nahmiitoken)

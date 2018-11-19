@@ -15,10 +15,10 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -30,7 +30,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -43,58 +43,6 @@ Params:
 
 
 ## Methods
-### hashOrderGlobalData(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bytes32`*
-
---- 
-### setOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### setDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
 ### hashPaymentAsOperator(tuple)
 
 
@@ -134,7 +82,7 @@ Returns:
 ### deployer()
 
 
-**Execution cost**: less than 1031 gas
+**Execution cost**: less than 1053 gas
 
 **Attributes**: constant
 
@@ -151,7 +99,7 @@ Returns:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 767 gas
+**Execution cost**: less than 745 gas
 
 **Attributes**: constant
 
@@ -163,7 +111,24 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### hashPaymentNonce(tuple)
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### hashPaymentRecipientDataAsWallet(tuple)
 
 
 **Execution cost**: No bound available
@@ -174,24 +139,6 @@ Returns:
 Params:
 
 1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bytes32`*
-
---- 
-### hashSignature(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **signature** *of type `tuple`*
 
 Returns:
 
@@ -217,6 +164,42 @@ Returns:
 1. **output_0** *of type `bytes32`*
 
 --- 
+### hashOrderPlacementResidualsData(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **order** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
+### hashPaymentAsWallet(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
 ### hashPaymentRecipientDataAsDriipSettlement(tuple)
 
 
@@ -235,7 +218,7 @@ Returns:
 1. **output_0** *of type `bytes32`*
 
 --- 
-### hashPaymentSenderDataAsWallet(tuple)
+### hashOrderAsWallet(tuple)
 
 
 **Execution cost**: No bound available
@@ -245,7 +228,7 @@ Returns:
 
 Params:
 
-1. **payment** *of type `tuple`*
+1. **order** *of type `tuple`*
 
 Returns:
 
@@ -271,7 +254,7 @@ Returns:
 1. **output_0** *of type `bytes32`*
 
 --- 
-### hashPaymentRecipientDataAsWallet(tuple)
+### hashOrderGlobalData(tuple)
 
 
 **Execution cost**: No bound available
@@ -281,7 +264,7 @@ Returns:
 
 Params:
 
-1. **payment** *of type `tuple`*
+1. **order** *of type `tuple`*
 
 Returns:
 
@@ -289,7 +272,7 @@ Returns:
 1. **output_0** *of type `bytes32`*
 
 --- 
-### hashPaymentAsWallet(tuple)
+### hashPaymentNonce(tuple)
 
 
 **Execution cost**: No bound available
@@ -325,7 +308,7 @@ Returns:
 1. **output_0** *of type `bytes32`*
 
 --- 
-### hashOrderPlacementResidualsData(tuple)
+### hashTradeTransfersData(tuple)
 
 
 **Execution cost**: No bound available
@@ -335,25 +318,7 @@ Returns:
 
 Params:
 
-1. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bytes32`*
-
---- 
-### hashOrderAsWallet(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **order** *of type `tuple`*
+1. **trade** *of type `tuple`*
 
 Returns:
 
@@ -372,6 +337,78 @@ Returns:
 Params:
 
 1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
+### hashTradeSellerData(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
+### hashPaymentSenderDataAsWallet(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
+### hashSignature(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **signature** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bytes32`*
+
+--- 
+### hashTradeGlobalData(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
 
 Returns:
 
@@ -415,64 +452,10 @@ Returns:
 1. **output_0** *of type `bytes32`*
 
 --- 
-### hashTradeGlobalData(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bytes32`*
-
---- 
-### hashTradeSellerData(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bytes32`*
-
---- 
-### hashTradeTransfersData(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bytes32`*
-
---- 
 ### operator()
 
 
-**Execution cost**: less than 789 gas
+**Execution cost**: less than 767 gas
 
 **Attributes**: constant
 
@@ -482,6 +465,23 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
 
 --- 
 ### triggerDestroy()

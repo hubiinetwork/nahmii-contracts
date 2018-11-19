@@ -10,7 +10,7 @@
 
 
 ## Events
-### ChangeCancelOrdersChallengeEvent(address,address)
+### SetCancelOrdersChallengeEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -22,7 +22,7 @@ Params:
 2. **newCancelOrdersChallenge** *of type `address`*
 
 --- 
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -34,7 +34,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -48,6 +48,51 @@ Params:
 
 ## Methods
 ### cancelOrdersChallenge()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### deployer()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### destructor()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### operator()
 
 
 **Execution cost**: No bound available
@@ -96,51 +141,6 @@ Params:
 
 1. **newOperator** *of type `address`*
 
-
---- 
-### deployer()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### destructor()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### operator()
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### triggerDestroy()
