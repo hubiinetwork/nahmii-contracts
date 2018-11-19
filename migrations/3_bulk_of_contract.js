@@ -224,7 +224,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'PartnerFund', '', PartnerFund);
 
             //configure smart contracts
-            instance = Configuration.at(addressStorage.get('Configuration'));
+            instance = await Configuration.at(addressStorage.get('Configuration'));
             tx = await instance.setConfirmationBlocks(web3.eth.blockNumber + 1, 12);
             tx = await instance.setTradeMakerFee(web3.eth.blockNumber + 1, 1e15, [], []);                       // 0.1%
             tx = await instance.setTradeMakerMinimumFee(web3.eth.blockNumber + 1, 1e14);                        // 0.01%
