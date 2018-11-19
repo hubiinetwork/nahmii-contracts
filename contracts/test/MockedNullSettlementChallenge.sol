@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
-import {SettlementTypesLibNew} from "../SettlementTypesLibNew.sol";
+import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 
 /**
@@ -27,9 +27,9 @@ contract MockedNullSettlementChallenge {
     uint256 public _proposalStageAmountIndex;
     int256 public _proposalTargetBalanceAmount;
     uint256 public _proposalExpirationTime;
-    SettlementTypesLibNew.ChallengeStatus public _proposalStatus;
+    SettlementTypesLib.Status public _proposalStatus;
     bool public _proposalBalanceReward;
-    SettlementTypesLibNew.CandidateType public _disqualificationCandidateType;
+    SettlementTypesLib.CandidateType public _disqualificationCandidateType;
     bytes32 public _disqualificationCandidateHash;
     address public _disqualificationChallenger;
     NullSettlementDispute public _nullSettlementDispute;
@@ -168,7 +168,7 @@ contract MockedNullSettlementChallenge {
     }
 
     function setProposalStatus(address wallet, address currencyCt, uint256 currencyId,
-        SettlementTypesLibNew.ChallengeStatus status)
+        SettlementTypesLib.Status status)
     public
     {
         // To silence unused function parameter compiler warning
@@ -181,7 +181,7 @@ contract MockedNullSettlementChallenge {
     function proposalStatus(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLibNew.ChallengeStatus)
+    returns (SettlementTypesLib.Status)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
@@ -208,7 +208,7 @@ contract MockedNullSettlementChallenge {
         return _proposalBalanceReward;
     }
 
-    function _setDisqualificationCandidateType(SettlementTypesLibNew.CandidateType candidateType)
+    function _setDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
     public
     {
         _disqualificationCandidateType = candidateType;
@@ -217,7 +217,7 @@ contract MockedNullSettlementChallenge {
     function disqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLibNew.CandidateType)
+    returns (SettlementTypesLib.CandidateType)
     {
         // To silence unused function parameter compiler warning
         require(wallet == wallet);
@@ -319,7 +319,7 @@ contract MockedNullSettlementChallenge {
     }
 
     function addDisqualification(address wallet, address currencyCt, uint256 currencyId, bytes32 candidateHash,
-        SettlementTypesLibNew.CandidateType candidateType, address challenger)
+        SettlementTypesLib.CandidateType candidateType, address challenger)
     public
     {
         // To silence unused function parameter compiler warning

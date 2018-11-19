@@ -613,7 +613,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
                     await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
                 });
 
@@ -631,7 +631,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
                     await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Qualified')
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
                     );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.intended.current);
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.conjugate.current);
@@ -889,7 +889,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
                     await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
                 });
 
@@ -906,7 +906,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
                     await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Qualified')
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
                     );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.intended.current);
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.conjugate.current);
@@ -1145,7 +1145,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
                     await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
                 });
 
@@ -1163,7 +1163,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
                     await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Qualified')
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
                     );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(payment.sender.balances.current);
                 });
@@ -1387,7 +1387,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
                     await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
                 });
 
@@ -1404,7 +1404,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
                     await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Qualified')
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
                     );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(payment.sender.balances.current);
                 });

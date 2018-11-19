@@ -20,7 +20,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {SettlementTypesLibNew} from "./SettlementTypesLibNew.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 
 /**
@@ -99,7 +99,7 @@ CancelOrdersChallengable {
         require(!driipSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
         // Require that proposal has not been disqualified already
-        require(SettlementTypesLibNew.ChallengeStatus.Disqualified != driipSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Disqualified != driipSettlementChallenge.proposalStatus(
             order.wallet, currency.ct, currency.id
         ));
 
@@ -119,7 +119,7 @@ CancelOrdersChallengable {
             order.wallet, currency.ct, currency.id, block.timestamp.add(configuration.settlementChallengeTimeout())
         );
         driipSettlementChallenge.setProposalStatus(
-            order.wallet, currency.ct, currency.id, SettlementTypesLibNew.ChallengeStatus.Disqualified
+            order.wallet, currency.ct, currency.id, SettlementTypesLib.Status.Disqualified
         );
 
         // Lock wallet
@@ -128,7 +128,7 @@ CancelOrdersChallengable {
         // Add disqualification
         driipSettlementChallenge.addDisqualification(
             order.wallet, currency.ct, currency.id, order.seals.operator.hash,
-            SettlementTypesLibNew.CandidateType.Order, challenger
+            SettlementTypesLib.CandidateType.Order, challenger
         );
 
         // Slash wallet's balances or reward challenger by stake fraction
@@ -175,12 +175,12 @@ CancelOrdersChallengable {
         require(!driipSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
         // Require that proposal has been disqualified
-        require(SettlementTypesLibNew.ChallengeStatus.Disqualified == driipSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Disqualified == driipSettlementChallenge.proposalStatus(
             order.wallet, currency.ct, currency.id
         ));
 
         // Require that candidate type is order
-        require(SettlementTypesLibNew.CandidateType.Order == driipSettlementChallenge.disqualificationCandidateType(
+        require(SettlementTypesLib.CandidateType.Order == driipSettlementChallenge.disqualificationCandidateType(
             order.wallet, currency.ct, currency.id
         ));
 
@@ -211,7 +211,7 @@ CancelOrdersChallengable {
 
         // Update proposal
         driipSettlementChallenge.setProposalStatus(
-            order.wallet, currency.ct, currency.id, SettlementTypesLibNew.ChallengeStatus.Qualified
+            order.wallet, currency.ct, currency.id, SettlementTypesLib.Status.Qualified
         );
 
         // Get challenger
@@ -275,7 +275,7 @@ CancelOrdersChallengable {
         require(!driipSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
         // Require that proposal has not been disqualified already
-        require(SettlementTypesLibNew.ChallengeStatus.Disqualified != driipSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Disqualified != driipSettlementChallenge.proposalStatus(
             wallet, currency.ct, currency.id
         ));
 
@@ -292,7 +292,7 @@ CancelOrdersChallengable {
 
         // Update proposal status
         driipSettlementChallenge.setProposalStatus(
-            wallet, currency.ct, currency.id, SettlementTypesLibNew.ChallengeStatus.Disqualified
+            wallet, currency.ct, currency.id, SettlementTypesLib.Status.Disqualified
         );
 
         // Lock wallet
@@ -301,7 +301,7 @@ CancelOrdersChallengable {
         // Add disqualification
         driipSettlementChallenge.addDisqualification(
             wallet, currency.ct, currency.id, trade.seal.hash,
-            SettlementTypesLibNew.CandidateType.Trade, challenger
+            SettlementTypesLib.CandidateType.Trade, challenger
         );
 
         // Slash wallet's balances or reward challenger by stake fraction
@@ -339,7 +339,7 @@ CancelOrdersChallengable {
         require(!driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
         // Require that proposal has not been disqualified already
-        require(SettlementTypesLibNew.ChallengeStatus.Disqualified != driipSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Disqualified != driipSettlementChallenge.proposalStatus(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
@@ -359,7 +359,7 @@ CancelOrdersChallengable {
 
         // Update proposal status
         driipSettlementChallenge.setProposalStatus(
-            wallet, payment.currency.ct, payment.currency.id, SettlementTypesLibNew.ChallengeStatus.Disqualified
+            wallet, payment.currency.ct, payment.currency.id, SettlementTypesLib.Status.Disqualified
         );
 
         // Lock wallet
@@ -368,7 +368,7 @@ CancelOrdersChallengable {
         // Add disqualification
         driipSettlementChallenge.addDisqualification(
             wallet, payment.currency.ct, payment.currency.id, payment.seals.operator.hash,
-            SettlementTypesLibNew.CandidateType.Payment, challenger
+            SettlementTypesLib.CandidateType.Payment, challenger
         );
 
         // Slash wallet's balances or reward challenger by stake fraction

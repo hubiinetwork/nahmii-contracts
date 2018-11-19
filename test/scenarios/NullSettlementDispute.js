@@ -287,7 +287,7 @@ module.exports = (glob) => {
             describe('if called on settlement that has already been challenged', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setProposalStatus(
-                        order.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                        order.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
                 });
 
@@ -346,7 +346,7 @@ module.exports = (glob) => {
                         await ethersNullSettlementChallenge.challengeByOrder(order, {gasLimit: 1e6});
 
                         (await ethersNullSettlementChallenge._proposalStatus())
-                            .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
+                            .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
@@ -364,7 +364,7 @@ module.exports = (glob) => {
                         await ethersNullSettlementChallenge.challengeByOrder(order, {gasLimit: 1e6});
 
                         (await ethersNullSettlementChallenge._proposalStatus())
-                            .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
+                            .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
@@ -480,7 +480,7 @@ module.exports = (glob) => {
             describe('if called on settlement that has already been challenged', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
                 });
 
@@ -541,7 +541,7 @@ module.exports = (glob) => {
                         );
 
                         (await ethersNullSettlementChallenge._proposalStatus())
-                            .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
+                            .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
@@ -561,7 +561,7 @@ module.exports = (glob) => {
                         );
 
                         (await ethersNullSettlementChallenge._proposalStatus())
-                            .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
+                            .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
@@ -652,7 +652,7 @@ module.exports = (glob) => {
             describe('if called on settlement that has already been challenged', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.proposalStatuses.indexOf('Disqualified')
+                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
                 });
 
@@ -713,7 +713,7 @@ module.exports = (glob) => {
                         );
 
                         (await ethersNullSettlementChallenge._proposalStatus())
-                            .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
+                            .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())
@@ -733,7 +733,7 @@ module.exports = (glob) => {
                         );
 
                         (await ethersNullSettlementChallenge._proposalStatus())
-                            .should.equal(mocks.proposalStatuses.indexOf('Disqualified'));
+                            .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersClientFund.lockedWalletsCount())

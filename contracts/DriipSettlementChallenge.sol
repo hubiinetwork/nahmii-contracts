@@ -17,7 +17,7 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {SettlementTypesLibNew} from "./SettlementTypesLibNew.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
 @title DriipSettlementChallenge
@@ -39,11 +39,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     mapping(address => bool) public lockedByWallet;
     mapping(address => uint) public unlockTimeByWallet;
 
-    SettlementTypesLibNew.Proposal[] public proposals;
+    SettlementTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
     mapping(address => uint256[]) public proposalIndicesByWallet;
 
-    SettlementTypesLibNew.Disqualification[] public disqualifications;
+    SettlementTypesLib.Disqualification[] public disqualifications;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public disqualificationIndexByWalletCurrency;
 
     bytes32[] public challengeTradeHashes;
@@ -308,7 +308,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     function proposalStatus(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLibNew.ChallengeStatus)
+    returns (SettlementTypesLib.Status)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
@@ -398,7 +398,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     function disqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLibNew.CandidateType)
+    returns (SettlementTypesLib.CandidateType)
     {
         uint256 index = disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
@@ -454,7 +454,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     /// @param wallet The concerned wallet
     /// @param status The status value
     function setProposalStatus(address wallet, address currencyCt, uint256 currencyId,
-        SettlementTypesLibNew.ChallengeStatus status)
+        SettlementTypesLib.Status status)
     public
     onlyDriipSettlementDispute
     {
@@ -546,7 +546,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     /// @param candidateType The candidate type
     /// @param challenger The concerned challenger
     function addDisqualification(address wallet, address currencyCt, uint256 currencyId, bytes32 candidateHash,
-        SettlementTypesLibNew.CandidateType candidateType, address challenger)
+        SettlementTypesLib.CandidateType candidateType, address challenger)
     public
     onlyDriipSettlementDispute
     {
@@ -692,7 +692,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         proposals[proposals.length - 1].nonce = trade.nonce;
         proposals[proposals.length - 1].blockNumber = trade.blockNumber;
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
-        proposals[proposals.length - 1].status = SettlementTypesLibNew.ChallengeStatus.Qualified;
+        proposals[proposals.length - 1].status = SettlementTypesLib.Status.Qualified;
         proposals[proposals.length - 1].currencyCt = currency.ct;
         proposals[proposals.length - 1].currencyId = currency.id;
         proposals[proposals.length - 1].stageAmount = stageAmount;
@@ -730,7 +730,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         proposals[proposals.length - 1].nonce = payment.nonce;
         proposals[proposals.length - 1].blockNumber = payment.blockNumber;
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
-        proposals[proposals.length - 1].status = SettlementTypesLibNew.ChallengeStatus.Qualified;
+        proposals[proposals.length - 1].status = SettlementTypesLib.Status.Qualified;
         proposals[proposals.length - 1].currencyCt = payment.currency.ct;
         proposals[proposals.length - 1].currencyId = payment.currency.id;
         proposals[proposals.length - 1].stageAmount = stageAmount;

@@ -17,7 +17,7 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDispute} from "./NullSettlementDispute.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {SettlementTypesLibNew} from "./SettlementTypesLibNew.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
 @title NullSettlementChallenge
@@ -41,11 +41,11 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     mapping(address => bool) public lockedByWallet;
     mapping(address => uint) public unlockTimeByWallet;
 
-    SettlementTypesLibNew.Proposal[] public proposals;
+    SettlementTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
     mapping(address => uint256[]) public proposalIndicesByWallet;
 
-    SettlementTypesLibNew.Disqualification[] public disqualifications;
+    SettlementTypesLib.Disqualification[] public disqualifications;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public disqualificationIndexByWalletCurrency;
 
     bytes32[] public candidateHashes;
@@ -226,7 +226,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     function proposalStatus(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLibNew.ChallengeStatus)
+    returns (SettlementTypesLib.Status)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
@@ -286,7 +286,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     function disqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLibNew.CandidateType)
+    returns (SettlementTypesLib.CandidateType)
     {
         uint256 index = disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
@@ -342,7 +342,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     /// @param wallet The concerned wallet
     /// @param status The status value
     function setProposalStatus(address wallet, address currencyCt, uint256 currencyId,
-        SettlementTypesLibNew.ChallengeStatus status)
+        SettlementTypesLib.Status status)
     public
     onlyNullSettlementDispute
     {
@@ -424,7 +424,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     /// @param candidateType The candidate type
     /// @param challenger The concerned challenger
     function addDisqualification(address wallet, address currencyCt, uint256 currencyId, bytes32 candidateHash,
-        SettlementTypesLibNew.CandidateType candidateType, address challenger)
+        SettlementTypesLib.CandidateType candidateType, address challenger)
     public
     onlyNullSettlementDispute
     {
@@ -489,7 +489,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         proposals[proposals.length - 1].nonce = ++nonce;
         proposals[proposals.length - 1].blockNumber = activeBalanceBlockNumber;
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
-        proposals[proposals.length - 1].status = SettlementTypesLibNew.ChallengeStatus.Qualified;
+        proposals[proposals.length - 1].status = SettlementTypesLib.Status.Qualified;
         proposals[proposals.length - 1].currencyCt = currencyCt;
         proposals[proposals.length - 1].currencyId = currencyId;
         proposals[proposals.length - 1].stageAmount = stageAmount;

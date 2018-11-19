@@ -20,7 +20,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {SettlementTypesLibNew} from "./SettlementTypesLibNew.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 
@@ -92,7 +92,7 @@ FraudChallengable, CancelOrdersChallengable {
         require(!nullSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
         // Require that proposal has not been disqualified already
-        require(SettlementTypesLibNew.ChallengeStatus.Disqualified != nullSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Disqualified != nullSettlementChallenge.proposalStatus(
             order.wallet, currency.ct, currency.id
         ));
 
@@ -109,7 +109,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Update proposal status
         nullSettlementChallenge.setProposalStatus(
-            order.wallet, currency.ct, currency.id, SettlementTypesLibNew.ChallengeStatus.Disqualified
+            order.wallet, currency.ct, currency.id, SettlementTypesLib.Status.Disqualified
         );
 
         // Lock wallet
@@ -118,7 +118,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Add disqualification
         nullSettlementChallenge.addDisqualification(
             order.wallet, currency.ct, currency.id, order.seals.operator.hash,
-            SettlementTypesLibNew.CandidateType.Order, challenger
+            SettlementTypesLib.CandidateType.Order, challenger
         );
 
         // Slash wallet's balances or reward challenger by stake fraction
@@ -171,7 +171,7 @@ FraudChallengable, CancelOrdersChallengable {
         require(!nullSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
         // Require that proposal has not been disqualified already
-        require(SettlementTypesLibNew.ChallengeStatus.Disqualified != nullSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Disqualified != nullSettlementChallenge.proposalStatus(
             wallet, currency.ct, currency.id
         ));
 
@@ -188,7 +188,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Update proposal status
         nullSettlementChallenge.setProposalStatus(
-            wallet, currency.ct, currency.id, SettlementTypesLibNew.ChallengeStatus.Disqualified
+            wallet, currency.ct, currency.id, SettlementTypesLib.Status.Disqualified
         );
 
         // Lock wallet
@@ -197,7 +197,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Add disqualification
         nullSettlementChallenge.addDisqualification(
             wallet, currency.ct, currency.id, trade.seal.hash,
-            SettlementTypesLibNew.CandidateType.Trade, challenger
+            SettlementTypesLib.CandidateType.Trade, challenger
         );
 
         // Slash wallet's balances or reward challenger by stake fraction
@@ -233,7 +233,7 @@ FraudChallengable, CancelOrdersChallengable {
         require(!nullSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
         // Require that proposal has not been disqualified already
-        require(SettlementTypesLibNew.ChallengeStatus.Disqualified != nullSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Disqualified != nullSettlementChallenge.proposalStatus(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
@@ -250,7 +250,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Update proposal status
         nullSettlementChallenge.setProposalStatus(
-            wallet, payment.currency.ct, payment.currency.id, SettlementTypesLibNew.ChallengeStatus.Disqualified
+            wallet, payment.currency.ct, payment.currency.id, SettlementTypesLib.Status.Disqualified
         );
 
         // Lock wallet
@@ -259,7 +259,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Add disqualification
         nullSettlementChallenge.addDisqualification(
             wallet, payment.currency.ct, payment.currency.id, payment.seals.operator.hash,
-            SettlementTypesLibNew.CandidateType.Payment, challenger
+            SettlementTypesLib.CandidateType.Payment, challenger
         );
 
         // Slash wallet's balances or reward challenger by stake fraction

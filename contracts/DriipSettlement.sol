@@ -22,7 +22,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {SettlementTypesLibNew} from "./SettlementTypesLibNew.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
 @title DriipSettlement
@@ -41,7 +41,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
 
-    SettlementTypesLibNew.Settlement[] public settlements;
+    SettlementTypesLib.Settlement[] public settlements;
     mapping(uint256 => uint256) public nonceSettlementIndex;
     mapping(address => uint256[]) public walletSettlementIndices;
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
@@ -121,7 +121,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @notice Get the settlement for the given (global) nonce
     /// @param nonce The nonce of the settlement
     /// @return settlement of the provided nonce
-    function settlementByNonce(uint256 nonce) public view returns (SettlementTypesLibNew.Settlement) {
+    function settlementByNonce(uint256 nonce) public view returns (SettlementTypesLib.Settlement) {
         require(hasSettlementByNonce(nonce));
         return settlements[nonceSettlementIndex[nonce] - 1];
     }
@@ -137,7 +137,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @param wallet The address for which to return settlement
     /// @param index The wallet's settlement index
     /// @return settlement for the provided wallet and index
-    function settlementByWalletAndIndex(address wallet, uint256 index) public view returns (SettlementTypesLibNew.Settlement) {
+    function settlementByWalletAndIndex(address wallet, uint256 index) public view returns (SettlementTypesLib.Settlement) {
         require(walletSettlementIndices[wallet].length > index);
         return settlements[walletSettlementIndices[wallet][index] - 1];
     }
@@ -146,7 +146,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @param wallet The address for which to return settlement
     /// @param nonce The wallet's nonce
     /// @return settlement for the provided wallet and index
-    function settlementByWalletAndNonce(address wallet, uint256 nonce) public view returns (SettlementTypesLibNew.Settlement) {
+    function settlementByWalletAndNonce(address wallet, uint256 nonce) public view returns (SettlementTypesLib.Settlement) {
         require(0 < walletNonceSettlementIndex[wallet][nonce]);
         return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
     }
@@ -227,10 +227,10 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         require(driipSettlementChallenge.hasProposalExpired(wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id));
 
         // Require that driip settlement challenge proposals qualified
-        require(SettlementTypesLibNew.ChallengeStatus.Qualified == driipSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Qualified == driipSettlementChallenge.proposalStatus(
             wallet, trade.currencies.intended.ct, trade.currencies.intended.id
         ));
-        require(SettlementTypesLibNew.ChallengeStatus.Qualified == driipSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Qualified == driipSettlementChallenge.proposalStatus(
             wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
         ));
 
@@ -244,7 +244,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             || (trade.nonce < maxDriipNonce));
 
         // Get settlement, or create one if no such settlement exists for the trade nonce
-        SettlementTypesLibNew.Settlement storage settlement = hasSettlementByNonce(trade.nonce) ?
+        SettlementTypesLib.Settlement storage settlement = hasSettlementByNonce(trade.nonce) ?
         getSettlement(
             trade.nonce, NahmiiTypesLib.DriipType.Trade
         ) :
@@ -254,16 +254,16 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         );
 
         // Get settlement role
-        SettlementTypesLibNew.SettlementRole settlementRole = getSettlementRoleFromTrade(trade, wallet);
+        SettlementTypesLib.SettlementRole settlementRole = getSettlementRoleFromTrade(trade, wallet);
 
         // If exists settlement of nonce then require that wallet has not already settled
         require(
-            (SettlementTypesLibNew.SettlementRole.Origin == settlementRole && !settlement.origin.done) ||
-            (SettlementTypesLibNew.SettlementRole.Target == settlementRole && !settlement.target.done)
+            (SettlementTypesLib.SettlementRole.Origin == settlementRole && !settlement.origin.done) ||
+            (SettlementTypesLib.SettlementRole.Target == settlementRole && !settlement.target.done)
         );
 
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
-        if (SettlementTypesLibNew.SettlementRole.Origin == settlementRole)
+        if (SettlementTypesLib.SettlementRole.Origin == settlementRole)
             settlement.origin.done = true;
         else
             settlement.target.done = true;
@@ -334,7 +334,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         require(driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
         // Require that driip settlement challenge proposal qualified
-        require(SettlementTypesLibNew.ChallengeStatus.Qualified == driipSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Qualified == driipSettlementChallenge.proposalStatus(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
@@ -347,22 +347,22 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             || (payment.nonce < maxDriipNonce));
 
         // Get settlement, or create one if no such settlement exists for the trade nonce
-        SettlementTypesLibNew.Settlement storage settlement = hasSettlementByNonce(payment.nonce) ?
+        SettlementTypesLib.Settlement storage settlement = hasSettlementByNonce(payment.nonce) ?
         getSettlement(payment.nonce, NahmiiTypesLib.DriipType.Payment) :
         createSettlement(payment.nonce, NahmiiTypesLib.DriipType.Payment,
             payment.sender.nonce, payment.sender.wallet, payment.recipient.nonce, payment.recipient.wallet);
 
         // Get settlement role
-        SettlementTypesLibNew.SettlementRole settlementRole = getSettlementRoleFromPayment(payment, wallet);
+        SettlementTypesLib.SettlementRole settlementRole = getSettlementRoleFromPayment(payment, wallet);
 
         // If exists settlement of nonce then require that wallet has not already settled
         require(
-            (SettlementTypesLibNew.SettlementRole.Origin == settlementRole && !settlement.origin.done) ||
-            (SettlementTypesLibNew.SettlementRole.Target == settlementRole && !settlement.target.done)
+            (SettlementTypesLib.SettlementRole.Origin == settlementRole && !settlement.origin.done) ||
+            (SettlementTypesLib.SettlementRole.Target == settlementRole && !settlement.target.done)
         );
 
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
-        if (SettlementTypesLibNew.SettlementRole.Origin == settlementRole)
+        if (SettlementTypesLib.SettlementRole.Origin == settlementRole)
             settlement.origin.done = true;
         else
             settlement.target.done = true;
@@ -405,30 +405,30 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     function getSettlementRoleFromTrade(NahmiiTypesLib.Trade trade, address wallet)
     private
     pure
-    returns (SettlementTypesLibNew.SettlementRole)
+    returns (SettlementTypesLib.SettlementRole)
     {
         return (wallet == trade.seller.wallet ?
-        SettlementTypesLibNew.SettlementRole.Origin :
-        SettlementTypesLibNew.SettlementRole.Target);
+        SettlementTypesLib.SettlementRole.Origin :
+        SettlementTypesLib.SettlementRole.Target);
     }
 
     function getSettlementRoleFromPayment(NahmiiTypesLib.Payment payment, address wallet)
     private
     pure
-    returns (SettlementTypesLibNew.SettlementRole)
+    returns (SettlementTypesLib.SettlementRole)
     {
         return (wallet == payment.sender.wallet ?
-        SettlementTypesLibNew.SettlementRole.Origin :
-        SettlementTypesLibNew.SettlementRole.Target);
+        SettlementTypesLib.SettlementRole.Origin :
+        SettlementTypesLib.SettlementRole.Target);
     }
 
     function getSettlement(uint256 nonce, NahmiiTypesLib.DriipType driipType)
     private
     view
-    returns (SettlementTypesLibNew.Settlement storage)
+    returns (SettlementTypesLib.Settlement storage)
     {
         uint256 index = nonceSettlementIndex[nonce];
-        SettlementTypesLibNew.Settlement storage settlement = settlements[index - 1];
+        SettlementTypesLib.Settlement storage settlement = settlements[index - 1];
         require(driipType == settlement.driipType);
         return settlement;
     }
@@ -436,13 +436,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     function createSettlement(uint256 nonce, NahmiiTypesLib.DriipType driipType,
         uint256 originNonce, address originWallet, uint256 targetNonce, address targetWallet)
     private
-    returns (SettlementTypesLibNew.Settlement storage)
+    returns (SettlementTypesLib.Settlement storage)
     {
-        SettlementTypesLibNew.Settlement memory settlement;
+        SettlementTypesLib.Settlement memory settlement;
         settlement.nonce = nonce;
         settlement.driipType = driipType;
-        settlement.origin = SettlementTypesLibNew.SettlementParty(originNonce, originWallet, false);
-        settlement.target = SettlementTypesLibNew.SettlementParty(targetNonce, targetWallet, false);
+        settlement.origin = SettlementTypesLib.SettlementParty(originNonce, originWallet, false);
+        settlement.target = SettlementTypesLib.SettlementParty(targetNonce, targetWallet, false);
 
         settlements.push(settlement);
 

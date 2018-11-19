@@ -322,11 +322,13 @@ module.exports = (glob) => {
                     await ethersClientFund._reset({gasLimit: 1e6});
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(glob.owner, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(
+                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNull({gasLimit: 1e6}).should.be.rejected;
+                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6}).should.be.rejected;
                 });
             });
 
@@ -343,12 +345,12 @@ module.exports = (glob) => {
                     await ethersCommunityVote._reset();
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(glob.owner, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(
+                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    );
                     await ethersNullSettlementChallenge._setProposalNonce(1);
-                    await ethersNullSettlementChallenge._setProposalCurrency({ct: mocks.address0, id: 0});
-                    await ethersNullSettlementChallenge._setProposalStageAmount(10);
+                    await ethersNullSettlementChallenge._addProposalStageAmount(10);
                     await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(0);
-                    await ethersNullSettlementChallenge.setProposalChallenger(glob.owner, challenger);
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {
@@ -357,7 +359,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull().should.be.rejected;
+                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6}).should.be.rejected;
                     });
                 });
 
@@ -367,13 +369,13 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull().should.be.rejected;
+                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6}).should.be.rejected;
                     });
                 });
 
                 describe('if nonce is greater than previously settled nonce for wallet and currency', () => {
                     it('should settle successfully', async () => {
-                        await ethersNullSettlement.settleNull({gasLimit: 1e6});
+                        await ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics[0]
@@ -410,11 +412,12 @@ module.exports = (glob) => {
 
                 describe('if nonce is smaller than or equal to previously settled nonce for wallet and currency', () => {
                     beforeEach(async () => {
-                        await ethersNullSettlement.settleNull({gasLimit: 1e6});
+                        await ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6});
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull({gasLimit: 1e6}).should.be.rejected;
+                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                            .should.be.rejected;
                     });
                 });
             });
@@ -433,7 +436,8 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
 
@@ -442,11 +446,12 @@ module.exports = (glob) => {
                     await ethersClientFund._reset({gasLimit: 1e6});
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified'));
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6}).should.be.rejected;
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
 
@@ -463,12 +468,12 @@ module.exports = (glob) => {
                     await ethersCommunityVote._reset();
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(
+                        wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    );
                     await ethersNullSettlementChallenge._setProposalNonce(1);
-                    await ethersNullSettlementChallenge._setProposalCurrency({ct: mocks.address0, id: 0});
-                    await ethersNullSettlementChallenge._setProposalStageAmount(10);
+                    await ethersNullSettlementChallenge._addProposalStageAmount(10);
                     await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(0);
-                    await ethersNullSettlementChallenge.setProposalChallenger(wallet, challenger);
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {
@@ -477,7 +482,8 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                            .should.be.rejected;
                     });
                 });
 
@@ -487,13 +493,14 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                            .should.be.rejected;
                     });
                 });
 
                 describe('if nonce is greater than previously settled nonce for wallet and currency', () => {
                     it('should settle successfully', async () => {
-                        await ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6});
+                        await ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics[0]
@@ -530,11 +537,14 @@ module.exports = (glob) => {
 
                 describe('if nonce is smaller than or equal to previously settled nonce for wallet and currency', () => {
                     beforeEach(async () => {
-                        await ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6});
+                        await ethersNullSettlement.settleNullByProxy(
+                            wallet, mocks.address0, 0, {gasLimit: 1e6}
+                        );
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6}).should.be.rejected;
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                            .should.be.rejected;
                     });
                 });
             });

@@ -20,7 +20,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {SettlementTypesLibNew} from "./SettlementTypesLibNew.sol";
+import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
 @title NullSettlement
@@ -110,7 +110,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     private
     {
         // Require that driip settlement challenge qualified
-        require(SettlementTypesLibNew.ChallengeStatus.Qualified == nullSettlementChallenge.proposalStatus(
+        require(SettlementTypesLib.Status.Qualified == nullSettlementChallenge.proposalStatus(
             wallet, currencyCt, currencyId
         ));
 
@@ -128,7 +128,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         // Update settled nonce of wallet and currency
         walletCurrencyMaxNullNonce[wallet][currencyCt][currencyId] = nonce;
 
-        // Get proposal's currency, target balance amount and stage amount. (Null settlement proposals only have one of each.)
+        // Get proposal's stage amount and target balance amount.
         int256 stageAmount = nullSettlementChallenge.proposalStageAmount(
             wallet, currencyCt, currencyId
         );

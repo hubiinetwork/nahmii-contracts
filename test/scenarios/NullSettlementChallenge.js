@@ -269,7 +269,7 @@ module.exports = (glob) => {
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
                     proposal.nonce._bn.should.eq.BN(1);
                     proposal.blockNumber._bn.should.eq.BN(1);
-                    proposal.status.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
+                    proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     proposal.stageAmount._bn.should.eq.BN(1);
                     proposal.targetBalanceAmount._bn.should.eq.BN(9);
                     proposal.balanceReward.should.be.true;
@@ -370,7 +370,7 @@ module.exports = (glob) => {
                     proposal.wallet.should.equal(wallet);
                     proposal.nonce._bn.should.eq.BN(1);
                     proposal.blockNumber._bn.should.eq.BN(1);
-                    proposal.status.should.equal(mocks.challengeStatuses.indexOf('Qualified'));
+                    proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     proposal.stageAmount._bn.should.eq.BN(1);
                     proposal.targetBalanceAmount._bn.should.eq.BN(9);
                     proposal.balanceReward.should.be.false;
@@ -537,7 +537,7 @@ module.exports = (glob) => {
                 it('should return status of proposal', async () => {
                     (await ethersNullSettlementChallenge.proposalStatus(
                         glob.owner, mocks.address0, 0
-                    )).should.equal(mocks.challengeStatuses.indexOf('Qualified'));
+                    )).should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                 });
             });
         });
@@ -680,7 +680,7 @@ module.exports = (glob) => {
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.challengeStatuses.indexOf('Disqualified')
+                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     ).should.be.rejected
                 });
             });
@@ -692,7 +692,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersNullSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.challengeStatuses.indexOf('Disqualified')
+                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     ).should.be.rejected
                 });
             });
@@ -708,12 +708,12 @@ module.exports = (glob) => {
 
                 it('should successfully set status of proposal', async () => {
                     await ethersNullSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.challengeStatuses.indexOf('Disqualified')
+                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
 
                     (await ethersNullSettlementChallenge.proposalStatus(
                         glob.owner, mocks.address0, 0
-                    )).should.equal(mocks.challengeStatuses.indexOf('Disqualified'));
+                    )).should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                 });
             });
         });

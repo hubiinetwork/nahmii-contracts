@@ -40,7 +40,7 @@ const RevenueFund = artifacts.require('RevenueFund');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
-const SettlementTypesLibNew = artifacts.require('SettlementTypesLibNew');
+const SettlementTypesLib = artifacts.require('SettlementTypesLib');
 const DriipStorable = artifacts.require('DriipStorable');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
@@ -106,7 +106,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'BalanceLib', '', BalanceLib);
             await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
             await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
-            await execDeploy(ctl, 'SettlementTypesLibNew', '', SettlementTypesLibNew);
+            await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
             await execDeploy(ctl, 'BlockNumbUintsLib', '', BlockNumbUintsLib);
             await execDeploy(ctl, 'BlockNumbIntsLib', '', BlockNumbIntsLib);
             await execDeploy(ctl, 'BlockNumbDisdIntsLib', '', BlockNumbDisdIntsLib);
@@ -138,7 +138,7 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(TxHistoryLib, [
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
-            await deployer.link(SettlementTypesLibNew, [
+            await deployer.link(SettlementTypesLib, [
                 DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
                 NullSettlement, NullSettlementChallenge, NullSettlementDispute
             ]);
