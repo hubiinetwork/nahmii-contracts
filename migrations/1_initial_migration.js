@@ -4,7 +4,8 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-const Migrations = artifacts.require('Migrations');
+// Using './Contract.sol' rather than 'Contract' because of https://github.com/trufflesuite/truffle/issues/611
+const Migrations = artifacts.require('./Migrations.sol');
 const helpers = require('../scripts/common/helpers.js');
 
 // -----------------------------------------------------------------------------------------------------------------

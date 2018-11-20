@@ -4,53 +4,54 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-const BalanceLib = artifacts.require('BalanceLib');
-const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
-const SignerManager = artifacts.require('SignerManager');
-const ClientFund = artifacts.require('ClientFund');
-const CommunityVote = artifacts.require('CommunityVote');
-const Configuration = artifacts.require('Configuration');
-const DriipSettlement = artifacts.require('DriipSettlement');
-const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
-const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
-const ERC20TransferController = artifacts.require('ERC20TransferController');
-const ERC721TransferController = artifacts.require('ERC721TransferController');
-const Hasher = artifacts.require('Hasher');
-const FraudChallenge = artifacts.require('FraudChallenge');
-const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDoubleSpentOrders');
-const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
-const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
-const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTrades');
-const FraudChallengeByOrder = artifacts.require('FraudChallengeByOrder');
-const FraudChallengeByPayment = artifacts.require('FraudChallengeByPayment');
-const FraudChallengeByPaymentSucceedingTrade = artifacts.require('FraudChallengeByPaymentSucceedingTrade');
-const FraudChallengeBySuccessivePayments = artifacts.require('FraudChallengeBySuccessivePayments');
-const FraudChallengeBySuccessiveTrades = artifacts.require('FraudChallengeBySuccessiveTrades');
-const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
-const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByTradeOrderResiduals');
-const FraudChallengeByTradeSucceedingPayment = artifacts.require('FraudChallengeByTradeSucceedingPayment');
-const InUseCurrencyLib = artifacts.require('InUseCurrencyLib');
-const MockedConfiguration = artifacts.require('MockedConfiguration');
-const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
-const NullSettlement = artifacts.require('NullSettlement');
-const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
-const NullSettlementDispute = artifacts.require('NullSettlementDispute');
-const PartnerFund = artifacts.require('PartnerFund');
-const RevenueFund = artifacts.require('RevenueFund');
-const SafeMathIntLib = artifacts.require('SafeMathIntLib');
-const SafeMathUintLib = artifacts.require('SafeMathUintLib');
-const SecurityBond = artifacts.require('SecurityBond');
-const SettlementTypesLib = artifacts.require('SettlementTypesLib');
-const DriipStorable = artifacts.require('DriipStorable');
-const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
-const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
-const TransferControllerManager = artifacts.require('TransferControllerManager');
-const TxHistoryLib = artifacts.require('TxHistoryLib');
-const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
-const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
-const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
-const ConstantsLib = artifacts.require('ConstantsLib');
-const Validator = artifacts.require('Validator');
+// Using './Contract.sol' rather than 'Contract' because of https://github.com/trufflesuite/truffle/issues/611
+const BalanceLib = artifacts.require('./BalanceLib.sol');
+const CancelOrdersChallenge = artifacts.require('./CancelOrdersChallenge.sol');
+const SignerManager = artifacts.require('./SignerManager.sol');
+const ClientFund = artifacts.require('./ClientFund.sol');
+const CommunityVote = artifacts.require('./CommunityVote.sol');
+const Configuration = artifacts.require('./Configuration.sol');
+const DriipSettlement = artifacts.require('./DriipSettlement.sol');
+const DriipSettlementChallenge = artifacts.require('./DriipSettlementChallenge.sol');
+const DriipSettlementDispute = artifacts.require('./DriipSettlementDispute.sol');
+const ERC20TransferController = artifacts.require('./ERC20TransferController.sol');
+const ERC721TransferController = artifacts.require('./ERC721TransferController.sol');
+const Hasher = artifacts.require('./Hasher.sol');
+const FraudChallenge = artifacts.require('./FraudChallenge.sol');
+const FraudChallengeByDoubleSpentOrders = artifacts.require('./FraudChallengeByDoubleSpentOrders.sol');
+const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('./FraudChallengeByDuplicateDriipNonceOfPayments.sol');
+const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('./FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.sol');
+const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('./FraudChallengeByDuplicateDriipNonceOfTrades.sol');
+const FraudChallengeByOrder = artifacts.require('./FraudChallengeByOrder.sol');
+const FraudChallengeByPayment = artifacts.require('./FraudChallengeByPayment.sol');
+const FraudChallengeByPaymentSucceedingTrade = artifacts.require('./FraudChallengeByPaymentSucceedingTrade.sol');
+const FraudChallengeBySuccessivePayments = artifacts.require('./FraudChallengeBySuccessivePayments.sol');
+const FraudChallengeBySuccessiveTrades = artifacts.require('./FraudChallengeBySuccessiveTrades.sol');
+const FraudChallengeByTrade = artifacts.require('./FraudChallengeByTrade.sol');
+const FraudChallengeByTradeOrderResiduals = artifacts.require('./FraudChallengeByTradeOrderResiduals.sol');
+const FraudChallengeByTradeSucceedingPayment = artifacts.require('./FraudChallengeByTradeSucceedingPayment.sol');
+const InUseCurrencyLib = artifacts.require('./InUseCurrencyLib.sol');
+const MockedConfiguration = artifacts.require('./MockedConfiguration.sol');
+const MonetaryTypesLib = artifacts.require('./MonetaryTypesLib.sol');
+const NullSettlement = artifacts.require('./NullSettlement.sol');
+const NullSettlementChallenge = artifacts.require('./NullSettlementChallenge.sol');
+const NullSettlementDispute = artifacts.require('./NullSettlementDispute.sol');
+const PartnerFund = artifacts.require('./PartnerFund.sol');
+const RevenueFund = artifacts.require('./RevenueFund.sol');
+const SafeMathIntLib = artifacts.require('./SafeMathIntLib.sol');
+const SafeMathUintLib = artifacts.require('./SafeMathUintLib.sol');
+const SecurityBond = artifacts.require('./SecurityBond.sol');
+const SettlementTypesLib = artifacts.require('./SettlementTypesLib.sol');
+const DriipStorable = artifacts.require('./DriipStorable.sol');
+const NahmiiTypesLib = artifacts.require('./NahmiiTypesLib.sol');
+const TokenHolderRevenueFund = artifacts.require('./TokenHolderRevenueFund.sol');
+const TransferControllerManager = artifacts.require('./TransferControllerManager.sol');
+const TxHistoryLib = artifacts.require('./TxHistoryLib.sol');
+const BlockNumbUintsLib = artifacts.require('./BlockNumbUintsLib.sol');
+const BlockNumbIntsLib = artifacts.require('./BlockNumbIntsLib.sol');
+const BlockNumbDisdIntsLib = artifacts.require('./BlockNumbDisdIntsLib.sol');
+const ConstantsLib = artifacts.require('./ConstantsLib.sol');
+const Validator = artifacts.require('./Validator.sol');
 
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
@@ -226,27 +227,29 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'PartnerFund', '', PartnerFund);
 
             //configure smart contracts
+            const delayBlocks = helpers.isTestNetwork(network) ? 1 : 10;
+
             instance = await Configuration.at(addressStorage.get('Configuration'));
-            tx = await instance.setConfirmationBlocks((await web3.eth.getBlockNumberPromise()) + 1, 12);
-            tx = await instance.setTradeMakerFee((await web3.eth.getBlockNumberPromise()) + 1, 1e15, [], []);                       // 0.1%
-            tx = await instance.setTradeMakerMinimumFee((await web3.eth.getBlockNumberPromise()) + 1, 1e14);                        // 0.01%
-            tx = await instance.setTradeTakerFee((await web3.eth.getBlockNumberPromise()) + 1, 2e15, [], []);                       // 0.2%
-            tx = await instance.setTradeTakerMinimumFee((await web3.eth.getBlockNumberPromise()) + 1, 2e14);                        // 0.02%
-            tx = await instance.setPaymentFee((await web3.eth.getBlockNumberPromise()) + 1, 1e15, [], []);                          // 0.1%
-            tx = await instance.setPaymentMinimumFee((await web3.eth.getBlockNumberPromise()) + 1, 1e14);                           // 0.01%
-            tx = await instance.setWalletLockTimeout((await web3.eth.getBlockNumberPromise()) + 1, 60 * 60 * 24 * 30);              // 30 days
-            if (network.startsWith('ropsten')) {
-                tx = await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + 1, 60 * 3);           // 3 minutes
-                tx = await instance.setSettlementChallengeTimeout((await web3.eth.getBlockNumberPromise()) + 1, 60 * 5);            // 5 minutes
-            } else {
-                tx = await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + 1, 60 * 60 * 24 * 3); // 3 days
-                tx = await instance.setSettlementChallengeTimeout((await web3.eth.getBlockNumberPromise()) + 1, 60 * 60 * 24 * 5);  // 5 days
-            }
-            tx = await instance.setWalletSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + 1, 1e17);               // 10%
-            tx = await instance.setOperatorSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + 1, 5e17);             // 50%
-            tx = await instance.setFraudStakeFraction((await web3.eth.getBlockNumberPromise()) + 1, 5e17);                          // 50%
+            tx = await instance.setConfirmationBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 12);
+            tx = await instance.setTradeMakerFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e15, [], []);                       // 0.1%
+            tx = await instance.setTradeMakerMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e14);                        // 0.01%
+            tx = await instance.setTradeTakerFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2e15, [], []);                       // 0.2%
+            tx = await instance.setTradeTakerMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2e14);                        // 0.02%
+            tx = await instance.setPaymentFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e15, [], []);                          // 0.1%
+            tx = await instance.setPaymentMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e14);                           // 0.01%
+            tx = await instance.setWalletLockTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 30);              // 30 days
             if (network.startsWith('mainnet')) {
-                tx = await instance.setUpdateDelayBlocks((await web3.eth.getBlockNumberPromise()) + 1, 2880);                       // ~12 hours
+                tx = await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 3); // 3 days
+                tx = await instance.setSettlementChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 5);  // 5 days
+            } else {
+                tx = await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 3);           // 3 minutes
+                tx = await instance.setSettlementChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 5);            // 5 minutes
+            }
+            tx = await instance.setWalletSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e17);               // 10%
+            tx = await instance.setOperatorSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);             // 50%
+            tx = await instance.setFraudStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);                          // 50%
+            if (network.startsWith('mainnet')) {
+                tx = await instance.setUpdateDelayBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2880);                       // ~12 hours
                 tx = await instance.setEarliestSettlementBlockNumber((await web3.eth.getBlockNumberPromise()) + 172800);            // In ~30 days
                 // tx = await instance.disableEarliestSettlementBlockNumberUpdate();
             }
