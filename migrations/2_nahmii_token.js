@@ -45,22 +45,20 @@ module.exports = (deployer, network, accounts) => {
 
             console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
             console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
-
-            console.log('Saving addresses...');
-            await addressStorage.save();
         }
 
         else if (network.startsWith('ropsten')) {
-            addressStorage.set('NahmiiToken', '0x65905e653b750bCB8f903374Bc93cbd8E2E71B71');
-
-            console.log(`Referenced NahmiiToken:  0x65905e653b750bCB8f903374Bc93cbd8E2E71B71`);
+            addressStorage.set('NahmiiToken', '0x65905e653b750bcb8f903374bc93cbd8e2e71b71');
+            console.log(`Referenced NahmiiToken: 0x65905e653b750bcb8f903374bc93cbd8e2e71b71`);
         }
 
         else if (network.startsWith('mainnet')) {
-            addressStorage.set('NahmiiToken', '0xAc4f2f204b38390b92D0540908447d5ed352799a');
-
-            console.log(`Referenced NahmiiToken:  0xAc4f2f204b38390b92D0540908447d5ed352799a`);
+            addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
+            console.log(`Referenced NahmiiToken: 0xac4f2f204b38390b92d0540908447d5ed352799a`);
         }
+
+        console.log('Saving addresses...');
+        await addressStorage.save();
     });
 };
 
