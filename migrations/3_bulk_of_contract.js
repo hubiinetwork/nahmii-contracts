@@ -4,18 +4,25 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
+const AccrualBenefactor = artifacts.require('AccrualBenefactor');
 const BalanceLib = artifacts.require('BalanceLib');
+const BalanceLogLib = artifacts.require('BalanceLogLib');
+const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
+const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
+const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
 const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
 const SignerManager = artifacts.require('SignerManager');
 const ClientFund = artifacts.require('ClientFund');
+const ClientFundable = artifacts.require('ClientFundable');
 const CommunityVote = artifacts.require('CommunityVote');
 const Configuration = artifacts.require('Configuration');
+const ConstantsLib = artifacts.require('ConstantsLib');
 const DriipSettlement = artifacts.require('DriipSettlement');
 const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
+const DriipStorable = artifacts.require('DriipStorable');
 const ERC20TransferController = artifacts.require('ERC20TransferController');
 const ERC721TransferController = artifacts.require('ERC721TransferController');
-const Hasher = artifacts.require('Hasher');
 const FraudChallenge = artifacts.require('FraudChallenge');
 const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDoubleSpentOrders');
 const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
@@ -29,9 +36,19 @@ const FraudChallengeBySuccessiveTrades = artifacts.require('FraudChallengeBySucc
 const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
 const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByTradeOrderResiduals');
 const FraudChallengeByTradeSucceedingPayment = artifacts.require('FraudChallengeByTradeSucceedingPayment');
+const Hasher = artifacts.require('Hasher');
 const InUseCurrencyLib = artifacts.require('InUseCurrencyLib');
+const MockedBeneficiary = artifacts.require('MockedBeneficiary');
+const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
+const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
+const MockedDriipSettlementChallenge = artifacts.require('MockedDriipSettlementChallenge');
+const MockedDriipSettlementDispute = artifacts.require('MockedDriipSettlementDispute');
+const MockedNullSettlementChallenge = artifacts.require('MockedNullSettlementChallenge');
+const MockedNullSettlementDispute = artifacts.require('MockedNullSettlementDispute');
+const MockedValidator = artifacts.require('MockedValidator');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
+const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
 const NullSettlement = artifacts.require('NullSettlement');
 const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const NullSettlementDispute = artifacts.require('NullSettlementDispute');
@@ -41,15 +58,12 @@ const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
 const SettlementTypesLib = artifacts.require('SettlementTypesLib');
-const DriipStorable = artifacts.require('DriipStorable');
-const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
+const StandardTokenEx = artifacts.require('StandardTokenEx');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
-const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
-const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
-const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
-const ConstantsLib = artifacts.require('ConstantsLib');
+const UnitTestHelpers = artifacts.require('UnitTestHelpers');
+const Validatable = artifacts.require('Validatable');
 const Validator = artifacts.require('Validator');
 
 const path = require('path');
@@ -90,68 +104,78 @@ module.exports = (deployer, network, accounts) => {
                 ownerAccount: ownerAccount
             };
 
+            await execDeploy(ctl, 'BlockNumbIntsLib', '', BlockNumbIntsLib);
+            await execDeploy(ctl, 'BlockNumbUintsLib', '', BlockNumbUintsLib);
             await execDeploy(ctl, 'ConstantsLib', '', ConstantsLib);
             await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
-
-            await deployer.link(ConstantsLib, [
-                BlockNumbDisdIntsLib, Configuration, MockedConfiguration, RevenueFund, SecurityBond, Validator
-            ]);
-            await deployer.link(MonetaryTypesLib, [
-                ClientFund, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, NahmiiTypesLib,
-                NullSettlement, TokenHolderRevenueFund, Validator
-            ]);
-
-            //deploy base libraries
             await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
             await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
-            await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
-            await execDeploy(ctl, 'BalanceLib', '', BalanceLib);
-            await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
             await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
-            await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
-            await execDeploy(ctl, 'BlockNumbUintsLib', '', BlockNumbUintsLib);
-            await execDeploy(ctl, 'BlockNumbIntsLib', '', BlockNumbIntsLib);
-            await execDeploy(ctl, 'BlockNumbDisdIntsLib', '', BlockNumbDisdIntsLib);
 
-            //link dependencies
-            await deployer.link(SafeMathIntLib, [
-                BalanceLib, CancelOrdersChallenge, ClientFund, CommunityVote, Configuration, DriipSettlement, DriipSettlementChallenge,
-                DriipSettlementDispute, NullSettlement, NullSettlementChallenge, NullSettlementDispute, PartnerFund, RevenueFund,
-                SecurityBond, TokenHolderRevenueFund, Validator
-            ]);
-            await deployer.link(SafeMathUintLib, [
-                CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
-                NullSettlementChallenge, NullSettlementDispute, /*RevenueFund, */, SecurityBond, TokenHolderRevenueFund,
-                Validator
-            ]);
-            await deployer.link(NahmiiTypesLib, [
-                CancelOrdersChallenge, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable, FraudChallenge,
-                FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
-                FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
-                FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
-                FraudChallengeByTradeSucceedingPayment, Hasher, NullSettlement, Validator
-            ]);
-            await deployer.link(BalanceLib, [
-                ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
-            ]);
-            await deployer.link(InUseCurrencyLib, [
-                ClientFund, RevenueFund, SecurityBond
-            ]);
-            await deployer.link(TxHistoryLib, [
-                ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
-            ]);
-            await deployer.link(SettlementTypesLib, [
-                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
-                NullSettlement, NullSettlementChallenge, NullSettlementDispute
+            await deployer.link(BlockNumbIntsLib, [
+                Configuration
             ]);
             await deployer.link(BlockNumbUintsLib, [
                 Configuration
             ]);
-            await deployer.link(BlockNumbIntsLib, [
-                Configuration
+            await deployer.link(ConstantsLib, [
+                AccrualBenefactor, BlockNumbDisdIntsLib, Configuration, MockedConfiguration, RevenueFund, SecurityBond,
+                Validator
             ]);
+            await deployer.link(MonetaryTypesLib, [
+                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable,
+                InUseCurrencyLib, MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
+                PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
+            ]);
+            await deployer.link(SafeMathIntLib, [
+                AccrualBenefactor, BalanceLib, BlockNumbDisdIntsLib, CancelOrdersChallenge, ClientFund,
+                Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
+                NullSettlementChallenge, NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond,
+                TokenHolderRevenueFund, Validator
+            ]);
+            await deployer.link(SafeMathUintLib, [
+                CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
+                NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, SecurityBond, StandardTokenEx,
+                TokenHolderRevenueFund, UnitTestHelpers, Validator
+            ]);
+            await deployer.link(TxHistoryLib, [
+                ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
+            ]);
+
+            await execDeploy(ctl, 'BalanceLib', '', BalanceLib);
+            await execDeploy(ctl, 'BalanceLogLib', '', BalanceLogLib);
+            await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
+            await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
+
+            await deployer.link(BalanceLib, [
+                ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
+            ]);
+            await deployer.link(BalanceLogLib, [
+                ClientFund
+            ]);
+            await deployer.link(InUseCurrencyLib, [
+                ClientFund, RevenueFund, SecurityBond
+            ]);
+            await deployer.link(NahmiiTypesLib, [
+                CancelOrdersChallenge, ClientFundable, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable,
+                FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
+                FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
+                FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
+                FraudChallengeByTradeSucceedingPayment, Hasher, MockedCancelOrdersChallenge, MockedDriipSettlementChallenge, MockedDriipSettlementDispute,
+                MockedNullSettlementChallenge, MockedNullSettlementDispute, MockedValidator, NullSettlementChallenge, NullSettlementDispute,
+                SettlementTypesLib, Validatable, Validator
+            ]);
+
+            await execDeploy(ctl, 'BlockNumbDisdIntsLib', '', BlockNumbDisdIntsLib);
+            await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
+
             await deployer.link(BlockNumbDisdIntsLib, [
                 Configuration
+            ]);
+            await deployer.link(SettlementTypesLib, [
+                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
+                MockedDriipSettlementChallenge, MockedNullSettlementChallenge,
+                NullSettlement, NullSettlementChallenge, NullSettlementDispute
             ]);
 
             //deploy transfer controllers
@@ -249,7 +273,7 @@ module.exports = (deployer, network, accounts) => {
             tx = await instance.setFraudStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);                          // 50%
             if (network.startsWith('mainnet')) {
                 tx = await instance.setUpdateDelayBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2880);                       // ~12 hours
-                tx = await instance.setEarliestSettlementBlockNumber((await web3.eth.getBlockNumberPromise()) + 172800);            // In ~30 days
+                tx = await instance.setEarliestSettlementBlockNumber((await web3.eth.getBlockNumberPromise()) + 172800);                      // In ~30 days
                 // tx = await instance.disableEarliestSettlementBlockNumberUpdate();
             }
             tx = await instance.registerService(addressStorage.get('FraudChallengeByOrder'));

@@ -8,8 +8,6 @@
 
 pragma solidity ^0.4.25;
 
-import {SafeMathIntLib} from "./SafeMathIntLib.sol";
-
 library BalanceLogLib {
     struct Entry {
         int256 amount;

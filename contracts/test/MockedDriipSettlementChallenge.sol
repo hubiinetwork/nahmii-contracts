@@ -9,7 +9,6 @@
 pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";

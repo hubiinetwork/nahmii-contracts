@@ -10,8 +10,6 @@ pragma solidity ^0.4.25;
 
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
-
 /**
 @title MockedSecurityBond
 @notice Mocked implementation of security bond contract
