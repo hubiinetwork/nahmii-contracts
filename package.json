@@ -10,6 +10,7 @@
     "build": "truffle compile",
     "build:all": "truffle compile --all",
     "test": "concurrently -r -s first --kill-others 'ganache-cli -e 1000 >/dev/null' 'truffle compile && truffle test'",
+    "test:ganache": "truffle compile && truffle test --ganache",
     "deploy": "npm run deploy:test",
     "deploy:test": "truffle migrate --network testnet",
     "deploy:main": "truffle migrate --network mainnet",
@@ -18,6 +19,7 @@
     "exec:script:mainnet": "truffle compile && truffle exec scripts/common/script_template.js --network mainnet-infura",
     "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
     "docs": "soldoc",
+    "version:truffle": "truffle version",
     "version:compiler": "solcjs --version"
   },
   "author": "Hubii",
@@ -33,7 +35,8 @@
     "ganache-cli": "^6.1.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.0.0",
-    "truffle": "^4.1.11",
+    "solc": "^0.4.25",
+    "truffle": "^4.1.14",
     "truffle-hdwallet-provider": "0.0.6"
   },
   "devDependencies": {
