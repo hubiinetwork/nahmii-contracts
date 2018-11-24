@@ -308,7 +308,7 @@ module.exports = (glob) => {
                 wallet = Wallet.createRandom().address;
             });
 
-            describe('if called from non-deployer', () => {
+            describe('if called from non-operator', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {from: glob.user_a})
                         .should.be.rejected;

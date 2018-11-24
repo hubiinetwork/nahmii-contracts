@@ -72,7 +72,10 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         receiveEthersTo(msg.sender, "");
     }
 
-    function receiveEthersTo(address wallet, string balanceType) public payable {
+    function receiveEthersTo(address wallet, string balanceType)
+    public
+    payable
+    {
         require(
             0 == bytes(balanceType).length ||
             keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
@@ -92,11 +95,15 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(
             0 == bytes(balanceType).length ||
             keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
@@ -124,18 +131,29 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Balance functions
     // -----------------------------------------------------------------------------------------------------------------
-    function periodAccrualBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+    function periodAccrualBalance(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         return periodAccrual.get(currencyCt, currencyId);
     }
 
-    function aggregateAccrualBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+    function aggregateAccrualBalance(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         return aggregateAccrual.get(currencyCt, currencyId);
     }
 
     //
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyDeployer {
+    function closeAccrualPeriod()
+    public
+    onlyOperator
+    {
         uint256 currencyIndex;
         uint256 beneficiaryIndex;
         int256 remaining;
@@ -206,7 +224,11 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Service functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyDeployer notNullAddress(service) notThisAddress(service) {
+    function registerService(address service)
+    public
+    onlyDeployer
+    notNullOrThisAddress(service)
+    {
         require(service != deployer);
 
         // Ensure service is not already registered
@@ -219,7 +241,11 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         emit RegisterServiceEvent(service);
     }
 
-    function deregisterService(address service) public onlyDeployer notNullAddress(service) {
+    function deregisterService(address service)
+    public
+    onlyDeployer
+    notNullAddress(service)
+    {
         // Ensure service is registered
         require(registeredServicesMap[service] != false);
 
