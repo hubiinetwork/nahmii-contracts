@@ -196,7 +196,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     function startChallengeFromTradeByProxy(address wallet, NahmiiTypesLib.Trade trade, int256 intendedStageAmount,
         int256 conjugateStageAmount)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Start challenge for wallet
         startChallengeFromTradePrivate(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
@@ -227,7 +227,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     /// @param stageAmount Amount of payment currency to be staged
     function startChallengeFromPaymentByProxy(address wallet, NahmiiTypesLib.Payment payment, int256 stageAmount)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Start challenge for wallet
         startChallengeFromPaymentPrivate(wallet, payment, stageAmount, false);
