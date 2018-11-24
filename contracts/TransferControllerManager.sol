@@ -50,8 +50,10 @@ contract TransferControllerManager is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerTransferController(string standard, address controller) external onlyDeployer
-        notNullAddress(controller)
+    function registerTransferController(string standard, address controller)
+    external
+    onlyDeployer
+    notNullAddress(controller)
     {
         require(bytes(standard).length > 0);
         bytes32 standardHash = keccak256(abi.encodePacked(standard));
@@ -64,8 +66,10 @@ contract TransferControllerManager is Ownable {
         emit RegisterTransferControllerEvent(standard, controller);
     }
 
-    function reassociateTransferController(string oldStandard, string newStandard, address controller) external onlyDeployer
-        notNullAddress(controller)
+    function reassociateTransferController(string oldStandard, string newStandard, address controller)
+    external
+    onlyDeployer
+    notNullAddress(controller)
     {
         require(bytes(newStandard).length > 0);
         bytes32 oldStandardHash = keccak256(abi.encodePacked(oldStandard));
@@ -81,7 +85,11 @@ contract TransferControllerManager is Ownable {
         emit ReassociateTransferControllerEvent(oldStandard, newStandard, controller);
     }
 
-    function registerCurrency(address currencyCt, string standard) external onlyDeployer notNullAddress(currencyCt) {
+    function registerCurrency(address currencyCt, string standard)
+    external
+    onlyOperator
+    notNullAddress(currencyCt)
+    {
         require(bytes(standard).length > 0);
         bytes32 standardHash = keccak256(abi.encodePacked(standard));
 
@@ -93,7 +101,10 @@ contract TransferControllerManager is Ownable {
         emit RegisterCurrencyEvent(currencyCt, standard);
     }
 
-    function deregisterCurrency(address currencyCt) external onlyDeployer {
+    function deregisterCurrency(address currencyCt)
+    external
+    onlyOperator
+    {
         require(registeredCurrencies[currencyCt].standard != 0);
 
         registeredCurrencies[currencyCt].standard = bytes32(0);
@@ -103,7 +114,10 @@ contract TransferControllerManager is Ownable {
         emit DeregisterCurrencyEvent(currencyCt);
     }
 
-    function blacklistCurrency(address currencyCt) external onlyDeployer {
+    function blacklistCurrency(address currencyCt)
+    external
+    onlyOperator
+    {
         require(registeredCurrencies[currencyCt].standard != bytes32(0));
 
         registeredCurrencies[currencyCt].blacklisted = true;
@@ -112,7 +126,10 @@ contract TransferControllerManager is Ownable {
         emit BlacklistCurrencyEvent(currencyCt);
     }
 
-    function whitelistCurrency(address currencyCt) external onlyDeployer {
+    function whitelistCurrency(address currencyCt)
+    external
+    onlyOperator
+    {
         require(registeredCurrencies[currencyCt].standard != bytes32(0));
 
         registeredCurrencies[currencyCt].blacklisted = false;
@@ -124,7 +141,11 @@ contract TransferControllerManager is Ownable {
     /**
     @notice The provided standard takes priority over assigned interface to currency
     */
-    function getTransferController(address currencyCt, string standard) public view returns (TransferController) {
+    function transferController(address currencyCt, string standard)
+    public
+    view
+    returns (TransferController)
+    {
         if (bytes(standard).length > 0) {
             bytes32 standardHash = keccak256(abi.encodePacked(standard));
 

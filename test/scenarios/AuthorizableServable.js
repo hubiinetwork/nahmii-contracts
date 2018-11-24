@@ -43,7 +43,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('authorizeInitiallyRegisteredService()', () => {
+        describe('authorizeInitialService()', () => {
             let service;
 
             before(() => {
@@ -56,21 +56,21 @@ module.exports = (glob) => {
 
             describe('if called from non-deployer', () => {
                 it('should revert', async () => {
-                    web3AuthorizableServable.authorizeInitiallyRegisteredService(service, {from: glob.user_a})
+                    web3AuthorizableServable.authorizeInitialService(service, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
 
             describe('if called with null address', () => {
                 it('should revert', async () => {
-                    web3AuthorizableServable.authorizeInitiallyRegisteredService(address0)
+                    web3AuthorizableServable.authorizeInitialService(address0)
                         .should.be.rejected;
                 });
             });
 
             describe('if called with address of authorizable servable', () => {
                 it('should revert', async () => {
-                    web3AuthorizableServable.authorizeInitiallyRegisteredService(web3AuthorizableServable.address)
+                    web3AuthorizableServable.authorizeInitialService(web3AuthorizableServable.address)
                         .should.be.rejected;
                 });
             });
@@ -81,14 +81,14 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    web3AuthorizableServable.authorizeInitiallyRegisteredService(service)
+                    web3AuthorizableServable.authorizeInitialService(service)
                         .should.be.rejected;
                 });
             });
 
             describe('if called with address of sender', () => {
                 it('should revert', async () => {
-                    web3AuthorizableServable.authorizeInitiallyRegisteredService(glob.owner)
+                    web3AuthorizableServable.authorizeInitialService(glob.owner)
                         .should.be.rejected;
                 });
             });
@@ -99,17 +99,17 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    web3AuthorizableServable.authorizeInitiallyRegisteredService(service)
+                    web3AuthorizableServable.authorizeInitialService(service)
                         .should.be.rejected;
                 });
             });
 
             describe('if within operational constraints', () => {
                 it('should revert', async () => {
-                    const result = await web3AuthorizableServable.authorizeInitiallyRegisteredService(service);
+                    const result = await web3AuthorizableServable.authorizeInitialService(service);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('AuthorizeInitiallyRegisteredServiceEvent');
+                    result.logs[0].event.should.equal('AuthorizeInitialServiceEvent');
 
                     (await web3AuthorizableServable.initialServiceAuthorizedMap.call(service))
                         .should.be.true;
@@ -129,13 +129,6 @@ module.exports = (glob) => {
 
             beforeEach(async () => {
                 await web3AuthorizableServable.registerService(service);
-            });
-
-            describe('if called from deployer', () => {
-                it('should revert', async () => {
-                    web3AuthorizableServable.authorizeRegisteredService(service)
-                        .should.be.rejected;
-                });
             });
 
             describe('if called with null address', () => {
@@ -172,7 +165,7 @@ module.exports = (glob) => {
 
             describe('if called with initial service', () => {
                 beforeEach(async () => {
-                    await web3AuthorizableServable.authorizeInitiallyRegisteredService(service);
+                    await web3AuthorizableServable.authorizeInitialService(service);
                 });
 
                 it('should revert', async () => {
@@ -203,13 +196,6 @@ module.exports = (glob) => {
 
             beforeEach(async () => {
                 await web3AuthorizableServable.registerService(service);
-            });
-
-            describe('if called from deployer', () => {
-                it('should revert', async () => {
-                    web3AuthorizableServable.unauthorizeRegisteredService(service)
-                        .should.be.rejected;
-                });
             });
 
             describe('if called with null address', () => {
@@ -246,7 +232,7 @@ module.exports = (glob) => {
 
             describe('if called with initial registered service', () => {
                 beforeEach(async () => {
-                    await web3AuthorizableServable.authorizeInitiallyRegisteredService(service);
+                    await web3AuthorizableServable.authorizeInitialService(service);
                 });
 
                 it('should unauthorize initial registered service contract and emit event', async () => {
@@ -300,13 +286,6 @@ module.exports = (glob) => {
                 await web3AuthorizableServable.enableServiceAction(service, 'some_action');
             });
 
-            describe('if called from deployer', () => {
-                it('should revert', async () => {
-                    web3AuthorizableServable.authorizeRegisteredServiceAction(glob.owner, 'some_action')
-                        .should.be.rejected;
-                });
-            });
-
             describe('if called with null address', () => {
                 it('should revert', async () => {
                     web3AuthorizableServable.authorizeRegisteredServiceAction(
@@ -358,7 +337,7 @@ module.exports = (glob) => {
 
             describe('if called with initial service', () => {
                 beforeEach(async () => {
-                    await web3AuthorizableServable.authorizeInitiallyRegisteredService(service);
+                    await web3AuthorizableServable.authorizeInitialService(service);
                 });
 
                 it('should revert', async () => {
@@ -405,14 +384,6 @@ module.exports = (glob) => {
                 await web3AuthorizableServable.authorizeRegisteredServiceAction(
                     service, 'some_action', {from: glob.user_a}
                 );
-            });
-
-            describe('if called from deployer', () => {
-                it('should revert', async () => {
-                    web3AuthorizableServable.unauthorizeRegisteredServiceAction(
-                        glob.owner, 'some_action'
-                    ).should.be.rejected;
-                });
             });
 
             describe('if called with null address', () => {
@@ -468,7 +439,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     web3AuthorizableServable = await AuthorizableServable.new(glob.owner);
                     await web3AuthorizableServable.registerService(service);
-                    await web3AuthorizableServable.authorizeInitiallyRegisteredService(service);
+                    await web3AuthorizableServable.authorizeInitialService(service);
                 });
 
                 it('should revert', async () => {

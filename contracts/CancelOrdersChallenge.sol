@@ -45,7 +45,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //

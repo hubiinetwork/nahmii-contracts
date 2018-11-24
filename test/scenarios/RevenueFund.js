@@ -223,7 +223,7 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Cannot be called from non-owner', async () => {
+        it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Cannot be called from non-operator', async () => {
             try {
                 await glob.web3RevenueFund.closeAccrualPeriod({from: glob.user_a});
                 assert(false, 'This test must fail.');

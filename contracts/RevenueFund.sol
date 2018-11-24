@@ -72,7 +72,10 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         receiveEthersTo(msg.sender, "");
     }
 
-    function receiveEthersTo(address wallet, string balanceType) public payable {
+    function receiveEthersTo(address wallet, string balanceType)
+    public
+    payable
+    {
         require(
             0 == bytes(balanceType).length ||
             keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
@@ -92,11 +95,17 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokens(string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
+    public
+    {
         receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokensTo(address wallet, string balanceType, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(
             0 == bytes(balanceType).length ||
             keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
@@ -105,7 +114,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         require(amount.isNonZeroPositiveInt256());
 
         // Execute transfer
-        TransferController controller = getTransferController(currencyCt, standard);
+        TransferController controller = transferController(currencyCt, standard);
         if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId))
             revert();
 
@@ -124,25 +133,36 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Balance functions
     // -----------------------------------------------------------------------------------------------------------------
-    function periodAccrualBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+    function periodAccrualBalance(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         return periodAccrual.get(currencyCt, currencyId);
     }
 
-    function aggregateAccrualBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+    function aggregateAccrualBalance(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         return aggregateAccrual.get(currencyCt, currencyId);
     }
 
     //
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyDeployer {
+    function closeAccrualPeriod()
+    public
+    onlyOperator
+    {
         uint256 currencyIndex;
         uint256 beneficiaryIndex;
         int256 remaining;
         int256 transferable;
         address beneficiaryAddress;
 
-        require(totalBeneficiaryFraction == ConstantsLib.PARTS_PER());
+        require(this.totalBeneficiaryFraction() == ConstantsLib.PARTS_PER());
 
         // Execute transfer
         for (currencyIndex = inUsePeriodAccrual.getLength(); currencyIndex > 0; currencyIndex--) {
@@ -155,9 +175,9 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                 if (!isRegisteredBeneficiary(beneficiaryAddress))
                     continue;
 
-                if (getBeneficiaryFraction(beneficiaryAddress) > 0) {
+                if (beneficiaryFraction(beneficiaryAddress) > 0) {
                     transferable = periodAccrual.get(currency.ct, currency.id).mul(
-                        getBeneficiaryFraction(beneficiaryAddress)
+                        beneficiaryFraction(beneficiaryAddress)
                     ).div(ConstantsLib.PARTS_PER());
 
                     if (transferable > remaining)
@@ -172,7 +192,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
                         else {
                             // Execute transfer
-                            TransferController controller = getTransferController(currency.ct, "");
+                            TransferController controller = transferController(currency.ct, "");
                             if (!address(controller).delegatecall(controller.getApproveSignature(), beneficiaryAddress, uint256(transferable), currency.ct, currency.id))
                                 revert();
 
@@ -193,7 +213,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         for (beneficiaryIndex = 0; beneficiaryIndex < beneficiaries.length; beneficiaryIndex++) {
             beneficiaryAddress = beneficiaries[beneficiaryIndex];
 
-            if (!isRegisteredBeneficiary(beneficiaryAddress) || 0 == getBeneficiaryFraction(beneficiaryAddress))
+            if (!isRegisteredBeneficiary(beneficiaryAddress) || 0 == beneficiaryFraction(beneficiaryAddress))
                 continue;
 
             AccrualBeneficiary(beneficiaryAddress).closeAccrualPeriod();
@@ -206,7 +226,11 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Service functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerService(address service) public onlyDeployer notNullAddress(service) notThisAddress(service) {
+    function registerService(address service)
+    public
+    onlyDeployer
+    notNullOrThisAddress(service)
+    {
         require(service != deployer);
 
         // Ensure service is not already registered
@@ -219,7 +243,11 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         emit RegisterServiceEvent(service);
     }
 
-    function deregisterService(address service) public onlyDeployer notNullAddress(service) {
+    function deregisterService(address service)
+    public
+    onlyDeployer
+    notNullAddress(service)
+    {
         // Ensure service is registered
         require(registeredServicesMap[service] != false);
 

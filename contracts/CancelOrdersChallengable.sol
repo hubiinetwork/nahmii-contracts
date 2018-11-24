@@ -24,7 +24,8 @@ contract CancelOrdersChallengable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge, CancelOrdersChallenge newCancelOrdersChallenge);
+    event SetCancelOrdersChallengeEvent(CancelOrdersChallenge oldCancelOrdersChallenge,
+        CancelOrdersChallenge newCancelOrdersChallenge);
 
     //
     // Functions

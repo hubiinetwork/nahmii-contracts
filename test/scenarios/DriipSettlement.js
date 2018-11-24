@@ -801,7 +801,7 @@ module.exports = (glob) => {
                 await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
             });
 
-            describe('if called from non-deployer', () => {
+            describe('if called from non-operator', () => {
                 beforeEach(async () => {
                     ethersDriipSettlement = ethersDriipSettlement.connect(glob.signer_a);
                 });
@@ -1309,7 +1309,7 @@ module.exports = (glob) => {
                 await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
             });
 
-            describe('if called from non-deployer', () => {
+            describe('if called from non-operator', () => {
                 beforeEach(async () => {
                     ethersDriipSettlement = ethersDriipSettlement.connect(glob.signer_a);
                 });

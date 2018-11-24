@@ -176,7 +176,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @param trade The trade to be settled
     function settleTradeByProxy(address wallet, NahmiiTypesLib.Trade trade)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Settle trade for wallet
         settleTradePrivate(wallet, trade);
@@ -202,7 +202,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @param payment The payment to be settled
     function settlePaymentByProxy(address wallet, NahmiiTypesLib.Payment payment)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Settle payment for wallet
         settlePaymentPrivate(wallet, payment);

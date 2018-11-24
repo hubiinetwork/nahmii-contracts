@@ -171,7 +171,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         require(amount.isNonZeroPositiveInt256());
 
         // Execute transfer
-        TransferController controller = getTransferController(currencyCt, standard);
+        TransferController controller = transferController(currencyCt, standard);
         require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
         if (0 == bytes(balanceType).length)
@@ -550,7 +550,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
             msg.sender.transfer(uint256(amount));
 
         else {
-            TransferController controller = getTransferController(currencyCt, standard);
+            TransferController controller = transferController(currencyCt, standard);
             require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
         }
 
@@ -687,7 +687,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
 
         else {
             // Approve of beneficiary
-            TransferController controller = getTransferController(currencyCt, standard);
+            TransferController controller = transferController(currencyCt, standard);
             require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 
             // Transfer funds to the beneficiary

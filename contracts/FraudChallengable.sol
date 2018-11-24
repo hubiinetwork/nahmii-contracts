@@ -31,7 +31,9 @@ contract FraudChallengable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the fraud challenge contract
     /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function setFraudChallenge(FraudChallenge newFraudChallenge) public onlyDeployer
+    function setFraudChallenge(FraudChallenge newFraudChallenge)
+    public
+    onlyDeployer
     notNullAddress(newFraudChallenge)
     notSameAddresses(newFraudChallenge, fraudChallenge)
     {

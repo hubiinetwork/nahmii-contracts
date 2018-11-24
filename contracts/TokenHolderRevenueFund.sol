@@ -73,11 +73,12 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
     uint256[] accrualBlockNumbers;
 
-   //
+    //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
-    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
     event ClaimAccrualEvent(address from, address currencyCt, uint256 currencyId);
@@ -93,7 +94,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the revenue token contract
     /// @param newRevenueToken The (address of) RevenueToken contract instance
-    function setRevenueToken(RevenueToken newRevenueToken) public onlyDeployer notNullAddress(newRevenueToken) {
+    function setRevenueToken(RevenueToken newRevenueToken)
+    public
+    onlyDeployer
+    notNullAddress(newRevenueToken)
+    {
         if (newRevenueToken != revenueToken) {
             //set new revenue token
             RevenueToken oldRevenueToken = revenueToken;
@@ -111,7 +116,10 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         receiveEthersTo(msg.sender, "");
     }
 
-    function receiveEthersTo(address wallet, string balanceType) public payable {
+    function receiveEthersTo(address wallet, string balanceType)
+    public
+    payable
+    {
         require(
             0 == bytes(balanceType).length ||
             keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
@@ -130,11 +138,15 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
     }
 
-    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokens(string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
     }
 
-    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(
             0 == bytes(balanceType).length ||
             keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
@@ -143,7 +155,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
-        TransferController controller = getTransferController(currencyCt, standard);
+        TransferController controller = transferController(currencyCt, standard);
         if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)) {
             revert();
         }
@@ -170,26 +182,46 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId);
     }
 
-    function deposit(address wallet, uint index) public view returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId) {
+    function deposit(address wallet, uint index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
         return walletMap[wallet].txHistory.deposit(index);
     }
 
-    function depositsCount(address wallet) public view returns (uint256) {
+    function depositsCount(address wallet)
+    public
+    view
+    returns (uint256)
+    {
         return walletMap[wallet].txHistory.depositsCount();
     }
 
     //
     // Balance retrieval functions
     // -----------------------------------------------------------------------------------------------------------------
-    function periodAccrualBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+    function periodAccrualBalance(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         return periodAccrual.get(currencyCt, currencyId);
     }
 
-    function aggregateAccrualBalance(address currencyCt, uint256 currencyId) public view returns (int256) {
+    function aggregateAccrualBalance(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         return aggregateAccrual.get(currencyCt, currencyId);
     }
 
-    function stagedBalance(address wallet, address currencyCt, uint256 currencyId) public view returns (int256) {
+    function stagedBalance(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
         //require(wallet != address(0));
         return walletMap[wallet].staged.get(currencyCt, currencyId);
     }
@@ -197,7 +229,10 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Accrual functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public onlyEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION) {
+    function closeAccrualPeriod()
+    public
+    onlyEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION)
+    {
         uint256 i;
         uint256 len;
 
@@ -215,7 +250,9 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         emit CloseAccrualPeriodEvent();
     }
 
-    function claimAccrual(address currencyCt, uint256 currencyId) public {
+    function claimAccrual(address currencyCt, uint256 currencyId)
+    public
+    {
         int256 balance;
         int256 amount;
         int256 fraction;
@@ -236,7 +273,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         uint256[] storage claimAccrualBlockNumbers = walletMap[msg.sender].claimAccrualBlockNumbers[currencyCt][currencyId];
         if (claimAccrualBlockNumbers.length == 0)
-            bn_low = 0; //no block numbers for claimed accruals yet
+            bn_low = 0;
+        //no block numbers for claimed accruals yet
         else
             bn_low = claimAccrualBlockNumbers[claimAccrualBlockNumbers.length - 1];
 
@@ -264,7 +302,9 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Withdrawal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard) public notDeployer {
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(amount.isNonZeroPositiveInt256());
 
         amount = amount.clampMax(walletMap[msg.sender].staged.get(currencyCt, currencyId));
@@ -280,7 +320,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             msg.sender.transfer(uint256(amount));
         }
         else {
-            TransferController controller = getTransferController(currencyCt, standard);
+            TransferController controller = transferController(currencyCt, standard);
             if (!address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId)) {
                 revert();
             }
@@ -290,11 +330,19 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
-    function withdrawal(address wallet, uint index) public view returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId) {
+    function withdrawal(address wallet, uint index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
         return walletMap[wallet].txHistory.withdrawal(index);
     }
 
-    function withdrawalsCount(address wallet) public view returns (uint256) {
+    function withdrawalsCount(address wallet)
+    public
+    view
+    returns (uint256)
+    {
         return walletMap[wallet].txHistory.withdrawalsCount();
     }
 

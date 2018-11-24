@@ -19,17 +19,23 @@ contract Migrations is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor() public Ownable(msg.sender)  {
+    constructor() Ownable(msg.sender) public  {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setCompleted(uint completed) public onlyDeployer {
+    function setCompleted(uint completed)
+    public
+    onlyDeployer
+    {
         last_completed_migration = completed;
     }
 
-    function upgrade(address newAddress) public onlyDeployer {
+    function upgrade(address newAddress)
+    public
+    onlyDeployer
+    {
         Migrations upgraded = Migrations(newAddress);
         upgraded.setCompleted(last_completed_migration);
     }

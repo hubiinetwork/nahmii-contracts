@@ -125,7 +125,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         require(amount.isNonZeroPositiveInt256());
 
         // Execute transfer
-        TransferController controller = getTransferController(currencyCt, standard);
+        TransferController controller = transferController(currencyCt, standard);
         require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
 
         // Add to balance
@@ -249,7 +249,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
 
         else {
             // Approve of beneficiary
-            TransferController controller = getTransferController(currencyCt, "");
+            TransferController controller = transferController(currencyCt, "");
             require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 
             // Transfer funds to the beneficiary

@@ -95,7 +95,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function settleNullByProxy(address wallet, address currencyCt, uint256 currencyId)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Settle null of wallet
         settleNullPrivate(wallet, currencyCt, currencyId);

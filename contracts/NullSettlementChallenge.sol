@@ -144,7 +144,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function startChallengeByProxy(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Start challenge for wallet
         startChallengePrivate(wallet, amount, currencyCt, currencyId, false);

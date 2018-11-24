@@ -25,23 +25,24 @@ contract ClientFundable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetClientFundEvent(ClientFund oldAddress, ClientFund newAddress);
+    event SetClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the client fund contract
-    /// @param newAddress The (address of) ClientFund contract instance
-    function setClientFund(ClientFund newAddress) public onlyDeployer
-    notNullAddress(newAddress)
-    notSameAddresses(newAddress, clientFund)
+    /// @param newClientFund The (address of) ClientFund contract instance
+    function setClientFund(ClientFund newClientFund) public
+    onlyDeployer
+    notNullAddress(newClientFund)
+    notSameAddresses(newClientFund, clientFund)
     {
         //set new community vote
-        ClientFund oldAddress = clientFund;
-        clientFund = newAddress;
+        ClientFund oldClientFund = clientFund;
+        clientFund = newClientFund;
 
         // Emit event
-        emit SetClientFundEvent(oldAddress, newAddress);
+        emit SetClientFundEvent(oldClientFund, newClientFund);
     }
 
     //
