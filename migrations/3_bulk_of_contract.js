@@ -20,7 +20,6 @@ const ConstantsLib = artifacts.require('ConstantsLib');
 const DriipSettlement = artifacts.require('DriipSettlement');
 const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
-const DriipStorable = artifacts.require('DriipStorable');
 const ERC20TransferController = artifacts.require('ERC20TransferController');
 const ERC721TransferController = artifacts.require('ERC721TransferController');
 const FraudChallenge = artifacts.require('FraudChallenge');
@@ -119,12 +118,12 @@ module.exports = (deployer, network, accounts) => {
                 Configuration
             ]);
             await deployer.link(ConstantsLib, [
-                AccrualBenefactor, BlockNumbDisdIntsLib, Configuration, MockedConfiguration, RevenueFund, SecurityBond,
-                Validator
+                AccrualBenefactor, BlockNumbDisdIntsLib, Configuration, MockedConfiguration,
+                RevenueFund, SecurityBond, Validator
             ]);
             await deployer.link(MonetaryTypesLib, [
-                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable,
-                InUseCurrencyLib, MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
+                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, InUseCurrencyLib,
+                MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
                 PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathIntLib, [
@@ -157,7 +156,7 @@ module.exports = (deployer, network, accounts) => {
                 ClientFund, RevenueFund, SecurityBond
             ]);
             await deployer.link(NahmiiTypesLib, [
-                CancelOrdersChallenge, ClientFundable, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, DriipStorable,
+                CancelOrdersChallenge, ClientFundable, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
                 FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
                 FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
