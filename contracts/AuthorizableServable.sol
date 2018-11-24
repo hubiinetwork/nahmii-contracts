@@ -76,7 +76,6 @@ contract AuthorizableServable is Servable {
     /// @param service The address of the concerned registered service
     function authorizeRegisteredService(address service)
     public
-    notDeployer
     notNullOrThisAddress(service)
     {
         require(msg.sender != service);
@@ -99,7 +98,6 @@ contract AuthorizableServable is Servable {
     /// @param service The address of the concerned registered service
     function unauthorizeRegisteredService(address service)
     public
-    notDeployer
     notNullOrThisAddress(service)
     {
         require(msg.sender != service);
@@ -144,7 +142,6 @@ contract AuthorizableServable is Servable {
     /// @param action The concerned service action
     function authorizeRegisteredServiceAction(address service, string action)
     public
-    notDeployerOrOperator
     notNullOrThisAddress(service)
     {
         require(msg.sender != service);
@@ -175,7 +172,6 @@ contract AuthorizableServable is Servable {
     /// @param action The concerned service action
     function unauthorizeRegisteredServiceAction(address service, string action)
     public
-    notDeployerOrOperator
     notNullOrThisAddress(service)
     {
         require(msg.sender != service);
