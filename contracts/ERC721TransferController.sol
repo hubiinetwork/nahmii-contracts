@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {TransferController} from "./TransferController.sol";
 import {ERC721} from "./ERC721.sol";

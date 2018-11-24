@@ -6,11 +6,10 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {FraudChallenge} from "../FraudChallenge.sol";
-import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
 @title MockedFraudChallenge

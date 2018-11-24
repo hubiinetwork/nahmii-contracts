@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";

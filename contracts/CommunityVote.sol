@@ -6,9 +6,8 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
-import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {ERC20} from "./ERC20.sol";
 import {Ownable} from "./Ownable.sol";
 

@@ -6,9 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
-
-import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+pragma solidity ^0.4.25;
 
 library BalanceLogLib {
     struct Entry {
