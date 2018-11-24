@@ -73,7 +73,7 @@ contract SignerManager is Ownable {
     /// @param newSigner The address of the signer to register
     function registerSigner(address newSigner)
     public
-    onlyDeployer
+    onlyOperator
     notNullOrThisAddress(newSigner)
     {
         if (0 == signerIndicesMap[newSigner]) {

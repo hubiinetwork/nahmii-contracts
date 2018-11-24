@@ -30,17 +30,19 @@ contract Hashable is Ownable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the hasher contract
-    /// @param newAddress The (address of) Hasher contract instance
-    function setHasher(Hasher newAddress) public onlyDeployer
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, hasher)
+    /// @param newHasher The (address of) Hasher contract instance
+    function setHasher(Hasher newHasher)
+    public
+    onlyDeployer
+    notNullAddress(newHasher)
+    notSameAddresses(newHasher, hasher)
     {
         //set new hasher
-        Hasher oldAddress = hasher;
-        hasher = newAddress;
+        Hasher oldHasher = hasher;
+        hasher = newHasher;
 
         // Emit event
-        emit SetHasherEvent(oldAddress, newAddress);
+        emit SetHasherEvent(oldHasher, newHasher);
     }
 
     //
