@@ -328,7 +328,6 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     // -----------------------------------------------------------------------------------------------------------------
     function stage(int256 amount, address currencyCt, uint256 currencyId)
     public
-    notDeployer
     {
         address tag = partnerFromWallet(msg.sender);
 

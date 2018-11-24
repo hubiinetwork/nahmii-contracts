@@ -304,7 +304,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // -----------------------------------------------------------------------------------------------------------------
     function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
     public
-    notDeployer
     {
         require(amount.isNonZeroPositiveInt256());
 
