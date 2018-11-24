@@ -22,8 +22,8 @@ contract AccrualBenefactor is Benefactor {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => int256) internal beneficiaryFractionMap;
-    int256 internal totalBeneficiaryFraction;
+    mapping(address => int256) private _beneficiaryFractionMap;
+    int256 public totalBeneficiaryFraction;
 
     //
     // Events
@@ -60,7 +60,7 @@ contract AccrualBenefactor is Benefactor {
         if (!super.registerBeneficiary(beneficiary))
             return false;
 
-        beneficiaryFractionMap[beneficiary] = fraction;
+        _beneficiaryFractionMap[beneficiary] = fraction;
         totalBeneficiaryFraction = totalBeneficiaryFraction.add(fraction);
 
         // Emit event
@@ -80,8 +80,8 @@ contract AccrualBenefactor is Benefactor {
         if (!super.deregisterBeneficiary(beneficiary))
             return false;
 
-        totalBeneficiaryFraction = totalBeneficiaryFraction.sub(beneficiaryFractionMap[beneficiary]);
-        beneficiaryFractionMap[beneficiary] = 0;
+        totalBeneficiaryFraction = totalBeneficiaryFraction.sub(_beneficiaryFractionMap[beneficiary]);
+        _beneficiaryFractionMap[beneficiary] = 0;
 
         // Emit event
         emit DeregisterAccrualBeneficiaryEvent(beneficiary);
@@ -92,22 +92,11 @@ contract AccrualBenefactor is Benefactor {
     /// @notice Get the fraction of benefits that is granted the given beneficiary
     /// @param beneficiary Address of beneficiary
     /// @return The beneficiary's fraction
-    function getBeneficiaryFraction(address beneficiary)
+    function beneficiaryFraction(address beneficiary)
     public
     view
     returns (int256)
     {
-        return beneficiaryFractionMap[beneficiary];
-    }
-
-    /// @notice Get the current total of fractions of benefits that is granted all beneficiaries
-    /// @param beneficiary Address of beneficiary
-    /// @return The total benefit fraction
-    function getTotalBeneficiaryFraction()
-    public
-    view
-    returns (int256)
-    {
-        return totalBeneficiaryFraction;
+        return _beneficiaryFractionMap[beneficiary];
     }
 }

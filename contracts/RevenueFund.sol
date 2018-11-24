@@ -142,7 +142,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         int256 transferable;
         address beneficiaryAddress;
 
-        require(totalBeneficiaryFraction == ConstantsLib.PARTS_PER());
+        require(this.totalBeneficiaryFraction() == ConstantsLib.PARTS_PER());
 
         // Execute transfer
         for (currencyIndex = inUsePeriodAccrual.getLength(); currencyIndex > 0; currencyIndex--) {
@@ -155,9 +155,9 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                 if (!isRegisteredBeneficiary(beneficiaryAddress))
                     continue;
 
-                if (getBeneficiaryFraction(beneficiaryAddress) > 0) {
+                if (beneficiaryFraction(beneficiaryAddress) > 0) {
                     transferable = periodAccrual.get(currency.ct, currency.id).mul(
-                        getBeneficiaryFraction(beneficiaryAddress)
+                        beneficiaryFraction(beneficiaryAddress)
                     ).div(ConstantsLib.PARTS_PER());
 
                     if (transferable > remaining)
@@ -193,7 +193,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         for (beneficiaryIndex = 0; beneficiaryIndex < beneficiaries.length; beneficiaryIndex++) {
             beneficiaryAddress = beneficiaries[beneficiaryIndex];
 
-            if (!isRegisteredBeneficiary(beneficiaryAddress) || 0 == getBeneficiaryFraction(beneficiaryAddress))
+            if (!isRegisteredBeneficiary(beneficiaryAddress) || 0 == beneficiaryFraction(beneficiaryAddress))
                 continue;
 
             AccrualBeneficiary(beneficiaryAddress).closeAccrualPeriod();
