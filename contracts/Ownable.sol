@@ -13,7 +13,7 @@ import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Ownable
-@notice A contract that has an owner property
+@notice A modifiable that has ownership roles
 */
 contract Ownable is Modifiable, SelfDestructible {
     //
