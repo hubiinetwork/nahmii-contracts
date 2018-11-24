@@ -154,7 +154,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param newUpdateDelayBlocks The new update delay blocks value
     function setUpdateDelayBlocks(uint256 fromBlockNumber, uint256 newUpdateDelayBlocks)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         updateDelayBlocksByBlockNumber.addEntry(fromBlockNumber, newUpdateDelayBlocks);
@@ -186,7 +186,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param newConfirmationBlocks The new confirmation blocks value
     function setConfirmationBlocks(uint256 fromBlockNumber, uint256 newConfirmationBlocks)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         confirmationBlocksByBlockNumber.addEntry(fromBlockNumber, newConfirmationBlocks);
@@ -220,7 +220,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Discount values
     function setTradeMakerFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         tradeMakerFeeByBlockNumber.addDiscountedEntry(fromBlockNumber, nominal, discountTiers, discountValues);
@@ -254,7 +254,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Discount values
     function setTradeTakerFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         tradeTakerFeeByBlockNumber.addDiscountedEntry(fromBlockNumber, nominal, discountTiers, discountValues);
@@ -288,7 +288,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Discount values
     function setPaymentFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         paymentFeeByBlockNumber.addDiscountedEntry(fromBlockNumber, nominal, discountTiers, discountValues);
@@ -336,7 +336,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     function setCurrencyPaymentFee(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal,
         int256[] discountTiers, int256[] discountValues)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         currencyPaymentFeeByBlockNumber[currencyCt][currencyId].addDiscountedEntry(
@@ -371,7 +371,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Minimum relative fee
     function setTradeMakerMinimumFee(uint256 fromBlockNumber, int256 nominal)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         tradeMakerMinimumFeeByBlockNumber.addEntry(fromBlockNumber, nominal);
@@ -402,7 +402,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Minimum relative fee
     function setTradeTakerMinimumFee(uint256 fromBlockNumber, int256 nominal)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         tradeTakerMinimumFeeByBlockNumber.addEntry(fromBlockNumber, nominal);
@@ -433,7 +433,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Minimum relative fee
     function setPaymentMinimumFee(uint256 fromBlockNumber, int256 nominal)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         paymentMinimumFeeByBlockNumber.addEntry(fromBlockNumber, nominal);
@@ -473,7 +473,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Minimum relative fee
     function setCurrencyPaymentMinimumFee(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].addEntry(fromBlockNumber, nominal);
@@ -495,7 +495,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param timeoutInSeconds Timeout duration in seconds
     function setWalletLockTimeout(uint256 fromBlockNumber, uint256 timeoutInSeconds)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         walletLockTimeoutByBlockNumber.addEntry(fromBlockNumber, timeoutInSeconds);
@@ -517,7 +517,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param timeoutInSeconds Timeout duration in seconds
     function setCancelOrderChallengeTimeout(uint256 fromBlockNumber, uint256 timeoutInSeconds)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         cancelOrderChallengeTimeoutByBlockNumber.addEntry(fromBlockNumber, timeoutInSeconds);
@@ -539,7 +539,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param timeoutInSeconds Timeout duration in seconds
     function setSettlementChallengeTimeout(uint256 fromBlockNumber, uint256 timeoutInSeconds)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         settlementChallengeTimeoutByBlockNumber.addEntry(fromBlockNumber, timeoutInSeconds);
@@ -562,7 +562,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param stakeFraction The fraction gained
     function setWalletSettlementStakeFraction(uint256 fromBlockNumber, uint256 stakeFraction)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         walletSettlementStakeFractionByBlockNumber.addEntry(fromBlockNumber, stakeFraction);
@@ -585,7 +585,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param stakeFraction The fraction gained
     function setOperatorSettlementStakeFraction(uint256 fromBlockNumber, uint256 stakeFraction)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         operatorSettlementStakeFractionByBlockNumber.addEntry(fromBlockNumber, stakeFraction);
@@ -608,7 +608,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param stakeFraction The fraction gained
     function setFraudStakeFraction(uint256 fromBlockNumber, uint256 stakeFraction)
     public
-    onlyDeployer
+    onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
         fraudStakeFractionByBlockNumber.addEntry(fromBlockNumber, stakeFraction);
@@ -619,7 +619,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param _earliestSettlementBlockNumber The block number of the earliest settlement
     function setEarliestSettlementBlockNumber(uint256 _earliestSettlementBlockNumber)
     public
-    onlyDeployer
+    onlyOperator
     {
         earliestSettlementBlockNumber = _earliestSettlementBlockNumber;
         emit SetEarliestSettlementBlockNumberEvent(earliestSettlementBlockNumber);
@@ -629,7 +629,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @dev This operation can not be undone
     function disableEarliestSettlementBlockNumberUpdate()
     public
-    onlyDeployer
+    onlyOperator
     {
         earliestSettlementBlockNumberUpdateDisabled = true;
         emit DisableEarliestSettlementBlockNumberUpdateEvent();
@@ -639,7 +639,10 @@ contract Configuration is Modifiable, Ownable, Servable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyDelayedBlockNumber(uint256 blockNumber) {
-        require(0 == updateDelayBlocksByBlockNumber.count() || blockNumber >= block.number + updateDelayBlocksByBlockNumber.currentValue());
+        require(
+            0 == updateDelayBlocksByBlockNumber.count() ||
+        blockNumber >= block.number + updateDelayBlocksByBlockNumber.currentValue()
+        );
         _;
     }
 }
