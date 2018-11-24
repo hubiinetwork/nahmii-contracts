@@ -59,7 +59,9 @@ contract MockedClientFund {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
+    function _reset()
+ public
+ {
         locks.length = 0;
         unlocks.length = 0;
 

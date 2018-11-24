@@ -37,7 +37,11 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeBuyerFee(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    function isGenuineTradeBuyerFee(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         int256 feePartsPer = ConstantsLib.PARTS_PER();
         int256 discountTier = int256(trade.buyer.rollingVolume);
         if (NahmiiTypesLib.LiquidityRole.Maker == trade.buyer.liquidityRole) {
@@ -52,7 +56,11 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeSellerFee(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    function isGenuineTradeSellerFee(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         int256 feePartsPer = ConstantsLib.PARTS_PER();
         int256 discountTier = int256(trade.seller.rollingVolume);
         if (NahmiiTypesLib.LiquidityRole.Maker == trade.seller.liquidityRole) {
@@ -67,7 +75,11 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeBuyer(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    function isGenuineTradeBuyer(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (!signerManager.isSigner(trade.buyer.wallet))
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.buyer.fees.single.amount))
@@ -78,7 +90,11 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeSeller(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    function isGenuineTradeSeller(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (!signerManager.isSigner(trade.seller.wallet))
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))
@@ -88,11 +104,19 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         && (trade.seller.order.residuals.previous >= trade.seller.order.residuals.current);
     }
 
-    function isGenuineOrderWalletHash(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderWalletHash(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashOrderAsWallet(order) == order.seals.wallet.hash;
     }
 
-    function isGenuineOrderOperatorHash(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderOperatorHash(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashOrderAsOperator(order) == order.seals.operator.hash;
     }
 
@@ -112,53 +136,97 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         return isSignedBy(hash, signature.v, signature.r, signature.s, wallet);
     }
 
-    function isGenuineOrderWalletSeal(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderWalletSeal(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return isGenuineOrderWalletHash(order)
         && isGenuineWalletSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
     }
 
-    function isGenuineOrderOperatorSeal(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderOperatorSeal(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return isGenuineOrderOperatorHash(order)
         && isGenuineOperatorSignature(order.seals.operator.hash, order.seals.operator.signature);
     }
 
-    function isGenuineOrderSeals(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderSeals(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return isGenuineOrderWalletSeal(order) && isGenuineOrderOperatorSeal(order);
     }
 
-    function isGenuineTradeHash(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    function isGenuineTradeHash(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashTrade(trade) == trade.seal.hash;
     }
 
-    function isGenuineTradeSeal(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    function isGenuineTradeSeal(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         return isGenuineTradeHash(trade)
         && isGenuineOperatorSignature(trade.seal.hash, trade.seal.signature);
     }
 
-    function isGenuinePaymentWalletHash(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentWalletHash(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash;
     }
 
-    function isGenuinePaymentOperatorHash(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentOperatorHash(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashPaymentAsOperator(payment) == payment.seals.operator.hash;
     }
 
-    function isGenuinePaymentWalletSeal(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentWalletSeal(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return isGenuinePaymentWalletHash(payment)
         && isGenuineWalletSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
     }
-    
-    function isGenuinePaymentOperatorSeal(NahmiiTypesLib.Payment payment) public view returns (bool) {
+
+    function isGenuinePaymentOperatorSeal(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return isGenuinePaymentOperatorHash(payment)
         && isGenuineOperatorSignature(payment.seals.operator.hash, payment.seals.operator.signature);
     }
 
-    function isGenuinePaymentSeals(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentSeals(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return isGenuinePaymentWalletSeal(payment) && isGenuinePaymentOperatorSeal(payment);
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuinePaymentFee(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentFee(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         int256 feePartsPer = int256(ConstantsLib.PARTS_PER());
         return (payment.sender.fees.single.amount <= payment.amount.mul(configuration.currencyPaymentFee(payment.blockNumber, payment.currency.ct, payment.currency.id, 0)).div(feePartsPer))
         && (payment.sender.fees.single.amount == payment.amount.mul(configuration.currencyPaymentFee(payment.blockNumber, payment.currency.ct, payment.currency.id, payment.amount)).div(feePartsPer))
@@ -166,12 +234,20 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     }
 
     // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuinePaymentSender(NahmiiTypesLib.Payment payment) public pure returns (bool) {
+    function isGenuinePaymentSender(NahmiiTypesLib.Payment payment)
+    public
+    pure
+    returns (bool)
+    {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.sender.fees.single.amount));
     }
 
-    function isGenuinePaymentRecipient(NahmiiTypesLib.Payment payment) public pure returns (bool) {
+    function isGenuinePaymentRecipient(NahmiiTypesLib.Payment payment)
+    public
+    pure
+    returns (bool)
+    {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.recipient.balances.current == payment.recipient.balances.previous.add(payment.transfers.single));
     }
@@ -183,7 +259,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         NahmiiTypesLib.TradePartyRole lastTradePartyRole
     )
     public
-    pure returns (bool)
+    pure
+    returns (bool)
     {
         uint256 firstNonce = (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.nonce : firstTrade.seller.nonce);
         uint256 lastNonce = (NahmiiTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.nonce : lastTrade.seller.nonce);
@@ -197,7 +274,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         NahmiiTypesLib.PaymentPartyRole lastPaymentPartyRole
     )
     public
-    pure returns (bool)
+    pure
+    returns (bool)
     {
         uint256 firstNonce = (NahmiiTypesLib.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.nonce : firstPayment.recipient.nonce);
         uint256 lastNonce = (NahmiiTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.nonce : lastPayment.recipient.nonce);
@@ -211,7 +289,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         NahmiiTypesLib.PaymentPartyRole paymentPartyRole
     )
     public
-    pure returns (bool)
+    pure
+    returns (bool)
     {
         uint256 firstNonce = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
         uint256 lastNonce = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
@@ -225,7 +304,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         NahmiiTypesLib.TradePartyRole tradePartyRole
     )
     public
-    pure returns (bool)
+    pure
+    returns (bool)
     {
         uint256 firstNonce = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
         uint256 lastNonce = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);

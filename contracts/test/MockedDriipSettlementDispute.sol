@@ -39,7 +39,8 @@ contract MockedDriipSettlementDispute {
         _challengeByOrderCount++;
     }
 
-    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address unchallenger)
+    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade,
+        address unchallenger)
     public
     {
         // To silence unused function parameter compiler warning

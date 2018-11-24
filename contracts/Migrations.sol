@@ -19,7 +19,7 @@ contract Migrations is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor() public Ownable(msg.sender)  {
+    constructor() Ownable(msg.sender) public  {
     }
 
     //

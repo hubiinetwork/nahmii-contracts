@@ -61,7 +61,11 @@ library TxHistoryLib {
         currencyId = self.deposits[index].currencyId;
     }
 
-    function depositsCount(TxHistory storage self) internal view returns (uint256) {
+    function depositsCount(TxHistory storage self)
+    internal
+    view
+    returns (uint256)
+    {
         return self.deposits.length;
     }
 
@@ -76,7 +80,11 @@ library TxHistoryLib {
         blockNumber = self.currencyDeposits[currencyCt][currencyId][index].blockNumber;
     }
 
-    function currencyDepositsCount(TxHistory storage self, address currencyCt, uint256 currencyId) internal view returns (uint256) {
+    function currencyDepositsCount(TxHistory storage self, address currencyCt, uint256 currencyId)
+    internal
+    view
+    returns (uint256)
+    {
         return self.currencyDeposits[currencyCt][currencyId].length;
     }
 
@@ -114,7 +122,11 @@ library TxHistoryLib {
         blockNumber = self.currencyWithdrawals[currencyCt][currencyId][index].blockNumber;
     }
 
-    function currencyWithdrawalsCount(TxHistory storage self, address currencyCt, uint256 currencyId) internal view returns (uint256) {
+    function currencyWithdrawalsCount(TxHistory storage self, address currencyCt, uint256 currencyId)
+    internal
+    view
+    returns (uint256)
+    {
         return self.currencyWithdrawals[currencyCt][currencyId].length;
     }
 }

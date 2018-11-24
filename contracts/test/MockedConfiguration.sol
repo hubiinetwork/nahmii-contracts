@@ -26,7 +26,9 @@ contract MockedConfiguration is Configuration {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
+    function _reset()
+    public
+    {
         operationalMode = OperationalMode.Normal;
     }
 }

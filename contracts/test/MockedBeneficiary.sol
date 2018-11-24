@@ -35,11 +35,16 @@ contract MockedBeneficiary is Beneficiary {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
+    function _reset()
+    public
+    {
         benefits.length = 0;
     }
 
-    function receiveEthersTo(address wallet, string balance) public payable {
+    function receiveEthersTo(address wallet, string balance)
+    public
+    payable
+    {
         benefits.push(
             Benefit(
                 wallet,
@@ -53,7 +58,10 @@ contract MockedBeneficiary is Beneficiary {
         );
     }
 
-    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokensTo(address wallet, string balance, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         benefits.push(
             Benefit(
                 wallet,
@@ -70,7 +78,8 @@ contract MockedBeneficiary is Beneficiary {
     function getBenefit(uint256 index)
     public
     view
-    returns (address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    returns (address wallet, string balance, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
     {
         wallet = benefits[index].wallet;
         balance = benefits[index].balance;

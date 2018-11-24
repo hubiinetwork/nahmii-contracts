@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 library InUseCurrencyLib {
-    uint256 public constant INVALID_INDEX = 2**256 - 1;
+    uint256 public constant INVALID_INDEX = 2 ** 256 - 1;
 
     //
     // Structures
@@ -31,7 +31,9 @@ library InUseCurrencyLib {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function clear(InUseCurrency storage inUseCurrency) public {
+    function clear(InUseCurrency storage inUseCurrency)
+    public
+    {
         MonetaryTypesLib.Currency[] storage _list = inUseCurrency.list;
         assembly {
             mstore(_list_slot, 0)
@@ -40,7 +42,9 @@ library InUseCurrencyLib {
     }
 
     /// NOTE: Does not like "add" because we use assembly
-    function addItem(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId) public {
+    function addItem(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId)
+    public
+    {
         InUseCurrencyItem storage item = inUseCurrency.map[currencyCt][currencyId];
         if (item.listIndex == 0 || item.version != inUseCurrency.mapVersion) {
             inUseCurrency.list.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
@@ -49,13 +53,17 @@ library InUseCurrencyLib {
         }
     }
 
-    function removeItem(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId) public {
+    function removeItem(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId)
+    public
+    {
         uint256 index = getIndex(inUseCurrency, currencyCt, currencyId);
         require(index != INVALID_INDEX);
         removeItemAt(inUseCurrency, index);
     }
 
-    function removeItemAt(InUseCurrency storage inUseCurrency, uint256 index) public {
+    function removeItemAt(InUseCurrency storage inUseCurrency, uint256 index)
+    public
+    {
         require(index < inUseCurrency.list.length);
 
         address currencyCt = inUseCurrency.list[index].ct;
@@ -75,23 +83,40 @@ library InUseCurrencyLib {
             delete inUseCurrency.list[index];
         }
         inUseCurrency.list.length--;
-        inUseCurrency.map[currencyCt][currencyId].listIndex = 0; //clean mapping
+        inUseCurrency.map[currencyCt][currencyId].listIndex = 0;
+        //clean mapping
     }
 
-    function getLength(InUseCurrency storage inUseCurrency) public view returns (uint256) {
+    function getLength(InUseCurrency storage inUseCurrency)
+    public
+    view
+    returns (uint256)
+    {
         return inUseCurrency.list.length;
     }
 
-    function has(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId) public view returns (bool) {
+    function has(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool)
+    {
         return INVALID_INDEX != getIndex(inUseCurrency, currencyCt, currencyId);
     }
 
-    function getAt(InUseCurrency storage inUseCurrency, uint256 index) public view returns (MonetaryTypesLib.Currency) {
+    function getAt(InUseCurrency storage inUseCurrency, uint256 index)
+    public
+    view
+    returns (MonetaryTypesLib.Currency)
+    {
         require(index < inUseCurrency.list.length);
         return inUseCurrency.list[index];
     }
 
-    function getIndex(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId) public view returns (uint256) {
+    function getIndex(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
         InUseCurrencyItem storage item = inUseCurrency.map[currencyCt][currencyId];
         if (item.listIndex == 0 || item.version != inUseCurrency.mapVersion) {
             return INVALID_INDEX;

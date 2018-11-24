@@ -77,7 +77,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
-    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
     event CloseAccrualPeriodEvent();
     event ClaimAccrualEvent(address from, address currencyCt, uint256 currencyId);

@@ -45,25 +45,39 @@ contract MockedSecurityBond {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
+    function _reset()
+    public
+    {
         rewards.length = 0;
         deprivals.length = 0;
     }
 
-    function _rewardsCount() public view returns (uint256) {
+    function _rewardsCount()
+    public
+    view
+    returns (uint256)
+    {
         return rewards.length;
     }
 
-    function _deprivalsCount() public view returns (uint256) {
+    function _deprivalsCount()
+    public
+    view
+    returns (uint256)
+    {
         return deprivals.length;
     }
 
-    function reward(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds) public {
+    function reward(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds)
+    public
+    {
         rewards.push(Reward(wallet, rewardFraction, unlockTimeoutInSeconds));
         emit RewardEvent(msg.sender, rewardFraction, unlockTimeoutInSeconds);
     }
 
-    function deprive(address wallet) public {
+    function deprive(address wallet)
+    public
+    {
         deprivals.push(wallet);
         emit DepriveEvent(msg.sender);
     }
