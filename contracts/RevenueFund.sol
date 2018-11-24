@@ -112,7 +112,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         require(amount.isNonZeroPositiveInt256());
 
         // Execute transfer
-        TransferController controller = getTransferController(currencyCt, standard);
+        TransferController controller = transferController(currencyCt, standard);
         if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId))
             revert();
 
@@ -190,7 +190,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
                         else {
                             // Execute transfer
-                            TransferController controller = getTransferController(currency.ct, "");
+                            TransferController controller = transferController(currency.ct, "");
                             if (!address(controller).delegatecall(controller.getApproveSignature(), beneficiaryAddress, uint256(transferable), currency.ct, currency.id))
                                 revert();
 

@@ -72,7 +72,7 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
 
     function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
         //execute transfer
-        TransferController controller = getTransferController(currencyCt, standard);
+        TransferController controller = transferController(currencyCt, standard);
         controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
         emit DepositTokensToWasCalled(wallet, balance, amount, currencyCt, currencyId);
     }

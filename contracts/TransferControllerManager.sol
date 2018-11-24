@@ -141,7 +141,7 @@ contract TransferControllerManager is Ownable {
     /**
     @notice The provided standard takes priority over assigned interface to currency
     */
-    function getTransferController(address currencyCt, string standard)
+    function transferController(address currencyCt, string standard)
     public
     view
     returns (TransferController)

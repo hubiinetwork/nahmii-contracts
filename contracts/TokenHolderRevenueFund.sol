@@ -154,7 +154,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         require(amount.isNonZeroPositiveInt256());
 
         //execute transfer
-        TransferController controller = getTransferController(currencyCt, standard);
+        TransferController controller = transferController(currencyCt, standard);
         if (!address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)) {
             revert();
         }
@@ -320,7 +320,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             msg.sender.transfer(uint256(amount));
         }
         else {
-            TransferController controller = getTransferController(currencyCt, standard);
+            TransferController controller = transferController(currencyCt, standard);
             if (!address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId)) {
                 revert();
             }
