@@ -430,7 +430,7 @@ module.exports = (glob) => {
                 wallet = Wallet.createRandom().address;
             });
 
-            describe('if called from non-deployer', () => {
+            describe('if called from non-operator', () => {
                 beforeEach(async () => {
                     ethersNullSettlement = ethersNullSettlement.connect(glob.signer_a);
                 });
