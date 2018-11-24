@@ -65,9 +65,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisterParnerEvent(address tag, uint256 fee);
-    event SetdFeeEvent(address tag, uint256 fee);
-    event SetdWalletEvent(address tag, address oldWallet, address newWallet);
+    event RegisterPartnerEvent(address tag, uint256 fee);
+    event SetFeeEvent(address tag, uint256 fee);
+    event SetWalletEvent(address tag, address oldWallet, address newWallet);
     event ReceiveEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
     event StageEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address tag, address to, int256 amount, address currencyCt, uint256 currencyId);
@@ -96,7 +96,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].fee = fee;
 
         // Emit event
-        emit RegisterParnerEvent(tag, fee);
+        emit RegisterPartnerEvent(tag, fee);
     }
 
     function setPartnerFee(address tag, uint256 fee)
@@ -109,7 +109,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         walletMap[tag].fee = fee;
 
         // Emit event
-        emit SetdFeeEvent(tag, fee);
+        emit SetFeeEvent(tag, fee);
     }
 
     function getPartnerFee(address tag)
@@ -160,7 +160,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
             addressTagMap[newWallet] = tag;
 
         // Emit event
-        emit SetdWalletEvent(tag, oldWallet, newWallet);
+        emit SetWalletEvent(tag, oldWallet, newWallet);
     }
 
     function getPartnerAddress(address tag)
@@ -178,9 +178,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         revert();
     }
 
-    function receiveEthersTo(address tag, string balance) public isRegisteredTag(tag)
+    function receiveEthersTo(address tag, string balance)
     public
     payable
+    isRegisteredTag(tag)
     {
         require(0 == bytes(balance).length || ACTIVE_BALANCE == keccak256(abi.encodePacked(balance)));
 
@@ -245,8 +246,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Deposit history retrieval functions
     // -----------------------------------------------------------------------------------------------------------------
-    function deposit(address tag, uint index) public view isRegisteredTag(tag)
+    function deposit(address tag, uint index)
     public
+    view
+    isRegisteredTag(tag)
     returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         require(index < walletMap[tag].fullDepositHistory.length);
