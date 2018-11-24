@@ -32,7 +32,7 @@ contract AuthorizableServable is Servable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event AuthorizeInitiallyRegisteredServiceEvent(address wallet, address service);
+    event AuthorizeInitialServiceEvent(address wallet, address service);
     event AuthorizeRegisteredServiceEvent(address wallet, address service);
     event AuthorizeRegisteredServiceActionEvent(address wallet, address service, string action);
     event UnauthorizeRegisteredServiceEvent(address wallet, address service);
@@ -44,7 +44,7 @@ contract AuthorizableServable is Servable {
     /// @notice Add service to initial whitelist of services
     /// @dev The service must be registered already
     /// @param service The address of the concerned registered service
-    function authorizeInitiallyRegisteredService(address service)
+    function authorizeInitialService(address service)
     public
     onlyDeployer
     notNullOrThisAddress(service)
@@ -59,7 +59,7 @@ contract AuthorizableServable is Servable {
         initialServiceAuthorizedMap[service] = true;
 
         // Emit event
-        emit AuthorizeInitiallyRegisteredServiceEvent(msg.sender, service);
+        emit AuthorizeInitialServiceEvent(msg.sender, service);
     }
 
     /// @notice Disable further initial authorization of services
