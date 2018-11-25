@@ -359,7 +359,7 @@ module.exports = (glob) => {
         });
 
         describe('communityVoteUpdateDisabled()', () => {
-            it('should return value initialized', async () => {
+            it('should equal value initialized', async () => {
                 const result = await ethersDriipSettlement.communityVoteUpdateDisabled();
                 result.should.be.false;
             });

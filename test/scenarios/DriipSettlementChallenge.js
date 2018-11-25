@@ -184,49 +184,49 @@ module.exports = (glob) => {
         });
 
         describe('challengeWalletsCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.challengeWalletsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('lockedWalletsCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.lockedWalletsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('proposalsCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.proposalsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('disqualificationsCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.disqualificationsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('challengeTradeHashesCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.challengeTradeHashesCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('challengePaymentHashesCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.challengePaymentHashesCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('walletChallengeTradeHashIndicesCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 const address = Wallet.createRandom().address;
                 (await ethersDriipSettlementChallenge.walletChallengeTradeHashIndicesCount(address))
                     ._bn.should.eq.BN(0);
@@ -234,7 +234,7 @@ module.exports = (glob) => {
         });
 
         describe('walletChallengePaymentHashIndicesCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 const address = Wallet.createRandom().address;
                 (await ethersDriipSettlementChallenge.walletChallengePaymentHashIndicesCount(address))
                     ._bn.should.eq.BN(0);
@@ -1300,7 +1300,7 @@ module.exports = (glob) => {
         });
 
         describe('candidateHashesCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.candidateHashesCount())._bn.should.eq.BN(0);
             });
         });

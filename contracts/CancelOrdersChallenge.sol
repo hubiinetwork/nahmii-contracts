@@ -115,8 +115,6 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     function cancelOrders(NahmiiTypesLib.Order[] orders)
     public
     onlyOperationalModeNormal
-    validatorInitialized
-    configurationInitialized
     {
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i].wallet);

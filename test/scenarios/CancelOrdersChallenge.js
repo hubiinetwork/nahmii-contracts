@@ -187,27 +187,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if validator contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3CancelOrdersChallenge = await CancelOrdersChallenge.new(glob.owner);
-                });
-
-                it('should revert', async () => {
-                    web3CancelOrdersChallenge.cancelOrders([order0, order1], {gasLimit: 3e6}).should.be.rejected;
-                });
-            });
-
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3CancelOrdersChallenge = await CancelOrdersChallenge.new(glob.owner);
-                    await web3CancelOrdersChallenge.setValidator(web3Validator.address);
-                });
-
-                it('should revert', async () => {
-                    web3CancelOrdersChallenge.cancelOrders([order0, order1], {gasLimit: 3e6}).should.be.rejected;
-                });
-            });
-
             describe('if order wallet differs from msg.sender', () => {
                 beforeEach(async () => {
                     order0 = await mocks.mockOrder(glob.owner, {wallet: glob.user_a});
