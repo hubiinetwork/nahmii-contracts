@@ -122,6 +122,7 @@ library NahmiiTypesLib {
         Seal seal;
         uint256 blockNumber;
         uint256 operatorId;
+        uint256 partnerId;
     }
 
     struct PaymentSenderParty {
@@ -157,6 +158,7 @@ library NahmiiTypesLib {
         WalletOperatorSeal seals;
         uint256 blockNumber;
         uint256 operatorId;
+        uint256 partnerId;
     }
 
     struct OrderPlacement {

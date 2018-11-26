@@ -103,15 +103,29 @@ exports.mockTrade = async (operator, params) => {
                         id: utils.bigNumberify(0)
                     }
                 },
-                total: [
-                    {
-                        amount: utils.parseUnits('0.2', 18),
-                        currency: {
-                            ct: '0x0000000000000000000000000000000000000001',
-                            id: utils.bigNumberify(0)
+                total: {
+                    native: [
+                        {
+                            amount: utils.parseUnits('0.2', 18),
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000001',
+                                id: utils.bigNumberify(0)
+                            }
                         }
-                    }
-                ]
+                    ],
+                    partner: [
+                        {
+                            figure: {
+                                amount: utils.parseUnits('0.2', 18)
+                                currency: {
+                                    ct: '0x0000000000000000000000000000000000000001',
+                                    id: utils.bigNumberify(0)
+                                },
+                            },
+                            partnerId: 0
+                        }
+                    ]
+                }
             }
         },
         seller: {
