@@ -137,13 +137,13 @@ contract MockedClientFund {
         );
     }
 
-    function transferToBeneficiary(Beneficiary beneficiary, int256 amount,
+    function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
         address currencyCt, uint256 currencyId, string standard)
     public
     {
         beneficiaryTransfers.push(
             Update(
-                address(0),
+                wallet,
                 address(beneficiary),
                 MonetaryTypesLib.Figure(
                     amount,
