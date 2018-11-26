@@ -46,10 +46,10 @@ contract MockedClientFundService is Ownable, ClientFundable {
         clientFund.stageToBeneficiary(wallet, beneficiary, amount, currencyCt, currencyId, standard);
     }
 
-    function transferToBeneficiary(Beneficiary beneficiary, int256 amount,
+    function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
         address currencyCt, uint256 currencyId, string standard)
     public
     {
-        clientFund.transferToBeneficiary(beneficiary, amount, currencyCt, currencyId, standard);
+        clientFund.transferToBeneficiary(wallet, beneficiary, amount, currencyCt, currencyId, standard);
     }
 }

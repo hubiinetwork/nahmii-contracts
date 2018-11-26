@@ -142,6 +142,15 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit ReceiveEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 
+    function totalAmountReceived(address /*wallet*/, string /*balance*/, address /*currencyCt*/,
+        uint256 /*currencyId*/)
+    public
+    view
+    returns (int256)
+    {
+        return 0;
+    }
+
     function depositByTag(address tag, uint index)
     public
     view
