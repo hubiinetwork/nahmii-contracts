@@ -359,6 +359,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
             await instance.setTradesRevenueFund(addressStorage.get('TradesRevenueFund'));
             await instance.setPaymentsRevenueFund(addressStorage.get('PaymentsRevenueFund'));
+            await instance.setPartnerFund(addressStorage.get('PartnerFund'));
 
             instance = await DriipSettlementChallenge.at(addressStorage.get('DriipSettlementChallenge'));
             await instance.setConfiguration(addressStorage.get('Configuration'));

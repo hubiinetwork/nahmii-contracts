@@ -669,10 +669,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(2);
-                        const stageTotalFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersDriipSettlement.interface.events.StageTotalFeeEvent.topics[0]
+                        const StageFeesEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersDriipSettlement.interface.events.StageFeesEvent.topics[0]
                         ));
-                        stageTotalFeeEvents.should.have.lengthOf(1);
+                        StageFeesEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersDriipSettlement.interface.events.SettleTradeEvent.topics[0]
                         ));
@@ -944,10 +944,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(2);
-                        const stageTotalFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersDriipSettlement.interface.events.StageTotalFeeEvent.topics[0]
+                        const StageFeesEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersDriipSettlement.interface.events.StageFeesEvent.topics[0]
                         ));
-                        stageTotalFeeEvents.should.have.lengthOf(1);
+                        StageFeesEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersDriipSettlement.interface.events.SettleTradeByProxyEvent.topics[0]
                         ));
@@ -1200,10 +1200,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(1);
-                        const stageTotalFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersDriipSettlement.interface.events.StageTotalFeeEvent.topics[0]
+                        const StageFeesEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersDriipSettlement.interface.events.StageFeesEvent.topics[0]
                         ));
-                        stageTotalFeeEvents.should.have.lengthOf(1);
+                        StageFeesEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersDriipSettlement.interface.events.SettlePaymentEvent.topics[0]
                         ));
@@ -1441,10 +1441,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(1);
-                        const stageTotalFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersDriipSettlement.interface.events.StageTotalFeeEvent.topics[0]
+                        const StageFeesEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersDriipSettlement.interface.events.StageFeesEvent.topics[0]
                         ));
-                        stageTotalFeeEvents.should.have.lengthOf(1);
+                        StageFeesEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersDriipSettlement.interface.events.SettlePaymentByProxyEvent.topics[0]
                         ));
