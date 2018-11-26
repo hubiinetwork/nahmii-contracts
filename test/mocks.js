@@ -103,29 +103,18 @@ exports.mockTrade = async (operator, params) => {
                         id: utils.bigNumberify(0)
                     }
                 },
-                total: {
-                    native: [
-                        {
-                            amount: utils.parseUnits('0.2', 18),
+                total: [
+                    {
+                        targetId: utils.bigNumberify(0),
+                        figure: {
+                            amount: utils.parseUnits('0.2', 18)
                             currency: {
                                 ct: '0x0000000000000000000000000000000000000001',
                                 id: utils.bigNumberify(0)
                             }
                         }
-                    ],
-                    partner: [
-                        {
-                            figure: {
-                                amount: utils.parseUnits('0.2', 18)
-                                currency: {
-                                    ct: '0x0000000000000000000000000000000000000001',
-                                    id: utils.bigNumberify(0)
-                                },
-                            },
-                            partnerId: 0
-                        }
-                    ]
-                }
+                    }
+                ]
             }
         },
         seller: {
@@ -164,10 +153,13 @@ exports.mockTrade = async (operator, params) => {
                 },
                 total: [
                     {
-                        amount: utils.parseUnits('0.0004', 18),
-                        currency: {
-                            ct: '0x0000000000000000000000000000000000000002',
-                            id: utils.bigNumberify(0)
+                        targetId: utils.bigNumberify(0),
+                        figure: {
+                            amount: utils.parseUnits('0.0004', 18),
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000002',
+                                id: utils.bigNumberify(0)
+                            }
                         }
                     }
                 ]
@@ -220,10 +212,13 @@ exports.mockPayment = async (operator, params) => {
                 },
                 total: [
                     {
-                        amount: utils.parseUnits('0.2', 18),
-                        currency: {
-                            ct: '0x0000000000000000000000000000000000000001',
-                            id: utils.bigNumberify(0)
+                        targetId: utils.bigNumberify(0),
+                        figure: {
+                            amount: utils.parseUnits('0.2', 18),
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000001',
+                                id: utils.bigNumberify(0)
+                            }
                         }
                     }
                 ]

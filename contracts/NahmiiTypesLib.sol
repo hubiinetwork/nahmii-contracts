@@ -29,18 +29,23 @@ library NahmiiTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
+    struct TargetFigure {
+        uint256 targetId;
+        MonetaryTypesLib.Figure figure;
+    }
+    
     struct IntendedConjugateCurrency {
         MonetaryTypesLib.Currency intended;
         MonetaryTypesLib.Currency conjugate;
     }
 
-    struct SingleFigureTotalFigures {
+    struct SingleFigureTotalTargetFigures {
         MonetaryTypesLib.Figure single;
-        MonetaryTypesLib.Figure[] total;
+        TargetFigure[] total;
     }
 
-    struct TotalFigures {
-        MonetaryTypesLib.Figure[] total;
+    struct TotalTargetFigures {
+        TargetFigure[] total;
     }
 
     struct CurrentPreviousInt256 {
@@ -102,7 +107,7 @@ library NahmiiTypesLib {
 
         IntendedConjugateCurrentPreviousInt256 balances;
 
-        SingleFigureTotalFigures fees;
+        SingleFigureTotalTargetFigures fees;
     }
 
     struct Trade {
@@ -131,7 +136,7 @@ library NahmiiTypesLib {
 
         CurrentPreviousInt256 balances;
 
-        SingleFigureTotalFigures fees;
+        SingleFigureTotalTargetFigures fees;
     }
 
     struct PaymentRecipientParty {
@@ -140,7 +145,7 @@ library NahmiiTypesLib {
 
         CurrentPreviousInt256 balances;
 
-        TotalFigures fees;
+        TotalTargetFigures fees;
     }
 
     struct Payment {
