@@ -489,7 +489,7 @@ module.exports = (glob) => {
 
             describe('if called with improperly sealed trade', () => {
                 beforeEach(async () => {
-                    await ethersValidator.isGenuineTradeSeal(trade, {gasLimit: 1e6});
+                    await ethersValidator.isGenuineTradeSeal(trade);
                     await web3Validator.setGenuineTradeSeal(false);
                 });
 
@@ -700,7 +700,7 @@ module.exports = (glob) => {
 
             describe('if called with improperly sealed trade', () => {
                 beforeEach(async () => {
-                    await ethersValidator.isGenuineTradeSeal(trade, {gasLimit: 1e6});
+                    await ethersValidator.isGenuineTradeSeal(trade);
                     await web3Validator.setGenuineTradeSeal(false);
                 });
 
@@ -893,7 +893,7 @@ module.exports = (glob) => {
 
             describe('if called with improperly sealed payment', () => {
                 beforeEach(async () => {
-                    await ethersValidator.isGenuinePaymentSeals(payment, {gasLimit: 1e6});
+                    await ethersValidator.isGenuinePaymentSeals(payment);
                     await web3Validator.setGenuinePaymentSeals(false);
                 });
 

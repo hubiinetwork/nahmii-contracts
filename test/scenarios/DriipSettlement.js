@@ -713,9 +713,9 @@ module.exports = (glob) => {
                         const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
                         totalFeeTransfer[0].should.equal(mocks.address0);
                         totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].amount._bn);
-                        totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].currency.id._bn);
+                        totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
 
@@ -988,9 +988,9 @@ module.exports = (glob) => {
                         const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
                         totalFeeTransfer[0].should.equal(mocks.address0);
                         totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].amount._bn);
-                        totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].currency.id._bn);
+                        totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
 
@@ -1231,9 +1231,9 @@ module.exports = (glob) => {
                         const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
                         totalFeeTransfer[0].should.equal(mocks.address0);
                         totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].amount._bn);
-                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].currency.id._bn);
+                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
 
@@ -1472,9 +1472,9 @@ module.exports = (glob) => {
                         const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
                         totalFeeTransfer[0].should.equal(mocks.address0);
                         totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].amount._bn);
-                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].currency.id._bn);
+                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
 

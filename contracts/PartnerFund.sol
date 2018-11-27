@@ -73,9 +73,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     event SetFeeByNameEvent(string name, uint256 fee);
     event SetFeeByNameHashEvent(bytes32 nameHash, uint256 fee);
     event SetFeeByWalletEvent(address wallet, uint256 fee);
-    event SetWalletByIndexEvent(uint256 index, address oldWallet, address newWallet);
-    event SetWalletByNameEvent(string name, address oldWallet, address newWallet);
-    event SetWalletByNameHashEvent(bytes32 nameHash, address oldWallet, address newWallet);
+    event SetPartnerWalletByIndexEvent(uint256 index, address oldWallet, address newWallet);
+    event SetPartnerWalletByNameEvent(string name, address oldWallet, address newWallet);
+    event SetPartnerWalletByNameHashEvent(bytes32 nameHash, address oldWallet, address newWallet);
+    event SetPartnerWalletByWalletEvent(address oldWallet, address newWallet);
     event StageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
 
@@ -286,7 +287,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return partners.length;
     }
 
-    function registerPartnerByName(string name, uint256 fee, address wallet,
+    function registerByName(string name, uint256 fee, address wallet,
         bool partnerCanUpdate, bool operatorCanUpdate)
     public
     onlyOperator
@@ -304,7 +305,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit RegisterPartnerByNameEvent(name, fee, wallet);
     }
 
-    function registerPartnerByNameHash(bytes32 nameHash, uint256 fee, address wallet,
+    function registerByNameHash(bytes32 nameHash, uint256 fee, address wallet,
         bool partnerCanUpdate, bool operatorCanUpdate)
     public
     onlyOperator
@@ -325,7 +326,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         uint256 index = _indexByNameHash[nameHash];
-        require(0 != index);
+        require(0 < index);
         return index;
     }
 
@@ -349,7 +350,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         uint256 index = _indexByWallet[wallet];
-        require(0 != index);
+        require(0 < index);
         return index;
     }
 
@@ -377,8 +378,50 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return (0 < _indexByWallet[wallet]);
     }
 
+    /// @dev Reverts if name does not correspond to registered partner
+    function feeByIndex(uint256 index)
+    public
+    view
+    returns (uint256)
+    {
+        // Require partner index is one of registered partner
+        require(0 < index && index <= partners.length);
+
+        return _partnerFeeByIndex(index - 1);
+    }
+
+    /// @dev Reverts if name does not correspond to registered partner
+    function feeByName(string name)
+    public
+    view
+    returns (uint256)
+    {
+        // Get fee, implicitly requiring that partner name is registered
+        return _partnerFeeByIndex(indexByName(name) - 1);
+    }
+
+    /// @dev Reverts if name hash does not correspond to registered partner
+    function feeByNameHash(bytes32 nameHash)
+    public
+    view
+    returns (uint256)
+    {
+        // Get fee, implicitly requiring that partner name hash is registered
+        return _partnerFeeByIndex(indexByNameHash(nameHash) - 1);
+    }
+
+    /// @dev Reverts if name does not correspond to registered partner
+    function feeByWallet(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        // Get fee, implicitly requiring that partner wallet is registered
+        return _partnerFeeByIndex(indexByWallet(wallet) - 1);
+    }
+
     /// @dev index is 1-based
-    function setPartnerFeeByIndex(uint256 index, uint256 fee)
+    function setFeeByIndex(uint256 index, uint256 fee)
     public
     {
         // Require partner index is one of registered partner
@@ -391,7 +434,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit SetFeeByIndexEvent(index, fee);
     }
 
-    function setPartnerFeeByName(string name, uint256 fee)
+    function setFeeByName(string name, uint256 fee)
     public
     {
         // Update fee, implicitly requiring that partner name is registered
@@ -401,7 +444,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit SetFeeByNameEvent(name, fee);
     }
 
-    function setPartnerFeeByNameHash(bytes32 nameHash, uint256 fee)
+    function setFeeByNameHash(bytes32 nameHash, uint256 fee)
     public
     {
         // Update fee, implicitly requiring that partner name hash is registered
@@ -411,7 +454,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit SetFeeByNameHashEvent(nameHash, fee);
     }
 
-    function setPartnerFeeByWallet(address wallet, uint256 fee)
+    function setFeeByWallet(address wallet, uint256 fee)
     public
     {
         // Update fee, implicitly requiring that partner wallet is registered
@@ -421,85 +464,20 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit SetFeeByWalletEvent(wallet, fee);
     }
 
-    function setWalletByIndex(uint256 index, address newWallet)
+    /// @dev Reverts if index does not correspond to registered partner
+    function walletByIndex(uint256 index)
     public
+    view
+    returns (address)
     {
         // Require partner index is one of registered partner
         require(0 < index && index <= partners.length);
 
-        // Update wallet
-        address oldWallet = _setWalletByIndex(index - 1, newWallet);
-
-        // Emit event
-        emit SetWalletByIndexEvent(index, oldWallet, newWallet);
+        return partners[index - 1].wallet;
     }
 
     /// @dev Reverts if name does not correspond to registered partner
-    function setWalletByName(string name, address newWallet)
-    public
-    {
-        // Update wallet
-        address oldWallet = _setWalletByIndex(indexByName(name) - 1, newWallet);
-
-        // Emit event
-        emit SetWalletByNameEvent(name, oldWallet, newWallet);
-    }
-
-    /// @dev Reverts if name hash does not correspond to registered partner
-    function setWalletByNameHash(bytes32 nameHash, address newWallet)
-    public
-    {
-        // Update wallet
-        address oldWallet = _setWalletByIndex(indexByNameHash(nameHash) - 1, newWallet);
-
-        // Emit event
-        emit SetWalletByNameHashEvent(nameHash, oldWallet, newWallet);
-    }
-
-    /// @dev Reverts if name does not correspond to registered partner
-    function partnerFeeByIndex(uint256 index)
-    public
-    view
-    returns (uint256)
-    {
-        // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length);
-
-        return _partnerFeeByIndex(index - 1);
-    }
-
-    /// @dev Reverts if name does not correspond to registered partner
-    function partnerFeeByName(string name)
-    public
-    view
-    returns (uint256)
-    {
-        // Get fee, implicitly requiring that partner name is registered
-        return _partnerFeeByIndex(indexByName(name) - 1);
-    }
-
-    /// @dev Reverts if name hash does not correspond to registered partner
-    function partnerFeeByNameHash(bytes32 nameHash)
-    public
-    view
-    returns (uint256)
-    {
-        // Get fee, implicitly requiring that partner name hash is registered
-        return _partnerFeeByIndex(indexByNameHash(nameHash) - 1);
-    }
-
-    /// @dev Reverts if name does not correspond to registered partner
-    function partnerFeeByWallet(address wallet)
-    public
-    view
-    returns (uint256)
-    {
-        // Get fee, implicitly requiring that partner wallet is registered
-        return _partnerFeeByIndex(indexByWallet(wallet) - 1);
-    }
-
-    /// @dev Reverts if name does not correspond to registered partner
-    function partnerWalletByName(string name)
+    function walletByName(string name)
     public
     view
     returns (address)
@@ -509,7 +487,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     }
 
     /// @dev Reverts if name hash does not correspond to registered partner
-    function partnerWalletByNameHash(bytes32 nameHash)
+    function walletByNameHash(bytes32 nameHash)
     public
     view
     returns (address)
@@ -518,19 +496,63 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return partners[indexByNameHash(nameHash) - 1].wallet;
     }
 
+    function setWalletByIndex(uint256 index, address newWallet)
+    public
+    {
+        // Require partner index is one of registered partner
+        require(0 < index && index <= partners.length);
+
+        // Update wallet
+        address oldWallet = _setPartnerWalletByIndex(index - 1, newWallet);
+
+        // Emit event
+        emit SetPartnerWalletByIndexEvent(index, oldWallet, newWallet);
+    }
+
+    /// @dev Reverts if name does not correspond to registered partner
+    function setWalletByName(string name, address newWallet)
+    public
+    {
+        // Update wallet
+        address oldWallet = _setPartnerWalletByIndex(indexByName(name) - 1, newWallet);
+
+        // Emit event
+        emit SetPartnerWalletByNameEvent(name, oldWallet, newWallet);
+    }
+
+    /// @dev Reverts if name hash does not correspond to registered partner
+    function setWalletByNameHash(bytes32 nameHash, address newWallet)
+    public
+    {
+        // Update wallet
+        address oldWallet = _setPartnerWalletByIndex(indexByNameHash(nameHash) - 1, newWallet);
+
+        // Emit event
+        emit SetPartnerWalletByNameHashEvent(nameHash, oldWallet, newWallet);
+    }
+
+    /// @dev Reverts if old wallet hash does not correspond to registered partner
+    function setWalletByWallet(address oldWallet, address newWallet)
+    public
+    {
+        // Update wallet
+        _setPartnerWalletByIndex(indexByWallet(oldWallet) - 1, newWallet);
+
+        // Emit event
+        emit SetPartnerWalletByWalletEvent(oldWallet, newWallet);
+    }
+
     function stage(int256 amount, address currencyCt, uint256 currencyId)
     public
     {
-        // Require that wallet is one of registered partner
-        uint256 index = _indexByWallet[msg.sender];
-        require(0 != index);
+        // Get index, implicitly requiring that msg.sender is wallet of registered partner
+        uint256 index = indexByWallet(msg.sender);
 
+        // Require positive amount
         require(amount.isPositiveInt256());
 
         // Clamp amount to move
         amount = amount.clampMax(partners[index - 1].active.get(currencyCt, currencyId));
-        if (amount <= 0)
-            return;
 
         partners[index - 1].active.sub(amount, currencyCt, currencyId);
         partners[index - 1].staged.add(amount, currencyCt, currencyId);
@@ -553,14 +575,14 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
     public
     {
-        // Require that wallet is one of registered partner
-        uint256 index = _indexByWallet[msg.sender];
-        require(0 != index);
+        // Get index, implicitly requiring that msg.sender is wallet of registered partner
+        uint256 index = indexByWallet(msg.sender);
+
+        // Require positive amount
+        require(amount.isPositiveInt256());
 
         // Clamp amount to move
         amount = amount.clampMax(partners[index - 1].staged.get(currencyCt, currencyId));
-        if (amount <= 0)
-            return;
 
         partners[index - 1].staged.sub(amount, currencyCt, currencyId);
 
@@ -698,12 +720,12 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         uint256 index = partners.length;
 
         // Update partner map
-        partners[index].nameHash = nameHash;
-        partners[index].fee = fee;
-        partners[index].wallet = wallet;
-        partners[index].partnerCanUpdate = partnerCanUpdate;
-        partners[index].operatorCanUpdate = operatorCanUpdate;
-        partners[index].index = index;
+        partners[index - 1].nameHash = nameHash;
+        partners[index - 1].fee = fee;
+        partners[index - 1].wallet = wallet;
+        partners[index - 1].partnerCanUpdate = partnerCanUpdate;
+        partners[index - 1].operatorCanUpdate = operatorCanUpdate;
+        partners[index - 1].index = index;
 
         // Update name hash to index map
         _indexByNameHash[nameHash] = index;
@@ -733,7 +755,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     }
 
     // @dev index is 0-based
-    function _setWalletByIndex(uint256 index, address newWallet)
+    function _setPartnerWalletByIndex(uint256 index, address newWallet)
     private
     returns (address)
     {

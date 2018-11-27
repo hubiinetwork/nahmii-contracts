@@ -288,7 +288,7 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully accept the challenge candidate trade', async () => {
-                    await ethersCancelOrdersChallenge.challenge(trade, trade.buyer.wallet, {gasLimit: 5e6});
+                    await ethersCancelOrdersChallenge.challenge(trade, trade.buyer.wallet, {gasLimit: 1e6});
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);

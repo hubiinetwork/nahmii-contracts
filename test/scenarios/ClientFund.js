@@ -1181,7 +1181,7 @@ module.exports = function (glob) {
                     );
 
                     const benefit = await ethersMockedBeneficiary.getBenefit(0);
-                    benefit.wallet.should.equal(glob.user_b);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
                     benefit.balance.should.be.a('string').that.is.empty;
                     benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
                     benefit.currencyCt.should.equal(mocks.address0);
@@ -1210,7 +1210,7 @@ module.exports = function (glob) {
                     );
 
                     const benefit = await ethersMockedBeneficiary.getBenefit(0);
-                    benefit.wallet.should.equal(glob.user_b);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
                     benefit.balance.should.be.a('string').that.is.empty;
                     benefit.amount._bn.should.eq.BN(3);
                     benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
