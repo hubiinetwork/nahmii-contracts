@@ -186,7 +186,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     public
     {
         // Settle trade
-        settleTradePrivate(msg.sender, trade);
+        _settleTrade(msg.sender, trade);
 
         // Emit event
         emit SettleTradeEvent(msg.sender, trade);
@@ -200,7 +200,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     onlyOperator
     {
         // Settle trade for wallet
-        settleTradePrivate(wallet, trade);
+        _settleTrade(wallet, trade);
 
         // Emit event
         emit SettleTradeByProxyEvent(msg.sender, wallet, trade);
@@ -212,7 +212,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     public
     {
         // Settle payment
-        settlePaymentPrivate(msg.sender, payment);
+        _settlePayment(msg.sender, payment);
 
         // Emit event
         emit SettlePaymentEvent(msg.sender, payment);
@@ -226,13 +226,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     onlyOperator
     {
         // Settle payment for wallet
-        settlePaymentPrivate(wallet, payment);
+        _settlePayment(wallet, payment);
 
         // Emit event
         emit SettlePaymentByProxyEvent(msg.sender, wallet, payment);
     }
 
-    function settleTradePrivate(address wallet, NahmiiTypesLib.Trade trade)
+    function _settleTrade(address wallet, NahmiiTypesLib.Trade trade)
     private
     onlySealedTrade(trade)
     {
@@ -340,7 +340,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             maxDriipNonce = trade.nonce;
     }
 
-    function settlePaymentPrivate(address wallet, NahmiiTypesLib.Payment payment)
+    function _settlePayment(address wallet, NahmiiTypesLib.Payment payment)
     private
     onlySealedPayment(payment)
     {

@@ -182,7 +182,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         require(!isLockedWallet(msg.sender));
 
         // Start challenge
-        startChallengeFromTradePrivate(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
+        _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
 
         // Emit event
         emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
@@ -199,7 +199,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     onlyOperator
     {
         // Start challenge for wallet
-        startChallengeFromTradePrivate(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
+        _startChallengeFromTrade(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
 
         // Emit event
         emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
@@ -215,7 +215,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         require(!isLockedWallet(msg.sender));
 
         // Start challenge for wallet
-        startChallengeFromPaymentPrivate(msg.sender, payment, stageAmount, true);
+        _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
 
         // Emit event
         emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
@@ -230,7 +230,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     onlyOperator
     {
         // Start challenge for wallet
-        startChallengeFromPaymentPrivate(wallet, payment, stageAmount, false);
+        _startChallengeFromPayment(wallet, payment, stageAmount, false);
 
         // Emit event
         emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
@@ -597,7 +597,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function startChallengeFromTradePrivate(address wallet, NahmiiTypesLib.Trade trade,
+    function _startChallengeFromTrade(address wallet, NahmiiTypesLib.Trade trade,
         int256 intendedStageAmount, int256 conjugateStageAmount, bool balanceReward)
     private
     onlySealedTrade(trade)
@@ -628,7 +628,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         challengeTradeHashIndicesByWallet[wallet].push(challengeTradeHashes.length);
     }
 
-    function startChallengeFromPaymentPrivate(address wallet, NahmiiTypesLib.Payment payment,
+    function _startChallengeFromPayment(address wallet, NahmiiTypesLib.Payment payment,
         int256 stageAmount, bool balanceReward)
     private
     onlySealedPayment(payment)

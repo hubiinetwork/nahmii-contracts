@@ -63,7 +63,7 @@ contract Servable is Ownable {
     onlyDeployer
     notNullOrThisAddress(service)
     {
-        registerServicePrivate(service, 0);
+        _registerService(service, 0);
 
         // Emit event
         emit RegisterServiceEvent(service);
@@ -76,7 +76,7 @@ contract Servable is Ownable {
     onlyDeployer
     notNullOrThisAddress(service)
     {
-        registerServicePrivate(service, serviceActivationTimeout);
+        _registerService(service, serviceActivationTimeout);
 
         // Emit event
         emit RegisterServiceDeferredEvent(service, serviceActivationTimeout);
@@ -184,7 +184,7 @@ contract Servable is Ownable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerServicePrivate(address service, uint256 timeout)
+    function _registerService(address service, uint256 timeout)
     private
     {
         if (!registeredServicesMap[service].registered) {
