@@ -380,7 +380,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         else
             settlement.target.done = true;
 
-        NahmiiTypesLib.TargetFigure[] memory totalFees;
+        NahmiiTypesLib.OriginFigure[] memory totalFees;
         int256 currentBalance;
         if (validator.isPaymentParty(payment, wallet)) {
             totalFees = payment.sender.fees.total;
@@ -470,7 +470,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         return settlements[index - 1];
     }
 
-    function stageFees(address wallet, NahmiiTypesLib.TargetFigure[] fees,
+    function stageFees(address wallet, NahmiiTypesLib.OriginFigure[] fees,
         Beneficiary protocolBeneficiary, uint256 nonce)
     private
     {
@@ -480,9 +480,9 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             if (walletCurrencyFeeNonce[wallet][fees[i].figure.currency.ct][fees[i].figure.currency.id] < nonce) {
                 walletCurrencyFeeNonce[wallet][fees[i].figure.currency.ct][fees[i].figure.currency.id] = nonce;
 
-                // Based on targetId determine if this is protocol or partner fee
+                // Based on originId determine if this is protocol or partner fee
                 (Beneficiary beneficiary, address beneficiaryWallet) =
-                (0 == fees[i].targetId) ? (protocolBeneficiary, wallet) : (partnerFund, address(fees[i].targetId));
+                (0 == fees[i].originId) ? (protocolBeneficiary, wallet) : (partnerFund, address(fees[i].originId));
 
                 // Get the amount previously staged
                 int256 deltaAmount = fees[i].figure.amount - beneficiary.totalAmountReceived(

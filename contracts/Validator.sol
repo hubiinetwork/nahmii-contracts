@@ -403,10 +403,10 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         else if (NahmiiTypesLib.TradePartyRole.Seller == lastTradePartyRole)
             lastSingleFee = lastTrade.seller.fees.single;
 
-        NahmiiTypesLib.TargetFigure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.total : firstTrade.seller.fees.total);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.total : firstTrade.seller.fees.total);
         MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, lastSingleFee.currency);
 
-        NahmiiTypesLib.TargetFigure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.total : lastTrade.seller.fees.total);
+        NahmiiTypesLib.OriginFigure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.total : lastTrade.seller.fees.total);
         MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(lastTotalFees, lastSingleFee.currency);
 
         return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
@@ -450,7 +450,7 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        NahmiiTypesLib.TargetFigure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
         MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, payment.sender.fees.single.currency);
 
         MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(payment.sender.fees.total, payment.sender.fees.single.currency);
@@ -474,10 +474,10 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         else if (NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
             lastSingleFee = trade.seller.fees.single;
 
-        NahmiiTypesLib.TargetFigure[] memory firstTotalFees = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.total : payment.recipient.fees.total);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.total : payment.recipient.fees.total);
         MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, lastSingleFee.currency);
 
-        NahmiiTypesLib.TargetFigure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
+        NahmiiTypesLib.OriginFigure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
         MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(lastTotalFees, lastSingleFee.currency);
 
         return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
@@ -543,14 +543,14 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     //
     // Private unctions
     // -----------------------------------------------------------------------------------------------------------------
-    function getProtocolFigureByCurrency(NahmiiTypesLib.TargetFigure[] targetFigures, MonetaryTypesLib.Currency currency)
+    function getProtocolFigureByCurrency(NahmiiTypesLib.OriginFigure[] originFigures, MonetaryTypesLib.Currency currency)
     private
     pure
     returns (MonetaryTypesLib.Figure) {
-        for (uint256 i = 0; i < targetFigures.length; i++)
-            if (targetFigures[i].figure.currency.ct == currency.ct && targetFigures[i].figure.currency.id == currency.id
-            && targetFigures[i].targetId == 0)
-                return targetFigures[i].figure;
+        for (uint256 i = 0; i < originFigures.length; i++)
+            if (originFigures[i].figure.currency.ct == currency.ct && originFigures[i].figure.currency.id == currency.id
+            && originFigures[i].originId == 0)
+                return originFigures[i].figure;
         return MonetaryTypesLib.Figure(0, currency);
     }
 }

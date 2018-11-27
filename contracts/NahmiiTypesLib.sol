@@ -29,8 +29,8 @@ library NahmiiTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct TargetFigure {
-        uint256 targetId;
+    struct OriginFigure {
+        uint256 originId;
         MonetaryTypesLib.Figure figure;
     }
     
@@ -39,13 +39,13 @@ library NahmiiTypesLib {
         MonetaryTypesLib.Currency conjugate;
     }
 
-    struct SingleFigureTotalTargetFigures {
+    struct SingleFigureTotalOriginFigures {
         MonetaryTypesLib.Figure single;
-        TargetFigure[] total;
+        OriginFigure[] total;
     }
 
-    struct TotalTargetFigures {
-        TargetFigure[] total;
+    struct TotalOriginFigures {
+        OriginFigure[] total;
     }
 
     struct CurrentPreviousInt256 {
@@ -107,7 +107,7 @@ library NahmiiTypesLib {
 
         IntendedConjugateCurrentPreviousInt256 balances;
 
-        SingleFigureTotalTargetFigures fees;
+        SingleFigureTotalOriginFigures fees;
     }
 
     struct Trade {
@@ -127,7 +127,6 @@ library NahmiiTypesLib {
         Seal seal;
         uint256 blockNumber;
         uint256 operatorId;
-        uint256 partnerId;
     }
 
     struct PaymentSenderParty {
@@ -136,7 +135,7 @@ library NahmiiTypesLib {
 
         CurrentPreviousInt256 balances;
 
-        SingleFigureTotalTargetFigures fees;
+        SingleFigureTotalOriginFigures fees;
     }
 
     struct PaymentRecipientParty {
@@ -145,7 +144,7 @@ library NahmiiTypesLib {
 
         CurrentPreviousInt256 balances;
 
-        TotalTargetFigures fees;
+        TotalOriginFigures fees;
     }
 
     struct Payment {
@@ -163,7 +162,6 @@ library NahmiiTypesLib {
         WalletOperatorSeal seals;
         uint256 blockNumber;
         uint256 operatorId;
-        uint256 partnerId;
     }
 
     struct OrderPlacement {
