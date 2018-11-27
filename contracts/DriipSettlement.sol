@@ -34,6 +34,14 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     using SafeMathUintLib for uint256;
 
     //
+    // Structures
+    // -----------------------------------------------------------------------------------------------------------------
+    struct Total {
+        uint256 nonce;
+        int256 amount;
+    }
+
+    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     uint256 public maxDriipNonce;
@@ -49,7 +57,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxDriipNonce;
 
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyFeeNonce;
+    mapping(address => mapping(address => mapping(address => mapping(address => mapping(uint256 => Total))))) public feeTotalsMap;
 
     //
     // Events
@@ -474,24 +482,27 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         Beneficiary protocolBeneficiary, uint256 nonce)
     private
     {
-        // For each target fee...
+        // For each origin figure...
         for (uint256 i = 0; i < fees.length; i++) {
-            // If wallet has previously settled fee of the concerned currency with higher driip nonce then don't settle again
-            if (walletCurrencyFeeNonce[wallet][fees[i].figure.currency.ct][fees[i].figure.currency.id] < nonce) {
-                walletCurrencyFeeNonce[wallet][fees[i].figure.currency.ct][fees[i].figure.currency.id] = nonce;
+            // Based on originId determine if this is protocol or partner fee, and if the latter define originId as destination in beneficiary
+            (Beneficiary beneficiary, address destination) =
+            (0 == fees[i].originId) ? (protocolBeneficiary, address(0)) : (partnerFund, address(fees[i].originId));
 
-                // Based on originId determine if this is protocol or partner fee
-                (Beneficiary beneficiary, address beneficiaryWallet) =
-                (0 == fees[i].originId) ? (protocolBeneficiary, wallet) : (partnerFund, address(fees[i].originId));
+            Total storage feeTotal = feeTotalsMap[wallet][address(beneficiary)][destination][fees[i].figure.currency.ct][fees[i].figure.currency.id];
+
+            // If wallet has previously settled fee of the concerned currency with higher driip nonce then don't settle again
+            if (feeTotal.nonce < nonce) {
+                feeTotal.nonce = nonce;
 
                 // Get the amount previously staged
-                int256 deltaAmount = fees[i].figure.amount - beneficiary.totalAmountReceived(
-                    beneficiaryWallet, "", fees[i].figure.currency.ct, fees[i].figure.currency.id
-                );
+                int256 deltaAmount = fees[i].figure.amount - feeTotal.amount;
+
+                // Update the fee total amount
+                feeTotal.amount = fees[i].figure.amount;
 
                 // Transfer to beneficiary
                 clientFund.transferToBeneficiary(
-                    beneficiaryWallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
+                    destination, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
                 );
 
                 // Emit event

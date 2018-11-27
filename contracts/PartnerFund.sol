@@ -17,6 +17,7 @@ import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {StringsLib} from "./StringsLib.sol";
 
 /**
 @title PartnerFund
@@ -26,18 +27,20 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathIntLib for int256;
+    using StringsLib for string;
 
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Partner {
-        bool isRegistered;
-        bool operatorCanUpdate;
-        bool partnerCanUpdate;
+        bytes32 nameHash;
 
         uint256 fee;
         address wallet;
         uint256 index;
+
+        bool operatorCanUpdate;
+        bool partnerCanUpdate;
 
         BalanceLib.Balance active;
         BalanceLib.Balance staged;
@@ -55,21 +58,26 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    address[] public tags;
+    Partner[] private partners;
 
-    mapping(address => Partner) private partnerMap;
-    mapping(address => address) private addressTagMap;
-    mapping(uint256 => address) private indexTagMap;
+    mapping(bytes32 => uint256) private _indexByNameHash;
+    mapping(address => uint256) private _indexByWallet;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisterPartnerEvent(address tag, uint256 fee);
-    event SetFeeEvent(address tag, uint256 fee);
-    event SetWalletEvent(address tag, address oldWallet, address newWallet);
-    event ReceiveEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
-    event StageEvent(address tag, address from, int256 amount, address currencyCt, uint256 currencyId);
-    event WithdrawEvent(address tag, address to, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event RegisterPartnerByNameEvent(string name, uint256 fee, address wallet);
+    event RegisterPartnerByNameHashEvent(bytes32 nameHash, uint256 fee, address wallet);
+    event SetFeeByIndexEvent(uint256 index, uint256 fee);
+    event SetFeeByNameEvent(string name, uint256 fee);
+    event SetFeeByNameHashEvent(bytes32 nameHash, uint256 fee);
+    event SetFeeByWalletEvent(address wallet, uint256 fee);
+    event SetWalletByIndexEvent(uint256 index, address oldWallet, address newWallet);
+    event SetWalletByNameEvent(string name, address oldWallet, address newWallet);
+    event SetWalletByNameHashEvent(bytes32 nameHash, address oldWallet, address newWallet);
+    event StageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
 
     //
     // Constructor
@@ -78,109 +86,111 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     }
 
     function() public payable {
-        receiveEthersTo(partnerTagByWallet(msg.sender), "");
+        _receiveEthersTo(
+            indexByWallet(msg.sender) - 1, SafeMathIntLib.toNonZeroInt256(msg.value)
+        );
     }
 
     function receiveEthersTo(address tag, string)
     public
     payable
-    isRegisteredTag(tag)
     {
-        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
-
-        // Add to active
-        partnerMap[tag].active.add(amount, address(0), 0);
-        partnerMap[tag].txHistory.addDeposit(amount, address(0), 0);
-
-        // Add to full deposit history
-        partnerMap[tag].fullBalanceHistory.push(
-            FullBalanceHistory(
-                partnerMap[tag].txHistory.depositsCount() - 1,
-                partnerMap[tag].active.get(address(0), 0),
-                block.number
-            )
+        _receiveEthersTo(
+            uint256(tag) - 1, SafeMathIntLib.toNonZeroInt256(msg.value)
         );
-
-        // Emit event
-        emit ReceiveEvent(tag, msg.sender, amount, address(0), 0);
     }
 
     function receiveTokens(string, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
-        receiveTokensTo(partnerTagByWallet(msg.sender), "", amount, currencyCt, currencyId, standard);
+        _receiveTokensTo(
+            indexByWallet(msg.sender) - 1, amount, currencyCt, currencyId, standard
+        );
     }
 
     function receiveTokensTo(address tag, string, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
-    isRegisteredTag(tag)
     {
-        require(amount.isNonZeroPositiveInt256());
-
-        // Execute transfer
-        TransferController controller = transferController(currencyCt, standard);
-        require(address(controller).delegatecall(
-                controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)
+        _receiveTokensTo(
+            uint256(tag) - 1, amount, currencyCt, currencyId, standard
         );
-
-        // Add to active
-        partnerMap[tag].active.add(amount, currencyCt, currencyId);
-        partnerMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
-
-        // Add to full deposit history
-        partnerMap[tag].fullBalanceHistory.push(
-            FullBalanceHistory(
-                partnerMap[tag].txHistory.depositsCount() - 1,
-                partnerMap[tag].active.get(currencyCt, currencyId),
-                block.number
-            )
-        );
-
-        // Emit event
-        emit ReceiveEvent(tag, msg.sender, amount, currencyCt, currencyId);
     }
 
-    function totalAmountReceived(address /*wallet*/, string /*balance*/, address /*currencyCt*/,
-        uint256 /*currencyId*/)
+    function hashName(string name)
     public
-    view
-    returns (int256)
+    pure
+    returns (bytes32)
     {
-        return 0;
+        return keccak256(abi.encodePacked(name.upper()));
     }
 
-    function depositByTag(address tag, uint index)
-    public
-    view
-    isRegisteredTag(tag)
-    returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
-    {
-        require(index < partnerMap[tag].fullBalanceHistory.length);
-
-        FullBalanceHistory storage entry = partnerMap[tag].fullBalanceHistory[index];
-        (,, currencyCt, currencyId) = partnerMap[tag].txHistory.deposit(entry.listIndex);
-
-        balance = entry.balance;
-        blockNumber = entry.blockNumber;
-    }
-
-    function depositByWallet(address wallet, uint index)
+    function depositByIndices(uint256 partnerIndex, uint256 depositIndex)
     public
     view
     returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        return depositByTag(partnerTagByWallet(wallet), index);
+        // Require partner index is one of registered partner
+        require(0 < partnerIndex && partnerIndex <= partners.length);
+
+        return _depositByIndices(partnerIndex - 1, depositIndex);
     }
 
-    function depositsCountByTag(address tag)
+    function depositByName(string name, uint depositIndex)
     public
     view
-    isRegisteredTag(tag)
+    returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
+        // Implicitly require that partner name is registered
+        return _depositByIndices(indexByName(name) - 1, depositIndex);
+    }
+
+    function depositByNameHash(bytes32 nameHash, uint depositIndex)
+    public
+    view
+    returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
+        // Implicitly require that partner name hash is registered
+        return _depositByIndices(indexByNameHash(nameHash) - 1, depositIndex);
+    }
+
+    function depositByWallet(address wallet, uint depositIndex)
+    public
+    view
+    returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
+        // Implicitly require that partner wallet is registered
+        return _depositByIndices(indexByWallet(wallet) - 1, depositIndex);
+    }
+
+    function depositsCountByIndex(uint256 index)
+    public
+    view
     returns (uint256)
     {
-        return partnerMap[tag].fullBalanceHistory.length;
+        // Require partner index is one of registered partner
+        require(0 < index && index <= partners.length);
+
+        return _depositsCountByIndex(index - 1);
+    }
+
+    function depositsCountByName(string name)
+    public
+    view
+    returns (uint256)
+    {
+        // Implicitly require that partner name is registered
+        return _depositsCountByIndex(indexByName(name) - 1);
+    }
+
+    function depositsCountByNameHash(bytes32 nameHash)
+    public
+    view
+    returns (uint256)
+    {
+        // Implicitly require that partner name hash is registered
+        return _depositsCountByIndex(indexByNameHash(nameHash) - 1);
     }
 
     function depositsCountByWallet(address wallet)
@@ -188,16 +198,37 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     view
     returns (uint256)
     {
-        return depositsCountByTag(partnerTagByWallet(wallet));
+        // Implicitly require that partner wallet is registered
+        return _depositsCountByIndex(indexByWallet(wallet) - 1);
     }
 
-    function activeBalanceByTag(address tag, address currencyCt, uint256 currencyId)
+    function activeBalanceByIndex(uint256 index, address currencyCt, uint256 currencyId)
     public
     view
-    isRegisteredTag(tag)
     returns (int256)
     {
-        return partnerMap[tag].active.get(currencyCt, currencyId);
+        // Require partner index is one of registered partner
+        require(0 < index && index <= partners.length);
+
+        return _activeBalanceByIndex(index - 1, currencyCt, currencyId);
+    }
+
+    function activeBalanceByName(string name, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        // Implicitly require that partner name is registered
+        return _activeBalanceByIndex(indexByName(name) - 1, currencyCt, currencyId);
+    }
+
+    function activeBalanceByNameHash(bytes32 nameHash, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        // Implicitly require that partner name hash is registered
+        return _activeBalanceByIndex(indexByNameHash(nameHash) - 1, currencyCt, currencyId);
     }
 
     function activeBalanceByWallet(address wallet, address currencyCt, uint256 currencyId)
@@ -205,16 +236,37 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     view
     returns (int256)
     {
-        return activeBalanceByTag(partnerTagByWallet(wallet), currencyCt, currencyId);
+        // Implicitly require that partner wallet is registered
+        return _activeBalanceByIndex(indexByWallet(wallet) - 1, currencyCt, currencyId);
     }
 
-    function stagedBalanceByTag(address tag, address currencyCt, uint256 currencyId)
+    function stagedBalanceByIndex(uint256 index, address currencyCt, uint256 currencyId)
     public
     view
-    isRegisteredTag(tag)
     returns (int256)
     {
-        return partnerMap[tag].staged.get(currencyCt, currencyId);
+        // Require partner index is one of registered partner
+        require(0 < index && index <= partners.length);
+
+        return _stagedBalanceByIndex(index - 1, currencyCt, currencyId);
+    }
+
+    function stagedBalanceByName(string name, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        // Implicitly require that partner name is registered
+        return _stagedBalanceByIndex(indexByName(name) - 1, currencyCt, currencyId);
+    }
+
+    function stagedBalanceByNameHash(bytes32 nameHash, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        // Implicitly require that partner name is registered
+        return _stagedBalanceByIndex(indexByNameHash(nameHash) - 1, currencyCt, currencyId);
     }
 
     function stagedBalanceByWallet(address wallet, address currencyCt, uint256 currencyId)
@@ -222,198 +274,295 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     view
     returns (int256)
     {
-        return stagedBalanceByTag(partnerTagByWallet(wallet), currencyCt, currencyId);
+        // Implicitly require that partner wallet is registered
+        return _stagedBalanceByIndex(indexByWallet(wallet) - 1, currencyCt, currencyId);
     }
 
-    function tagsCount()
+    function partnersCount()
     public
     view
     returns (uint256)
     {
-        return tags.length;
+        return partners.length;
     }
 
-    function registerPartner(address tag, address wallet, uint256 fee, bool partnerCanUpdate, bool operatorCanUpdate)
+    function registerPartnerByName(string name, uint256 fee, address wallet,
+        bool partnerCanUpdate, bool operatorCanUpdate)
     public
     onlyOperator
-    notNullTag(tag)
     {
-        // Require that the tag is not previously registered
-        require(!partnerMap[tag].isRegistered);
+        // Require not empty name string
+        require(bytes(name).length > 0);
 
-        // Require possibility to update
-        require(partnerCanUpdate || operatorCanUpdate);
+        // Hash name
+        bytes32 nameHash = hashName(name);
 
-        // Store tag
-        tags.push(tag);
-
-        // Update partner map
-        partnerMap[tag].isRegistered = true;
-        partnerMap[tag].operatorCanUpdate = operatorCanUpdate;
-        partnerMap[tag].partnerCanUpdate = partnerCanUpdate;
-        partnerMap[tag].fee = fee;
-        partnerMap[tag].wallet = wallet;
-        partnerMap[tag].index = tags.length;
-
-        // Update address to tag map
-        addressTagMap[wallet] = tag;
-
-        // Update index to tag map
-        indexTagMap[tags.length] = tag;
+        // Register partner
+        _registerPartnerByNameHash(nameHash, fee, wallet, partnerCanUpdate, operatorCanUpdate);
 
         // Emit event
-        emit RegisterPartnerEvent(tag, fee);
+        emit RegisterPartnerByNameEvent(name, fee, wallet);
     }
 
-    function setPartnerFee(address tag, uint256 fee)
+    function registerPartnerByNameHash(bytes32 nameHash, uint256 fee, address wallet,
+        bool partnerCanUpdate, bool operatorCanUpdate)
     public
-    isRegisteredTag(tag)
+    onlyOperator
     {
-        // If operator tries to change verify that operator has access
-        if (isOperator())
-            require(partnerMap[tag].operatorCanUpdate);
-
-        else {
-            // Require that msg.sender is partner
-            require(msg.sender == partnerMap[tag].wallet);
-
-            // If partner tries to change verify that partner has access
-            require(partnerMap[tag].partnerCanUpdate);
-        }
-
-        // Update stored fee
-        partnerMap[tag].fee = fee;
+        // Register partner
+        _registerPartnerByNameHash(nameHash, fee, wallet, partnerCanUpdate, operatorCanUpdate);
 
         // Emit event
-        emit SetFeeEvent(tag, fee);
+        emit RegisterPartnerByNameHashEvent(nameHash, fee, wallet);
     }
 
-    function partnerFeeByTag(address tag)
-    public
-    view
-    isRegisteredTag(tag)
-    returns (uint256)
-    {
-        return partnerMap[tag].fee;
-    }
-
-    function setPartnerWallet(address tag, address newWallet)
-    public
-    isRegisteredTag(tag)
-    {
-        address oldWallet = partnerMap[tag].wallet;
-
-        // If address has not been set operator is the only allowed to change it
-        if (oldWallet == address(0))
-            require(isOperator());
-
-        // Else if operator tries to change verify that operator has access
-        else if (isOperator())
-            require(partnerMap[tag].operatorCanUpdate);
-
-        else {
-            // Require that msg.sender is partner
-            require(msg.sender == oldWallet);
-
-            // If partner tries to change verify that partner has access
-            require(partnerMap[tag].partnerCanUpdate);
-
-            // Require that new wallet is not zero-address if it can not be changed by operator
-            require(partnerMap[tag].operatorCanUpdate || newWallet != address(0));
-        }
-
-        // Update stored wallet
-        partnerMap[tag].wallet = newWallet;
-
-        // Update address to tag map
-        if (oldWallet != address(0))
-            addressTagMap[oldWallet] = 0x0;
-        if (newWallet != address(0))
-            addressTagMap[newWallet] = tag;
-
-        // Emit event
-        emit SetWalletEvent(tag, oldWallet, newWallet);
-    }
-
-    function partnerWalletByTag(address tag)
-    public
-    view
-    returns (address)
-    {
-        return partnerMap[tag].wallet;
-    }
-
-    function partnerTagByWallet(address wallet)
-    internal
-    view
-    returns (address)
-    {
-        address tag = addressTagMap[wallet];
-        require(tag != 0);
-        require(partnerMap[tag].isRegistered);
-        return tag;
-    }
-
-    function partnerTagByIndex(uint256 index)
-    public
-    view
-    returns (address)
-    {
-        address tag = indexTagMap[index];
-        require(tag != 0);
-        require(partnerMap[tag].isRegistered);
-        return tag;
-    }
-
-    function partnerIndexByTag(address tag)
+    /// @notice Gets the 1-based index of partner by its name
+    /// @dev Reverts if name does not correspond to registered partner
+    /// @return Index of partner by given name
+    function indexByNameHash(bytes32 nameHash)
     public
     view
     returns (uint256)
     {
-        return partnerMap[tag].index;
+        uint256 index = _indexByNameHash[nameHash];
+        require(0 != index);
+        return index;
+    }
+
+    /// @notice Gets the 1-based index of partner by its name
+    /// @dev Reverts if name does not correspond to registered partner
+    /// @return Index of partner by given name
+    function indexByName(string name)
+    public
+    view
+    returns (uint256)
+    {
+        return indexByNameHash(hashName(name));
+    }
+
+    /// @notice Gets the 1-based index of partner by its wallet
+    /// @dev Reverts if wallet does not correspond to registered partner
+    /// @return Index of partner by given wallet
+    function indexByWallet(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        uint256 index = _indexByWallet[wallet];
+        require(0 != index);
+        return index;
+    }
+
+    function isRegisteredByName(string name)
+    public
+    view
+    returns (bool)
+    {
+        return (0 < _indexByNameHash[hashName(name)]);
+    }
+
+    function isRegisteredByNameHash(bytes32 nameHash)
+    public
+    view
+    returns (bool)
+    {
+        return (0 < _indexByNameHash[nameHash]);
+    }
+
+    function isRegisteredByWallet(address wallet)
+    public
+    view
+    returns (bool)
+    {
+        return (0 < _indexByWallet[wallet]);
+    }
+
+    /// @dev index is 1-based
+    function setPartnerFeeByIndex(uint256 index, uint256 fee)
+    public
+    {
+        // Require partner index is one of registered partner
+        require(0 < index && index <= partners.length);
+
+        // Update fee
+        _setPartnerFeeByIndex(index - 1, fee);
+
+        // Emit event
+        emit SetFeeByIndexEvent(index, fee);
+    }
+
+    function setPartnerFeeByName(string name, uint256 fee)
+    public
+    {
+        // Update fee, implicitly requiring that partner name is registered
+        _setPartnerFeeByIndex(indexByName(name) - 1, fee);
+
+        // Emit event
+        emit SetFeeByNameEvent(name, fee);
+    }
+
+    function setPartnerFeeByNameHash(bytes32 nameHash, uint256 fee)
+    public
+    {
+        // Update fee, implicitly requiring that partner name hash is registered
+        _setPartnerFeeByIndex(indexByNameHash(nameHash) - 1, fee);
+
+        // Emit event
+        emit SetFeeByNameHashEvent(nameHash, fee);
+    }
+
+    function setPartnerFeeByWallet(address wallet, uint256 fee)
+    public
+    {
+        // Update fee, implicitly requiring that partner wallet is registered
+        _setPartnerFeeByIndex(indexByWallet(wallet) - 1, fee);
+
+        // Emit event
+        emit SetFeeByWalletEvent(wallet, fee);
+    }
+
+    function setWalletByIndex(uint256 index, address newWallet)
+    public
+    {
+        // Require partner index is one of registered partner
+        require(0 < index && index <= partners.length);
+
+        // Update wallet
+        address oldWallet = _setWalletByIndex(index - 1, newWallet);
+
+        // Emit event
+        emit SetWalletByIndexEvent(index, oldWallet, newWallet);
+    }
+
+    /// @dev Reverts if name does not correspond to registered partner
+    function setWalletByName(string name, address newWallet)
+    public
+    {
+        // Update wallet
+        address oldWallet = _setWalletByIndex(indexByName(name) - 1, newWallet);
+
+        // Emit event
+        emit SetWalletByNameEvent(name, oldWallet, newWallet);
+    }
+
+    /// @dev Reverts if name hash does not correspond to registered partner
+    function setWalletByNameHash(bytes32 nameHash, address newWallet)
+    public
+    {
+        // Update wallet
+        address oldWallet = _setWalletByIndex(indexByNameHash(nameHash) - 1, newWallet);
+
+        // Emit event
+        emit SetWalletByNameHashEvent(nameHash, oldWallet, newWallet);
+    }
+
+    /// @dev Reverts if name does not correspond to registered partner
+    function partnerFeeByIndex(uint256 index)
+    public
+    view
+    returns (uint256)
+    {
+        // Require partner index is one of registered partner
+        require(0 < index && index <= partners.length);
+
+        return _partnerFeeByIndex(index - 1);
+    }
+
+    /// @dev Reverts if name does not correspond to registered partner
+    function partnerFeeByName(string name)
+    public
+    view
+    returns (uint256)
+    {
+        // Get fee, implicitly requiring that partner name is registered
+        return _partnerFeeByIndex(indexByName(name) - 1);
+    }
+
+    /// @dev Reverts if name hash does not correspond to registered partner
+    function partnerFeeByNameHash(bytes32 nameHash)
+    public
+    view
+    returns (uint256)
+    {
+        // Get fee, implicitly requiring that partner name hash is registered
+        return _partnerFeeByIndex(indexByNameHash(nameHash) - 1);
+    }
+
+    /// @dev Reverts if name does not correspond to registered partner
+    function partnerFeeByWallet(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        // Get fee, implicitly requiring that partner wallet is registered
+        return _partnerFeeByIndex(indexByWallet(wallet) - 1);
+    }
+
+    /// @dev Reverts if name does not correspond to registered partner
+    function partnerWalletByName(string name)
+    public
+    view
+    returns (address)
+    {
+        // Get wallet, implicitly requiring that partner name is registered
+        return partners[indexByName(name) - 1].wallet;
+    }
+
+    /// @dev Reverts if name hash does not correspond to registered partner
+    function partnerWalletByNameHash(bytes32 nameHash)
+    public
+    view
+    returns (address)
+    {
+        // Get wallet, implicitly requiring that partner name hash is registered
+        return partners[indexByNameHash(nameHash) - 1].wallet;
     }
 
     function stage(int256 amount, address currencyCt, uint256 currencyId)
     public
     {
+        // Require that wallet is one of registered partner
+        uint256 index = _indexByWallet[msg.sender];
+        require(0 != index);
+
         require(amount.isPositiveInt256());
 
-        address tag = partnerTagByWallet(msg.sender);
-
         // Clamp amount to move
-        amount = amount.clampMax(partnerMap[tag].active.get(currencyCt, currencyId));
+        amount = amount.clampMax(partners[index - 1].active.get(currencyCt, currencyId));
         if (amount <= 0)
             return;
 
-        partnerMap[tag].active.sub(amount, currencyCt, currencyId);
-        partnerMap[tag].staged.add(amount, currencyCt, currencyId);
+        partners[index - 1].active.sub(amount, currencyCt, currencyId);
+        partners[index - 1].staged.add(amount, currencyCt, currencyId);
 
-        partnerMap[tag].txHistory.addDeposit(amount, currencyCt, currencyId);
+        partners[index - 1].txHistory.addDeposit(amount, currencyCt, currencyId);
 
         // Add to full deposit history
-        partnerMap[tag].fullBalanceHistory.push(
+        partners[index - 1].fullBalanceHistory.push(
             FullBalanceHistory(
-                partnerMap[tag].txHistory.depositsCount() - 1,
-                partnerMap[tag].active.get(currencyCt, currencyId),
+                partners[index - 1].txHistory.depositsCount() - 1,
+                partners[index - 1].active.get(currencyCt, currencyId),
                 block.number
             )
         );
 
         // Emit event
-        emit StageEvent(tag, msg.sender, amount, currencyCt, currencyId);
+        emit StageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
     function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
     public
     {
-        address tag = partnerTagByWallet(msg.sender);
+        // Require that wallet is one of registered partner
+        uint256 index = _indexByWallet[msg.sender];
+        require(0 != index);
 
         // Clamp amount to move
-        amount = amount.clampMax(partnerMap[tag].staged.get(currencyCt, currencyId));
+        amount = amount.clampMax(partners[index - 1].staged.get(currencyCt, currencyId));
         if (amount <= 0)
             return;
 
-        partnerMap[tag].staged.sub(amount, currencyCt, currencyId);
+        partners[index - 1].staged.sub(amount, currencyCt, currencyId);
 
         // Execute transfer
         if (currencyCt == address(0))
@@ -427,20 +576,206 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         }
 
         // Emit event
-        emit WithdrawEvent(tag, msg.sender, amount, currencyCt, currencyId);
+        emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
     //
-    // Modifiers
+    // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullTag(address tag) {
-        require(tag != 0);
-        _;
+    /// @dev index is 0-based
+    function _receiveEthersTo(uint256 index, int256 amount)
+    private
+    {
+        // Require that index is within bounds
+        require(index < partners.length);
+
+        // Add to active
+        partners[index].active.add(amount, address(0), 0);
+        partners[index].txHistory.addDeposit(amount, address(0), 0);
+
+        // Add to full deposit history
+        partners[index].fullBalanceHistory.push(
+            FullBalanceHistory(
+                partners[index].txHistory.depositsCount() - 1,
+                partners[index].active.get(address(0), 0),
+                block.number
+            )
+        );
+
+        // Emit event
+        emit ReceiveEvent(msg.sender, amount, address(0), 0);
     }
 
-    modifier isRegisteredTag(address tag) {
-        require(tag != 0);
-        require(partnerMap[tag].isRegistered);
-        _;
+    /// @dev index is 0-based
+    function _receiveTokensTo(uint256 index, int256 amount, address currencyCt,
+        uint256 currencyId, string standard)
+    private
+    {
+        // Require that index is within bounds
+        require(index < partners.length);
+
+        require(amount.isNonZeroPositiveInt256());
+
+        // Execute transfer
+        TransferController controller = transferController(currencyCt, standard);
+        require(address(controller).delegatecall(
+                controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)
+        );
+
+        // Add to active
+        partners[index].active.add(amount, currencyCt, currencyId);
+        partners[index].txHistory.addDeposit(amount, currencyCt, currencyId);
+
+        // Add to full deposit history
+        partners[index].fullBalanceHistory.push(
+            FullBalanceHistory(
+                partners[index].txHistory.depositsCount() - 1,
+                partners[index].active.get(currencyCt, currencyId),
+                block.number
+            )
+        );
+
+        // Emit event
+        emit ReceiveEvent(msg.sender, amount, currencyCt, currencyId);
+    }
+
+    /// @dev partnerIndex is 0-based
+    function _depositByIndices(uint256 partnerIndex, uint256 depositIndex)
+    private
+    view
+    returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    {
+        require(depositIndex < partners[partnerIndex].fullBalanceHistory.length);
+
+        FullBalanceHistory storage entry = partners[partnerIndex].fullBalanceHistory[depositIndex];
+        (,, currencyCt, currencyId) = partners[partnerIndex].txHistory.deposit(entry.listIndex);
+
+        balance = entry.balance;
+        blockNumber = entry.blockNumber;
+    }
+
+    /// @dev index is 0-based
+    function _depositsCountByIndex(uint256 index)
+    private
+    view
+    returns (uint256)
+    {
+        return partners[index].fullBalanceHistory.length;
+    }
+
+    /// @dev index is 0-based
+    function _activeBalanceByIndex(uint256 index, address currencyCt, uint256 currencyId)
+    private
+    view
+    returns (int256)
+    {
+        return partners[index].active.get(currencyCt, currencyId);
+    }
+
+    /// @dev index is 0-based
+    function _stagedBalanceByIndex(uint256 index, address currencyCt, uint256 currencyId)
+    private
+    view
+    returns (int256)
+    {
+        return partners[index].staged.get(currencyCt, currencyId);
+    }
+
+    function _registerPartnerByNameHash(bytes32 nameHash, uint256 fee, address wallet,
+        bool partnerCanUpdate, bool operatorCanUpdate)
+    private
+    {
+        // Require that the name is not previously registered
+        require(0 == _indexByNameHash[nameHash]);
+
+        // Require possibility to update
+        require(partnerCanUpdate || operatorCanUpdate);
+
+        // Add new partner
+        partners.length++;
+
+        // Reference by 1-based index
+        uint256 index = partners.length;
+
+        // Update partner map
+        partners[index].nameHash = nameHash;
+        partners[index].fee = fee;
+        partners[index].wallet = wallet;
+        partners[index].partnerCanUpdate = partnerCanUpdate;
+        partners[index].operatorCanUpdate = operatorCanUpdate;
+        partners[index].index = index;
+
+        // Update name hash to index map
+        _indexByNameHash[nameHash] = index;
+
+        // Update wallet to index map
+        _indexByWallet[wallet] = index;
+    }
+
+    /// @dev index is 0-based
+    function _setPartnerFeeByIndex(uint256 index, uint256 fee)
+    private
+    {
+        // If operator tries to change verify that operator has access
+        if (isOperator())
+            require(partners[index].operatorCanUpdate);
+
+        else {
+            // Require that msg.sender is partner
+            require(msg.sender == partners[index].wallet);
+
+            // If partner tries to change verify that partner has access
+            require(partners[index].partnerCanUpdate);
+        }
+
+        // Update stored fee
+        partners[index].fee = fee;
+    }
+
+    // @dev index is 0-based
+    function _setWalletByIndex(uint256 index, address newWallet)
+    private
+    returns (address)
+    {
+        address oldWallet = partners[index].wallet;
+
+        // If address has not been set operator is the only allowed to change it
+        if (oldWallet == address(0))
+            require(isOperator());
+
+        // Else if operator tries to change verify that operator has access
+        else if (isOperator())
+            require(partners[index].operatorCanUpdate);
+
+        else {
+            // Require that msg.sender is partner
+            require(msg.sender == oldWallet);
+
+            // If partner tries to change verify that partner has access
+            require(partners[index].partnerCanUpdate);
+
+            // Require that new wallet is not zero-address if it can not be changed by operator
+            require(partners[index].operatorCanUpdate || newWallet != address(0));
+        }
+
+        // Update stored wallet
+        partners[index].wallet = newWallet;
+
+        // Update address to tag map
+        if (oldWallet != address(0))
+            _indexByWallet[oldWallet] = 0;
+        if (newWallet != address(0))
+            _indexByWallet[newWallet] = index;
+
+        return oldWallet;
+    }
+
+    // @dev index is 0-based
+    function _partnerFeeByIndex(uint256 index)
+    private
+    view
+    returns (uint256)
+    {
+        return partners[index].fee;
     }
 }

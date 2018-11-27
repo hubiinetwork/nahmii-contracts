@@ -65,9 +65,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: Set user A address', async() => {
+        it(testCounter.next() + ': MUST SUCCEED [setWalletByName]: Set user A address', async() => {
             try {
-                await glob.web3PartnerFund.setPartnerWallet(userATag, glob.user_a);
+                await glob.web3PartnerFund.setWalletByName(userATag, glob.user_a);
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -76,9 +76,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: User A trying to modify his address', async() => {
+        it(testCounter.next() + ': MUST FAIL [setWalletByName]: User A trying to modify his address', async() => {
             try {
-                await glob.web3PartnerFund.setPartnerWallet(userATag, glob.user_a, { from: glob.user_a });
+                await glob.web3PartnerFund.setWalletByName(userATag, glob.user_a, { from: glob.user_a });
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -103,9 +103,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: User B trying to modify his address but not set previously', async() => {
+        it(testCounter.next() + ': MUST FAIL [setWalletByName]: User B trying to modify his address but not set previously', async() => {
             try {
-                await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b, { from: glob.user_b });
+                await glob.web3PartnerFund.setWalletByName(userBTag, glob.user_b, { from: glob.user_b });
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -115,9 +115,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: Set user B address', async() => {
+        it(testCounter.next() + ': MUST SUCCEED [setWalletByName]: Set user B address', async() => {
             try {
-                await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b);
+                await glob.web3PartnerFund.setWalletByName(userBTag, glob.user_b);
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
@@ -126,9 +126,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: Owner trying to set user B address again', async() => {
+        it(testCounter.next() + ': MUST FAIL [setWalletByName]: Owner trying to set user B address again', async() => {
             try {
-                await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b);
+                await glob.web3PartnerFund.setWalletByName(userBTag, glob.user_b);
                 assert(false, 'This test must fail.');
             }
             catch (err) {
@@ -138,9 +138,9 @@ module.exports = function (glob) {
 
         //-------------------------------------------------------------------------
 
-        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: User B changing his address', async() => {
+        it(testCounter.next() + ': MUST SUCCEED [setWalletByName]: User B changing his address', async() => {
             try {
-                await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b, { from: glob.user_b });
+                await glob.web3PartnerFund.setWalletByName(userBTag, glob.user_b, { from: glob.user_b });
             }
             catch (err) {
                 assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');

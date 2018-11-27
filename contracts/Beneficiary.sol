@@ -31,15 +31,4 @@ contract Beneficiary {
     function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public;
-
-    /// @notice Get the total amount received to the wallets balance and in given currency
-    /// @return The total amount received
-    function totalAmountReceived(address /*wallet*/, string /*balance*/, address /*currencyCt*/,
-        uint256 /*currencyId*/)
-    public
-    view
-    returns (int256)
-    {
-        return 0;
-    }
 }
