@@ -17,7 +17,7 @@ import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {StringsLib} from "./StringsLib.sol";
+import {Strings} from "solidity-util/lib/Strings.sol";
 
 /**
 @title PartnerFund
@@ -27,7 +27,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathIntLib for int256;
-    using StringsLib for string;
+    using Strings for string;
 
     //
     // Structures

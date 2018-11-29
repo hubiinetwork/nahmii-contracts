@@ -14,7 +14,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe.only('PartnerFund', function () {
+    describe('PartnerFund', function () {
         let web3TransferControllerManager;
         let web3ERC20;
         let web3PartnerFund, ethersPartnerFund;
