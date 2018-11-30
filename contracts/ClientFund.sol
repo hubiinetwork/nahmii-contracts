@@ -305,12 +305,26 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param index The index of wallet's active balance log entry in the given currency
     /// @return The active balance log entry of the concerned wallet and currency
-    function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    function activeBalanceLogEntryByIndex(address wallet, address currencyCt, uint256 currencyId, uint256 index)
     public
     view
     returns (int256 amount, uint256 blockNumber)
     {
         return walletMap[wallet].activeLog.getByIndex(currencyCt, currencyId, index);
+    }
+
+    /// @notice Get active balance log entry of the given wallet and currency at the given block number
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param _blockNumber The blockNumber of wallet's active balance log entry in the given currency
+    /// @return The active balance log entry of the concerned wallet and currency
+    function activeBalanceLogEntryByBlockNumber(address wallet, address currencyCt, uint256 currencyId, uint256 _blockNumber)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        return walletMap[wallet].activeLog.getByBlockNumber(currencyCt, currencyId, _blockNumber);
     }
 
     /// @notice Get the count of entries of the given wallet's active balance log in the given currency

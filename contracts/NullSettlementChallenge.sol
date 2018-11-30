@@ -473,7 +473,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         // Require that wallet has active balance log entries
         require(activeBalanceLogEntriesCount > 0);
 
-        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = clientFund.activeBalanceLogEntry(
+        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = clientFund.activeBalanceLogEntryByIndex(
             wallet, currencyCt, currencyId, activeBalanceLogEntriesCount.sub(1)
         );
 

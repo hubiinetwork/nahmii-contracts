@@ -229,7 +229,7 @@ contract MockedClientFund {
         return activeBalanceLogEntries.length;
     }
 
-    function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    function activeBalanceLogEntryByIndex(address wallet, address currencyCt, uint256 currencyId, uint256 index)
     public
     view
     returns (int256 amount, uint256 blockNumber)
