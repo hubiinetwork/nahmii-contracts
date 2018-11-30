@@ -347,7 +347,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
 
     /// @notice Stage the amount for subsequent withdrawal
     /// @param wallet The address of the concerned wallet
-    /// @param amount The concerned amount
+    /// @param amount The concerned amount to be staged
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
@@ -659,19 +659,20 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         if (amount <= 0)
             return;
 
-        // Subtract from settled, possibly also from deposited
-        walletMap[wallet].deposited.sub(
-            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
-            0 :
-            amount.sub(walletMap[wallet].settled.get(currencyCt, currencyId)),
-            currencyCt, currencyId
-        );
-        walletMap[wallet].settled.sub_allow_neg(
-            walletMap[wallet].settled.get(currencyCt, currencyId) > amount ?
-            amount :
-            walletMap[wallet].settled.get(currencyCt, currencyId),
-            currencyCt, currencyId
-        );
+        // If settled is greater than or equal to amount then amount can be deducted from settled
+        if (walletMap[wallet].settled.get(currencyCt, currencyId) >= amount)
+            walletMap[wallet].settled.sub_allow_neg(
+                amount, currencyCt, currencyId
+            );
+
+        // Else settled will be zeroed and (amount - settled) is deducted from deposited
+        else {
+            walletMap[wallet].deposited.add_allow_neg(
+                walletMap[wallet].settled.get(currencyCt, currencyId).sub(amount),
+                currencyCt, currencyId
+            );
+            walletMap[wallet].settled.set(0, currencyCt, currencyId);
+        }
     }
 
     function transferToBeneficiaryPrivate(address destWallet, Beneficiary beneficiary,
