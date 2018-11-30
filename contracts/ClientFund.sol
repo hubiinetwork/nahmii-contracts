@@ -49,7 +49,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         BalanceLib.Balance deposited;
         BalanceLib.Balance staged;
         BalanceLib.Balance settled;
-        BalanceLogLib.BalanceLog active;
+        BalanceLogLib.BalanceLog activeLog;
 
         TxHistoryLib.TxHistory txHistory;
 
@@ -130,7 +130,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
             walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
             // Add active balance log entry
-            walletMap[wallet].active.add(activeBalance(wallet, address(0), 0), address(0), 0);
+            walletMap[wallet].activeLog.add(activeBalance(wallet, address(0), 0), address(0), 0);
 
         } else
             revert();
@@ -188,7 +188,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
             walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
 
             // Add active balance log entry
-            walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+            walletMap[wallet].activeLog.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
 
         } else
             revert();
@@ -310,7 +310,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        return walletMap[wallet].active.get(currencyCt, currencyId, index);
+        return walletMap[wallet].activeLog.getByIndex(currencyCt, currencyId, index);
     }
 
     /// @notice Get the count of entries of the given wallet's active balance log in the given currency
@@ -323,7 +323,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (uint256)
     {
-        return walletMap[wallet].active.count(currencyCt, currencyId);
+        return walletMap[wallet].activeLog.count(currencyCt, currencyId);
     }
 
     /// @notice Update the settled balance by the difference between provided amount and deposited on-chain balance
@@ -360,7 +360,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         stageSubtract(wallet, amount, currencyCt, currencyId);
 
         // Add active balance log entry
-        walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+        walletMap[wallet].activeLog.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
 
         // Add to staged
         walletMap[wallet].staged.add(amount, currencyCt, currencyId);
@@ -387,7 +387,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         walletMap[msg.sender].staged.transfer(walletMap[msg.sender].deposited, amount, currencyCt, currencyId);
 
         // Add active balance log entry
-        walletMap[msg.sender].active.add(activeBalance(msg.sender, currencyCt, currencyId), currencyCt, currencyId);
+        walletMap[msg.sender].activeLog.add(activeBalance(msg.sender, currencyCt, currencyId), currencyCt, currencyId);
 
         // Emit event
         emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
@@ -409,7 +409,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         stageSubtract(wallet, amount, currencyCt, currencyId);
 
         // Add active balance log entry
-        walletMap[wallet].active.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+        walletMap[wallet].activeLog.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
 
         // Transfer to beneficiary
         transferToBeneficiaryPrivate(wallet, beneficiary, amount, currencyCt, currencyId, standard);
