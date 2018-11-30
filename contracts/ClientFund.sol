@@ -296,7 +296,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     returns (int256)
     {
         return walletMap[wallet].deposited.get(currencyCt, currencyId)
-        .add(walletMap[wallet].staged.get(currencyCt, currencyId));
+        .add(walletMap[wallet].settled.get(currencyCt, currencyId));
     }
 
     /// @notice Get active balance log entry of the given wallet and currency at the given index

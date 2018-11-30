@@ -9,14 +9,14 @@
 pragma solidity ^0.4.25;
 
 library BalanceLogLib {
+    //
+    // Structures
+    // -----------------------------------------------------------------------------------------------------------------
     struct Entry {
         int256 amount;
         uint256 blockNumber;
     }
 
-    //
-    // Structures
-    // -----------------------------------------------------------------------------------------------------------------
     struct BalanceLog {
         mapping(address => mapping(uint256 => Entry[])) entries;
     }
