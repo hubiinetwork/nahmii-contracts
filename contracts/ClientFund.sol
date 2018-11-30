@@ -49,6 +49,8 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         BalanceLib.Balance deposited;
         BalanceLib.Balance staged;
         BalanceLib.Balance settled;
+
+        BalanceLogLib.BalanceLog depositedLog;
         BalanceLogLib.BalanceLog activeLog;
 
         TxHistoryLib.TxHistory txHistory;
@@ -130,6 +132,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
             walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
 
             // Add active balance log entry
+            walletMap[wallet].depositedLog.add(depositedBalance(wallet, address(0), 0), address(0), 0);
+
+            // Add active balance log entry
             walletMap[wallet].activeLog.add(activeBalance(wallet, address(0), 0), address(0), 0);
 
         } else
@@ -186,6 +191,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
             // Add to per-wallet deposited balance
             walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
             walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
+
+            // Add active balance log entry
+            walletMap[wallet].depositedLog.add(depositedBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
 
             // Add active balance log entry
             walletMap[wallet].activeLog.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
@@ -340,7 +348,8 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         return walletMap[wallet].activeLog.count(currencyCt, currencyId);
     }
 
-    /// @notice Update the settled balance by the difference between provided amount and deposited on-chain balance
+    /// @notice Update the settled balance by the difference between provided off-chain balance amount
+    /// and deposited on-chain balance, where deposited balance is resolved at the given block number
     /// @param wallet The address of the concerned wallet
     /// @param amount The off-chain balance amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
@@ -352,7 +361,10 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     {
         require(amount.isPositiveInt256());
 
-        int256 settledBalanceAmount = amount.sub(walletMap[wallet].deposited.get(currencyCt, currencyId));
+        (int256 depositedAmount, ) = walletMap[wallet].depositedLog.getByBlockNumber(
+            currencyCt, currencyId, blockNumber
+        );
+        int256 settledBalanceAmount = amount.sub(depositedAmount);
         walletMap[wallet].settled.set(settledBalanceAmount, currencyCt, currencyId);
 
         // Emit event
@@ -372,6 +384,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
 
         // Subtract stage amount from settled, possibly also from deposited
         stageSubtract(wallet, amount, currencyCt, currencyId);
+
+        // Add active balance log entry
+        walletMap[wallet].depositedLog.add(depositedBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
 
         // Add active balance log entry
         walletMap[wallet].activeLog.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
@@ -399,6 +414,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
 
         // Move from staged balance to deposited
         walletMap[msg.sender].staged.transfer(walletMap[msg.sender].deposited, amount, currencyCt, currencyId);
+
+        // Add active balance log entry
+        walletMap[msg.sender].depositedLog.add(depositedBalance(msg.sender, currencyCt, currencyId), currencyCt, currencyId);
 
         // Add active balance log entry
         walletMap[msg.sender].activeLog.add(activeBalance(msg.sender, currencyCt, currencyId), currencyCt, currencyId);
