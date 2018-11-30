@@ -354,7 +354,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     /// @param amount The off-chain balance amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    /// @param blockNumber The block number to which the settled balance is updated
+    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 blockNumber)
     public
     onlyAuthorizedService(wallet)
     notNullAddress(wallet)

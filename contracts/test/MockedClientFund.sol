@@ -30,6 +30,7 @@ contract MockedClientFund {
         address targetWallet;
         MonetaryTypesLib.Figure figure;
         string standard;
+        uint256 blockNumber;
     }
 
     struct BalanceLogEntry {
@@ -60,8 +61,8 @@ contract MockedClientFund {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function _reset()
- public
- {
+    public
+    {
         locks.length = 0;
         unlocks.length = 0;
 
@@ -101,7 +102,8 @@ contract MockedClientFund {
         return unlocks.length;
     }
 
-    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 blockNumber)
     public
     {
         settledBalanceUpdates.push(
@@ -112,7 +114,8 @@ contract MockedClientFund {
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
-                ""
+                "",
+                blockNumber
             )
         );
         emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
@@ -149,7 +152,8 @@ contract MockedClientFund {
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
-                ""
+                "",
+                0
             )
         );
         emit StageEvent(wallet, amount, currencyCt, currencyId);
@@ -189,7 +193,8 @@ contract MockedClientFund {
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
-                standard
+                standard,
+                0
             )
         );
     }

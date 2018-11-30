@@ -28,10 +28,10 @@ contract MockedClientFundService is Ownable, ClientFundable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId, uint256 blockNumber)
     public
     {
-        clientFund.updateSettledBalance(wallet, amount, currencyCt, currencyId);
+        clientFund.updateSettledBalance(wallet, amount, currencyCt, currencyId, blockNumber);
     }
 
     function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
