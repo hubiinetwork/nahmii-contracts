@@ -126,16 +126,10 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         // Update settled nonce of wallet and currency
         walletCurrencyMaxNullNonce[wallet][currencyCt][currencyId] = nonce;
 
-        // Get proposal's stage amount and target balance amount.
+        // Get proposal's stage amount
         int256 stageAmount = nullSettlementChallenge.proposalStageAmount(
             wallet, currencyCt, currencyId
         );
-        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(
-            wallet, currencyCt, currencyId
-        );
-
-        // Update settled balance
-        clientFund.updateSettledBalance(wallet, targetBalanceAmount, currencyCt, currencyId);
 
         // Stage the proposed amount
         clientFund.stage(wallet, stageAmount, currencyCt, currencyId);
