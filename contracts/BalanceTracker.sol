@@ -13,11 +13,66 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {BalanceLogLib} from "./BalanceLogLib.sol";
 
+interface BalanceTracker {
+    function get(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256);
+
+    function sum(address wallet, bytes32[] _types, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256);
+
+    function set(address wallet, bytes32 _type, int256 amount, address currencyCt, uint256 currencyId)
+    public;
+
+    function reset(address wallet, bytes32[] _types, address currencyCt, uint256 currencyId)
+    public;
+
+    function add(address wallet, bytes32 _type, int256 amount, address currencyCt, uint256 currencyId)
+    public;
+
+    function sub(address wallet, bytes32 _type, int256 amount, address currencyCt, uint256 currencyId)
+    public;
+
+    function transfer(address wallet, bytes32 fromType, bytes32 toType, int256 amount, address currencyCt,
+        uint256 currencyId)
+    public;
+
+    function hasCurrency(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool);
+
+    function logSize(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256);
+
+    function logByIndex(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
+        uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber);
+
+    function logByBlockNumber(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
+        uint256 _blockNumber)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber);
+
+    function lastLog(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber);
+}
+
 /**
 @title Balance tracker
 @notice An ownable to track balances of generic types
 */
-contract BalanceTracker is Ownable {
+contract BalanceTrackerImpl is Ownable, BalanceTracker {
     using SafeMathIntLib for int256;
     using BalanceLib for BalanceLib.Balance;
     using BalanceLogLib for BalanceLogLib.BalanceLog;

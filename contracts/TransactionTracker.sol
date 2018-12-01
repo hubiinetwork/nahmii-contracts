@@ -12,11 +12,36 @@ import {Ownable} from "./Ownable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 
+interface TransactionTracker {
+    function add(address wallet, bytes32 _type, int256 amount, address currencyCt, uint256 currencyId)
+    public;
+
+    function getByIndex(address wallet, bytes32 _type, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId);
+
+    function count(address wallet, bytes32 _type)
+    public
+    view
+    returns (uint256);
+
+    function getByCurrencyIndex(address wallet, bytes32 _type, address currencyCt, uint256 currencyId, uint256 index)
+    public
+    view
+    returns (int256 amount, uint256 blockNumber);
+
+    function countByCurrency(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256);
+}
+
 /**
 @title Transaction tracker
 @notice An ownable to track transactions of generic types
 */
-contract TransactionTracker is Ownable {
+contract TransactionTrackerImpl is Ownable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 

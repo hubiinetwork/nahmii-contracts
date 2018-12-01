@@ -10,7 +10,6 @@ pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {ClientFund} from "./ClientFund.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title ClientFundable

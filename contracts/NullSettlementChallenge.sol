@@ -131,7 +131,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         require(!isLockedWallet(msg.sender));
 
         // Start challenge for wallet
-        startChallengePrivate(msg.sender, amount, currencyCt, currencyId, true);
+        _startChallenge(msg.sender, amount, currencyCt, currencyId, true);
 
         // Emit event
         emit StartChallengeEvent(msg.sender, amount, currencyCt, currencyId);
@@ -147,7 +147,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     onlyOperator
     {
         // Start challenge for wallet
-        startChallengePrivate(wallet, amount, currencyCt, currencyId, false);
+        _startChallenge(wallet, amount, currencyCt, currencyId, false);
 
         // Emit event
         emit StartChallengeByProxyEvent(msg.sender, wallet, amount, currencyCt, currencyId);
@@ -453,7 +453,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function startChallengePrivate(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId,
+    function _startChallenge(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId,
         bool balanceReward)
     private
     {
