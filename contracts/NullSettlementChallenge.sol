@@ -464,17 +464,15 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         require(stageAmount.isPositiveInt256());
 
         // Require that wallet has no overlap with active proposal
-        require(hasProposalExpired(
+        require(
+            hasProposalExpired(
                 wallet, currencyCt, currencyId
-            ));
+            )
+        );
 
-        uint256 activeBalanceLogEntriesCount = clientFund.activeBalanceLogEntriesCount(wallet, currencyCt, currencyId);
-
-        // Require that wallet has active balance log entries
-        require(activeBalanceLogEntriesCount > 0);
-
-        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = clientFund.activeBalanceLogEntryByIndex(
-            wallet, currencyCt, currencyId, activeBalanceLogEntriesCount.sub(1)
+        // Get the last logged active balance amount and block number
+        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = clientFund.lastLoggedActiveBalance(
+            wallet, currencyCt, currencyId
         );
 
         // Require that balance amount is not less than stage amount

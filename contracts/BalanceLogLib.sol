@@ -45,6 +45,21 @@ library BalanceLogLib {
         return getByIndex(self, currencyCt, currencyId, indexByBlockNumber(self, currencyCt, currencyId, _blockNumber));
     }
 
+    function getLast(BalanceLog storage self, address currencyCt, uint256 currencyId)
+    internal
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        if (currencyCt == address(0))
+            require(currencyId == 0);
+        require(0 < self.entries[currencyCt][currencyId].length);
+
+        uint256 index = self.entries[currencyCt][currencyId].length - 1;
+
+        amount = self.entries[currencyCt][currencyId][index].amount;
+        blockNumber = self.entries[currencyCt][currencyId][index].blockNumber;
+    }
+
     function add(BalanceLog storage self, int256 amount, address currencyCt, uint256 currencyId)
     internal
     {

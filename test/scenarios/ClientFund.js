@@ -142,13 +142,6 @@ module.exports = function (glob) {
             })
         });
 
-        describe('activeBalanceLogEntriesCount()', () => {
-            it('should return initial value', async () => {
-                (await ethersClientFund.activeBalanceLogEntriesCount(Wallet.createRandom().address, mocks.address0, 0))
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
         describe('depositedBalance()', () => {
             describe('of Ether', () => {
                 it('should return initial value', async () => {
@@ -1811,103 +1804,21 @@ module.exports = function (glob) {
             });
         });
 
-        describe('activeBalanceLogEntryByIndex()', () => {
-            describe('before first deposit', () => {
-                it('should revert', async () => {
-                    ethersClientFund.activeBalanceLogEntryByIndex(glob.user_a, mocks.address0, 0, 0).should.be.rejected;
-                });
-            });
-
+        describe('lastLoggedActiveBalance()', () => {
             describe('of Ether', () => {
                 beforeEach(async () => {
                     await web3ClientFund.receiveEthersTo(
-                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
-                    );
-                    await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gasLimit: 1e6}
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 2e6}
                     );
                 });
 
-                it('should successfully return log entry', async () => {
-                    let activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntryByIndex(glob.user_a, mocks.address0, 0, 0);
-
-                    activeBalanceLogEntry.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
-                    activeBalanceLogEntry.blockNumber.should.exist;
-
-                    activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntryByIndex(glob.user_a, mocks.address0, 0, 1);
-
-                    activeBalanceLogEntry.amount._bn.should.eq.BN(utils.parseEther('0.7')._bn);
-                    activeBalanceLogEntry.blockNumber.should.exist;
-                });
-            });
-
-            describe('of ERC20 token', () => {
-                beforeEach(async () => {
-                    await web3ERC20.approve(
-                        web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3ClientFund.receiveTokensTo(
-                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, 3, web3ERC20.address, 0, {gas: 1e6}
-                    );
-                });
-
-                it('should successfully return log entry', async () => {
-                    let activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntryByIndex(glob.user_a, web3ERC20.address, 0, 0);
-
-                    activeBalanceLogEntry.amount._bn.should.eq.BN(10);
-                    activeBalanceLogEntry.blockNumber.should.exist;
-
-                    activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntryByIndex(glob.user_a, web3ERC20.address, 0, 1);
-
-                    activeBalanceLogEntry.amount._bn.should.eq.BN(7);
-                    activeBalanceLogEntry.blockNumber.should.exist;
-                });
-            });
-        });
-
-        describe('activeBalanceLogEntryByBlockNumber()', () => {
-            let blockNumber;
-
-            describe('before first deposit', () => {
-                beforeEach(async () => {
-                    blockNumber = await provider.getBlockNumber();
-                });
-
-                it('should revert', async () => {
-                    ethersClientFund.activeBalanceLogEntryByBlockNumber(glob.user_a, mocks.address0, 0, blockNumber).should.be.rejected;
-                });
-            });
-
-            describe('of Ether', () => {
-                beforeEach(async () => {
-                    await web3ClientFund.receiveEthersTo(
-                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 5e6}
-                    );
-
-                    await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gasLimit: 5e6}
-                    );
-
-                    blockNumber = await provider.getBlockNumber();
-                });
-
-                it('should successfully return log entry', async () => {
-                    let activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntryByBlockNumber(
-                        glob.user_a, mocks.address0, 0, blockNumber - 1
+                it('should successfully return log entry of deposited', async () => {
+                    let activeBalanceLogEntry = await ethersClientFund.lastLoggedActiveBalance(
+                        glob.user_a, mocks.address0, 0
                     );
 
                     activeBalanceLogEntry.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
-                    activeBalanceLogEntry.blockNumber.should.exist;
-
-                    activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntryByBlockNumber(
-                        glob.user_a, mocks.address0, 0, blockNumber
-                    );
-
-                    activeBalanceLogEntry.amount._bn.should.eq.BN(utils.parseEther('0.7')._bn);
-                    activeBalanceLogEntry.blockNumber.should.exist;
+                    activeBalanceLogEntry.blockNumber._bn.should.be.gt.BN(0);
                 });
             });
 
@@ -1920,28 +1831,15 @@ module.exports = function (glob) {
                     await web3ClientFund.receiveTokensTo(
                         glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 2e6}
                     );
-
-                    await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, 3, web3ERC20.address, 0, {gas: 2e6}
-                    );
-
-                    blockNumber = await provider.getBlockNumber();
                 });
 
-                it('should successfully return log entry', async () => {
-                    let activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntryByBlockNumber(
-                        glob.user_a, web3ERC20.address, 0, blockNumber - 1
+                it('should successfully return log entry of deposited', async () => {
+                    let activeBalanceLogEntry = await ethersClientFund.loggedActiveBalanceByBlockNumber(
+                        glob.user_a, web3ERC20.address, 0
                     );
 
                     activeBalanceLogEntry.amount._bn.should.eq.BN(10);
-                    activeBalanceLogEntry.blockNumber.should.exist;
-
-                    activeBalanceLogEntry = await ethersClientFund.activeBalanceLogEntryByBlockNumber(
-                        glob.user_a, web3ERC20.address, 0, blockNumber
-                    );
-
-                    activeBalanceLogEntry.amount._bn.should.eq.BN(7);
-                    activeBalanceLogEntry.blockNumber.should.exist;
+                    activeBalanceLogEntry.blockNumber._bn.should.be.gt.BN(0);
                 });
             });
         });

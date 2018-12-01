@@ -16,22 +16,20 @@ import {Benefactor} from "./Benefactor.sol";
 import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
-import {BalanceLib} from "./BalanceLib.sol";
-import {BalanceLogLib} from "./BalanceLogLib.sol";
-import {TxHistoryLib} from "./TxHistoryLib.sol";
-import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+//import {BalanceLib} from "./BalanceLib.sol";
+//import {BalanceLogLib} from "./BalanceLogLib.sol";
+//import {TxHistoryLib} from "./TxHistoryLib.sol";
+//import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {TransactionTracker} from "./TransactionTracker.sol";
 
 /**
 @title Client fund
 @notice Where clients’ crypto is deposited into, staged and withdrawn from.
 */
 contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable {
-    using BalanceLib for BalanceLib.Balance;
-    using BalanceLogLib for BalanceLogLib.BalanceLog;
-    using TxHistoryLib for TxHistoryLib.TxHistory;
-    using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -42,21 +40,17 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     string constant public SETTLED_BALANCE_TYPE = "settled";
     string constant public STAGED_BALANCE_TYPE = "staged";
 
+    bytes32 constant public DEPOSITED_BALANCE_TYPE_HASH = keccak256(abi.encodePacked(DEPOSITED_BALANCE_TYPE));
+    bytes32 constant public SETTLED_BALANCE_TYPE_HASH = keccak256(abi.encodePacked(SETTLED_BALANCE_TYPE));
+    bytes32 constant public STAGED_BALANCE_TYPE_HASH = keccak256(abi.encodePacked(STAGED_BALANCE_TYPE));
+
+    bytes32 constant public DEPOSIT_TRANSACTION_TYPE_HASH = keccak256(abi.encodePacked("deposit"));
+    bytes32 constant public WITHDRAWAL_TRANSACTION_TYPE_HASH = keccak256(abi.encodePacked("withdrawal"));
+
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Wallet {
-        BalanceLib.Balance deposited;
-        BalanceLib.Balance staged;
-        BalanceLib.Balance settled;
-
-        BalanceLogLib.BalanceLog depositedLog;
-        BalanceLogLib.BalanceLog activeLog;
-
-        TxHistoryLib.TxHistory txHistory;
-
-        InUseCurrencyLib.InUseCurrency inUseCurrencies;
-
         address locker;
         uint256 unlockTime;
     }
@@ -72,9 +66,16 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     address[] public seizedWallets;
     mapping(address => bool) public seizedByWallet;
 
+    BalanceTracker public balanceTracker;
+    TransactionTracker public transactionTracker;
+
+    bytes32[] private _allBalanceTypeHashes;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event SetBalanceTrackerEvent(BalanceTracker balanceTracker);
+    event SetTransactionTrackerEvent(TransactionTracker transactionTracker);
     event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId,
         string standard);
     event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
@@ -96,11 +97,50 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     public
     {
         serviceActivationTimeout = 1 weeks;
+
+        _allBalanceTypeHashes = new bytes32[](3);
+        _allBalanceTypeHashes[0] = DEPOSITED_BALANCE_TYPE_HASH;
+        _allBalanceTypeHashes[1] = SETTLED_BALANCE_TYPE_HASH;
+        _allBalanceTypeHashes[2] = STAGED_BALANCE_TYPE_HASH;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Set the balance tracker contract
+    /// @dev This function can only successfully be called once
+    /// @param _balanceTracker The (address of) BalanceTracker contract instance
+    function setBalanceTracker(BalanceTracker _balanceTracker)
+    public
+    onlyDeployer
+    {
+        // Require that balance tracker has not been set previously
+        require(address(0) == address(balanceTracker));
+
+        // Set balance tracker
+        balanceTracker = _balanceTracker;
+
+        // Emit event
+        emit SetBalanceTrackerEvent(_balanceTracker);
+    }
+
+    /// @notice Set the transaction tracker contract
+    /// @dev This function can only successfully be called once
+    /// @param _transactionTracker The (address of) TransactionTracker contract instance
+    function setTransactionTracker(TransactionTracker _transactionTracker)
+    public
+    onlyDeployer
+    {
+        // Require that transaction tracker has not been set previously
+        require(address(0) == address(transactionTracker));
+
+        // Set transaction tracker
+        transactionTracker = _transactionTracker;
+
+        // Emit event
+        emit SetTransactionTrackerEvent(_transactionTracker);
+    }
+
     /// @notice Fallback function that deposits ethers to msg.sender's deposited balance
     function()
     public
@@ -118,30 +158,8 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     {
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
-        if (0 == bytes(balanceType).length)
-            balanceType = DEPOSITED_BALANCE_TYPE;
-
-        bytes32 balanceHash = keccak256(abi.encodePacked(balanceType));
-
-        if (keccak256(abi.encodePacked(STAGED_BALANCE_TYPE)) == balanceHash)
-            walletMap[wallet].staged.add(amount, address(0), 0);
-
-        else if (keccak256(abi.encodePacked(DEPOSITED_BALANCE_TYPE)) == balanceHash) {
-            // Add to per-wallet deposited balance
-            walletMap[wallet].deposited.add(amount, address(0), 0);
-            walletMap[wallet].txHistory.addDeposit(amount, address(0), 0);
-
-            // Add active balance log entry
-            walletMap[wallet].depositedLog.add(depositedBalance(wallet, address(0), 0), address(0), 0);
-
-            // Add active balance log entry
-            walletMap[wallet].activeLog.add(activeBalance(wallet, address(0), 0), address(0), 0);
-
-        } else
-            revert();
-
-        // Add currency to in-use list
-        walletMap[wallet].inUseCurrencies.addItem(address(0), 0);
+        // Register reception
+        _receiveTo(wallet, balanceType, amount, address(0), 0);
 
         // Emit event
         emit ReceiveEvent(wallet, balanceType, amount, address(0), 0, "");
@@ -177,32 +195,12 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
+        require(address(controller).delegatecall(
+                controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)
+        );
 
-        if (0 == bytes(balanceType).length)
-            balanceType = DEPOSITED_BALANCE_TYPE;
-
-        bytes32 balanceHash = keccak256(abi.encodePacked(balanceType));
-
-        if (keccak256(abi.encodePacked(STAGED_BALANCE_TYPE)) == balanceHash)
-            walletMap[wallet].staged.add(amount, currencyCt, currencyId);
-
-        else if (keccak256(abi.encodePacked(DEPOSITED_BALANCE_TYPE)) == balanceHash) {
-            // Add to per-wallet deposited balance
-            walletMap[wallet].deposited.add(amount, currencyCt, currencyId);
-            walletMap[wallet].txHistory.addDeposit(amount, currencyCt, currencyId);
-
-            // Add active balance log entry
-            walletMap[wallet].depositedLog.add(depositedBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
-
-            // Add active balance log entry
-            walletMap[wallet].activeLog.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
-
-        } else
-            revert();
-
-        // Add currency to in-use list
-        walletMap[wallet].inUseCurrencies.addItem(currencyCt, currencyId);
+        // Register reception
+        _receiveTo(wallet, balanceType, amount, currencyCt, currencyId);
 
         // Emit event
         emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId, standard);
@@ -217,14 +215,14 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        return walletMap[wallet].txHistory.deposit(index);
+        return transactionTracker.getByIndex(wallet, DEPOSIT_TRANSACTION_TYPE_HASH, index);
     }
 
     /// @notice Get the count of the given wallet's deposits
     /// @param wallet The address of the concerned wallet
     /// @return The count of the concerned wallet's deposits
     function depositsCount(address wallet) public view returns (uint256) {
-        return walletMap[wallet].txHistory.depositsCount();
+        return transactionTracker.count(wallet, DEPOSIT_TRANSACTION_TYPE_HASH);
     }
 
     /// @notice Get metadata of the given wallet's deposit in the given currency at the given index
@@ -238,7 +236,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        return walletMap[wallet].txHistory.currencyDeposit(currencyCt, currencyId, index);
+        return transactionTracker.getByCurrencyIndex(
+            wallet, DEPOSIT_TRANSACTION_TYPE_HASH, currencyCt, currencyId, index
+        );
     }
 
     /// @notice Get the count of the given wallet's deposits in the given currency
@@ -251,7 +251,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (uint256)
     {
-        return walletMap[wallet].txHistory.currencyDepositsCount(currencyCt, currencyId);
+        return transactionTracker.countByCurrency(
+            wallet, DEPOSIT_TRANSACTION_TYPE_HASH, currencyCt, currencyId
+        );
     }
 
     /// @notice Get deposited balance of the given wallet and currency
@@ -264,7 +266,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256)
     {
-        return walletMap[wallet].deposited.get(currencyCt, currencyId);
+        return balanceTracker.get(wallet, DEPOSITED_BALANCE_TYPE_HASH, currencyCt, currencyId);
     }
 
     /// @notice Get settled balance of the given wallet and currency
@@ -277,7 +279,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256)
     {
-        return walletMap[wallet].settled.get(currencyCt, currencyId);
+        return balanceTracker.get(wallet, SETTLED_BALANCE_TYPE_HASH, currencyCt, currencyId);
     }
 
     /// @notice Get staged balance of the given wallet and currency
@@ -290,7 +292,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256)
     {
-        return walletMap[wallet].staged.get(currencyCt, currencyId);
+        return balanceTracker.get(wallet, STAGED_BALANCE_TYPE_HASH, currencyCt, currencyId);
     }
 
     /// @notice Get active balance (sum of deposited and settled balances) of the given wallet and currency
@@ -303,49 +305,40 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256)
     {
-        return walletMap[wallet].deposited.get(currencyCt, currencyId)
-        .add(walletMap[wallet].settled.get(currencyCt, currencyId));
+        return balanceTracker.get(wallet, DEPOSITED_BALANCE_TYPE_HASH, currencyCt, currencyId).add(
+            balanceTracker.get(wallet, SETTLED_BALANCE_TYPE_HASH, currencyCt, currencyId)
+        );
     }
 
-    /// @notice Get active balance log entry of the given wallet and currency at the given index
+    /// @notice Get last active balance log entry of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param index The index of wallet's active balance log entry in the given currency
     /// @return The active balance log entry of the concerned wallet and currency
-    function activeBalanceLogEntryByIndex(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    function lastLoggedActiveBalance(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        return walletMap[wallet].activeLog.getByIndex(currencyCt, currencyId, index);
-    }
+        (int256 depositedAmount, uint256 depositedBlockNumber) =
+        0 < balanceTracker.logSize(wallet, DEPOSITED_BALANCE_TYPE_HASH, currencyCt, currencyId) ?
+        balanceTracker.lastLog(
+            wallet, DEPOSITED_BALANCE_TYPE_HASH, currencyCt, currencyId
+        ) :
+        (0, 0);
 
-    /// @notice Get active balance log entry of the given wallet and currency at the given block number
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param _blockNumber The blockNumber of wallet's active balance log entry in the given currency
-    /// @return The active balance log entry of the concerned wallet and currency
-    function activeBalanceLogEntryByBlockNumber(address wallet, address currencyCt, uint256 currencyId, uint256 _blockNumber)
-    public
-    view
-    returns (int256 amount, uint256 blockNumber)
-    {
-        return walletMap[wallet].activeLog.getByBlockNumber(currencyCt, currencyId, _blockNumber);
-    }
+        (int256 settledAmount, uint256 settledBlockNumber) =
+        0 < balanceTracker.logSize(wallet, SETTLED_BALANCE_TYPE_HASH, currencyCt, currencyId) ?
+        balanceTracker.lastLog(
+            wallet, SETTLED_BALANCE_TYPE_HASH, currencyCt, currencyId
+        ) :
+        (0, 0);
 
-    /// @notice Get the count of entries of the given wallet's active balance log in the given currency
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The count of the concerned wallet's active balance log entries in the given currency
-    function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
-    public
-    view
-    returns (uint256)
-    {
-        return walletMap[wallet].activeLog.count(currencyCt, currencyId);
+        // Set amount as the sum of deposited and settled
+        amount = depositedAmount.add(settledAmount);
+
+        // Set block number as the latest of deposited and settled
+        blockNumber = depositedBlockNumber > settledBlockNumber ? depositedBlockNumber : settledBlockNumber;
     }
 
     /// @notice Update the settled balance by the difference between provided off-chain balance amount
@@ -363,11 +356,12 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     {
         require(amount.isPositiveInt256());
 
-        (int256 depositedAmount, ) = walletMap[wallet].depositedLog.getByBlockNumber(
-            currencyCt, currencyId, blockNumber
+        (int256 depositedAmount,) = balanceTracker.logByBlockNumber(
+            wallet, DEPOSITED_BALANCE_TYPE_HASH, currencyCt, currencyId, blockNumber
         );
+
         int256 settledBalanceAmount = amount.sub(depositedAmount);
-        walletMap[wallet].settled.set(settledBalanceAmount, currencyCt, currencyId);
+        balanceTracker.set(wallet, SETTLED_BALANCE_TYPE_HASH, settledBalanceAmount, currencyCt, currencyId);
 
         // Emit event
         emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
@@ -375,100 +369,87 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
 
     /// @notice Stage the amount for subsequent withdrawal
     /// @param wallet The address of the concerned wallet
-    /// @param amount The concerned amount to be staged
+    /// @param stageAmount The concerned amount to stage
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function stage(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId)
     public
     onlyAuthorizedService(wallet)
     {
-        require(amount.isNonZeroPositiveInt256());
+        require(stageAmount.isNonZeroPositiveInt256());
 
         // Subtract stage amount from settled, possibly also from deposited
-        stageSubtract(wallet, amount, currencyCt, currencyId);
-
-        // Add active balance log entry
-        walletMap[wallet].depositedLog.add(depositedBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
-
-        // Add active balance log entry
-        walletMap[wallet].activeLog.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+        _stageSubtract(wallet, stageAmount, currencyCt, currencyId);
 
         // Add to staged
-        walletMap[wallet].staged.add(amount, currencyCt, currencyId);
+        balanceTracker.add(wallet, STAGED_BALANCE_TYPE_HASH, stageAmount, currencyCt, currencyId);
 
         // Emit event
-        emit StageEvent(wallet, amount, currencyCt, currencyId);
+        emit StageEvent(wallet, stageAmount, currencyCt, currencyId);
     }
 
     /// @notice Unstage a staged amount
-    /// @param amount The concerned balance amount
+    /// @param unstageAmount The concerned balance amount to unstage
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function unstage(int256 amount, address currencyCt, uint256 currencyId)
+    function unstage(int256 unstageAmount, address currencyCt, uint256 currencyId)
     public
     {
-        require(amount.isNonZeroPositiveInt256());
+        require(unstageAmount.isNonZeroPositiveInt256());
 
-        // Clamp amount to move
-        amount = amount.clampMax(walletMap[msg.sender].staged.get(currencyCt, currencyId));
-        if (amount == 0)
+        // Clamp amount to unstage
+        unstageAmount = unstageAmount.clampMax(
+            balanceTracker.get(msg.sender, STAGED_BALANCE_TYPE_HASH, currencyCt, currencyId)
+        );
+        if (unstageAmount == 0)
             return;
 
-        // Move from staged balance to deposited
-        walletMap[msg.sender].staged.transfer(walletMap[msg.sender].deposited, amount, currencyCt, currencyId);
-
-        // Add active balance log entry
-        walletMap[msg.sender].depositedLog.add(depositedBalance(msg.sender, currencyCt, currencyId), currencyCt, currencyId);
-
-        // Add active balance log entry
-        walletMap[msg.sender].activeLog.add(activeBalance(msg.sender, currencyCt, currencyId), currencyCt, currencyId);
+        // Move from staged balance to deposited balance
+        balanceTracker.transfer(msg.sender, STAGED_BALANCE_TYPE_HASH, DEPOSITED_BALANCE_TYPE_HASH, unstageAmount, currencyCt, currencyId);
 
         // Emit event
-        emit UnstageEvent(msg.sender, amount, currencyCt, currencyId);
+        emit UnstageEvent(msg.sender, unstageAmount, currencyCt, currencyId);
     }
 
     /// @notice Stage the amount from wallet to the given beneficiary and targeted to wallet
     /// @param wallet The address of the concerned wallet
     /// @param beneficiary The (address of) concerned beneficiary contract
-    /// @param amount The concerned amount
+    /// @param stageAmount The concerned amount to stage
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
+    function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 stageAmount,
         address currencyCt, uint256 currencyId, string standard)
     public
     onlyAuthorizedService(wallet)
     {
         // Subtract stage amount from settled, possibly also from deposited
-        stageSubtract(wallet, amount, currencyCt, currencyId);
-
-        // Add active balance log entry
-        walletMap[wallet].activeLog.add(activeBalance(wallet, currencyCt, currencyId), currencyCt, currencyId);
+        _stageSubtract(wallet, stageAmount, currencyCt, currencyId);
 
         // Transfer to beneficiary
-        transferToBeneficiaryPrivate(wallet, beneficiary, amount, currencyCt, currencyId, standard);
+        _transferToBeneficiary(wallet, beneficiary, stageAmount, currencyCt, currencyId, standard);
 
         // Emit event
-        emit StageToBeneficiaryEvent(wallet, beneficiary, amount, currencyCt, currencyId, standard);
+        emit StageToBeneficiaryEvent(wallet, beneficiary, stageAmount, currencyCt, currencyId, standard);
     }
 
     /// @notice Transfer the given amount of currency to the given beneficiary without target wallet
     /// @param beneficiary The (address of) concerned beneficiary contract
-    /// @param amount The concerned amount
+    /// @param transferAmount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function transferToBeneficiary(Beneficiary beneficiary, int256 amount,
+    function transferToBeneficiary(Beneficiary beneficiary, int256 transferAmount,
         address currencyCt, uint256 currencyId, string standard)
     public
     notNullAddress(beneficiary)
     onlyActiveService
     {
         // Transfer to beneficiary
-        transferToBeneficiaryPrivate(address(0), beneficiary, amount, currencyCt, currencyId, standard);
+        _transferToBeneficiary(address(0), beneficiary, transferAmount, currencyCt, currencyId, standard);
 
         // Emit event
-        emit TransferToBeneficiaryEvent(beneficiary, amount, currencyCt, currencyId);
+        emit TransferToBeneficiaryEvent(beneficiary, transferAmount, currencyCt, currencyId);
     }
 
     /// @notice Lock balances of the given locked wallet allowing them to be seized by
@@ -488,7 +469,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         walletMap[lockedWallet].unlockTime = block.timestamp.add(configuration.walletLockTimeout());
 
         // Add to the store of locked wallets
-        addToLockedWallets(lockedWallet);
+        _addToLockedWallets(lockedWallet);
 
         // Emit event
         emit LockBalancesEvent(lockedWallet, lockerWallet);
@@ -508,7 +489,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         address locker = walletMap[msg.sender].locker;
 
         // Unlock balances
-        unlockBalancesPrivate(msg.sender);
+        _unlockBalances(msg.sender);
 
         // Emit event
         emit UnlockBalancesEvent(msg.sender, locker);
@@ -524,7 +505,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         address locker = walletMap[msg.sender].locker;
 
         // Unlock balances
-        unlockBalancesPrivate(wallet);
+        _unlockBalances(wallet);
 
         // Emit event
         emit UnlockBalancesByProxyEvent(msg.sender, locker);
@@ -543,19 +524,18 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
             block.timestamp < walletMap[lockedWallet].unlockTime
         );
 
-        int256 amount = sumAllBalancesOfWalletAndCurrency(lockedWallet, currencyCt, currencyId);
-        assert(amount >= 0);
+        // Get sum of balances for locked wallet
+        int256 amount = _sumAllBalancesOfWalletAndCurrency(lockedWallet, currencyCt, currencyId);
+        require(amount >= 0);
 
-        zeroAllBalancesOfWalletAndCurrency(lockedWallet, currencyCt, currencyId);
+        // Zero locked wallet's balances
+        _zeroAllBalancesOfWalletAndCurrency(lockedWallet, currencyCt, currencyId);
 
-        // Add to staged balance
-        walletMap[msg.sender].staged.add(amount, currencyCt, currencyId);
-
-        // Add currencyCt to in-use list
-        walletMap[msg.sender].inUseCurrencies.addItem(currencyCt, currencyId);
+        // Add to staged balance of sender
+        balanceTracker.add(msg.sender, STAGED_BALANCE_TYPE_HASH, amount, currencyCt, currencyId);
 
         // Add to the store of seized wallets
-        addToSeizedWallets(lockedWallet);
+        _addToSeizedWallets(lockedWallet);
 
         // Emit event
         emit SeizeBalancesEvent(lockedWallet, msg.sender);
@@ -571,13 +551,15 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     {
         require(amount.isNonZeroPositiveInt256());
 
-        amount = amount.clampMax(walletMap[msg.sender].staged.get(currencyCt, currencyId));
+        amount = amount.clampMax(balanceTracker.get(msg.sender, STAGED_BALANCE_TYPE_HASH, currencyCt, currencyId));
         if (amount <= 0)
             return;
 
         // Subtract to per-wallet staged balance
-        walletMap[msg.sender].staged.sub(amount, currencyCt, currencyId);
-        walletMap[msg.sender].txHistory.addWithdrawal(amount, currencyCt, currencyId);
+        balanceTracker.sub(msg.sender, STAGED_BALANCE_TYPE_HASH, amount, currencyCt, currencyId);
+
+        // Log record of this transaction
+        transactionTracker.add(msg.sender, WITHDRAWAL_TRANSACTION_TYPE_HASH, amount, currencyCt, currencyId);
 
         // Execute transfer
         if (currencyCt == address(0) && currencyId == 0)
@@ -585,7 +567,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            require(address(controller).delegatecall(controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId));
+            require(address(controller).delegatecall(
+                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId)
+            );
         }
 
         // Emit event
@@ -601,7 +585,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        return walletMap[wallet].txHistory.withdrawal(index);
+        return transactionTracker.getByIndex(wallet, WITHDRAWAL_TRANSACTION_TYPE_HASH, index);
     }
 
     /// @notice Get the count of the given wallet's withdrawals
@@ -612,7 +596,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (uint256)
     {
-        return walletMap[wallet].txHistory.withdrawalsCount();
+        return transactionTracker.count(wallet, WITHDRAWAL_TRANSACTION_TYPE_HASH);
     }
 
     /// @notice Get metadata of the given wallet's withdrawal in the given currency at the given index
@@ -626,7 +610,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        return walletMap[wallet].txHistory.currencyWithdrawal(currencyCt, currencyId, index);
+        return transactionTracker.getByCurrencyIndex(
+            wallet, WITHDRAWAL_TRANSACTION_TYPE_HASH, currencyCt, currencyId, index
+        );
     }
 
     /// @notice Get the count of the given wallet's withdrawals in the given currency
@@ -639,7 +625,9 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     view
     returns (uint256)
     {
-        return walletMap[wallet].txHistory.currencyWithdrawalsCount(currencyCt, currencyId);
+        return transactionTracker.countByCurrency(
+            wallet, WITHDRAWAL_TRANSACTION_TYPE_HASH, currencyCt, currencyId
+        );
     }
 
     /// @notice Get the locked status of given wallet
@@ -685,70 +673,88 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function stageSubtract(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function _receiveTo(address wallet, string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId)
+    private
+    {
+        bytes32 balanceHash = 0 < bytes(balanceType).length ? keccak256(abi.encodePacked(balanceType)) : DEPOSITED_BALANCE_TYPE_HASH;
+
+        if (STAGED_BALANCE_TYPE_HASH == balanceHash)
+            balanceTracker.add(wallet, STAGED_BALANCE_TYPE_HASH, amount, currencyCt, currencyId);
+
+        else if (DEPOSITED_BALANCE_TYPE_HASH == balanceHash) {
+            // Add to per-wallet deposited balance
+            balanceTracker.add(wallet, DEPOSITED_BALANCE_TYPE_HASH, amount, currencyCt, currencyId);
+
+            // Log record of this transaction
+            transactionTracker.add(wallet, DEPOSIT_TRANSACTION_TYPE_HASH, amount, currencyCt, currencyId);
+
+        }
+
+        else
+            revert();
+    }
+
+    function _stageSubtract(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId)
     private
     {
         // Clamp amount to stage
-        amount = amount.clampMax(activeBalance(wallet, currencyCt, currencyId));
-        if (amount <= 0)
+        stageAmount = stageAmount.clampMax(activeBalance(wallet, currencyCt, currencyId));
+        if (stageAmount <= 0)
             return;
 
-        // If settled is greater than or equal to amount then amount can be deducted from settled
-        if (walletMap[wallet].settled.get(currencyCt, currencyId) >= amount)
-            walletMap[wallet].settled.sub_allow_neg(
-                amount, currencyCt, currencyId
-            );
+        // Get settled balance amount
+        int256 settledBalanceAmount = balanceTracker.get(wallet, SETTLED_BALANCE_TYPE_HASH, currencyCt, currencyId);
 
-        // Else settled will be zeroed and (amount - settled) is deducted from deposited
+        // If settled is greater than or equal to amount then amount can be deducted from settled
+        if (settledBalanceAmount >= stageAmount)
+            balanceTracker.sub(wallet, SETTLED_BALANCE_TYPE_HASH, stageAmount, currencyCt, currencyId);
+
+        // Else settled will be zeroed and (stage amount - settled) is deducted from deposited
         else {
-            walletMap[wallet].deposited.add_allow_neg(
-                walletMap[wallet].settled.get(currencyCt, currencyId).sub(amount),
-                currencyCt, currencyId
-            );
-            walletMap[wallet].settled.set(0, currencyCt, currencyId);
+            balanceTracker.add(wallet, DEPOSITED_BALANCE_TYPE_HASH, settledBalanceAmount.sub(stageAmount), currencyCt, currencyId);
+            balanceTracker.set(wallet, SETTLED_BALANCE_TYPE_HASH, 0, currencyCt, currencyId);
         }
     }
 
-    function transferToBeneficiaryPrivate(address destWallet, Beneficiary beneficiary,
-        int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function _transferToBeneficiary(address destWallet, Beneficiary beneficiary,
+        int256 transferAmount, address currencyCt, uint256 currencyId, string standard)
     private
     {
-        require(amount.isNonZeroPositiveInt256());
+        require(transferAmount.isNonZeroPositiveInt256());
         require(isRegisteredBeneficiary(beneficiary));
 
         // Transfer funds to the beneficiary
         if (currencyCt == address(0) && currencyId == 0)
-            beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, "");
+            beneficiary.receiveEthersTo.value(uint256(transferAmount))(destWallet, "");
 
         else {
             // Approve of beneficiary
             TransferController controller = transferController(currencyCt, standard);
-            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
+            require(address(controller).delegatecall(
+                    controller.getApproveSignature(), beneficiary, uint256(transferAmount), currencyCt, currencyId)
+            );
 
             // Transfer funds to the beneficiary
-            beneficiary.receiveTokensTo(destWallet, "", amount, currencyCt, currencyId, standard);
+            beneficiary.receiveTokensTo(destWallet, "", transferAmount, currencyCt, currencyId, standard);
         }
     }
 
-    function sumAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId)
+    function _sumAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId)
     private
     view
     returns (int256)
     {
-        return walletMap[wallet].deposited.get(currencyCt, currencyId)
-        .add(walletMap[wallet].settled.get(currencyCt, currencyId))
-        .add(walletMap[wallet].staged.get(currencyCt, currencyId));
+        return balanceTracker.sum(wallet, _allBalanceTypeHashes, currencyCt, currencyId);
     }
 
-    function zeroAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId)
+    function _zeroAllBalancesOfWalletAndCurrency(address wallet, address currencyCt, uint256 currencyId)
     private
     {
-        walletMap[wallet].deposited.set(0, currencyCt, currencyId);
-        walletMap[wallet].settled.set(0, currencyCt, currencyId);
-        walletMap[wallet].staged.set(0, currencyCt, currencyId);
+        balanceTracker.reset(wallet, _allBalanceTypeHashes, currencyCt, currencyId);
     }
 
-    function unlockBalancesPrivate(address wallet)
+    function _unlockBalances(address wallet)
     private
     {
         // Unlock and release
@@ -756,10 +762,10 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         walletMap[wallet].unlockTime = 0;
 
         // Remove from the store of locked wallets
-        removeFromLockedWallets(wallet);
+        _removeFromLockedWallets(wallet);
     }
 
-    function addToLockedWallets(address wallet)
+    function _addToLockedWallets(address wallet)
     private
     {
         if (0 == lockedWalletIndexByWallet[wallet]) {
@@ -768,7 +774,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         }
     }
 
-    function removeFromLockedWallets(address wallet)
+    function _removeFromLockedWallets(address wallet)
     private
     {
         if (0 != lockedWalletIndexByWallet[wallet]) {
@@ -781,7 +787,7 @@ contract ClientFund is Ownable, Configurable, Beneficiary, Benefactor, Authoriza
         }
     }
 
-    function addToSeizedWallets(address wallet)
+    function _addToSeizedWallets(address wallet)
     private
     {
         if (!seizedByWallet[wallet]) {

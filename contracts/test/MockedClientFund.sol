@@ -222,19 +222,7 @@ contract MockedClientFund {
         );
     }
 
-    function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
-    public
-    view
-    returns (uint256)
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
-        return activeBalanceLogEntries.length;
-    }
-
-    function activeBalanceLogEntryByIndex(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    function lastLoggedActiveBalance(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256 amount, uint256 blockNumber)
@@ -243,12 +231,11 @@ contract MockedClientFund {
         require(wallet == wallet);
         require(currencyCt == currencyCt);
         require(currencyId == currencyId);
-        require(index == index);
         amount = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].amount;
         blockNumber = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].blockNumber;
     }
 
-    function _addActiveBalanceLogEntry(int256 amount, uint256 blockNumber)
+    function _setLastLoggedActiveBalance(int256 amount, uint256 blockNumber)
     public
     {
         activeBalanceLogEntries.push(BalanceLogEntry(amount, blockNumber));
