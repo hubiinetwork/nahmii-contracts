@@ -47,14 +47,9 @@ SecurityBondable {
     )
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedTrade(trade1)
     onlySealedTrade(trade2)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(securityBond != address(0));
-
         require(trade1.seal.hash != trade2.seal.hash);
         require(trade1.nonce == trade2.nonce);
 

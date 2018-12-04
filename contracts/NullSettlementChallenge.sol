@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Challenge} from "./Challenge.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDispute} from "./NullSettlementDispute.sol";
@@ -22,7 +22,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 @title NullSettlementChallenge
 @notice Where null settlements are started and challenged
 */
-contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
+contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -131,7 +131,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         require(!isLockedWallet(msg.sender));
 
         // Start challenge for wallet
-        startChallengePrivate(msg.sender, amount, currencyCt, currencyId, true);
+        _startChallenge(msg.sender, amount, currencyCt, currencyId, true);
 
         // Emit event
         emit StartChallengeEvent(msg.sender, amount, currencyCt, currencyId);
@@ -147,7 +147,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     onlyOperator
     {
         // Start challenge for wallet
-        startChallengePrivate(wallet, amount, currencyCt, currencyId, false);
+        _startChallenge(wallet, amount, currencyCt, currencyId, false);
 
         // Emit event
         emit StartChallengeByProxyEvent(msg.sender, wallet, amount, currencyCt, currencyId);
@@ -453,7 +453,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function startChallengePrivate(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId,
+    function _startChallenge(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId,
         bool balanceReward)
     private
     {
@@ -464,18 +464,15 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         require(stageAmount.isPositiveInt256());
 
         // Require that wallet has no overlap with active proposal
-        require(hasProposalExpired(
+        require(
+            hasProposalExpired(
                 wallet, currencyCt, currencyId
-            ));
-
-        uint256 activeBalanceLogEntriesCount = clientFund.activeBalanceLogEntriesCount(wallet, currencyCt, currencyId);
-
-        // Require that wallet has active balance log entries
-        require(activeBalanceLogEntriesCount > 0);
-
-        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = clientFund.activeBalanceLogEntry(
-            wallet, currencyCt, currencyId, activeBalanceLogEntriesCount.sub(1)
+            )
         );
+
+        // Get the last logged active balance amount and block number
+        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) =
+        _activeBalanceLogEntry(wallet, currencyCt, currencyId);
 
         // Require that balance amount is not less than stage amount
         require(activeBalanceAmount >= stageAmount);
@@ -504,6 +501,32 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
             challengeByWallets[wallet] = true;
             challengeWallets.push(wallet);
         }
+    }
+
+    function _activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId)
+    private
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        (int256 depositedAmount, uint256 depositedBlockNumber) =
+        0 < balanceTracker.logSize(wallet, balanceTracker.depositedBalanceType(), currencyCt, currencyId) ?
+        balanceTracker.lastLog(
+            wallet, balanceTracker.depositedBalanceType(), currencyCt, currencyId
+        ) :
+        (0, 0);
+
+        (int256 settledAmount, uint256 settledBlockNumber) =
+        0 < balanceTracker.logSize(wallet, balanceTracker.settledBalanceType(), currencyCt, currencyId) ?
+        balanceTracker.lastLog(
+            wallet, balanceTracker.settledBalanceType(), currencyCt, currencyId
+        ) :
+        (0, 0);
+
+        // Set amount as the sum of deposited and settled
+        amount = depositedAmount.add(settledAmount);
+
+        // Set block number as the latest of deposited and settled
+        blockNumber = depositedBlockNumber > settledBlockNumber ? depositedBlockNumber : settledBlockNumber;
     }
 
     //

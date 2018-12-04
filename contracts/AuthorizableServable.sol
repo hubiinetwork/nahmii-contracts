@@ -129,9 +129,6 @@ contract AuthorizableServable is Servable {
     view
     returns (bool)
     {
-        if (service == wallet)
-            return false;
-
         return isRegisteredActiveService(service) &&
         (isInitialServiceAuthorizedForWallet(service, wallet) || serviceWalletAuthorizedMap[service][wallet]);
     }
@@ -201,9 +198,6 @@ contract AuthorizableServable is Servable {
     view
     returns (bool)
     {
-        if (service == wallet)
-            return false;
-
         bytes32 actionHash = hashString(action);
 
         return isEnabledServiceAction(service, action) &&

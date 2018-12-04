@@ -37,7 +37,7 @@ contract Configurable is Ownable {
     notNullAddress(newConfiguration)
     notSameAddresses(newConfiguration, configuration)
     {
-        //set new configuration
+        // Set new configuration
         Configuration oldConfiguration = configuration;
         configuration = newConfiguration;
 

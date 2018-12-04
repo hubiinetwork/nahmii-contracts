@@ -10,7 +10,6 @@ pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {ClientFund} from "./ClientFund.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
 @title ClientFundable
@@ -37,7 +36,7 @@ contract ClientFundable is Ownable {
     notNullAddress(newClientFund)
     notSameAddresses(newClientFund, clientFund)
     {
-        //set new community vote
+        // Update field
         ClientFund oldClientFund = clientFund;
         clientFund = newClientFund;
 

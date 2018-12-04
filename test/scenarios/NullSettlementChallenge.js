@@ -9,7 +9,7 @@ const cryptography = require('omphalos-commons').util.cryptography;
 const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const MockedNullSettlementDispute = artifacts.require('MockedNullSettlementDispute');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
-const MockedClientFund = artifacts.require('MockedClientFund');
+const MockedBalanceTracker = artifacts.require('MockedBalanceTracker');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
@@ -24,11 +24,12 @@ module.exports = (glob) => {
         let web3NullSettlementChallenge, ethersNullSettlementChallenge;
         let web3NullSettlementDispute, ethersNullSettlementDispute;
         let web3Configuration, ethersConfiguration;
-        let web3ClientFund, ethersClientFund;
+        let web3BalanceTracker, ethersBalanceTracker;
         let web3SecurityBond, ethersSecurityBond;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
+        let depositedBalanceType;
         let blockNumber;
 
         before(async () => {
@@ -36,8 +37,8 @@ module.exports = (glob) => {
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3ClientFund = await MockedClientFund.new();
-            ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
+            web3BalanceTracker = await MockedBalanceTracker.new();
+            ethersBalanceTracker = new Contract(web3BalanceTracker.address, MockedBalanceTracker.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
@@ -52,6 +53,8 @@ module.exports = (glob) => {
             await web3Configuration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
             await web3Configuration.setSettlementChallengeTimeout(web3.eth.blockNumber + 1, 1000);
             await web3Configuration.setWalletSettlementStakeFraction(web3.eth.blockNumber + 1, 1e17);
+
+            depositedBalanceType = await web3BalanceTracker.depositedBalanceType();
         });
 
         beforeEach(async () => {
@@ -59,13 +62,13 @@ module.exports = (glob) => {
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, NullSettlementChallenge.abi, glob.signer_owner);
 
             await ethersNullSettlementChallenge.setConfiguration(ethersConfiguration.address);
-            await ethersNullSettlementChallenge.setClientFund(ethersClientFund.address);
+            await ethersNullSettlementChallenge.setBalanceTracker(ethersBalanceTracker.address, false);
             await ethersNullSettlementChallenge.setNullSettlementDispute(ethersNullSettlementDispute.address);
 
             blockNumber = await provider.getBlockNumber();
 
-            await web3ClientFund._reset();
             await web3Configuration._reset();
+            await web3BalanceTracker._reset();
 
             await ethersConfiguration.setCancelOrderChallengeTimeout((await provider.getBlockNumber()) + 1, 1e3);
             await ethersConfiguration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 1e4);
@@ -221,23 +224,18 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if amount to be staged is negative', () => {
+            describe
+            ('if amount to be staged is negative', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.startChallenge(-1, mocks.address0, 0)
                         .should.be.rejected;
                 });
             });
 
-            describe('if wallet has never deposited into client fund', () => {
-                it('should revert', async () => {
-                    web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0)
-                        .should.be.rejected;
-                });
-            });
-
             describe('if amount to be staged is greater than active balance in client fund', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(1, 1)
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 1, 1);
                 });
 
                 it('should revert', async () => {
@@ -250,7 +248,8 @@ module.exports = (glob) => {
                 let topic, filter;
 
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     topic = ethersNullSettlementChallenge.interface.events['StartChallengeEvent'].topics[0];
                     filter = {
@@ -289,7 +288,8 @@ module.exports = (glob) => {
 
             describe('if called before an ongoing settlement challenge has expired', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -308,7 +308,7 @@ module.exports = (glob) => {
                 wallet = Wallet.createRandom().address;
             });
 
-            describe('if called from non-operator', () => {
+            describe('if called by non-operator', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {from: glob.user_a})
                         .should.be.rejected;
@@ -321,29 +321,27 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0).should.be.rejected;
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0)
+                        .should.be.rejected;
                 });
             });
 
             describe('if amount to be staged is negative', () => {
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.startChallengeByProxy(wallet, -1, mocks.address0, 0).should.be.rejected;
-                });
-            });
-
-            describe('if wallet has never deposited into client fund', () => {
-                it('should revert', async () => {
-                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0).should.be.rejected;
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, -1, mocks.address0, 0)
+                        .should.be.rejected;
                 });
             });
 
             describe('if amount to be staged is greater than active balance in client fund', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(1, 1)
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 1, 1);
                 });
 
                 it('should revert', async () => {
-                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 10, mocks.address0, 0).should.be.rejected;
+                    web3NullSettlementChallenge.startChallengeByProxy(wallet, 10, mocks.address0, 0)
+                        .should.be.rejected;
                 });
             });
 
@@ -351,7 +349,8 @@ module.exports = (glob) => {
                 let topic, filter;
 
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     topic = ethersNullSettlementChallenge.interface.events['StartChallengeByProxyEvent'].topics[0];
                     filter = {
@@ -390,7 +389,8 @@ module.exports = (glob) => {
 
             describe('if called before an ongoing settlement challenge has expired', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -416,7 +416,8 @@ module.exports = (glob) => {
                     beforeEach(async () => {
                         await web3Configuration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 0);
 
-                        await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                        await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                        await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                         await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                     });
@@ -430,7 +431,8 @@ module.exports = (glob) => {
 
                 describe('if settlement challenge is ongoing for the wallet and currency', () => {
                     beforeEach(async () => {
-                        await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                        await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                        await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                         await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                     });
@@ -455,7 +457,8 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -479,7 +482,8 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -505,7 +509,8 @@ module.exports = (glob) => {
                 let block;
 
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
 
@@ -532,7 +537,8 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -556,7 +562,8 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -580,7 +587,8 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -604,7 +612,8 @@ module.exports = (glob) => {
 
             describe('if settlement challenge has been started by wallet', () => {
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -624,7 +633,8 @@ module.exports = (glob) => {
                 });
 
                 beforeEach(async () => {
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallengeByProxy(wallet, 1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -662,7 +672,8 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
 
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -704,7 +715,8 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
 
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -867,7 +879,8 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
 
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
                 });
@@ -913,7 +926,8 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
 
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
 
@@ -950,7 +964,8 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
 
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
 
@@ -987,7 +1002,8 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
 
-                    await web3ClientFund._addActiveBalanceLogEntry(10, 1);
+                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
 
                     await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
 

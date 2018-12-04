@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
@@ -22,7 +22,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
 contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -43,14 +43,8 @@ SecurityBondable, ClientFundable {
     function challenge(NahmiiTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlyOperatorSealedPayment(payment)
     {
-        require(fraudChallenge != address(0));
-        require(configuration != address(0));
-        require(securityBond != address(0));
-        require(clientFund != address(0));
-
         require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
@@ -79,7 +73,7 @@ SecurityBondable, ClientFundable {
         if (!genuineRecipient)
             lockedWallet = payment.recipient.wallet;
         if (address(0) != lockedWallet)
-            clientFund.lockBalancesByProxy(lockedWallet, msg.sender);
+            walletLocker.lockByProxy(lockedWallet, msg.sender);
 
         emit ChallengeByPaymentEvent(payment.seals.operator.hash, msg.sender, lockedWallet);
     }

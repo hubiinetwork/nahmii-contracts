@@ -83,7 +83,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     public
     {
         // Settle null
-        settleNullPrivate(msg.sender, currencyCt, currencyId);
+        _settleNull(msg.sender, currencyCt, currencyId);
 
         // Emit event
         emit SettleNullEvent(msg.sender, currencyCt, currencyId);
@@ -98,13 +98,16 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     onlyOperator
     {
         // Settle null of wallet
-        settleNullPrivate(wallet, currencyCt, currencyId);
+        _settleNull(wallet, currencyCt, currencyId);
 
         // Emit event
         emit SettleNullByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
     }
 
-    function settleNullPrivate(address wallet, address currencyCt, uint256 currencyId)
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function _settleNull(address wallet, address currencyCt, uint256 currencyId)
     private
     {
         // Require that driip settlement challenge qualified
@@ -126,16 +129,10 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         // Update settled nonce of wallet and currency
         walletCurrencyMaxNullNonce[wallet][currencyCt][currencyId] = nonce;
 
-        // Get proposal's stage amount and target balance amount.
+        // Get proposal's stage amount
         int256 stageAmount = nullSettlementChallenge.proposalStageAmount(
             wallet, currencyCt, currencyId
         );
-        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(
-            wallet, currencyCt, currencyId
-        );
-
-        // Update settled balance
-        clientFund.updateSettledBalance(wallet, targetBalanceAmount, currencyCt, currencyId);
 
         // Stage the proposed amount
         clientFund.stage(wallet, stageAmount, currencyCt, currencyId);

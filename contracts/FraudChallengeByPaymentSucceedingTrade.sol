@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
@@ -22,7 +22,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @notice Where driips are challenged wrt fraud by mismatch in payment succeeding trade
 */
 contract FraudChallengeByPaymentSucceedingTrade is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -54,14 +54,9 @@ SecurityBondable, ClientFundable {
     )
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedTrade(trade)
     onlySealedPayment(payment)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(clientFund != address(0));
-
         require(validator.isTradeParty(trade, wallet));
         require(validator.isPaymentParty(payment, wallet));
         require((currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id)
@@ -86,7 +81,7 @@ SecurityBondable, ClientFundable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        clientFund.lockBalancesByProxy(wallet, msg.sender);
+        walletLocker.lockByProxy(wallet, msg.sender);
 
         emit ChallengeByPaymentSucceedingTradeEvent(
             trade.seal.hash, payment.seals.operator.hash, msg.sender, wallet

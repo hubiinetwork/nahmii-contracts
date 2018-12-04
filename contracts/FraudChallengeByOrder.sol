@@ -41,13 +41,8 @@ SecurityBondable {
     function challenge(NahmiiTypesLib.Order order)
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlyOperatorSealedOrder(order)
     {
-        require(fraudChallenge != address(0));
-        require(configuration != address(0));
-        require(securityBond != address(0));
-
         require(validator.isGenuineOrderWalletHash(order));
 
         // Genuineness affected by wallet not having signed the payment
