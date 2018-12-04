@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
@@ -22,7 +22,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @notice Where driips are challenged wrt fraud by mismatch in single trade property values
 */
 contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -41,13 +41,8 @@ SecurityBondable, ClientFundable {
     /// @param trade Fraudulent trade candidate
     function challenge(NahmiiTypesLib.Trade trade) public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedTrade(trade)
     {
-        require(fraudChallenge != address(0));
-        require(configuration != address(0));
-        require(clientFund != address(0));
-
         // Genuineness affected by buyer
         bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade)
         && validator.isGenuineTradeBuyerFee(trade);
@@ -70,7 +65,7 @@ SecurityBondable, ClientFundable {
         if (!genuineSellerAndFee)
             lockedWallet = trade.seller.wallet;
         if (address(0) != lockedWallet)
-            clientFund.lockBalancesByProxy(lockedWallet, msg.sender);
+            walletLocker.lockByProxy(lockedWallet, msg.sender);
 
         emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, lockedWallet);
     }
