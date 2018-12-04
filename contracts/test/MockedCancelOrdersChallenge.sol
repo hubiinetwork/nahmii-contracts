@@ -39,16 +39,16 @@ contract MockedCancelOrdersChallenge {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function _reset()
- public
- {
+    public
+    {
         for (uint256 i = 0; i < cancelledOrderHashes.length; i++)
             orderHashCancelledMap[cancelledOrderHashes[i]] = false;
         cancelledOrderHashes.length = 0;
     }
 
     function cancelOrders(NahmiiTypesLib.Order[] orders)
- public
- {
+    public
+    {
         for (uint256 i = 0; i < orders.length; i++) {
             cancelledOrderHashes.push(orders[i].seals.operator.hash);
             orderHashCancelledMap[orders[i].seals.operator.hash] = true;
@@ -58,8 +58,8 @@ contract MockedCancelOrdersChallenge {
     }
 
     function cancelOrdersByHash(bytes32[] orderHashes)
- public
- {
+    public
+    {
         for (uint256 i = 0; i < orderHashes.length; i++) {
             cancelledOrderHashes.push(orderHashes[i]);
             orderHashCancelledMap[orderHashes[i]] = true;
@@ -68,13 +68,11 @@ contract MockedCancelOrdersChallenge {
         emit CancelOrdersByHashEvent(orderHashes, msg.sender);
     }
 
-    function isOrderCancelled(address wallet, bytes32 orderHash)
- public
- view
- returns (bool)
- {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
+    function isOrderCancelled(address, bytes32 orderHash)
+    public
+    view
+    returns (bool)
+    {
         return orderHashCancelledMap[orderHash];
     }
 }
