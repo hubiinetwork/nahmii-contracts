@@ -104,7 +104,7 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     }
 
     /// @notice Unlock balances of the given wallet
-    /// @param wallet The address of concerned wallet whose balances will be unlocked
+    /// @param wallet The address of the concerned wallet whose balances will be unlocked
     function unlockByProxy(address wallet)
     public
     onlyAuthorizedService(wallet)

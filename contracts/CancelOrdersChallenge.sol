@@ -135,7 +135,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     function challenge(NahmiiTypesLib.Trade trade, address wallet)
     public
     onlyOperationalModeNormal

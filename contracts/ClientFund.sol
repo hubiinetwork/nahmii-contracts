@@ -247,7 +247,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
 
     /// @notice Seize balances in the given currency of the given wallet, provided that the wallet
     /// is locked by the caller
-    /// @param wallet The address of concerned wallet whose balances are seized
+    /// @param wallet The address of the concerned wallet whose balances are seized
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function seizeBalances(address wallet, address currencyCt, uint256 currencyId)

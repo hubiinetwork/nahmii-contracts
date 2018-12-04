@@ -296,8 +296,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get number of payment fee block number tiers of given currency
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function currencyPaymentFeesCount(address currencyCt, uint256 currencyId)
     public
     view
@@ -309,8 +309,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @notice Get payment relative fee for given currency at given block number, possibly discounted by
     /// discount tier value
     /// @param blockNumber The concerned block number
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param discountTier The concerned discount tier
     function currencyPaymentFee(uint256 blockNumber, address currencyCt, uint256 currencyId, int256 discountTier)
     public
@@ -328,8 +328,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @notice Set payment nominal relative fee and discount tiers and values for given currency at given
     /// block number tier
     /// @param fromBlockNumber Block number from which the update applies
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
@@ -441,8 +441,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get number of minimum payment fee block number tiers for given currency
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function currencyPaymentMinimumFeesCount(address currencyCt, uint256 currencyId)
     public
     view
@@ -453,8 +453,8 @@ contract Configuration is Modifiable, Ownable, Servable {
 
     /// @notice Get payment minimum relative fee for given currency at given block number
     /// @param blockNumber The concerned block number
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function currencyPaymentMinimumFee(uint256 blockNumber, address currencyCt, uint256 currencyId)
     public
     view
@@ -468,8 +468,8 @@ contract Configuration is Modifiable, Ownable, Servable {
 
     /// @notice Set payment minimum relative fee for given currency at given block number tier
     /// @param fromBlockNumber Block number from which the update applies
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param nominal Minimum relative fee
     function setCurrencyPaymentMinimumFee(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal)
     public
