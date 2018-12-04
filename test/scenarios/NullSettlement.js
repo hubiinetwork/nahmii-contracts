@@ -378,22 +378,12 @@ module.exports = (glob) => {
                         await ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics[0]
-                        ))).should.have.lengthOf(1);
-
-                        (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ))).should.have.lengthOf(1);
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersNullSettlement.interface.events.SettleNullEvent.topics[0]
                         ))).should.have.lengthOf(1);
-
-                        const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
-                        settledBalanceUpdate[0].should.equal(utils.getAddress(glob.owner));
-                        settledBalanceUpdate[1]._bn.should.eq.BN(0);
-                        settledBalanceUpdate[2].should.equal(mocks.address0);
-                        settledBalanceUpdate[3]._bn.should.eq.BN(0);
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -503,22 +493,12 @@ module.exports = (glob) => {
                         await ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics[0]
-                        ))).should.have.lengthOf(1);
-
-                        (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ))).should.have.lengthOf(1);
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersNullSettlement.interface.events.SettleNullByProxyEvent.topics[0]
                         ))).should.have.lengthOf(1);
-
-                        const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
-                        settledBalanceUpdate[0].should.equal(wallet);
-                        settledBalanceUpdate[1]._bn.should.eq.BN(0);
-                        settledBalanceUpdate[2].should.equal(mocks.address0);
-                        settledBalanceUpdate[3]._bn.should.eq.BN(0);
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 

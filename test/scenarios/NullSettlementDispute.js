@@ -10,7 +10,7 @@ const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
-const MockedClientFund = artifacts.require('MockedClientFund');
+const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -23,7 +23,7 @@ module.exports = (glob) => {
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
-        let web3ClientFund, ethersClientFund;
+        let web3WalletLocker, ethersWalletLocker;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
@@ -40,8 +40,8 @@ module.exports = (glob) => {
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
-            web3ClientFund = await MockedClientFund.new();
-            ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
+            web3WalletLocker = await MockedWalletLocker.new();
+            ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3CancelOrdersChallenge = await MockedCancelOrdersChallenge.new();
@@ -57,7 +57,7 @@ module.exports = (glob) => {
             await ethersNullSettlementDispute.setConfiguration(ethersConfiguration.address);
             await ethersNullSettlementDispute.setValidator(ethersValidator.address);
             await ethersNullSettlementDispute.setSecurityBond(ethersSecurityBond.address);
-            await ethersNullSettlementDispute.setClientFund(ethersClientFund.address);
+            await ethersNullSettlementDispute.setWalletLocker(ethersWalletLocker.address, false);
             await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
             await ethersNullSettlementDispute.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
             await ethersNullSettlementDispute.setNullSettlementChallenge(ethersNullSettlementChallenge.address);
@@ -215,7 +215,7 @@ module.exports = (glob) => {
                 await web3CancelOrdersChallenge._reset();
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
-                await web3ClientFund._reset();
+                await web3WalletLocker._reset();
 
                 order = await mocks.mockOrder(glob.owner);
 
@@ -351,7 +351,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersClientFund.lockedWalletsCount())
+                        (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
@@ -369,7 +369,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersClientFund.lockedWalletsCount())
+                        (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(1);
@@ -390,7 +390,7 @@ module.exports = (glob) => {
                 await web3CancelOrdersChallenge._reset();
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
-                await web3ClientFund._reset();
+                await web3WalletLocker._reset();
 
                 trade = await mocks.mockTrade(glob.owner);
 
@@ -546,7 +546,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersClientFund.lockedWalletsCount())
+                        (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
@@ -566,7 +566,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersClientFund.lockedWalletsCount())
+                        (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(1);
@@ -586,7 +586,7 @@ module.exports = (glob) => {
                 await web3FraudChallenge._reset();
                 await web3NullSettlementChallenge._reset();
                 await web3SecurityBond._reset();
-                await web3ClientFund._reset();
+                await web3WalletLocker._reset();
 
                 payment = await mocks.mockPayment(glob.owner);
 
@@ -718,7 +718,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersClientFund.lockedWalletsCount())
+                        (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
@@ -738,7 +738,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersClientFund.lockedWalletsCount())
+                        (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(1);
