@@ -30,13 +30,12 @@
   },
   "dependencies": {
     "async": "^2.6.0",
-    "augmented-keccak256": "github:CoinFabrik/augmented-keccak256.git",
     "ethers": "^3.0.7",
     "ganache-cli": "^6.1.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.0.0",
     "solc": "^0.4.25",
-    "solidity-util": "github:hubiinetwork/solidity-util",
+    "solidity-util": "github:willitscale/solidity-util",
     "truffle": "^4.1.14",
     "truffle-hdwallet-provider": "0.0.6"
   },
