@@ -414,7 +414,7 @@ module.exports = (glob) => {
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
             });
 
-            describe('if called from non-operator', () => {
+            describe('if called by non-operator', () => {
                 beforeEach(async () => {
                     ethersDriipSettlementChallenge = ethersDriipSettlementChallenge.connect(glob.signer_a);
                 });
@@ -704,7 +704,7 @@ module.exports = (glob) => {
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
             });
 
-            describe('if called from non-operator', () => {
+            describe('if called by non-operator', () => {
                 beforeEach(async () => {
                     ethersDriipSettlementChallenge = ethersDriipSettlementChallenge.connect(glob.signer_a);
                 });
