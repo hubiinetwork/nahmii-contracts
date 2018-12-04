@@ -18,7 +18,6 @@ import {Beneficiary} from "../Beneficiary.sol";
 @notice Mocked implementation of service contract that interacts with ClientFund
 */
 contract MockedClientFundService is Ownable, ClientFundable {
-
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
@@ -52,17 +51,5 @@ contract MockedClientFundService is Ownable, ClientFundable {
     public
     {
         clientFund.transferToBeneficiary(beneficiary, amount, currencyCt, currencyId, standard);
-    }
-
-    function lockBalancesByProxy(address lockedWallet, address lockerWallet)
-    public
-    {
-        clientFund.lockBalancesByProxy(lockedWallet, lockerWallet);
-    }
-
-    function unlockBalancesByProxy(address wallet)
-    public
-    {
-        clientFund.unlockBalancesByProxy(wallet);
     }
 }

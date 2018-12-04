@@ -116,7 +116,7 @@ library BalanceLib {
     {
         if (0 == self.figures[currencyCt][currencyId] && self.inUseCurrencies.has(currencyCt, currencyId))
             self.inUseCurrencies.removeItem(currencyCt, currencyId);
-        else if (0 < self.figures[currencyCt][currencyId] && !self.inUseCurrencies.has(currencyCt, currencyId))
+        else if (!self.inUseCurrencies.has(currencyCt, currencyId))
             self.inUseCurrencies.addItem(currencyCt, currencyId);
     }
 }

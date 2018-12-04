@@ -36,7 +36,7 @@ contract ClientFundable is Ownable {
     notNullAddress(newClientFund)
     notSameAddresses(newClientFund, clientFund)
     {
-        //set new community vote
+        // Update field
         ClientFund oldClientFund = clientFund;
         clientFund = newClientFund;
 
