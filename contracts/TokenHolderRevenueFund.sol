@@ -257,8 +257,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         int256 amount;
         int256 fraction;
         int256 bb;
-        uint256 bn_low;
-        uint256 bn_up;
+        uint256 bnLow;
+        uint256 bnUp;
 
         require(address(revenueToken) != address(0));
 
@@ -269,21 +269,21 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         // upper bound = last accrual block number
 
         require(accrualBlockNumbers.length > 0);
-        bn_up = accrualBlockNumbers[accrualBlockNumbers.length - 1];
+        bnUp = accrualBlockNumbers[accrualBlockNumbers.length - 1];
 
         uint256[] storage claimAccrualBlockNumbers = walletMap[msg.sender].claimAccrualBlockNumbers[currencyCt][currencyId];
         if (claimAccrualBlockNumbers.length == 0)
-            bn_low = 0;
+            bnLow = 0;
         //no block numbers for claimed accruals yet
         else
-            bn_low = claimAccrualBlockNumbers[claimAccrualBlockNumbers.length - 1];
+            bnLow = claimAccrualBlockNumbers[claimAccrualBlockNumbers.length - 1];
 
-        require(bn_low != bn_up);
+        require(bnLow != bnUp);
         // avoid division by 0
 
-        bb = int256(revenueToken.balanceBlocksIn(msg.sender, bn_low, bn_up));
+        bb = int256(revenueToken.balanceBlocksIn(msg.sender, bnLow, bnUp));
 
-        fraction = bb.mul_nn(1e18).mul_nn(balance).div_nn(balance.mul_nn(int256(bn_up.sub(bn_low))).mul_nn(1e18));
+        fraction = bb.mul_nn(1e18).mul_nn(balance).div_nn(balance.mul_nn(int256(bnUp.sub(bnLow))).mul_nn(1e18));
         amount = fraction.mul_nn(balance).div_nn(1e18);
         if (amount <= 0)
             return;
@@ -293,7 +293,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         walletMap[msg.sender].staged.add(amount, currencyCt, currencyId);
 
         // Store upper bound as the last claimed accrual block number for currency
-        claimAccrualBlockNumbers.push(bn_up);
+        claimAccrualBlockNumbers.push(bnUp);
 
         // Emit event
         emit ClaimAccrualEvent(msg.sender, currencyCt, currencyId);
