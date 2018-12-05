@@ -20,7 +20,7 @@ contract TransactionTracker is Ownable, Servable {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct TransactionLogEntry {
+    struct TransactionRecord {
         int256 amount;
         uint256 blockNumber;
         address currencyCt;
@@ -28,8 +28,8 @@ contract TransactionTracker is Ownable, Servable {
     }
 
     struct TransactionLog {
-        TransactionLogEntry[] entries;
-        mapping(address => mapping(uint256 => uint256[])) entryIndicesByCurrency;
+        TransactionRecord[] records;
+        mapping(address => mapping(uint256 => uint256[])) recordIndicesByCurrency;
     }
 
     //
@@ -64,16 +64,16 @@ contract TransactionTracker is Ownable, Servable {
     public
     onlyActiveService
     {
-        transactionLogByWalletType[wallet][_type].entries.length++;
+        transactionLogByWalletType[wallet][_type].records.length++;
 
-        uint256 index = transactionLogByWalletType[wallet][_type].entries.length - 1;
+        uint256 index = transactionLogByWalletType[wallet][_type].records.length - 1;
 
-        transactionLogByWalletType[wallet][_type].entries[index].amount = amount;
-        transactionLogByWalletType[wallet][_type].entries[index].blockNumber = block.number;
-        transactionLogByWalletType[wallet][_type].entries[index].currencyCt = currencyCt;
-        transactionLogByWalletType[wallet][_type].entries[index].currencyId = currencyId;
+        transactionLogByWalletType[wallet][_type].records[index].amount = amount;
+        transactionLogByWalletType[wallet][_type].records[index].blockNumber = block.number;
+        transactionLogByWalletType[wallet][_type].records[index].currencyCt = currencyCt;
+        transactionLogByWalletType[wallet][_type].records[index].currencyId = currencyId;
 
-        transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId].push(index);
+        transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].push(index);
     }
 
     function count(address wallet, bytes32 _type)
@@ -81,7 +81,7 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (uint256)
     {
-        return transactionLogByWalletType[wallet][_type].entries.length;
+        return transactionLogByWalletType[wallet][_type].records.length;
     }
 
     function getByIndex(address wallet, bytes32 _type, uint256 index)
@@ -89,7 +89,7 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        TransactionLogEntry storage entry = transactionLogByWalletType[wallet][_type].entries[index];
+        TransactionRecord storage entry = transactionLogByWalletType[wallet][_type].records[index];
         amount = entry.amount;
         blockNumber = entry.blockNumber;
         currencyCt = entry.currencyCt;
@@ -110,7 +110,7 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (uint256)
     {
-        return transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId].length;
+        return transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length;
     }
 
     function getByCurrencyIndex(address wallet, bytes32 _type, address currencyCt,
@@ -119,9 +119,9 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        uint256 entryIndex = transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId][index];
+        uint256 entryIndex = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId][index];
 
-        TransactionLogEntry storage entry = transactionLogByWalletType[wallet][_type].entries[entryIndex];
+        TransactionRecord storage entry = transactionLogByWalletType[wallet][_type].records[entryIndex];
         amount = entry.amount;
         blockNumber = entry.blockNumber;
     }
@@ -148,9 +148,9 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (uint256)
     {
-        require(0 < transactionLogByWalletType[wallet][_type].entries.length);
-        for (uint256 i = transactionLogByWalletType[wallet][_type].entries.length - 1; i >= 0; i--)
-            if (blockNumber >= transactionLogByWalletType[wallet][_type].entries[i].blockNumber)
+        require(0 < transactionLogByWalletType[wallet][_type].records.length);
+        for (uint256 i = transactionLogByWalletType[wallet][_type].records.length - 1; i >= 0; i--)
+            if (blockNumber >= transactionLogByWalletType[wallet][_type].records[i].blockNumber)
                 return i;
         revert();
     }
@@ -161,10 +161,10 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (uint256)
     {
-        require(0 < transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId].length);
-        for (uint256 i = transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId].length - 1; i >= 0; i--) {
-            uint256 j = transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId][i];
-            if (blockNumber >= transactionLogByWalletType[wallet][_type].entries[j].blockNumber)
+        require(0 < transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length);
+        for (uint256 i = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length - 1; i >= 0; i--) {
+            uint256 j = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId][i];
+            if (blockNumber >= transactionLogByWalletType[wallet][_type].records[j].blockNumber)
                 return j;
         }
         revert();
