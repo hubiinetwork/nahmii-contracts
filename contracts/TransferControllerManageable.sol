@@ -51,7 +51,6 @@ contract TransferControllerManageable is Ownable {
     function transferController(address currencyCt, string standard)
     internal
     view
-    transferControllerManagerInitialized
     returns (TransferController)
     {
         return transferControllerManager.transferController(currencyCt, standard);

@@ -172,28 +172,28 @@ module.exports = (glob) => {
         });
 
         describe('challengeWalletsCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersNullSettlementChallenge.challengeWalletsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('lockedWalletsCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersNullSettlementChallenge.lockedWalletsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('proposalsCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersNullSettlementChallenge.proposalsCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
         describe('disqualificationsCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersNullSettlementChallenge.disqualificationsCount())
                     ._bn.should.eq.BN(0);
             });
@@ -782,7 +782,7 @@ module.exports = (glob) => {
         });
 
         describe('candidateHashesCount()', () => {
-            it('should return value initialized ', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersNullSettlementChallenge.candidateHashesCount())._bn.should.eq.BN(0);
             });
         });

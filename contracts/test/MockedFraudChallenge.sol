@@ -87,13 +87,11 @@ contract MockedFraudChallenge is FraudChallenge {
         fraudulentOrderHash = _fraudulentOrderHash;
     }
 
-    function isFraudulentOrderHash(bytes32 hash)
+    function isFraudulentOrderHash(bytes32)
     public
     view
     returns (bool)
     {
-        // To silence unused function parameter compiler warning
-        require(hash == hash);
         return fraudulentOrderHash;
     }
 
@@ -103,13 +101,11 @@ contract MockedFraudChallenge is FraudChallenge {
         fraudulentTradeHash = _fraudulentTradeHash;
     }
 
-    function isFraudulentTradeHash(bytes32 hash)
+    function isFraudulentTradeHash(bytes32)
     public
     view
     returns (bool)
     {
-        // To silence unused function parameter compiler warning
-        require(hash == hash);
         return fraudulentTradeHash;
     }
 
@@ -119,13 +115,11 @@ contract MockedFraudChallenge is FraudChallenge {
         fraudulentPaymentHash = _fraudulentPaymentHash;
     }
 
-    function isFraudulentPaymentHash(bytes32 hash)
+    function isFraudulentPaymentHash(bytes32)
     public
     view
     returns (bool)
     {
-        // To silence unused function parameter compiler warning
-        require(hash == hash);
         return fraudulentPaymentHash;
     }
 }

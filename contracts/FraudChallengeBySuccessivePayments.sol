@@ -42,7 +42,7 @@ SecurityBondable, WalletLockable {
     /// to be tested for succession differences
     /// @param firstPayment Reference payment
     /// @param lastPayment Fraudulent payment candidate
-    /// @param wallet Address of concerned wallet
+    /// @param wallet The address of the concerned wallet
     function challenge(
         NahmiiTypesLib.Payment firstPayment,
         NahmiiTypesLib.Payment lastPayment,

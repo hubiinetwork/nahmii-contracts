@@ -42,9 +42,9 @@ SecurityBondable, WalletLockable {
     /// trade order residual differences
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
-    /// @param wallet Address of concerned wallet
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function challenge(
         NahmiiTypesLib.Trade firstTrade,
         NahmiiTypesLib.Trade lastTrade,

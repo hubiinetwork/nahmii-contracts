@@ -90,7 +90,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     }
 
     /// @notice Settle null by proxy
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function settleNullByProxy(address wallet, address currencyCt, uint256 currencyId)

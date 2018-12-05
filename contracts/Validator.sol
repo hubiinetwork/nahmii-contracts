@@ -403,11 +403,11 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         else if (NahmiiTypesLib.TradePartyRole.Seller == lastTradePartyRole)
             lastSingleFee = lastTrade.seller.fees.single;
 
-        MonetaryTypesLib.Figure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.total : firstTrade.seller.fees.total);
-        MonetaryTypesLib.Figure memory firstTotalFee = MonetaryTypesLib.getFigureByCurrency(firstTotalFees, lastSingleFee.currency);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.total : firstTrade.seller.fees.total);
+        MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, lastSingleFee.currency);
 
-        MonetaryTypesLib.Figure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.total : lastTrade.seller.fees.total);
-        MonetaryTypesLib.Figure memory lastTotalFee = MonetaryTypesLib.getFigureByCurrency(lastTotalFees, lastSingleFee.currency);
+        NahmiiTypesLib.OriginFigure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.total : lastTrade.seller.fees.total);
+        MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(lastTotalFees, lastSingleFee.currency);
 
         return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
     }
@@ -436,8 +436,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        MonetaryTypesLib.Figure memory firstTotalFee = MonetaryTypesLib.getFigureByCurrency(firstPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
-        MonetaryTypesLib.Figure memory lastTotalFee = MonetaryTypesLib.getFigureByCurrency(lastPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
+        MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
+        MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(lastPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
         return lastTotalFee.amount == firstTotalFee.amount.add(lastPayment.sender.fees.single.amount);
     }
 
@@ -450,10 +450,10 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        MonetaryTypesLib.Figure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
-        MonetaryTypesLib.Figure memory firstTotalFee = MonetaryTypesLib.getFigureByCurrency(firstTotalFees, payment.sender.fees.single.currency);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
+        MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, payment.sender.fees.single.currency);
 
-        MonetaryTypesLib.Figure memory lastTotalFee = MonetaryTypesLib.getFigureByCurrency(payment.sender.fees.total, payment.sender.fees.single.currency);
+        MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(payment.sender.fees.total, payment.sender.fees.single.currency);
 
         return lastTotalFee.amount == firstTotalFee.amount.add(payment.sender.fees.single.amount);
     }
@@ -474,11 +474,11 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         else if (NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
             lastSingleFee = trade.seller.fees.single;
 
-        MonetaryTypesLib.Figure[] memory firstTotalFees = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.total : payment.recipient.fees.total);
-        MonetaryTypesLib.Figure memory firstTotalFee = MonetaryTypesLib.getFigureByCurrency(firstTotalFees, lastSingleFee.currency);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.total : payment.recipient.fees.total);
+        MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, lastSingleFee.currency);
 
-        MonetaryTypesLib.Figure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
-        MonetaryTypesLib.Figure memory lastTotalFee = MonetaryTypesLib.getFigureByCurrency(lastTotalFees, lastSingleFee.currency);
+        NahmiiTypesLib.OriginFigure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
+        MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(lastTotalFees, lastSingleFee.currency);
 
         return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
     }
@@ -538,5 +538,19 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     returns (bool)
     {
         return wallet == payment.recipient.wallet;
+    }
+
+    //
+    // Private unctions
+    // -----------------------------------------------------------------------------------------------------------------
+    function getProtocolFigureByCurrency(NahmiiTypesLib.OriginFigure[] originFigures, MonetaryTypesLib.Currency currency)
+    private
+    pure
+    returns (MonetaryTypesLib.Figure) {
+        for (uint256 i = 0; i < originFigures.length; i++)
+            if (originFigures[i].figure.currency.ct == currency.ct && originFigures[i].figure.currency.id == currency.id
+            && originFigures[i].originId == 0)
+                return originFigures[i].figure;
+        return MonetaryTypesLib.Figure(0, currency);
     }
 }

@@ -115,8 +115,6 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     function cancelOrders(NahmiiTypesLib.Order[] orders)
     public
     onlyOperationalModeNormal
-    validatorInitialized
-    configurationInitialized
     {
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i].wallet);
@@ -137,7 +135,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     function challenge(NahmiiTypesLib.Trade trade, address wallet)
     public
     onlyOperationalModeNormal

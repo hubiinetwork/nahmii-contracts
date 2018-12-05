@@ -104,7 +104,7 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     }
 
     /// @notice Unlock balances of the given wallet
-    /// @param wallet The address of concerned wallet whose balances will be unlocked
+    /// @param wallet The address of the concerned wallet
     function unlockByProxy(address wallet)
     public
     onlyAuthorizedService(wallet)
@@ -129,6 +129,9 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
         return lockedWallets.length;
     }
 
+    /// @notice Gauge whether the given wallet is locked
+    /// @param wallet The address of the concerned wallet
+    /// @return true if wallet is locked, else false
     function isLocked(address wallet)
     public
     view
@@ -140,6 +143,10 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
         );
     }
 
+    /// @notice Gauge whether the given locked wallet is locked by the given locker wallet
+    /// @param lockedWallet The address of the concerned locked wallet
+    /// @param lockerWallet The address of the concerned locker wallet
+    /// @return true if lockedWallet is locked by lockerWallet, else false
     function isLockedBy(address lockedWallet, address lockerWallet)
     public
     view

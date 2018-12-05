@@ -59,6 +59,7 @@ const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
 const SettlementTypesLib = artifacts.require('SettlementTypesLib');
 const StandardTokenEx = artifacts.require('StandardTokenEx');
+const Strings = artifacts.require('Strings');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TransactionTracker = artifacts.require('TransactionTracker');
@@ -112,6 +113,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
             await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
             await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
+            await execDeploy(ctl, 'Strings', '', Strings);
             await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
 
             await deployer.link(BlockNumbIntsLib, [
@@ -139,6 +141,9 @@ module.exports = (deployer, network, accounts) => {
                 CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
                 NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, SecurityBond, StandardTokenEx,
                 TokenHolderRevenueFund, UnitTestHelpers, Validator, WalletLocker
+            ]);
+            await deployer.link(Strings, [
+                PartnerFund
             ]);
             await deployer.link(TxHistoryLib, [
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
@@ -359,6 +364,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
             await instance.setTradesRevenueFund(addressStorage.get('TradesRevenueFund'));
             await instance.setPaymentsRevenueFund(addressStorage.get('PaymentsRevenueFund'));
+            await instance.setPartnerFund(addressStorage.get('PartnerFund'));
 
             instance = await DriipSettlementChallenge.at(addressStorage.get('DriipSettlementChallenge'));
             await instance.setConfiguration(addressStorage.get('Configuration'));

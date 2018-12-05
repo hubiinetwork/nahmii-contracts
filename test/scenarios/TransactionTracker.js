@@ -171,29 +171,29 @@ module.exports = function (glob) {
                     (await ethersTransactionTracker.count(glob.user_a, type))
                         ._bn.should.eq.BN(1);
 
-                    const logEntryByIndex = await ethersTransactionTracker.getByIndex(
+                    const transactionRecordByIndex = await ethersTransactionTracker.getByIndex(
                         glob.user_a, type, 0
                     );
-                    logEntryByIndex.amount._bn.should.eq.BN(10);
-                    logEntryByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
-                    logEntryByIndex.currencyCt.should.equal(address0);
-                    logEntryByIndex.currencyId._bn.should.eq.BN(0);
+                    transactionRecordByIndex.amount._bn.should.eq.BN(10);
+                    transactionRecordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+                    transactionRecordByIndex.currencyCt.should.equal(address0);
+                    transactionRecordByIndex.currencyId._bn.should.eq.BN(0);
 
-                    const logEntryByBlockNumber = await ethersTransactionTracker.getByBlockNumber(
+                    const transactionRecordByBlockNumber = await ethersTransactionTracker.getByBlockNumber(
                         glob.user_a, type, blockNumber + 10
                     );
-                    logEntryByBlockNumber.should.deep.equal(logEntryByIndex);
+                    transactionRecordByBlockNumber.should.deep.equal(transactionRecordByIndex);
 
-                    const logEntryByCurrencyIndex = await ethersTransactionTracker.getByCurrencyIndex(
+                    const transactionRecordByCurrencyIndex = await ethersTransactionTracker.getByCurrencyIndex(
                         glob.user_a, type, address0, 0, 0
                     );
-                    logEntryByCurrencyIndex.amount._bn.should.eq.BN(10);
-                    logEntryByCurrencyIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+                    transactionRecordByCurrencyIndex.amount._bn.should.eq.BN(10);
+                    transactionRecordByCurrencyIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
 
-                    const logEntryByCurrencyBlockNumber = await ethersTransactionTracker.getByCurrencyBlockNumber(
+                    const transactionRecordByCurrencyBlockNumber = await ethersTransactionTracker.getByCurrencyBlockNumber(
                         glob.user_a, type, address0, 0, blockNumber + 10
                     );
-                    logEntryByCurrencyBlockNumber.should.deep.equal(logEntryByCurrencyIndex);
+                    transactionRecordByCurrencyBlockNumber.should.deep.equal(transactionRecordByCurrencyIndex);
                 });
             });
         });

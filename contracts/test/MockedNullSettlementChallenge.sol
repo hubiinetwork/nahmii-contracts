@@ -61,14 +61,10 @@ contract MockedNullSettlementChallenge {
         _proposalExpired = proposalExpired;
     }
 
-    function hasProposalExpired(address wallet, address currencyCt, uint256 currencyId)
+    function hasProposalExpired(address, address, uint256)
     public
     view
     returns (bool) {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _proposalExpired;
     }
 
@@ -78,15 +74,11 @@ contract MockedNullSettlementChallenge {
         _proposalNonce = proposalNonce;
     }
 
-    function proposalNonce(address wallet, address currencyCt, uint256 currencyId)
+    function proposalNonce(address, address, uint256)
     public
     view
     returns (uint256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _proposalNonce;
     }
 
@@ -96,15 +88,11 @@ contract MockedNullSettlementChallenge {
         _proposalBlockNumber = proposalBlockNumber;
     }
 
-    function proposalBlockNumber(address wallet, address currencyCt, uint256 currencyId)
+    function proposalBlockNumber(address, address, uint256)
     public
     view
     returns (uint256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _proposalBlockNumber;
     }
 
@@ -114,14 +102,10 @@ contract MockedNullSettlementChallenge {
         _proposalStageAmounts.push(proposalStageAmount);
     }
 
-    function proposalStageAmount(address wallet, address currencyCt, uint256 currencyId)
+    function proposalStageAmount(address, address, uint256)
     public
     returns (int256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _proposalStageAmounts.length == 0 ? 0 : _proposalStageAmounts[_proposalStageAmountIndex++];
     }
 
@@ -131,61 +115,41 @@ contract MockedNullSettlementChallenge {
         _proposalTargetBalanceAmount = proposalTargetBalanceAmount;
     }
 
-    function proposalTargetBalanceAmount(address wallet, address currencyCt, uint256 currencyId)
+    function proposalTargetBalanceAmount(address, address, uint256)
     public
     view
     returns (int256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _proposalTargetBalanceAmount;
     }
 
-    function setProposalExpirationTime(address wallet, address currencyCt, uint256 currencyId,
+    function setProposalExpirationTime(address, address, uint256,
         uint256 expirationTime)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         _proposalExpirationTime = expirationTime;
     }
 
-    function proposalExpirationTime(address wallet, address currencyCt, uint256 currencyId)
+    function proposalExpirationTime(address, address, uint256)
     public
     view
     returns (uint256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _proposalExpirationTime;
     }
 
-    function setProposalStatus(address wallet, address currencyCt, uint256 currencyId,
+    function setProposalStatus(address, address, uint256,
         SettlementTypesLib.Status status)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         _proposalStatus = status;
     }
 
-    function proposalStatus(address wallet, address currencyCt, uint256 currencyId)
+    function proposalStatus(address, address, uint256)
     public
     view
     returns (SettlementTypesLib.Status)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _proposalStatus;
     }
 
@@ -195,15 +159,11 @@ contract MockedNullSettlementChallenge {
         _proposalBalanceReward = balanceReward;
     }
 
-    function proposalBalanceReward(address wallet, address currencyCt, uint256 currencyId)
+    function proposalBalanceReward(address, address, uint256)
     public
     view
     returns (bool)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _proposalBalanceReward;
     }
 
@@ -213,15 +173,11 @@ contract MockedNullSettlementChallenge {
         _disqualificationCandidateType = candidateType;
     }
 
-    function disqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
+    function disqualificationCandidateType(address, address, uint256)
     public
     view
     returns (SettlementTypesLib.CandidateType)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _disqualificationCandidateType;
     }
 
@@ -231,15 +187,11 @@ contract MockedNullSettlementChallenge {
         _disqualificationCandidateHash = candidateHash;
     }
 
-    function disqualificationCandidateHash(address wallet, address currencyCt, uint256 currencyId)
+    function disqualificationCandidateHash(address, address, uint256)
     public
     view
     returns (bytes32)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _disqualificationCandidateHash;
     }
 
@@ -249,15 +201,11 @@ contract MockedNullSettlementChallenge {
         _disqualificationChallenger = challenger;
     }
 
-    function disqualificationChallenger(address wallet, address currencyCt, uint256 currencyId)
+    function disqualificationChallenger(address, address, uint256)
     public
     view
     returns (address)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         return _disqualificationChallenger;
     }
 
@@ -293,21 +241,17 @@ contract MockedNullSettlementChallenge {
         return _disqualificationsCount;
     }
 
-    function lockWallet(address wallet)
+    function lockWallet(address)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
         _lockedWallet = true;
     }
 
-    function isLockedWallet(address wallet)
+    function isLockedWallet(address)
     public
     view
     returns (bool)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
         return _lockedWallet;
     }
 
@@ -317,27 +261,16 @@ contract MockedNullSettlementChallenge {
         _disqualificationsCount = count;
     }
 
-    function addDisqualification(address wallet, address currencyCt, uint256 currencyId, bytes32 candidateHash,
-        SettlementTypesLib.CandidateType candidateType, address challenger)
+    function addDisqualification(address, address, uint256, bytes32,
+        SettlementTypesLib.CandidateType, address)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
-        require(candidateHash == candidateHash);
-        require(candidateType == candidateType);
-        require(challenger == challenger);
         _disqualificationsCount++;
     }
 
-    function removeDisqualification(address wallet, address currencyCt, uint256 currencyId)
+    function removeDisqualification(address, address, uint256)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
         _disqualificationsCount--;
     }
 }

@@ -20,7 +20,7 @@ contract TransactionTracker is Ownable, Servable {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct TransactionLogEntry {
+    struct TransactionRecord {
         int256 amount;
         uint256 blockNumber;
         address currencyCt;
@@ -28,8 +28,8 @@ contract TransactionTracker is Ownable, Servable {
     }
 
     struct TransactionLog {
-        TransactionLogEntry[] entries;
-        mapping(address => mapping(uint256 => uint256[])) entryIndicesByCurrency;
+        TransactionRecord[] records;
+        mapping(address => mapping(uint256 => uint256[])) recordIndicesByCurrency;
     }
 
     //
@@ -59,43 +59,63 @@ contract TransactionTracker is Ownable, Servable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Add a transaction record of the given wallet, type, amount and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param amount The concerned amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function add(address wallet, bytes32 _type, int256 amount, address currencyCt,
         uint256 currencyId)
     public
     onlyActiveService
     {
-        transactionLogByWalletType[wallet][_type].entries.length++;
+        transactionLogByWalletType[wallet][_type].records.length++;
 
-        uint256 index = transactionLogByWalletType[wallet][_type].entries.length - 1;
+        uint256 index = transactionLogByWalletType[wallet][_type].records.length - 1;
 
-        transactionLogByWalletType[wallet][_type].entries[index].amount = amount;
-        transactionLogByWalletType[wallet][_type].entries[index].blockNumber = block.number;
-        transactionLogByWalletType[wallet][_type].entries[index].currencyCt = currencyCt;
-        transactionLogByWalletType[wallet][_type].entries[index].currencyId = currencyId;
+        transactionLogByWalletType[wallet][_type].records[index].amount = amount;
+        transactionLogByWalletType[wallet][_type].records[index].blockNumber = block.number;
+        transactionLogByWalletType[wallet][_type].records[index].currencyCt = currencyCt;
+        transactionLogByWalletType[wallet][_type].records[index].currencyId = currencyId;
 
-        transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId].push(index);
+        transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].push(index);
     }
 
+    /// @notice Get the number of transaction records for the given wallet and type
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @return The count of transaction records
     function count(address wallet, bytes32 _type)
     public
     view
     returns (uint256)
     {
-        return transactionLogByWalletType[wallet][_type].entries.length;
+        return transactionLogByWalletType[wallet][_type].records.length;
     }
 
+    /// @notice Get the transaction record for the given wallet and type by the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param index The concerned log index
+    /// @return The transaction record
     function getByIndex(address wallet, bytes32 _type, uint256 index)
     public
     view
     returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        TransactionLogEntry storage entry = transactionLogByWalletType[wallet][_type].entries[index];
+        TransactionRecord storage entry = transactionLogByWalletType[wallet][_type].records[index];
         amount = entry.amount;
         blockNumber = entry.blockNumber;
         currencyCt = entry.currencyCt;
         currencyId = entry.currencyId;
     }
 
+    /// @notice Get the transaction record for the given wallet and type by the given block number
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param _blockNumber The concerned block number
+    /// @return The transaction record
     function getByBlockNumber(address wallet, bytes32 _type, uint256 _blockNumber)
     public
     view
@@ -104,28 +124,44 @@ contract TransactionTracker is Ownable, Servable {
         return getByIndex(wallet, _type, _indexByBlockNumber(wallet, _type, _blockNumber));
     }
 
+    /// @notice Get the number of transaction records for the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of transaction records
     function countByCurrency(address wallet, bytes32 _type, address currencyCt,
         uint256 currencyId)
     public
     view
     returns (uint256)
     {
-        return transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId].length;
+        return transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length;
     }
 
+    /// @notice Get the transaction record for the given wallet, type and currency by the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param index The concerned log index
+    /// @return The transaction record
     function getByCurrencyIndex(address wallet, bytes32 _type, address currencyCt,
         uint256 currencyId, uint256 index)
     public
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        uint256 entryIndex = transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId][index];
+        uint256 entryIndex = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId][index];
 
-        TransactionLogEntry storage entry = transactionLogByWalletType[wallet][_type].entries[entryIndex];
+        TransactionRecord storage entry = transactionLogByWalletType[wallet][_type].records[entryIndex];
         amount = entry.amount;
         blockNumber = entry.blockNumber;
     }
 
+    /// @notice Get the transaction record for the given wallet, type and currency by the given block number
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param _blockNumber The concerned block number
+    /// @return The transaction record
     function getByCurrencyBlockNumber(address wallet, bytes32 _type, address currencyCt,
         uint256 currencyId, uint256 _blockNumber)
     public
@@ -148,9 +184,9 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (uint256)
     {
-        require(0 < transactionLogByWalletType[wallet][_type].entries.length);
-        for (uint256 i = transactionLogByWalletType[wallet][_type].entries.length - 1; i >= 0; i--)
-            if (blockNumber >= transactionLogByWalletType[wallet][_type].entries[i].blockNumber)
+        require(0 < transactionLogByWalletType[wallet][_type].records.length);
+        for (uint256 i = transactionLogByWalletType[wallet][_type].records.length - 1; i >= 0; i--)
+            if (blockNumber >= transactionLogByWalletType[wallet][_type].records[i].blockNumber)
                 return i;
         revert();
     }
@@ -161,10 +197,10 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (uint256)
     {
-        require(0 < transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId].length);
-        for (uint256 i = transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId].length - 1; i >= 0; i--) {
-            uint256 j = transactionLogByWalletType[wallet][_type].entryIndicesByCurrency[currencyCt][currencyId][i];
-            if (blockNumber >= transactionLogByWalletType[wallet][_type].entries[j].blockNumber)
+        require(0 < transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length);
+        for (uint256 i = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length - 1; i >= 0; i--) {
+            uint256 j = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId][i];
+            if (blockNumber >= transactionLogByWalletType[wallet][_type].records[j].blockNumber)
                 return j;
         }
         revert();

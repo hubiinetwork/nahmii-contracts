@@ -16,6 +16,7 @@ import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
+import {PartnerFund} from "./PartnerFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -33,6 +34,14 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     using SafeMathUintLib for uint256;
 
     //
+    // Structures
+    // -----------------------------------------------------------------------------------------------------------------
+    struct Total {
+        uint256 nonce;
+        int256 amount;
+    }
+
+    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     uint256 public maxDriipNonce;
@@ -40,6 +49,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     DriipSettlementChallenge public driipSettlementChallenge;
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
+    PartnerFund public partnerFund;
 
     SettlementTypesLib.Settlement[] public settlements;
     mapping(uint256 => uint256) public nonceSettlementIndex;
@@ -47,8 +57,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxDriipNonce;
 
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyFeeNonce;
-    mapping(address => mapping(address => mapping(uint256 => int256))) public walletCurrencyFeeCharged;
+    mapping(address => mapping(address => mapping(address => mapping(address => mapping(uint256 => Total))))) public feeTotalsMap;
 
     //
     // Events
@@ -61,7 +70,8 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         DriipSettlementChallenge newDriipSettlementChallenge);
     event SetTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event SetPaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event StageTotalFeeEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
+    event SetPartnerFundEvent(PartnerFund oldPartnerFund, PartnerFund newPartnerFund);
+    event StageFeesEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
         address currencyCt, uint256 currencyId);
 
     //
@@ -104,6 +114,17 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         RevenueFund oldPaymentsRevenueFund = paymentsRevenueFund;
         paymentsRevenueFund = newPaymentsRevenueFund;
         emit SetPaymentsRevenueFundEvent(oldPaymentsRevenueFund, paymentsRevenueFund);
+    }
+
+    /// @notice Set the partner fund contract
+    /// @param newPartnerFund The (address of) partner contract instance
+    function setPartnerFund(PartnerFund newPartnerFund) public
+    onlyDeployer
+    notNullAddress(newPartnerFund)
+    {
+        PartnerFund oldPartnerFund = partnerFund;
+        partnerFund = newPartnerFund;
+        emit SetPartnerFundEvent(oldPartnerFund, partnerFund);
     }
 
     /// @notice Get the count of settlements
@@ -165,7 +186,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     public
     {
         // Settle trade
-        settleTradePrivate(msg.sender, trade);
+        _settleTrade(msg.sender, trade);
 
         // Emit event
         emit SettleTradeEvent(msg.sender, trade);
@@ -179,7 +200,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     onlyOperator
     {
         // Settle trade for wallet
-        settleTradePrivate(wallet, trade);
+        _settleTrade(wallet, trade);
 
         // Emit event
         emit SettleTradeByProxyEvent(msg.sender, wallet, trade);
@@ -191,7 +212,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     public
     {
         // Settle payment
-        settlePaymentPrivate(msg.sender, payment);
+        _settlePayment(msg.sender, payment);
 
         // Emit event
         emit SettlePaymentEvent(msg.sender, payment);
@@ -205,13 +226,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     onlyOperator
     {
         // Settle payment for wallet
-        settlePaymentPrivate(wallet, payment);
+        _settlePayment(wallet, payment);
 
         // Emit event
         emit SettlePaymentByProxyEvent(msg.sender, wallet, payment);
     }
 
-    function settleTradePrivate(address wallet, NahmiiTypesLib.Trade trade)
+    function _settleTrade(address wallet, NahmiiTypesLib.Trade trade)
     private
     onlySealedTrade(trade)
     {
@@ -319,7 +340,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             maxDriipNonce = trade.nonce;
     }
 
-    function settlePaymentPrivate(address wallet, NahmiiTypesLib.Payment payment)
+    function _settlePayment(address wallet, NahmiiTypesLib.Payment payment)
     private
     onlySealedPayment(payment)
     {
@@ -367,7 +388,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         else
             settlement.target.done = true;
 
-        MonetaryTypesLib.Figure[] memory totalFees;
+        NahmiiTypesLib.OriginFigure[] memory totalFees;
         int256 currentBalance;
         if (validator.isPaymentParty(payment, wallet)) {
             totalFees = payment.sender.fees.total;
@@ -457,30 +478,37 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         return settlements[index - 1];
     }
 
-    function stageFees(address wallet, MonetaryTypesLib.Figure[] fees,
-        Beneficiary beneficiary, uint256 nonce)
+    function stageFees(address wallet, NahmiiTypesLib.OriginFigure[] fees,
+        Beneficiary protocolBeneficiary, uint256 nonce)
     private
     {
-        // For each fee figure...
+        // For each origin figure...
         for (uint256 i = 0; i < fees.length; i++) {
-            // If wallet has previously settled fee of the concerned currency with higher driip nonce then don't settle again
-            if (walletCurrencyFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] < nonce) {
-                walletCurrencyFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] = nonce;
+            // Based on originId determine if this is protocol or partner fee, and if the latter define originId as destination in beneficiary
+            (Beneficiary beneficiary, address destination) =
+            (0 == fees[i].originId) ? (protocolBeneficiary, address(0)) : (partnerFund, address(fees[i].originId));
 
-                // Stage delta of fee to beneficiary
+            Total storage feeTotal = feeTotalsMap[wallet][address(beneficiary)][destination][fees[i].figure.currency.ct][fees[i].figure.currency.id];
+
+            // If wallet has previously settled fee of the concerned currency with higher driip nonce then don't settle again
+            if (feeTotal.nonce < nonce) {
+                feeTotal.nonce = nonce;
+
+                // Get the amount previously staged
+                int256 deltaAmount = fees[i].figure.amount - feeTotal.amount;
+
+                // Update the fee total amount
+                feeTotal.amount = fees[i].figure.amount;
+
+                // Transfer to beneficiary
                 clientFund.transferToBeneficiary(
-                    beneficiary, fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
-                    fees[i].currency.ct, fees[i].currency.id, ""
+                    destination, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
                 );
 
-                // Update fee charged
-                walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id] = fees[i].amount;
-
                 // Emit event
-                emit StageTotalFeeEvent(wallet,
-                    fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
-                    walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
-                    fees[i].currency.ct, fees[i].currency.id);
+                emit StageFeesEvent(
+                    wallet, deltaAmount, fees[i].figure.amount, fees[i].figure.currency.ct, fees[i].figure.currency.id
+                );
             }
         }
     }

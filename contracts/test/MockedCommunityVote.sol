@@ -49,12 +49,10 @@ contract MockedCommunityVote {
         doubleSpenderWalletStats.push(doubleSpender);
     }
 
-    function isDoubleSpenderWallet(address wallet)
+    function isDoubleSpenderWallet(address)
     public
     returns (bool)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
         return doubleSpenderWalletStats.length == 0 ? false : doubleSpenderWalletStats[doubleSpenderWalletStatsIndex++];
     }
 

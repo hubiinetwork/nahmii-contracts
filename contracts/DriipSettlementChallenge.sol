@@ -182,7 +182,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         require(!isLockedWallet(msg.sender));
 
         // Start challenge
-        startChallengeFromTradePrivate(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
+        _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
 
         // Emit event
         emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
@@ -199,7 +199,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     onlyOperator
     {
         // Start challenge for wallet
-        startChallengeFromTradePrivate(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
+        _startChallengeFromTrade(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
 
         // Emit event
         emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
@@ -215,7 +215,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         require(!isLockedWallet(msg.sender));
 
         // Start challenge for wallet
-        startChallengeFromPaymentPrivate(msg.sender, payment, stageAmount, true);
+        _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
 
         // Emit event
         emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
@@ -230,14 +230,14 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     onlyOperator
     {
         // Start challenge for wallet
-        startChallengeFromPaymentPrivate(wallet, payment, stageAmount, false);
+        _startChallengeFromPayment(wallet, payment, stageAmount, false);
 
         // Emit event
         emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return true if proposal has expired, else false
@@ -256,7 +256,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the challenge nonce of the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The challenge nonce
@@ -271,7 +271,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the settlement proposal block number of the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal block number
@@ -286,7 +286,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the settlement proposal end time of the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal end time
@@ -301,7 +301,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the challenge status of the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The challenge status
@@ -316,7 +316,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the settlement proposal stage amount of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal stage amount
@@ -331,7 +331,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the settlement proposal target balance amount of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal target balance amount
@@ -346,7 +346,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the settlement proposal driip hash of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal driip hash
@@ -361,7 +361,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the settlement proposal driip type of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal driip type
@@ -376,7 +376,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the balance reward of the given wallet's settlement proposal
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The balance reward of the settlement proposal
@@ -391,7 +391,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the disqualification candidate type of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The candidate type of the settlement disqualification
@@ -406,7 +406,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the disqualification candidate hash of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The candidate hash of the settlement disqualification
@@ -421,7 +421,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Get the disqualification challenger of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The challenger of the settlement disqualification
@@ -437,7 +437,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Set settlement proposal end time property of the given wallet
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param expirationTime The end time value
     function setProposalExpirationTime(address wallet, address currencyCt, uint256 currencyId,
         uint256 expirationTime)
@@ -451,7 +451,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Set settlement proposal status property of the given wallet
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param status The status value
     function setProposalStatus(address wallet, address currencyCt, uint256 currencyId,
         SettlementTypesLib.Status status)
@@ -514,7 +514,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Disqualify the given wallet
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     function lockWallet(address wallet)
     public
     onlyDriipSettlementDispute
@@ -528,7 +528,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Gauge whether the wallet is (temporarily) locked
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @return true if wallet is locked, else false
     function isLockedWallet(address wallet)
     public
@@ -539,7 +539,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Add a disqualification instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param candidateHash The candidate hash
@@ -574,7 +574,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     }
 
     /// @notice Remove a disqualification instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function removeDisqualification(address wallet, address currencyCt, uint256 currencyId)
@@ -597,7 +597,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function startChallengeFromTradePrivate(address wallet, NahmiiTypesLib.Trade trade,
+    function _startChallengeFromTrade(address wallet, NahmiiTypesLib.Trade trade,
         int256 intendedStageAmount, int256 conjugateStageAmount, bool balanceReward)
     private
     onlySealedTrade(trade)
@@ -628,7 +628,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         challengeTradeHashIndicesByWallet[wallet].push(challengeTradeHashes.length);
     }
 
-    function startChallengeFromPaymentPrivate(address wallet, NahmiiTypesLib.Payment payment,
+    function _startChallengeFromPayment(address wallet, NahmiiTypesLib.Payment payment,
         int256 stageAmount, bool balanceReward)
     private
     onlySealedPayment(payment)

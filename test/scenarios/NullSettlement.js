@@ -214,7 +214,7 @@ module.exports = (glob) => {
         });
 
         describe('communityVoteUpdateDisabled()', () => {
-            it('should return value initialized', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersNullSettlement.communityVoteUpdateDisabled())
                     .should.be.false;
             });
