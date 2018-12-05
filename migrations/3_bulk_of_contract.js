@@ -127,7 +127,7 @@ module.exports = (deployer, network, accounts) => {
                 RevenueFund, SecurityBond, Validator
             ]);
             await deployer.link(MonetaryTypesLib, [
-                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, InUseCurrencyLib,
+                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, Hasher, InUseCurrencyLib,
                 MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
                 PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
