@@ -360,11 +360,7 @@ exports.hashOrderAsWallet = (order) => {
 };
 
 exports.hashOrderAsOperator = (order) => {
-    const walletSignatureHash = cryptography.hash(
-        {type: 'uint8', value: order.seals.wallet.signature.v},
-        order.seals.wallet.signature.r,
-        order.seals.wallet.signature.s
-    );
+    const walletSignatureHash = exports.hashSignature(order.seals.wallet.signature);
     const placementResidualsHash = cryptography.hash(
         order.placement.residuals.current,
         order.placement.residuals.previous
@@ -436,11 +432,7 @@ exports.hashPaymentAsWallet = (payment) => {
 };
 
 exports.hashPaymentAsOperator = (payment) => {
-    const walletSignatureHash = cryptography.hash(
-        {type: 'uint8', value: payment.seals.wallet.signature.v},
-        payment.seals.wallet.signature.r,
-        payment.seals.wallet.signature.s
-    );
+    const walletSignatureHash = exports.hashSignature(payment.seals.wallet.signature);
     const nonceHash = cryptography.hash(
         payment.nonce
     );
@@ -475,6 +467,14 @@ exports.hashPaymentRecipientPartyAsOperator = (recipient) => {
     const totalFeesHash = exports.hashOriginFigures(recipient.fees.total);
 
     return cryptography.hash(rootHash, balancesHash, totalFeesHash);
+};
+
+exports.hashSignature = (signature) => {
+    return cryptography.hash(
+        {type: 'uint8', value: signature.v},
+        signature.r,
+        signature.s
+    );
 };
 
 exports.hashFigure = (figure) => {
