@@ -59,6 +59,12 @@ contract TransactionTracker is Ownable, Servable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Add a transaction record of the given wallet, type, amount and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param amount The concerned amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function add(address wallet, bytes32 _type, int256 amount, address currencyCt,
         uint256 currencyId)
     public
@@ -76,6 +82,10 @@ contract TransactionTracker is Ownable, Servable {
         transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].push(index);
     }
 
+    /// @notice Get the number of transaction records for the given wallet and type
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @return The count of transaction records
     function count(address wallet, bytes32 _type)
     public
     view
@@ -84,6 +94,11 @@ contract TransactionTracker is Ownable, Servable {
         return transactionLogByWalletType[wallet][_type].records.length;
     }
 
+    /// @notice Get the transaction record for the given wallet and type by the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param index The concerned log index
+    /// @return The transaction record
     function getByIndex(address wallet, bytes32 _type, uint256 index)
     public
     view
@@ -96,6 +111,11 @@ contract TransactionTracker is Ownable, Servable {
         currencyId = entry.currencyId;
     }
 
+    /// @notice Get the transaction record for the given wallet and type by the given block number
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param _blockNumber The concerned block number
+    /// @return The transaction record
     function getByBlockNumber(address wallet, bytes32 _type, uint256 _blockNumber)
     public
     view
@@ -104,6 +124,12 @@ contract TransactionTracker is Ownable, Servable {
         return getByIndex(wallet, _type, _indexByBlockNumber(wallet, _type, _blockNumber));
     }
 
+    /// @notice Get the number of transaction records for the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of transaction records
     function countByCurrency(address wallet, bytes32 _type, address currencyCt,
         uint256 currencyId)
     public
@@ -113,6 +139,11 @@ contract TransactionTracker is Ownable, Servable {
         return transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length;
     }
 
+    /// @notice Get the transaction record for the given wallet, type and currency by the given index
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param index The concerned log index
+    /// @return The transaction record
     function getByCurrencyIndex(address wallet, bytes32 _type, address currencyCt,
         uint256 currencyId, uint256 index)
     public
@@ -126,6 +157,11 @@ contract TransactionTracker is Ownable, Servable {
         blockNumber = entry.blockNumber;
     }
 
+    /// @notice Get the transaction record for the given wallet, type and currency by the given block number
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The transaction type
+    /// @param _blockNumber The concerned block number
+    /// @return The transaction record
     function getByCurrencyBlockNumber(address wallet, bytes32 _type, address currencyCt,
         uint256 currencyId, uint256 _blockNumber)
     public
