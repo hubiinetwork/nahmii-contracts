@@ -344,7 +344,6 @@ exports.augmentPaymentSeals = async (payment, operatorSign, walletSign) => {
 
 exports.hashOrderAsWallet = (order) => {
     const rootHash = cryptography.hash(
-        order.nonce,
         order.wallet
     );
     const placementHash = cryptography.hash(
@@ -360,12 +359,15 @@ exports.hashOrderAsWallet = (order) => {
 };
 
 exports.hashOrderAsOperator = (order) => {
+    const rootHash = cryptography.hash(
+        order.nonce
+    );
     const walletSignatureHash = exports.hashSignature(order.seals.wallet.signature);
     const placementResidualsHash = cryptography.hash(
         order.placement.residuals.current,
         order.placement.residuals.previous
     );
-    return cryptography.hash(walletSignatureHash, placementResidualsHash);
+    return cryptography.hash(rootHash, walletSignatureHash, placementResidualsHash);
 };
 
 exports.hashTrade = (trade) => {
