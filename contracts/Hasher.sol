@@ -32,7 +32,7 @@ contract Hasher is Ownable {
     pure
     returns (bytes32)
     {
-        bytes32 rootHash = hashOrderRoot(order);
+        bytes32 rootHash = hashAddress(order.wallet);
         bytes32 placementHash = hashOrderPlacement(order.placement);
 
         return keccak256(abi.encodePacked(rootHash, placementHash));
@@ -43,10 +43,11 @@ contract Hasher is Ownable {
     pure
     returns (bytes32)
     {
+        bytes32 rootHash = hashUint256(order.nonce);
         bytes32 walletSignatureHash = hashSignature(order.seals.wallet.signature);
         bytes32 placementResidualsHash = hashCurrentPreviousInt256(order.placement.residuals);
 
-        return keccak256(abi.encodePacked(walletSignatureHash, placementResidualsHash));
+        return keccak256(abi.encodePacked(rootHash, walletSignatureHash, placementResidualsHash));
     }
 
     function hashTrade(NahmiiTypesLib.Trade trade)
@@ -87,17 +88,6 @@ contract Hasher is Ownable {
 
         return keccak256(abi.encodePacked(
                 walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash
-            ));
-    }
-
-    function hashOrderRoot(NahmiiTypesLib.Order order)
-    public
-    pure
-    returns (bytes32)
-    {
-        return keccak256(abi.encodePacked(
-                order.nonce,
-                order.wallet
             ));
     }
 
