@@ -3,6 +3,7 @@ const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Wallet, Contract} = require('ethers');
+const {address0} = require('../mocks');
 const Configuration = artifacts.require('Configuration');
 
 chai.use(chaiAsPromised);
@@ -659,6 +660,55 @@ module.exports = (glob) => {
                         (await ethersConfiguration.currencyPaymentMinimumFee((await provider.getBlockNumber()) + 1, currencyCt, currencyId))
                             ._bn.should.eq.BN(1e18.toString());
                         (await ethersConfiguration.currencyPaymentMinimumFeesCount(currencyCt, currencyId))
+                            ._bn.should.eq.BN(1);
+                    });
+                });
+            });
+
+            describe('feeCurrenciesCount()', () => {
+                it('should return the initial value', async () => {
+                    (await ethersConfiguration.feeCurrenciesCount(address0, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('feeCurrency()', () => {
+                it('should revert', async () => {
+                    ethersConfiguration.feeCurrency((await provider.getBlockNumber()) + 1, address0, 0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('setFeeCurrency()', () => {
+                describe('if called by non-operator', () => {
+                    it('should revert', async () => {
+                        web3Configuration.setFeeCurrency(
+                            (await provider.getBlockNumber()) + 1, address0, 0, address0, 0, {from: glob.user_a}
+                        ).should.be.rejected;
+                    });
+                });
+
+                describe('if called with block number below constraints', () => {
+                    it('should revert', async () => {
+                        web3Configuration.setFeeCurrency(
+                            await provider.getBlockNumber(), address0, 0, address0, 0
+                        ).should.be.rejected;
+                    });
+                });
+
+                describe('if within operational constraints', () => {
+                    it('should successfully set new value and emit event', async () => {
+                        const result = await web3Configuration.setFeeCurrency(
+                            (await provider.getBlockNumber()) + 1, address0, 0, address0, 0
+                        );
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('SetFeeCurrencyEvent');
+
+                        const feeCurrency = await ethersConfiguration.feeCurrency((await provider.getBlockNumber()) + 1, address0, 0);
+                        feeCurrency.ct.should.equal(address0);
+                        feeCurrency.id._bn.should.eq.BN(0);
+                        (await ethersConfiguration.feeCurrenciesCount(address0, 0))
                             ._bn.should.eq.BN(1);
                     });
                 });

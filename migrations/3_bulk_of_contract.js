@@ -8,6 +8,7 @@ const AccrualBenefactor = artifacts.require('AccrualBenefactor');
 const BalanceLib = artifacts.require('BalanceLib');
 const BalanceLogLib = artifacts.require('BalanceLogLib');
 const BalanceTracker = artifacts.require('BalanceTracker');
+const BlockNumbCurrenciesLib = artifacts.require('BlockNumbCurrenciesLib');
 const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
 const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
 const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
@@ -127,7 +128,7 @@ module.exports = (deployer, network, accounts) => {
                 RevenueFund, SecurityBond, Validator
             ]);
             await deployer.link(MonetaryTypesLib, [
-                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, Hasher, InUseCurrencyLib,
+                BlockNumbCurrenciesLib, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, Hasher, InUseCurrencyLib,
                 MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
                 PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
@@ -149,8 +150,12 @@ module.exports = (deployer, network, accounts) => {
                 ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
 
+            await execDeploy(ctl, 'BlockNumbCurrenciesLib', '', BlockNumbCurrenciesLib);
             await execDeploy(ctl, 'InUseCurrencyLib', '', InUseCurrencyLib);
 
+            await deployer.link(BlockNumbCurrenciesLib, [
+                Configuration
+            ]);
             await deployer.link(InUseCurrencyLib, [
                 BalanceLib, BalanceTracker, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
