@@ -16,6 +16,8 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {BlockNumbUintsLib} from "./BlockNumbUintsLib.sol";
 import {BlockNumbIntsLib} from "./BlockNumbIntsLib.sol";
 import {BlockNumbDisdIntsLib} from "./BlockNumbDisdIntsLib.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {BlockNumbCurrenciesLib} from "./BlockNumbCurrenciesLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
@@ -27,6 +29,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     using BlockNumbUintsLib for BlockNumbUintsLib.BlockNumbUints;
     using BlockNumbIntsLib for BlockNumbIntsLib.BlockNumbInts;
     using BlockNumbDisdIntsLib for BlockNumbDisdIntsLib.BlockNumbDisdInts;
+    using BlockNumbCurrenciesLib for BlockNumbCurrenciesLib.BlockNumbCurrencies;
 
     //
     // Constants
@@ -43,26 +46,28 @@ contract Configuration is Modifiable, Ownable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     OperationalMode public operationalMode = OperationalMode.Normal;
 
-    BlockNumbUintsLib.BlockNumbUints updateDelayBlocksByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints confirmationBlocksByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private updateDelayBlocksByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private confirmationBlocksByBlockNumber;
 
-    BlockNumbDisdIntsLib.BlockNumbDisdInts tradeMakerFeeByBlockNumber;
-    BlockNumbDisdIntsLib.BlockNumbDisdInts tradeTakerFeeByBlockNumber;
-    BlockNumbDisdIntsLib.BlockNumbDisdInts paymentFeeByBlockNumber;
-    mapping(address => mapping(uint256 => BlockNumbDisdIntsLib.BlockNumbDisdInts)) currencyPaymentFeeByBlockNumber;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts private tradeMakerFeeByBlockNumber;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts private tradeTakerFeeByBlockNumber;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts private paymentFeeByBlockNumber;
+    mapping(address => mapping(uint256 => BlockNumbDisdIntsLib.BlockNumbDisdInts)) private currencyPaymentFeeByBlockNumber;
 
-    BlockNumbIntsLib.BlockNumbInts tradeMakerMinimumFeeByBlockNumber;
-    BlockNumbIntsLib.BlockNumbInts tradeTakerMinimumFeeByBlockNumber;
-    BlockNumbIntsLib.BlockNumbInts paymentMinimumFeeByBlockNumber;
-    mapping(address => mapping(uint256 => BlockNumbIntsLib.BlockNumbInts)) currencyPaymentMinimumFeeByBlockNumber;
+    BlockNumbIntsLib.BlockNumbInts private tradeMakerMinimumFeeByBlockNumber;
+    BlockNumbIntsLib.BlockNumbInts private tradeTakerMinimumFeeByBlockNumber;
+    BlockNumbIntsLib.BlockNumbInts private paymentMinimumFeeByBlockNumber;
+    mapping(address => mapping(uint256 => BlockNumbIntsLib.BlockNumbInts)) private currencyPaymentMinimumFeeByBlockNumber;
 
-    BlockNumbUintsLib.BlockNumbUints walletLockTimeoutByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints cancelOrderChallengeTimeoutByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints settlementChallengeTimeoutByBlockNumber;
+    BlockNumbCurrenciesLib.BlockNumbCurrencies private feeCurrencies;
 
-    BlockNumbUintsLib.BlockNumbUints walletSettlementStakeFractionByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints operatorSettlementStakeFractionByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints fraudStakeFractionByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private walletLockTimeoutByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private cancelOrderChallengeTimeoutByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private settlementChallengeTimeoutByBlockNumber;
+
+    BlockNumbUintsLib.BlockNumbUints private walletSettlementStakeFractionByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private operatorSettlementStakeFractionByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private fraudStakeFractionByBlockNumber;
 
     uint256 public earliestSettlementBlockNumber;
     bool public earliestSettlementBlockNumberUpdateDisabled;
@@ -82,6 +87,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     event SetTradeTakerMinimumFeeEvent(uint256 fromBlockNumber, int256 nominal);
     event SetPaymentMinimumFeeEvent(uint256 fromBlockNumber, int256 nominal);
     event SetCurrencyPaymentMinimumFeeEvent(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal);
+    event SetFeeCurrencyEvent(uint256 fromBlockNumber, address referenceCurrencyCt, uint256 referenceCurrencyId,
+        address feeCurrencyCt, uint256 feeCurrencyId);
     event SetWalletLockTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
     event SetCancelOrderChallengeTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
     event SetSettlementChallengeTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
@@ -478,6 +485,54 @@ contract Configuration is Modifiable, Ownable, Servable {
     {
         currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].addEntry(fromBlockNumber, nominal);
         emit SetCurrencyPaymentMinimumFeeEvent(fromBlockNumber, currencyCt, currencyId, nominal);
+    }
+
+    /// @notice Get number of fee currencies for the given reference currency
+    /// @param currencyCt The address of the concerned reference currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned reference currency (0 for ETH and ERC20)
+    function feeCurrenciesCount(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return feeCurrencies.count(MonetaryTypesLib.Currency(currencyCt, currencyId));
+    }
+
+    /// @notice Get the fee currency for the given reference currency at given block number
+    /// @param blockNumber The concerned block number
+    /// @param currencyCt The address of the concerned reference currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned reference currency (0 for ETH and ERC20)
+    function feeCurrency(uint256 blockNumber, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (address ct, uint256 id)
+    {
+        MonetaryTypesLib.Currency storage _feeCurrency = feeCurrencies.currencyAt(
+            MonetaryTypesLib.Currency(currencyCt, currencyId), blockNumber
+        );
+        ct = _feeCurrency.ct;
+        id = _feeCurrency.id;
+    }
+
+    /// @notice Set the fee currency for the given reference currency at given block number
+    /// @param fromBlockNumber Block number from which the update applies
+    /// @param referenceCurrencyCt The address of the concerned reference currency contract (address(0) == ETH)
+    /// @param referenceCurrencyId The ID of the concerned reference currency (0 for ETH and ERC20)
+    /// @param feeCurrencyCt The address of the concerned fee currency contract (address(0) == ETH)
+    /// @param feeCurrencyId The ID of the concerned fee currency (0 for ETH and ERC20)
+    function setFeeCurrency(uint256 fromBlockNumber, address referenceCurrencyCt, uint256 referenceCurrencyId,
+        address feeCurrencyCt, uint256 feeCurrencyId)
+    public
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
+    {
+        feeCurrencies.addEntry(
+            fromBlockNumber,
+            MonetaryTypesLib.Currency(referenceCurrencyCt, referenceCurrencyId),
+            MonetaryTypesLib.Currency(feeCurrencyCt, feeCurrencyId)
+        );
+        emit SetFeeCurrencyEvent(fromBlockNumber, referenceCurrencyCt, referenceCurrencyId,
+            feeCurrencyCt, feeCurrencyId);
     }
 
     /// @notice Get the current value of wallet lock timeout
