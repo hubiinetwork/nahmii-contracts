@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {Beneficiary} from "../Beneficiary.sol";
@@ -16,20 +16,15 @@ import {Beneficiary} from "../Beneficiary.sol";
 @notice Mocked implementation of client fund contract
 */
 contract MockedClientFund {
-
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct LockUnlock {
-        address lockedWallet;
-        address lockerWallet;
-    }
-
     struct Update {
         address sourceWallet;
         address targetWallet;
         MonetaryTypesLib.Figure figure;
         string standard;
+        uint256 blockNumber;
     }
 
     struct BalanceLogEntry {
@@ -40,13 +35,9 @@ contract MockedClientFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    LockUnlock[] public locks;
-    LockUnlock[] public unlocks;
-
     Update[] public settledBalanceUpdates;
     Update[] public stages;
     Update[] public beneficiaryTransfers;
-    BalanceLogEntry[] public activeBalanceLogEntries;
 
     //
     // Events
@@ -59,47 +50,16 @@ contract MockedClientFund {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
-        locks.length = 0;
-        unlocks.length = 0;
-
+    function _reset()
+    public
+    {
         settledBalanceUpdates.length = 0;
         stages.length = 0;
         beneficiaryTransfers.length = 0;
-        activeBalanceLogEntries.length = 0;
     }
 
-    function lockBalancesByProxy(address sourceWallet, address targetWallet)
-    public
-    {
-        locks.push(LockUnlock(sourceWallet, targetWallet));
-        emit LockBalancesEvent(sourceWallet, targetWallet);
-    }
-
-    function unlockBalancesByProxy(address wallet)
-    public
-    {
-        unlocks.push(LockUnlock(wallet, address(0)));
-        emit UnlockBalancesEvent(wallet, address(0));
-    }
-
-    function lockedWalletsCount()
-    public
-    view
-    returns (uint256)
-    {
-        return locks.length;
-    }
-
-    function _unlocksCount()
-    public
-    view
-    returns (uint256)
-    {
-        return unlocks.length;
-    }
-
-    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 blockNumber)
     public
     {
         settledBalanceUpdates.push(
@@ -110,7 +70,8 @@ contract MockedClientFund {
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
-                ""
+                "",
+                blockNumber
             )
         );
         emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
@@ -147,7 +108,8 @@ contract MockedClientFund {
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
-                ""
+                "",
+                0
             )
         );
         emit StageEvent(wallet, amount, currencyCt, currencyId);
@@ -175,19 +137,20 @@ contract MockedClientFund {
         );
     }
 
-    function transferToBeneficiary(Beneficiary beneficiary, int256 amount,
+    function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
         address currencyCt, uint256 currencyId, string standard)
     public
     {
         beneficiaryTransfers.push(
             Update(
-                address(0),
+                wallet,
                 address(beneficiary),
                 MonetaryTypesLib.Figure(
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
-                standard
+                standard,
+                0
             )
         );
     }
@@ -213,37 +176,5 @@ contract MockedClientFund {
         beneficiaryTransfers[index].figure.currency.id,
         beneficiaryTransfers[index].standard
         );
-    }
-
-    function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
-    public
-    view
-    returns (uint256)
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
-        return activeBalanceLogEntries.length;
-    }
-
-    function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
-    public
-    view
-    returns (int256 amount, uint256 blockNumber)
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
-        require(index == index);
-        amount = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].amount;
-        blockNumber = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].blockNumber;
-    }
-
-    function _addActiveBalanceLogEntry(int256 amount, uint256 blockNumber)
-    public
-    {
-        activeBalanceLogEntries.push(BalanceLogEntry(amount, blockNumber));
     }
 }

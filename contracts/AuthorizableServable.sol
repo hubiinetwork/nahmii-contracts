@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Servable} from "./Servable.sol";
 
@@ -32,7 +32,7 @@ contract AuthorizableServable is Servable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event AuthorizeInitiallyRegisteredServiceEvent(address wallet, address service);
+    event AuthorizeInitialServiceEvent(address wallet, address service);
     event AuthorizeRegisteredServiceEvent(address wallet, address service);
     event AuthorizeRegisteredServiceActionEvent(address wallet, address service, string action);
     event UnauthorizeRegisteredServiceEvent(address wallet, address service);
@@ -44,7 +44,7 @@ contract AuthorizableServable is Servable {
     /// @notice Add service to initial whitelist of services
     /// @dev The service must be registered already
     /// @param service The address of the concerned registered service
-    function authorizeInitiallyRegisteredService(address service)
+    function authorizeInitialService(address service)
     public
     onlyDeployer
     notNullOrThisAddress(service)
@@ -59,7 +59,7 @@ contract AuthorizableServable is Servable {
         initialServiceAuthorizedMap[service] = true;
 
         // Emit event
-        emit AuthorizeInitiallyRegisteredServiceEvent(msg.sender, service);
+        emit AuthorizeInitialServiceEvent(msg.sender, service);
     }
 
     /// @notice Disable further initial authorization of services
@@ -76,7 +76,6 @@ contract AuthorizableServable is Servable {
     /// @param service The address of the concerned registered service
     function authorizeRegisteredService(address service)
     public
-    notDeployer
     notNullOrThisAddress(service)
     {
         require(msg.sender != service);
@@ -99,7 +98,6 @@ contract AuthorizableServable is Servable {
     /// @param service The address of the concerned registered service
     function unauthorizeRegisteredService(address service)
     public
-    notDeployer
     notNullOrThisAddress(service)
     {
         require(msg.sender != service);
@@ -131,9 +129,6 @@ contract AuthorizableServable is Servable {
     view
     returns (bool)
     {
-        if (service == wallet)
-            return false;
-
         return isRegisteredActiveService(service) &&
         (isInitialServiceAuthorizedForWallet(service, wallet) || serviceWalletAuthorizedMap[service][wallet]);
     }
@@ -144,7 +139,6 @@ contract AuthorizableServable is Servable {
     /// @param action The concerned service action
     function authorizeRegisteredServiceAction(address service, string action)
     public
-    notDeployerOrOperator
     notNullOrThisAddress(service)
     {
         require(msg.sender != service);
@@ -175,7 +169,6 @@ contract AuthorizableServable is Servable {
     /// @param action The concerned service action
     function unauthorizeRegisteredServiceAction(address service, string action)
     public
-    notDeployerOrOperator
     notNullOrThisAddress(service)
     {
         require(msg.sender != service);
@@ -205,9 +198,6 @@ contract AuthorizableServable is Servable {
     view
     returns (bool)
     {
-        if (service == wallet)
-            return false;
-
         bytes32 actionHash = hashString(action);
 
         return isEnabledServiceAction(service, action) &&

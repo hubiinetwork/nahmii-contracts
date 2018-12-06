@@ -570,13 +570,13 @@ contract('Smart contract checks', function () {
     // -------------------------------------------------------------------------
 
     require('./scenarios/NahmiiToken')(glob);
+    require('./scenarios/AuthorizableServable')(glob);
+    require('./scenarios/BalanceTracker')(glob);
+    require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/ClientFund')(glob);
-    require('./scenarios/Hasher')(glob);
-    require('./scenarios/Validator')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/Configuration')(glob);
     require('./scenarios/DriipSettlement')(glob);
-    require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/DriipSettlementChallenge')(glob);
     require('./scenarios/DriipSettlementDispute')(glob);
     require('./scenarios/ERC20TransferController')(glob);
@@ -593,6 +593,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
+    require('./scenarios/Hasher')(glob);
     require('./scenarios/NullSettlement')(glob);
     require('./scenarios/NullSettlementChallenge')(glob);
     require('./scenarios/NullSettlementDispute')(glob);
@@ -600,7 +601,9 @@ contract('Smart contract checks', function () {
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/Servable')(glob);
     require('./scenarios/SignerManager')(glob);
-    require('./scenarios/AuthorizableServable')(glob);
-    require('./scenarios/TokenHolderRevenueFund')(glob);
     require('./scenarios/PartnerFund')(glob);
+    require('./scenarios/TokenHolderRevenueFund')(glob);
+    require('./scenarios/TransactionTracker')(glob);
+    require('./scenarios/Validator')(glob);
+    require('./scenarios/WalletLocker')(glob);
 });

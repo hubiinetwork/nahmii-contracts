@@ -87,7 +87,7 @@ module.exports = (glob) => {
             });
 
             describe('setUpdateDelayBlocks()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setUpdateDelayBlocks(
                             (await provider.getBlockNumber()) + 1, 1, {from: glob.user_a}
@@ -135,7 +135,7 @@ module.exports = (glob) => {
             });
 
             describe('setConfirmationBlocks()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setConfirmationBlocks(
                             (await provider.getBlockNumber()) + 1, 1, {from: glob.user_a}
@@ -183,7 +183,7 @@ module.exports = (glob) => {
             });
 
             describe('setTradeMakerFee()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setTradeMakerFee(
                             (await provider.getBlockNumber()) + 1, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}
@@ -239,7 +239,7 @@ module.exports = (glob) => {
             });
 
             describe('setTradeTakerFee()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setTradeTakerFee(
                             (await provider.getBlockNumber()) + 1, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}
@@ -295,7 +295,7 @@ module.exports = (glob) => {
             });
 
             describe('setPaymentFee()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setPaymentFee(
                             (await provider.getBlockNumber()) + 1, 1e18, [1, 10], [1e17, 2e17], {from: glob.user_a}
@@ -402,7 +402,7 @@ module.exports = (glob) => {
                     currencyId = 0;
                 });
 
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setCurrencyPaymentFee(
                             (await provider.getBlockNumber()) + 1, currencyCt, currencyId, 1e15, [1, 10], [1e17, 2e17], {from: glob.user_a}
@@ -452,7 +452,7 @@ module.exports = (glob) => {
             });
 
             describe('setTradeMakerMinimumFee()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setTradeMakerMinimumFee(
                             (await provider.getBlockNumber()) + 1, 1e14, {from: glob.user_a}
@@ -499,7 +499,7 @@ module.exports = (glob) => {
             });
 
             describe('setTradeTakerMinimumFee()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setTradeTakerMinimumFee(
                             (await provider.getBlockNumber()) + 1, 1e14, {from: glob.user_a}
@@ -546,7 +546,7 @@ module.exports = (glob) => {
             });
 
             describe('setPaymentMinimumFee()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setPaymentMinimumFee(
                             (await provider.getBlockNumber()) + 1, 1e14, {from: glob.user_a}
@@ -631,7 +631,7 @@ module.exports = (glob) => {
                     currencyId = 0;
                 });
 
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setCurrencyPaymentMinimumFee(
                             (await provider.getBlockNumber()) + 1, currencyCt, currencyId, 1e14, {from: glob.user_a}
@@ -672,7 +672,7 @@ module.exports = (glob) => {
             });
 
             describe('setWalletLockTimeout()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setWalletLockTimeout(
                             (await provider.getBlockNumber()) + 1, 100, {from: glob.user_a}
@@ -701,7 +701,7 @@ module.exports = (glob) => {
             });
 
             describe('setCancelOrderChallengeTimeout()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setCancelOrderChallengeTimeout(
                             (await provider.getBlockNumber()) + 1, 100, {from: glob.user_a}
@@ -730,7 +730,7 @@ module.exports = (glob) => {
             });
 
             describe('setSettlementChallengeTimeout()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setSettlementChallengeTimeout(
                             (await provider.getBlockNumber()) + 1, 100, {from: glob.user_a}
@@ -761,7 +761,7 @@ module.exports = (glob) => {
             });
 
             describe('setWalletSettlementStakeFraction()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setWalletSettlementStakeFraction((await provider.getBlockNumber()) + 1, 1e18, {from: glob.user_a})
                             .should.be.rejected;
@@ -789,7 +789,7 @@ module.exports = (glob) => {
             });
 
             describe('setOperatorSettlementStakeFraction()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setOperatorSettlementStakeFraction((await provider.getBlockNumber()) + 1, 1e18, {from: glob.user_a})
                             .should.be.rejected;
@@ -817,7 +817,7 @@ module.exports = (glob) => {
             });
 
             describe('setFraudStakeFraction()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setFraudStakeFraction((await provider.getBlockNumber()) + 1, 1e18, {from: glob.user_a})
                             .should.be.rejected;
@@ -845,7 +845,7 @@ module.exports = (glob) => {
             });
 
             describe('setEarliestSettlementBlockNumber()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.setEarliestSettlementBlockNumber(1000, {from: glob.user_a})
                             .should.be.rejected;
@@ -873,7 +873,7 @@ module.exports = (glob) => {
             });
 
             describe('disableEarliestSettlementBlockNumberUpdate()', () => {
-                describe('if called by non-deployer', () => {
+                describe('if called by non-operator', () => {
                     it('should revert', async () => {
                         web3Configuration.disableEarliestSettlementBlockNumberUpdate({from: glob.user_a})
                             .should.be.rejected;

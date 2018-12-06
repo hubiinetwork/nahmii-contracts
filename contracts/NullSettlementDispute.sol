@@ -6,14 +6,14 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -28,7 +28,7 @@ import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 @title NullSettlementDispute
 @notice The workhorse of null settlement challenges, utilized by NullSettlementChallenge
 */
-contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, ClientFundable,
+contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
 FraudChallengable, CancelOrdersChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
@@ -123,7 +123,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
-            clientFund.lockBalancesByProxy(order.wallet, challenger);
+            walletLocker.lockByProxy(order.wallet, challenger);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
@@ -202,7 +202,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
-            clientFund.lockBalancesByProxy(wallet, challenger);
+            walletLocker.lockByProxy(wallet, challenger);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
@@ -264,7 +264,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(wallet, payment.currency.ct, payment.currency.id))
-            clientFund.lockBalancesByProxy(wallet, challenger);
+            walletLocker.lockByProxy(wallet, challenger);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 

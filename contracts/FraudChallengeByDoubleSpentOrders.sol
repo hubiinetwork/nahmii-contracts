@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -43,14 +43,9 @@ SecurityBondable {
     function challenge(NahmiiTypesLib.Trade trade1, NahmiiTypesLib.Trade trade2)
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedTrade(trade1)
     onlySealedTrade(trade2)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(securityBond != address(0));
-
         bool doubleSpentBuyOrder = trade1.buyer.order.hashes.operator == trade2.buyer.order.hashes.operator;
         bool doubleSpentSellOrder = trade1.seller.order.hashes.operator == trade2.seller.order.hashes.operator;
 

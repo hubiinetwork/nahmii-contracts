@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 
@@ -73,7 +73,7 @@ contract SignerManager is Ownable {
     /// @param newSigner The address of the signer to register
     function registerSigner(address newSigner)
     public
-    onlyDeployer
+    onlyOperator
     notNullOrThisAddress(newSigner)
     {
         if (0 == signerIndicesMap[newSigner]) {

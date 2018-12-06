@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Benefactor} from "./Benefactor.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -22,8 +22,8 @@ contract AccrualBenefactor is Benefactor {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => int256) internal beneficiaryFractionMap;
-    int256 internal totalBeneficiaryFraction;
+    mapping(address => int256) private _beneficiaryFractionMap;
+    int256 public totalBeneficiaryFraction;
 
     //
     // Events
@@ -34,18 +34,33 @@ contract AccrualBenefactor is Benefactor {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
+    /// @notice Register the given beneficiary for the entirety fraction
+    /// @param beneficiary Address of beneficiary to be registered
+    function registerBeneficiary(address beneficiary)
+    public
+    onlyDeployer
+    notNullAddress(beneficiary)
+    returns (bool)
+    {
         return registerFractionalBeneficiary(beneficiary, ConstantsLib.PARTS_PER());
     }
 
-    function registerFractionalBeneficiary(address beneficiary, int256 fraction) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
+    /// @notice Register the given beneficiary for the given fraction
+    /// @param beneficiary Address of beneficiary to be registered
+    /// @param fraction Fraction of benefits to be given
+    function registerFractionalBeneficiary(address beneficiary, int256 fraction)
+    public
+    onlyDeployer
+    notNullAddress(beneficiary)
+    returns (bool)
+    {
         require(fraction > 0);
         require(totalBeneficiaryFraction.add(fraction) <= ConstantsLib.PARTS_PER());
 
         if (!super.registerBeneficiary(beneficiary))
             return false;
 
-        beneficiaryFractionMap[beneficiary] = fraction;
+        _beneficiaryFractionMap[beneficiary] = fraction;
         totalBeneficiaryFraction = totalBeneficiaryFraction.add(fraction);
 
         // Emit event
@@ -54,12 +69,19 @@ contract AccrualBenefactor is Benefactor {
         return true;
     }
 
-    function deregisterBeneficiary(address beneficiary) public onlyDeployer notNullAddress(beneficiary) returns (bool) {
+    /// @notice Deregister the given beneficiary
+    /// @param beneficiary Address of beneficiary to be deregistered
+    function deregisterBeneficiary(address beneficiary)
+    public
+    onlyDeployer
+    notNullAddress(beneficiary)
+    returns (bool)
+    {
         if (!super.deregisterBeneficiary(beneficiary))
             return false;
 
-        totalBeneficiaryFraction = totalBeneficiaryFraction.sub(beneficiaryFractionMap[beneficiary]);
-        beneficiaryFractionMap[beneficiary] = 0;
+        totalBeneficiaryFraction = totalBeneficiaryFraction.sub(_beneficiaryFractionMap[beneficiary]);
+        _beneficiaryFractionMap[beneficiary] = 0;
 
         // Emit event
         emit DeregisterAccrualBeneficiaryEvent(beneficiary);
@@ -67,11 +89,14 @@ contract AccrualBenefactor is Benefactor {
         return true;
     }
 
-    function getBeneficiaryFraction(address beneficiary) public view returns (int256) {
-        return beneficiaryFractionMap[beneficiary];
-    }
-
-    function getTotalBeneficiaryFraction() public view returns (int256) {
-        return totalBeneficiaryFraction;
+    /// @notice Get the fraction of benefits that is granted the given beneficiary
+    /// @param beneficiary Address of beneficiary
+    /// @return The beneficiary's fraction
+    function beneficiaryFraction(address beneficiary)
+    public
+    view
+    returns (int256)
+    {
+        return _beneficiaryFractionMap[beneficiary];
     }
 }

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
@@ -31,7 +31,9 @@ contract FraudChallengable is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the fraud challenge contract
     /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function setFraudChallenge(FraudChallenge newFraudChallenge) public onlyDeployer
+    function setFraudChallenge(FraudChallenge newFraudChallenge)
+    public
+    onlyDeployer
     notNullAddress(newFraudChallenge)
     notSameAddresses(newFraudChallenge, fraudChallenge)
     {

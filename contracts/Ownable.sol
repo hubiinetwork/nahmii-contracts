@@ -6,14 +6,14 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Modifiable} from "./Modifiable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
 @title Ownable
-@notice A contract that has an owner property
+@notice A modifiable that has ownership roles
 */
 contract Ownable is Modifiable, SelfDestructible {
     //
@@ -40,7 +40,11 @@ contract Ownable is Modifiable, SelfDestructible {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Return the address that is able to initiate self-destruction
-    function destructor() public view returns (address) {
+    function destructor()
+    public
+    view
+    returns (address)
+    {
         return deployer;
     }
 
@@ -80,20 +84,32 @@ contract Ownable is Modifiable, SelfDestructible {
 
     /// @notice Gauge whether message sender is deployer or not
     /// @return true if msg.sender is deployer, else false
-    function isDeployer() internal view returns (bool) {
+    function isDeployer()
+    internal
+    view
+    returns (bool)
+    {
         return msg.sender == deployer;
     }
 
     /// @notice Gauge whether message sender is operator or not
     /// @return true if msg.sender is operator, else false
-    function isOperator() internal view returns (bool) {
+    function isOperator()
+    internal
+    view
+    returns (bool)
+    {
         return msg.sender == operator;
     }
 
     /// @notice Gauge whether message sender is operator or deployer on the one hand, or none of these on these on
     /// on the other hand
     /// @return true if msg.sender is operator, else false
-    function isDeployerOrOperator() internal view returns (bool) {
+    function isDeployerOrOperator()
+    internal
+    view
+    returns (bool)
+    {
         return isDeployer() || isOperator();
     }
 

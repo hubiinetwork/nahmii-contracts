@@ -9,16 +9,18 @@
   "scripts": {
     "build": "truffle compile",
     "build:all": "truffle compile --all",
-    "test": "concurrently -r -s first --kill-others 'ganache-cli -e 1000 >/dev/null' 'truffle compile && truffle test'",
     "deploy": "npm run deploy:test",
-    "deploy:test": "truffle migrate --network testnet",
-    "deploy:main": "truffle migrate --network mainnet",
-    "deploy:ganache": "truffle compile && truffle migrate --network ganache",
     "deploy:ci": "truffle migrate",
+    "deploy:ganache": "truffle compile && truffle migrate --network ganache",
+    "deploy:main": "truffle migrate --network mainnet",
+    "deploy:test": "truffle migrate --network testnet",
+    "docs": "soldoc",
     "exec:script:mainnet": "truffle compile && truffle exec scripts/common/script_template.js --network mainnet-infura",
     "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
-    "docs": "soldoc",
-    "version:compiler": "solcjs --version"
+    "test": "concurrently -r -s first --kill-others 'ganache-cli -e 1000 >/dev/null' 'truffle compile && truffle test'",
+    "test:ganache": "truffle compile && truffle test --ganache",
+    "version:compiler": "solcjs --version",
+    "version:truffle": "truffle version"
   },
   "author": "Hubii",
   "license": "LGPL-3.0",
@@ -28,12 +30,13 @@
   },
   "dependencies": {
     "async": "^2.6.0",
-    "augmented-keccak256": "git+https://github.com/CoinFabrik/augmented-keccak256.git",
     "ethers": "^3.0.7",
     "ganache-cli": "^6.1.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.0.0",
-    "truffle": "^4.1.11",
+    "solc": "^0.4.25",
+    "solidity-util": "github:willitscale/solidity-util",
+    "truffle": "^4.1.14",
     "truffle-hdwallet-provider": "0.0.6"
   },
   "devDependencies": {

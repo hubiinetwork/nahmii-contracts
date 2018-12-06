@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 /**
 @title TransferController
@@ -16,34 +16,57 @@ contract TransferController {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CurrencyTransferred(address from, address to, uint256 amount, address currencyCt, uint256 currencyId);
+    event CurrencyTransferred(address from, address to, uint256 amount,
+        address currencyCt, uint256 currencyId);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function isTyped() public view returns(bool);
-    function isQuantifiable() public view returns(bool);
+    function isTyped()
+    public
+    view
+    returns (bool);
+
+    function isQuantifiable()
+    public
+    view
+    returns (bool);
 
     /// @notice MUST be called with DELEGATECALL
-    function receive(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public;
+    function receive(address from, address to, uint256 amount, address currencyCt, uint256 currencyId)
+    public;
 
     /// @notice MUST be called with DELEGATECALL
-    function approve(address to, uint256 amount, address currencyCt, uint256 currencyId) public;
+    function approve(address to, uint256 amount, address currencyCt, uint256 currencyId)
+    public;
 
     /// @notice MUST be called with DELEGATECALL
-    function dispatch(address from, address to, uint256 amount, address currencyCt, uint256 currencyId) public;
+    function dispatch(address from, address to, uint256 amount, address currencyCt, uint256 currencyId)
+    public;
 
     //----------------------------------------
 
-    function getReceiveSignature() public pure returns (bytes4) {
+    function getReceiveSignature()
+    public
+    pure
+    returns (bytes4)
+    {
         return bytes4(keccak256("receive(address,address,uint256,address,uint256)"));
     }
 
-    function getApproveSignature() public pure returns (bytes4) {
+    function getApproveSignature()
+    public
+    pure
+    returns (bytes4)
+    {
         return bytes4(keccak256("approve(address,uint256,address,uint256)"));
     }
 
-    function getDispatchSignature() public pure returns (bytes4) {
+    function getDispatchSignature()
+    public
+    pure
+    returns (bytes4)
+    {
         return bytes4(keccak256("dispatch(address,address,uint256,address,uint256)"));
     }
 }

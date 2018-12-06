@@ -105,10 +105,13 @@ exports.mockTrade = async (operator, params) => {
                 },
                 total: [
                     {
-                        amount: utils.parseUnits('0.2', 18),
-                        currency: {
-                            ct: '0x0000000000000000000000000000000000000001',
-                            id: utils.bigNumberify(0)
+                        originId: utils.bigNumberify(0),
+                        figure: {
+                            amount: utils.parseUnits('0.2', 18),
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000001',
+                                id: utils.bigNumberify(0)
+                            }
                         }
                     }
                 ]
@@ -150,10 +153,13 @@ exports.mockTrade = async (operator, params) => {
                 },
                 total: [
                     {
-                        amount: utils.parseUnits('0.0004', 18),
-                        currency: {
-                            ct: '0x0000000000000000000000000000000000000002',
-                            id: utils.bigNumberify(0)
+                        originId: utils.bigNumberify(0),
+                        figure: {
+                            amount: utils.parseUnits('0.0004', 18),
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000002',
+                                id: utils.bigNumberify(0)
+                            }
                         }
                     }
                 ]
@@ -206,10 +212,13 @@ exports.mockPayment = async (operator, params) => {
                 },
                 total: [
                     {
-                        amount: utils.parseUnits('0.2', 18),
-                        currency: {
-                            ct: '0x0000000000000000000000000000000000000001',
-                            id: utils.bigNumberify(0)
+                        originId: utils.bigNumberify(0),
+                        figure: {
+                            amount: utils.parseUnits('0.2', 18),
+                            currency: {
+                                ct: '0x0000000000000000000000000000000000000001',
+                                id: utils.bigNumberify(0)
+                            }
                         }
                     }
                 ]
@@ -334,8 +343,7 @@ exports.augmentPaymentSeals = async (payment, operatorSign, walletSign) => {
 };
 
 exports.hashOrderAsWallet = (order) => {
-    const globalHash = cryptography.hash(
-        order.nonce,
+    const rootHash = cryptography.hash(
         order.wallet
     );
     const placementHash = cryptography.hash(
@@ -347,24 +355,23 @@ exports.hashOrderAsWallet = (order) => {
         order.placement.currencies.conjugate.id,
         order.placement.rate
     );
-    return cryptography.hash(globalHash, placementHash);
+    return cryptography.hash(rootHash, placementHash);
 };
 
 exports.hashOrderAsOperator = (order) => {
-    const walletSignatureHash = cryptography.hash(
-        {type: 'uint8', value: order.seals.wallet.signature.v},
-        order.seals.wallet.signature.r,
-        order.seals.wallet.signature.s
+    const rootHash = cryptography.hash(
+        order.nonce
     );
+    const walletSignatureHash = exports.hashSignature(order.seals.wallet.signature);
     const placementResidualsHash = cryptography.hash(
         order.placement.residuals.current,
         order.placement.residuals.previous
     );
-    return cryptography.hash(walletSignatureHash, placementResidualsHash);
+    return cryptography.hash(rootHash, walletSignatureHash, placementResidualsHash);
 };
 
 exports.hashTrade = (trade) => {
-    const globalHash = cryptography.hash(
+    const rootHash = cryptography.hash(
         trade.nonce,
         trade.amount,
         trade.currencies.intended.ct,
@@ -373,55 +380,41 @@ exports.hashTrade = (trade) => {
         trade.currencies.conjugate.id,
         trade.rate
     );
-    const buyerHash = cryptography.hash(
-        trade.buyer.nonce,
-        trade.buyer.wallet,
-        // TODO Consider adding 'trade.buyer.rollingVolume' and 'trade.buyer.liquidityRole' to hash
-        // trade.buyer.rollingVolume,
-        // {type: 'uint8', value: trade.buyer.liquidityRole},
-        trade.buyer.order.hashes.wallet,
-        trade.buyer.order.hashes.operator,
-        trade.buyer.order.amount,
-        trade.buyer.order.residuals.current,
-        trade.buyer.order.residuals.previous,
-        trade.buyer.balances.intended.current,
-        trade.buyer.balances.intended.previous,
-        trade.buyer.balances.conjugate.current,
-        trade.buyer.balances.conjugate.previous,
-        trade.buyer.fees.single.amount,
-        trade.buyer.fees.single.currency.ct,
-        trade.buyer.fees.single.currency.id
-        // TODO Consider adding dynamic size 'trade.buyer.fees.total' to hash
-        // trade.buyer.fees.total
-    );
-    const sellerHash = cryptography.hash(
-        trade.seller.nonce,
-        trade.seller.wallet,
-        // TODO Consider adding 'trade.seller.rollingVolume' and 'trade.seller.liquidityRole' to hash
-        // trade.seller.rollingVolume,
-        // {type: 'uint8', value: trade.seller.liquidityRole},
-        trade.seller.order.hashes.wallet,
-        trade.seller.order.hashes.operator,
-        trade.seller.order.amount,
-        trade.seller.order.residuals.current,
-        trade.seller.order.residuals.previous,
-        trade.seller.balances.intended.current,
-        trade.seller.balances.intended.previous,
-        trade.seller.balances.conjugate.current,
-        trade.seller.balances.conjugate.previous,
-        trade.seller.fees.single.amount,
-        trade.seller.fees.single.currency.ct,
-        trade.seller.fees.single.currency.id
-        // TODO Consider adding dynamic size 'trade.seller.fees.total' to hash
-        // trade.seller.fees.total
-    );
+    const buyerHash = exports.hashTradeParty(trade.buyer);
+    const sellerHash = exports.hashTradeParty(trade.seller);
     const transfersHash = cryptography.hash(
         trade.transfers.intended.single,
         trade.transfers.intended.total,
         trade.transfers.conjugate.single,
         trade.transfers.conjugate.total
     );
-    return cryptography.hash(globalHash, buyerHash, sellerHash, transfersHash);
+    return cryptography.hash(rootHash, buyerHash, sellerHash, transfersHash);
+};
+
+exports.hashTradeParty = (tradeParty) => {
+    const rootHash = cryptography.hash(
+        tradeParty.nonce,
+        tradeParty.wallet,
+        tradeParty.rollingVolume,
+        {type: 'uint8', value: tradeParty.liquidityRole}
+    );
+    const orderHash = cryptography.hash(
+        tradeParty.order.hashes.wallet,
+        tradeParty.order.hashes.operator,
+        tradeParty.order.amount,
+        tradeParty.order.residuals.current,
+        tradeParty.order.residuals.previous
+    );
+    const balancesHash = cryptography.hash(
+        tradeParty.balances.intended.current,
+        tradeParty.balances.intended.previous,
+        tradeParty.balances.conjugate.current,
+        tradeParty.balances.conjugate.previous
+    );
+    const singleFeeHash = exports.hashFigure(tradeParty.fees.single);
+    const totalFeesHash = exports.hashOriginFigures(tradeParty.fees.total);
+
+    return cryptography.hash(rootHash, orderHash, balancesHash, singleFeeHash, totalFeesHash);
 };
 
 exports.hashPaymentAsWallet = (payment) => {
@@ -441,37 +434,71 @@ exports.hashPaymentAsWallet = (payment) => {
 };
 
 exports.hashPaymentAsOperator = (payment) => {
-    const walletSignatureHash = cryptography.hash(
-        {type: 'uint8', value: payment.seals.wallet.signature.v},
-        payment.seals.wallet.signature.r,
-        payment.seals.wallet.signature.s
-    );
+    const walletSignatureHash = exports.hashSignature(payment.seals.wallet.signature);
     const nonceHash = cryptography.hash(
         payment.nonce
     );
-    const senderHash = cryptography.hash(
-        payment.sender.nonce,
-        payment.sender.balances.current,
-        payment.sender.balances.previous,
-        payment.sender.fees.single.amount,
-        payment.sender.fees.single.currency.ct,
-        payment.sender.fees.single.currency.id
-        // TODO Consider adding dynamic size 'payment.sender.fees.total' to operator hash
-        // payment.sender.fees.total
-    );
-    const recipientHash = cryptography.hash(
-        payment.recipient.nonce,
-        payment.recipient.balances.current,
-        payment.recipient.balances.previous
-        // TODO Consider adding dynamic size 'payment.recipient.fees.total' to operator hash
-        // payment.recipient.fees.total
-    );
+    const senderHash = exports.hashPaymentSenderPartyAsOperator(payment.sender);
+    const recipientHash = exports.hashPaymentRecipientPartyAsOperator(payment.recipient);
     const transfersHash = cryptography.hash(
         payment.transfers.single,
         payment.transfers.total
     );
 
     return cryptography.hash(walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash);
+};
+
+exports.hashPaymentSenderPartyAsOperator = (sender) => {
+    const rootHash = cryptography.hash(sender.nonce);
+    const balancesHash = cryptography.hash(
+        sender.balances.current,
+        sender.balances.previous
+    );
+    const singleFeeHash = exports.hashFigure(sender.fees.single);
+    const totalFeesHash = exports.hashOriginFigures(sender.fees.total);
+
+    return cryptography.hash(rootHash, balancesHash, singleFeeHash, totalFeesHash);
+};
+
+exports.hashPaymentRecipientPartyAsOperator = (recipient) => {
+    const rootHash = cryptography.hash(recipient.nonce);
+    const balancesHash = cryptography.hash(
+        recipient.balances.current,
+        recipient.balances.previous
+    );
+    const totalFeesHash = exports.hashOriginFigures(recipient.fees.total);
+
+    return cryptography.hash(rootHash, balancesHash, totalFeesHash);
+};
+
+exports.hashSignature = (signature) => {
+    return cryptography.hash(
+        {type: 'uint8', value: signature.v},
+        signature.r,
+        signature.s
+    );
+};
+
+exports.hashFigure = (figure) => {
+    return cryptography.hash(
+        figure.amount,
+        figure.currency.ct,
+        figure.currency.id
+    );
+};
+
+exports.hashOriginFigures = (originFigures) => {
+    let hash = 0;
+    for (let i = 0; i < originFigures.length; i++) {
+        hash = cryptography.hash(
+            hash,
+            originFigures[i].originId,
+            originFigures[i].figure.amount,
+            originFigures[i].figure.currency.ct,
+            originFigures[i].figure.currency.id
+        );
+    }
+    return hash;
 };
 
 exports.ethutilToStdSig = (sig) => {

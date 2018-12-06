@@ -6,10 +6,11 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
@@ -26,82 +27,91 @@ contract Hasher is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function hashOrderAsWallet(NahmiiTypesLib.Order order) public pure returns (bytes32) {
-        bytes32 globalHash = hashOrderGlobalData(order);
-        bytes32 placementHash = hashOrderPlacementData(order);
+    function hashOrderAsWallet(NahmiiTypesLib.Order order)
+    public
+    pure
+    returns (bytes32)
+    {
+        bytes32 rootHash = hashAddress(order.wallet);
+        bytes32 placementHash = hashOrderPlacement(order.placement);
 
-        return keccak256(abi.encodePacked(globalHash, placementHash));
+        return keccak256(abi.encodePacked(rootHash, placementHash));
     }
 
-    function hashOrderAsOperator(NahmiiTypesLib.Order order) public pure returns (bytes32) {
+    function hashOrderAsOperator(NahmiiTypesLib.Order order)
+    public
+    pure
+    returns (bytes32)
+    {
+        bytes32 rootHash = hashUint256(order.nonce);
         bytes32 walletSignatureHash = hashSignature(order.seals.wallet.signature);
-        bytes32 placementResidualsHash = hashOrderPlacementResidualsData(order);
+        bytes32 placementResidualsHash = hashCurrentPreviousInt256(order.placement.residuals);
 
-        return keccak256(abi.encodePacked(walletSignatureHash, placementResidualsHash));
+        return keccak256(abi.encodePacked(rootHash, walletSignatureHash, placementResidualsHash));
     }
 
-    function hashTrade(NahmiiTypesLib.Trade trade) public pure returns (bytes32) {
-        bytes32 globalHash = hashTradeGlobalData(trade);
-        bytes32 buyerHash = hashTradeBuyerData(trade);
-        bytes32 sellerHash = hashTradeSellerData(trade);
-        bytes32 transfersHash = hashTradeTransfersData(trade);
+    function hashTrade(NahmiiTypesLib.Trade trade)
+    public
+    pure
+    returns (bytes32)
+    {
+        bytes32 rootHash = hashTradeRoot(trade);
+        bytes32 buyerHash = hashTradeParty(trade.buyer);
+        bytes32 sellerHash = hashTradeParty(trade.seller);
+        bytes32 transfersHash = hashIntendedConjugateSingleTotalInt256(trade.transfers);
 
-        return keccak256(abi.encodePacked(globalHash, buyerHash, sellerHash, transfersHash));
+        return keccak256(abi.encodePacked(rootHash, buyerHash, sellerHash, transfersHash));
     }
 
-    function hashPaymentAsWallet(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
-        bytes32 amountCurrencyHash = hashPaymentAmountCurrencyData(payment);
-        bytes32 senderHash = hashPaymentSenderDataAsWallet(payment);
-        bytes32 recipientHash = hashPaymentRecipientDataAsWallet(payment);
+    function hashPaymentAsWallet(NahmiiTypesLib.Payment payment)
+    public
+    pure
+    returns (bytes32)
+    {
+        bytes32 amountCurrencyHash = hashPaymentAmountCurrency(payment);
+        bytes32 senderHash = hashAddress(payment.sender.wallet);
+        bytes32 recipientHash = hashAddress(payment.recipient.wallet);
 
         return keccak256(abi.encodePacked(amountCurrencyHash, senderHash, recipientHash));
     }
 
-    function hashPaymentAsOperator(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
+    function hashPaymentAsOperator(NahmiiTypesLib.Payment payment)
+    public
+    pure
+    returns (bytes32)
+    {
         bytes32 walletSignatureHash = hashSignature(payment.seals.wallet.signature);
-        bytes32 nonceHash = hashPaymentNonce(payment);
-        bytes32 senderHash = hashPaymentSenderDataAsDriipSettlement(payment);
-        bytes32 recipientHash = hashPaymentRecipientDataAsDriipSettlement(payment);
-        bytes32 transfersHash = hashPaymentTransfersData(payment);
+        bytes32 nonceHash = hashUint256(payment.nonce);
+        bytes32 senderHash = hashPaymentSenderPartyAsOperator(payment.sender);
+        bytes32 recipientHash = hashPaymentRecipientPartyAsOperator(payment.recipient);
+        bytes32 transfersHash = hashSingleTotalInt256(payment.transfers);
 
-        return keccak256(abi.encodePacked(walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash));
-    }
-
-    function hashSignature(NahmiiTypesLib.Signature signature) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
-                signature.v,
-                signature.r,
-                signature.s
+                walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash
             ));
     }
 
-    function hashOrderGlobalData(NahmiiTypesLib.Order order) public pure returns (bytes32) {
+    function hashOrderPlacement(NahmiiTypesLib.OrderPlacement orderPlacement)
+    public
+    pure
+    returns (bytes32)
+    {
         return keccak256(abi.encodePacked(
-                order.nonce,
-                order.wallet
+                orderPlacement.intention,
+                orderPlacement.amount,
+                orderPlacement.currencies.intended.ct,
+                orderPlacement.currencies.intended.id,
+                orderPlacement.currencies.conjugate.ct,
+                orderPlacement.currencies.conjugate.id,
+                orderPlacement.rate
             ));
     }
 
-    function hashOrderPlacementData(NahmiiTypesLib.Order order) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(
-                order.placement.intention,
-                order.placement.amount,
-                order.placement.currencies.intended.ct,
-                order.placement.currencies.intended.id,
-                order.placement.currencies.conjugate.ct,
-                order.placement.currencies.conjugate.id,
-                order.placement.rate
-            ));
-    }
-
-    function hashOrderPlacementResidualsData(NahmiiTypesLib.Order order) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(
-                order.placement.residuals.current,
-                order.placement.residuals.previous
-            ));
-    }
-
-    function hashTradeGlobalData(NahmiiTypesLib.Trade trade) public pure returns (bytes32) {
+    function hashTradeRoot(NahmiiTypesLib.Trade trade)
+    public
+    pure
+    returns (bytes32)
+    {
         return keccak256(abi.encodePacked(
                 trade.nonce,
                 trade.amount,
@@ -113,64 +123,54 @@ contract Hasher is Ownable {
             ));
     }
 
-    function hashTradeBuyerData(NahmiiTypesLib.Trade trade) public pure returns (bytes32) {
+    function hashTradeParty(NahmiiTypesLib.TradeParty tradeParty)
+    public
+    pure
+    returns (bytes32)
+    {
+        bytes32 rootHash = hashTradePartyRoot(tradeParty);
+        bytes32 orderHash = hashTradeOrder(tradeParty.order);
+        bytes32 balancesHash = hashIntendedConjugateCurrentPreviousInt256(tradeParty.balances);
+        bytes32 singleFeeHash = hashFigure(tradeParty.fees.single);
+        bytes32 totalFeesHash = hashOriginFigures(tradeParty.fees.total);
+
         return keccak256(abi.encodePacked(
-                trade.buyer.nonce,
-                trade.buyer.wallet,
-            // TODO Consider adding 'trade.buyer.rollingVolume' and 'trade.buyer.liquidityRole' to hash
-            //                trade.buyer.rollingVolume,
-            //                trade.buyer.liquidityRole,
-                trade.buyer.order.hashes.wallet,
-                trade.buyer.order.hashes.operator,
-                trade.buyer.order.amount,
-                trade.buyer.order.residuals.current,
-                trade.buyer.order.residuals.previous,
-                trade.buyer.balances.intended.current,
-                trade.buyer.balances.intended.previous,
-                trade.buyer.balances.conjugate.current,
-                trade.buyer.balances.conjugate.previous,
-                trade.buyer.fees.single.amount,
-                trade.buyer.fees.single.currency.ct,
-                trade.buyer.fees.single.currency.id
-            // TODO Consider adding dynamic size 'trade.buyer.fees.total' to hash
-            // trade.buyer.fees.total
+                rootHash, orderHash, balancesHash, singleFeeHash, totalFeesHash
             ));
     }
 
-    function hashTradeSellerData(NahmiiTypesLib.Trade trade) public pure returns (bytes32) {
+    function hashTradePartyRoot(NahmiiTypesLib.TradeParty tradeParty)
+    public
+    pure
+    returns (bytes32)
+    {
         return keccak256(abi.encodePacked(
-                trade.seller.nonce,
-                trade.seller.wallet,
-            // TODO Consider adding 'trade.seller.rollingVolume' and 'trade.seller.liquidityRole' to hash
-            //                trade.seller.rollingVolume,
-            //                trade.seller.liquidityRole,
-                trade.seller.order.hashes.wallet,
-                trade.seller.order.hashes.operator,
-                trade.seller.order.amount,
-                trade.seller.order.residuals.current,
-                trade.seller.order.residuals.previous,
-                trade.seller.balances.intended.current,
-                trade.seller.balances.intended.previous,
-                trade.seller.balances.conjugate.current,
-                trade.seller.balances.conjugate.previous,
-                trade.seller.fees.single.amount,
-                trade.seller.fees.single.currency.ct,
-                trade.seller.fees.single.currency.id
-            // TODO Consider adding dynamic size 'trade.seller.fees.total' to hash
-            // trade.seller.fees.total
+                tradeParty.nonce,
+                tradeParty.wallet,
+                tradeParty.rollingVolume,
+                tradeParty.liquidityRole
             ));
     }
 
-    function hashTradeTransfersData(NahmiiTypesLib.Trade trade) public pure returns (bytes32) {
+    function hashTradeOrder(NahmiiTypesLib.TradeOrder tradeOrder)
+    public
+    pure
+    returns (bytes32)
+    {
         return keccak256(abi.encodePacked(
-                trade.transfers.intended.single,
-                trade.transfers.intended.total,
-                trade.transfers.conjugate.single,
-                trade.transfers.conjugate.total
+                tradeOrder.hashes.wallet,
+                tradeOrder.hashes.operator,
+                tradeOrder.amount,
+                tradeOrder.residuals.current,
+                tradeOrder.residuals.previous
             ));
     }
 
-    function hashPaymentAmountCurrencyData(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
+    function hashPaymentAmountCurrency(NahmiiTypesLib.Payment payment)
+    public
+    pure
+    returns (bytes32)
+    {
         return keccak256(abi.encodePacked(
                 payment.amount,
                 payment.currency.ct,
@@ -178,41 +178,145 @@ contract Hasher is Ownable {
             ));
     }
 
-    function hashPaymentSenderDataAsWallet(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(payment.sender.wallet));
-    }
+    function hashPaymentSenderPartyAsOperator(
+        NahmiiTypesLib.PaymentSenderParty paymentSenderParty)
+    public
+    pure
+    returns (bytes32)
+    {
+        bytes32 rootHash = hashUint256(paymentSenderParty.nonce);
+        bytes32 balancesHash = hashCurrentPreviousInt256(paymentSenderParty.balances);
+        bytes32 singleFeeHash = hashFigure(paymentSenderParty.fees.single);
+        bytes32 totalFeesHash = hashOriginFigures(paymentSenderParty.fees.total);
 
-    function hashPaymentSenderDataAsDriipSettlement(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
-                payment.sender.nonce,
-                payment.sender.balances.current,
-                payment.sender.balances.previous,
-                payment.sender.fees.single.amount,
-                payment.sender.fees.single.currency.ct,
-                payment.sender.fees.single.currency.id
+                rootHash, balancesHash, singleFeeHash, totalFeesHash
             ));
     }
 
-    function hashPaymentRecipientDataAsWallet(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(payment.recipient.wallet));
-    }
+    function hashPaymentRecipientPartyAsOperator(
+        NahmiiTypesLib.PaymentRecipientParty paymentRecipientParty)
+    public
+    pure
+    returns (bytes32)
+    {
+        bytes32 rootHash = hashUint256(paymentRecipientParty.nonce);
+        bytes32 balancesHash = hashCurrentPreviousInt256(paymentRecipientParty.balances);
+        bytes32 totalFeesHash = hashOriginFigures(paymentRecipientParty.fees.total);
 
-    function hashPaymentRecipientDataAsDriipSettlement(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
-                payment.recipient.nonce,
-                payment.recipient.balances.current,
-                payment.recipient.balances.previous
+                rootHash, balancesHash, totalFeesHash
             ));
     }
 
-    function hashPaymentTransfersData(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
+    function hashIntendedConjugateSingleTotalInt256(
+        NahmiiTypesLib.IntendedConjugateSingleTotalInt256 intededConjugateSingleTotalInt256)
+    public
+    pure
+    returns (bytes32)
+    {
         return keccak256(abi.encodePacked(
-                payment.transfers.single,
-                payment.transfers.total
+                intededConjugateSingleTotalInt256.intended.single,
+                intededConjugateSingleTotalInt256.intended.total,
+                intededConjugateSingleTotalInt256.conjugate.single,
+                intededConjugateSingleTotalInt256.conjugate.total
             ));
     }
 
-    function hashPaymentNonce(NahmiiTypesLib.Payment payment) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(payment.nonce));
+    function hashCurrentPreviousInt256(
+        NahmiiTypesLib.CurrentPreviousInt256 currentPreviousInt256)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(
+                currentPreviousInt256.current,
+                currentPreviousInt256.previous
+            ));
+    }
+
+    function hashSingleTotalInt256(
+        NahmiiTypesLib.SingleTotalInt256 singleTotalInt256)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(
+                singleTotalInt256.single,
+                singleTotalInt256.total
+            ));
+    }
+
+    function hashIntendedConjugateCurrentPreviousInt256(
+        NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 intendedConjugateCurrentPreviousInt256)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(
+                intendedConjugateCurrentPreviousInt256.intended.current,
+                intendedConjugateCurrentPreviousInt256.intended.previous,
+                intendedConjugateCurrentPreviousInt256.conjugate.current,
+                intendedConjugateCurrentPreviousInt256.conjugate.previous
+            ));
+    }
+
+    function hashFigure(MonetaryTypesLib.Figure figure)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(
+                figure.amount,
+                figure.currency.ct,
+                figure.currency.id
+            ));
+    }
+
+    function hashOriginFigures(NahmiiTypesLib.OriginFigure[] originFigures)
+    public
+    pure
+    returns (bytes32)
+    {
+        bytes32 hash;
+        for (uint256 i = 0; i < originFigures.length; i++) {
+            hash = keccak256(abi.encodePacked(
+                    hash,
+                    originFigures[i].originId,
+                    originFigures[i].figure.amount,
+                    originFigures[i].figure.currency.ct,
+                    originFigures[i].figure.currency.id
+                )
+            );
+        }
+        return hash;
+    }
+
+    function hashUint256(uint256 _uint256)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(_uint256));
+    }
+
+    function hashAddress(address _address)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(_address));
+    }
+
+    function hashSignature(NahmiiTypesLib.Signature signature)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(
+                signature.v,
+                signature.r,
+                signature.s
+            ));
     }
 }

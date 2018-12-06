@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -45,7 +45,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) Ownable(_owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -115,8 +115,6 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     function cancelOrders(NahmiiTypesLib.Order[] orders)
     public
     onlyOperationalModeNormal
-    validatorInitialized
-    configurationInitialized
     {
         for (uint256 i = 0; i < orders.length; i++) {
             require(msg.sender == orders[i].wallet);
@@ -137,7 +135,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     function challenge(NahmiiTypesLib.Trade trade, address wallet)
     public
     onlyOperationalModeNormal

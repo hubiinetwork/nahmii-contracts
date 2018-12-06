@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {Configuration} from "./Configuration.sol";
@@ -37,7 +37,7 @@ contract Configurable is Ownable {
     notNullAddress(newConfiguration)
     notSameAddresses(newConfiguration, configuration)
     {
-        //set new configuration
+        // Set new configuration
         Configuration oldConfiguration = configuration;
         configuration = newConfiguration;
 

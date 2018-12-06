@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -47,14 +47,9 @@ SecurityBondable {
     )
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedTrade(trade)
     onlySealedPayment(payment)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(securityBond != address(0));
-
         require(trade.nonce == payment.nonce);
 
         configuration.setOperationalModeExit();

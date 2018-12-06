@@ -8,7 +8,7 @@ const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
-const MockedClientFund = artifacts.require('MockedClientFund');
+const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -23,7 +23,7 @@ module.exports = (glob) => {
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
-        let web3ClientFund, ethersClientFund;
+        let web3WalletLocker, ethersWalletLocker;
         let blockNumber0, blockNumber10, blockNumber20;
 
         before(async () => {
@@ -38,16 +38,16 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
-            web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
+            web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
-            web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
-            ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
+            web3WalletLocker = await MockedWalletLocker.new();
+            ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
 
             await ethersFraudChallengeByTradeOrderResiduals.setFraudChallenge(ethersFraudChallenge.address);
             await ethersFraudChallengeByTradeOrderResiduals.setConfiguration(ethersConfiguration.address);
             await ethersFraudChallengeByTradeOrderResiduals.setValidator(ethersValidator.address);
             await ethersFraudChallengeByTradeOrderResiduals.setSecurityBond(ethersSecurityBond.address);
-            await ethersFraudChallengeByTradeOrderResiduals.setClientFund(ethersClientFund.address);
+            await ethersFraudChallengeByTradeOrderResiduals.setWalletLocker(ethersWalletLocker.address, false);
 
             await ethersConfiguration.registerService(glob.owner);
             await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
@@ -240,14 +240,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('clientFund()', () => {
+        describe('walletLocker()', () => {
             it('should equal value initialized', async () => {
-                const clientFund = await ethersFraudChallengeByTradeOrderResiduals.clientFund();
-                clientFund.should.equal(utils.getAddress(ethersClientFund.address));
+                const walletLocker = await ethersFraudChallengeByTradeOrderResiduals.walletLocker();
+                walletLocker.should.equal(utils.getAddress(ethersWalletLocker.address));
             });
         });
 
-        describe('setClientFund()', () => {
+        describe('setWalletLocker()', () => {
             let address;
 
             before(() => {
@@ -255,28 +255,29 @@ module.exports = (glob) => {
             });
 
             describe('if called with deployer as sender', () => {
-                let clientFund;
+                let walletLocker;
 
                 beforeEach(async () => {
-                    clientFund = await web3FraudChallengeByTradeOrderResiduals.clientFund.call();
+                    walletLocker = await web3FraudChallengeByTradeOrderResiduals.walletLocker.call();
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByTradeOrderResiduals.setClientFund(clientFund);
+                    await web3FraudChallengeByTradeOrderResiduals.setWalletLocker(walletLocker, false);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByTradeOrderResiduals.setClientFund(address);
+                    const result = await web3FraudChallengeByTradeOrderResiduals.setWalletLocker(address, false);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetClientFundEvent');
-                    const clientFund = await web3FraudChallengeByTradeOrderResiduals.clientFund();
-                    utils.getAddress(clientFund).should.equal(address);
+                    result.logs[0].event.should.equal('SetWalletLockerEvent');
+                    const walletLocker = await web3FraudChallengeByTradeOrderResiduals.walletLocker();
+                    utils.getAddress(walletLocker).should.equal(address);
                 });
             });
 
             describe('if called with sender that is not deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByTradeOrderResiduals.setClientFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByTradeOrderResiduals.setWalletLocker(address, false, {from: glob.user_a})
+                        .should.be.rejected;
                 });
             });
         });
@@ -293,7 +294,7 @@ module.exports = (glob) => {
                 await ethersFraudChallenge._reset(overrideOptions);
                 await ethersValidator._reset(overrideOptions);
                 await ethersSecurityBond._reset(overrideOptions);
-                await ethersClientFund._reset(overrideOptions);
+                await ethersWalletLocker._reset(overrideOptions);
 
                 firstTrade = await mocks.mockTrade(glob.owner, {
                     buyer: {
@@ -600,8 +601,8 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersClientFund.lockedWalletsCount(),
-                        ethersClientFund.locks(utils.bigNumberify(0)),
+                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;

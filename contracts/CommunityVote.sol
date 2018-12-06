@@ -6,9 +6,8 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
-import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {ERC20} from "./ERC20.sol";
 import {Ownable} from "./Ownable.sol";
 
@@ -28,7 +27,7 @@ contract CommunityVote is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public Ownable(_owner) {
+    constructor(address deployer) Ownable(deployer) public {
         dataAvailable = true;
     }
 
@@ -38,25 +37,41 @@ contract CommunityVote is Ownable {
     /// @notice Get the double spender status of given wallet
     /// @param wallet The wallet address for which to check double spender status
     /// @return true if wallet is double spender, false otherwise
-    function isDoubleSpenderWallet(address wallet) public view returns (bool) {
+    function isDoubleSpenderWallet(address wallet)
+    public
+    view
+    returns (bool)
+    {
         return doubleSpenderByWallet[wallet];
     }
 
     /// @notice Get the max driip nonce to be accepted in settlements
     /// @return the max driip nonce
-    function getMaxDriipNonce() public view returns (uint256) {
+    function getMaxDriipNonce()
+    public
+    view
+    returns (uint256)
+    {
         return maxDriipNonce;
     }
 
     /// @notice Get the max null settlement nonce to be accepted in settlements
     /// @return the max driip nonce
-    function getMaxNullNonce() public view returns (uint256) {
+    function getMaxNullNonce()
+    public
+    view
+    returns (uint256)
+    {
         return maxNullNonce;
     }
 
     /// @notice Get the data availability status
     /// @return true if data is available
-    function isDataAvailable() public view returns (bool) {
+    function isDataAvailable()
+    public
+    view
+    returns (bool)
+    {
         return dataAvailable;
     }
 }

@@ -6,14 +6,14 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
@@ -22,7 +22,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 @notice Where driips are challenged wrt fraud by mismatch in trade succeeding payment
 */
 contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -42,9 +42,9 @@ SecurityBondable, ClientFundable {
     /// to be tested for succession differences
     /// @param payment Reference payment
     /// @param trade Fraudulent trade candidate
-    /// @param wallet Address of concerned wallet
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function challenge(
         NahmiiTypesLib.Payment payment,
         NahmiiTypesLib.Trade trade,
@@ -53,15 +53,10 @@ SecurityBondable, ClientFundable {
         uint256 currencyId
     )
     public
-    validatorInitialized
     onlyOperationalModeNormal
     onlySealedPayment(payment)
     onlySealedTrade(trade)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(clientFund != address(0));
-
         require(validator.isTradeParty(trade, wallet));
         require(validator.isPaymentParty(payment, wallet));
         require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
@@ -86,7 +81,7 @@ SecurityBondable, ClientFundable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        clientFund.lockBalancesByProxy(wallet, msg.sender);
+        walletLocker.lockByProxy(wallet, msg.sender);
 
         emit ChallengeByTradeSucceedingPaymentEvent(
             payment.seals.operator.hash, trade.seal.hash, msg.sender, wallet

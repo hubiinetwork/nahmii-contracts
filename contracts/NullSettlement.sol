@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -18,8 +18,6 @@ import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
@@ -85,28 +83,31 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     public
     {
         // Settle null
-        settleNullPrivate(msg.sender, currencyCt, currencyId);
+        _settleNull(msg.sender, currencyCt, currencyId);
 
         // Emit event
         emit SettleNullEvent(msg.sender, currencyCt, currencyId);
     }
 
     /// @notice Settle null by proxy
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function settleNullByProxy(address wallet, address currencyCt, uint256 currencyId)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Settle null of wallet
-        settleNullPrivate(wallet, currencyCt, currencyId);
+        _settleNull(wallet, currencyCt, currencyId);
 
         // Emit event
         emit SettleNullByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
     }
 
-    function settleNullPrivate(address wallet, address currencyCt, uint256 currencyId)
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function _settleNull(address wallet, address currencyCt, uint256 currencyId)
     private
     {
         // Require that driip settlement challenge qualified
@@ -128,16 +129,10 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         // Update settled nonce of wallet and currency
         walletCurrencyMaxNullNonce[wallet][currencyCt][currencyId] = nonce;
 
-        // Get proposal's stage amount and target balance amount.
+        // Get proposal's stage amount
         int256 stageAmount = nullSettlementChallenge.proposalStageAmount(
             wallet, currencyCt, currencyId
         );
-        int256 targetBalanceAmount = nullSettlementChallenge.proposalTargetBalanceAmount(
-            wallet, currencyCt, currencyId
-        );
-
-        // Update settled balance
-        clientFund.updateSettledBalance(wallet, targetBalanceAmount, currencyCt, currencyId);
 
         // Stage the proposed amount
         clientFund.stage(wallet, stageAmount, currencyCt, currencyId);

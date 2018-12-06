@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "../Ownable.sol";
 import {AccrualBeneficiary} from "../AccrualBeneficiary.sol";
@@ -35,7 +35,7 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address _owner) public Ownable(_owner) {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     function() public payable {
@@ -60,43 +60,60 @@ contract UnitTestHelpers is Ownable, AccrualBeneficiary, TransferControllerManag
     //
     // Helpers for RevenueFund SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToDepositTokens_REVENUEFUND(address revenueFund, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function callToDepositTokens_REVENUEFUND(address revenueFund, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         require(revenueFund != address(0));
         RevenueFund sc = RevenueFund(revenueFund);
         sc.receiveTokens("", amount, currencyCt, currencyId, standard);
     }
 
-    function receiveEthersTo(address wallet, string balance) public payable {
+    function receiveEthersTo(address wallet, string balance)
+    public
+    payable
+    {
         emit DepositEthersToWasCalled(wallet, balance);
     }
 
-    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard) public {
+    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
         //execute transfer
-        TransferController controller = getTransferController(currencyCt, standard);
+        TransferController controller = transferController(currencyCt, standard);
         controller.receive(msg.sender, this, uint256(amount), currencyCt, currencyId);
         emit DepositTokensToWasCalled(wallet, balance, amount, currencyCt, currencyId);
     }
 
-    function closeAccrualPeriod() public {
+    function closeAccrualPeriod()
+    public
+    {
         emit CloseAccrualPeriodWasCalled();
     }
 
     //
     // Helpers for TokenHolderRevenueFund SC
     // -----------------------------------------------------------------------------------------------------------------
-    function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund, address token, int256 amount) public {
+    function callToDepositTokens_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund, address token, int256 amount)
+    public
+    {
         require(tokenHolderRevenueFund != address(0));
         TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFund);
         sc.receiveTokens("", amount, token, 0, "");
     }
 
-    function callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund) public {
+    function callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address tokenHolderRevenueFund)
+    public
+    {
         require(tokenHolderRevenueFund != address(0));
         TokenHolderRevenueFund sc = TokenHolderRevenueFund(tokenHolderRevenueFund);
         sc.closeAccrualPeriod();
     }
 
-    function balanceBlocksIn(address /*a*/, uint256 /*from*/, uint256 /*to*/) public pure returns (uint256) {
+    function balanceBlocksIn(address /*a*/, uint256 /*from*/, uint256 /*to*/)
+    public
+    pure
+    returns (uint256)
+    {
         return 1e10;
     }
 }

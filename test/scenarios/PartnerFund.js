@@ -1,464 +1,1609 @@
-var Helpers = require('../helpers');
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
+const {Contract, utils} = require('ethers');
+const {address0} = require('../mocks');
+const cryptography = require('omphalos-commons').util.cryptography;
+const ERC20Token = artifacts.require('StandardTokenEx');
+const TransferControllerManager = artifacts.require('TransferControllerManager');
+const PartnerFund = artifacts.require('PartnerFund');
+
+chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
+chai.should();
 
 module.exports = function (glob) {
-    var userATag = '0x1111111111222222222233333333334444444444';
-    var userBTag = '0x4444444444333333333322222222221111111111';
-    var dummyTag = '0x1234567890123456789012345678901234567890';
-    var testCounter = Helpers.TestCounter();
-
-    const _1e18 = '1000000000000000000';
-
     describe('PartnerFund', function () {
-        it(testCounter.next() + ': MUST FAIL [payable]: Payable is disabled', async() => {
-            try {
-                await web3.eth.sendTransactionPromise({
-                    from: glob.user_a,
-                    to: glob.web3PartnerFund.address,
-                    value: web3.toWei(0.2, 'ether'),
-                    gas: glob.gasLimit
+        let web3TransferControllerManager;
+        let web3ERC20;
+        let web3PartnerFund, ethersPartnerFund;
+
+        before(async () => {
+            web3TransferControllerManager = await TransferControllerManager.deployed();
+        });
+
+        beforeEach(async () => {
+            web3ERC20 = await ERC20Token.new();
+            await web3ERC20.testMint(glob.user_a, 1000);
+
+            await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
+
+            web3PartnerFund = await PartnerFund.new(glob.owner);
+            ethersPartnerFund = new Contract(web3PartnerFund.address, PartnerFund.abi, glob.signer_owner);
+
+            await web3PartnerFund.setTransferControllerManager(web3TransferControllerManager.address);
+        });
+
+        describe('constructor()', () => {
+            it('should initialize fields', async () => {
+                (await web3PartnerFund.deployer.call()).should.equal(glob.owner);
+                (await web3PartnerFund.operator.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('hashName()', () => {
+            it('should successfully hash name as upper case', async () => {
+                (await web3PartnerFund.hashName.call('Some Name'))
+                    .should.equal(cryptography.hash('SOME NAME'));
+            });
+        });
+
+        describe('depositByIndices()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.depositByIndices.call(1, 0).should.be.rejected;
+            });
+        });
+
+        describe('depositByName()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.depositByName.call('some name', 0).should.be.rejected;
+            });
+        });
+
+        describe('depositByNameHash()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.depositByNameHash.call(cryptography.hash('some name'), 0)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('depositByWallet()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.depositByWallet.call(glob.user_a, 0).should.be.rejected;
+            });
+        });
+
+        describe('depositsCountByIndex()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.depositsCountByIndex.call(1).should.be.rejected;
+            });
+        });
+
+        describe('depositsCountByName()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.depositsCountByName.call('some name').should.be.rejected;
+            });
+        });
+
+        describe('depositsCountByNameHash()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.depositsCountByNameHash.call(cryptography.hash('some name'))
+                    .should.be.rejected;
+            });
+        });
+
+        describe('depositsCountByWallet()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.depositsCountByWallet.call(glob.user_a)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('activeBalanceByIndex()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.activeBalanceByIndex.call(1, address0, 0)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('activeBalanceByName()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.activeBalanceByName.call('some name', address0, 0)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('activeBalanceByNameHash()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.activeBalanceByNameHash.call(
+                    cryptography.hash('some name'), address0, 0
+                ).should.be.rejected;
+            });
+        });
+
+        describe('activeBalanceByWallet()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.activeBalanceByWallet.call(glob.user_a, address0, 0)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('stagedBalanceByIndex()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.stagedBalanceByIndex.call(1, address0, 0)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('stagedBalanceByName()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.stagedBalanceByName.call('some name', address0, 0)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('stagedBalanceByNameHash()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.stagedBalanceByNameHash.call(
+                    cryptography.hash('some name'), address0, 0
+                ).should.be.rejected;
+            });
+        });
+
+        describe('stagedBalanceByWallet()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.stagedBalanceByWallet.call(glob.user_a, address0, 0)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('partnersCount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersPartnerFund.partnersCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('indexByName()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.indexByName.call('some name')
+                    .should.be.rejected;
+            });
+        });
+
+        describe('indexByNameHash()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.indexByNameHash.call(cryptography.hash('some name'))
+                    .should.be.rejected;
+            });
+        });
+
+        describe('indexByWallet()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.indexByWallet.call(glob.user_a)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('isRegisteredByName()', () => {
+            it('should revert', async () => {
+                (await web3PartnerFund.isRegisteredByName.call('some name'))
+                    .should.be.false;
+            });
+        });
+
+        describe('isRegisteredByNameHash()', () => {
+            it('should revert', async () => {
+                (await web3PartnerFund.isRegisteredByNameHash.call(cryptography.hash('some name')))
+                    .should.be.false;
+            });
+        });
+
+        describe('isRegisteredByWallet()', () => {
+            it('should revert', async () => {
+                (await web3PartnerFund.isRegisteredByWallet.call(glob.user_a))
+                    .should.be.false;
+            });
+        });
+
+        describe('feeByIndex()', () => {
+            describe('if called index is too low', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.feeByIndex(0).should.be.rejected;
                 });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            });
+
+            describe('if called index is too high', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.feeByIndex(1).should.be.rejected;
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST FAIL [receiveEthersTo]: Not registered tag', async() => {
-            try {
-                await glob.web3PartnerFund.receiveEthersTo(dummyTag, '', { value: web3.toWei(0.2, 'ether') });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+        describe('feeByName()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.feeByName('some name').should.be.rejected;
+            });
         });
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST FAIL [receiveTokensTo]: Not registered tag', async() => {
-            try {
-                await glob.web3PartnerFund.receiveTokensTo(dummyTag, '', 2, glob.web3Erc20.address, 0, "");
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+        describe('feeByNameHash()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.feeByNameHash(cryptography.hash('some name'))
+                    .should.be.rejected;
+            });
         });
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [registerPartner]: Register user A tag and owner can change the address', async() => {
-            try {
-                let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
-
-                var fee_1_pct = (new BN(_1e18)).div(100);
-
-                await glob.web3PartnerFund.registerPartner(userATag, fee_1_pct, false, true);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+        describe('feeByWallet()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.feeByNameHash(glob.user_a)
+                    .should.be.rejected;
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('walletByIndex()', () => {
+            describe('if called index is too low', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.walletByIndex(0).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: Set user A address', async() => {
-            try {
-                await glob.web3PartnerFund.setPartnerWallet(userATag, glob.user_a);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            describe('if called index is too high', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.walletByIndex(1).should.be.rejected;
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: User A trying to modify his address', async() => {
-            try {
-                await glob.web3PartnerFund.setPartnerWallet(userATag, glob.user_a, { from: glob.user_a });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+        describe('walletByName()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.walletByName('some name').should.be.rejected;
+            });
         });
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [registerPartner]: Register user B tag and only he can change the address', async() => {
-            try {
-                let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
-
-                var fee_2_pct = (new BN(_1e18)).div(100).mul(2);
-
-                await glob.web3PartnerFund.registerPartner(userBTag, fee_2_pct, true, false);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+        describe('walletByNameHash()', () => {
+            it('should revert', async () => {
+                web3PartnerFund.walletByNameHash(cryptography.hash('some name'))
+                    .should.be.rejected;
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('registerByName()', () => {
+            describe('if called by non-operator', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: User B trying to modify his address but not set previously', async() => {
-            try {
-                await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b, { from: glob.user_b });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            describe('if called with empty partner name', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.registerByName(
+                        '', 1e15, glob.user_a, false, true
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called without possibility to update', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, false
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let nameHash;
+
+                before(() => {
+                    nameHash = cryptography.hash('SOME PARTNER');
+                });
+
+                it('register successfully', async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true
+                    );
+
+                    (await ethersPartnerFund.partnersCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.indexByName('some partner'))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.indexByNameHash(nameHash))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.indexByWallet(glob.user_a))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.isRegisteredByName('some partner'))
+                        .should.be.true;
+                    (await ethersPartnerFund.isRegisteredByNameHash(nameHash))
+                        .should.be.true;
+                    (await ethersPartnerFund.isRegisteredByWallet(glob.user_a))
+                        .should.be.true;
+                    (await ethersPartnerFund.feeByIndex(1))
+                        ._bn.should.eq.BN(1e15);
+                    (await ethersPartnerFund.feeByName('some partner'))
+                        ._bn.should.eq.BN(1e15);
+                    (await ethersPartnerFund.feeByNameHash(nameHash))
+                        ._bn.should.eq.BN(1e15);
+                    (await ethersPartnerFund.feeByWallet(glob.user_a))
+                        ._bn.should.eq.BN(1e15);
+                    (await web3PartnerFund.walletByIndex.call(1))
+                        .should.equal(glob.user_a);
+                    (await web3PartnerFund.walletByName.call('some partner'))
+                        .should.equal(glob.user_a);
+                    (await web3PartnerFund.walletByNameHash.call(nameHash))
+                        .should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called partner is previously registered', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true
+                    ).should.be.rejected
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('registerByNameHash()', () => {
+            let nameHash;
 
-        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: Set user B address', async() => {
-            try {
-                await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            before(() => {
+                nameHash = cryptography.hash('SOME PARTNER');
+            });
+
+            describe('if called by non-operator', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, false, true, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called without possibility to update', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, false, false
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('register successfully', async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, false, true
+                    );
+
+                    (await ethersPartnerFund.partnersCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.indexByName('some partner'))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.indexByNameHash(nameHash))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.indexByWallet(glob.user_a))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.isRegisteredByName('some partner'))
+                        .should.be.true;
+                    (await ethersPartnerFund.isRegisteredByNameHash(nameHash))
+                        .should.be.true;
+                    (await ethersPartnerFund.isRegisteredByWallet(glob.user_a))
+                        .should.be.true;
+                    (await ethersPartnerFund.feeByIndex(1))
+                        ._bn.should.eq.BN(1e15);
+                    (await ethersPartnerFund.feeByName('some partner'))
+                        ._bn.should.eq.BN(1e15);
+                    (await ethersPartnerFund.feeByNameHash(nameHash))
+                        ._bn.should.eq.BN(1e15);
+                    (await ethersPartnerFund.feeByWallet(glob.user_a))
+                        ._bn.should.eq.BN(1e15);
+                    (await web3PartnerFund.walletByIndex.call(1))
+                        .should.equal(glob.user_a);
+                    (await web3PartnerFund.walletByName.call('some partner'))
+                        .should.equal(glob.user_a);
+                    (await web3PartnerFund.walletByNameHash.call(nameHash))
+                        .should.equal(glob.user_a);
+                });
+            });
+
+            describe('if called partner is previously registered', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, false, true
+                    ).should.be.rejected
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('setFeeByIndex()', () => {
+            describe('if called index is too low', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
 
-        it(testCounter.next() + ': MUST FAIL [setPartnerWallet]: Owner trying to set user B address again', async() => {
-            try {
-                await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByIndex(0, 2e15).should.be.rejected;
+                });
+            });
+
+            describe('if called index is too high', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByIndex(2, 2e15).should.be.rejected;
+                });
+            });
+
+            describe('if called by operator and operator can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByIndex(1, 2e15).should.be.rejected;
+                });
+            });
+
+            describe('if called by non-operator non-partner wallet', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByIndex(1, 2e15, {from: glob.user_b}).should.be.rejected;
+                });
+            });
+
+            describe('if called by partner and partner can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByIndex(1, 2e15, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if called by operator within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setFeeByIndex(1, 2e15);
+
+                    (await ethersPartnerFund.feeByIndex(1))
+                        ._bn.should.eq.BN(2e15);
+                });
+            });
+
+            describe('if called by partner within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setFeeByIndex(1, 2e15, {from: glob.user_a});
+
+                    (await ethersPartnerFund.feeByIndex(1))
+                        ._bn.should.eq.BN(2e15);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('setFeeByName()', () => {
+            describe('if called name is not registered', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
 
-        it(testCounter.next() + ': MUST SUCCEED [setPartnerWallet]: User B changing his address', async() => {
-            try {
-                await glob.web3PartnerFund.setPartnerWallet(userBTag, glob.user_b, { from: glob.user_b });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByName('some unregistered partner', 2e15).should.be.rejected;
+                });
+            });
+
+            describe('if called by operator and operator can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByName('some partner', 2e15).should.be.rejected;
+                });
+            });
+
+            describe('if called by non-operator non-partner wallet', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByName('some partner', 2e15, {from: glob.user_b}).should.be.rejected;
+                });
+            });
+
+            describe('if called by partner and partner can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByName('some partner', 2e15, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+
+            describe('if called by operator within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setFeeByName('some partner', 2e15);
+
+                    (await ethersPartnerFund.feeByName('some partner'))
+                        ._bn.should.eq.BN(2e15);
+                });
+            });
+
+            describe('if called by partner within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setFeeByName('some partner', 2e15, {from: glob.user_a});
+
+                    (await ethersPartnerFund.feeByName('some partner'))
+                        ._bn.should.eq.BN(2e15);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('setFeeByNameHash()', () => {
+            let nameHash;
 
-        it(testCounter.next() + ': MUST SUCCEED [getPartnerFee]: Get user B fee', async() => {
-            try {
-                let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+            before(() => {
+                nameHash = cryptography.hash('SOME PARTNER');
+            });
 
-                var fee_2_pct = (new BN(_1e18)).div(100).mul(2);
+            describe('if called name is not registered', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
 
-                let fee = await glob.web3PartnerFund.getPartnerFee(userBTag);
-                assert.equal(fee.toString(), fee_2_pct.toString(), 'Fee is not 2%. [Got ' + fee_2_pct.div(_1e18).mul(100).toString() + '%].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByNameHash(
+                        cryptography.hash('some unregistered partner'), 2e15
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called by operator and operator can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByNameHash(nameHash, 2e15).should.be.rejected;
+                });
+            });
+
+            describe('if called by non-operator non-partner wallet', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByNameHash(nameHash, 2e15, {from: glob.user_b})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner and partner can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByNameHash(nameHash, 2e15, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by operator within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setFeeByNameHash(nameHash, 2e15);
+
+                    (await ethersPartnerFund.feeByNameHash(nameHash))
+                        ._bn.should.eq.BN(2e15);
+                });
+            });
+
+            describe('if called by partner within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setFeeByNameHash(nameHash, 2e15, {from: glob.user_a});
+
+                    (await ethersPartnerFund.feeByNameHash(nameHash))
+                        ._bn.should.eq.BN(2e15);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('setFeeByWallet()', () => {
+            let nameHash;
 
-        it(testCounter.next() + ': MUST FAIL [changePartnerFee]: Change non-registered user fee', async() => {
-            try {
-                let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+            before(() => {
+                nameHash = cryptography.hash('SOME PARTNER');
+            });
 
-                var fee_5_pct = (new BN(_1e18)).div(100).mul(5);
+            describe('if called wallet is not registered', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
 
-                await glob.web3PartnerFund.setPartnerFee(dummyTag, fee_5_pct);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByWallet(glob.user_b, 2e15).should.be.rejected;
+                });
+            });
+
+            describe('if called by operator and operator can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByWallet(glob.user_a, 2e15).should.be.rejected;
+                });
+            });
+
+            describe('if called by non-operator non-partner wallet', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByWallet(glob.user_a, 2e15, {from: glob.user_b})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner and partner can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setFeeByWallet(glob.user_a, 2e15, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by operator within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setFeeByWallet(glob.user_a, 2e15);
+
+                    (await ethersPartnerFund.feeByWallet(glob.user_a))
+                        ._bn.should.eq.BN(2e15);
+                });
+            });
+
+            describe('if called by partner within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setFeeByWallet(glob.user_a, 2e15, {from: glob.user_a});
+
+                    (await ethersPartnerFund.feeByWallet(glob.user_a))
+                        ._bn.should.eq.BN(2e15);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('setWalletByIndex()', () => {
+            describe('if called index is too low', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
 
-        it(testCounter.next() + ': MUST FAIL [changePartnerFee]: User B wants to change its fee', async() => {
-            try {
-                let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByIndex(0, glob.user_b).should.be.rejected;
+                });
+            });
 
-                var fee_5_pct = (new BN(_1e18)).div(100).mul(5);
+            describe('if called index is too high', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
 
-                await glob.web3PartnerFund.setPartnerFee(userBTag, fee_5_pct, { from: glob.user_b });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByIndex(2, glob.user_b).should.be.rejected;
+                });
+            });
+
+            describe('if called by operator and operator can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByIndex(1, glob.user_b).should.be.rejected;
+                });
+            });
+
+            describe('if called by non-operator non-partner wallet', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByIndex(1, glob.user_b, {from: glob.user_b})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner and partner can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByIndex(1, glob.user_b, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner, operator can not update and wallet is zero-address', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByIndex(1, address0, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by operator within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setWalletByIndex(1, glob.user_b);
+
+                    (await web3PartnerFund.walletByIndex(1))
+                        .should.equal(glob.user_b);
+                });
+            });
+
+            describe('if called by partner within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setWalletByIndex(1, glob.user_b, {from: glob.user_a});
+
+                    (await web3PartnerFund.walletByIndex(1))
+                        .should.equal(glob.user_b);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('setWalletByName()', () => {
+            describe('if called name is not registered', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
 
-        it(testCounter.next() + ': MUST SUCCEED [changePartnerFee]: Set new fee to user B', async() => {
-            try {
-                let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByName('some unregistered partner', glob.user_b)
+                        .should.be.rejected;
+                });
+            });
 
-                var fee_3_pct = (new BN(_1e18)).div(100).mul(3);
+            describe('if called by operator and operator can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, false
+                    );
+                });
 
-                await glob.web3PartnerFund.setPartnerFee(userBTag, fee_3_pct);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByName('some partner', glob.user_b)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by non-operator non-partner wallet', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByName('some partner', glob.user_b, {from: glob.user_b})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner and partner can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByName('some partner', glob.user_b, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner, operator can not update and wallet is zero-address', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByName('some partner', address0, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by operator within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setWalletByName('some partner', glob.user_b);
+
+                    (await web3PartnerFund.walletByName('some partner'))
+                        .should.equal(glob.user_b);
+                });
+            });
+
+            describe('if called by partner within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setWalletByName('some partner', glob.user_b, {from: glob.user_a});
+
+                    (await web3PartnerFund.walletByName('some partner'))
+                        .should.equal(glob.user_b);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('setWalletByNameHash()', () => {
+            let nameHash;
 
-        it(testCounter.next() + ': MUST SUCCEED [getPartnerFee]: Verify new user B fee', async() => {
-            try {
-                let BN = web3.BigNumber.another({DECIMAL_PLACES: 5, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+            before(() => {
+                nameHash = cryptography.hash('SOME PARTNER');
+            });
 
-                var fee_3_pct = (new BN(_1e18)).div(100).mul(3);
+            describe('if called by operator and operator can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, false
+                    );
+                });
 
-                let fee = await glob.web3PartnerFund.getPartnerFee(userBTag);
-                assert.equal(fee.toString(), fee_3_pct.toString(), 'Fee is not 3%. [Got ' + fee_3_pct.div(_1e18).mul(100).toString() + '%].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByNameHash(nameHash, glob.user_b).should.be.rejected;
+                });
+            });
+
+            describe('if called by non-operator non-partner wallet', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByNameHash(nameHash, glob.user_b, {from: glob.user_b})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner and partner can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByNameHash(nameHash, glob.user_b, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner, operator can not update and wallet is zero-address', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByNameHash(nameHash, address0, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by operator within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setWalletByNameHash(nameHash, glob.user_b);
+
+                    (await web3PartnerFund.walletByNameHash(nameHash))
+                        .should.equal(glob.user_b);
+                });
+            });
+
+            describe('if called by partner within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByNameHash(
+                        nameHash, 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setWalletByNameHash(nameHash, glob.user_b, {from: glob.user_a});
+
+                    (await web3PartnerFund.walletByNameHash(nameHash))
+                        .should.equal(glob.user_b);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('setWalletByWallet()', () => {
+            describe('if called old wallet is not registered', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
 
-        it(testCounter.next() + ': MUST SUCCEED [receiveEthersTo]: add 1 ether to user A deposited balance', async() => {
-            try {
-                await glob.web3PartnerFund.receiveEthersTo(userATag, '', { from: glob.owner, value: web3.toWei(1, 'ether') });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByWallet(glob.user_b, glob.user_b)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by operator and operator can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByWallet(glob.user_a, glob.user_b)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by non-operator non-partner wallet', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByWallet(glob.user_a, glob.user_b, {from: glob.user_b})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner and partner can not update', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, false, true
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByWallet(glob.user_a, glob.user_b, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by partner, operator can not update and wallet is zero-address', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, false
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3PartnerFund.setWalletByWallet(glob.user_a, address0, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by operator within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setWalletByWallet(glob.user_a, glob.user_b);
+
+                    (await web3PartnerFund.walletByName('some partner'))
+                        .should.equal(glob.user_b);
+                });
+            });
+
+            describe('if called by partner within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should successfully set fee', async () => {
+                    await web3PartnerFund.setWalletByWallet(glob.user_a, glob.user_b, {from: glob.user_a});
+
+                    (await web3PartnerFund.walletByName('some partner'))
+                        .should.equal(glob.user_b);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('fallback function', () => {
+            describe('if called with no partner registered', () => {
+                it('should revert', async () => {
+                    web3.eth.sendTransactionPromise({
+                        from: glob.user_a,
+                        to: web3PartnerFund.address,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
+                    }).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ': MUST SUCCEED [receiveTokensTo]: 3 tokens added to A deposited balance', async() => {
-            try {
-                await glob.web3Erc20.approve(glob.web3PartnerFund.address, 3, { from: glob.owner });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
-            }
-            try {
-                await glob.web3PartnerFund.receiveTokensTo(userATag, '', 3, glob.web3Erc20.address, 0, "", { from: glob.owner });
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            describe('if called with partner registered', () => {
+                let nameHash;
+
+                before(() => {
+                    nameHash = cryptography.hash('SOME PARTNER');
+                });
+
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should increment active balance of partner sending funds', async () => {
+                    await web3.eth.sendTransactionPromise({
+                        from: glob.user_a,
+                        to: web3PartnerFund.address,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
+                    });
+
+                    (await ethersPartnerFund.depositsCountByIndex(1))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByName('some partner'))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByNameHash(nameHash))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByWallet(glob.user_a))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.activeBalanceByIndex(1, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersPartnerFund.activeBalanceByName('some partner', address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersPartnerFund.activeBalanceByNameHash(nameHash, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersPartnerFund.activeBalanceByWallet(glob.user_a, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersPartnerFund.stagedBalanceByIndex(1, address0, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByName('some partner', address0, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByNameHash(nameHash, address0, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, address0, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('receiveEthersTo()', () => {
+            describe('if called with no partner registered', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.receiveEthersTo(
+                        '0x0000000000000000000000000000000000000001',
+                        '',
+                        {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    ).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ': MUST SUCCEED [depositCountFromAddress]: User A should have 2 deposits', async() => {
-            try {
-                let count = await glob.web3PartnerFund.depositCountFromAddress(glob.user_a);
-                assert.equal(count, 2, 'This test must succeed. Error: Deposit count: ' + count.toString());
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            describe('if called with partner registered', () => {
+                let nameHash;
+
+                before(() => {
+                    nameHash = cryptography.hash('SOME PARTNER');
+                });
+
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should increment active balance of partner sending funds', async () => {
+                    await web3PartnerFund.receiveEthersTo(
+                        '0x0000000000000000000000000000000000000001',
+                        '',
+                        {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    );
+
+                    (await ethersPartnerFund.depositsCountByIndex(1))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByName('some partner'))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByNameHash(nameHash))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByWallet(glob.user_a))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.activeBalanceByIndex(1, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersPartnerFund.activeBalanceByName('some partner', address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersPartnerFund.activeBalanceByNameHash(nameHash, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersPartnerFund.activeBalanceByWallet(glob.user_a, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersPartnerFund.stagedBalanceByIndex(1, address0, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByName('some partner', address0, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByNameHash(nameHash, address0, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, address0, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('receiveTokens()', () => {
+            beforeEach(async () => {
+                await web3ERC20.approve(
+                    web3PartnerFund.address, 10, {from: glob.user_a, gas: 1e6}
+                );
+            });
 
-        it(testCounter.next() + ': MUST FAIL [depositsCount]: Cannot be called from non-registered address', async() => {
-            try {
-                await glob.web3PartnerFund.depositsCount(dummyTag);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            describe('if called with no partner registered', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.receiveTokens(
+                        '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with partner registered', () => {
+                let nameHash;
+
+                before(() => {
+                    nameHash = cryptography.hash('SOME PARTNER');
+                });
+
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should increment active balance of partner sending funds', async () => {
+                    await web3PartnerFund.receiveTokens(
+                        '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                    );
+
+                    (await ethersPartnerFund.depositsCountByIndex(1))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByName('some partner'))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByNameHash(nameHash))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByWallet(glob.user_a))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.activeBalanceByIndex(1, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(10);
+                    (await ethersPartnerFund.activeBalanceByName('some partner', web3ERC20.address, 0))
+                        ._bn.should.eq.BN(10);
+                    (await ethersPartnerFund.activeBalanceByNameHash(nameHash, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(10);
+                    (await ethersPartnerFund.activeBalanceByWallet(glob.user_a, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(10);
+                    (await ethersPartnerFund.stagedBalanceByIndex(1, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByName('some partner', web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByNameHash(nameHash, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('receiveTokensTo()', () => {
+            beforeEach(async () => {
+                await web3ERC20.approve(
+                    web3PartnerFund.address, 10, {from: glob.user_a, gas: 1e6}
+                );
+            });
 
-        it(testCounter.next() + ': MUST SUCCEED [deposit]: User A should have 1 ETH at index 0', async() => {
-            try {
-                let args = await glob.web3PartnerFund.deposit(userATag, 0);
-                const _amount = args[0];
-                const _blocknum = args[1];
-                const _currencyCt = args[2];
-                const _currencyId = args[3];
+            describe('if called with no partner registered', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.receiveTokensTo(
+                        '0x0000000000000000000000000000000000000001', '', 10, web3ERC20.address, 0,
+                        '', {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
 
-                assert.equal(_currencyCt, 0, 'Unexpected token deposit.');
-                assert.equal(_currencyId, 0, 'Unexpected token deposit.');
-                assert.equal(_amount, web3.toWei(1, 'ether'), 'Unexpected ether deposit amount.');
-                assert.notEqual(_blocknum, 0, 'Block number cannot be null.');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            describe('if called with partner registered', () => {
+                let nameHash;
+
+                before(() => {
+                    nameHash = cryptography.hash('SOME PARTNER');
+                });
+
+                beforeEach(async () => {
+                    await web3PartnerFund.registerByName(
+                        'some partner', 1e15, glob.user_a, true, true
+                    );
+                });
+
+                it('should increment active balance of partner sending funds', async () => {
+                    await web3PartnerFund.receiveTokensTo(
+                        '0x0000000000000000000000000000000000000001', '', 10, web3ERC20.address, 0,
+                        '', {from: glob.user_a}
+                    );
+
+                    (await ethersPartnerFund.depositsCountByIndex(1))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByName('some partner'))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByNameHash(nameHash))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.depositsCountByWallet(glob.user_a))
+                        ._bn.should.eq.BN(1);
+                    (await ethersPartnerFund.activeBalanceByIndex(1, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(10);
+                    (await ethersPartnerFund.activeBalanceByName('some partner', web3ERC20.address, 0))
+                        ._bn.should.eq.BN(10);
+                    (await ethersPartnerFund.activeBalanceByNameHash(nameHash, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(10);
+                    (await ethersPartnerFund.activeBalanceByWallet(glob.user_a, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(10);
+                    (await ethersPartnerFund.stagedBalanceByIndex(1, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByName('some partner', web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByNameHash(nameHash, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, web3ERC20.address, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('stage()', () => {
+            beforeEach(async () => {
+                await web3PartnerFund.registerByName(
+                    'some partner', 1e15, glob.user_a, true, true
+                );
 
-        it(testCounter.next() + ': MUST FAIL [deposit]: Invalid index deposit 0 for user B.', async() => {
-            try {
-                await glob.web3PartnerFund.deposit(userBTag, 0);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                await web3PartnerFund.receiveEthersTo(
+                    '0x0000000000000000000000000000000000000001',
+                    '',
+                    {
+                        from: glob.user_a,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
+                    }
+                );
+            });
+
+            describe('if called by non-registered wallet', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.stage(web3.toWei(1, 'ether'), address0, 0, {from: glob.user_b})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called with negative amount', () => {
+                it('should revert', async () => {
+                    web3PartnerFund.stage(web3.toWei(-1, 'ether'), address0, 0, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let nameHash;
+
+                before(() => {
+                    nameHash = cryptography.hash('SOME PARTNER');
+                });
+
+                it('should successfully stage', async () => {
+                    await web3PartnerFund.stage(web3.toWei(0.6, 'ether'), address0, 0, {from: glob.user_a});
+
+                    (await ethersPartnerFund.activeBalanceByIndex(1, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                    (await ethersPartnerFund.activeBalanceByName('some partner', address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                    (await ethersPartnerFund.activeBalanceByNameHash(nameHash, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                    (await ethersPartnerFund.activeBalanceByWallet(glob.user_a, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                    (await ethersPartnerFund.stagedBalanceByIndex(1, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.6')._bn);
+                    (await ethersPartnerFund.stagedBalanceByName('some partner', address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.6')._bn);
+                    (await ethersPartnerFund.stagedBalanceByNameHash(nameHash, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.6')._bn);
+                    (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('0.6')._bn);
+                });
+            });
         });
 
-        //------------------------------------------------------------------------
+        describe('withdraw()', () => {
+            beforeEach(async () => {
+                await web3PartnerFund.registerByName(
+                    'some partner', 1e15, glob.user_a, true, true
+                );
+            });
 
-        it(testCounter.next() + ': MUST SUCCEED [deposit]: User A should have 3 tokens at index 1', async() => {
-            try {
-                let args = await glob.web3PartnerFund.deposit(userATag, 1);
-                const _amount = args[0];
-                const _blocknum = args[1];
-                const _currencyCt = args[2];
-                const _currencyId = args[3];
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3PartnerFund.receiveEthersTo(
+                        '0x0000000000000000000000000000000000000001',
+                        '',
+                        {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    );
 
-                assert.equal(_currencyCt, glob.web3Erc20.address, 'Unexpected ether or other token deposit.');
-                assert.equal(_currencyId, 0, 'Unexpected NFT token deposit.');
-                assert.equal(_amount, 3, 'Unexpeced token deposit amount.');
-                assert.notEqual(_blocknum, 0, 'Block number cannot be null.');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
+                    await web3PartnerFund.stage(
+                        web3.toWei(0.6, 'ether'), address0, 0, {from: glob.user_a}
+                    );
+                });
 
-        //------------------------------------------------------------------------
+                describe('if called by non-registered wallet', () => {
+                    it('should revert', async () => {
+                        web3PartnerFund.withdraw(web3.toWei(0.4, 'ether'), address0, 0, '', {from: glob.user_b})
+                            .should.be.rejected;
+                    });
+                });
 
-        it(testCounter.next() + ': MUST SUCCEED [activeBalance]: 1 ETH for User A', async() => {
-            try {
-                let balance = await glob.web3PartnerFund.activeBalance(userATag, 0, 0);
-                assert.equal(balance, web3.toWei(1, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
+                describe('if called with negative amount', () => {
+                    it('should revert', async () => {
+                        web3PartnerFund.withdraw(web3.toWei(-0.4, 'ether'), address0, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
 
-        //------------------------------------------------------------------------
+                describe('if within operational constraints', () => {
+                    let nameHash;
 
-        it(testCounter.next() + ': MUST SUCCEED [activeBalance]: 3 tokens for User A', async() => {
-            try {
-                let balance = await glob.web3PartnerFund.activeBalance(userATag, glob.web3Erc20.address, 0);
-                assert.equal(balance, 3, 'Wrong balance [' + balance.toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
+                    before(() => {
+                        nameHash = cryptography.hash('SOME PARTNER');
+                    });
 
-        //------------------------------------------------------------------------
+                    it('should successfully withdraw', async () => {
+                        await web3PartnerFund.withdraw(web3.toWei(0.4, 'ether'), address0, 0, '', {from: glob.user_a});
 
-        it(testCounter.next() + ': MUST SUCCEED [stagedBalance]: 0 ETH for User A', async() => {
-            try {
-                let balance = await glob.web3PartnerFund.stagedBalance(userATag, 0, 0);
-                assert.equal(balance, web3.toWei(0, 'ether'), 'Wrong balance [' + web3.fromWei(balance, 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
+                        (await ethersPartnerFund.activeBalanceByIndex(1, address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                        (await ethersPartnerFund.activeBalanceByName('some partner', address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                        (await ethersPartnerFund.activeBalanceByNameHash(nameHash, address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                        (await ethersPartnerFund.activeBalanceByWallet(glob.user_a, address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                        (await ethersPartnerFund.stagedBalanceByIndex(1, address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
+                        (await ethersPartnerFund.stagedBalanceByName('some partner', address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
+                        (await ethersPartnerFund.stagedBalanceByNameHash(nameHash, address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
+                        (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
+                    });
+                });
+            });
 
-        //------------------------------------------------------------------------
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3PartnerFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
 
-        it(testCounter.next() + ': MUST SUCCEED [stagedBalance]: 0 tokens for User A', async() => {
-            try {
-                let balance = await glob.web3PartnerFund.stagedBalance(userATag, glob.web3Erc20.address, 0);
-                assert.equal(balance, 0, 'Wrong balance [' + balance.toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
+                    await web3PartnerFund.receiveTokensTo(
+                        '0x0000000000000000000000000000000000000001', '', 10, web3ERC20.address, 0,
+                        '', {from: glob.user_a}
+                    );
 
-        //------------------------------------------------------------------------
+                    await web3PartnerFund.stage(6, web3ERC20.address, 0, {from: glob.user_a});
+                });
 
-        it(testCounter.next() + ': MUST SUCCEED [stage]: User A wants to stage 0.2 ETH', async() => {
-            try {
-                let oldStagedBalance = await glob.web3PartnerFund.stagedBalance(userATag, 0, 0);
-                let oldActiveBalance = await glob.web3PartnerFund.activeBalance(userATag, 0, 0);
+                describe('if called by non-registered wallet', () => {
+                    it('should revert', async () => {
+                        web3PartnerFund.withdraw(4, web3ERC20.address, 0, '', {from: glob.user_b})
+                            .should.be.rejected;
+                    });
+                });
 
-                let result = await glob.web3PartnerFund.stage(web3.toWei(0.2, 'ether'), 0, 0, { from: glob.user_a });
+                describe('if called with negative amount', () => {
+                    it('should revert', async () => {
+                        web3PartnerFund.withdraw(-4, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
 
-                let newStagedBalance = await glob.web3PartnerFund.stagedBalance(userATag, 0, 0);
-                let newActiveBalance = await glob.web3PartnerFund.activeBalance(userATag, 0, 0);
+                describe('if within operational constraints', () => {
+                    let nameHash;
 
-                assert.equal(oldActiveBalance.sub(newActiveBalance), web3.toWei(0.2, 'ether'), 'Wrong active balance [Diff ' + web3.fromWei(oldActiveBalance.add(newActiveBalance), 'ether') + ' ethers].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), web3.toWei(0.2, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(newStagedBalance.sub(oldStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
+                    before(() => {
+                        nameHash = cryptography.hash('SOME PARTNER');
+                    });
 
-        //------------------------------------------------------------------------
+                    it('should successfully withdraw', async () => {
+                        await web3PartnerFund.withdraw(4, web3ERC20.address, 0, '', {from: glob.user_a});
 
-        it(testCounter.next() + ': MUST SUCCEED [stage]: User A wants to stage 2 token', async() => {
-            try {
-                let oldStagedBalance = await glob.web3PartnerFund.stagedBalance(userATag, glob.web3Erc20.address, 0);
-                let oldActiveBalance = await glob.web3PartnerFund.activeBalance(userATag, glob.web3Erc20.address, 0);
-
-                let result = await glob.web3PartnerFund.stage(2, glob.web3Erc20.address, 0, { from: glob.user_a });
-                let newStagedBalance = await glob.web3PartnerFund.stagedBalance(userATag, glob.web3Erc20.address, 0);
-                let newActiveBalance = await glob.web3PartnerFund.activeBalance(userATag, glob.web3Erc20.address, 0);
-
-                assert.equal(oldActiveBalance.sub(newActiveBalance), 2, 'Wrong active balance [Diff ' + oldActiveBalance.add(newActiveBalance).toString() + ' tokens].');
-                assert.equal(newStagedBalance.sub(oldStagedBalance), 2, 'Wrong staged balance [Diff ' + newStagedBalance.sub(oldStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [withdraw]: User A wants to withdraw 0.1 ETH', async() => {
-            try {
-                let oldStagedBalance = await glob.web3PartnerFund.stagedBalanceFromAddress(glob.user_a, 0, 0);
-                let oldEthersBalance = await web3.eth.getBalancePromise(glob.user_a);
-
-                let result = await glob.web3PartnerFund.withdraw(web3.toWei(0.1, 'ether'), 0, 0, "", { from: glob.user_a });
-
-                let tx = web3.eth.getTransaction(result.tx);
-                let totalGasPrice = new web3.BigNumber(result.receipt.gasUsed);
-                totalGasPrice = totalGasPrice.mul(new web3.BigNumber(tx.gasPrice));
-
-                let newStagedBalance = await glob.web3PartnerFund.stagedBalanceFromAddress(glob.user_a, 0, 0);
-                let newEthersBalance = await web3.eth.getBalancePromise(glob.user_a);
-
-                assert.equal(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), web3.toWei(0.1, 'ether'), 'Wrong user A balance [Diff ' + web3.fromWei(newEthersBalance.add(totalGasPrice).sub(oldEthersBalance), 'ether') + ' ethers].');
-                assert.equal(oldStagedBalance.sub(newStagedBalance), web3.toWei(0.1, 'ether'), 'Wrong staged balance [Diff ' + web3.fromWei(oldStagedBalance.sub(newStagedBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [withdraw]: User A wants to withdraw 1 token', async() => {
-            try {
-                let oldStagedBalance = await glob.web3PartnerFund.stagedBalanceFromAddress(glob.user_a, glob.web3Erc20.address, 0);
-                let oldTokensBalance = await glob.web3Erc20.balanceOf(glob.user_a);
-
-                let result = await glob.web3PartnerFund.withdraw(1, glob.web3Erc20.address, 0, "", { from: glob.user_a });
-
-                let newStagedBalance = await glob.web3PartnerFund.stagedBalanceFromAddress(glob.user_a, glob.web3Erc20.address, 0);
-                let newTokensBalance = await glob.web3Erc20.balanceOf(glob.user_a);
-
-                assert.equal(newTokensBalance.sub(oldTokensBalance), 1, 'Wrong user A balance [Diff ' + newTokensBalance.sub(oldTokensBalance).toString() + ' tokens].');
-                assert.equal(oldStagedBalance.sub(newStagedBalance), 1, 'Wrong staged balance [Diff ' + oldStagedBalance.sub(newStagedBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+                        (await ethersPartnerFund.activeBalanceByIndex(1, web3ERC20.address, 0))
+                            ._bn.should.eq.BN(4);
+                        (await ethersPartnerFund.activeBalanceByName('some partner', web3ERC20.address, 0))
+                            ._bn.should.eq.BN(4);
+                        (await ethersPartnerFund.activeBalanceByNameHash(nameHash, web3ERC20.address, 0))
+                            ._bn.should.eq.BN(4);
+                        (await ethersPartnerFund.activeBalanceByWallet(glob.user_a, web3ERC20.address, 0))
+                            ._bn.should.eq.BN(4);
+                        (await ethersPartnerFund.stagedBalanceByIndex(1, web3ERC20.address, 0))
+                            ._bn.should.eq.BN(2);
+                        (await ethersPartnerFund.stagedBalanceByName('some partner', web3ERC20.address, 0))
+                            ._bn.should.eq.BN(2);
+                        (await ethersPartnerFund.stagedBalanceByNameHash(nameHash, web3ERC20.address, 0))
+                            ._bn.should.eq.BN(2);
+                        (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, web3ERC20.address, 0))
+                            ._bn.should.eq.BN(2);
+                    });
+                });
+            });
         });
     });
 };

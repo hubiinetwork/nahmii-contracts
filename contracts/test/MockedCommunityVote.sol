@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 /**
 @title MockedCommunityVote
@@ -32,7 +32,9 @@ contract MockedCommunityVote {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
+    function _reset()
+    public
+    {
         maxDriipNonce = 0;
         maxNullNonce = 0;
         dataAvailable = true;
@@ -40,37 +42,62 @@ contract MockedCommunityVote {
         doubleSpenderWalletStatsIndex = 0;
     }
 
-    function addDoubleSpenderWallet(bool doubleSpender) public returns (address[3]) {
+    function addDoubleSpenderWallet(bool doubleSpender)
+    public
+    returns (address[3])
+    {
         doubleSpenderWalletStats.push(doubleSpender);
     }
 
-    function isDoubleSpenderWallet(address wallet) public returns (bool) {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
+    function isDoubleSpenderWallet(address)
+    public
+    returns (bool)
+    {
         return doubleSpenderWalletStats.length == 0 ? false : doubleSpenderWalletStats[doubleSpenderWalletStatsIndex++];
     }
 
-    function setMaxDriipNonce(uint256 _maxDriipNonce) public returns (uint256) {
+    function setMaxDriipNonce(uint256 _maxDriipNonce)
+    public
+    returns (uint256)
+    {
         return maxDriipNonce = _maxDriipNonce;
     }
 
-    function getMaxDriipNonce() public view returns (uint256) {
+    function getMaxDriipNonce()
+    public
+    view
+    returns (uint256)
+    {
         return maxDriipNonce;
     }
 
-    function setMaxNullNonce(uint256 _maxNullNonce) public returns (uint256) {
+    function setMaxNullNonce(uint256 _maxNullNonce)
+    public
+    returns (uint256)
+    {
         return maxNullNonce = _maxNullNonce;
     }
 
-    function getMaxNullNonce() public view returns (uint256) {
+    function getMaxNullNonce()
+    public
+    view
+    returns (uint256)
+    {
         return maxNullNonce;
     }
 
-    function setDataAvailable(bool _dataAvailable) public returns (bool) {
+    function setDataAvailable(bool _dataAvailable)
+    public
+    returns (bool)
+    {
         return dataAvailable = _dataAvailable;
     }
 
-    function isDataAvailable() public view returns (bool) {
+    function isDataAvailable()
+    public
+    view
+    returns (bool)
+    {
         return dataAvailable;
     }
 }

@@ -359,7 +359,7 @@ module.exports = (glob) => {
         });
 
         describe('communityVoteUpdateDisabled()', () => {
-            it('should return value initialized', async () => {
+            it('should equal value initialized', async () => {
                 const result = await ethersDriipSettlement.communityVoteUpdateDisabled();
                 result.should.be.false;
             });
@@ -669,10 +669,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(2);
-                        const stageTotalFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersDriipSettlement.interface.events.StageTotalFeeEvent.topics[0]
+                        const StageFeesEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersDriipSettlement.interface.events.StageFeesEvent.topics[0]
                         ));
-                        stageTotalFeeEvents.should.have.lengthOf(1);
+                        StageFeesEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersDriipSettlement.interface.events.SettleTradeEvent.topics[0]
                         ));
@@ -713,9 +713,9 @@ module.exports = (glob) => {
                         const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
                         totalFeeTransfer[0].should.equal(mocks.address0);
                         totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].amount._bn);
-                        totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].currency.id._bn);
+                        totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
 
@@ -801,7 +801,7 @@ module.exports = (glob) => {
                 await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
             });
 
-            describe('if called from non-deployer', () => {
+            describe('if called by non-operator', () => {
                 beforeEach(async () => {
                     ethersDriipSettlement = ethersDriipSettlement.connect(glob.signer_a);
                 });
@@ -944,10 +944,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(2);
-                        const stageTotalFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersDriipSettlement.interface.events.StageTotalFeeEvent.topics[0]
+                        const StageFeesEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersDriipSettlement.interface.events.StageFeesEvent.topics[0]
                         ));
-                        stageTotalFeeEvents.should.have.lengthOf(1);
+                        StageFeesEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersDriipSettlement.interface.events.SettleTradeByProxyEvent.topics[0]
                         ));
@@ -988,9 +988,9 @@ module.exports = (glob) => {
                         const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
                         totalFeeTransfer[0].should.equal(mocks.address0);
                         totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].amount._bn);
-                        totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].currency.id._bn);
+                        totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
 
@@ -1200,10 +1200,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(1);
-                        const stageTotalFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersDriipSettlement.interface.events.StageTotalFeeEvent.topics[0]
+                        const StageFeesEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersDriipSettlement.interface.events.StageFeesEvent.topics[0]
                         ));
-                        stageTotalFeeEvents.should.have.lengthOf(1);
+                        StageFeesEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersDriipSettlement.interface.events.SettlePaymentEvent.topics[0]
                         ));
@@ -1231,9 +1231,9 @@ module.exports = (glob) => {
                         const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
                         totalFeeTransfer[0].should.equal(mocks.address0);
                         totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].amount._bn);
-                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].currency.id._bn);
+                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
 
@@ -1309,7 +1309,7 @@ module.exports = (glob) => {
                 await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
             });
 
-            describe('if called from non-deployer', () => {
+            describe('if called by non-operator', () => {
                 beforeEach(async () => {
                     ethersDriipSettlement = ethersDriipSettlement.connect(glob.signer_a);
                 });
@@ -1441,10 +1441,10 @@ module.exports = (glob) => {
                             ethersClientFund.interface.events.StageEvent.topics[0]
                         ));
                         clientFundStageEvents.should.have.lengthOf(1);
-                        const stageTotalFeeEvents = await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersDriipSettlement.interface.events.StageTotalFeeEvent.topics[0]
+                        const StageFeesEvents = await provider.getLogs(await fromBlockTopicsFilter(
+                            ethersDriipSettlement.interface.events.StageFeesEvent.topics[0]
                         ));
-                        stageTotalFeeEvents.should.have.lengthOf(1);
+                        StageFeesEvents.should.have.lengthOf(1);
                         const settleDriipEvents = await provider.getLogs(await fromBlockTopicsFilter(
                             ethersDriipSettlement.interface.events.SettlePaymentByProxyEvent.topics[0]
                         ));
@@ -1472,9 +1472,9 @@ module.exports = (glob) => {
                         const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
                         totalFeeTransfer[0].should.equal(mocks.address0);
                         totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].amount._bn);
-                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].currency.id._bn);
+                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlement.settlementsCount())._bn.should.eq.BN(1);
 

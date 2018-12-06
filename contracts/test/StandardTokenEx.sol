@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 /**
  * Originally from https://github.com/OpenZeppelin/zeppelin-solidity
@@ -26,7 +26,10 @@ contract StandardTokenEx is ERC20 {
      * @param to The address to transfer to.
      * @param value The amount to be transferred.
      */
-    function transfer(address to, uint value) public returns (bool success) {
+    function transfer(address to, uint value)
+    public
+    returns (bool success)
+    {
         balances[msg.sender] = balances[msg.sender].sub(value);
         balances[to] = balances[to].add(value);
         emit Transfer(msg.sender, to, value);
@@ -38,7 +41,11 @@ contract StandardTokenEx is ERC20 {
      * @param account The address whose balance is to be queried.
      * @return An uint representing the amount owned by the passed address.
      */
-    function balanceOf(address account) public view returns (uint balance) {
+    function balanceOf(address account)
+    public
+    view
+    returns (uint balance)
+    {
         return balances[account];
     }
 
@@ -48,7 +55,10 @@ contract StandardTokenEx is ERC20 {
      * @param to address The address which you want to transfer to
      * @param value uint the amout of tokens to be transfered
      */
-    function transferFrom(address from, address to, uint value) public returns (bool success) {
+    function transferFrom(address from, address to, uint value)
+    public
+    returns (bool success)
+    {
         uint allowance = allowed[from][msg.sender];
         require(value <= allowance, "value is > allowance");
 
@@ -68,7 +78,10 @@ contract StandardTokenEx is ERC20 {
      * @param spender The address which will spend the funds.
      * @param value The amount of tokens to be spent.
      */
-    function approve(address spender, uint value) public returns (bool success) {
+    function approve(address spender, uint value)
+    public
+    returns (bool success)
+    {
         // To change the approve amount you first have to reduce the addresses'
         //  allowance to zero by calling `approve(spender, 0)` if it is not
         //  already 0 to mitigate the race condition described here:
@@ -86,7 +99,11 @@ contract StandardTokenEx is ERC20 {
      * @param spender address The address which will spend the funds.
      * @return A uint specifing the amount of tokens still avaible for the spender.
      */
-    function allowance(address account, address spender) public view returns (uint remaining) {
+    function allowance(address account, address spender)
+    public
+    view
+    returns (uint remaining)
+    {
         return allowed[account][spender];
     }
 
@@ -95,7 +112,10 @@ contract StandardTokenEx is ERC20 {
      *
      * Works around https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
      */
-    function addApproval(address spender, uint addedValue) public returns (bool success) {
+    function addApproval(address spender, uint addedValue)
+    public
+    returns (bool success)
+    {
         uint oldValue = allowed[msg.sender][spender];
         allowed[msg.sender][spender] = oldValue.add(addedValue);
         emit Approval(msg.sender, spender, allowed[msg.sender][spender]);
@@ -107,7 +127,10 @@ contract StandardTokenEx is ERC20 {
      *
      * Works around https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
      */
-    function subApproval(address spender, uint subtractedValue) public returns (bool success) {
+    function subApproval(address spender, uint subtractedValue)
+    public
+    returns (bool success)
+    {
         uint oldVal = allowed[msg.sender][spender];
         if (subtractedValue > oldVal) {
             allowed[msg.sender][spender] = 0;
@@ -121,7 +144,9 @@ contract StandardTokenEx is ERC20 {
     /**
      * @dev Provides an internal function for destroying tokens. Useful for upgrades.
      */
-    function burnTokens(address account, uint value) internal {
+    function burnTokens(address account, uint value)
+    internal
+    {
         balances[account] = balances[account].sub(value);
         total_supply = total_supply.sub(value);
         emit Transfer(account, 0, value);
@@ -130,7 +155,9 @@ contract StandardTokenEx is ERC20 {
     /**
      * @dev Provides an internal minting function.
      */
-    function mintInternal(address receiver, uint amount) internal {
+    function mintInternal(address receiver, uint amount)
+    internal
+    {
         total_supply = total_supply.add(amount);
         balances[receiver] = balances[receiver].add(amount);
 
@@ -141,7 +168,9 @@ contract StandardTokenEx is ERC20 {
     }
 
     /* Testing purposes only */
-    function testMint(address receiver, uint amount) public {
+    function testMint(address receiver, uint amount)
+    public
+    {
         mintInternal(receiver, amount);
     }
 }

@@ -6,16 +6,15 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Challenge} from "./Challenge.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDispute} from "./NullSettlementDispute.sol";
-import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
@@ -23,7 +22,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 @title NullSettlementChallenge
 @notice Where null settlements are started and challenged
 */
-contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
+contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -132,30 +131,30 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         require(!isLockedWallet(msg.sender));
 
         // Start challenge for wallet
-        startChallengePrivate(msg.sender, amount, currencyCt, currencyId, true);
+        _startChallenge(msg.sender, amount, currencyCt, currencyId, true);
 
         // Emit event
         emit StartChallengeEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
     /// @notice Start settlement challenge for the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param amount The concerned amount to stage
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function startChallengeByProxy(address wallet, int256 amount, address currencyCt, uint256 currencyId)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Start challenge for wallet
-        startChallengePrivate(wallet, amount, currencyCt, currencyId, false);
+        _startChallenge(wallet, amount, currencyCt, currencyId, false);
 
         // Emit event
         emit StartChallengeByProxyEvent(msg.sender, wallet, amount, currencyCt, currencyId);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return true if proposal has expired, else false
@@ -174,7 +173,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the challenge nonce of the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The challenge nonce
@@ -189,7 +188,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the settlement proposal block number of the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal block number
@@ -204,7 +203,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the settlement proposal end time of the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal end time
@@ -219,7 +218,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the challenge status of the given wallet
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The challenge status
@@ -234,7 +233,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the settlement proposal stage amount of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal stage amount
@@ -249,7 +248,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the settlement proposal target balance amount of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal target balance amount
@@ -264,7 +263,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the balance reward of the given wallet's settlement proposal
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The balance reward of the settlement proposal
@@ -279,7 +278,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the disqualification candidate type of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The candidate type of the settlement disqualification
@@ -294,7 +293,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the disqualification candidate hash of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The candidate hash of the settlement disqualification
@@ -309,7 +308,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Get the disqualification challenger of the given wallet and currency
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The challenger of the settlement disqualification
@@ -325,7 +324,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
 
     /// @notice Set settlement proposal end time property of the given wallet
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param expirationTime The end time value
     function setProposalExpirationTime(address wallet, address currencyCt, uint256 currencyId,
         uint256 expirationTime)
@@ -339,7 +338,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
 
     /// @notice Set settlement proposal status property of the given wallet
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param status The status value
     function setProposalStatus(address wallet, address currencyCt, uint256 currencyId,
         SettlementTypesLib.Status status)
@@ -392,7 +391,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
 
     /// @notice Disqualify the given wallet
     /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     function lockWallet(address wallet)
     public
     onlyNullSettlementDispute
@@ -406,7 +405,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Gauge whether the wallet is (temporarily) locked
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @return true if wallet is locked, else false
     function isLockedWallet(address wallet)
     public
@@ -417,7 +416,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     }
 
     /// @notice Add a disqualification instance
-    /// @param wallet The concerned wallet
+    /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param candidateHash The candidate hash
@@ -454,7 +453,7 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function startChallengePrivate(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId,
+    function _startChallenge(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId,
         bool balanceReward)
     private
     {
@@ -465,18 +464,15 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
         require(stageAmount.isPositiveInt256());
 
         // Require that wallet has no overlap with active proposal
-        require(hasProposalExpired(
+        require(
+            hasProposalExpired(
                 wallet, currencyCt, currencyId
-            ));
-
-        uint256 activeBalanceLogEntriesCount = clientFund.activeBalanceLogEntriesCount(wallet, currencyCt, currencyId);
-
-        // Require that wallet has active balance log entries
-        require(activeBalanceLogEntriesCount > 0);
-
-        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = clientFund.activeBalanceLogEntry(
-            wallet, currencyCt, currencyId, activeBalanceLogEntriesCount.sub(1)
+            )
         );
+
+        // Get the last logged active balance amount and block number
+        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) =
+        _activeBalanceLogEntry(wallet, currencyCt, currencyId);
 
         // Require that balance amount is not less than stage amount
         require(activeBalanceAmount >= stageAmount);
@@ -505,6 +501,32 @@ contract NullSettlementChallenge is Ownable, Challenge, ClientFundable {
             challengeByWallets[wallet] = true;
             challengeWallets.push(wallet);
         }
+    }
+
+    function _activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId)
+    private
+    view
+    returns (int256 amount, uint256 blockNumber)
+    {
+        (int256 depositedAmount, uint256 depositedBlockNumber) =
+        0 < balanceTracker.logSize(wallet, balanceTracker.depositedBalanceType(), currencyCt, currencyId) ?
+        balanceTracker.lastLog(
+            wallet, balanceTracker.depositedBalanceType(), currencyCt, currencyId
+        ) :
+        (0, 0);
+
+        (int256 settledAmount, uint256 settledBlockNumber) =
+        0 < balanceTracker.logSize(wallet, balanceTracker.settledBalanceType(), currencyCt, currencyId) ?
+        balanceTracker.lastLog(
+            wallet, balanceTracker.settledBalanceType(), currencyCt, currencyId
+        ) :
+        (0, 0);
+
+        // Set amount as the sum of deposited and settled
+        amount = depositedAmount.add(settledAmount);
+
+        // Set block number as the latest of deposited and settled
+        blockNumber = depositedBlockNumber > settledBlockNumber ? depositedBlockNumber : settledBlockNumber;
     }
 
     //
