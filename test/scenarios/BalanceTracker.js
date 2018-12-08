@@ -130,8 +130,10 @@ module.exports = function (glob) {
             });
 
             it('should revert', async () => {
-                web3BalanceTracker.logByIndex.call(glob.user_a, type, address0, 0, 0)
-                    .should.be.rejected;
+                const logRecord = await ethersBalanceTracker.logByIndex(glob.user_a, type, address0, 0, 0);
+
+                logRecord.amount._bn.should.eq.BN(0);
+                logRecord.blockNumber._bn.should.eq.BN(0);
             });
         });
 
@@ -145,8 +147,10 @@ module.exports = function (glob) {
             });
 
             it('should revert', async () => {
-                web3BalanceTracker.logByBlockNumber.call(glob.user_a, type, address0, 0, blockNumber)
-                    .should.be.rejected;
+                const logRecord = await ethersBalanceTracker.logByBlockNumber(glob.user_a, type, address0, 0, blockNumber);
+
+                logRecord.amount._bn.should.eq.BN(0);
+                logRecord.blockNumber._bn.should.eq.BN(0);
             });
         });
 
@@ -158,8 +162,10 @@ module.exports = function (glob) {
             });
 
             it('should revert', async () => {
-                web3BalanceTracker.lastLog.call(glob.user_a, type, address0, 0)
-                    .should.be.rejected;
+                const logRecord = await ethersBalanceTracker.lastLog(glob.user_a, type, address0, 0);
+
+                logRecord.amount._bn.should.eq.BN(0);
+                logRecord.blockNumber._bn.should.eq.BN(0);
             });
         });
 
