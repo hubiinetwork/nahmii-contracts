@@ -8,7 +8,11 @@
 
 pragma solidity ^0.4.25;
 
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+
 library BalanceLogLib {
+    using SafeMathUintLib for uint256;
+
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -31,10 +35,19 @@ library BalanceLogLib {
     {
         if (currencyCt == address(0))
             require(currencyId == 0);
-        require(index < self.entries[currencyCt][currencyId].length);
 
-        amount = self.entries[currencyCt][currencyId][index].amount;
-        blockNumber = self.entries[currencyCt][currencyId][index].blockNumber;
+        // Return 0s if there are no log entries
+        if (0 == count(self, currencyCt, currencyId)) {
+            amount = 0;
+            blockNumber = 0;
+
+        } else {
+            // Clamp index to max of highest index
+            index = index.clampMax(self.entries[currencyCt][currencyId].length - 1);
+
+            amount = self.entries[currencyCt][currencyId][index].amount;
+            blockNumber = self.entries[currencyCt][currencyId][index].blockNumber;
+        }
     }
 
     function getByBlockNumber(BalanceLog storage self, address currencyCt, uint256 currencyId, uint256 _blockNumber)
@@ -42,7 +55,25 @@ library BalanceLogLib {
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        return getByIndex(self, currencyCt, currencyId, indexByBlockNumber(self, currencyCt, currencyId, _blockNumber));
+        if (currencyCt == address(0))
+            require(currencyId == 0);
+
+        // Return 0 values if there are no log entries
+        if (0 == count(self, currencyCt, currencyId)) {
+            amount = 0;
+            blockNumber = 0;
+
+        } else {
+            uint256 index = indexByBlockNumber(self, currencyCt, currencyId, _blockNumber);
+
+            if (0 == index) {
+                amount = 0;
+                blockNumber = 0;
+            } else {
+                amount = self.entries[currencyCt][currencyId][index - 1].amount;
+                blockNumber = self.entries[currencyCt][currencyId][index - 1].blockNumber;
+            }
+        }
     }
 
     function getLast(BalanceLog storage self, address currencyCt, uint256 currencyId)
@@ -52,12 +83,18 @@ library BalanceLogLib {
     {
         if (currencyCt == address(0))
             require(currencyId == 0);
-        require(0 < self.entries[currencyCt][currencyId].length);
 
-        uint256 index = self.entries[currencyCt][currencyId].length - 1;
+        // Return 0s if there are no log entries
+        if (0 == count(self, currencyCt, currencyId)) {
+            amount = 0;
+            blockNumber = 0;
 
-        amount = self.entries[currencyCt][currencyId][index].amount;
-        blockNumber = self.entries[currencyCt][currencyId][index].blockNumber;
+        } else {
+            uint256 index = self.entries[currencyCt][currencyId].length - 1;
+
+            amount = self.entries[currencyCt][currencyId][index].amount;
+            blockNumber = self.entries[currencyCt][currencyId][index].blockNumber;
+        }
     }
 
     function add(BalanceLog storage self, int256 amount, address currencyCt, uint256 currencyId)
@@ -83,10 +120,13 @@ library BalanceLogLib {
     view
     returns (uint256)
     {
-        require(0 < self.entries[currencyCt][currencyId].length);
-        for (uint256 i = self.entries[currencyCt][currencyId].length - 1; i >= 0; i--)
-            if (blockNumber >= self.entries[currencyCt][currencyId][i].blockNumber)
+        if (0 == self.entries[currencyCt][currencyId].length)
+            return 0;
+
+        for (uint256 i = self.entries[currencyCt][currencyId].length; i > 0; i--)
+            if (blockNumber >= self.entries[currencyCt][currencyId][i - 1].blockNumber)
                 return i;
-        revert();
+
+        return 0;
     }
 }

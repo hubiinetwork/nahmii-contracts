@@ -224,8 +224,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe
-            ('if amount to be staged is negative', () => {
+            describe('if amount to be staged is negative', () => {
                 it('should revert', async () => {
                     web3NullSettlementChallenge.startChallenge(-1, mocks.address0, 0)
                         .should.be.rejected;

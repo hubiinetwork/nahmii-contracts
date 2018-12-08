@@ -128,20 +128,20 @@ module.exports = (deployer, network, accounts) => {
                 RevenueFund, SecurityBond, Validator
             ]);
             await deployer.link(MonetaryTypesLib, [
-                BlockNumbCurrenciesLib, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, Hasher, InUseCurrencyLib,
-                MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
+                BlockNumbCurrenciesLib, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
+                Hasher, InUseCurrencyLib, MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
                 PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathIntLib, [
-                AccrualBenefactor, BalanceLib, BalanceTracker, BlockNumbDisdIntsLib, CancelOrdersChallenge, ClientFund,
+                AccrualBenefactor, BalanceLib, BalanceLogLib, BalanceTracker, BlockNumbDisdIntsLib, CancelOrdersChallenge, ClientFund,
                 Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
                 NullSettlementChallenge, NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond,
                 TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathUintLib, [
-                CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
-                NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, SecurityBond, StandardTokenEx,
-                TokenHolderRevenueFund, UnitTestHelpers, Validator, WalletLocker
+                BalanceLogLib, BalanceTracker, CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge,
+                DriipSettlementDispute,  NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund,
+                SecurityBond, StandardTokenEx, TokenHolderRevenueFund, UnitTestHelpers, Validator, WalletLocker
             ]);
             await deployer.link(Strings, [
                 PartnerFund
