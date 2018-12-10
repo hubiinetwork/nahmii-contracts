@@ -554,7 +554,7 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            await instance.setRevenueToken(addressStorage.get('NahmiiToken'));
+            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
 
             instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));

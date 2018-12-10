@@ -15,12 +15,13 @@ import {Servable} from "./Servable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {RevenueToken} from "./RevenueToken.sol";
-import {TransferController} from "./TransferController.sol";
 import {BalanceLib} from "./BalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+import {RevenueToken} from "./RevenueToken.sol";
+import {RevenueTokenManager} from "./RevenueTokenManager.sol";
+import {TransferController} from "./TransferController.sol";
 
 /**
 @title TokenHolderRevenueFund
@@ -55,14 +56,13 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         TxHistoryLib.TxHistory txHistory;
 
-        // Claim accrual tracking
         mapping(address => mapping(uint256 => uint256[])) claimedAccrualBlockNumbers;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    RevenueToken private revenueToken;
+    RevenueTokenManager public revenueTokenManager;
 
     BalanceLib.Balance  periodAccrual;
     InUseCurrencyLib.InUseCurrency periodInUseCurrency;
@@ -78,7 +78,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetRevenueTokenEvent(RevenueToken oldRevenueToken, RevenueToken newRevenueToken);
+    event SetRevenueTokenManagerEvent(RevenueTokenManager oldRevenueTokenManager, RevenueTokenManager newRevenueTokenManager);
     event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt,
         uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
@@ -95,20 +95,20 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Set the revenue token contract
-    /// @param newRevenueToken The (address of) RevenueToken contract instance
-    function setRevenueToken(RevenueToken newRevenueToken)
+    /// @notice Set the revenue token manager contract
+    /// @param newRevenueTokenManager The (address of) RevenueTokenManager contract instance
+    function setRevenueTokenManager(RevenueTokenManager newRevenueTokenManager)
     public
     onlyDeployer
-    notNullAddress(newRevenueToken)
+    notNullAddress(newRevenueTokenManager)
     {
-        if (newRevenueToken != revenueToken) {
+        if (newRevenueTokenManager != revenueTokenManager) {
             // Set new revenue token
-            RevenueToken oldRevenueToken = revenueToken;
-            revenueToken = newRevenueToken;
+            RevenueTokenManager oldRevenueTokenManager = revenueTokenManager;
+            revenueTokenManager = newRevenueTokenManager;
 
             // Emit event
-            emit SetRevenueTokenEvent(oldRevenueToken, newRevenueToken);
+            emit SetRevenueTokenManagerEvent(oldRevenueTokenManager, newRevenueTokenManager);
         }
     }
 
@@ -243,7 +243,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     function claimAccrual(address currencyCt, uint256 currencyId)
     public
     {
-        require(address(revenueToken) != address(0));
         require(0 < accrualBlockNumbersByCurrency[currencyCt][currencyId].length);
 
         // Lower bound = last accrual block number claimed for currency c by msg.sender OR 0
@@ -255,16 +254,19 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         require(bnLow < bnUp);
 
-        int256 claimable = aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnUp]
+        int256 claimableAmount = aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnUp]
         - aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnLow];
 
-        int256 senderBalanceBlocks = int256(revenueToken.balanceBlocksIn(msg.sender, bnLow, bnUp));
+        int256 senderBalanceBlocks = int256(
+            RevenueToken(revenueTokenManager.token()).balanceBlocksIn(msg.sender, bnLow, bnUp)
+        );
 
-        // TODO Calculate this one
-        int256 circulatingBalanceBlocks = 0;
+        int256 circulatingBalanceBlocks = int256(
+            revenueTokenManager.releasedAmountBlocksIn(bnLow, bnUp)
+        );
 
         // Calculate claim amount
-        int256 amount = senderBalanceBlocks.mul_nn(claimable).mul_nn(1e18).div_nn(circulatingBalanceBlocks.mul_nn(1e18));
+        int256 amount = senderBalanceBlocks.mul_nn(claimableAmount).mul_nn(1e18).div_nn(circulatingBalanceBlocks.mul_nn(1e18));
 
         // Store upper bound as the last claimed accrual block number for currency
         claimedAccrualBlockNumbers.push(bnUp);
@@ -327,13 +329,5 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     returns (uint256)
     {
         return walletMap[wallet].txHistory.withdrawalsCount();
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier revenueTokenInitialized() {
-        require(revenueToken != address(0));
-        _;
     }
 }

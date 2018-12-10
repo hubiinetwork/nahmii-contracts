@@ -482,21 +482,21 @@ contract('Smart contract checks', function () {
         }
     });
 
-    before('Preflight: Instantiate TokenHolderRevenueFund contract', async () => {
-        try {
-            glob.web3TokenHolderRevenueFund = await TokenHolderRevenueFund.deployed();
-            assert.notEqual(glob.web3TokenHolderRevenueFund, null);
-            glob.ethersIoTokenHolderRevenueFund = new ethers.Contract(glob.web3TokenHolderRevenueFund.address, TokenHolderRevenueFund.abi, glob.signer_owner);
-
-            glob.web3RevenueToken = await RevenueToken.new();
-            assert.notEqual(glob.web3RevenueToken, null);
-            console.log('Sample RevenueToken deployed at address: ' + glob.web3RevenueToken.address);
-            glob.web3TokenHolderRevenueFund.setRevenueToken(glob.web3RevenueToken.address);
-        }
-        catch (err) {
-            assert(false, 'Failed to instantiate TokenHolderRevenueFund contract address. [Error: ' + err.toString() + ']');
-        }
-    });
+    // before('Preflight: Instantiate TokenHolderRevenueFund contract', async () => {
+    //     try {
+    //         glob.web3TokenHolderRevenueFund = await TokenHolderRevenueFund.deployed();
+    //         assert.notEqual(glob.web3TokenHolderRevenueFund, null);
+    //         glob.ethersIoTokenHolderRevenueFund = new ethers.Contract(glob.web3TokenHolderRevenueFund.address, TokenHolderRevenueFund.abi, glob.signer_owner);
+    //
+    //         glob.web3RevenueToken = await RevenueToken.new();
+    //         assert.notEqual(glob.web3RevenueToken, null);
+    //         console.log('Sample RevenueToken deployed at address: ' + glob.web3RevenueToken.address);
+    //         glob.web3TokenHolderRevenueFund.setRevenueToken(glob.web3RevenueToken.address);
+    //     }
+    //     catch (err) {
+    //         assert(false, 'Failed to instantiate TokenHolderRevenueFund contract address. [Error: ' + err.toString() + ']');
+    //     }
+    // });
 
     before('Preflight: Instantiate PartnerFund contract', async () => {
         try {
