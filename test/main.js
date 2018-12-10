@@ -598,11 +598,13 @@ contract('Smart contract checks', function () {
     require('./scenarios/NullSettlementChallenge')(glob);
     require('./scenarios/NullSettlementDispute')(glob);
     require('./scenarios/RevenueFund')(glob);
+    require('./scenarios/RevenueTokenManager')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/Servable')(glob);
     require('./scenarios/SignerManager')(glob);
     require('./scenarios/PartnerFund')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);
+    require('./scenarios/TokenMultiTimelock')(glob);
     require('./scenarios/TransactionTracker')(glob);
     require('./scenarios/Validator')(glob);
     require('./scenarios/WalletLocker')(glob);

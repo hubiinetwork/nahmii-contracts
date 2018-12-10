@@ -24,8 +24,8 @@ contract TokenMultiTimelock is Ownable {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Release {
-        uint256 amount;
         uint256 releaseTime;
+        uint256 amount;
         bool done;
     }
 
@@ -41,9 +41,9 @@ contract TokenMultiTimelock is Ownable {
 
     event SetTokenEvent(IERC20 token);
     event SetBeneficiaryEvent(address beneficiary);
-    event AddReleaseEvent(uint256 amount, uint256 releaseTime);
-    event ReleaseEvent(uint256 index, uint256 amount, uint256 nominalReleaseTime,
-        uint256 actualReleaseTime);
+    event AddReleaseEvent(uint256 releaseTime, uint256 amount);
+    event ReleaseEvent(uint256 index, uint256 nominalReleaseTime,
+        uint256 actualReleaseTime, uint256 amount);
 
     //
     // Constructor
@@ -79,7 +79,7 @@ contract TokenMultiTimelock is Ownable {
     function setBeneficiary(address _beneficiary)
     public
     onlyOperator
-    notNullOrThisAddress(_beneficiary)
+    notNullAddress(_beneficiary)
     {
         // Update beneficiary
         beneficiary = _beneficiary;
@@ -89,12 +89,15 @@ contract TokenMultiTimelock is Ownable {
     }
 
     /// @notice Define a new release
-    /// @param amount The amount to be released
     /// @param releaseTime The timestamp after which the amount may be released
-    function defineRelease(uint256 amount, uint256 releaseTime)
+    /// @param amount The amount to be released
+    function defineRelease(uint256 releaseTime, uint256 amount)
     onlyOperator
     public
     {
+        // Require that token address has been set
+        require(address(token) != address(0));
+
         // Require that release time is later than current timestamp
         require(releaseTime > block.timestamp);
 
@@ -106,10 +109,10 @@ contract TokenMultiTimelock is Ownable {
         require(token.balanceOf(address(this)) >= totalLockedAmount);
 
         // Add release
-        releases.push(Release(amount, releaseTime, false));
+        releases.push(Release(releaseTime, amount, false));
 
         // Emit event
-        emit AddReleaseEvent(amount, releaseTime);
+        emit AddReleaseEvent(releaseTime, amount);
     }
 
     /// @notice Get the count of releases
@@ -137,9 +140,6 @@ contract TokenMultiTimelock is Ownable {
         // Require that the current timestamp is beyond the nominal release time
         require(block.timestamp >= _release.releaseTime);
 
-        // Require that the balance of this contract is greater than or equal to the release amount
-        require(token.balanceOf(address(this)) >= _release.amount);
-
         // Set release done
         _release.done = true;
 
@@ -153,6 +153,6 @@ contract TokenMultiTimelock is Ownable {
         token.safeTransfer(beneficiary, _release.amount);
 
         // Emit event
-        emit ReleaseEvent(index, _release.amount, _release.releaseTime, block.timestamp);
+        emit ReleaseEvent(index, _release.releaseTime, block.timestamp, _release.amount);
     }
 }

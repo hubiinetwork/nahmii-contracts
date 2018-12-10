@@ -118,7 +118,8 @@ contract RevenueTokenManager is TokenMultiTimelock {
         // Store the new total amount released by adding this release' amount to
         // previous total amount
         totalReleasedAmounts.push(
-            (0 == totalReleasedAmounts.length ? 0 : totalReleasedAmounts.length - 1) + releases[index].amount
+            (0 == totalReleasedAmounts.length ? 0 : totalReleasedAmounts[totalReleasedAmounts.length - 1])
+            + releases[index].amount
         );
 
         // Add to total released amount blocks
