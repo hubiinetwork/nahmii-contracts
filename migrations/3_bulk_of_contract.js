@@ -55,6 +55,7 @@ const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const PartnerFund = artifacts.require('PartnerFund');
 const RevenueFund = artifacts.require('RevenueFund');
+const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
@@ -140,7 +141,7 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(SafeMathUintLib, [
                 BalanceLogLib, BalanceTracker, CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge,
-                DriipSettlementDispute,  NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund,
+                DriipSettlementDispute,  NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, RevenueTokenManager,
                 SecurityBond, StandardTokenEx, TokenHolderRevenueFund, UnitTestHelpers, Validator, WalletLocker
             ]);
             await deployer.link(Strings, [
@@ -253,6 +254,8 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'RevenueFund', 'TradesRevenueFund', RevenueFund);
 
             await execDeploy(ctl, 'RevenueFund', 'PaymentsRevenueFund', RevenueFund);
+
+            await execDeploy(ctl, 'RevenueTokenManager', 'RevenueTokenManager', RevenueFund);
 
             await execDeploy(ctl, 'SecurityBond', '', SecurityBond);
 
@@ -521,6 +524,12 @@ module.exports = (deployer, network, accounts) => {
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
             await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), 1e16);
+
+            instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
+            await instance.setToken(addressStorage.get('NahmiiToken'));
+            await instance.setBeneficiary(ownerAccount);
+            await instance.defineRelease(1e24, Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000));
+            // await instance.defineRelease(1e24, Math.floor(new Date('2019-02-01T00:00:00Z').getTime() / 1000));
 
             instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             await instance.setConfiguration(addressStorage.get('Configuration'));

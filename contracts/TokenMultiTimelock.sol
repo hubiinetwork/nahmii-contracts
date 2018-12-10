@@ -17,7 +17,7 @@ import {SafeERC20} from "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.s
 @notice An ownable that allows a beneficiary to extract tokens in
 a number of batches each a given release time
 */
-contract TokenTimelock is Ownable {
+contract TokenMultiTimelock is Ownable {
     using SafeERC20 for IERC20;
 
     //
@@ -33,13 +33,13 @@ contract TokenTimelock is Ownable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     IERC20 public token;
-
     address public beneficiary;
 
     Release[] public releases;
     uint256 public totalLockedAmount;
     uint256 public executedReleasesCount;
 
+    event SetTokenEvent(IERC20 token);
     event SetBeneficiaryEvent(address beneficiary);
     event AddReleaseEvent(uint256 amount, uint256 releaseTime);
     event ReleaseEvent(uint256 index, uint256 amount, uint256 nominalReleaseTime,
@@ -48,17 +48,32 @@ contract TokenTimelock is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address deployer, IERC20 _token, address _beneficiary)
+    constructor(address deployer)
     Ownable(deployer)
     public
     {
-        token = _token;
-        beneficiary = _beneficiary;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Set the address of token
+    /// @param _token The address of token
+    function setToken(IERC20 _token)
+    public
+    onlyOperator
+    notNullOrThisAddress(_token)
+    {
+        // Require that the token has not previously been set
+        require(address(token) == address(0));
+
+        // Update beneficiary
+        token = _token;
+
+        // Emit event
+        emit SetTokenEvent(token);
+    }
+
     /// @notice Set the address of beneficiary
     /// @param _beneficiary The new address of beneficiary
     function setBeneficiary(address _beneficiary)
@@ -107,7 +122,7 @@ contract TokenTimelock is Ownable {
         return releases.length;
     }
 
-    /// @notice Transfers tokens held in the given release to beneficiary.
+    /// @notice Transfers tokens held in the indicated release to beneficiary.
     /// @param index The index of the release
     function release(uint256 index)
     public
