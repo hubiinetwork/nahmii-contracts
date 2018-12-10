@@ -243,7 +243,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         // Move from balance to staged
         deposited.sub(amount, currencyCt, currencyId);
 
-        // Transfer funds to the beneficiary
+        // Transfer ETH to the beneficiary
         if (currencyCt == address(0) && currencyId == 0)
             beneficiary.receiveEthersTo.value(uint256(amount))(msg.sender, "staged");
 
@@ -252,7 +252,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
             TransferController controller = transferController(currencyCt, "");
             require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
 
-            // Transfer funds to the beneficiary
+            // Transfer tokens to the beneficiary
             beneficiary.receiveTokensTo(msg.sender, "staged", amount, currencyCt, currencyId, "");
         }
 
