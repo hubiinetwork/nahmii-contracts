@@ -41,8 +41,6 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     string constant public REWARD_ACTION = "reward";
     string constant public DEPRIVE_ACTION = "deprive";
 
-    string constant public DEPOSIT_BALANCE_TYPE = "deposit";
-
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
@@ -50,7 +48,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         uint256 rewardFraction;
         uint256 rewardNonce;
         uint256 unlockTime;
-        mapping(address => mapping(uint256 => uint256)) stageNonceByCurrency;
+        mapping(address => mapping(uint256 => uint256)) claimNonceByCurrency;
     }
 
     //
@@ -61,15 +59,18 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     InUseCurrencyLib.InUseCurrency private inUseCurrencies;
 
     mapping(address => RewardMeta) public rewardMetaByWallet;
+    mapping(address => BalanceLib.Balance) private stagedByWallet;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEvent(address from, string balanceType, int256 amount, address currencyCt, uint256 currencyId);
+    event ReceiveEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
     event RewardEvent(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds);
     event DepriveEvent(address wallet);
-    event StageToBeneficiaryEvent(address from, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId);
+    event ClaimAndTransferToBeneficiaryEvent(address from, Beneficiary beneficiary, string balance, int256 amount,
+        address currencyCt, uint256 currencyId, string standard);
+    event ClaimAndStageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+    event WithdrawEvent(address from, int256 amount, address currencyCt, uint256 currencyId, string standard);
 
     //
     // Constructor
@@ -84,15 +85,10 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         receiveEthersTo(msg.sender, "");
     }
 
-    function receiveEthersTo(address wallet, string balanceType)
+    function receiveEthersTo(address wallet, string)
     public
     payable
     {
-        require(
-            0 == bytes(balanceType).length ||
-            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
-        );
-
         int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         // Add to balance
@@ -103,30 +99,29 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         inUseCurrencies.addItem(address(0), 0);
 
         // Emit event
-        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0);
+        emit ReceiveEvent(wallet, amount, address(0), 0);
     }
 
-    function receiveTokens(string balanceType, int256 amount, address currencyCt,
+    function receiveTokens(string, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
-        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
+        receiveTokensTo(msg.sender, "", amount, currencyCt, currencyId, standard);
     }
 
-    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
+    function receiveTokensTo(address wallet, string, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
-        require(
-            0 == bytes(balanceType).length ||
-            keccak256(abi.encodePacked(DEPOSIT_BALANCE_TYPE)) == keccak256(abi.encodePacked(balanceType))
-        );
-
         require(amount.isNonZeroPositiveInt256());
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        require(address(controller).delegatecall(controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId));
+        require(
+            address(controller).delegatecall(
+                controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
+            )
+        );
 
         // Add to balance
         deposited.add(amount, currencyCt, currencyId);
@@ -136,7 +131,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         inUseCurrencies.addItem(currencyCt, currencyId);
 
         // Emit event
-        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId);
+        emit ReceiveEvent(wallet, amount, currencyCt, currencyId);
     }
 
     function deposit(uint index)
@@ -161,6 +156,14 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     returns (int256)
     {
         return deposited.get(currencyCt, currencyId);
+    }
+
+    function stagedBalance(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256)
+    {
+        return stagedByWallet[wallet].get(currencyCt, currencyId);
     }
 
     function inUseCurrenciesCount()
@@ -191,7 +194,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     view
     returns (uint256)
     {
-        return rewardMetaByWallet[wallet].stageNonceByCurrency[currencyCt][currencyId];
+        return rewardMetaByWallet[wallet].claimNonceByCurrency[currencyCt][currencyId];
     }
 
     function reward(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds)
@@ -221,42 +224,100 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         emit DepriveEvent(wallet);
     }
 
-    function stageToBeneficiary(Beneficiary beneficiary, address currencyCt, uint256 currencyId)
+    function claimAndTransferToBeneficiary(Beneficiary beneficiary, string balance, address currencyCt,
+        uint256 currencyId, string standard)
     public
     {
-        require(inUseCurrencies.has(currencyCt, currencyId));
-        require(0 < rewardMetaByWallet[msg.sender].rewardFraction);
-        require(block.timestamp >= rewardMetaByWallet[msg.sender].unlockTime);
-        require(
-            rewardMetaByWallet[msg.sender].stageNonceByCurrency[currencyCt][currencyId] < rewardMetaByWallet[msg.sender].rewardNonce
-        );
+        // Claim reward
+        int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId);
 
-        // Set stage nonce of currency to the reward nonce
-        rewardMetaByWallet[msg.sender].stageNonceByCurrency[currencyCt][currencyId] = rewardMetaByWallet[msg.sender].rewardNonce;
-
-        // Calculate amount to stage
-        int256 amount = deposited
-        .get(currencyCt, currencyId)
-        .mul(SafeMathIntLib.toInt256(rewardMetaByWallet[msg.sender].rewardFraction))
-        .div(ConstantsLib.PARTS_PER());
-
-        // Move from balance to staged
-        deposited.sub(amount, currencyCt, currencyId);
-
-        // Transfer ETH to the beneficiary
+        // Execute transfer
         if (currencyCt == address(0) && currencyId == 0)
-            beneficiary.receiveEthersTo.value(uint256(amount))(msg.sender, "staged");
+            beneficiary.receiveEthersTo.value(uint256(claimedAmount))(msg.sender, balance);
 
         else {
-            // Approve of beneficiary
-            TransferController controller = transferController(currencyCt, "");
-            require(address(controller).delegatecall(controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId));
-
-            // Transfer tokens to the beneficiary
-            beneficiary.receiveTokensTo(msg.sender, "staged", amount, currencyCt, currencyId, "");
+            TransferController controller = transferController(currencyCt, standard);
+            require(
+                address(controller).delegatecall(
+                    controller.getApproveSignature(), beneficiary, uint256(claimedAmount), currencyCt, currencyId
+                )
+            );
+            beneficiary.receiveTokensTo(msg.sender, balance, claimedAmount, currencyCt, currencyId, standard);
         }
 
         // Emit event
-        emit StageToBeneficiaryEvent(msg.sender, beneficiary, amount, currencyCt, currencyId);
+        emit ClaimAndTransferToBeneficiaryEvent(msg.sender, beneficiary, balance, claimedAmount, currencyCt, currencyId, standard);
+    }
+
+    function claimAndStage(address currencyCt, uint256 currencyId)
+    public
+    {
+        // Claim reward
+        int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId);
+
+        // Update staged balance
+        stagedByWallet[msg.sender].add(claimedAmount, currencyCt, currencyId);
+
+        // Emit event
+        emit ClaimAndStageEvent(msg.sender, claimedAmount, currencyCt, currencyId);
+    }
+
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
+        // Require that amount is strictly positive
+        require(amount.isNonZeroPositiveInt256());
+
+        // Clamp amount to the max given by staged balance
+        amount = amount.clampMax(stagedByWallet[msg.sender].get(currencyCt, currencyId));
+
+        // Subtract to per-wallet staged balance
+        stagedByWallet[msg.sender].sub(amount, currencyCt, currencyId);
+
+        // Execute transfer
+        if (currencyCt == address(0) && currencyId == 0)
+            msg.sender.transfer(uint256(amount));
+
+        else {
+            TransferController controller = transferController(currencyCt, standard);
+            require(
+                address(controller).delegatecall(
+                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId
+                )
+            );
+        }
+
+        // Emit event
+        emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId, standard);
+    }
+
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function _claim(address wallet, address currencyCt, uint256 currencyId)
+    private
+    returns (int256)
+    {
+        require(inUseCurrencies.has(currencyCt, currencyId));
+        require(0 < rewardMetaByWallet[wallet].rewardFraction);
+        require(block.timestamp >= rewardMetaByWallet[wallet].unlockTime);
+        require(
+            rewardMetaByWallet[wallet].claimNonceByCurrency[currencyCt][currencyId] < rewardMetaByWallet[wallet].rewardNonce
+        );
+
+        // Set stage nonce of currency to the reward nonce
+        rewardMetaByWallet[wallet].claimNonceByCurrency[currencyCt][currencyId] = rewardMetaByWallet[wallet].rewardNonce;
+
+        // Calculate claimed amount
+        int256 claimedAmount = deposited
+        .get(currencyCt, currencyId)
+        .mul(SafeMathIntLib.toInt256(rewardMetaByWallet[wallet].rewardFraction))
+        .div(ConstantsLib.PARTS_PER());
+
+        // Move from balance to staged
+        deposited.sub(claimedAmount, currencyCt, currencyId);
+
+        // Return claimed amount
+        return claimedAmount;
     }
 }
