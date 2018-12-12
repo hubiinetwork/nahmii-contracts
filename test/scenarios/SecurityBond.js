@@ -460,9 +460,9 @@ module.exports = function (glob) {
             })
         });
 
-        describe('stageNonceByWalletCurrency()', () => {
+        describe('claimNonceByWalletCurrency()', () => {
             it('should successfully return meta', async () => {
-                (await ethersSecurityBond.stageNonceByWalletCurrency(glob.user_a, mocks.address0, 0))
+                (await ethersSecurityBond.claimNonceByWalletCurrency(glob.user_a, mocks.address0, 0))
                     ._bn.should.eq.BN(0);
             })
         });
@@ -610,7 +610,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should successfully stage', async () => {
+                    it('should successfully claim and transfer', async () => {
                         const result = await web3SecurityBond.claimAndTransferToBeneficiary(
                             web3MockedBeneficiary.address, 'staged', mocks.address0, 0, '', {from: glob.user_a}
                         );
@@ -636,7 +636,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should successfully stage', async () => {
+                    it('should successfully claim and transfer', async () => {
                         const result = await web3SecurityBond.claimAndTransferToBeneficiary(
                             web3MockedBeneficiary.address, 'staged', web3ERC20.address, 0, '', {from: glob.user_a}
                         );
@@ -722,7 +722,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should successfully stage', async () => {
+                    it('should successfully claim and stage', async () => {
                         const result = await web3SecurityBond.claimAndStage(
                             mocks.address0, 0, {from: glob.user_a}
                         );
@@ -750,7 +750,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should successfully stage', async () => {
+                    it('should successfully claim and stage', async () => {
                         const result = await web3SecurityBond.claimAndStage(
                             web3ERC20.address, 0, {from: glob.user_a}
                         );
@@ -810,7 +810,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should successfully stage', async () => {
+                    it('should successfully withdraw', async () => {
                         const result = await web3SecurityBond.withdraw(
                             web3.toWei(0.2, 'ether'), mocks.address0, 0, '', {from: glob.user_b}
                         );
@@ -841,7 +841,7 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should successfully stage', async () => {
+                    it('should successfully withdraw', async () => {
                         const result = await web3SecurityBond.withdraw(
                             2, web3ERC20.address, 0, '', {from: glob.user_b}
                         );
