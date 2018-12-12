@@ -40,12 +40,8 @@ const RevenueFund = artifacts.require('RevenueFund');
 const SecurityBond = artifacts.require('SecurityBond');
 const TestServable = artifacts.require('TestServable');
 const TestAuthorizableServable = artifacts.require('TestAuthorizableServable');
-// const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 
 const ERC20Token = artifacts.require('StandardTokenEx');
-// const RevenueToken = artifacts.require('RevenueToken');
-
-const UnitTestHelpers = artifacts.require('UnitTestHelpers');
 
 //augmented sendTransaction using promises
 Helpers.augmentWeb3(web3);
@@ -116,39 +112,9 @@ contract('Smart contract checks', function () {
             glob.web3Erc20.totalSupply = initialTokensSupply;
 
             let instance = await TransferControllerManager.deployed();
-            await instance.registerCurrency(glob.web3Erc20.address, 'ERC20', { from: glob.owner });
-        }
-        catch (err) {
+            await instance.registerCurrency(glob.web3Erc20.address, 'ERC20', {from: glob.owner});
+        } catch (err) {
             assert(false, 'Failed to instantiate ERC20Token instance. [Error: ' + err.toString() + ']');
-        }
-    });
-
-    before('Preflight: Deploy several unit test helper contracts for validation tests', async () => {
-        try {
-            let instance = await TransferControllerManager.deployed();
-
-            glob.web3UnitTestHelpers_SUCCESS_TESTS = await UnitTestHelpers.new(glob.owner);
-            assert.notEqual(glob.web3UnitTestHelpers_SUCCESS_TESTS, null);
-            glob.ethersUnitTestHelpers_SUCCESS_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
-            await glob.web3UnitTestHelpers_SUCCESS_TESTS.setTransferControllerManager(instance.address);
-
-            glob.web3UnitTestHelpers_FAIL_TESTS = await UnitTestHelpers.new(glob.owner);
-            assert.notEqual(glob.web3UnitTestHelpers_FAIL_TESTS, null);
-            glob.ethersUnitTestHelpers_FAIL_TESTS = new ethers.Contract(glob.web3UnitTestHelpers_FAIL_TESTS.address, UnitTestHelpers.abi, glob.signer_owner);
-            await glob.ethersUnitTestHelpers_FAIL_TESTS.setTransferControllerManager(instance.address);
-
-            glob.web3UnitTestHelpers_MISC_1 = await UnitTestHelpers.new(glob.owner);
-            assert.notEqual(glob.web3UnitTestHelpers_MISC_1, null);
-            glob.web3UnitTestHelpers_MISC_1 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_1.address, UnitTestHelpers.abi, glob.signer_owner);
-            await glob.web3UnitTestHelpers_MISC_1.setTransferControllerManager(instance.address);
-
-            glob.web3UnitTestHelpers_MISC_2 = await UnitTestHelpers.new(glob.owner);
-            assert.notEqual(glob.web3UnitTestHelpers_MISC_2, null);
-            glob.web3UnitTestHelpers_MISC_2 = new ethers.Contract(glob.web3UnitTestHelpers_MISC_2.address, UnitTestHelpers.abi, glob.signer_owner);
-            await glob.web3UnitTestHelpers_MISC_2.setTransferControllerManager(instance.address);
-        }
-        catch (err) {
-            assert(false, 'Failed to create an instance of UnitTestHelpers. [Error: ' + err.toString() + ']');
         }
     });
 
@@ -157,8 +123,7 @@ contract('Smart contract checks', function () {
             glob.web3SignerManager = await SignerManager.deployed();
             assert.notEqual(glob.web3SignerManager, null);
             glob.ethersIoSignerManager = new ethers.Contract(glob.web3SignerManager.address, SignerManager.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate SignerManager contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -168,8 +133,7 @@ contract('Smart contract checks', function () {
             glob.web3Servable = await TestServable.new(glob.owner);
             assert.notEqual(glob.web3Servable, null);
             glob.ethersIoServable = new ethers.Contract(glob.web3Servable.address, TestServable.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate Servable contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -179,8 +143,7 @@ contract('Smart contract checks', function () {
             glob.web3AuthorizableServable = await TestAuthorizableServable.new(glob.owner);
             assert.notEqual(glob.web3AuthorizableServable, null);
             glob.ethersIoAuthorizableServable = new ethers.Contract(glob.web3AuthorizableServable.address, TestAuthorizableServable.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate AuthorizableServable contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -190,8 +153,7 @@ contract('Smart contract checks', function () {
             glob.web3ClientFund = await ClientFund.deployed();
             assert.notEqual(glob.web3ClientFund, null);
             glob.ethersIoClientFund = new ethers.Contract(glob.web3ClientFund.address, ClientFund.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate ClientFund contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -201,8 +163,7 @@ contract('Smart contract checks', function () {
             glob.web3Hasher = await Hasher.deployed();
             assert.notEqual(glob.web3Hasher, null);
             glob.ethersIoHasher = new ethers.Contract(glob.web3Hasher.address, Hasher.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate Hasher contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -212,8 +173,7 @@ contract('Smart contract checks', function () {
             glob.web3Validator = await Validator.deployed();
             assert.notEqual(glob.web3Validator, null);
             glob.ethersIoValidator = new ethers.Contract(glob.web3Validator.address, Validator.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate Validator contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -223,8 +183,7 @@ contract('Smart contract checks', function () {
             glob.web3CommunityVote = await CommunityVote.deployed();
             assert.notEqual(glob.web3CommunityVote, null);
             glob.ethersIoCommunityVote = new ethers.Contract(glob.web3CommunityVote.address, CommunityVote.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate CommunityVote contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -234,8 +193,7 @@ contract('Smart contract checks', function () {
             glob.web3Configuration = await Configuration.deployed();
             assert.notEqual(glob.web3Configuration, null);
             glob.ethersIoConfiguration = new ethers.Contract(glob.web3Configuration.address, Configuration.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate Configuration contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -245,8 +203,7 @@ contract('Smart contract checks', function () {
             glob.web3CancelOrdersChallenge = await CancelOrdersChallenge.deployed();
             assert.notEqual(glob.web3CancelOrdersChallenge, null);
             glob.ethersIoCancelOrdersChallenge = new ethers.Contract(glob.web3CancelOrdersChallenge.address, CancelOrdersChallenge.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate CancelOrdersChallenge contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -256,8 +213,7 @@ contract('Smart contract checks', function () {
             glob.web3DriipSettlement = await DriipSettlement.deployed();
             assert.notEqual(glob.web3DriipSettlement, null);
             glob.ethersIoDriipSettlement = new ethers.Contract(glob.web3DriipSettlement.address, DriipSettlement.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate DriipSettlement contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -267,8 +223,7 @@ contract('Smart contract checks', function () {
             glob.web3DriipSettlementChallenge = await DriipSettlementChallenge.deployed();
             assert.notEqual(glob.web3DriipSettlementChallenge, null);
             glob.ethersIoDriipSettlementChallenge = new ethers.Contract(glob.web3DriipSettlementChallenge.address, DriipSettlementChallenge.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate DriipSettlementChallenge contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -278,8 +233,7 @@ contract('Smart contract checks', function () {
             glob.web3DriipSettlementDispute = await DriipSettlementDispute.deployed();
             assert.notEqual(glob.web3DriipSettlementDispute, null);
             glob.ethersIoDriipSettlementDispute = new ethers.Contract(glob.web3DriipSettlementDispute.address, DriipSettlementDispute.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate DriipSettlementDispute contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -289,8 +243,7 @@ contract('Smart contract checks', function () {
             glob.web3NullSettlement = await NullSettlement.deployed();
             assert.notEqual(glob.web3NullSettlement, null);
             glob.ethersIoNullSettlement = new ethers.Contract(glob.web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate NullSettlement contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -300,8 +253,7 @@ contract('Smart contract checks', function () {
             glob.web3NullSettlementChallenge = await NullSettlementChallenge.deployed();
             assert.notEqual(glob.web3NullSettlementChallenge, null);
             glob.ethersIoNullSettlementChallenge = new ethers.Contract(glob.web3NullSettlementChallenge.address, NullSettlementChallenge.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate NullSettlementChallenge contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -311,8 +263,7 @@ contract('Smart contract checks', function () {
             glob.web3NullSettlementDispute = await NullSettlementDispute.deployed();
             assert.notEqual(glob.web3NullSettlementDispute, null);
             glob.ethersIoNullSettlementDispute = new ethers.Contract(glob.web3NullSettlementDispute.address, NullSettlementDispute.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate NullSettlementDispute contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -322,8 +273,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallenge = await FraudChallenge.deployed();
             assert.notEqual(glob.web3FraudChallenge, null);
             glob.ethersIoFraudChallenge = new ethers.Contract(glob.web3FraudChallenge.address, FraudChallenge.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallenge contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -333,8 +283,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByOrder = await FraudChallengeByOrder.deployed();
             assert.notEqual(glob.web3FraudChallengeByOrder, null);
             glob.ethersIoFraudChallengeByOrder = new ethers.Contract(glob.web3FraudChallengeByOrder.address, FraudChallengeByOrder.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByOrder contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -344,8 +293,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByTrade = await FraudChallengeByTrade.deployed();
             assert.notEqual(glob.web3FraudChallengeByTrade, null);
             glob.ethersIoFraudChallengeByTrade = new ethers.Contract(glob.web3FraudChallengeByTrade.address, FraudChallengeByTrade.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByTrade contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -355,8 +303,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByPayment = await FraudChallengeByPayment.deployed();
             assert.notEqual(glob.web3FraudChallengeByPayment, null);
             glob.ethersIoFraudChallengeByPayment = new ethers.Contract(glob.web3FraudChallengeByPayment.address, FraudChallengeByPayment.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByPayment contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -366,8 +313,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeBySuccessiveTrades = await FraudChallengeBySuccessiveTrades.deployed();
             assert.notEqual(glob.web3FraudChallengeBySuccessiveTrades, null);
             glob.ethersIoFraudChallengeBySuccessiveTrades = new ethers.Contract(glob.web3FraudChallengeBySuccessiveTrades.address, FraudChallengeBySuccessiveTrades.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeBySuccessiveTrades contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -377,8 +323,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeBySuccessivePayments = await FraudChallengeBySuccessivePayments.deployed();
             assert.notEqual(glob.web3FraudChallengeBySuccessivePayments, null);
             glob.ethersIoFraudChallengeBySuccessivePayments = new ethers.Contract(glob.web3FraudChallengeBySuccessivePayments.address, FraudChallengeBySuccessivePayments.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeBySuccessivePayments contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -388,8 +333,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByPaymentSucceedingTrade = await FraudChallengeByPaymentSucceedingTrade.deployed();
             assert.notEqual(glob.web3FraudChallengeByPaymentSucceedingTrade, null);
             glob.ethersIoFraudChallengeByPaymentSucceedingTrade = new ethers.Contract(glob.web3FraudChallengeByPaymentSucceedingTrade.address, FraudChallengeByPaymentSucceedingTrade.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByPaymentSucceedingTrade contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -399,8 +343,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByTradeSucceedingPayment = await FraudChallengeByTradeSucceedingPayment.deployed();
             assert.notEqual(glob.web3FraudChallengeByTradeSucceedingPayment, null);
             glob.ethersIoFraudChallengeByTradeSucceedingPayment = new ethers.Contract(glob.web3FraudChallengeByTradeSucceedingPayment.address, FraudChallengeByTradeSucceedingPayment.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByTradeSucceedingPayment contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -410,8 +353,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByTradeOrderResiduals = await FraudChallengeByTradeOrderResiduals.deployed();
             assert.notEqual(glob.web3FraudChallengeByTradeOrderResiduals, null);
             glob.ethersIoFraudChallengeByTradeOrderResiduals = new ethers.Contract(glob.web3FraudChallengeByTradeOrderResiduals.address, FraudChallengeByTradeOrderResiduals.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByTradeOrderResiduals contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -421,8 +363,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByDoubleSpentOrders = await FraudChallengeByDoubleSpentOrders.deployed();
             assert.notEqual(glob.web3FraudChallengeByDoubleSpentOrders, null);
             glob.ethersIoFraudChallengeByDoubleSpentOrders = new ethers.Contract(glob.web3FraudChallengeByDoubleSpentOrders.address, FraudChallengeByDoubleSpentOrders.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByDoubleSpentOrders contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -432,8 +373,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByDuplicateDriipNonceOfTrades = await FraudChallengeByDuplicateDriipNonceOfTrades.deployed();
             assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfTrades, null);
             glob.ethersIoFraudChallengeByDuplicateDriipNonceOfTrades = new ethers.Contract(glob.web3FraudChallengeByDuplicateDriipNonceOfTrades.address, FraudChallengeByDuplicateDriipNonceOfTrades.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByDuplicateDriipNonceOfTrades contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -443,8 +383,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByDuplicateDriipNonceOfPayments = await FraudChallengeByDuplicateDriipNonceOfPayments.deployed();
             assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfPayments, null);
             glob.ethersIoFraudChallengeByDuplicateDriipNonceOfPayments = new ethers.Contract(glob.web3FraudChallengeByDuplicateDriipNonceOfPayments.address, FraudChallengeByDuplicateDriipNonceOfPayments.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByDuplicateDriipNonceOfPayments contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -454,8 +393,7 @@ contract('Smart contract checks', function () {
             glob.web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = await FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.deployed();
             assert.notEqual(glob.web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, null);
             glob.ethersIoFraudChallengeByDuplicateDriipNonceOfTradeAndPayment = new ethers.Contract(glob.web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.address, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate FraudChallengeByDuplicateDriipNonceOfTradeAndPayment contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -465,8 +403,7 @@ contract('Smart contract checks', function () {
             glob.web3RevenueFund = await RevenueFund.deployed();
             assert.notEqual(glob.web3RevenueFund, null);
             glob.ethersIoRevenueFund = new ethers.Contract(glob.web3RevenueFund.address, RevenueFund.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate RevenueFund contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -476,8 +413,7 @@ contract('Smart contract checks', function () {
             glob.web3SecurityBond = await SecurityBond.deployed();
             assert.notEqual(glob.web3SecurityBond, null);
             glob.ethersIoSecurityBond = new ethers.Contract(glob.web3SecurityBond.address, SecurityBond.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate SecurityBond contract address. [Error: ' + err.toString() + ']');
         }
     });
@@ -503,41 +439,12 @@ contract('Smart contract checks', function () {
             glob.web3PartnerFund = await PartnerFund.deployed();
             assert.notEqual(glob.web3PartnerFund, null);
             glob.ethersIoPartnerFund = new ethers.Contract(glob.web3PartnerFund.address, PartnerFund.abi, glob.signer_owner);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Failed to instantiate PartnerFund contract address. [Error: ' + err.toString() + ']');
         }
     });
 
-    before('Preflight: Distribute test ethers', async () => {
-        try {
-            await web3.eth.sendTransactionPromise({
-                from: glob.owner,
-                to: glob.web3UnitTestHelpers_SUCCESS_TESTS.address,
-                value: web3.toWei('10', 'ether')
-            });
-            await web3.eth.sendTransactionPromise({
-                from: glob.owner,
-                to: glob.web3UnitTestHelpers_FAIL_TESTS.address,
-                value: web3.toWei('10', 'ether')
-            });
-            await web3.eth.sendTransactionPromise({
-                from: glob.owner,
-                to: glob.web3UnitTestHelpers_MISC_1.address,
-                value: web3.toWei('10', 'ether')
-            });
-            await web3.eth.sendTransactionPromise({
-                from: glob.owner,
-                to: glob.web3UnitTestHelpers_MISC_2.address,
-                value: web3.toWei('10', 'ether')
-            });
-        }
-        catch (err) {
-            assert(false, 'Cannot distribute money to smart contracts. [Error: ' + err.toString() + ']');
-        }
-    });
-
-    before('Preflight: Distribute test tokens', async() => {
+    before('Preflight: Distribute test tokens', async () => {
         try {
             await glob.web3Erc20.testMint(glob.owner, 100);
             await glob.web3Erc20.testMint(glob.user_a, initialTokensForAll);
@@ -545,12 +452,7 @@ contract('Smart contract checks', function () {
             await glob.web3Erc20.testMint(glob.user_c, initialTokensForAll);
             await glob.web3Erc20.testMint(glob.user_d, initialTokensForAll);
             await glob.web3Erc20.testMint(glob.user_e, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_SUCCESS_TESTS.address, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_FAIL_TESTS.address, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_1.address, initialTokensForAll);
-            await glob.web3Erc20.testMint(glob.web3UnitTestHelpers_MISC_2.address, initialTokensForAll);
-        }
-        catch (err) {
+        } catch (err) {
             assert(false, 'Cannot assign tokens for users and smart contracts. [Error: ' + err.toString() + ']');
         }
     });

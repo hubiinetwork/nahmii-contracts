@@ -66,7 +66,6 @@ const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TransactionTracker = artifacts.require('TransactionTracker');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
-const UnitTestHelpers = artifacts.require('UnitTestHelpers');
 const Validatable = artifacts.require('Validatable');
 const Validator = artifacts.require('Validator');
 const WalletLocker = artifacts.require('WalletLocker');
@@ -142,7 +141,7 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(SafeMathUintLib, [
                 BalanceLogLib, BalanceTracker, CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge,
                 DriipSettlementDispute,  NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, RevenueTokenManager,
-                SecurityBond, StandardTokenEx, TokenHolderRevenueFund, UnitTestHelpers, Validator, WalletLocker
+                SecurityBond, StandardTokenEx, TokenHolderRevenueFund, Validator, WalletLocker
             ]);
             await deployer.link(Strings, [
                 PartnerFund
@@ -333,6 +332,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setTransactionTracker(addressStorage.get('TransactionTracker'), true);
             await instance.setWalletLocker(addressStorage.get('WalletLocker'), true);
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
             await instance.registerService(addressStorage.get('DriipSettlement'));
             await instance.authorizeInitialService(addressStorage.get('DriipSettlement'));
             await instance.registerService(addressStorage.get('DriipSettlementDispute'));
