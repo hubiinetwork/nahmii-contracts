@@ -20,6 +20,14 @@ contract AccrualBeneficiary is Beneficiary {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    event CloseAccrualPeriodEvent();
+
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     function closeAccrualPeriod(MonetaryTypesLib.Currency[])
-    public {}
+    public
+    {
+        emit CloseAccrualPeriodEvent();
+    }
 }
