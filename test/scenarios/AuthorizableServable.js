@@ -54,7 +54,7 @@ module.exports = (glob) => {
                 await web3AuthorizableServable.registerService(service);
             });
 
-            describe('if called from non-deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3AuthorizableServable.authorizeInitialService(service, {from: glob.user_a})
                         .should.be.rejected;
