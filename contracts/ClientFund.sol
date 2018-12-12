@@ -19,6 +19,7 @@ import {TransactionTrackable} from "./TransactionTrackable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {TransferController} from "./TransferController.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {TokenHolderRevenueFund} from "./TokenHolderRevenueFund.sol";
 
 /**
 @title Client fund
@@ -31,19 +32,28 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     address[] public seizedWallets;
     mapping(address => bool) public seizedByWallet;
 
+    TokenHolderRevenueFund public tokenHolderRevenueFund;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt, uint256 currencyId,
+    event SetTokenHolderRevenueFundEvent(TokenHolderRevenueFund oldTokenHolderRevenueFund,
+        TokenHolderRevenueFund newTokenHolderRevenueFund);
+    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string standard);
+    event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId,
         string standard);
-    event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard);
     event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
     event UnstageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
-    event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
-    event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 amount, address currencyCt,
-        uint256 currencyId, string standard);
-    event TransferToBeneficiaryEvent(address wallet, address beneficiary, int256 amount, address currencyCt, uint256 currencyId);
+    event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt,
+        uint256 currencyId);
+    event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard);
+    event TransferToBeneficiaryEvent(address wallet, address beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId);
     event SeizeBalancesEvent(address seizedWallet, address seizerWallet);
+    event ClaimRevenueEvent(address claimer, string balanceType, address currencyCt,
+        uint256 currencyId, string standard);
 
     //
     // Constructor
@@ -57,6 +67,22 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Set the token holder revenue fund contract
+    /// @param newTokenHolderRevenueFund The (address of) TokenHolderRevenueFund contract instance
+    function setTokenHolderRevenueFund(TokenHolderRevenueFund newTokenHolderRevenueFund)
+    public
+    onlyDeployer
+    notNullAddress(newTokenHolderRevenueFund)
+    notSameAddresses(newTokenHolderRevenueFund, tokenHolderRevenueFund)
+    {
+        // Set new token holder revenue fund
+        TokenHolderRevenueFund oldTokenHolderRevenueFund = tokenHolderRevenueFund;
+        tokenHolderRevenueFund = newTokenHolderRevenueFund;
+
+        // Emit event
+        emit SetTokenHolderRevenueFundEvent(oldTokenHolderRevenueFund, newTokenHolderRevenueFund);
+    }
+
     /// @notice Fallback function that deposits ethers to msg.sender's deposited balance
     function()
     public
@@ -87,7 +113,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param amount The amount to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param standard The standard of token ("ERC20", "ERC721")
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function receiveTokens(string balanceType, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
@@ -102,7 +128,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param amount The amount to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param standard The standard of the token ("ERC20", "ERC721")
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
@@ -209,7 +235,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param stageAmount The concerned amount to stage
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param standard The standard of token ("ERC20", "ERC721")
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 stageAmount,
         address currencyCt, uint256 currencyId, string standard)
     public
@@ -231,7 +257,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param transferAmount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param standard The standard of token ("ERC20", "ERC721")
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 transferAmount,
         address currencyCt, uint256 currencyId, string standard)
     public
@@ -280,7 +306,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param standard The standard of token ("ERC20", "ERC721")
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
     public
     {
@@ -322,14 +348,42 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @notice Get the seized status of given wallet
     /// @param wallet The address of the concerned wallet
     /// @return true if wallet is seized, false otherwise
-    function isSeizedWallet(address wallet) public view returns (bool) {
+    function isSeizedWallet(address wallet)
+    public
+    view
+    returns (bool)
+    {
         return seizedByWallet[wallet];
     }
 
     /// @notice Get the number of wallets whose funds have been seized
     /// @return Number of wallets
-    function seizedWalletsCount() public view returns (uint256) {
+    function seizedWalletsCount()
+    public
+    view
+    returns (uint256)
+    {
         return seizedWallets.length;
+    }
+
+    /// @notice Claim revenue from token holder revenue fund based this contract's holdings of the
+    /// revenue token, this so that revenue may be shared amongst revenue token holders in nahmii
+    /// @param claimer The concerned address of claimer that will subsequently distribute revenue in nahmii
+    /// @param balanceType The target balance type for the reception in this contract
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
+    function claimRevenue(address claimer, string balanceType, address currencyCt,
+        uint256 currencyId, string standard)
+    public
+    onlyOperator
+    {
+        tokenHolderRevenueFund.claimAndTransferToBeneficiary(
+            this, claimer, balanceType,
+            currencyCt, currencyId, standard
+        );
+
+        emit ClaimRevenueEvent(claimer, balanceType, currencyCt, currencyId, standard);
     }
 
     //

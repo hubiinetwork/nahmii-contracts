@@ -80,7 +80,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3DriipSettlementChallenge.setConfiguration(address);
 
@@ -92,7 +92,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementChallenge.setConfiguration(address, {from: glob.user_a})
                         .should.be.rejected;
@@ -114,7 +114,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3DriipSettlementChallenge.setValidator(address);
 
@@ -126,7 +126,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementChallenge.setValidator(address, {from: glob.user_a})
                         .should.be.rejected;
@@ -148,7 +148,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3DriipSettlementChallenge.setDriipSettlementDispute(address);
 
@@ -160,7 +160,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlementChallenge.setDriipSettlementDispute(address, {from: glob.user_a}).should.be.rejected;
                 });

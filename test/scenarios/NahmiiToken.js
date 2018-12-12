@@ -11,7 +11,8 @@ chai.should();
 
 module.exports = function (glob) {
     describe('NahmiiToken', function () {
-        let provider, web3NahmiiToken, ethersNahmiiToken;
+        let provider;
+        let web3NahmiiToken, ethersNahmiiToken;
 
         before(() => {
             provider = glob.signer_owner.provider;

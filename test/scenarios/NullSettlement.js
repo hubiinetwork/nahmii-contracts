@@ -131,7 +131,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3NullSettlement.setConfiguration(address);
 
@@ -142,7 +142,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlement.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -163,7 +163,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3NullSettlement.setNullSettlementChallenge(address);
 
@@ -174,7 +174,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlement.setNullSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -195,7 +195,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3NullSettlement.setClientFund(address);
 
@@ -206,7 +206,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlement.setClientFund(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -227,7 +227,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3NullSettlement.setCommunityVote(address);
 
@@ -238,7 +238,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlement.setCommunityVote(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -246,13 +246,13 @@ module.exports = (glob) => {
         });
 
         describe('disableUpdateOfCommunityVote()', () => {
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlement.disableUpdateOfCommunityVote({from: glob.user_a}).should.be.rejected;
                 });
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let address;
 
                 before(() => {

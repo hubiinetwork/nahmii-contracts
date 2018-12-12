@@ -145,7 +145,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -166,7 +166,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlement.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -186,7 +186,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -207,7 +207,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlement.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -227,7 +227,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let driipSettlementChallenge;
 
                 beforeEach(async () => {
@@ -248,7 +248,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlement.setDriipSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -262,7 +262,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let clientFund;
 
                 beforeEach(async () => {
@@ -282,7 +282,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlement.setClientFund(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -296,7 +296,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let tradesRevenueFund;
 
                 beforeEach(async () => {
@@ -317,7 +317,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlement.setTradesRevenueFund(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -331,7 +331,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let paymentsRevenueFund;
 
                 beforeEach(async () => {
@@ -351,7 +351,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlement.setPaymentsRevenueFund(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -372,7 +372,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let communityVote;
 
                 beforeEach(async () => {
@@ -393,7 +393,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlement.setCommunityVote(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -401,13 +401,13 @@ module.exports = (glob) => {
         });
 
         describe('disableUpdateOfCommunityVote()', () => {
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3DriipSettlement.disableUpdateOfCommunityVote({from: glob.user_a}).should.be.rejected;
                 });
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let address;
 
                 before(async () => {

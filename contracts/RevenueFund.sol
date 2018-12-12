@@ -152,7 +152,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     //
     // Accrual closure function
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod()
+    function closeAccrualPeriod(MonetaryTypesLib.Currency[] currencies)
     public
     onlyOperator
     {
@@ -216,7 +216,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
             if (!isRegisteredBeneficiary(beneficiaryAddress) || 0 == beneficiaryFraction(beneficiaryAddress))
                 continue;
 
-            AccrualBeneficiary(beneficiaryAddress).closeAccrualPeriod();
+            AccrualBeneficiary(beneficiaryAddress).closeAccrualPeriod(currencies);
         }
 
         // Emit event

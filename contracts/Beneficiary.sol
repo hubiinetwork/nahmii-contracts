@@ -13,22 +13,22 @@ pragma solidity ^0.4.25;
 @notice A recipient of ethers and tokens
 */
 contract Beneficiary {
-    /// @notice Receive ethers to the given wallet's given balance
+    /// @notice Receive ethers to the given wallet's given balance type
     /// @param wallet The address of the concerned wallet
-    /// @param balance The target balance of the wallet
-    function receiveEthersTo(address wallet, string balance)
+    /// @param balanceType The target balance type of the wallet
+    function receiveEthersTo(address wallet, string balanceType)
     public
     payable;
 
-    /// @notice Receive token to the given wallet's given balance
+    /// @notice Receive token to the given wallet's given balance type
     /// @dev The wallet must approve of the token transfer prior to calling this function
     /// @param wallet The address of the concerned wallet
-    /// @param balance The target balance of the wallet
+    /// @param balanceType The target balance type of the wallet
     /// @param amount The amount to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param standard The standard of the token ("ERC20", "ERC721")
-    function receiveTokensTo(address wallet, string balance, int256 amount, address currencyCt,
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
+    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public;
 }
