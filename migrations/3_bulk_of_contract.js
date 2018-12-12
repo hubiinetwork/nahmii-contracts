@@ -55,6 +55,7 @@ const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const PartnerFund = artifacts.require('PartnerFund');
 const RevenueFund = artifacts.require('RevenueFund');
+const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
@@ -65,7 +66,6 @@ const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TransactionTracker = artifacts.require('TransactionTracker');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
-const UnitTestHelpers = artifacts.require('UnitTestHelpers');
 const Validatable = artifacts.require('Validatable');
 const Validator = artifacts.require('Validator');
 const WalletLocker = artifacts.require('WalletLocker');
@@ -128,20 +128,20 @@ module.exports = (deployer, network, accounts) => {
                 RevenueFund, SecurityBond, Validator
             ]);
             await deployer.link(MonetaryTypesLib, [
-                BlockNumbCurrenciesLib, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, Hasher, InUseCurrencyLib,
-                MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
+                BlockNumbCurrenciesLib, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
+                Hasher, InUseCurrencyLib, MockedBeneficiary, MockedClientFund, NahmiiTypesLib, NullSettlementDispute,
                 PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathIntLib, [
-                AccrualBenefactor, BalanceLib, BalanceTracker, BlockNumbDisdIntsLib, CancelOrdersChallenge, ClientFund,
+                AccrualBenefactor, BalanceLib, BalanceLogLib, BalanceTracker, BlockNumbDisdIntsLib, CancelOrdersChallenge, ClientFund,
                 Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute, NullSettlement,
                 NullSettlementChallenge, NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond,
                 TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathUintLib, [
-                CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
-                NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, SecurityBond, StandardTokenEx,
-                TokenHolderRevenueFund, UnitTestHelpers, Validator, WalletLocker
+                BalanceLogLib, BalanceTracker, CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge,
+                DriipSettlementDispute,  NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, RevenueTokenManager,
+                SecurityBond, StandardTokenEx, TokenHolderRevenueFund, Validator, WalletLocker
             ]);
             await deployer.link(Strings, [
                 PartnerFund
@@ -254,6 +254,8 @@ module.exports = (deployer, network, accounts) => {
 
             await execDeploy(ctl, 'RevenueFund', 'PaymentsRevenueFund', RevenueFund);
 
+            await execDeploy(ctl, 'RevenueTokenManager', 'RevenueTokenManager', RevenueTokenManager);
+
             await execDeploy(ctl, 'SecurityBond', '', SecurityBond);
 
             await execDeploy(ctl, 'TokenHolderRevenueFund', '', TokenHolderRevenueFund);
@@ -271,11 +273,11 @@ module.exports = (deployer, network, accounts) => {
             instance = await Configuration.at(addressStorage.get('Configuration'));
             await instance.setConfirmationBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 12);
             await instance.setTradeMakerFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e15, [], []);                       // 0.1%
-            await instance.setTradeMakerMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e14);                        // 0.01%
+            await instance.setTradeMakerMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e11);                        // 0.00001%
             await instance.setTradeTakerFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2e15, [], []);                       // 0.2%
-            await instance.setTradeTakerMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2e14);                        // 0.02%
+            await instance.setTradeTakerMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2e11);                        // 0.00002%
             await instance.setPaymentFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e15, [], []);                          // 0.1%
-            await instance.setPaymentMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e14);                           // 0.01%
+            await instance.setPaymentMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e11);                           // 0.00001%
             await instance.setWalletLockTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 30);              // 30 days
             if (network.startsWith('mainnet')) {
                 await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 3); // 3 days
@@ -330,6 +332,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setTransactionTracker(addressStorage.get('TransactionTracker'), true);
             await instance.setWalletLocker(addressStorage.get('WalletLocker'), true);
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
             await instance.registerService(addressStorage.get('DriipSettlement'));
             await instance.authorizeInitialService(addressStorage.get('DriipSettlement'));
             await instance.registerService(addressStorage.get('DriipSettlementDispute'));
@@ -522,6 +525,12 @@ module.exports = (deployer, network, accounts) => {
             await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
             await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), 1e16);
 
+            instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
+            await instance.setToken(addressStorage.get('NahmiiToken'));
+            await instance.setBeneficiary(ownerAccount);
+            // await instance.defineRelease(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
+            // await instance.defineRelease(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
+
             instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
@@ -545,7 +554,7 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            await instance.setRevenueToken(addressStorage.get('NahmiiToken'));
+            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
 
             instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));

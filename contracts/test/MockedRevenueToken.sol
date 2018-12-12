@@ -9,25 +9,36 @@
 pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
-import {Beneficiary} from "./Beneficiary.sol";
-import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-
 /**
-@title AccrualBeneficiary
-@notice A beneficiary of accruals
+@title MockedRevenueToken
+@notice Mocked implementation of RevenueToken
 */
-contract AccrualBeneficiary is Beneficiary {
+contract MockedRevenueToken {
     //
-    // Functions
+    // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    event CloseAccrualPeriodEvent();
+    uint256 public _balanceBlocksIn;
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod(MonetaryTypesLib.Currency[])
+    function _reset()
     public
     {
-        emit CloseAccrualPeriodEvent();
+        _balanceBlocksIn = 0;
+    }
+
+    function balanceBlocksIn(address, uint256, uint256)
+    public
+    view
+    returns (uint256)
+    {
+        return _balanceBlocksIn;
+    }
+
+    function _setBalanceBlocksIn(uint256 _bbIn)
+    public
+    {
+        _balanceBlocksIn = _bbIn;
     }
 }

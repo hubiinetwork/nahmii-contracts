@@ -7,15 +7,17 @@
  */
 
 pragma solidity ^0.4.25;
+pragma experimental ABIEncoderV2;
 
 import {Beneficiary} from "../Beneficiary.sol";
+import {TokenHolderRevenueFund} from "../TokenHolderRevenueFund.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 
 /**
-@title MockedBeneficiary
-@notice Mocked implementation of beneficiary
+@title MockedTokenHolderRevenueFundService
+@notice Mocked implementation of service contract that interacts with TokenHolderRevenueFund
 */
-contract MockedBeneficiary is Beneficiary {
+contract MockedTokenHolderRevenueFundService is Beneficiary {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
@@ -29,6 +31,8 @@ contract MockedBeneficiary is Beneficiary {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
+    TokenHolderRevenueFund public _tokenHolderRevenueFund;
+
     Benefit[] public _benefits;
 
     //
@@ -38,6 +42,18 @@ contract MockedBeneficiary is Beneficiary {
     public
     {
         _benefits.length = 0;
+    }
+
+    function setTokenHolderRevenueFund(TokenHolderRevenueFund tokenHolderRevenueFund)
+    public
+    {
+        _tokenHolderRevenueFund = tokenHolderRevenueFund;
+    }
+
+    function closeAccrualPeriod(MonetaryTypesLib.Currency[] currencies)
+    public
+    {
+        _tokenHolderRevenueFund.closeAccrualPeriod(currencies);
     }
 
     function receiveEthersTo(address wallet, string balanceType)

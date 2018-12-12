@@ -31,15 +31,6 @@ contract BalanceTracker is Ownable, Servable {
     string constant public STAGED_BALANCE_TYPE = "staged";
 
     //
-    // Variables
-    // -----------------------------------------------------------------------------------------------------------------
-    bytes32 public depositedBalanceType;
-    bytes32 public settledBalanceType;
-    bytes32 public stagedBalanceType;
-    bytes32[] public balanceTypes;
-    mapping(bytes32 => bool) public balanceTypeMap;
-
-    //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Wallet {
@@ -50,6 +41,12 @@ contract BalanceTracker is Ownable, Servable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
+    bytes32 public depositedBalanceType;
+    bytes32 public settledBalanceType;
+    bytes32 public stagedBalanceType;
+    bytes32[] public balanceTypes;
+    mapping(bytes32 => bool) public balanceTypeMap;
+
     mapping(address => Wallet) private walletMap;
 
     //

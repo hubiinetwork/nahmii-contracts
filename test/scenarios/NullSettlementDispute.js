@@ -88,7 +88,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3NullSettlementDispute.setValidator(address);
 
@@ -100,7 +100,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlementDispute.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -121,7 +121,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3NullSettlementDispute.setFraudChallenge(address);
 
@@ -133,7 +133,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlementDispute.setFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -154,7 +154,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3NullSettlementDispute.setCancelOrdersChallenge(address);
 
@@ -166,7 +166,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlementDispute.setCancelOrdersChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -187,7 +187,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3NullSettlementDispute.setNullSettlementChallenge(address);
 
@@ -199,7 +199,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlementDispute.setNullSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });

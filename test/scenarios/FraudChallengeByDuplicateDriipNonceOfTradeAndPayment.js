@@ -138,7 +138,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
@@ -158,7 +158,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.setFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -179,7 +179,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -199,7 +199,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -220,7 +220,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -240,7 +240,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
@@ -261,7 +261,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let securityBond;
 
                 beforeEach(async () => {
@@ -281,7 +281,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.setSecurityBond(address, {from: glob.user_a}).should.be.rejected;
                 });

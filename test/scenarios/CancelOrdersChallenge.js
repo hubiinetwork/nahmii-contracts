@@ -64,7 +64,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3CancelOrdersChallenge.setConfiguration(address);
 
@@ -76,7 +76,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3CancelOrdersChallenge.setConfiguration(address, {from: glob.user_a})
                         .should.be.rejected;
@@ -98,7 +98,7 @@ module.exports = (glob) => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
                     const result = await web3CancelOrdersChallenge.setValidator(address);
 
@@ -110,7 +110,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3CancelOrdersChallenge.setValidator(address, {from: glob.user_a})
                         .should.be.rejected;
