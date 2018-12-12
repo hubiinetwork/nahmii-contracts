@@ -7,11 +7,12 @@ const mocks = require('../mocks');
 const ERC20Token = artifacts.require('StandardTokenEx');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const ClientFund = artifacts.require('ClientFund');
-const MockedClientFundService = artifacts.require('MockedClientFundService');
-const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const BalanceTracker = artifacts.require('BalanceTracker');
 const TransactionTracker = artifacts.require('TransactionTracker');
+const MockedClientFundService = artifacts.require('MockedClientFundService');
+const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
+const MockedTokenHolderRevenueFund = artifacts.require('MockedTokenHolderRevenueFund');
 
 chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
@@ -29,6 +30,7 @@ module.exports = function (glob) {
         let web3MockedClientFundAuthorizedService, ethersMockedClientFundAuthorizedService;
         let web3MockedClientFundUnauthorizedService, ethersMockedClientFundUnauthorizedService;
         let web3MockedBeneficiary, ethersMockedBeneficiary;
+        let web3MockedTokenHolderRevenueFund, ethersMockedTokenHolderRevenueFund;
         let depositedBalanceType, settledBalanceType, stagedBalanceType;
         let depositTransactionType;
 
@@ -39,6 +41,8 @@ module.exports = function (glob) {
 
             web3MockedWalletLocker = await MockedWalletLocker.new();
             ethersMockedWalletLocker = new Contract(web3MockedWalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
+            web3MockedTokenHolderRevenueFund = await MockedTokenHolderRevenueFund.new();
+            ethersMockedTokenHolderRevenueFund = new Contract(web3MockedTokenHolderRevenueFund.address, MockedTokenHolderRevenueFund.abi, glob.signer_owner);
         });
 
         beforeEach(async () => {
@@ -73,6 +77,7 @@ module.exports = function (glob) {
             await web3ClientFund.setBalanceTracker(web3BalanceTracker.address, true);
             await web3ClientFund.setTransactionTracker(web3TransactionTracker.address, true);
             await web3ClientFund.setWalletLocker(web3MockedWalletLocker.address, true);
+            await web3ClientFund.setTokenHolderRevenueFund(web3MockedTokenHolderRevenueFund.address);
             await web3ClientFund.registerBeneficiary(web3MockedBeneficiary.address);
 
             await web3BalanceTracker.registerService(web3ClientFund.address);
@@ -90,6 +95,40 @@ module.exports = function (glob) {
             it('should initialize fields', async () => {
                 (await web3ClientFund.deployer.call()).should.equal(glob.owner);
                 (await web3ClientFund.operator.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('tokenHolderRevenueFund()', () => {
+            it('should equal value initialized', async () => {
+                (await web3ClientFund.tokenHolderRevenueFund.call())
+                    .should.equal(web3MockedTokenHolderRevenueFund.address);
+            });
+        });
+
+        describe('setTokenHolderRevenueFund()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called by deployer', () => {
+                it('should set new value and emit event', async () => {
+                    const result = await web3ClientFund.setTokenHolderRevenueFund(address);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetTokenHolderRevenueFundEvent');
+
+                    (await ethersClientFund.tokenHolderRevenueFund())
+                        .should.equal(address);
+                });
+            });
+
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3ClientFund.setTokenHolderRevenueFund(address, {from: glob.user_a})
+                        .should.be.rejected;
+                });
             });
         });
 
@@ -1018,9 +1057,9 @@ module.exports = function (glob) {
                         (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, mocks.address0, 0))
                             ._bn.should.eq.BN(0);
 
-                        const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                        const benefit = await ethersMockedBeneficiary._getBenefit(0);
                         benefit.wallet.should.equal(utils.getAddress(glob.user_a));
-                        benefit.balance.should.be.a('string').that.is.empty;
+                        benefit.balanceType.should.be.a('string').that.is.empty;
                         benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
                         benefit.currencyCt.should.equal(mocks.address0);
                         benefit.currencyId._bn.should.eq.BN(0);
@@ -1050,9 +1089,9 @@ module.exports = function (glob) {
                         (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, mocks.address0, 0))
                             ._bn.should.eq.BN(0);
 
-                        const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                        const benefit = await ethersMockedBeneficiary._getBenefit(0);
                         benefit.wallet.should.equal(utils.getAddress(glob.user_a));
-                        benefit.balance.should.be.a('string').that.is.empty;
+                        benefit.balanceType.should.be.a('string').that.is.empty;
                         benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
                         benefit.currencyCt.should.equal(mocks.address0);
                         benefit.currencyId._bn.should.eq.BN(0);
@@ -1096,9 +1135,9 @@ module.exports = function (glob) {
                         (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, web3ERC20.address, 0))
                             ._bn.should.eq.BN(0);
 
-                        const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                        const benefit = await ethersMockedBeneficiary._getBenefit(0);
                         benefit.wallet.should.equal(utils.getAddress(glob.user_a));
-                        benefit.balance.should.be.a('string').that.is.empty;
+                        benefit.balanceType.should.be.a('string').that.is.empty;
                         benefit.amount._bn.should.eq.BN(3);
                         benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
                         benefit.currencyId._bn.should.eq.BN(0);
@@ -1129,9 +1168,9 @@ module.exports = function (glob) {
                         (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, web3ERC20.address, 0))
                             ._bn.should.eq.BN(0);
 
-                        const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                        const benefit = await ethersMockedBeneficiary._getBenefit(0);
                         benefit.wallet.should.equal(utils.getAddress(glob.user_a));
-                        benefit.balance.should.be.a('string').that.is.empty;
+                        benefit.balanceType.should.be.a('string').that.is.empty;
                         benefit.amount._bn.should.eq.BN(3);
                         benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
                         benefit.currencyId._bn.should.eq.BN(0);
@@ -1180,9 +1219,9 @@ module.exports = function (glob) {
                         glob.user_b, web3MockedBeneficiary.address, web3.toWei(0.3, 'ether'), mocks.address0, 0, '', {gas: 1e6}
                     );
 
-                    const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
                     benefit.wallet.should.equal(utils.getAddress(glob.user_b));
-                    benefit.balance.should.be.a('string').that.is.empty;
+                    benefit.balanceType.should.be.a('string').that.is.empty;
                     benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
                     benefit.currencyCt.should.equal(mocks.address0);
                     benefit.currencyId._bn.should.eq.BN(0);
@@ -1209,9 +1248,9 @@ module.exports = function (glob) {
                         glob.user_b, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {gas: 1e6}
                     );
 
-                    const benefit = await ethersMockedBeneficiary.getBenefit(0);
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
                     benefit.wallet.should.equal(utils.getAddress(glob.user_b));
-                    benefit.balance.should.be.a('string').that.is.empty;
+                    benefit.balanceType.should.be.a('string').that.is.empty;
                     benefit.amount._bn.should.eq.BN(3);
                     benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
                     benefit.currencyId._bn.should.eq.BN(0);
@@ -1295,6 +1334,41 @@ module.exports = function (glob) {
                     (await ethersClientFund.seizedWallets(0))
                         .should.equal(utils.getAddress(glob.user_a));
                 })
+            });
+        });
+
+        describe('claimRevenue', () => {
+            let balanceType;
+
+            beforeEach(async () => {
+                balanceType = await web3BalanceTracker.DEPOSITED_BALANCE_TYPE();
+            });
+
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3ClientFund.claimRevenue(
+                        glob.user_a, balanceType, mocks.address0, 0, '', {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called by deployer', () => {
+                it('should set new value and emit event', async () => {
+                    const result = await web3ClientFund.claimRevenue(
+                        glob.user_a, balanceType, mocks.address0, 0, ''
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ClaimRevenueEvent');
+
+                    const claimTransfer = await ethersMockedTokenHolderRevenueFund._getClaimTransfer(0);
+                    claimTransfer.beneficiary.should.equal(utils.getAddress(ethersClientFund.address));
+                    claimTransfer.destWallet.should.equal(utils.getAddress(glob.user_a))
+                    claimTransfer.balanceType.should.equal(balanceType);
+                    claimTransfer.currencyCt.should.equal(mocks.address0);
+                    claimTransfer.currencyId._bn.should.eq.BN(0);
+                    claimTransfer.standard.should.be.a('string').that.is.empty;
+                });
             });
         });
     });
