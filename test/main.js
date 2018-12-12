@@ -40,10 +40,10 @@ const RevenueFund = artifacts.require('RevenueFund');
 const SecurityBond = artifacts.require('SecurityBond');
 const TestServable = artifacts.require('TestServable');
 const TestAuthorizableServable = artifacts.require('TestAuthorizableServable');
-const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
+// const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 
 const ERC20Token = artifacts.require('StandardTokenEx');
-const RevenueToken = artifacts.require('RevenueToken');
+// const RevenueToken = artifacts.require('RevenueToken');
 
 const UnitTestHelpers = artifacts.require('UnitTestHelpers');
 
@@ -597,7 +597,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/NullSettlement')(glob);
     require('./scenarios/NullSettlementChallenge')(glob);
     require('./scenarios/NullSettlementDispute')(glob);
-    require('./scenarios/RevenueFund')(glob);
+    // require('./scenarios/RevenueFund')(glob);
     require('./scenarios/RevenueTokenManager')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/Servable')(glob);

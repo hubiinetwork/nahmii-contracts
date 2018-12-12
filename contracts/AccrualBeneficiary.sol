@@ -7,8 +7,10 @@
  */
 
 pragma solidity ^0.4.25;
+pragma experimental ABIEncoderV2;
 
 import {Beneficiary} from "./Beneficiary.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
 @title AccrualBeneficiary
@@ -16,14 +18,8 @@ import {Beneficiary} from "./Beneficiary.sol";
 */
 contract AccrualBeneficiary is Beneficiary {
     //
-    // Events
-    // -----------------------------------------------------------------------------------------------------------------
-    event CloseAccrualPeriodEvent();
-
-    //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod() public {
-        emit CloseAccrualPeriodEvent();
-    }
+    function closeAccrualPeriod(MonetaryTypesLib.Currency[])
+    public {}
 }

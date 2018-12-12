@@ -16,13 +16,12 @@ import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 @notice Mocked implementation of beneficiary
 */
 contract MockedBeneficiary is Beneficiary {
-
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
     struct Benefit {
         address wallet;
-        string balance;
+        string balanceType;
         MonetaryTypesLib.Figure figure;
         string standard;
     }
@@ -30,7 +29,7 @@ contract MockedBeneficiary is Beneficiary {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Benefit[] public benefits;
+    Benefit[] public _benefits;
 
     //
     // Functions
@@ -38,17 +37,17 @@ contract MockedBeneficiary is Beneficiary {
     function _reset()
     public
     {
-        benefits.length = 0;
+        _benefits.length = 0;
     }
 
-    function receiveEthersTo(address wallet, string balance)
+    function receiveEthersTo(address wallet, string balanceType)
     public
     payable
     {
-        benefits.push(
+        _benefits.push(
             Benefit(
                 wallet,
-                balance,
+                balanceType,
                 MonetaryTypesLib.Figure(
                     int256(msg.value),
                     MonetaryTypesLib.Currency(address(0), 0)
@@ -58,14 +57,14 @@ contract MockedBeneficiary is Beneficiary {
         );
     }
 
-    function receiveTokensTo(address wallet, string balance, int256 amount,
+    function receiveTokensTo(address wallet, string balanceType, int256 amount,
         address currencyCt, uint256 currencyId, string standard)
     public
     {
-        benefits.push(
+        _benefits.push(
             Benefit(
                 wallet,
-                balance,
+                balanceType,
                 MonetaryTypesLib.Figure(
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -75,17 +74,17 @@ contract MockedBeneficiary is Beneficiary {
         );
     }
 
-    function getBenefit(uint256 index)
+    function _getBenefit(uint256 index)
     public
     view
-    returns (address wallet, string balance, int256 amount, address currencyCt,
+    returns (address wallet, string balanceType, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     {
-        wallet = benefits[index].wallet;
-        balance = benefits[index].balance;
-        amount = benefits[index].figure.amount;
-        currencyCt = benefits[index].figure.currency.ct;
-        currencyId = benefits[index].figure.currency.id;
-        standard = benefits[index].standard;
+        wallet = _benefits[index].wallet;
+        balanceType = _benefits[index].balanceType;
+        amount = _benefits[index].figure.amount;
+        currencyCt = _benefits[index].figure.currency.ct;
+        currencyId = _benefits[index].figure.currency.id;
+        standard = _benefits[index].standard;
     }
 }
