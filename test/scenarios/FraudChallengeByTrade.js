@@ -287,7 +287,7 @@ module.exports = (glob) => {
             let trade, overrideOptions, filter;
 
             before(async () => {
-                overrideOptions = {gasLimit: 2e6};
+                overrideOptions = {gasLimit: 3e6};
             });
 
             beforeEach(async () => {

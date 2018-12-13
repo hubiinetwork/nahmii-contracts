@@ -52,12 +52,20 @@ SecurityBondable, WalletLockable {
             payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet
         );
 
-        // Genuineness affected by sender
-        bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&
-        validator.isGenuinePaymentFee(payment);
+        // Genuineness affected by sender and recipient
+        bool genuineSenderAndFee;
+        bool genuineRecipient;
+        if (validator.isPaymentCurrencyNonFungible(payment)) {
+            genuineSenderAndFee = validator.isGenuinePaymentSenderOfNonFungible(payment)
+            && validator.isGenuinePaymentFeeOfNonFungible(payment);
 
-        // Genuineness affected by recipient
-        bool genuineRecipient = validator.isGenuinePaymentRecipient(payment);
+            genuineRecipient = validator.isGenuinePaymentRecipientOfNonFungible(payment);
+        } else {
+            genuineSenderAndFee = validator.isGenuinePaymentSenderOfFungible(payment)
+            && validator.isGenuinePaymentFeeOfFungible(payment);
+
+            genuineRecipient = validator.isGenuinePaymentRecipientOfFungible(payment);
+        }
 
         require(!genuineWalletSignature || !genuineSenderAndFee || !genuineRecipient);
 

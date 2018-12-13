@@ -253,7 +253,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe('isGenuineTradeBuyerFee()', () => {
+        describe('isGenuineTradeBuyerFeeOfFungible()', () => {
             let amountIntended, trade;
 
             before(() => {
@@ -284,7 +284,7 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeBuyerFeeOfFungible(trade);
                         result.should.be.true;
                     });
                 });
@@ -316,14 +316,14 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeBuyerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeBuyerFeeOfFungible(trade);
                         result.should.be.true;
                     });
                 });
             });
         });
 
-        describe('isGenuineTradeSellerFee()', () => {
+        describe('isGenuineTradeSellerFeeOfFungible()', () => {
             let amountIntended, amountConjugate, trade;
 
             before(() => {
@@ -355,7 +355,7 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeSellerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeSellerFeeOfFungible(trade);
                         result.should.be.true;
                     });
                 });
@@ -387,7 +387,7 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully validate', async () => {
-                        const result = await ethersValidator.isGenuineTradeSellerFee(trade);
+                        const result = await ethersValidator.isGenuineTradeSellerFeeOfFungible(trade);
                         result.should.be.true;
                     });
                 });

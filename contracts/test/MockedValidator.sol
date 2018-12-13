@@ -190,7 +190,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyerFee = genuine;
     }
 
-    function isGenuineTradeBuyerFee(NahmiiTypesLib.Trade)
+    function isGenuineTradeBuyerFeeOfFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
@@ -204,7 +204,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeSellerFee = genuine;
     }
 
-    function isGenuineTradeSellerFee(NahmiiTypesLib.Trade)
+    function isGenuineTradeSellerFeeOfFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
@@ -218,7 +218,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyerGenuine = genuine;
     }
 
-    function isGenuineTradeBuyer(NahmiiTypesLib.Trade)
+    function isGenuineTradeBuyerOfFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
@@ -232,7 +232,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeSellerGenuine = genuine;
     }
 
-    function isGenuineTradeSeller(NahmiiTypesLib.Trade)
+    function isGenuineTradeSellerOfFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
@@ -325,7 +325,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentFee = genuine;
     }
 
-    function isGenuinePaymentFee(NahmiiTypesLib.Payment)
+    function isGenuinePaymentFeeOfFungible(NahmiiTypesLib.Payment)
     public
     view
     returns (bool)
@@ -339,7 +339,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentSenderGenuine = genuine;
     }
 
-    function isGenuinePaymentSender(NahmiiTypesLib.Payment)
+    function isGenuinePaymentSenderOfFungible(NahmiiTypesLib.Payment)
     public
     view
     returns (bool)
@@ -353,7 +353,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentRecipientGenuine = genuine;
     }
 
-    function isGenuinePaymentRecipient(NahmiiTypesLib.Payment)
+    function isGenuinePaymentRecipientOfFungible(NahmiiTypesLib.Payment)
     public
     view
     returns (bool)
