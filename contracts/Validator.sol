@@ -44,10 +44,27 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     {
         int256 feePartsPer = ConstantsLib.PARTS_PER();
         int256 discountTier = int256(trade.buyer.rollingVolume);
+
+        int256 feeAmount;
         if (NahmiiTypesLib.LiquidityRole.Maker == trade.buyer.liquidityRole) {
-            return trade.buyer.fees.single.amount == trade.amount.mul(configuration.tradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer);
+            feeAmount = trade.amount
+            .mul(configuration.tradeMakerFee(trade.blockNumber, discountTier))
+            .div(feePartsPer);
+
+            if (1 > feeAmount)
+                feeAmount = 1;
+
+            return (trade.buyer.fees.single.amount == feeAmount);
+
         } else {// NahmiiTypesLib.LiquidityRole.Taker == trade.buyer.liquidityRole
-            return trade.buyer.fees.single.amount == trade.amount.mul(configuration.tradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer);
+            feeAmount = trade.amount
+            .mul(configuration.tradeTakerFee(trade.blockNumber, discountTier))
+            .div(feePartsPer);
+
+            if (1 > feeAmount)
+                feeAmount = 1;
+
+            return (trade.buyer.fees.single.amount == feeAmount);
         }
     }
 
@@ -59,10 +76,27 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     {
         int256 feePartsPer = ConstantsLib.PARTS_PER();
         int256 discountTier = int256(trade.seller.rollingVolume);
+
+        int256 feeAmount;
         if (NahmiiTypesLib.LiquidityRole.Maker == trade.seller.liquidityRole) {
-            return trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.tradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer);
+            feeAmount = trade.amount
+            .mul(configuration.tradeMakerFee(trade.blockNumber, discountTier))
+            .div(trade.rate.mul(feePartsPer));
+
+            if (1 > feeAmount)
+                feeAmount = 1;
+
+            return (trade.seller.fees.single.amount == feeAmount);
+
         } else {// NahmiiTypesLib.LiquidityRole.Taker == trade.seller.liquidityRole
-            return trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.tradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer);
+            feeAmount = trade.amount
+            .mul(configuration.tradeTakerFee(trade.blockNumber, discountTier))
+            .div(trade.rate.mul(feePartsPer));
+
+            if (1 > feeAmount)
+                feeAmount = 1;
+
+            return (trade.seller.fees.single.amount == feeAmount);
         }
     }
 
@@ -268,7 +302,18 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     returns (bool)
     {
         int256 feePartsPer = int256(ConstantsLib.PARTS_PER());
-        return (payment.sender.fees.single.amount == payment.amount.mul(configuration.currencyPaymentFee(payment.blockNumber, payment.currency.ct, payment.currency.id, payment.amount)).div(feePartsPer));
+
+        int256 feeAmount = payment.amount
+        .mul(
+            configuration.currencyPaymentFee(
+                payment.blockNumber, payment.currency.ct, payment.currency.id, payment.amount
+            )
+        ).div(feePartsPer);
+
+        if (1 > feeAmount)
+            feeAmount = 1;
+
+        return (payment.sender.fees.single.amount == feeAmount);
     }
 
     // @dev Logics of this function only applies to NFT

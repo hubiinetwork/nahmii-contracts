@@ -416,9 +416,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe.only('if payment fee is fraudulent', () => {
+            describe('if payment fee is fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersValidator.setGenuinePaymentFee(false);
+                    await ethersValidator.setGenuinePaymentFeeOfFungible(false);
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 

@@ -49,7 +49,7 @@ SecurityBondable, WalletLockable {
         validator.isGenuineTradeBuyerOfFungible(trade) && validator.isGenuineTradeBuyerFeeOfFungible(trade);
 
         // Genuineness affected by seller
-        bool genuineSellerAndFee = validator.isTradeIntendedCurrencyNonFungible(trade) ?
+        bool genuineSellerAndFee = validator.isTradeConjugateCurrencyNonFungible(trade) ?
         validator.isGenuineTradeSellerOfNonFungible(trade) && validator.isGenuineTradeSellerFeeOfNonFungible(trade) :
         validator.isGenuineTradeSellerOfFungible(trade) && validator.isGenuineTradeSellerFeeOfFungible(trade);
 
