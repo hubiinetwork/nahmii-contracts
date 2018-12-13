@@ -12,9 +12,9 @@ import {Ownable} from "./Ownable.sol";
 import {WalletLocker} from "./WalletLocker.sol";
 
 /**
-@title WalletLockable
-@notice An ownable that has a wallet locker property
-*/
+ * @title WalletLockable
+ * @notice An ownable that has a wallet locker property
+ */
 contract WalletLockable is Ownable {
     //
     // Variables

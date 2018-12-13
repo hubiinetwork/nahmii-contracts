@@ -20,9 +20,9 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {Strings} from "solidity-util/lib/Strings.sol";
 
 /**
-@title PartnerFund
-@notice XXXX
-*/
+ * @title PartnerFund
+ * @notice Where partners’ fees are managed
+ */
 contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;

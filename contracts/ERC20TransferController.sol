@@ -12,9 +12,9 @@ import {TransferController} from "./TransferController.sol";
 import {ERC20} from "./ERC20.sol";
 
 /**
-@title ERC20TransferController
-@notice Handles transfers of ERC20 tokens
-*/
+ * @title ERC20TransferController
+ * @notice Handles transfers of ERC20 tokens
+ */
 contract ERC20TransferController is TransferController {
     function isTyped()
     public

@@ -14,9 +14,9 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title Hasher
-@notice Contract that hashes types in NahmiiTypesLib contract
-*/
+ * @title Hasher
+ * @notice Contract that hashes types in NahmiiTypesLib contract
+ */
 contract Hasher is Ownable {
     //
     // Constructor

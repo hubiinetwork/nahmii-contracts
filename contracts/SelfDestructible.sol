@@ -9,9 +9,9 @@
 pragma solidity ^0.4.25;
 
 /**
-@title SelfDestructible
-@notice Contract that allows for self-destruction
-*/
+ * @title SelfDestructible
+ * @notice Contract that allows for self-destruction
+ */
 contract SelfDestructible {
     //
     // Variables

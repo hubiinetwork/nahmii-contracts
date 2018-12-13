@@ -9,9 +9,9 @@
 pragma solidity ^0.4.25;
 
 /**
-@title Beneficiary
-@notice A recipient of ethers and tokens
-*/
+ * @title Beneficiary
+ * @notice A recipient of ethers and tokens
+ */
 contract Beneficiary {
     /// @notice Receive ethers to the given wallet's given balance type
     /// @param wallet The address of the concerned wallet

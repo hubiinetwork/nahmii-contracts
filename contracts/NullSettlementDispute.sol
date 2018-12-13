@@ -25,9 +25,9 @@ import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 
 /**
-@title NullSettlementDispute
-@notice The workhorse of null settlement challenges, utilized by NullSettlementChallenge
-*/
+ * @title NullSettlementDispute
+ * @notice The workhorse of null settlement challenges, utilized by NullSettlementChallenge
+ */
 contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
 FraudChallengable, CancelOrdersChallengable {
     using SafeMathIntLib for int256;

@@ -12,9 +12,9 @@ import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 
 /**
-@title Transaction tracker
-@notice An ownable to track transactions of generic types
-*/
+ * @title Transaction tracker
+ * @notice An ownable to track transactions of generic types
+ */
 contract TransactionTracker is Ownable, Servable {
 
     //

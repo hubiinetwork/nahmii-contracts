@@ -12,9 +12,9 @@ import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
 /**
-@title MockedClientFund
-@notice Mocked implementation of client fund contract
-*/
+ * @title MockedClientFund
+ * @notice Mocked implementation of client fund contract
+ */
 contract MockedClientFund {
     //
     // Types

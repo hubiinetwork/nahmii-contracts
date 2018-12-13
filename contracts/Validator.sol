@@ -20,9 +20,9 @@ import {SignerManageable} from "./SignerManageable.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
-@title Validator
-@notice An ownable that validates valuable types (order, trade, payment)
-*/
+ * @title Validator
+ * @notice An ownable that validates valuable types (order, trade, payment)
+ */
 contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
@@ -681,8 +681,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        return (payment.currency.ct != payment.sender.fees.single.currency.ct)
-        || (payment.currency.id != payment.sender.fees.single.currency.id);
+        return payment.currency.ct != payment.sender.fees.single.currency.ct
+        || payment.currency.id != payment.sender.fees.single.currency.id;
     }
 
     //

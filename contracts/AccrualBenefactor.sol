@@ -13,9 +13,9 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
-@title AccrualBenefactor
-@notice A benefactor whose registered beneficiaries obtain a predefined fraction of total amount
-*/
+ * @title AccrualBenefactor
+ * @notice A benefactor whose registered beneficiaries obtain a predefined fraction of total amount
+ */
 contract AccrualBenefactor is Benefactor {
     using SafeMathIntLib for int256;
 

@@ -24,9 +24,9 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 
 /**
-@title DriipSettlementDispute
-@notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
-*/
+ * @title DriipSettlementDispute
+ * @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
+ */
 contract DriipSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable, FraudChallengable,
 CancelOrdersChallengable {
     using SafeMathIntLib for int256;

@@ -12,11 +12,10 @@ pragma experimental ABIEncoderV2;
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
-@title MockedCancelOrdersChallenge
-@notice Mocked implementation of cancel orders challenge contract
-*/
+ * @title MockedCancelOrdersChallenge
+ * @notice Mocked implementation of cancel orders challenge contract
+ */
 contract MockedCancelOrdersChallenge {
-
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

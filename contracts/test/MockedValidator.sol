@@ -14,15 +14,10 @@ import {SignerManageable} from "../SignerManageable.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
-@title MockedValidator
-@notice Mocked implementation of validator contract
-*/
+ * @title MockedValidator
+ * @notice Mocked implementation of validator contract
+ */
 contract MockedValidator is Ownable, SignerManageable {
-
-    //
-    // Types
-    // -----------------------------------------------------------------------------------------------------------------
-
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -39,6 +34,8 @@ contract MockedValidator is Ownable, SignerManageable {
     bool tradeBuyer;
     bool tradeSeller;
     bool tradeOrder;
+    bool tradeIntendedCurrencyNonFungible;
+    bool tradeConjugateCurrencyNonFungible;
     bool paymentFeeOfFungible;
     bool paymentSenderGenuine;
     bool paymentRecipientGenuine;
@@ -49,6 +46,7 @@ contract MockedValidator is Ownable, SignerManageable {
     bool paymentParty;
     bool paymentSender;
     bool paymentRecipient;
+    bool paymentCurrencyNonFungible;
     bool successiveTradesPartyNonces;
     bool successiveTradesBalances;
     bool successiveTradesTotalFees;
@@ -98,6 +96,8 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyer = true;
         tradeSeller = true;
         tradeOrder = true;
+        tradeIntendedCurrencyNonFungible = false;
+        tradeConjugateCurrencyNonFungible = false;
         paymentFeeOfFungible = true;
         paymentSenderGenuine = true;
         paymentRecipientGenuine = true;
@@ -109,6 +109,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentParty = true;
         paymentSender = true;
         paymentRecipient = true;
+        paymentCurrencyNonFungible = false;
         successiveTradesPartyNonces = true;
         successiveTradesBalances = true;
         successiveTradesTotalFees = true;

@@ -18,9 +18,9 @@ import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeBySuccessiveTrades
-@notice Where driips are challenged wrt fraud by mismatch in successive trades
-*/
+ * @title FraudChallengeBySuccessiveTrades
+ * @notice Where driips are challenged wrt fraud by mismatch in successive trades
+ */
 contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable, WalletLockable {
     //

@@ -11,9 +11,9 @@ pragma solidity ^0.4.25;
 import {Servable} from "./Servable.sol";
 
 /**
-@title AuthorizableServable
-@notice A servable that may be authorized and unauthorized
-*/
+ * @title AuthorizableServable
+ * @notice A servable that may be authorized and unauthorized
+ */
 contract AuthorizableServable is Servable {
     //
     // Variables

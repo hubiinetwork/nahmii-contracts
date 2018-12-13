@@ -14,11 +14,10 @@ import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 
 /**
-@title MockedNullSettlementChallenge
-@notice Mocked implementation of null settlement challenge
-*/
+ * @title MockedNullSettlementChallenge
+ * @notice Mocked implementation of null settlement challenge
+ */
 contract MockedNullSettlementChallenge {
-
     bool public _proposalExpired;
     uint256 public _proposalNonce;
     uint256 public _proposalBlockNumber;

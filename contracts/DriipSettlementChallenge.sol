@@ -20,9 +20,9 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
-@title DriipSettlementChallenge
-@notice Where driip settlements are started and challenged
-*/
+ * @title DriipSettlementChallenge
+ * @notice Where driip settlements are started and challenged
+ */
 contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

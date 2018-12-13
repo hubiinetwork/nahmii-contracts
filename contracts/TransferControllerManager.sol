@@ -12,9 +12,9 @@ import {Ownable} from "./Ownable.sol";
 import {TransferController} from "./TransferController.sol";
 
 /**
-@title TransferControllerManager
-@notice Handles the management of transfer controllers
-*/
+ * @title TransferControllerManager
+ * @notice Handles the management of transfer controllers
+ */
 contract TransferControllerManager is Ownable {
     //
     // Constants

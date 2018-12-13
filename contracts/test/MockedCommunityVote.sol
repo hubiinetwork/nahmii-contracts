@@ -8,11 +8,10 @@
 pragma solidity ^0.4.25;
 
 /**
-@title MockedCommunityVote
-@notice Mocked implementation of community vote contract
-*/
+ * @title MockedCommunityVote
+ * @notice Mocked implementation of community vote contract
+ */
 contract MockedCommunityVote {
-
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------

@@ -21,9 +21,9 @@ import {BlockNumbCurrenciesLib} from "./BlockNumbCurrenciesLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
-@title Configuration
-@notice An oracle for configurations values
-*/
+ * @title Configuration
+ * @notice An oracle for configurations values
+ */
 contract Configuration is Modifiable, Ownable, Servable {
     using SafeMathIntLib for int256;
     using BlockNumbUintsLib for BlockNumbUintsLib.BlockNumbUints;

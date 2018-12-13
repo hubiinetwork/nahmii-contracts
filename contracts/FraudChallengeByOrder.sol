@@ -17,9 +17,9 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByOrder
-@notice Where order is challenged wrt signature error
-*/
+ * @title FraudChallengeByOrder
+ * @notice Where order is challenged wrt signature error
+ */
 contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable {
     //

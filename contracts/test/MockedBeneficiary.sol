@@ -12,9 +12,9 @@ import {Beneficiary} from "../Beneficiary.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 
 /**
-@title MockedBeneficiary
-@notice Mocked implementation of beneficiary
-*/
+ * @title MockedBeneficiary
+ * @notice Mocked implementation of beneficiary
+ */
 contract MockedBeneficiary is Beneficiary {
     //
     // Types

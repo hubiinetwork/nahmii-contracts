@@ -21,9 +21,9 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
-@title NullSettlement
-@notice Where null settlement are finalized
-*/
+ * @title NullSettlement
+ * @notice Where null settlement are finalized
+ */
 contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

@@ -14,11 +14,10 @@ import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
 
 /**
-@title MockedDriipSettlementChallenge
-@notice Mocked implementation of driip settlement challenge contract
-*/
+ * @title MockedDriipSettlementChallenge
+ * @notice Mocked implementation of driip settlement challenge contract
+ */
 contract MockedDriipSettlementChallenge {
-
     bool public _proposalExpired;
     uint256 public _proposalNonce;
     uint256 public _proposalBlockNumber;

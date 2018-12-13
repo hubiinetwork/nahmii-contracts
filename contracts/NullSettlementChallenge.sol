@@ -19,9 +19,9 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
-@title NullSettlementChallenge
-@notice Where null settlements are started and challenged
-*/
+ * @title NullSettlementChallenge
+ * @notice Where null settlements are started and challenged
+ */
 contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

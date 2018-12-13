@@ -11,11 +11,10 @@ pragma solidity ^0.4.25;
 import {Configuration} from "../Configuration.sol";
 
 /**
-@title MockedConfiguration
-@notice Mocked implementation of configuration contract
-*/
+ * @title MockedConfiguration
+ * @notice Mocked implementation of configuration contract
+ */
 contract MockedConfiguration is Configuration {
-
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------

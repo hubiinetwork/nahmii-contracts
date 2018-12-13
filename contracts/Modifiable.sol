@@ -8,9 +8,9 @@
 pragma solidity ^0.4.25;
 
 /**
-@title Modifiable
-@notice A contract with basic modifiers
-*/
+ * @title Modifiable
+ * @notice A contract with basic modifiers
+ */
 contract Modifiable {
     //
     // Modifiers

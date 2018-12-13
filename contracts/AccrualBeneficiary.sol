@@ -13,9 +13,9 @@ import {Beneficiary} from "./Beneficiary.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
-@title AccrualBeneficiary
-@notice A beneficiary of accruals
-*/
+ * @title AccrualBeneficiary
+ * @notice A beneficiary of accruals
+ */
 contract AccrualBeneficiary is Beneficiary {
     //
     // Functions

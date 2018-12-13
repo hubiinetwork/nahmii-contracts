@@ -25,9 +25,9 @@ import {TransferController} from "./TransferController.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
-@title SecurityBond
-@notice Fund that contains crypto incentive for challenging operator fraud.
-*/
+ * @title SecurityBond
+ * @notice Fund that contains crypto incentive for challenging operator fraud.
+ */
 contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

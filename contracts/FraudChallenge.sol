@@ -13,9 +13,9 @@ import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 
 /**
-@title FraudChallenge
-@notice Where fraud challenge results are found
-*/
+ * @title FraudChallenge
+ * @notice Where fraud challenge results are found
+ */
 contract FraudChallenge is Ownable, Servable {
     //
     // Constants

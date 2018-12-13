@@ -12,9 +12,9 @@ pragma experimental ABIEncoderV2;
 import {MockedRevenueToken} from "./MockedRevenueToken.sol";
 
 /**
-@title MockedRevenueTokenManager
-@notice Mocked implementation of RevenueTokenManager
-*/
+ * @title MockedRevenueTokenManager
+ * @notice Mocked implementation of RevenueTokenManager
+ */
 contract MockedRevenueTokenManager {
     //
     // Variables

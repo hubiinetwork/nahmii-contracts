@@ -14,9 +14,9 @@ import {SecurityBondable} from "../SecurityBondable.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
 /**
-@title MockedSecurityBondService
-@notice Mocked implementation of service contract that interacts with SecurityBond
-*/
+ * @title MockedSecurityBondService
+ * @notice Mocked implementation of service contract that interacts with SecurityBond
+ */
 contract MockedSecurityBondService is Ownable, SecurityBondable {
     //
     // Constructor

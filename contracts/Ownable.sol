@@ -12,9 +12,9 @@ import {Modifiable} from "./Modifiable.sol";
 import {SelfDestructible} from "./SelfDestructible.sol";
 
 /**
-@title Ownable
-@notice A modifiable that has ownership roles
-*/
+ * @title Ownable
+ * @notice A modifiable that has ownership roles
+ */
 contract Ownable is Modifiable, SelfDestructible {
     //
     // Variables

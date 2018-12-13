@@ -10,9 +10,9 @@ pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 /**
-@title MockedRevenueToken
-@notice Mocked implementation of RevenueToken
-*/
+ * @title MockedRevenueToken
+ * @notice Mocked implementation of RevenueToken
+ */
 contract MockedRevenueToken {
     //
     // Variables

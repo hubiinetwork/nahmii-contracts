@@ -12,9 +12,9 @@ import {Ownable} from "./Ownable.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 
 /**
-@title CancelOrdersChallengable
-@notice An ownable that has a cancel orders challenge property
-*/
+ * @title CancelOrdersChallengable
+ * @notice An ownable that has a cancel orders challenge property
+ */
 contract CancelOrdersChallengable is Ownable {
     //
     // Variables

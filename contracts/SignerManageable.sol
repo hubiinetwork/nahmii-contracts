@@ -13,9 +13,9 @@ import {Ownable} from "./Ownable.sol";
 import {SignerManager} from "./SignerManager.sol";
 
 /**
-@title SignerManageable
-@notice A contract to interface ACL
-*/
+ * @title SignerManageable
+ * @notice A contract to interface ACL
+ */
 contract SignerManageable is Ownable {
     //
     // Variables
