@@ -98,9 +98,6 @@ contract TokenMultiTimelock is Ownable {
         // Require that token address has been set
         require(address(token) != address(0));
 
-        // Require that release time is later than current timestamp
-        require(releaseTime > block.timestamp);
-
         // Update the total amount locked by this contract
         totalLockedAmount += amount;
 
