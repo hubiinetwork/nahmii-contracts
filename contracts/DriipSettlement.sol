@@ -26,9 +26,9 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
-@title DriipSettlement
-@notice Where driip settlements are finalized
-*/
+ * @title DriipSettlement
+ * @notice Where driip settlements are finalized
+ */
 contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, FraudChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

@@ -287,7 +287,7 @@ module.exports = (glob) => {
             let trade, overrideOptions, filter;
 
             before(async () => {
-                overrideOptions = {gasLimit: 2e6};
+                overrideOptions = {gasLimit: 3e6};
             });
 
             beforeEach(async () => {
@@ -338,7 +338,7 @@ module.exports = (glob) => {
 
             describe('if trade buyer fee is fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersValidator.setGenuineTradeBuyerFee(false);
+                    await ethersValidator.setGenuineTradeBuyerFeeOfFungible(false);
                 });
 
                 beforeEach(async () => {
@@ -366,7 +366,7 @@ module.exports = (glob) => {
 
             describe('if trade seller fee is fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersValidator.setGenuineTradeSellerFee(false);
+                    await ethersValidator.setGenuineTradeSellerFeeOfFungible(false);
                 });
 
                 beforeEach(async () => {

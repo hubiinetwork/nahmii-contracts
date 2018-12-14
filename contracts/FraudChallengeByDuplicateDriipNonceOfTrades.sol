@@ -17,9 +17,9 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByDuplicateDriipNonceOfTrades
-@notice Where driips are challenged wrt fraud by duplicate drip nonce of trades
-*/
+ * @title FraudChallengeByDuplicateDriipNonceOfTrades
+ * @notice Where driips are challenged wrt fraud by duplicate drip nonce of trades
+ */
 contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable {
     //

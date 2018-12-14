@@ -17,9 +17,9 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByDoubleSpentOrders
-@notice Where driips are challenged wrt fraud by double spent orders
-*/
+ * @title FraudChallengeByDoubleSpentOrders
+ * @notice Where driips are challenged wrt fraud by double spent orders
+ */
 contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable {
     //

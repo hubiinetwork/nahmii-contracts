@@ -18,9 +18,9 @@ import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByTrade
-@notice Where driips are challenged wrt fraud by mismatch in single trade property values
-*/
+ * @title FraudChallengeByTrade
+ * @notice Where driips are challenged wrt fraud by mismatch in single trade property values
+ */
 contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable, WalletLockable {
     //
@@ -44,12 +44,14 @@ SecurityBondable, WalletLockable {
     onlySealedTrade(trade)
     {
         // Genuineness affected by buyer
-        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade)
-        && validator.isGenuineTradeBuyerFee(trade);
+        bool genuineBuyerAndFee = validator.isTradeIntendedCurrencyNonFungible(trade) ?
+        validator.isGenuineTradeBuyerOfNonFungible(trade) && validator.isGenuineTradeBuyerFeeOfNonFungible(trade) :
+        validator.isGenuineTradeBuyerOfFungible(trade) && validator.isGenuineTradeBuyerFeeOfFungible(trade);
 
         // Genuineness affected by seller
-        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade)
-        && validator.isGenuineTradeSellerFee(trade);
+        bool genuineSellerAndFee = validator.isTradeConjugateCurrencyNonFungible(trade) ?
+        validator.isGenuineTradeSellerOfNonFungible(trade) && validator.isGenuineTradeSellerFeeOfNonFungible(trade) :
+        validator.isGenuineTradeSellerOfFungible(trade) && validator.isGenuineTradeSellerFeeOfFungible(trade);
 
         require(!genuineBuyerAndFee || !genuineSellerAndFee);
 

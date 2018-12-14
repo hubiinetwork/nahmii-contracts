@@ -14,15 +14,10 @@ import {SignerManageable} from "../SignerManageable.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
-@title MockedValidator
-@notice Mocked implementation of validator contract
-*/
+ * @title MockedValidator
+ * @notice Mocked implementation of validator contract
+ */
 contract MockedValidator is Ownable, SignerManageable {
-
-    //
-    // Types
-    // -----------------------------------------------------------------------------------------------------------------
-
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,8 +25,8 @@ contract MockedValidator is Ownable, SignerManageable {
     bool orderWalletSeal;
     bool orderOperatorSeal;
     bool orderSeals;
-    bool tradeBuyerFee;
-    bool tradeSellerFee;
+    bool tradeBuyerFeeOfFungible;
+    bool tradeSellerFeeOfFungible;
     bool tradeBuyerGenuine;
     bool tradeSellerGenuine;
     bool[] tradeSeals;
@@ -39,7 +34,9 @@ contract MockedValidator is Ownable, SignerManageable {
     bool tradeBuyer;
     bool tradeSeller;
     bool tradeOrder;
-    bool paymentFee;
+    bool tradeIntendedCurrencyNonFungible;
+    bool tradeConjugateCurrencyNonFungible;
+    bool paymentFeeOfFungible;
     bool paymentSenderGenuine;
     bool paymentRecipientGenuine;
     bool paymentWalletHash;
@@ -49,6 +46,7 @@ contract MockedValidator is Ownable, SignerManageable {
     bool paymentParty;
     bool paymentSender;
     bool paymentRecipient;
+    bool paymentCurrencyNonFungible;
     bool successiveTradesPartyNonces;
     bool successiveTradesBalances;
     bool successiveTradesTotalFees;
@@ -88,8 +86,8 @@ contract MockedValidator is Ownable, SignerManageable {
         orderWalletSeal = true;
         orderOperatorSeal = true;
         orderSeals = true;
-        tradeBuyerFee = true;
-        tradeSellerFee = true;
+        tradeBuyerFeeOfFungible = true;
+        tradeSellerFeeOfFungible = true;
         tradeBuyerGenuine = true;
         tradeSellerGenuine = true;
         tradeSeals.length = 0;
@@ -98,7 +96,9 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyer = true;
         tradeSeller = true;
         tradeOrder = true;
-        paymentFee = true;
+        tradeIntendedCurrencyNonFungible = false;
+        tradeConjugateCurrencyNonFungible = false;
+        paymentFeeOfFungible = true;
         paymentSenderGenuine = true;
         paymentRecipientGenuine = true;
         paymentWalletHash = true;
@@ -109,6 +109,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentParty = true;
         paymentSender = true;
         paymentRecipient = true;
+        paymentCurrencyNonFungible = false;
         successiveTradesPartyNonces = true;
         successiveTradesBalances = true;
         successiveTradesTotalFees = true;
@@ -184,32 +185,32 @@ contract MockedValidator is Ownable, SignerManageable {
         return orderSeals;
     }
 
-    function setGenuineTradeBuyerFee(bool genuine)
+    function setGenuineTradeBuyerFeeOfFungible(bool genuine)
     public
     {
-        tradeBuyerFee = genuine;
+        tradeBuyerFeeOfFungible = genuine;
     }
 
-    function isGenuineTradeBuyerFee(NahmiiTypesLib.Trade)
+    function isGenuineTradeBuyerFeeOfFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
     {
-        return tradeBuyerFee;
+        return tradeBuyerFeeOfFungible;
     }
 
-    function setGenuineTradeSellerFee(bool genuine)
+    function setGenuineTradeSellerFeeOfFungible(bool genuine)
     public
     {
-        tradeSellerFee = genuine;
+        tradeSellerFeeOfFungible = genuine;
     }
 
-    function isGenuineTradeSellerFee(NahmiiTypesLib.Trade)
+    function isGenuineTradeSellerFeeOfFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
     {
-        return tradeSellerFee;
+        return tradeSellerFeeOfFungible;
     }
 
     function setGenuineTradeBuyer(bool genuine)
@@ -218,7 +219,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyerGenuine = genuine;
     }
 
-    function isGenuineTradeBuyer(NahmiiTypesLib.Trade)
+    function isGenuineTradeBuyerOfFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
@@ -232,7 +233,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeSellerGenuine = genuine;
     }
 
-    function isGenuineTradeSeller(NahmiiTypesLib.Trade)
+    function isGenuineTradeSellerOfFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
@@ -319,18 +320,46 @@ contract MockedValidator is Ownable, SignerManageable {
         return tradeOrder;
     }
 
-    function setGenuinePaymentFee(bool genuine)
-    public
-    {
-        paymentFee = genuine;
-    }
-
-    function isGenuinePaymentFee(NahmiiTypesLib.Payment)
+    function isTradeIntendedCurrencyNonFungible(NahmiiTypesLib.Trade)
     public
     view
     returns (bool)
     {
-        return paymentFee;
+        return tradeIntendedCurrencyNonFungible;
+    }
+
+    function setTradeIntendedCurrencyNonFungible(bool nonFungible)
+    public
+    {
+        tradeIntendedCurrencyNonFungible = nonFungible;
+    }
+
+    function isTradeConjugateCurrencyNonFungible(NahmiiTypesLib.Trade)
+    public
+    view
+    returns (bool)
+    {
+        return tradeConjugateCurrencyNonFungible;
+    }
+
+    function setTradeConjugateCurrencyNonFungible(bool nonFungible)
+    public
+    {
+        tradeConjugateCurrencyNonFungible = nonFungible;
+    }
+
+    function setGenuinePaymentFeeOfFungible(bool genuine)
+    public
+    {
+        paymentFeeOfFungible = genuine;
+    }
+
+    function isGenuinePaymentFeeOfFungible(NahmiiTypesLib.Payment)
+    public
+    view
+    returns (bool)
+    {
+        return paymentFeeOfFungible;
     }
 
     function setGenuinePaymentSender(bool genuine)
@@ -339,7 +368,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentSenderGenuine = genuine;
     }
 
-    function isGenuinePaymentSender(NahmiiTypesLib.Payment)
+    function isGenuinePaymentSenderOfFungible(NahmiiTypesLib.Payment)
     public
     view
     returns (bool)
@@ -353,7 +382,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentRecipientGenuine = genuine;
     }
 
-    function isGenuinePaymentRecipient(NahmiiTypesLib.Payment)
+    function isGenuinePaymentRecipientOfFungible(NahmiiTypesLib.Payment)
     public
     view
     returns (bool)
@@ -462,6 +491,20 @@ contract MockedValidator is Ownable, SignerManageable {
     returns (bool)
     {
         return paymentRecipient;
+    }
+
+    function isPaymentCurrencyNonFungible(NahmiiTypesLib.Payment)
+    public
+    view
+    returns (bool)
+    {
+        return paymentCurrencyNonFungible;
+    }
+
+    function setPaymentCurrencyNonFungible(bool nonFungible)
+    public
+    {
+        paymentCurrencyNonFungible = nonFungible;
     }
 
     function setSuccessiveTradesPartyNonces(bool genuine)

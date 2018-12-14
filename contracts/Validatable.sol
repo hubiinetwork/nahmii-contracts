@@ -13,9 +13,9 @@ import {Validator} from "./Validator.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title Validatable
-@notice An ownable that has a validator property
-*/
+ * @title Validatable
+ * @notice An ownable that has a validator property
+ */
 contract Validatable is Ownable {
     //
     // Variables

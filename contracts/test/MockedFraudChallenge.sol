@@ -12,25 +12,16 @@ pragma experimental ABIEncoderV2;
 import {FraudChallenge} from "../FraudChallenge.sol";
 
 /**
-@title MockedFraudChallenge
-@notice Mocked implementation of fraud challenge contract
-*/
+ * @title MockedFraudChallenge
+ * @notice Mocked implementation of fraud challenge contract
+ */
 contract MockedFraudChallenge is FraudChallenge {
-
-    //
-    // Types
-    // -----------------------------------------------------------------------------------------------------------------
-
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     bool public fraudulentOrderHash;
     bool public fraudulentTradeHash;
     bool public fraudulentPaymentHash;
-
-    //
-    // Events
-    // -----------------------------------------------------------------------------------------------------------------
 
     //
     // Constructor

@@ -13,9 +13,9 @@ import {TransferControllerManager} from "./TransferControllerManager.sol";
 import {TransferController} from "./TransferController.sol";
 
 /**
-@title TransferControllerManageable
-@notice An ownable with a transfer controller manager
-*/
+ * @title TransferControllerManageable
+ * @notice An ownable with a transfer controller manager
+ */
 contract TransferControllerManageable is Ownable {
     //
     // Variables

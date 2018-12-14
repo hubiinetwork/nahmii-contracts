@@ -12,9 +12,9 @@ import {Ownable} from "./Ownable.sol";
 import {BalanceTracker} from "./BalanceTracker.sol";
 
 /**
-@title BalanceTrackable
-@notice An ownable that has a balance tracker property
-*/
+ * @title BalanceTrackable
+ * @notice An ownable that has a balance tracker property
+ */
 contract BalanceTrackable is Ownable {
     //
     // Variables

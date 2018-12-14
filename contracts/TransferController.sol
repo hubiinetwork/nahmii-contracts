@@ -9,9 +9,9 @@
 pragma solidity ^0.4.25;
 
 /**
-@title TransferController
-@notice A base contract to handle transfers of different currency types
-*/
+ * @title TransferController
+ * @notice A base contract to handle transfers of different currency types
+ */
 contract TransferController {
     //
     // Events

@@ -14,9 +14,9 @@ import {AuthorizableServable} from "./AuthorizableServable.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 
 /**
-@title Wallet locker
-@notice An ownable to lock and unlock wallets
-*/
+ * @title Wallet locker
+ * @notice An ownable to lock and unlock wallets
+ */
 contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     using SafeMathUintLib for uint256;
 

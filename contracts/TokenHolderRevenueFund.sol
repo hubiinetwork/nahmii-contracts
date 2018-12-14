@@ -25,9 +25,9 @@ import {TransferController} from "./TransferController.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 
 /**
-@title TokenHolderRevenueFund
-@notice Fund that manages the revenue earned by revenue token holders.
-*/
+ * @title TokenHolderRevenueFund
+ * @notice Fund that manages the revenue earned by revenue token holders.
+ */
 contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

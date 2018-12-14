@@ -12,9 +12,9 @@ pragma experimental ABIEncoderV2;
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
-@title MockedDriipSettlementDispute
-@notice Mocked implementation of driip settlement dispute contract
-*/
+ * @title MockedDriipSettlementDispute
+ * @notice Mocked implementation of driip settlement dispute contract
+ */
 contract MockedDriipSettlementDispute {
     uint256 public _challengeByOrderCount;
     uint256 public _unchallengeOrderCandidateByTradeCount;

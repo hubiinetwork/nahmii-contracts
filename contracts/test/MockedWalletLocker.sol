@@ -9,9 +9,9 @@
 pragma solidity ^0.4.25;
 
 /**
-@title MockedWalletLocker
-@notice Mocked implementation of wallet locker contract
-*/
+ * @title MockedWalletLocker
+ * @notice Mocked implementation of wallet locker contract
+ */
 contract MockedWalletLocker {
     //
     // Types

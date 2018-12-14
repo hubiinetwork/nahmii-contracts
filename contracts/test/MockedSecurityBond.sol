@@ -11,9 +11,9 @@ pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 /**
-@title MockedSecurityBond
-@notice Mocked implementation of security bond contract
-*/
+ * @title MockedSecurityBond
+ * @notice Mocked implementation of security bond contract
+ */
 contract MockedSecurityBond {
     //
     // Structures

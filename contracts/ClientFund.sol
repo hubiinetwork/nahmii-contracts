@@ -22,9 +22,9 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {TokenHolderRevenueFund} from "./TokenHolderRevenueFund.sol";
 
 /**
-@title Client fund
-@notice Where clients’ crypto is deposited into, staged and withdrawn from.
-*/
+ * @title Client fund
+ * @notice Where clients’ crypto is deposited into, staged and withdrawn from.
+ */
 contract ClientFund is Ownable, Beneficiary, Benefactor, AuthorizableServable, TransferControllerManageable,
 BalanceTrackable, TransactionTrackable, WalletLockable {
     using SafeMathIntLib for int256;

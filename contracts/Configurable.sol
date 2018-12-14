@@ -12,9 +12,9 @@ import {Ownable} from "./Ownable.sol";
 import {Configuration} from "./Configuration.sol";
 
 /**
-@title Benefactor
-@notice An ownable that has a client fund property
-*/
+ * @title Benefactor
+ * @notice An ownable that has a client fund property
+ */
 contract Configurable is Ownable {
     //
     // Variables

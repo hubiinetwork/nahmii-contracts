@@ -12,9 +12,9 @@ import {ERC20} from "./ERC20.sol";
 import {Ownable} from "./Ownable.sol";
 
 /**
-@title Community vote
-@notice An oracle for relevant decisions made by the community.
-*/
+ * @title Community vote
+ * @notice An oracle for relevant decisions made by the community.
+ */
 contract CommunityVote is Ownable {
     //
     // Variables

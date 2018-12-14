@@ -13,10 +13,10 @@ import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 /**
-@title Balance tracker
-@notice An ownable that allows a beneficiary to extract tokens in
-a number of batches each a given release time
-*/
+ * @title Balance tracker
+ * @notice An ownable that allows a beneficiary to extract tokens in
+ *   a number of batches each a given release time
+ */
 contract TokenMultiTimelock is Ownable {
     using SafeERC20 for IERC20;
 
@@ -97,9 +97,6 @@ contract TokenMultiTimelock is Ownable {
     {
         // Require that token address has been set
         require(address(token) != address(0));
-
-        // Require that release time is later than current timestamp
-        require(releaseTime > block.timestamp);
 
         // Update the total amount locked by this contract
         totalLockedAmount += amount;

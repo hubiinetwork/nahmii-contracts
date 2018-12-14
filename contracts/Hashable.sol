@@ -12,9 +12,9 @@ import {Ownable} from "./Ownable.sol";
 import {Hasher} from "./Hasher.sol";
 
 /**
-@title Hashable
-@notice An ownable that has a hasher property
-*/
+ * @title Hashable
+ * @notice An ownable that has a hasher property
+ */
 contract Hashable is Ownable {
     //
     // Variables

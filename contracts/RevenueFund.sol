@@ -23,11 +23,11 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
-@title RevenueFund
-@notice The target of all revenue earned in driip settlements and from which accrued revenue is split amongst
- accrual beneficiaries. There will likely be 2 instances of this smart contract, one for revenue from trades
- and one for revenue from payments.
-*/
+ * @title RevenueFund
+ * @notice The target of all revenue earned in driip settlements and from which accrued revenue is split amongst
+ *   accrual beneficiaries. There will likely be 2 instances of this smart contract, one for revenue from trades
+ *   and one for revenue from payments.
+ */
 contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, TransferControllerManageable {
     using BalanceLib for BalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;

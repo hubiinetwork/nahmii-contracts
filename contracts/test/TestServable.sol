@@ -13,9 +13,9 @@ import {Ownable} from "../Ownable.sol";
 import {Servable} from "../Servable.sol";
 
 /**
-@title TestServable
-@notice A test contract that extends Servable
-*/
+ * @title TestServable
+ * @notice A test contract that extends Servable
+ */
 contract TestServable is Ownable, Servable {
     //
     // Constructor

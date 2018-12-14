@@ -9,9 +9,9 @@
 pragma solidity ^0.4.25;
 
 /**
-@title MockedBalanceTracker
-@notice Mocked implementation of balance tracker contract
-*/
+ * @title MockedBalanceTracker
+ * @notice Mocked implementation of balance tracker contract
+ */
 contract MockedBalanceTracker {
     //
     // Constants

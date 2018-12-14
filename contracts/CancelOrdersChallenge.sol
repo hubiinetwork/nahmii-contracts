@@ -17,9 +17,9 @@ import {Ownable} from "./Ownable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title CancelOrdersChallenge
-@notice Where orders are cancelled and cancellations challenged
-*/
+ * @title CancelOrdersChallenge
+ * @notice Where orders are cancelled and cancellations challenged
+ */
 contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

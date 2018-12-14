@@ -178,14 +178,6 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if called with release time set before block timestamp', () => {
-                it('should revert', async () => {
-                    web3TokenMultiTimelock.defineRelease(
-                        futureEpoch(-10), 1000
-                    ).should.be.rejected;
-                });
-            });
-
             describe('if posterior total locked amount becomes greater than contracts token balance', () => {
                 it('should revert', async () => {
                     web3TokenMultiTimelock.defineRelease(

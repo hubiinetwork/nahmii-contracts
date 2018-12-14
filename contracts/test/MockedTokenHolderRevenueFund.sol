@@ -13,9 +13,9 @@ import {Beneficiary} from "../Beneficiary.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 
 /**
-@title MockedTokenHolderRevenueFund
-@notice Mocked implementation of TokenHolderRevenueFund
-*/
+ * @title MockedTokenHolderRevenueFund
+ * @notice Mocked implementation of TokenHolderRevenueFund
+ */
 contract MockedTokenHolderRevenueFund /*is Beneficiary*/ {
     //
     // Types

@@ -15,9 +15,9 @@ import {BalanceLib} from "./BalanceLib.sol";
 import {BalanceLogLib} from "./BalanceLogLib.sol";
 
 /**
-@title Balance tracker
-@notice An ownable to track balances of generic types
-*/
+ * @title Balance tracker
+ * @notice An ownable to track balances of generic types
+ */
 contract BalanceTracker is Ownable, Servable {
     using SafeMathIntLib for int256;
     using BalanceLib for BalanceLib.Balance;

@@ -14,9 +14,9 @@ import {TokenHolderRevenueFund} from "../TokenHolderRevenueFund.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 
 /**
-@title MockedTokenHolderRevenueFundService
-@notice Mocked implementation of service contract that interacts with TokenHolderRevenueFund
-*/
+ * @title MockedTokenHolderRevenueFundService
+ * @notice Mocked implementation of service contract that interacts with TokenHolderRevenueFund
+ */
 contract MockedTokenHolderRevenueFundService is Beneficiary {
     //
     // Types
