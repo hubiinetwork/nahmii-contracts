@@ -75,3 +75,16 @@ exports.isResetArgPresent = function () {
     }
     return false;
 };
+
+exports.networkIdToName = function(id) {
+    switch (id) {
+        case '1':
+            return 'mainnet';
+        case '2':
+            return 'morden';
+        case '3':
+            return 'ropsten';
+        default:
+            return '';
+    }
+};

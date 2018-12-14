@@ -64,7 +64,6 @@ module.exports = function (glob) {
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('ReleaseEvent');
 
-
                         (await ethersRevenueTokenManager.totalLockedAmount())
                             ._bn.should.eq.BN(0);
                         (await ethersRevenueTokenManager.releasesCount())
