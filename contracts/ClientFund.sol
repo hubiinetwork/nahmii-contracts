@@ -261,8 +261,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 transferAmount,
         address currencyCt, uint256 currencyId, string standard)
     public
-    notNullAddress(beneficiary)
-    onlyActiveService
+    onlyAuthorizedService(wallet)
     {
         // Transfer to beneficiary
         _transferToBeneficiary(wallet, beneficiary, transferAmount, currencyCt, currencyId, standard);
@@ -311,6 +310,9 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     public
     {
         require(amount.isNonZeroPositiveInt256());
+
+        // Require that msg.sender is not locked
+        require(!walletLocker.isLocked(msg.sender));
 
         amount = amount.clampMax(
             balanceTracker.get(
