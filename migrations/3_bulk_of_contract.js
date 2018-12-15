@@ -518,12 +518,12 @@ module.exports = (deployer, network, accounts) => {
             instance = await RevenueFund.at(addressStorage.get('TradesRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
-            await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), 1e16);
+            await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
 
             instance = await RevenueFund.at(addressStorage.get('PaymentsRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
-            await instance.registerFractionalBeneficiary(addressStorage.get('PartnerFund'), 1e16);
+            await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
 
             instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
             await instance.setToken(addressStorage.get('NahmiiToken'));

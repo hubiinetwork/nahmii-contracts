@@ -158,10 +158,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        if (!address(controller).delegatecall(
-            controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
-        ))
-            revert();
+        require(
+            address(controller).delegatecall(
+                controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
+            )
+        );
 
         // Add to balances
         periodAccrual.add(amount, currencyCt, currencyId);
