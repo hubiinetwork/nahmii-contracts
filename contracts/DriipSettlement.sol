@@ -390,7 +390,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
 
         NahmiiTypesLib.OriginFigure[] memory totalFees;
         int256 currentBalance;
-        if (validator.isPaymentParty(payment, wallet)) {
+        if (validator.isPaymentSender(payment, wallet)) {
             totalFees = payment.sender.fees.total;
             currentBalance = payment.sender.balances.current;
         } else {
