@@ -7,4 +7,5 @@ module.exports = (web3) => {
     web3.eth.getTransactionReceiptPromise = BlueBird.promisify(web3.eth.getTransactionReceipt);
     web3.eth.getBlockPromise = BlueBird.promisify(web3.eth.getBlock);
     web3.eth.getBlockNumberPromise = BlueBird.promisify(web3.eth.getBlockNumber);
+    web3.version.getNetworkPromise = BlueBird.promisify(web3.version.getNetwork);
 };

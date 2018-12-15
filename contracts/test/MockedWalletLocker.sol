@@ -27,6 +27,7 @@ contract MockedWalletLocker {
     LockUnlock[] public locks;
     LockUnlock[] public unlocks;
 
+    bool public locked;
     bool public lockedBy;
 
     //
@@ -43,6 +44,7 @@ contract MockedWalletLocker {
     {
         locks.length = 0;
         unlocks.length = 0;
+        locked = false;
         lockedBy = false;
     }
 
@@ -74,6 +76,20 @@ contract MockedWalletLocker {
     returns (uint256)
     {
         return unlocks.length;
+    }
+
+    function isLocked(address)
+    public
+    view
+    returns (bool)
+    {
+        return locked;
+    }
+
+    function _setLocked(bool _locked)
+    public
+    {
+        locked = _locked;
     }
 
     function isLockedBy(address, address)
