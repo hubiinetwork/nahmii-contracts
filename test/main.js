@@ -499,7 +499,7 @@ contract('Smart contract checks', function () {
     require('./scenarios/NullSettlement')(glob);
     require('./scenarios/NullSettlementChallenge')(glob);
     require('./scenarios/NullSettlementDispute')(glob);
-    // require('./scenarios/RevenueFund')(glob);
+    require('./scenarios/RevenueFund')(glob);
     require('./scenarios/RevenueTokenManager')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/Servable')(glob);
