@@ -431,10 +431,10 @@ module.exports = function (glob) {
                 it('should successfully close accrual period of given currencies', async () => {
                     await ethersRevenueFund.closeAccrualPeriod(currencies, {gasLimit: 1e6});
 
-                    // (await ethersMockedAccrualBeneficiary99._closedAccrualPeriodsCount())
-                    //     ._bn.should.eq.BN(1);
-                    // (await ethersMockedAccrualBeneficiary01._closedAccrualPeriodsCount())
-                    //     ._bn.should.eq.BN(1);
+                    (await ethersMockedAccrualBeneficiary99._closedAccrualPeriodsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersMockedAccrualBeneficiary01._closedAccrualPeriodsCount())
+                        ._bn.should.eq.BN(1);
                 });
             });
         });
