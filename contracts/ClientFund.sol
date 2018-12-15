@@ -338,8 +338,10 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            require(address(controller).delegatecall(
-                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId)
+            require(
+                address(controller).delegatecall(
+                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId
+                )
             );
         }
 

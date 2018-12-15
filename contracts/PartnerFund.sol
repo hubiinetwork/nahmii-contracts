@@ -592,8 +592,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            require(address(controller).delegatecall(
-                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId)
+            require(
+                address(controller).delegatecall(
+                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId
+                )
             );
         }
 
@@ -640,8 +642,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        require(address(controller).delegatecall(
-                controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId)
+        require(
+            address(controller).delegatecall(
+                controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
+            )
         );
 
         // Add to active
