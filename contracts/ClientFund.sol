@@ -302,7 +302,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     }
 
     /// @notice Withdraw the given amount from staged balance
-    /// @param amount The concerned amount
+    /// @param amount The concerned amount to withdraw
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")

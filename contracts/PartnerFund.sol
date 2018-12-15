@@ -69,10 +69,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     event ReceiveEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
     event RegisterPartnerByNameEvent(string name, uint256 fee, address wallet);
     event RegisterPartnerByNameHashEvent(bytes32 nameHash, uint256 fee, address wallet);
-    event SetFeeByIndexEvent(uint256 index, uint256 fee);
-    event SetFeeByNameEvent(string name, uint256 fee);
-    event SetFeeByNameHashEvent(bytes32 nameHash, uint256 fee);
-    event SetFeeByWalletEvent(address wallet, uint256 fee);
+    event SetFeeByIndexEvent(uint256 index, uint256 oldFee, uint256 newFee);
+    event SetFeeByNameEvent(string name, uint256 oldFee, uint256 newFee);
+    event SetFeeByNameHashEvent(bytes32 nameHash, uint256 oldFee, uint256 newFee);
+    event SetFeeByWalletEvent(address wallet, uint256 oldFee, uint256 newFee);
     event SetPartnerWalletByIndexEvent(uint256 index, address oldWallet, address newWallet);
     event SetPartnerWalletByNameEvent(string name, address oldWallet, address newWallet);
     event SetPartnerWalletByNameHashEvent(bytes32 nameHash, address oldWallet, address newWallet);
@@ -86,12 +86,18 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     constructor(address deployer) Ownable(deployer) public {
     }
 
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Fallback function that deposits ethers
     function() public payable {
         _receiveEthersTo(
             indexByWallet(msg.sender) - 1, SafeMathIntLib.toNonZeroInt256(msg.value)
         );
     }
 
+    /// @notice Receive ethers to
+    /// @param tag The tag of the concerned partner
     function receiveEthersTo(address tag, string)
     public
     payable
@@ -101,6 +107,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         );
     }
 
+    /// @notice Receive tokens
+    /// @param amount The concerned amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of token ("ERC20", "ERC721")
     function receiveTokens(string, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
@@ -110,6 +121,12 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         );
     }
 
+    /// @notice Receive tokens to
+    /// @param tag The tag of the concerned partner
+    /// @param amount The concerned amount
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of token ("ERC20", "ERC721")
     function receiveTokensTo(address tag, string, int256 amount, address currencyCt,
         uint256 currencyId, string standard)
     public
@@ -119,6 +136,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         );
     }
 
+    /// @notice Hash name
+    /// @param name The name to be hashed
+    /// @return The hash value
     function hashName(string name)
     public
     pure
@@ -127,6 +147,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return keccak256(abi.encodePacked(name.upper()));
     }
 
+    /// @notice Get deposit by partner and deposit indices
+    /// @param partnerIndex The index of the concerned partner
+    /// @param depositIndex The index of the concerned deposit
+    /// return The deposit parameters
     function depositByIndices(uint256 partnerIndex, uint256 depositIndex)
     public
     view
@@ -138,6 +162,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _depositByIndices(partnerIndex - 1, depositIndex);
     }
 
+    /// @notice Get deposit by partner name and deposit indices
+    /// @param name The name of the concerned partner
+    /// @param depositIndex The index of the concerned deposit
+    /// return The deposit parameters
     function depositByName(string name, uint depositIndex)
     public
     view
@@ -147,6 +175,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _depositByIndices(indexByName(name) - 1, depositIndex);
     }
 
+    /// @notice Get deposit by partner name hash and deposit indices
+    /// @param nameHash The hashed name of the concerned partner
+    /// @param depositIndex The index of the concerned deposit
+    /// return The deposit parameters
     function depositByNameHash(bytes32 nameHash, uint depositIndex)
     public
     view
@@ -156,6 +188,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _depositByIndices(indexByNameHash(nameHash) - 1, depositIndex);
     }
 
+    /// @notice Get deposit by partner wallet and deposit indices
+    /// @param wallet The wallet of the concerned partner
+    /// @param depositIndex The index of the concerned deposit
+    /// return The deposit parameters
     function depositByWallet(address wallet, uint depositIndex)
     public
     view
@@ -165,6 +201,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _depositByIndices(indexByWallet(wallet) - 1, depositIndex);
     }
 
+    /// @notice Get deposits count by partner index
+    /// @param index The index of the concerned partner
+    /// return The deposits count
     function depositsCountByIndex(uint256 index)
     public
     view
@@ -176,6 +215,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _depositsCountByIndex(index - 1);
     }
 
+    /// @notice Get deposits count by partner name
+    /// @param name The name of the concerned partner
+    /// return The deposits count
     function depositsCountByName(string name)
     public
     view
@@ -185,6 +227,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _depositsCountByIndex(indexByName(name) - 1);
     }
 
+    /// @notice Get deposits count by partner name hash
+    /// @param nameHash The hashed name of the concerned partner
+    /// return The deposits count
     function depositsCountByNameHash(bytes32 nameHash)
     public
     view
@@ -194,6 +239,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _depositsCountByIndex(indexByNameHash(nameHash) - 1);
     }
 
+    /// @notice Get deposits count by partner wallet
+    /// @param wallet The wallet of the concerned partner
+    /// return The deposits count
     function depositsCountByWallet(address wallet)
     public
     view
@@ -203,6 +251,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _depositsCountByIndex(indexByWallet(wallet) - 1);
     }
 
+    /// @notice Get active balance by partner index and currency
+    /// @param index The index of the concerned partner
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// return The active balance
     function activeBalanceByIndex(uint256 index, address currencyCt, uint256 currencyId)
     public
     view
@@ -214,6 +267,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _activeBalanceByIndex(index - 1, currencyCt, currencyId);
     }
 
+    /// @notice Get active balance by partner name and currency
+    /// @param name The name of the concerned partner
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// return The active balance
     function activeBalanceByName(string name, address currencyCt, uint256 currencyId)
     public
     view
@@ -223,6 +281,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _activeBalanceByIndex(indexByName(name) - 1, currencyCt, currencyId);
     }
 
+    /// @notice Get active balance by partner name hash and currency
+    /// @param nameHash The hashed name of the concerned partner
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// return The active balance
     function activeBalanceByNameHash(bytes32 nameHash, address currencyCt, uint256 currencyId)
     public
     view
@@ -232,6 +295,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _activeBalanceByIndex(indexByNameHash(nameHash) - 1, currencyCt, currencyId);
     }
 
+    /// @notice Get active balance by partner wallet and currency
+    /// @param wallet The wallet of the concerned partner
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// return The active balance
     function activeBalanceByWallet(address wallet, address currencyCt, uint256 currencyId)
     public
     view
@@ -241,6 +309,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _activeBalanceByIndex(indexByWallet(wallet) - 1, currencyCt, currencyId);
     }
 
+    /// @notice Get staged balance by partner index and currency
+    /// @param index The index of the concerned partner
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// return The staged balance
     function stagedBalanceByIndex(uint256 index, address currencyCt, uint256 currencyId)
     public
     view
@@ -252,6 +325,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _stagedBalanceByIndex(index - 1, currencyCt, currencyId);
     }
 
+    /// @notice Get staged balance by partner name and currency
+    /// @param name The name of the concerned partner
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// return The staged balance
     function stagedBalanceByName(string name, address currencyCt, uint256 currencyId)
     public
     view
@@ -261,6 +339,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _stagedBalanceByIndex(indexByName(name) - 1, currencyCt, currencyId);
     }
 
+    /// @notice Get staged balance by partner name hash and currency
+    /// @param nameHash The hashed name of the concerned partner
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// return The staged balance
     function stagedBalanceByNameHash(bytes32 nameHash, address currencyCt, uint256 currencyId)
     public
     view
@@ -270,6 +353,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _stagedBalanceByIndex(indexByNameHash(nameHash) - 1, currencyCt, currencyId);
     }
 
+    /// @notice Get staged balance by partner wallet and currency
+    /// @param wallet The wallet of the concerned partner
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// return The staged balance
     function stagedBalanceByWallet(address wallet, address currencyCt, uint256 currencyId)
     public
     view
@@ -279,6 +367,8 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _stagedBalanceByIndex(indexByWallet(wallet) - 1, currencyCt, currencyId);
     }
 
+    /// @notice Get the number of partners
+    /// @return The number of partners
     function partnersCount()
     public
     view
@@ -287,6 +377,12 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return partners.length;
     }
 
+    /// @notice Register a partner by name
+    /// @param name The name of the concerned partner
+    /// @param fee The partner's fee fraction
+    /// @param wallet The partner's wallet
+    /// @param partnerCanUpdate Indicator of whether partner can update fee and wallet
+    /// @param operatorCanUpdate Indicator of whether operator can update fee and wallet
     function registerByName(string name, uint256 fee, address wallet,
         bool partnerCanUpdate, bool operatorCanUpdate)
     public
@@ -305,6 +401,12 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit RegisterPartnerByNameEvent(name, fee, wallet);
     }
 
+    /// @notice Register a partner by name hash
+    /// @param nameHash The hashed name of the concerned partner
+    /// @param fee The partner's fee fraction
+    /// @param wallet The partner's wallet
+    /// @param partnerCanUpdate Indicator of whether partner can update fee and wallet
+    /// @param operatorCanUpdate Indicator of whether operator can update fee and wallet
     function registerByNameHash(bytes32 nameHash, uint256 fee, address wallet,
         bool partnerCanUpdate, bool operatorCanUpdate)
     public
@@ -354,6 +456,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return index;
     }
 
+    /// @notice Gauge whether a partner by the given name is registered
+    /// @param name The name of the concerned partner
+    /// @return true if partner is registered, else false
     function isRegisteredByName(string name)
     public
     view
@@ -362,6 +467,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return (0 < _indexByNameHash[hashName(name)]);
     }
 
+    /// @notice Gauge whether a partner by the given name hash is registered
+    /// @param nameHash The hashed name of the concerned partner
+    /// @return true if partner is registered, else false
     function isRegisteredByNameHash(bytes32 nameHash)
     public
     view
@@ -370,6 +478,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return (0 < _indexByNameHash[nameHash]);
     }
 
+    /// @notice Gauge whether a partner by the given wallet is registered
+    /// @param wallet The wallet of the concerned partner
+    /// @return true if partner is registered, else false
     function isRegisteredByWallet(address wallet)
     public
     view
@@ -378,7 +489,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return (0 < _indexByWallet[wallet]);
     }
 
-    /// @dev Reverts if name does not correspond to registered partner
+    /// @notice Get the partner fee fraction by the given partner index
+    /// @param index The index of the concerned partner
+    /// @return The fee fraction
     function feeByIndex(uint256 index)
     public
     view
@@ -390,7 +503,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _partnerFeeByIndex(index - 1);
     }
 
-    /// @dev Reverts if name does not correspond to registered partner
+    /// @notice Get the partner fee fraction by the given partner name
+    /// @param name The name of the concerned partner
+    /// @return The fee fraction
     function feeByName(string name)
     public
     view
@@ -400,7 +515,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _partnerFeeByIndex(indexByName(name) - 1);
     }
 
-    /// @dev Reverts if name hash does not correspond to registered partner
+    /// @notice Get the partner fee fraction by the given partner name hash
+    /// @param nameHash The hashed name of the concerned partner
+    /// @return The fee fraction
     function feeByNameHash(bytes32 nameHash)
     public
     view
@@ -410,7 +527,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _partnerFeeByIndex(indexByNameHash(nameHash) - 1);
     }
 
-    /// @dev Reverts if name does not correspond to registered partner
+    /// @notice Get the partner fee fraction by the given partner wallet
+    /// @param wallet The wallet of the concerned partner
+    /// @return The fee fraction
     function feeByWallet(address wallet)
     public
     view
@@ -420,51 +539,64 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return _partnerFeeByIndex(indexByWallet(wallet) - 1);
     }
 
-    /// @dev index is 1-based
-    function setFeeByIndex(uint256 index, uint256 fee)
+    /// @notice Set the partner fee fraction by the given partner index
+    /// @param index The index of the concerned partner
+    /// @param newFee The partner's fee fraction
+    function setFeeByIndex(uint256 index, uint256 newFee)
     public
     {
         // Require partner index is one of registered partner
         require(0 < index && index <= partners.length);
 
         // Update fee
-        _setPartnerFeeByIndex(index - 1, fee);
+        uint256 oldFee = _setPartnerFeeByIndex(index - 1, newFee);
 
         // Emit event
-        emit SetFeeByIndexEvent(index, fee);
+        emit SetFeeByIndexEvent(index, oldFee, newFee);
     }
 
-    function setFeeByName(string name, uint256 fee)
+    /// @notice Set the partner fee fraction by the given partner name
+    /// @param name The name of the concerned partner
+    /// @param newFee The partner's fee fraction
+    function setFeeByName(string name, uint256 newFee)
     public
     {
         // Update fee, implicitly requiring that partner name is registered
-        _setPartnerFeeByIndex(indexByName(name) - 1, fee);
+        uint256 oldFee = _setPartnerFeeByIndex(indexByName(name) - 1, newFee);
 
         // Emit event
-        emit SetFeeByNameEvent(name, fee);
+        emit SetFeeByNameEvent(name, oldFee, newFee);
     }
 
-    function setFeeByNameHash(bytes32 nameHash, uint256 fee)
+    /// @notice Set the partner fee fraction by the given partner name hash
+    /// @param nameHash The hashed name of the concerned partner
+    /// @param newFee The partner's fee fraction
+    function setFeeByNameHash(bytes32 nameHash, uint256 newFee)
     public
     {
         // Update fee, implicitly requiring that partner name hash is registered
-        _setPartnerFeeByIndex(indexByNameHash(nameHash) - 1, fee);
+        uint256 oldFee = _setPartnerFeeByIndex(indexByNameHash(nameHash) - 1, newFee);
 
         // Emit event
-        emit SetFeeByNameHashEvent(nameHash, fee);
+        emit SetFeeByNameHashEvent(nameHash, oldFee, newFee);
     }
 
-    function setFeeByWallet(address wallet, uint256 fee)
+    /// @notice Set the partner fee fraction by the given partner wallet
+    /// @param wallet The wallet of the concerned partner
+    /// @param newFee The partner's fee fraction
+    function setFeeByWallet(address wallet, uint256 newFee)
     public
     {
         // Update fee, implicitly requiring that partner wallet is registered
-        _setPartnerFeeByIndex(indexByWallet(wallet) - 1, fee);
+        uint256 oldFee = _setPartnerFeeByIndex(indexByWallet(wallet) - 1, newFee);
 
         // Emit event
-        emit SetFeeByWalletEvent(wallet, fee);
+        emit SetFeeByWalletEvent(wallet, oldFee, newFee);
     }
 
-    /// @dev Reverts if index does not correspond to registered partner
+    /// @notice Get the partner wallet by the given partner index
+    /// @param index The index of the concerned partner
+    /// @return The wallet
     function walletByIndex(uint256 index)
     public
     view
@@ -476,7 +608,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return partners[index - 1].wallet;
     }
 
-    /// @dev Reverts if name does not correspond to registered partner
+    /// @notice Get the partner wallet by the given partner name
+    /// @param name The name of the concerned partner
+    /// @return The wallet
     function walletByName(string name)
     public
     view
@@ -486,7 +620,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return partners[indexByName(name) - 1].wallet;
     }
 
-    /// @dev Reverts if name hash does not correspond to registered partner
+    /// @notice Get the partner wallet by the given partner name hash
+    /// @param nameHash The hashed name of the concerned partner
+    /// @return The wallet
     function walletByNameHash(bytes32 nameHash)
     public
     view
@@ -496,6 +632,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         return partners[indexByNameHash(nameHash) - 1].wallet;
     }
 
+    /// @notice Set the partner wallet by the given partner index
+    /// @param index The index of the concerned partner
+    /// @return newWallet The partner's wallet
     function setWalletByIndex(uint256 index, address newWallet)
     public
     {
@@ -509,7 +648,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit SetPartnerWalletByIndexEvent(index, oldWallet, newWallet);
     }
 
-    /// @dev Reverts if name does not correspond to registered partner
+    /// @notice Set the partner wallet by the given partner name
+    /// @param name The name of the concerned partner
+    /// @return newWallet The partner's wallet
     function setWalletByName(string name, address newWallet)
     public
     {
@@ -520,7 +661,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit SetPartnerWalletByNameEvent(name, oldWallet, newWallet);
     }
 
-    /// @dev Reverts if name hash does not correspond to registered partner
+    /// @notice Set the partner wallet by the given partner name hash
+    /// @param nameHash The hashed name of the concerned partner
+    /// @return newWallet The partner's wallet
     function setWalletByNameHash(bytes32 nameHash, address newWallet)
     public
     {
@@ -531,7 +674,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit SetPartnerWalletByNameHashEvent(nameHash, oldWallet, newWallet);
     }
 
-    /// @dev Reverts if old wallet hash does not correspond to registered partner
+    /// @notice Set the new partner wallet by the given old partner wallet
+    /// @param oldWallet The old wallet of the concerned partner
+    /// @return newWallet The partner's new wallet
     function setWalletByWallet(address oldWallet, address newWallet)
     public
     {
@@ -542,6 +687,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit SetPartnerWalletByWalletEvent(oldWallet, newWallet);
     }
 
+    /// @notice Stage the amount for subsequent withdrawal
+    /// @param amount The concerned amount to stage
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function stage(int256 amount, address currencyCt, uint256 currencyId)
     public
     {
@@ -572,6 +721,11 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         emit StageEvent(msg.sender, amount, currencyCt, currencyId);
     }
 
+    /// @notice Withdraw the given amount from staged balance
+    /// @param amount The concerned amount to withdraw
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
     public
     {
@@ -741,7 +895,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @dev index is 0-based
     function _setPartnerFeeByIndex(uint256 index, uint256 fee)
     private
+    returns (uint256)
     {
+        uint256 oldFee = partners[index].fee;
+
         // If operator tries to change verify that operator has access
         if (isOperator())
             require(partners[index].operatorCanUpdate);
@@ -756,6 +913,8 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         // Update stored fee
         partners[index].fee = fee;
+
+        return oldFee;
     }
 
     // @dev index is 0-based
