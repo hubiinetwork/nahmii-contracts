@@ -239,7 +239,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
             beneficiaryAddress = beneficiaries[j];
 
             // Require that beneficiary fraction is strictly positive
-            if (0 <= beneficiaryFraction(beneficiaryAddress))
+            if (0 >= beneficiaryFraction(beneficiaryAddress))
                 continue;
 
             // Close accrual period
