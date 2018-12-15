@@ -16,15 +16,7 @@ import {ERC20} from "./ERC20.sol";
  * @notice Handles transfers of ERC20 tokens
  */
 contract ERC20TransferController is TransferController {
-    function isTyped()
-    public
-    view
-    returns (bool)
-    {
-        return false;
-    }
-
-    function isQuantifiable()
+    function isFungible()
     public
     view
     returns (bool)

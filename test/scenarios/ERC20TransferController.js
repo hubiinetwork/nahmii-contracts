@@ -23,15 +23,9 @@ module.exports = function (glob) {
             ethersERC20TransferController = new Contract(web3ERC20TransferController.address, ERC20TransferController.abi, glob.signer_owner);
         });
 
-        describe('isTyped()', () => {
-            it('should return false', async () => {
-                (await web3ERC20TransferController.isTyped.call()).should.be.false;
-            });
-        });
-
-        describe('isQuantifiable()', () => {
+        describe('isFungible()', () => {
             it('should return true', async () => {
-                (await web3ERC20TransferController.isQuantifiable.call()).should.be.true;
+                (await web3ERC20TransferController.isFungible.call()).should.be.true;
             });
         });
 

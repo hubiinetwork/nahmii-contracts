@@ -22,12 +22,7 @@ contract TransferController {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function isTyped()
-    public
-    view
-    returns (bool);
-
-    function isQuantifiable()
+    function isFungible()
     public
     view
     returns (bool);

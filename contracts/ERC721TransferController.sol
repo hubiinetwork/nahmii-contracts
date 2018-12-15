@@ -16,15 +16,7 @@ import {ERC721} from "./ERC721.sol";
  * @notice Handles transfers of ERC721 tokens
  */
 contract ERC721TransferController is TransferController {
-    function isTyped()
-    public
-    view
-    returns (bool)
-    {
-        return true;
-    }
-
-    function isQuantifiable()
+    function isFungible()
     public
     view
     returns (bool)
