@@ -211,7 +211,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     view
     returns (uint256)
     {
-        return periodInUseCurrencies.list.length;
+        return periodInUseCurrencies.count();
     }
 
     /// @notice Get the currencies with indices in the given range that have been recorded in the current accrual period
@@ -223,7 +223,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     view
     returns (MonetaryTypesLib.Currency[])
     {
-        return _inUseCurrenciesByIndices(periodInUseCurrencies, low, up);
+        return periodInUseCurrencies.getByIndices(low, up);
     }
 
     /// @notice Get the count of currencies ever recorded
@@ -233,7 +233,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     view
     returns (uint256)
     {
-        return aggregateInUseCurrencies.list.length;
+        return aggregateInUseCurrencies.count();
     }
 
     /// @notice Get the currencies with indices in the given range that have ever been recorded
@@ -245,7 +245,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     view
     returns (MonetaryTypesLib.Currency[])
     {
-        return _inUseCurrenciesByIndices(aggregateInUseCurrencies, low, up);
+        return aggregateInUseCurrencies.getByIndices(low, up);
     }
 
     /// @notice Get the count of deposits
@@ -302,12 +302,13 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                 currency.ct, currency.id
             );
 
-            // Reset period accrual of currency
-            if (periodAmount > 0)
+            if (periodAmount > 0) {
+                // Reset period accrual of currency
                 periodAccrual.set(0, currency.ct, currency.id);
 
-            // Remove currency from period in-use list
-            periodInUseCurrencies.removeItem(currency.ct, currency.id);
+                // Remove currency from period in-use list
+                periodInUseCurrencies.removeItem(currency.ct, currency.id);
+            }
 
             // Emit event
             emit CloseAccrualPeriodEvent(
@@ -333,7 +334,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId);
 
         // Transfer ETH to the beneficiary
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             beneficiary.receiveEthersTo.value(uint256(claimedAmount))(destWallet, balanceType);
 
         else {
@@ -387,7 +388,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         stagedByWallet[msg.sender].sub(amount, currencyCt, currencyId);
 
         // Execute transfer
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             msg.sender.transfer(uint256(amount));
 
         else {
@@ -406,21 +407,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _inUseCurrenciesByIndices(InUseCurrencyLib.InUseCurrency storage inUseCurrencies, uint256 low, uint256 up)
-    private
-    view
-    returns (MonetaryTypesLib.Currency[])
-    {
-        require(low <= up);
-
-        up = up > inUseCurrencies.list.length - 1 ? inUseCurrencies.list.length - 1 : up;
-        MonetaryTypesLib.Currency[] memory _inUseCurrencies = new MonetaryTypesLib.Currency[](up - low + 1);
-        for (uint256 i = low; i <= up; i++)
-            _inUseCurrencies[i - low] = inUseCurrencies.list[i];
-
-        return _inUseCurrencies;
-    }
-
     function _claim(address wallet, address currencyCt, uint256 currencyId)
     private
     returns (int256)
@@ -470,7 +456,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     private
     {
         // Transfer ETH to the beneficiary
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, balanceType);
 
         else {

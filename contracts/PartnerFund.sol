@@ -587,7 +587,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         partners[index - 1].staged.sub(amount, currencyCt, currencyId);
 
         // Execute transfer
-        if (currencyCt == address(0))
+        if (address(0) == currencyCt && 0 == currencyId)
             msg.sender.transfer(uint256(amount));
 
         else {

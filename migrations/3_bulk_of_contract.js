@@ -140,7 +140,7 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(SafeMathUintLib, [
                 BalanceLogLib, BalanceTracker, CancelOrdersChallenge, ClientFund, DriipSettlement, DriipSettlementChallenge,
-                DriipSettlementDispute,  NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, RevenueTokenManager,
+                DriipSettlementDispute, InUseCurrencyLib, NullSettlement, NullSettlementChallenge, NullSettlementDispute, RevenueFund, RevenueTokenManager,
                 SecurityBond, StandardTokenEx, TokenHolderRevenueFund, Validator, WalletLocker
             ]);
             await deployer.link(Strings, [
@@ -555,6 +555,10 @@ module.exports = (deployer, network, accounts) => {
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
+            await instance.registerService(addressStorage.get('TradesRevenueFund'));
+            await instance.enableServiceAction(addressStorage.get('TradesRevenueFund'), 'close_accrual_period');
+            await instance.registerService(addressStorage.get('PaymentsRevenueFund'));
+            await instance.enableServiceAction(addressStorage.get('PaymentsRevenueFund'), 'close_accrual_period');
 
             instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));

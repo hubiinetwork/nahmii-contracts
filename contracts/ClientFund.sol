@@ -333,7 +333,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         );
 
         // Execute transfer
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             msg.sender.transfer(uint256(amount));
 
         else {
@@ -467,7 +467,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         require(isRegisteredBeneficiary(beneficiary));
 
         // Transfer funds to the beneficiary
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             beneficiary.receiveEthersTo.value(uint256(transferAmount))(destWallet, "");
 
         else {
