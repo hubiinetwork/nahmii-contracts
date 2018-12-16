@@ -276,7 +276,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId);
 
         // Execute transfer
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             beneficiary.receiveEthersTo.value(uint256(claimedAmount))(msg.sender, balanceType);
 
         else {
@@ -327,7 +327,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         stagedByWallet[msg.sender].sub(amount, currencyCt, currencyId);
 
         // Execute transfer
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             msg.sender.transfer(uint256(amount));
 
         else {

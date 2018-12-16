@@ -334,7 +334,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId);
 
         // Transfer ETH to the beneficiary
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             beneficiary.receiveEthersTo.value(uint256(claimedAmount))(destWallet, balanceType);
 
         else {
@@ -388,7 +388,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         stagedByWallet[msg.sender].sub(amount, currencyCt, currencyId);
 
         // Execute transfer
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             msg.sender.transfer(uint256(amount));
 
         else {
@@ -456,7 +456,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     private
     {
         // Transfer ETH to the beneficiary
-        if (currencyCt == address(0) && currencyId == 0)
+        if (address(0) == currencyCt && 0 == currencyId)
             beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, balanceType);
 
         else {

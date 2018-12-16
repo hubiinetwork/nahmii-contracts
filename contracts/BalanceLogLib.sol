@@ -33,9 +33,6 @@ library BalanceLogLib {
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        if (currencyCt == address(0))
-            require(currencyId == 0);
-
         // Return 0s if there are no log entries
         if (0 == count(self, currencyCt, currencyId)) {
             amount = 0;
@@ -55,9 +52,6 @@ library BalanceLogLib {
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        if (currencyCt == address(0))
-            require(currencyId == 0);
-
         // Return 0 values if there are no log entries
         if (0 == count(self, currencyCt, currencyId)) {
             amount = 0;
@@ -81,9 +75,6 @@ library BalanceLogLib {
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        if (currencyCt == address(0))
-            require(currencyId == 0);
-
         // Return 0s if there are no log entries
         if (0 == count(self, currencyCt, currencyId)) {
             amount = 0;
@@ -100,8 +91,6 @@ library BalanceLogLib {
     function add(BalanceLog storage self, int256 amount, address currencyCt, uint256 currencyId)
     internal
     {
-        if (currencyCt == address(0))
-            require(currencyId == 0);
         self.entries[currencyCt][currencyId].push(Entry(amount, block.number));
     }
 
@@ -110,8 +99,6 @@ library BalanceLogLib {
     view
     returns (uint256)
     {
-        if (currencyCt == address(0))
-            require(currencyId == 0);
         return self.entries[currencyCt][currencyId].length;
     }
 
