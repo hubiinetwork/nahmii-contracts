@@ -199,7 +199,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     view
     returns (uint256)
     {
-        return inUseCurrencies.list.length;
+        return inUseCurrencies.count();
     }
 
     /// @notice Get the currencies recorded with indices in the given range
@@ -211,14 +211,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     view
     returns (MonetaryTypesLib.Currency[])
     {
-        require(low <= up);
-
-        up = up > inUseCurrencies.list.length - 1 ? inUseCurrencies.list.length - 1 : up;
-        MonetaryTypesLib.Currency[] memory _inUseCurrencies = new MonetaryTypesLib.Currency[](up - low + 1);
-        for (uint256 i = low; i <= up; i++)
-            _inUseCurrencies[i - low] = inUseCurrencies.list[i];
-
-        return _inUseCurrencies;
+        return inUseCurrencies.getByIndices(low, up);
     }
 
     /// @notice Get the claim nonce of the given wallet and currency

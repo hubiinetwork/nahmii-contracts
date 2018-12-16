@@ -197,6 +197,9 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
             int256 remaining = periodAccrual.get(currency.ct, currency.id);
 
+            if (0 >= remaining)
+                continue;
+
             for (uint256 j = 0; j < beneficiaries.length; j++) {
                 address beneficiaryAddress = beneficiaries[j];
 
@@ -213,8 +216,8 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                         if (currency.ct == address(0))
                             AccrualBeneficiary(beneficiaryAddress).receiveEthersTo.value(uint256(transferable))(address(0), "");
 
+                        // Transfer token to the beneficiary
                         else {
-                            // Transfer token to the beneficiary
                             TransferController controller = transferController(currency.ct, "");
                             require(
                                 address(controller).delegatecall(

@@ -9,118 +9,100 @@
 pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
+// TODO Rename to InUseCurrenciesLib
 library InUseCurrencyLib {
-    uint256 public constant INVALID_INDEX = 2 ** 256 - 1;
+    using SafeMathUintLib for uint256;
 
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO Rename to InUseCurrencies
     struct InUseCurrency {
-        MonetaryTypesLib.Currency[] list;
-        mapping(address => mapping(uint256 => InUseCurrencyItem)) map;
-        uint256 mapVersion;
-    }
-
-    struct InUseCurrencyItem {
-        uint256 listIndex;
-        uint256 version;
+        MonetaryTypesLib.Currency[] currencies;
+        mapping(address => mapping(uint256 => uint256)) indexByCurrency;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function clear(InUseCurrency storage inUseCurrency)
-    public
+    // TODO Rename to add
+    function addItem(InUseCurrency storage self, address currencyCt, uint256 currencyId)
+    internal
     {
-        MonetaryTypesLib.Currency[] storage _list = inUseCurrency.list;
-        assembly {
-            mstore(_list_slot, 0)
-        }
-        inUseCurrency.mapVersion++;
-    }
-
-    /// NOTE: Does not like "add" because we use assembly
-    function addItem(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId)
-    public
-    {
-        InUseCurrencyItem storage item = inUseCurrency.map[currencyCt][currencyId];
-        if (item.listIndex == 0 || item.version != inUseCurrency.mapVersion) {
-            inUseCurrency.list.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
-            item.listIndex = inUseCurrency.list.length;
-            item.version = inUseCurrency.mapVersion;
+        // Index is 1-based
+        if (0 == self.indexByCurrency[currencyCt][currencyId]) {
+            self.currencies.push(MonetaryTypesLib.Currency(currencyCt, currencyId));
+            self.indexByCurrency[currencyCt][currencyId] = self.currencies.length;
         }
     }
 
-    function removeItem(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId)
-    public
+    // TODO Rename to removeByCurrency
+    function removeItem(InUseCurrency storage self, address currencyCt, uint256 currencyId)
+    internal
     {
-        uint256 index = getIndex(inUseCurrency, currencyCt, currencyId);
-        require(index != INVALID_INDEX);
-        removeItemAt(inUseCurrency, index);
+        // Index is 1-based
+        uint256 index = self.indexByCurrency[currencyCt][currencyId];
+        if (0 < index)
+            removeItemAt(self, index - 1);
     }
 
-    function removeItemAt(InUseCurrency storage inUseCurrency, uint256 index)
-    public
+    // TODO Rename to removeByIndex
+    function removeItemAt(InUseCurrency storage self, uint256 index)
+    internal
     {
-        require(index < inUseCurrency.list.length);
+        require(index < self.currencies.length);
 
-        address currencyCt = inUseCurrency.list[index].ct;
-        uint256 currencyId = inUseCurrency.list[index].id;
+        address currencyCt = self.currencies[index].ct;
+        uint256 currencyId = self.currencies[index].id;
 
-        if (index < inUseCurrency.list.length - 1) {
-            //remap the last item in the array to this index
-            inUseCurrency.list[index] = inUseCurrency.list[inUseCurrency.list.length - 1];
-
-            inUseCurrency.map[inUseCurrency.list[index].ct][inUseCurrency.list[index].id].listIndex = index + 1;
-
-            //delete the last item in the array
-            delete inUseCurrency.list[inUseCurrency.list.length - 1];
+        if (index < self.currencies.length - 1) {
+            self.currencies[index] = self.currencies[self.currencies.length - 1];
+            self.indexByCurrency[self.currencies[index].ct][self.currencies[index].id] = index + 1;
         }
-        else {
-            //it is the last item in the array
-            delete inUseCurrency.list[index];
-        }
-        inUseCurrency.list.length--;
-        inUseCurrency.map[currencyCt][currencyId].listIndex = 0;
-        //clean mapping
+        self.currencies.length--;
+        self.indexByCurrency[currencyCt][currencyId] = 0;
     }
 
-    function getLength(InUseCurrency storage inUseCurrency)
-    public
+    function count(InUseCurrency storage self)
+    internal
     view
     returns (uint256)
     {
-        return inUseCurrency.list.length;
+        return self.currencies.length;
     }
 
-    function has(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId)
-    public
+    function has(InUseCurrency storage self, address currencyCt, uint256 currencyId)
+    internal
     view
     returns (bool)
     {
-        return INVALID_INDEX != getIndex(inUseCurrency, currencyCt, currencyId);
+        return 0 != self.indexByCurrency[currencyCt][currencyId];
     }
 
-    function getAt(InUseCurrency storage inUseCurrency, uint256 index)
-    public
+    function getByIndex(InUseCurrency storage self, uint256 index)
+    internal
     view
     returns (MonetaryTypesLib.Currency)
     {
-        require(index < inUseCurrency.list.length);
-        return inUseCurrency.list[index];
+        require(index < self.currencies.length);
+        return self.currencies[index];
     }
 
-    function getIndex(InUseCurrency storage inUseCurrency, address currencyCt, uint256 currencyId)
-    public
+    function getByIndices(InUseCurrency storage self, uint256 low, uint256 up)
+    internal
     view
-    returns (uint256)
+    returns (MonetaryTypesLib.Currency[])
     {
-        InUseCurrencyItem storage item = inUseCurrency.map[currencyCt][currencyId];
-        if (item.listIndex == 0 || item.version != inUseCurrency.mapVersion) {
-            return INVALID_INDEX;
-        }
-        return item.listIndex - 1;
+        require(low <= up);
+
+        up = up.clampMax(self.currencies.length - 1);
+        MonetaryTypesLib.Currency[] memory _currencies = new MonetaryTypesLib.Currency[](up - low + 1);
+        for (uint256 i = low; i <= up; i++)
+            _currencies[i - low] = self.currencies[i];
+
+        return _currencies;
     }
 }
