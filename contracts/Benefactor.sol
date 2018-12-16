@@ -86,4 +86,14 @@ contract Benefactor is Ownable {
     {
         return beneficiaryIndexByAddress[beneficiary] > 0;
     }
+
+    /// @notice Get the count of registered beneficiaries
+    /// @return The count of registered beneficiaries
+    function registeredBeneficiariesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return beneficiaries.length;
+    }
 }
