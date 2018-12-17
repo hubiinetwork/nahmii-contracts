@@ -88,28 +88,33 @@ contract TokenMultiTimelock is Ownable {
         emit SetBeneficiaryEvent(beneficiary);
     }
 
-    /// @notice Define a new release
-    /// @param releaseTime The timestamp after which the amount may be released
-    /// @param amount The amount to be released
-    function defineRelease(uint256 releaseTime, uint256 amount)
+    /// @notice Define a set of new releases
+    /// @param releaseTimes The timestamp after which the corresponding amount may be released
+    /// @param amounts The amounts to be released
+    function defineReleases(uint256[] releaseTimes, uint256[] amounts)
     onlyOperator
     public
     {
+        // Require equal number of release times and amounts
+        require(releaseTimes.length == amounts.length);
+
         // Require that token address has been set
         require(address(token) != address(0));
 
-        // Update the total amount locked by this contract
-        totalLockedAmount += amount;
+        for (uint256 i = 0; i < releaseTimes.length; i++) {
+            // Update the total amount locked by this contract
+            totalLockedAmount += amounts[i];
 
-        // Require that total amount locked is smaller than or equal to the token balance of
-        // this contract
-        require(token.balanceOf(address(this)) >= totalLockedAmount);
+            // Require that total amount locked is smaller than or equal to the token balance of
+            // this contract
+            require(token.balanceOf(address(this)) >= totalLockedAmount);
 
-        // Add release
-        releases.push(Release(releaseTime, amount, false));
+            // Add release
+            releases.push(Release(releaseTimes[i], amounts[i], false));
 
-        // Emit event
-        emit AddReleaseEvent(releaseTime, amount);
+            // Emit event
+            emit AddReleaseEvent(releaseTimes[i], amounts[i]);
+        }
     }
 
     /// @notice Get the count of releases
