@@ -29,7 +29,7 @@ module.exports = function (glob) {
             web3RevenueToken = await RevenueToken.new();
             ethersRevenueToken = new Contract(web3RevenueToken.address, RevenueToken.abi, glob.signer_owner);
 
-            await web3RevenueToken.mint(web3TokenMultiTimelock.address, 1000);
+            await web3RevenueToken.mint(web3TokenMultiTimelock.address, 10000);
         });
 
         describe('constructor()', () => {
@@ -150,15 +150,20 @@ module.exports = function (glob) {
             });
         });
 
-        describe('defineRelease()', () => {
+        describe('defineReleases()', () => {
+            let releaseTimes, amounts;
+
             beforeEach(async () => {
                 await web3TokenMultiTimelock.setToken(web3RevenueToken.address);
+
+                releaseTimes = [futureEpoch(10), futureEpoch(20), futureEpoch(30)];
+                amounts = [1000, 2000, 3000];
             });
 
             describe('if called by non-operator', () => {
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.defineRelease(
-                        futureEpoch(10), 1000, {from: glob.user_a}
+                    web3TokenMultiTimelock.defineReleases(
+                        releaseTimes, amounts, {from: glob.user_a}
                     ).should.be.rejected;
                 });
             });
@@ -172,33 +177,48 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.defineRelease(
-                        futureEpoch(10), 1000
+                    web3TokenMultiTimelock.defineReleases(
+                        releaseTimes, amounts
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if number of release times differs from number of amounts', () => {
+                beforeEach(() => {
+                    amounts.push(4000);
+                });
+
+                it('should revert', async () => {
+                    web3TokenMultiTimelock.defineReleases(
+                        releaseTimes, amounts
                     ).should.be.rejected;
                 });
             });
 
             describe('if posterior total locked amount becomes greater than contracts token balance', () => {
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.defineRelease(
-                        futureEpoch(10), 10000
+                    releaseTimes.push(futureEpoch(40));
+                    amounts.push(10000);
+
+                    web3TokenMultiTimelock.defineReleases(
+                        releaseTimes, amounts
                     ).should.be.rejected;
                 });
             });
 
             describe('if within operational constraints', () => {
                 it('should successfully define release', async () => {
-                    const result = await web3TokenMultiTimelock.defineRelease(
-                        futureEpoch(10), 1000
+                    const result = await web3TokenMultiTimelock.defineReleases(
+                        releaseTimes, amounts
                     );
 
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs.should.be.an('array').and.have.lengthOf(3);
                     result.logs[0].event.should.equal('AddReleaseEvent');
 
                     (await ethersTokenMultiTimelock.totalLockedAmount())
-                        ._bn.should.eq.BN(1000);
+                        ._bn.should.eq.BN(6000);
                     (await ethersTokenMultiTimelock.releasesCount())
-                        ._bn.should.eq.BN(1);
+                        ._bn.should.eq.BN(3);
                     (await ethersTokenMultiTimelock.executedReleasesCount())
                         ._bn.should.eq.BN(0);
                 });
@@ -210,8 +230,8 @@ module.exports = function (glob) {
                 await web3TokenMultiTimelock.setToken(web3RevenueToken.address);
                 await web3TokenMultiTimelock.setBeneficiary(glob.user_a);
 
-                await web3TokenMultiTimelock.defineRelease(
-                    futureEpoch(1), 1000
+                await web3TokenMultiTimelock.defineReleases(
+                    [futureEpoch(1)], [1000]
                 );
             });
 
@@ -231,8 +251,8 @@ module.exports = function (glob) {
                 beforeEach(async () => {
                     await web3RevenueToken.mint(web3TokenMultiTimelock.address, 1000);
 
-                    await web3TokenMultiTimelock.defineRelease(
-                        futureEpoch(10), 1000
+                    await web3TokenMultiTimelock.defineReleases(
+                        [futureEpoch(10)], [1000]
                     );
                 });
 

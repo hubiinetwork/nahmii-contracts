@@ -528,8 +528,8 @@ module.exports = (deployer, network, accounts) => {
             instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
             await instance.setToken(addressStorage.get('NahmiiToken'));
             await instance.setBeneficiary(ownerAccount);
-            // await instance.defineRelease(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
-            // await instance.defineRelease(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
+            // await instance.defineReleases(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
+            // await instance.defineReleases(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
 
             instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             await instance.setConfiguration(addressStorage.get('Configuration'));

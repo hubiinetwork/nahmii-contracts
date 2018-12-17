@@ -51,8 +51,8 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await web3NahmiiToken.mint(web3RevenueTokenManager.address, 1000);
 
-                        await web3RevenueTokenManager.defineRelease(
-                            futureEpoch(1), 1000
+                        await web3RevenueTokenManager.defineReleases(
+                            [futureEpoch(1)], [1000]
                         );
                     });
 
@@ -87,11 +87,8 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await web3NahmiiToken.mint(web3RevenueTokenManager.address, 2000);
 
-                        await web3RevenueTokenManager.defineRelease(
-                            futureEpoch(1), 1000
-                        );
-                        await web3RevenueTokenManager.defineRelease(
-                            futureEpoch(2), 1000
+                        await web3RevenueTokenManager.defineReleases(
+                            [futureEpoch(1), futureEpoch(2)], [1000, 1000]
                         );
                     });
 
@@ -149,14 +146,9 @@ module.exports = function (glob) {
                 beforeEach(async () => {
                     await web3NahmiiToken.mint(web3RevenueTokenManager.address, 6000);
 
-                    await web3RevenueTokenManager.defineRelease(
-                        futureEpoch(1), 1000
-                    );
-                    await web3RevenueTokenManager.defineRelease(
-                        futureEpoch(1), 2000
-                    );
-                    await web3RevenueTokenManager.defineRelease(
-                        futureEpoch(1), 3000
+                    await web3RevenueTokenManager.defineReleases(
+                        [futureEpoch(1), futureEpoch(1), futureEpoch(1)],
+                        [1000, 2000, 3000]
                     );
 
                     await sleep(1500);
