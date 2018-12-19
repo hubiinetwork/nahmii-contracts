@@ -133,7 +133,7 @@ CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (driipSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
-            walletLocker.lockByProxy(order.wallet, challenger);
+            walletLocker.lockFungibleByProxy(order.wallet, challenger, transferAmount, currency.ct, currency.id);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(),
                 configuration.settlementChallengeTimeout());
@@ -222,7 +222,7 @@ CancelOrdersChallengable {
 
         // Unlock wallet's balances or deprive challenger
         if (driipSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
-            walletLocker.unlockByProxy(order.wallet);
+            walletLocker.unlockFungibleByProxy(order.wallet, challenger, currency.ct, currency.id);
         else
             securityBond.deprive(challenger);
 
@@ -306,7 +306,7 @@ CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (driipSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
-            walletLocker.lockByProxy(wallet, challenger);
+            walletLocker.lockFungibleByProxy(wallet, challenger, transferAmount, currency.ct, currency.id);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
@@ -373,7 +373,7 @@ CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (driipSettlementChallenge.proposalBalanceReward(wallet, payment.currency.ct, payment.currency.id))
-            walletLocker.lockByProxy(wallet, challenger);
+            walletLocker.lockFungibleByProxy(wallet, challenger, transferAmount.abs(), payment.currency.ct, payment.currency.id);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 

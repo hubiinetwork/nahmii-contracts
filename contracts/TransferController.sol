@@ -16,7 +16,7 @@ contract TransferController {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event CurrencyTransferred(address from, address to, uint256 amount,
+    event CurrencyTransferred(address from, address to, uint256 value,
         address currencyCt, uint256 currencyId);
 
     //
@@ -28,15 +28,15 @@ contract TransferController {
     returns (bool);
 
     /// @notice MUST be called with DELEGATECALL
-    function receive(address from, address to, uint256 amount, address currencyCt, uint256 currencyId)
+    function receive(address from, address to, uint256 value, address currencyCt, uint256 currencyId)
     public;
 
     /// @notice MUST be called with DELEGATECALL
-    function approve(address to, uint256 amount, address currencyCt, uint256 currencyId)
+    function approve(address to, uint256 value, address currencyCt, uint256 currencyId)
     public;
 
     /// @notice MUST be called with DELEGATECALL
-    function dispatch(address from, address to, uint256 amount, address currencyCt, uint256 currencyId)
+    function dispatch(address from, address to, uint256 value, address currencyCt, uint256 currencyId)
     public;
 
     //----------------------------------------

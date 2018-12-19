@@ -42,19 +42,18 @@ contract RevenueTokenManager is TokenMultiTimelock {
     onlyOperator
     {
         // Add amount blocks
-        addAmountBlocks(index);
+        _addAmountBlocks(index);
 
         // Call release of multi timelock
         super.release(index);
     }
 
-    /**
-     * @notice Calculate the released amount blocks, i.e. the area under the curve (AUC) of
-     * release amount as function of block number
-     * @param startBlock The start block number considered
-     * @param endBlock The end block number considered
-     * @return The calculated AUC
-     */
+
+    /// @notice Calculate the released amount blocks, i.e. the area under the curve (AUC) of
+    /// release amount as function of block number
+    /// @param startBlock The start block number considered
+    /// @param endBlock The end block number considered
+    /// @return The calculated AUC
     function releasedAmountBlocksIn(uint256 startBlock, uint256 endBlock)
     public
     view
@@ -112,9 +111,12 @@ contract RevenueTokenManager is TokenMultiTimelock {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function addAmountBlocks(uint256 index)
+    function _addAmountBlocks(uint256 index)
     private
     {
+        // Use block number defined in release if it is non-null
+        uint256 blockNumber = 0 < releases[index].blockNumber ? releases[index].blockNumber : block.number;
+
         // Store the new total amount released by adding this release' amount to
         // previous total amount
         totalReleasedAmounts.push(
@@ -126,13 +128,13 @@ contract RevenueTokenManager is TokenMultiTimelock {
         if (0 < executedReleasesCount)
             totalReleasedAmountBlocks.push(
                 totalReleasedAmounts[executedReleasesCount - 1].mul(
-                    block.number.sub(releaseBlockNumbers[executedReleasesCount - 1])
+                    blockNumber.sub(releaseBlockNumbers[executedReleasesCount - 1])
                 )
             );
         else
             totalReleasedAmountBlocks.push(0);
 
         // Store the block number of the release
-        releaseBlockNumbers.push(block.number);
+        releaseBlockNumbers.push(blockNumber);
     }
 }
