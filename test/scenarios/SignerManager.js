@@ -68,7 +68,7 @@ module.exports = function (glob) {
         });
 
         describe('registerSigner()', () => {
-            describe('if called by non-deployer', () => {
+            describe('if called by non-operator', () => {
                 it('should revert', async () => {
                     web3SignerManager.registerSigner(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });

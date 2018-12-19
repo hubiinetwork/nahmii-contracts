@@ -10,7 +10,7 @@
 
 
 ## Events
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -22,7 +22,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -34,7 +34,7 @@ Params:
 2. **newOperator** *of type `address`*
 
 --- 
-### ChangeSecurityBondEvent(address,address)
+### SetSecurityBondEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -47,42 +47,6 @@ Params:
 
 
 ## Methods
-### changeDeployer(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-
---- 
-### changeOperator(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-
---- 
-### changeSecurityBond(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-
---- 
 ### deployer()
 
 
@@ -141,6 +105,42 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### setDeployer(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+
+--- 
+### setOperator(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+
+--- 
+### setSecurityBond(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
 
 --- 
 ### triggerDestroy()

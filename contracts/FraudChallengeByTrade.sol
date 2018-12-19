@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -14,24 +14,24 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByTrade
-@notice Where driips are challenged wrt fraud by mismatch in single trade property values
-*/
+ * @title FraudChallengeByTrade
+ * @notice Where driips are challenged wrt fraud by mismatch in single trade property values
+ */
 contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChallengeByTradeEvent(bytes32 tradeHash, address challenger, address seizedWallet);
+    event ChallengeByTradeEvent(bytes32 tradeHash, address challenger, address lockedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -41,20 +41,17 @@ SecurityBondable, ClientFundable {
     /// @param trade Fraudulent trade candidate
     function challenge(NahmiiTypesLib.Trade trade) public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedTrade(trade)
     {
-        require(fraudChallenge != address(0));
-        require(configuration != address(0));
-        require(clientFund != address(0));
-
         // Genuineness affected by buyer
-        bool genuineBuyerAndFee = validator.isGenuineTradeBuyer(trade)
-        && validator.isGenuineTradeBuyerFee(trade);
+        bool genuineBuyerAndFee = validator.isTradeIntendedCurrencyNonFungible(trade) ?
+        validator.isGenuineTradeBuyerOfNonFungible(trade) && validator.isGenuineTradeBuyerFeeOfNonFungible(trade) :
+        validator.isGenuineTradeBuyerOfFungible(trade) && validator.isGenuineTradeBuyerFeeOfFungible(trade);
 
         // Genuineness affected by seller
-        bool genuineSellerAndFee = validator.isGenuineTradeSeller(trade)
-        && validator.isGenuineTradeSellerFee(trade);
+        bool genuineSellerAndFee = validator.isTradeConjugateCurrencyNonFungible(trade) ?
+        validator.isGenuineTradeSellerOfNonFungible(trade) && validator.isGenuineTradeSellerFeeOfNonFungible(trade) :
+        validator.isGenuineTradeSellerOfFungible(trade) && validator.isGenuineTradeSellerFeeOfFungible(trade);
 
         require(!genuineBuyerAndFee || !genuineSellerAndFee);
 
@@ -62,16 +59,16 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        address seizedWallet;
+        address lockedWallet;
         if (!genuineBuyerAndFee)
-            seizedWallet = trade.buyer.wallet;
+            lockedWallet = trade.buyer.wallet;
         if (!genuineSellerAndFee)
-            seizedWallet = trade.seller.wallet;
-        if (address(0) != seizedWallet)
-            clientFund.seizeAllBalances(seizedWallet, msg.sender);
+            lockedWallet = trade.seller.wallet;
+//        if (address(0) != lockedWallet)
+//            walletLocker.lockByProxy(lockedWallet, msg.sender);
 
-        emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, seizedWallet);
+        emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, lockedWallet);
     }
 }

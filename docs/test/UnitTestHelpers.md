@@ -3,11 +3,11 @@
 > UnitTestHelpers
 
 
-**Execution cost**: less than 41598 gas
+**Execution cost**: less than 41559 gas
 
-**Deployment cost**: less than 711600 gas
+**Deployment cost**: less than 677600 gas
 
-**Combined cost**: less than 753198 gas
+**Combined cost**: less than 719159 gas
 
 ## Constructor
 
@@ -18,42 +18,6 @@ Params:
 1. **_owner** *of type `address`*
 
 ## Events
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
-
---- 
-### ChangeTransferControllerManagerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldTransferControllerManager** *of type `address`*
-2. **newTransferControllerManager** *of type `address`*
-
---- 
 ### CloseAccrualPeriodEvent()
 
 
@@ -70,7 +34,7 @@ Params:
 
 
 --- 
-### DepositEthersToWasCalled(address)
+### DepositEthersToWasCalled(address,string)
 
 
 **Execution cost**: No bound available
@@ -79,9 +43,10 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
+2. **balance** *of type `string`*
 
 --- 
-### DepositTokensToWasCalled(address,int256,address,uint256)
+### DepositTokensToWasCalled(address,string,int256,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -90,46 +55,69 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
+2. **balance** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+
+--- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
+
+--- 
+### SetTransferControllerManagerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldTransferControllerManager** *of type `address`*
+2. **newTransferControllerManager** *of type `address`*
 
 ## Fallback
 
 
-**Execution cost**: less than 541 gas
+**Execution cost**: less than 475 gas
 
 **Attributes**: payable
 
 
 
 ## Methods
-### triggerDestroy()
->
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
+### receiveEthersTo(address,string)
 
 
 **Execution cost**: No bound available
 
-
-
-
---- 
-### callToStage_SECURITYBOND(address,address,int256,address,uint256)
-
-
-**Execution cost**: No bound available
+**Attributes**: payable
 
 
 Params:
 
-1. **securityBond** *of type `address`*
-2. **wallet** *of type `address`*
-3. **amount** *of type `int256`*
-4. **currencyCt** *of type `address`*
-5. **currencyid** *of type `uint256`*
+1. **wallet** *of type `address`*
+2. **balance** *of type `string`*
 
 
 --- 
@@ -144,52 +132,6 @@ Params:
 1. **tokenHolderRevenueFund** *of type `address`*
 2. **token** *of type `address`*
 3. **amount** *of type `int256`*
-
-
---- 
-### callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **tokenHolderRevenueFund** *of type `address`*
-
-
---- 
-### balanceBlocksIn(address,uint256,uint256)
-
-
-**Execution cost**: less than 569 gas
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-2. **param_1** *of type `uint256`*
-3. **param_2** *of type `uint256`*
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
-
---- 
-### callToSeizeAllBalances_CLIENTFUND(address,address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **clientFund** *of type `address`*
-2. **sourceWallet** *of type `address`*
-3. **destWallet** *of type `address`*
 
 
 --- 
@@ -209,24 +151,7 @@ Params:
 
 
 --- 
-### changeTransferControllerManager(address)
->
->Change the currency manager contract
-
-
-**Execution cost**: less than 23000 gas
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) TransferControllerManager contract instance
-
-
-
---- 
-### callToUpdateSettledBalance_CLIENTFUND(address,address,int256,address,uint256)
+### callToCloseAccrualPeriod_TOKENHOLDERREVENUEFUND(address)
 
 
 **Execution cost**: No bound available
@@ -234,61 +159,34 @@ Params:
 
 Params:
 
-1. **clientFund** *of type `address`*
-2. **wallet** *of type `address`*
-3. **amount** *of type `int256`*
-4. **currencyCt** *of type `address`*
-5. **currencyId** *of type `uint256`*
+1. **tokenHolderRevenueFund** *of type `address`*
 
 
 --- 
-### changeDeployer(address)
->
->Change the deployer of this contract
+### balanceBlocksIn(address,uint256,uint256)
 
 
-**Execution cost**: less than 23127 gas
+**Execution cost**: less than 503 gas
+
+**Attributes**: constant
 
 
 Params:
 
-1. **newDeployer** *of type `address`*
+1. **param_0** *of type `address`*
+2. **param_1** *of type `uint256`*
+3. **param_2** *of type `uint256`*
 
-    > The address of the new deployer
-
-
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
+Returns:
 
 
-**Execution cost**: less than 22820 gas
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
+1. **output_0** *of type `uint256`*
 
 --- 
-### closeAccrualPeriod()
+### transferControllerManager()
 
 
-**Execution cost**: less than 1335 gas
-
-
-
-
---- 
-### deployer()
-
-
-**Execution cost**: less than 908 gas
+**Execution cost**: less than 820 gas
 
 **Attributes**: constant
 
@@ -300,34 +198,28 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### depositEthersTo(address)
+### closeAccrualPeriod()
 
 
-**Execution cost**: less than 1453 gas
-
-**Attributes**: payable
+**Execution cost**: less than 1291 gas
 
 
-Params:
-
-1. **wallet** *of type `address`*
 
 
 --- 
-### depositTokensTo(address,int256,address,uint256,string)
+### deployer()
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 886 gas
+
+**Attributes**: constant
 
 
-Params:
 
-1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-5. **standard** *of type `string`*
+Returns:
 
+
+1. **output_0** *of type `address`*
 
 --- 
 ### destructor()
@@ -335,7 +227,7 @@ Params:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 688 gas
+**Execution cost**: less than 622 gas
 
 **Attributes**: constant
 
@@ -350,7 +242,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 754 gas
+**Execution cost**: less than 666 gas
 
 **Attributes**: constant
 
@@ -360,6 +252,23 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### receiveTokensTo(address,string,int256,address,uint256,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **balance** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
+
 
 --- 
 ### send_money(address,uint256)
@@ -375,18 +284,67 @@ Params:
 
 
 --- 
-### transferControllerManager()
+### setDeployer(address)
+>
+>Set the deployer of this contract
 
 
-**Execution cost**: less than 864 gas
-
-**Attributes**: constant
+**Execution cost**: less than 22930 gas
 
 
+Params:
 
-Returns:
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
 
 
-1. **output_0** *of type `address`*
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: less than 23039 gas
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
+
+--- 
+### setTransferControllerManager(address)
+>
+>Set the currency manager contract
+
+
+**Execution cost**: less than 22978 gas
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) TransferControllerManager contract instance
+
+
+
+--- 
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
+
+
+**Execution cost**: No bound available
+
+
+
 
 [Back to the top ↑](#unittesthelpers)

@@ -5,12 +5,12 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 /**
-@title Modifiable
-@notice A contract with basic modifiers
-*/
+ * @title Modifiable
+ * @notice A contract with basic modifiers
+ */
 contract Modifiable {
     //
     // Modifiers

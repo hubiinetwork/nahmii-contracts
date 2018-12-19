@@ -3,11 +3,11 @@
 > Client fund
 
 
-**Execution cost**: less than 65855 gas
+**Execution cost**: less than 66638 gas
 
-**Deployment cost**: less than 4133800 gas
+**Deployment cost**: less than 4705000 gas
 
-**Combined cost**: less than 4199655 gas
+**Combined cost**: less than 4771638 gas
 
 ## Constructor
 
@@ -15,45 +15,9 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### UnauthorizeRegisteredServiceEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **wallet** *of type `address`*
-2. **service** *of type `address`*
-
---- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
-
---- 
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
 ### AuthorizeRegisteredServiceActionEvent(address,address,string)
 
 
@@ -67,6 +31,68 @@ Params:
 3. **action** *of type `string`*
 
 --- 
+### ReceiveEvent(address,string,int256,address,uint256,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **balanceType** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
+
+--- 
+### DeregisterBeneficiaryEvent(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **beneficiary** *of type `address`*
+
+--- 
+### DisableServiceActionEvent(address,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+2. **action** *of type `string`*
+
+--- 
+### EnableServiceActionEvent(address,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+2. **action** *of type `string`*
+
+--- 
+### DeregisterServiceEvent(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+--- 
 ### AuthorizeRegisteredServiceEvent(address,address)
 
 
@@ -77,6 +103,18 @@ Params:
 
 1. **wallet** *of type `address`*
 2. **service** *of type `address`*
+
+--- 
+### LockBalancesEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **lockedWallet** *of type `address`*
+2. **lockerWallet** *of type `address`*
 
 --- 
 ### AuthorizeInitiallyRegisteredServiceEvent(address,address)
@@ -102,7 +140,7 @@ Params:
 1. **service** *of type `address`*
 
 --- 
-### DepositEvent(address,int256,address,uint256,string)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -110,14 +148,11 @@ Params:
 
 Params:
 
-1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-5. **standard** *of type `string`*
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
 
 --- 
-### ChangeTransferControllerManagerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -125,8 +160,31 @@ Params:
 
 Params:
 
-1. **oldTransferControllerManager** *of type `address`*
-2. **newTransferControllerManager** *of type `address`*
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetConfigurationEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldConfiguration** *of type `address`*
+2. **newConfiguration** *of type `address`*
+
+--- 
+### RegisterBeneficiaryEvent(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **beneficiary** *of type `address`*
 
 --- 
 ### RegisterServiceDeferredEvent(address,uint256)
@@ -141,7 +199,69 @@ Params:
 2. **timeout** *of type `uint256`*
 
 --- 
-### StageToBeneficiaryEvent(address,address,int256,address,uint256)
+### SeizeBalancesEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **lockedWallet** *of type `address`*
+2. **lockerWallet** *of type `address`*
+
+--- 
+### ServiceActivationTimeoutEvent(uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **timeoutInSeconds** *of type `uint256`*
+
+--- 
+### UnstageEvent(address,int256,address,uint256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **amount** *of type `int256`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
+
+--- 
+### UnauthorizeRegisteredServiceActionEvent(address,address,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **service** *of type `address`*
+3. **action** *of type `string`*
+
+--- 
+### SetTransferControllerManagerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldTransferControllerManager** *of type `address`*
+2. **newTransferControllerManager** *of type `address`*
+
+--- 
+### StageToBeneficiaryEvent(address,address,int256,address,uint256,string)
 
 
 **Execution cost**: No bound available
@@ -154,6 +274,7 @@ Params:
 3. **amount** *of type `int256`*
 4. **currencyCt** *of type `address`*
 5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
 
 --- 
 ### StageEvent(address,int256,address,uint256)
@@ -170,7 +291,7 @@ Params:
 4. **currencyId** *of type `uint256`*
 
 --- 
-### DeregisterBeneficiaryEvent(address)
+### TransferToBeneficiaryEvent(address,int256,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -179,93 +300,12 @@ Params:
 Params:
 
 1. **beneficiary** *of type `address`*
+2. **amount** *of type `int256`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
 
 --- 
-### RegisterBeneficiaryEvent(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **beneficiary** *of type `address`*
-
---- 
-### ServiceActivationTimeoutEvent(uint256)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **timeoutInSeconds** *of type `uint256`*
-
---- 
-### SeizeAllBalancesEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **sourceWallet** *of type `address`*
-2. **targetWallet** *of type `address`*
-
---- 
-### DisableServiceActionEvent(address,string)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-2. **action** *of type `string`*
-
---- 
-### DeregisterServiceEvent(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-
---- 
-### EnableServiceActionEvent(address,string)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-2. **action** *of type `string`*
-
---- 
-### StageToBeneficiaryUntargetedEvent(address,address,int256,address,uint256)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **sourceWallet** *of type `address`*
-2. **beneficiary** *of type `address`*
-3. **amount** *of type `int256`*
-4. **currencyCt** *of type `address`*
-5. **currencyId** *of type `uint256`*
-
---- 
-### UnauthorizeRegisteredServiceActionEvent(address,address,string)
+### UnauthorizeRegisteredServiceEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -275,10 +315,9 @@ Params:
 
 1. **wallet** *of type `address`*
 2. **service** *of type `address`*
-3. **action** *of type `string`*
 
 --- 
-### UnstageEvent(address,int256,address,uint256)
+### UnlockBalancesByProxyEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -286,10 +325,20 @@ Params:
 
 Params:
 
-1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
+1. **lockedWallet** *of type `address`*
+2. **lockerWallet** *of type `address`*
+
+--- 
+### UnlockBalancesEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **lockedWallet** *of type `address`*
+2. **lockerWallet** *of type `address`*
 
 --- 
 ### UpdateSettledBalanceEvent(address,int256,address,uint256)
@@ -330,9 +379,9 @@ Params:
 
 
 ## Methods
-### depositsOfCurrencyCount(address,address,uint256)
+### depositOfCurrency(address,address,uint256,uint256)
 >
->Get the count of the given wallet's deposits in the given currency
+>Get metadata of the given wallet's deposit in the given currency at the given index
 
 
 **Execution cost**: No bound available
@@ -354,12 +403,17 @@ Params:
 
     > The ID of the concerned currency (0 for ETH and ERC20)
 
+4. **index** *of type `uint256`*
+
+    > The index of wallet's deposit in the given currency
+
 
 Returns:
 
-> The count of the concerned wallet's deposits in the given currency
+> The deposit metadata
 
-1. **output_0** *of type `uint256`*
+1. **amount** *of type `int256`*
+2. **blockNumber** *of type `uint256`*
 
 --- 
 ### authorizeRegisteredService(address)
@@ -413,6 +467,21 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
+### SETTLED_BALANCE_TYPE()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `string`*
+
+--- 
 ### activeBalanceLogEntry(address,address,uint256,uint256)
 >
 >Get active balance log entry of the given wallet and currency at the given index
@@ -448,6 +517,36 @@ Returns:
 
 1. **amount** *of type `int256`*
 2. **blockNumber** *of type `uint256`*
+
+--- 
+### STAGED_BALANCE_TYPE()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `string`*
+
+--- 
+### DEPOSITED_BALANCE_TYPE()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `string`*
 
 --- 
 ### activeBalanceLogEntriesCount(address,address,uint256)
@@ -501,29 +600,9 @@ Params:
 
 
 --- 
-### serviceActionWalletTouchedMap(address,bytes32,address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-2. **param_1** *of type `bytes32`*
-3. **param_2** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### registerService(address)
+### setServiceActivationTimeout(uint256)
 >
->Register a service contract whose activation is immediate
+>Set the service activation timeout
 
 
 **Execution cost**: No bound available
@@ -531,41 +610,17 @@ Returns:
 
 Params:
 
-1. **service** *of type `address`*
+1. **timeoutInSeconds** *of type `uint256`*
 
-    > The address of the service contract to be registered
-
-
-
---- 
-### isRegisteredActiveService(address)
->
->Gauge whether a service contract is registered and active
+    > The set timeout in unit of seconds
 
 
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **service** *of type `address`*
-
-    > The address of the service contract
-
-
-Returns:
-
-> true if service is registered and activate, else false
-
-1. **output_0** *of type `bool`*
 
 --- 
-### initialServiceAuthorizedMap(address)
+### lockedWalletIndexByWallet(address)
 
 
-**Execution cost**: less than 1058 gas
+**Execution cost**: less than 1046 gas
 
 **Attributes**: constant
 
@@ -577,28 +632,44 @@ Params:
 Returns:
 
 
-1. **output_0** *of type `bool`*
+1. **output_0** *of type `uint256`*
 
 --- 
-### deregisterBeneficiary(address)
+### isLockedWallet(address)
 >
->Deregister the given beneficiary
+>Get the locked status of given wallet
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 984 gas
+
+**Attributes**: constant
 
 
 Params:
 
-1. **beneficiary** *of type `address`*
+1. **wallet** *of type `address`*
 
-    > Address of beneficiary to be deregistered
+    > The address of the concerned wallet
 
 
 Returns:
 
+> true if wallet is locked, false otherwise
 
 1. **output_0** *of type `bool`*
+
+--- 
+### disableInitialServiceAuthorization()
+>
+>Disable further initial authorization of services
+>
+> This operation can not be undone
+
+
+**Execution cost**: less than 22287 gas
+
+
+
 
 --- 
 ### enableServiceAction(address,string)
@@ -627,7 +698,7 @@ Params:
 >Gauge whether a service contract is registered
 
 
-**Execution cost**: less than 1199 gas
+**Execution cost**: less than 1243 gas
 
 **Attributes**: constant
 
@@ -646,45 +717,27 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeOperator(address)
->
->Change the operator of this contract
+### initialServiceAuthorizedMap(address)
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 1036 gas
 
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### depositEthersTo(address)
->
->Deposit ethers to the given wallet's deposited balance
-
-
-**Execution cost**: No bound available
-
-**Attributes**: payable
+**Attributes**: constant
 
 
 Params:
 
-1. **wallet** *of type `address`*
+1. **param_0** *of type `address`*
 
-    > The address of the concerned wallet
+Returns:
 
 
+1. **output_0** *of type `bool`*
 
 --- 
-### isAuthorizedRegisteredServiceAction(address,string,address)
+### isRegisteredActiveService(address)
 >
->Gauge whether the given service action is authorized for the given wallet
+>Gauge whether a service contract is registered and active
 
 
 **Execution cost**: No bound available
@@ -696,20 +749,12 @@ Params:
 
 1. **service** *of type `address`*
 
-    > The address of the concerned registered service
-
-2. **action** *of type `string`*
-
-    > The concerned service action
-
-3. **wallet** *of type `address`*
-
-    > The address of the concerned wallet
+    > The address of the service contract
 
 
 Returns:
 
-> true if service action is authorized for the given wallet, else false
+> true if service is registered and activate, else false
 
 1. **output_0** *of type `bool`*
 
@@ -735,65 +780,43 @@ Params:
 
 
 --- 
-### disableInitialServiceAuthorization()
->
->Disable further initial authorization of services
->
-> This operation can not be undone
+### deployer()
 
 
-**Execution cost**: less than 21957 gas
+**Execution cost**: less than 2172 gas
+
+**Attributes**: constant
 
 
 
+Returns:
+
+
+1. **output_0** *of type `address`*
 
 --- 
-### depositTokens(int256,address,uint256,string)
+### isSeizedWallet(address)
 >
->Deposit token to msg.sender's deposited balance
->
-> The wallet must approve of this ClientFund's transfer prior to calling this function
+>Get the seized status of given wallet
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 2321 gas
+
+**Attributes**: constant
 
 
 Params:
 
-1. **amount** *of type `int256`*
+1. **wallet** *of type `address`*
 
-    > The amount to deposit
-
-2. **currencyCt** *of type `address`*
-
-    > The address of the concerned currency contract (address(0) == ETH)
-
-3. **currencyId** *of type `uint256`*
-
-    > The ID of the concerned currency (0 for ETH and ERC20)
-
-4. **standard** *of type `string`*
-
-    > The standard of token ("ERC20", "ERC721")
+    > The address of the concerned wallet
 
 
+Returns:
 
---- 
-### changeDeployer(address)
->
->Change the deployer of this contract
+> true if wallet is seized, false otherwise
 
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
+1. **output_0** *of type `bool`*
 
 --- 
 ### destructor()
@@ -801,7 +824,7 @@ Params:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 1139 gas
+**Execution cost**: less than 1138 gas
 
 **Attributes**: constant
 
@@ -844,29 +867,14 @@ Returns:
 4. **currencyId** *of type `uint256`*
 
 --- 
-### deployer()
-
-
-**Execution cost**: less than 1864 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### depositTokensTo(address,int256,address,uint256,string)
+### depositedBalance(address,address,uint256)
 >
->Deposit token to the given wallet's deposited balance
->
-> The wallet must approve of this ClientFund's transfer prior to calling this function
+>Get deposited balance of the given wallet and currency
 
 
 **Execution cost**: No bound available
+
+**Attributes**: constant
 
 
 Params:
@@ -875,23 +883,20 @@ Params:
 
     > The address of the concerned wallet
 
-2. **amount** *of type `int256`*
-
-    > The amount to deposit
-
-3. **currencyCt** *of type `address`*
+2. **currencyCt** *of type `address`*
 
     > The address of the concerned currency contract (address(0) == ETH)
 
-4. **currencyId** *of type `uint256`*
+3. **currencyId** *of type `uint256`*
 
     > The ID of the concerned currency (0 for ETH and ERC20)
 
-5. **standard** *of type `string`*
 
-    > The standard of the token ("ERC20", "ERC721")
+Returns:
 
+> The deposited balance of the concerned wallet and currency
 
+1. **output_0** *of type `int256`*
 
 --- 
 ### deregisterService(address)
@@ -911,9 +916,77 @@ Params:
 
 
 --- 
-### registerBeneficiary(address)
+### isAuthorizedRegisteredServiceAction(address,string,address)
 >
->Register the given beneficiary
+>Gauge whether the given service action is authorized for the given wallet
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the concerned registered service
+
+2. **action** *of type `string`*
+
+    > The concerned service action
+
+3. **wallet** *of type `address`*
+
+    > The address of the concerned wallet
+
+
+Returns:
+
+> true if service action is authorized for the given wallet, else false
+
+1. **output_0** *of type `bool`*
+
+--- 
+### lockBalancesByProxy(address,address)
+>
+>Lock balances of the given locked wallet allowing them to be seized by the given locker wallet
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **lockedWallet** *of type `address`*
+
+    > The address of concerned wallet whose balances will be locked
+
+2. **lockerWallet** *of type `address`*
+
+    > The address of concerned wallet that locks
+
+
+
+--- 
+### initialServiceAuthorizationDisabled()
+
+
+**Execution cost**: less than 1528 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### deregisterBeneficiary(address)
+>
+>Deregister the given beneficiary
 
 
 **Execution cost**: No bound available
@@ -923,28 +996,13 @@ Params:
 
 1. **beneficiary** *of type `address`*
 
-    > Address of beneficiary to be registered
+    > Address of beneficiary to be deregistered
 
 
 Returns:
 
 
 1. **output_0** *of type `bool`*
-
---- 
-### operator()
-
-
-**Execution cost**: less than 1270 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### isAuthorizedRegisteredService(address,address)
@@ -975,21 +1033,28 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeTransferControllerManager(address)
+### depositsCount(address)
 >
->Change the currency manager contract
+>Get the count of the given wallet's deposits
 
 
 **Execution cost**: No bound available
 
+**Attributes**: constant
+
 
 Params:
 
-1. **newAddress** *of type `address`*
+1. **wallet** *of type `address`*
 
-    > The (address of) TransferControllerManager contract instance
+    > The address of the concerned wallet
 
 
+Returns:
+
+> The count of the concerned wallet's deposits
+
+1. **output_0** *of type `uint256`*
 
 --- 
 ### isEnabledServiceAction(address,string)
@@ -1043,6 +1108,53 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### depositsOfCurrencyCount(address,address,uint256)
+>
+>Get the count of the given wallet's deposits in the given currency
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The address of the concerned wallet
+
+2. **currencyCt** *of type `address`*
+
+    > The address of the concerned currency contract (address(0) == ETH)
+
+3. **currencyId** *of type `uint256`*
+
+    > The ID of the concerned currency (0 for ETH and ERC20)
+
+
+Returns:
+
+> The count of the concerned wallet's deposits in the given currency
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### configuration()
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
 ### authorizeRegisteredServiceAction(address,string)
 >
 >Authorize the given registered service action
@@ -1085,9 +1197,112 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### depositedBalance(address,address,uint256)
+### updateSettledBalance(address,int256,address,uint256)
 >
->Get deposited balance of the given wallet and currency
+>Update the settled balance by the difference between provided amount and deposited on-chain balance
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The address of the concerned wallet
+
+2. **amount** *of type `int256`*
+
+    > The off-chain balance amount
+
+3. **currencyCt** *of type `address`*
+
+    > The address of the concerned currency contract (address(0) == ETH)
+
+4. **currencyId** *of type `uint256`*
+
+    > The ID of the concerned currency (0 for ETH and ERC20)
+
+
+
+--- 
+### registerService(address)
+>
+>Register a service contract whose activation is immediate
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the service contract to be registered
+
+
+
+--- 
+### lockedWalletsCount()
+>
+>Get the number of wallets whose funds have been locked
+
+
+**Execution cost**: less than 2154 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+> Number of wallets
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### receiveTokensTo(address,string,int256,address,uint256,string)
+>
+>Receive token to the given wallet's given balance
+>
+> The wallet must approve of this ClientFund's transfer prior to calling this function
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The address of the concerned wallet
+
+2. **balanceType** *of type `string`*
+
+    > The target balance type
+
+3. **amount** *of type `int256`*
+
+    > The amount to deposit
+
+4. **currencyCt** *of type `address`*
+
+    > The address of the concerned currency contract (address(0) == ETH)
+
+5. **currencyId** *of type `uint256`*
+
+    > The ID of the concerned currency (0 for ETH and ERC20)
+
+6. **standard** *of type `string`*
+
+    > The standard of the token ("ERC20", "ERC721")
+
+
+
+--- 
+### locker(address)
+>
+>Get the address of the wallet that locks the balances of the given wallet
 
 
 **Execution cost**: No bound available
@@ -1101,29 +1316,27 @@ Params:
 
     > The address of the concerned wallet
 
-2. **currencyCt** *of type `address`*
-
-    > The address of the concerned currency contract (address(0) == ETH)
-
-3. **currencyId** *of type `uint256`*
-
-    > The ID of the concerned currency (0 for ETH and ERC20)
-
 
 Returns:
 
-> The deposited balance of the concerned wallet and currency
+> The locking wallet's address
 
-1. **output_0** *of type `int256`*
+1. **output_0** *of type `address`*
 
 --- 
-### initialServiceAuthorizationDisabled()
+### registerBeneficiary(address)
+>
+>Register the given beneficiary
 
 
-**Execution cost**: less than 1440 gas
+**Execution cost**: No bound available
 
-**Attributes**: constant
 
+Params:
+
+1. **beneficiary** *of type `address`*
+
+    > Address of beneficiary to be registered
 
 
 Returns:
@@ -1132,9 +1345,100 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### depositOfCurrency(address,address,uint256,uint256)
+### receiveTokens(string,int256,address,uint256,string)
 >
->Get metadata of the given wallet's deposit in the given currency at the given index
+>Receive token to msg.sender's given balance
+>
+> The wallet must approve of this ClientFund's transfer prior to calling this function
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **balanceType** *of type `string`*
+
+    > The target balance type
+
+2. **amount** *of type `int256`*
+
+    > The amount to deposit
+
+3. **currencyCt** *of type `address`*
+
+    > The address of the concerned currency contract (address(0) == ETH)
+
+4. **currencyId** *of type `uint256`*
+
+    > The ID of the concerned currency (0 for ETH and ERC20)
+
+5. **standard** *of type `string`*
+
+    > The standard of token ("ERC20", "ERC721")
+
+
+
+--- 
+### operator()
+
+
+**Execution cost**: less than 1292 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### lockedWallets(uint256)
+
+
+**Execution cost**: less than 2471 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### receiveEthersTo(address,string)
+>
+>Deposit ethers to the given wallet's deposited balance
+
+
+**Execution cost**: No bound available
+
+**Attributes**: payable
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The address of the concerned wallet
+
+2. **balanceType** *of type `string`*
+
+    > The target balance ty
+
+
+
+--- 
+### withdrawalOfCurrency(address,address,uint256,uint256)
+>
+>Get metadata of the given wallet's withdrawal in the given currency at the given index
 
 
 **Execution cost**: No bound available
@@ -1158,20 +1462,18 @@ Params:
 
 4. **index** *of type `uint256`*
 
-    > The index of wallet's deposit in the given currency
+    > The index of wallet's withdrawal in the given currency
 
 
 Returns:
 
-> The deposit metadata
+> The withdrawal metadata
 
 1. **amount** *of type `int256`*
 2. **blockNumber** *of type `uint256`*
 
 --- 
-### depositsCount(address)
->
->Get the count of the given wallet's deposits
+### serviceActionWalletTouchedMap(address,bytes32,address)
 
 
 **Execution cost**: No bound available
@@ -1181,16 +1483,166 @@ Returns:
 
 Params:
 
-1. **wallet** *of type `address`*
+1. **param_0** *of type `address`*
+2. **param_1** *of type `bytes32`*
+3. **param_2** *of type `address`*
 
-    > The address of the concerned wallet
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### seizedWalletsCount()
+>
+>Get the number of wallets whose funds have been seized
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
 
 
 Returns:
 
-> The count of the concerned wallet's deposits
+> Number of wallets
 
 1. **output_0** *of type `uint256`*
+
+--- 
+### registerServiceDeferred(address)
+>
+>Register a service contract whose activation is deferred by the service activation timeout
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the service contract to be registered
+
+
+
+--- 
+### seizeBalances(address,address,uint256)
+>
+>Seize balances in the given currency of the given locked wallet, provided that the function is called by the wallet that locked and it is done before expiration of release timeout
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **lockedWallet** *of type `address`*
+
+    > The address of concerned wallet whose balances are locked
+
+2. **currencyCt** *of type `address`*
+
+    > The address of the concerned currency contract (address(0) == ETH)
+
+3. **currencyId** *of type `uint256`*
+
+    > The ID of the concerned currency (0 for ETH and ERC20)
+
+
+
+--- 
+### seizedByWallet(address)
+
+
+**Execution cost**: less than 2378 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### seizedWallets(uint256)
+
+
+**Execution cost**: less than 2449 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `uint256`*
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### serviceActionWalletAuthorizedMap(address,bytes32,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+2. **param_1** *of type `bytes32`*
+3. **param_2** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### setTransferControllerManager(address)
+>
+>Set the currency manager contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) TransferControllerManager contract instance
+
+
+
+--- 
+### unauthorizeRegisteredService(address)
+>
+>Unauthorize the given registered service by enabling all of actions
+>
+> The service must be registered already
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+    > The address of the concerned registered service
+
+
 
 --- 
 ### transferControllerManager()
@@ -1208,9 +1660,9 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### stageToBeneficiary(address,int256,address,uint256)
+### stageToBeneficiary(address,address,int256,address,uint256,string)
 >
->Stage the amount from msg.sender to the given beneficiary and targeted to msg.sender 
+>Stage the amount from wallet to the given beneficiary and targeted to wallet
 
 
 **Execution cost**: No bound available
@@ -1218,28 +1670,36 @@ Returns:
 
 Params:
 
-1. **beneficiary** *of type `address`*
+1. **wallet** *of type `address`*
+
+    > The address of the concerned wallet
+
+2. **beneficiary** *of type `address`*
 
     > The (address of) concerned beneficiary contract
 
-2. **amount** *of type `int256`*
+3. **amount** *of type `int256`*
 
     > The concerned amount
 
-3. **currencyCt** *of type `address`*
+4. **currencyCt** *of type `address`*
 
     > The address of the concerned currency contract (address(0) == ETH)
 
-4. **currencyId** *of type `uint256`*
+5. **currencyId** *of type `uint256`*
 
     > The ID of the concerned currency (0 for ETH and ERC20)
+
+6. **standard** *of type `string`*
+
+    > The standard of token ("ERC20", "ERC721")
 
 
 
 --- 
-### seizeAllBalances(address,address)
+### setOperator(address)
 >
->Transfer all balances of the given source wallet to the given target wallet
+>Set the operator of this contract
 
 
 **Execution cost**: No bound available
@@ -1247,18 +1707,48 @@ Params:
 
 Params:
 
-1. **sourceWallet** *of type `address`*
+1. **newOperator** *of type `address`*
 
-    > The address of concerned source wallet
-
-2. **targetWallet** *of type `address`*
-
-    > The address of concerned target wallet
+    > The address of the new operator
 
 
 
 --- 
-### serviceWalletActionList(address,address,uint256)
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setConfiguration(address)
+>
+>Set the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### serviceWalletAuthorizedMap(address,address)
 
 
 **Execution cost**: No bound available
@@ -1270,27 +1760,11 @@ Params:
 
 1. **param_0** *of type `address`*
 2. **param_1** *of type `address`*
-3. **param_2** *of type `uint256`*
 
 Returns:
 
 
-1. **output_0** *of type `bytes32`*
-
---- 
-### serviceActivationTimeout()
-
-
-**Execution cost**: less than 922 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `uint256`*
+1. **output_0** *of type `bool`*
 
 --- 
 ### settledBalance(address,address,uint256)
@@ -1325,21 +1799,24 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
-### registerServiceDeferred(address)
->
->Register a service contract whose activation is deferred by the service activation timeout
+### serviceWalletActionList(address,address,uint256)
 
 
 **Execution cost**: No bound available
 
+**Attributes**: constant
+
 
 Params:
 
-1. **service** *of type `address`*
+1. **param_0** *of type `address`*
+2. **param_1** *of type `address`*
+3. **param_2** *of type `uint256`*
 
-    > The address of the service contract to be registered
+Returns:
 
 
+1. **output_0** *of type `bytes32`*
 
 --- 
 ### stage(address,int256,address,uint256)
@@ -1371,29 +1848,9 @@ Params:
 
 
 --- 
-### serviceActionWalletUnauthorizedMap(address,bytes32,address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-2. **param_1** *of type `bytes32`*
-3. **param_2** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### setServiceActivationTimeout(uint256)
+### transferToBeneficiary(address,int256,address,uint256,string)
 >
->Set the service activation timeout
+>Transfer the given amount of currency to the given beneficiary without target wallet
 
 
 **Execution cost**: No bound available
@@ -1401,61 +1858,25 @@ Returns:
 
 Params:
 
-1. **timeoutInSeconds** *of type `uint256`*
-
-    > The set timeout in unit of seconds
-
-
-
---- 
-### serviceWalletUnauthorizedMap(address,address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **param_0** *of type `address`*
-2. **param_1** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### stageToBeneficiaryUntargeted(address,address,int256,address,uint256)
->
->Stage the amount from the given source wallet to the given beneficiary without target wallet
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **sourceWallet** *of type `address`*
-
-    > The address of concerned source wallet
-
-2. **beneficiary** *of type `address`*
+1. **beneficiary** *of type `address`*
 
     > The (address of) concerned beneficiary contract
 
-3. **amount** *of type `int256`*
+2. **amount** *of type `int256`*
 
     > The concerned amount
 
-4. **currencyCt** *of type `address`*
+3. **currencyCt** *of type `address`*
 
     > The address of the concerned currency contract (address(0) == ETH)
 
-5. **currencyId** *of type `uint256`*
+4. **currencyId** *of type `uint256`*
 
     > The ID of the concerned currency (0 for ETH and ERC20)
+
+5. **standard** *of type `string`*
+
+    > The standard of token ("ERC20", "ERC721")
 
 
 
@@ -1492,6 +1913,21 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
+### serviceActivationTimeout()
+
+
+**Execution cost**: less than 944 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
 ### triggerDestroy()
 >
 >Destroy this contract
@@ -1501,25 +1937,6 @@ Returns:
 
 **Execution cost**: No bound available
 
-
-
-
---- 
-### unauthorizeRegisteredService(address)
->
->Unauthorize the given registered service by enabling all of actions
->
-> The service must be registered already
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-
-    > The address of the concerned registered service
 
 
 
@@ -1547,6 +1964,58 @@ Params:
 
 
 --- 
+### unlockBalances()
+>
+>Unlock balances of msg.sender if release timeout has expired
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### unlockBalancesByProxy(address)
+>
+>Unlock balances of the given wallet
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The address of concerned wallet whose balances will be unlocked
+
+
+
+--- 
+### unlockTime(address)
+>
+>Get the timestamp at which the wallet's locked balances will be released
+
+
+**Execution cost**: less than 1831 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **wallet** *of type `address`*
+
+    > The address of the concerned wallet
+
+
+Returns:
+
+> The balances release timestamp
+
+1. **output_0** *of type `uint256`*
+
+--- 
 ### unstage(int256,address,uint256)
 >
 >Unstage a staged amount
@@ -1566,35 +2035,6 @@ Params:
     > The address of the concerned currency contract (address(0) == ETH)
 
 3. **currencyId** *of type `uint256`*
-
-    > The ID of the concerned currency (0 for ETH and ERC20)
-
-
-
---- 
-### updateSettledBalance(address,int256,address,uint256)
->
->Update the settled balance by the difference between provided amount and deposited on-chain balance
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-    > The address of the concerned wallet
-
-2. **amount** *of type `int256`*
-
-    > The off-chain balance amount
-
-3. **currencyCt** *of type `address`*
-
-    > The address of the concerned currency contract (address(0) == ETH)
-
-4. **currencyId** *of type `uint256`*
 
     > The ID of the concerned currency (0 for ETH and ERC20)
 
@@ -1659,43 +2099,6 @@ Returns:
 2. **blockNumber** *of type `uint256`*
 3. **currencyCt** *of type `address`*
 4. **currencyId** *of type `uint256`*
-
---- 
-### withdrawalOfCurrency(address,address,uint256,uint256)
->
->Get metadata of the given wallet's withdrawal in the given currency at the given index
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-    > The address of the concerned wallet
-
-2. **currencyCt** *of type `address`*
-
-    > The address of the concerned currency contract (address(0) == ETH)
-
-3. **currencyId** *of type `uint256`*
-
-    > The ID of the concerned currency (0 for ETH and ERC20)
-
-4. **index** *of type `uint256`*
-
-    > The index of wallet's withdrawal in the given currency
-
-
-Returns:
-
-> The withdrawal metadata
-
-1. **amount** *of type `int256`*
-2. **blockNumber** *of type `uint256`*
 
 --- 
 ### withdrawalsCount(address)

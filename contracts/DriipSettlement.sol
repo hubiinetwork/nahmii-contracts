@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -16,6 +16,7 @@ import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
+import {PartnerFund} from "./PartnerFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -25,12 +26,20 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
-@title DriipSettlement
-@notice Where driip settlements are finalized
-*/
+ * @title DriipSettlement
+ * @notice Where driip settlements are finalized
+ */
 contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, FraudChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+
+    //
+    // Structures
+    // -----------------------------------------------------------------------------------------------------------------
+    struct Total {
+        uint256 nonce;
+        int256 amount;
+    }
 
     //
     // Variables
@@ -40,6 +49,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     DriipSettlementChallenge public driipSettlementChallenge;
     RevenueFund public tradesRevenueFund;
     RevenueFund public paymentsRevenueFund;
+    PartnerFund public partnerFund;
 
     SettlementTypesLib.Settlement[] public settlements;
     mapping(uint256 => uint256) public nonceSettlementIndex;
@@ -47,25 +57,21 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxDriipNonce;
 
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyFeeNonce;
-    mapping(address => mapping(address => mapping(uint256 => int256))) public walletCurrencyFeeCharged;
+    mapping(address => mapping(address => mapping(address => mapping(address => mapping(uint256 => Total))))) public feeTotalsMap;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SettleTradeEvent(address wallet, NahmiiTypesLib.Trade trade,
-        SettlementTypesLib.ProposalStatus proposalStatus);
-    event SettleTradeByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Trade trade,
-        SettlementTypesLib.ProposalStatus proposalStatus);
-    event SettlePaymentEvent(address wallet, NahmiiTypesLib.Payment payment,
-        SettlementTypesLib.ProposalStatus proposalStatus);
-    event SettlePaymentByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Payment payment,
-        SettlementTypesLib.ProposalStatus proposalStatus);
-    event ChangeDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
+    event SettleTradeEvent(address wallet, NahmiiTypesLib.Trade trade);
+    event SettleTradeByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Trade trade);
+    event SettlePaymentEvent(address wallet, NahmiiTypesLib.Payment payment);
+    event SettlePaymentByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Payment payment);
+    event SetDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
         DriipSettlementChallenge newDriipSettlementChallenge);
-    event ChangeTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event ChangePaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event StageTotalFeeEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
+    event SetTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
+    event SetPaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
+    event SetPartnerFundEvent(PartnerFund oldPartnerFund, PartnerFund newPartnerFund);
+    event StageFeesEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
         address currencyCt, uint256 currencyId);
 
     //
@@ -77,37 +83,48 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the driip settlement challenge contract
+    /// @notice Set the driip settlement challenge contract
     /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
-    function changeDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
+    function setDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
     onlyDeployer
     notNullAddress(newDriipSettlementChallenge)
     {
         DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
         driipSettlementChallenge = newDriipSettlementChallenge;
-        emit ChangeDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
+        emit SetDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
     }
 
-    /// @notice Change the trades revenue fund contract
+    /// @notice Set the trades revenue fund contract
     /// @param newTradesRevenueFund The (address of) trades RevenueFund contract instance
-    function changeTradesRevenueFund(RevenueFund newTradesRevenueFund) public
+    function setTradesRevenueFund(RevenueFund newTradesRevenueFund) public
     onlyDeployer
     notNullAddress(newTradesRevenueFund)
     {
         RevenueFund oldTradesRevenueFund = tradesRevenueFund;
         tradesRevenueFund = newTradesRevenueFund;
-        emit ChangeTradesRevenueFundEvent(oldTradesRevenueFund, tradesRevenueFund);
+        emit SetTradesRevenueFundEvent(oldTradesRevenueFund, tradesRevenueFund);
     }
 
-    /// @notice Change the payments revenue fund contract
+    /// @notice Set the payments revenue fund contract
     /// @param newPaymentsRevenueFund The (address of) payments RevenueFund contract instance
-    function changePaymentsRevenueFund(RevenueFund newPaymentsRevenueFund) public
+    function setPaymentsRevenueFund(RevenueFund newPaymentsRevenueFund) public
     onlyDeployer
     notNullAddress(newPaymentsRevenueFund)
     {
         RevenueFund oldPaymentsRevenueFund = paymentsRevenueFund;
         paymentsRevenueFund = newPaymentsRevenueFund;
-        emit ChangePaymentsRevenueFundEvent(oldPaymentsRevenueFund, paymentsRevenueFund);
+        emit SetPaymentsRevenueFundEvent(oldPaymentsRevenueFund, paymentsRevenueFund);
+    }
+
+    /// @notice Set the partner fund contract
+    /// @param newPartnerFund The (address of) partner contract instance
+    function setPartnerFund(PartnerFund newPartnerFund) public
+    onlyDeployer
+    notNullAddress(newPartnerFund)
+    {
+        PartnerFund oldPartnerFund = partnerFund;
+        partnerFund = newPartnerFund;
+        emit SetPartnerFundEvent(oldPartnerFund, partnerFund);
     }
 
     /// @notice Get the count of settlements
@@ -169,10 +186,10 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     public
     {
         // Settle trade
-        settleTradePrivate(msg.sender, trade);
+        _settleTrade(msg.sender, trade);
 
         // Emit event
-        emit SettleTradeEvent(msg.sender, trade, driipSettlementChallenge.proposalStatus(msg.sender));
+        emit SettleTradeEvent(msg.sender, trade);
     }
 
     /// @notice Settle driip that is a trade
@@ -180,13 +197,13 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @param trade The trade to be settled
     function settleTradeByProxy(address wallet, NahmiiTypesLib.Trade trade)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Settle trade for wallet
-        settleTradePrivate(wallet, trade);
+        _settleTrade(wallet, trade);
 
         // Emit event
-        emit SettleTradeByProxyEvent(msg.sender, wallet, trade, driipSettlementChallenge.proposalStatus(wallet));
+        emit SettleTradeByProxyEvent(msg.sender, wallet, trade);
     }
 
     /// @notice Settle driip that is a payment
@@ -195,10 +212,10 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     public
     {
         // Settle payment
-        settlePaymentPrivate(msg.sender, payment);
+        _settlePayment(msg.sender, payment);
 
         // Emit event
-        emit SettlePaymentEvent(msg.sender, payment, driipSettlementChallenge.proposalStatus(msg.sender));
+        emit SettlePaymentEvent(msg.sender, payment);
     }
 
     /// @notice Settle driip that is a payment
@@ -206,34 +223,41 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
     /// @param payment The payment to be settled
     function settlePaymentByProxy(address wallet, NahmiiTypesLib.Payment payment)
     public
-    onlyDeployer
+    onlyOperator
     {
         // Settle payment for wallet
-        settlePaymentPrivate(wallet, payment);
+        _settlePayment(wallet, payment);
 
         // Emit event
-        emit SettlePaymentByProxyEvent(msg.sender, wallet, payment, driipSettlementChallenge.proposalStatus(wallet));
+        emit SettlePaymentByProxyEvent(msg.sender, wallet, payment);
     }
 
-    function settleTradePrivate(address wallet, NahmiiTypesLib.Trade trade)
+    function _settleTrade(address wallet, NahmiiTypesLib.Trade trade)
     private
-    validatorInitialized
-    fraudChallengeInitialized
-    communityVoteInitialized
-    configurationInitialized
-    clientFundInitialized
-    driipSettlementChallengeInitialized
     onlySealedTrade(trade)
     {
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
         require(validator.isTradeParty(trade, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        // Require that driip settlement challenge qualified
-        require(driipSettlementChallenge.proposalStatus(wallet) == SettlementTypesLib.ProposalStatus.Qualified);
+        // Require that wallet is not locked
+        require(!driipSettlementChallenge.isLockedWallet(wallet));
+
+        // Require that proposal has expired
+        require(driipSettlementChallenge.hasProposalExpired(wallet, trade.currencies.intended.ct, trade.currencies.intended.id));
+        require(driipSettlementChallenge.hasProposalExpired(wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id));
+
+        // Require that driip settlement challenge proposals qualified
+        require(SettlementTypesLib.Status.Qualified == driipSettlementChallenge.proposalStatus(
+            wallet, trade.currencies.intended.ct, trade.currencies.intended.id
+        ));
+        require(SettlementTypesLib.Status.Qualified == driipSettlementChallenge.proposalStatus(
+            wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+        ));
 
         // Require that the wallet's current driip settlement challenge is wrt this trade
-        require(driipSettlementChallenge.proposalNonce(wallet) == trade.nonce);
+        require(trade.nonce == driipSettlementChallenge.proposalNonce(wallet, trade.currencies.intended.ct, trade.currencies.intended.id));
+        require(trade.nonce == driipSettlementChallenge.proposalNonce(wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id));
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce
@@ -275,15 +299,15 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, party.balances.intended.current, trade.currencies.intended.ct, trade.currencies.intended.id
+                wallet, party.balances.intended.current, trade.currencies.intended.ct,
+                    trade.currencies.intended.id, "", trade.blockNumber
             );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet,
-                driipSettlementChallenge.proposalStageAmount(wallet, trade.currencies.intended),
-                trade.currencies.intended.ct,
-                trade.currencies.intended.id
+                driipSettlementChallenge.proposalStageAmount(wallet, trade.currencies.intended.ct, trade.currencies.intended.id),
+                trade.currencies.intended.ct, trade.currencies.intended.id, ""
             );
         }
 
@@ -295,20 +319,20 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, party.balances.conjugate.current, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                wallet, party.balances.conjugate.current, trade.currencies.conjugate.ct,
+                trade.currencies.conjugate.id, "", trade.blockNumber
             );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet,
-                driipSettlementChallenge.proposalStageAmount(wallet, trade.currencies.conjugate),
-                trade.currencies.conjugate.ct,
-                trade.currencies.conjugate.id
+                driipSettlementChallenge.proposalStageAmount(wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id),
+                trade.currencies.conjugate.ct, trade.currencies.conjugate.id, ""
             );
         }
 
         // Stage fees to revenue fund
-        if (address(tradesRevenueFund) != address(0))
+        if (address(0) != address(tradesRevenueFund))
             stageFees(wallet, party.fees.total, tradesRevenueFund, trade.nonce);
 
         // If payment nonce is beyond max driip nonce then update max driip nonce
@@ -316,25 +340,27 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             maxDriipNonce = trade.nonce;
     }
 
-    function settlePaymentPrivate(address wallet, NahmiiTypesLib.Payment payment)
+    function _settlePayment(address wallet, NahmiiTypesLib.Payment payment)
     private
-    validatorInitialized
-    fraudChallengeInitialized
-    communityVoteInitialized
-    configurationInitialized
-    clientFundInitialized
-    driipSettlementChallengeInitialized
     onlySealedPayment(payment)
     {
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
         require(validator.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
-        // Require that driip settlement challenge qualified
-        require(driipSettlementChallenge.proposalStatus(wallet) == SettlementTypesLib.ProposalStatus.Qualified);
+        // Require that wallet is not locked
+        require(!driipSettlementChallenge.isLockedWallet(wallet));
+
+        // Require that proposal has expired
+        require(driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
+
+        // Require that driip settlement challenge proposal qualified
+        require(SettlementTypesLib.Status.Qualified == driipSettlementChallenge.proposalStatus(
+            wallet, payment.currency.ct, payment.currency.id
+        ));
 
         // Require that the wallet's current driip settlement challenge is wrt this payment
-        require(driipSettlementChallenge.proposalNonce(wallet) == payment.nonce);
+        require(payment.nonce == driipSettlementChallenge.proposalNonce(wallet, payment.currency.ct, payment.currency.id));
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce
@@ -362,9 +388,9 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         else
             settlement.target.done = true;
 
-        MonetaryTypesLib.Figure[] memory totalFees;
+        NahmiiTypesLib.OriginFigure[] memory totalFees;
         int256 currentBalance;
-        if (validator.isPaymentParty(payment, wallet)) {
+        if (validator.isPaymentSender(payment, wallet)) {
             totalFees = payment.sender.fees.total;
             currentBalance = payment.sender.balances.current;
         } else {
@@ -379,19 +405,19 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             walletCurrencyMaxDriipNonce[wallet][payment.currency.ct][payment.currency.id] = payment.nonce;
 
             // Update settled balance
-            clientFund.updateSettledBalance(wallet, currentBalance, payment.currency.ct, payment.currency.id);
+            clientFund.updateSettledBalance(
+                wallet, currentBalance, payment.currency.ct, payment.currency.id, "", payment.blockNumber
+            );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
-                wallet,
-                driipSettlementChallenge.proposalStageAmount(wallet, payment.currency),
-                payment.currency.ct,
-                payment.currency.id
+                wallet, driipSettlementChallenge.proposalStageAmount(wallet, payment.currency.ct, payment.currency.id),
+                payment.currency.ct, payment.currency.id, ""
             );
         }
 
         // Stage fees to revenue fund
-        if (address(paymentsRevenueFund) != address(0))
+        if (address(0) != address(paymentsRevenueFund))
             stageFees(wallet, totalFees, paymentsRevenueFund, payment.nonce);
 
         // If payment nonce is beyond max driip nonce then update max driip nonce
@@ -454,40 +480,38 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         return settlements[index - 1];
     }
 
-    function stageFees(address wallet, MonetaryTypesLib.Figure[] fees,
-        Beneficiary beneficiary, uint256 nonce)
+    function stageFees(address wallet, NahmiiTypesLib.OriginFigure[] fees,
+        Beneficiary protocolBeneficiary, uint256 nonce)
     private
     {
-        // For each fee figure...
+        // For each origin figure...
         for (uint256 i = 0; i < fees.length; i++) {
-            // If wallet has previously settled fee of the concerned currency with higher driip nonce then don't settle again
-            if (walletCurrencyFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] < nonce) {
-                walletCurrencyFeeNonce[wallet][fees[i].currency.ct][fees[i].currency.id] = nonce;
+            // Based on originId determine if this is protocol or partner fee, and if the latter define originId as destination in beneficiary
+            (Beneficiary beneficiary, address destination) =
+            (0 == fees[i].originId) ? (protocolBeneficiary, address(0)) : (partnerFund, address(fees[i].originId));
 
-                // Stage delta of fee to beneficiary
-                clientFund.stageToBeneficiaryUntargeted(
-                    wallet, beneficiary,
-                    fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
-                    fees[i].currency.ct, fees[i].currency.id
+            Total storage feeTotal = feeTotalsMap[wallet][address(beneficiary)][destination][fees[i].figure.currency.ct][fees[i].figure.currency.id];
+
+            // If wallet has previously settled fee of the concerned currency with higher driip nonce then don't settle again
+            if (feeTotal.nonce < nonce) {
+                feeTotal.nonce = nonce;
+
+                // Get the amount previously staged
+                int256 deltaAmount = fees[i].figure.amount - feeTotal.amount;
+
+                // Update the fee total amount
+                feeTotal.amount = fees[i].figure.amount;
+
+                // Transfer to beneficiary
+                clientFund.transferToBeneficiary(
+                    destination, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
                 );
 
-                // Update fee charged
-                walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id] = fees[i].amount;
-
                 // Emit event
-                emit StageTotalFeeEvent(wallet,
-                    fees[i].amount - walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
-                    walletCurrencyFeeCharged[wallet][fees[i].currency.ct][fees[i].currency.id],
-                    fees[i].currency.ct, fees[i].currency.id);
+                emit StageFeesEvent(
+                    wallet, deltaAmount, fees[i].figure.amount, fees[i].figure.currency.ct, fees[i].figure.currency.id
+                );
             }
         }
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier driipSettlementChallengeInitialized() {
-        require(driipSettlementChallenge != address(0));
-        _;
     }
 }

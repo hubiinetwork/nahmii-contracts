@@ -5,7 +5,7 @@
 
 **Execution cost**: No bound available
 
-**Deployment cost**: less than 3650200 gas
+**Deployment cost**: less than 3641600 gas
 
 **Combined cost**: No bound available
 
@@ -15,11 +15,11 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 2. **signerManager** *of type `address`*
 
 ## Events
-### ChangeConfigurationEvent(address,address)
+### SetConfigurationEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -31,7 +31,7 @@ Params:
 2. **newConfiguration** *of type `address`*
 
 --- 
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -43,7 +43,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeHasherEvent(address,address)
+### SetHasherEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -55,7 +55,7 @@ Params:
 2. **newHasher** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -67,7 +67,7 @@ Params:
 2. **newOperator** *of type `address`*
 
 --- 
-### ChangeSignerManagerEvent(address,address)
+### SetSignerManagerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -101,92 +101,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeSignerManager(address)
->
->Change the signer manager of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newSignerManager** *of type `address`*
-
-    > The address of the new signer
-
-
-
---- 
-### changeDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### changeHasher(address)
->
->Change the hasher contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) Hasher contract instance
-
-
-
---- 
-### changeConfiguration(address)
->
->Change the configuration contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newConfiguration** *of type `address`*
-
-    > The (address of) Configuration contract instance
-
-
-
---- 
-### isGenuineTradeSellerFee(tuple)
+### isGenuinePaymentSender(tuple)
 
 
 **Execution cost**: No bound available
@@ -196,7 +111,61 @@ Params:
 
 Params:
 
-1. **trade** *of type `tuple`*
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentOperatorHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineOrderWalletSeal(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **order** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineOrderOperatorSeal(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **order** *of type `tuple`*
 
 Returns:
 
@@ -205,6 +174,24 @@ Returns:
 
 --- 
 ### isGenuineOrderWalletHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **order** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineOrderSeals(tuple)
 
 
 **Execution cost**: No bound available
@@ -237,10 +224,28 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### isGenuinePaymentSeals(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### deployer()
 
 
-**Execution cost**: less than 1710 gas
+**Execution cost**: less than 1754 gas
 
 **Attributes**: constant
 
@@ -271,6 +276,23 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
+
+
+**Execution cost**: less than 940 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
 ### isGenuineOrderOperatorHash(tuple)
 
 
@@ -289,24 +311,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 962 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### isGenuineOrderSeals(tuple)
+### isGenuinePaymentOperatorSeal(tuple)
 
 
 **Execution cost**: No bound available
@@ -316,7 +321,43 @@ Returns:
 
 Params:
 
-1. **order** *of type `tuple`*
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentRecipient(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuinePaymentFee(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
 
 Returns:
 
@@ -360,24 +401,6 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### isGenuineOrderOperatorSeal(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### configuration()
 
 
@@ -393,7 +416,7 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### isGenuineSuccessivePaymentTradeBalances(tuple,uint8,tuple,uint8,uint8)
+### isGenuineTradeSeller(tuple)
 
 
 **Execution cost**: No bound available
@@ -403,11 +426,7 @@ Returns:
 
 Params:
 
-1. **payment** *of type `tuple`*
-2. **paymentPartyRole** *of type `uint8`*
-3. **trade** *of type `tuple`*
-4. **tradePartyRole** *of type `uint8`*
-5. **tradeCurrencyRole** *of type `uint8`*
+1. **trade** *of type `tuple`*
 
 Returns:
 
@@ -428,24 +447,6 @@ Params:
 1. **trade** *of type `tuple`*
 2. **tradePartyRole** *of type `uint8`*
 3. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentSender(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
 
 Returns:
 
@@ -474,6 +475,24 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
+### isGenuinePaymentWalletHash(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **payment** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
 ### isGenuineSuccessivePaymentsTotalFees(tuple,tuple)
 
 
@@ -493,97 +512,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuinePaymentOperatorHash(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentWalletHash(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### isGenuinePaymentWalletSeal(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentSeals(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentFee(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **payment** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentRecipient(tuple)
 
 
 **Execution cost**: No bound available
@@ -664,25 +593,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineOrderWalletSeal(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuinePaymentOperatorSeal(tuple)
+### isGenuineSuccessivePaymentTradeBalances(tuple,uint8,tuple,uint8,uint8)
 
 
 **Execution cost**: No bound available
@@ -693,6 +604,10 @@ Returns:
 Params:
 
 1. **payment** *of type `tuple`*
+2. **paymentPartyRole** *of type `uint8`*
+3. **trade** *of type `tuple`*
+4. **tradePartyRole** *of type `uint8`*
+5. **tradeCurrencyRole** *of type `uint8`*
 
 Returns:
 
@@ -700,7 +615,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isPaymentSender(tuple,address)
+### isGenuineSuccessiveTradesTotalFees(tuple,uint8,tuple,uint8)
 
 
 **Execution cost**: No bound available
@@ -710,8 +625,30 @@ Returns:
 
 Params:
 
-1. **payment** *of type `tuple`*
-2. **wallet** *of type `address`*
+1. **firstTrade** *of type `tuple`*
+2. **firstTradePartyRole** *of type `uint8`*
+3. **lastTrade** *of type `tuple`*
+4. **lastTradePartyRole** *of type `uint8`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineWalletSignature(bytes32,tuple,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **hash** *of type `bytes32`*
+2. **signature** *of type `tuple`*
+3. **wallet** *of type `address`*
 
 Returns:
 
@@ -742,7 +679,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineWalletSignature(bytes32,tuple,address)
+### isGenuineTradeHash(tuple)
 
 
 **Execution cost**: No bound available
@@ -752,9 +689,136 @@ Returns:
 
 Params:
 
-1. **hash** *of type `bytes32`*
-2. **signature** *of type `tuple`*
-3. **wallet** *of type `address`*
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineTradeSellerFee(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineTradeBuyer(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineTradeBuyerFee(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isGenuineTradeSeal(tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### setSignerManager(address)
+>
+>Set the signer manager of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newSignerManager** *of type `address`*
+
+    > The address of the new signer
+
+
+
+--- 
+### isTradeSeller(tuple,address)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **wallet** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isSuccessiveTradePaymentPartyNonces(tuple,uint8,tuple,uint8)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **tradePartyRole** *of type `uint8`*
+3. **payment** *of type `tuple`*
+4. **paymentPartyRole** *of type `uint8`*
 
 Returns:
 
@@ -798,60 +862,6 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeSeller(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineTradeHash(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isGenuineTradeBuyerFee(tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### isPaymentParty(tuple,address)
 
 
@@ -871,7 +881,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineSuccessiveTradesTotalFees(tuple,uint8,tuple,uint8)
+### isSuccessiveTradesPartyNonces(tuple,uint8,tuple,uint8)
 
 
 **Execution cost**: No bound available
@@ -892,7 +902,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeSeal(tuple)
+### isTradeParty(tuple,address)
 
 
 **Execution cost**: No bound available
@@ -903,6 +913,26 @@ Returns:
 Params:
 
 1. **trade** *of type `tuple`*
+2. **wallet** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### isTradeOrder(tuple,tuple)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: constant
+
+
+Params:
+
+1. **trade** *of type `tuple`*
+2. **order** *of type `tuple`*
 
 Returns:
 
@@ -929,7 +959,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isGenuineTradeBuyer(tuple)
+### isPaymentSender(tuple,address)
 
 
 **Execution cost**: No bound available
@@ -939,7 +969,8 @@ Returns:
 
 Params:
 
-1. **trade** *of type `tuple`*
+1. **payment** *of type `tuple`*
+2. **wallet** *of type `address`*
 
 Returns:
 
@@ -1008,106 +1039,7 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### isSuccessiveTradePaymentPartyNonces(tuple,uint8,tuple,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-2. **tradePartyRole** *of type `uint8`*
-3. **payment** *of type `tuple`*
-4. **paymentPartyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isSuccessiveTradesPartyNonces(tuple,uint8,tuple,uint8)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **firstTrade** *of type `tuple`*
-2. **firstTradePartyRole** *of type `uint8`*
-3. **lastTrade** *of type `tuple`*
-4. **lastTradePartyRole** *of type `uint8`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
 ### isTradeBuyer(tuple,address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-2. **wallet** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isTradeOrder(tuple,tuple)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-2. **order** *of type `tuple`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isTradeParty(tuple,address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: constant
-
-
-Params:
-
-1. **trade** *of type `tuple`*
-2. **wallet** *of type `address`*
-
-Returns:
-
-
-1. **output_0** *of type `bool`*
-
---- 
-### isTradeSeller(tuple,address)
 
 
 **Execution cost**: No bound available
@@ -1139,6 +1071,74 @@ Returns:
 
 
 1. **output_0** *of type `address`*
+
+--- 
+### setConfiguration(address)
+>
+>Set the configuration contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newConfiguration** *of type `address`*
+
+    > The (address of) Configuration contract instance
+
+
+
+--- 
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setHasher(address)
+>
+>Set the hasher contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) Hasher contract instance
+
+
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
 
 --- 
 ### signerManager()

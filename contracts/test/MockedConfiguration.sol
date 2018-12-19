@@ -6,16 +6,15 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Configuration} from "../Configuration.sol";
 
 /**
-@title MockedConfiguration
-@notice Mocked implementation of configuration contract
-*/
+ * @title MockedConfiguration
+ * @notice Mocked implementation of configuration contract
+ */
 contract MockedConfiguration is Configuration {
-
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
@@ -26,7 +25,9 @@ contract MockedConfiguration is Configuration {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
+    function _reset()
+    public
+    {
         operationalMode = OperationalMode.Normal;
     }
 }

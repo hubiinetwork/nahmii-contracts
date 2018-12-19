@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -20,9 +20,9 @@ import {SignerManageable} from "./SignerManageable.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
-@title Validatable
-@notice An ownable that validates valuable types (order, trade, payment)
-*/
+ * @title Validator
+ * @notice An ownable that validates valuable types (order, trade, payment)
+ */
 contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
@@ -30,44 +30,110 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner, address signerManager) Ownable(owner) SignerManageable(signerManager) public {
+    constructor(address deployer, address signerManager) Ownable(deployer) SignerManageable(signerManager) public {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeBuyerFee(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    // @dev Logics of this function only applies to FT
+    function isGenuineTradeBuyerFeeOfFungible(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         int256 feePartsPer = ConstantsLib.PARTS_PER();
         int256 discountTier = int256(trade.buyer.rollingVolume);
+
+        int256 feeAmount;
         if (NahmiiTypesLib.LiquidityRole.Maker == trade.buyer.liquidityRole) {
-            return (trade.buyer.fees.single.amount <= trade.amount.mul(configuration.tradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.buyer.fees.single.amount == trade.amount.mul(configuration.tradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.buyer.fees.single.amount >= trade.amount.mul(configuration.tradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            feeAmount = trade.amount
+            .mul(configuration.tradeMakerFee(trade.blockNumber, discountTier))
+            .div(feePartsPer);
+
+            if (1 > feeAmount)
+                feeAmount = 1;
+
+            return (trade.buyer.fees.single.amount == feeAmount);
+
         } else {// NahmiiTypesLib.LiquidityRole.Taker == trade.buyer.liquidityRole
-            return (trade.buyer.fees.single.amount <= trade.amount.mul(configuration.tradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.buyer.fees.single.amount == trade.amount.mul(configuration.tradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.buyer.fees.single.amount >= trade.amount.mul(configuration.tradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            feeAmount = trade.amount
+            .mul(configuration.tradeTakerFee(trade.blockNumber, discountTier))
+            .div(feePartsPer);
+
+            if (1 > feeAmount)
+                feeAmount = 1;
+
+            return (trade.buyer.fees.single.amount == feeAmount);
         }
     }
 
-    // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeSellerFee(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    // @dev Logics of this function only applies to FT
+    function isGenuineTradeSellerFeeOfFungible(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         int256 feePartsPer = ConstantsLib.PARTS_PER();
         int256 discountTier = int256(trade.seller.rollingVolume);
+
+        int256 feeAmount;
         if (NahmiiTypesLib.LiquidityRole.Maker == trade.seller.liquidityRole) {
-            return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.tradeMakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.tradeMakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.tradeMakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            feeAmount = trade.amount
+            .mul(configuration.tradeMakerFee(trade.blockNumber, discountTier))
+            .div(trade.rate.mul(feePartsPer));
+
+            if (1 > feeAmount)
+                feeAmount = 1;
+
+            return (trade.seller.fees.single.amount == feeAmount);
+
         } else {// NahmiiTypesLib.LiquidityRole.Taker == trade.seller.liquidityRole
-            return (trade.seller.fees.single.amount <= trade.amount.div(trade.rate).mul(configuration.tradeTakerFee(trade.blockNumber, 0)).div(feePartsPer))
-            && (trade.seller.fees.single.amount == trade.amount.div(trade.rate).mul(configuration.tradeTakerFee(trade.blockNumber, discountTier)).div(feePartsPer))
-            && (trade.seller.fees.single.amount >= trade.amount.div(trade.rate).mul(configuration.tradeTakerMinimumFee(trade.blockNumber)).div(feePartsPer));
+            feeAmount = trade.amount
+            .mul(configuration.tradeTakerFee(trade.blockNumber, discountTier))
+            .div(trade.rate.mul(feePartsPer));
+
+            if (1 > feeAmount)
+                feeAmount = 1;
+
+            return (trade.seller.fees.single.amount == feeAmount);
         }
     }
 
-    // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeBuyer(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    // @dev Logics of this function only applies to NFT
+    function isGenuineTradeBuyerFeeOfNonFungible(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
+        (address feeCurrencyCt, uint256 feeCurrencyId) = configuration.feeCurrency(
+            trade.blockNumber, trade.currencies.intended.ct, trade.currencies.intended.id
+        );
+
+        return feeCurrencyCt == trade.buyer.fees.single.currency.ct
+        && feeCurrencyId == trade.buyer.fees.single.currency.id;
+    }
+
+    // @dev Logics of this function only applies to NFT
+    function isGenuineTradeSellerFeeOfNonFungible(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
+        (address feeCurrencyCt, uint256 feeCurrencyId) = configuration.feeCurrency(
+            trade.blockNumber, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+        );
+
+        return feeCurrencyCt == trade.seller.fees.single.currency.ct
+        && feeCurrencyId == trade.seller.fees.single.currency.id;
+    }
+
+    // @dev Logics of this function only applies to FT
+    function isGenuineTradeBuyerOfFungible(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (!signerManager.isSigner(trade.buyer.wallet))
         && (trade.buyer.balances.intended.current == trade.buyer.balances.intended.previous.add(trade.transfers.intended.single).sub(trade.buyer.fees.single.amount))
@@ -77,8 +143,12 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         && (trade.buyer.order.residuals.previous >= trade.buyer.order.residuals.current);
     }
 
-    // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuineTradeSeller(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    // @dev Logics of this function only applies to FT
+    function isGenuineTradeSellerOfFungible(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         return (trade.buyer.wallet != trade.seller.wallet)
         && (!signerManager.isSigner(trade.seller.wallet))
         && (trade.seller.balances.intended.current == trade.seller.balances.intended.previous.sub(trade.transfers.intended.single))
@@ -88,11 +158,39 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         && (trade.seller.order.residuals.previous >= trade.seller.order.residuals.current);
     }
 
-    function isGenuineOrderWalletHash(NahmiiTypesLib.Order order) public view returns (bool) {
+    // @dev Logics of this function only applies to NFT
+    function isGenuineTradeBuyerOfNonFungible(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
+        return (trade.buyer.wallet != trade.seller.wallet)
+        && (!signerManager.isSigner(trade.buyer.wallet));
+    }
+
+    // @dev Logics of this function only applies to NFT
+    function isGenuineTradeSellerOfNonFungible(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
+        return (trade.buyer.wallet != trade.seller.wallet)
+        && (!signerManager.isSigner(trade.seller.wallet));
+    }
+
+    function isGenuineOrderWalletHash(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashOrderAsWallet(order) == order.seals.wallet.hash;
     }
 
-    function isGenuineOrderOperatorHash(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderOperatorHash(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashOrderAsOperator(order) == order.seals.operator.hash;
     }
 
@@ -112,68 +210,164 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         return isSignedBy(hash, signature.v, signature.r, signature.s, wallet);
     }
 
-    function isGenuineOrderWalletSeal(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderWalletSeal(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return isGenuineOrderWalletHash(order)
         && isGenuineWalletSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
     }
 
-    function isGenuineOrderOperatorSeal(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderOperatorSeal(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return isGenuineOrderOperatorHash(order)
         && isGenuineOperatorSignature(order.seals.operator.hash, order.seals.operator.signature);
     }
 
-    function isGenuineOrderSeals(NahmiiTypesLib.Order order) public view returns (bool) {
+    function isGenuineOrderSeals(NahmiiTypesLib.Order order)
+    public
+    view
+    returns (bool)
+    {
         return isGenuineOrderWalletSeal(order) && isGenuineOrderOperatorSeal(order);
     }
 
-    function isGenuineTradeHash(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    function isGenuineTradeHash(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashTrade(trade) == trade.seal.hash;
     }
 
-    function isGenuineTradeSeal(NahmiiTypesLib.Trade trade) public view returns (bool) {
+    function isGenuineTradeSeal(NahmiiTypesLib.Trade trade)
+    public
+    view
+    returns (bool)
+    {
         return isGenuineTradeHash(trade)
         && isGenuineOperatorSignature(trade.seal.hash, trade.seal.signature);
     }
 
-    function isGenuinePaymentWalletHash(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentWalletHash(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash;
     }
 
-    function isGenuinePaymentOperatorHash(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentOperatorHash(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return hasher.hashPaymentAsOperator(payment) == payment.seals.operator.hash;
     }
 
-    function isGenuinePaymentWalletSeal(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentWalletSeal(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return isGenuinePaymentWalletHash(payment)
         && isGenuineWalletSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
     }
-    
-    function isGenuinePaymentOperatorSeal(NahmiiTypesLib.Payment payment) public view returns (bool) {
+
+    function isGenuinePaymentOperatorSeal(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return isGenuinePaymentOperatorHash(payment)
         && isGenuineOperatorSignature(payment.seals.operator.hash, payment.seals.operator.signature);
     }
 
-    function isGenuinePaymentSeals(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    function isGenuinePaymentSeals(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return isGenuinePaymentWalletSeal(payment) && isGenuinePaymentOperatorSeal(payment);
     }
 
-    // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuinePaymentFee(NahmiiTypesLib.Payment payment) public view returns (bool) {
+    // @dev Logics of this function only applies to FT
+    function isGenuinePaymentFeeOfFungible(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         int256 feePartsPer = int256(ConstantsLib.PARTS_PER());
-        return (payment.sender.fees.single.amount <= payment.amount.mul(configuration.currencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, 0)).div(feePartsPer))
-        && (payment.sender.fees.single.amount == payment.amount.mul(configuration.currencyPaymentFee(payment.currency.ct, payment.currency.id, payment.blockNumber, payment.amount)).div(feePartsPer))
-        && (payment.sender.fees.single.amount >= payment.amount.mul(configuration.currencyPaymentMinimumFee(payment.currency.ct, payment.currency.id, payment.blockNumber)).div(feePartsPer));
+
+        int256 feeAmount = payment.amount
+        .mul(
+            configuration.currencyPaymentFee(
+                payment.blockNumber, payment.currency.ct, payment.currency.id, payment.amount
+            )
+        ).div(feePartsPer);
+
+        if (1 > feeAmount)
+            feeAmount = 1;
+
+        return (payment.sender.fees.single.amount == feeAmount);
     }
 
-    // TODO Implement support for NFT. Current logics only applies to FT.
-    function isGenuinePaymentSender(NahmiiTypesLib.Payment payment) public pure returns (bool) {
+    // @dev Logics of this function only applies to NFT
+    function isGenuinePaymentFeeOfNonFungible(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
+        (address feeCurrencyCt, uint256 feeCurrencyId) = configuration.feeCurrency(
+            payment.blockNumber, payment.currency.ct, payment.currency.id
+        );
+
+        return feeCurrencyCt == payment.sender.fees.single.currency.ct
+        && feeCurrencyId == payment.sender.fees.single.currency.id;
+    }
+
+    // @dev Logics of this function only applies to FT
+    function isGenuinePaymentSenderOfFungible(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
         return (payment.sender.wallet != payment.recipient.wallet)
+        && (!signerManager.isSigner(payment.sender.wallet))
         && (payment.sender.balances.current == payment.sender.balances.previous.sub(payment.transfers.single).sub(payment.sender.fees.single.amount));
     }
 
-    function isGenuinePaymentRecipient(NahmiiTypesLib.Payment payment) public pure returns (bool) {
+    // @dev Logics of this function only applies to FT
+    function isGenuinePaymentRecipientOfFungible(NahmiiTypesLib.Payment payment)
+    public
+    pure
+    returns (bool)
+    {
         return (payment.sender.wallet != payment.recipient.wallet)
         && (payment.recipient.balances.current == payment.recipient.balances.previous.add(payment.transfers.single));
+    }
+
+    // @dev Logics of this function only applies to NFT
+    function isGenuinePaymentSenderOfNonFungible(NahmiiTypesLib.Payment payment)
+    public
+    view
+    returns (bool)
+    {
+        return (payment.sender.wallet != payment.recipient.wallet)
+        && (!signerManager.isSigner(payment.sender.wallet));
+    }
+
+    // @dev Logics of this function only applies to NFT
+    function isGenuinePaymentRecipientOfNonFungible(NahmiiTypesLib.Payment payment)
+    public
+    pure
+    returns (bool)
+    {
+        return (payment.sender.wallet != payment.recipient.wallet);
     }
 
     function isSuccessiveTradesPartyNonces(
@@ -183,7 +377,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         NahmiiTypesLib.TradePartyRole lastTradePartyRole
     )
     public
-    pure returns (bool)
+    pure
+    returns (bool)
     {
         uint256 firstNonce = (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.nonce : firstTrade.seller.nonce);
         uint256 lastNonce = (NahmiiTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.nonce : lastTrade.seller.nonce);
@@ -197,7 +392,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         NahmiiTypesLib.PaymentPartyRole lastPaymentPartyRole
     )
     public
-    pure returns (bool)
+    pure
+    returns (bool)
     {
         uint256 firstNonce = (NahmiiTypesLib.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.nonce : firstPayment.recipient.nonce);
         uint256 lastNonce = (NahmiiTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.nonce : lastPayment.recipient.nonce);
@@ -211,7 +407,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         NahmiiTypesLib.PaymentPartyRole paymentPartyRole
     )
     public
-    pure returns (bool)
+    pure
+    returns (bool)
     {
         uint256 firstNonce = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
         uint256 lastNonce = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
@@ -225,7 +422,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         NahmiiTypesLib.TradePartyRole tradePartyRole
     )
     public
-    pure returns (bool)
+    pure
+    returns (bool)
     {
         uint256 firstNonce = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.nonce : payment.recipient.nonce);
         uint256 lastNonce = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.nonce : trade.seller.nonce);
@@ -323,11 +521,11 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         else if (NahmiiTypesLib.TradePartyRole.Seller == lastTradePartyRole)
             lastSingleFee = lastTrade.seller.fees.single;
 
-        MonetaryTypesLib.Figure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.total : firstTrade.seller.fees.total);
-        MonetaryTypesLib.Figure memory firstTotalFee = MonetaryTypesLib.getFigureByCurrency(firstTotalFees, lastSingleFee.currency);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.fees.total : firstTrade.seller.fees.total);
+        MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, lastSingleFee.currency);
 
-        MonetaryTypesLib.Figure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.total : lastTrade.seller.fees.total);
-        MonetaryTypesLib.Figure memory lastTotalFee = MonetaryTypesLib.getFigureByCurrency(lastTotalFees, lastSingleFee.currency);
+        NahmiiTypesLib.OriginFigure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.fees.total : lastTrade.seller.fees.total);
+        MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(lastTotalFees, lastSingleFee.currency);
 
         return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
     }
@@ -356,8 +554,8 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        MonetaryTypesLib.Figure memory firstTotalFee = MonetaryTypesLib.getFigureByCurrency(firstPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
-        MonetaryTypesLib.Figure memory lastTotalFee = MonetaryTypesLib.getFigureByCurrency(lastPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
+        MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
+        MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(lastPayment.sender.fees.total, lastPayment.sender.fees.single.currency);
         return lastTotalFee.amount == firstTotalFee.amount.add(lastPayment.sender.fees.single.amount);
     }
 
@@ -370,10 +568,10 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
     pure
     returns (bool)
     {
-        MonetaryTypesLib.Figure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
-        MonetaryTypesLib.Figure memory firstTotalFee = MonetaryTypesLib.getFigureByCurrency(firstTotalFees, payment.sender.fees.single.currency);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
+        MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, payment.sender.fees.single.currency);
 
-        MonetaryTypesLib.Figure memory lastTotalFee = MonetaryTypesLib.getFigureByCurrency(payment.sender.fees.total, payment.sender.fees.single.currency);
+        MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(payment.sender.fees.total, payment.sender.fees.single.currency);
 
         return lastTotalFee.amount == firstTotalFee.amount.add(payment.sender.fees.single.amount);
     }
@@ -394,11 +592,11 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         else if (NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
             lastSingleFee = trade.seller.fees.single;
 
-        MonetaryTypesLib.Figure[] memory firstTotalFees = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.total : payment.recipient.fees.total);
-        MonetaryTypesLib.Figure memory firstTotalFee = MonetaryTypesLib.getFigureByCurrency(firstTotalFees, lastSingleFee.currency);
+        NahmiiTypesLib.OriginFigure[] memory firstTotalFees = (NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.fees.total : payment.recipient.fees.total);
+        MonetaryTypesLib.Figure memory firstTotalFee = getProtocolFigureByCurrency(firstTotalFees, lastSingleFee.currency);
 
-        MonetaryTypesLib.Figure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
-        MonetaryTypesLib.Figure memory lastTotalFee = MonetaryTypesLib.getFigureByCurrency(lastTotalFees, lastSingleFee.currency);
+        NahmiiTypesLib.OriginFigure[] memory lastTotalFees = (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.fees.total : trade.seller.fees.total);
+        MonetaryTypesLib.Figure memory lastTotalFee = getProtocolFigureByCurrency(lastTotalFees, lastSingleFee.currency);
 
         return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
     }
@@ -436,6 +634,24 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         trade.seller.order.hashes.operator == order.seals.operator.hash);
     }
 
+    function isTradeIntendedCurrencyNonFungible(NahmiiTypesLib.Trade trade)
+    public
+    pure
+    returns (bool)
+    {
+        return trade.currencies.intended.ct != trade.buyer.fees.single.currency.ct
+        || trade.currencies.intended.id != trade.buyer.fees.single.currency.id;
+    }
+
+    function isTradeConjugateCurrencyNonFungible(NahmiiTypesLib.Trade trade)
+    public
+    pure
+    returns (bool)
+    {
+        return trade.currencies.conjugate.ct != trade.seller.fees.single.currency.ct
+        || trade.currencies.conjugate.id != trade.seller.fees.single.currency.id;
+    }
+
     function isPaymentParty(NahmiiTypesLib.Payment payment, address wallet)
     public
     pure
@@ -460,11 +676,26 @@ contract Validator is Ownable, SignerManageable, Configurable, Hashable {
         return wallet == payment.recipient.wallet;
     }
 
+    function isPaymentCurrencyNonFungible(NahmiiTypesLib.Payment payment)
+    public
+    pure
+    returns (bool)
+    {
+        return payment.currency.ct != payment.sender.fees.single.currency.ct
+        || payment.currency.id != payment.sender.fees.single.currency.id;
+    }
+
     //
-    // Modifiers
+    // Private unctions
     // -----------------------------------------------------------------------------------------------------------------
-    modifier notNullAddress(address _address) {
-        require(_address != address(0));
-        _;
+    function getProtocolFigureByCurrency(NahmiiTypesLib.OriginFigure[] originFigures, MonetaryTypesLib.Currency currency)
+    private
+    pure
+    returns (MonetaryTypesLib.Figure) {
+        for (uint256 i = 0; i < originFigures.length; i++)
+            if (originFigures[i].figure.currency.ct == currency.ct && originFigures[i].figure.currency.id == currency.id
+            && originFigures[i].originId == 0)
+                return originFigures[i].figure;
+        return MonetaryTypesLib.Figure(0, currency);
     }
 }

@@ -1,4 +1,4 @@
-var BlueBird = require('bluebird');
+const BlueBird = require('bluebird');
 
 module.exports.augmentWeb3 = function (web3)
 {
@@ -7,7 +7,7 @@ module.exports.augmentWeb3 = function (web3)
 	web3.eth.getTransactionPromise = BlueBird.promisify(web3.eth.getTransaction);
 	web3.eth.getTransactionReceiptPromise = BlueBird.promisify(web3.eth.getTransactionReceipt);
 	web3.eth.getBlockPromise = BlueBird.promisify(web3.eth.getBlock);
-}
+};
 
 module.exports.TestCounter = function ()
 {
@@ -22,9 +22,13 @@ module.exports.TestCounter = function ()
 		}
 	}
 	return new TestCounter();
-}
+};
 
 module.exports.sleep = function (ms)
 {
 	return new Promise(resolve => setTimeout(resolve, ms));
-}
+};
+
+module.exports.futureEpoch = (futureInSeconds) => {
+	return Math.floor(Date.now() / 1000) + futureInSeconds;
+};

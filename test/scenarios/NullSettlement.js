@@ -45,16 +45,19 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3NullSettlementChallenge = await MockedNullSettlementChallenge.new();
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, MockedNullSettlementChallenge.abi, glob.signer_owner);
+
+            await web3Configuration.registerService(glob.owner);
+            await web3Configuration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
         });
 
         beforeEach(async () => {
             web3NullSettlement = await NullSettlement.new(glob.owner);
             ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
 
-            await ethersNullSettlement.changeConfiguration(web3Configuration.address);
-            await ethersNullSettlement.changeClientFund(web3ClientFund.address);
-            await ethersNullSettlement.changeCommunityVote(web3CommunityVote.address);
-            await ethersNullSettlement.changeNullSettlementChallenge(web3NullSettlementChallenge.address);
+            await ethersNullSettlement.setConfiguration(web3Configuration.address);
+            await ethersNullSettlement.setClientFund(web3ClientFund.address);
+            await ethersNullSettlement.setCommunityVote(web3CommunityVote.address);
+            await ethersNullSettlement.setNullSettlementChallenge(web3NullSettlementChallenge.address);
         });
 
         describe('constructor', () => {
@@ -70,13 +73,13 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeDeployer()', () => {
+        describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeDeployer(glob.user_a);
+                    const result = await web3NullSettlement.setDeployer(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+                    result.logs[0].event.should.equal('SetDeployerEvent');
 
                     (await web3NullSettlement.deployer.call()).should.equal(glob.user_a);
                 });
@@ -84,7 +87,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -95,13 +98,13 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeOperator()', () => {
+        describe('setOperator()', () => {
             describe('if called with (current) operator as sender', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeOperator(glob.user_a);
+                    const result = await web3NullSettlement.setOperator(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+                    result.logs[0].event.should.equal('SetOperatorEvent');
 
                     (await web3NullSettlement.operator.call()).should.equal(glob.user_a);
                 });
@@ -109,7 +112,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -121,27 +124,27 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeConfiguration(address);
+                    const result = await web3NullSettlement.setConfiguration(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
 
                     (await ethersNullSettlement.configuration()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -153,27 +156,27 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeNullSettlementChallenge()', () => {
+        describe('setNullSettlementChallenge()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeNullSettlementChallenge(address);
+                    const result = await web3NullSettlement.setNullSettlementChallenge(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeNullSettlementChallengeEvent');
+                    result.logs[0].event.should.equal('SetNullSettlementChallengeEvent');
 
                     (await ethersNullSettlement.nullSettlementChallenge()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeNullSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setNullSettlementChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -185,71 +188,71 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeClientFund()', () => {
+        describe('setClientFund()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeClientFund(address);
+                    const result = await web3NullSettlement.setClientFund(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeClientFundEvent');
+                    result.logs[0].event.should.equal('SetClientFundEvent');
 
                     (await ethersNullSettlement.clientFund()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeClientFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setClientFund(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('communityVoteUpdateDisabled()', () => {
-            it('should return value initialized', async () => {
+            it('should equal value initialized', async () => {
                 (await ethersNullSettlement.communityVoteUpdateDisabled())
                     .should.be.false;
             });
         });
 
-        describe('changeCommunityVote()', () => {
+        describe('setCommunityVote()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlement.changeCommunityVote(address);
+                    const result = await web3NullSettlement.setCommunityVote(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeCommunityVoteEvent');
+                    result.logs[0].event.should.equal('SetCommunityVoteEvent');
 
                     (await ethersNullSettlement.communityVote()).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.changeCommunityVote(address, {from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.setCommunityVote(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('disableUpdateOfCommunityVote()', () => {
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
                     web3NullSettlement.disableUpdateOfCommunityVote({from: glob.user_a}).should.be.rejected;
                 });
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let address;
 
                 before(() => {
@@ -261,7 +264,7 @@ module.exports = (glob) => {
                 });
 
                 it('should disable changing community vote', async () => {
-                    web3NullSettlement.changeCommunityVote(address).should.be.rejected;
+                    web3NullSettlement.setCommunityVote(address).should.be.rejected;
                 });
             });
         });
@@ -314,69 +317,18 @@ module.exports = (glob) => {
         });
 
         describe('settleNull()', () => {
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNull().should.be.rejected;
-                });
-            });
-
-            describe('if client fund contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNull().should.be.rejected;
-                });
-            });
-
-            describe('if community vote contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.changeClientFund(ethersClientFund.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNull().should.be.rejected;
-                });
-            });
-
-            describe('if null settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.changeClientFund(ethersClientFund.address);
-                    await ethersNullSettlement.changeCommunityVote(ethersCommunityVote.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNull().should.be.rejected;
-                });
-            });
-
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
                     await ethersClientFund._reset({gasLimit: 1e6});
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(glob.owner, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(
+                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNull({gasLimit: 1e6}).should.be.rejected;
+                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6}).should.be.rejected;
                 });
             });
 
@@ -393,12 +345,12 @@ module.exports = (glob) => {
                     await ethersCommunityVote._reset();
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(glob.owner, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(
+                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    );
                     await ethersNullSettlementChallenge._setProposalNonce(1);
-                    await ethersNullSettlementChallenge._setProposalCurrency({ct: mocks.address0, id: 0});
-                    await ethersNullSettlementChallenge._setProposalStageAmount(10);
+                    await ethersNullSettlementChallenge._addProposalStageAmount(10);
                     await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(0);
-                    await ethersNullSettlementChallenge.setProposalChallenger(glob.owner, challenger);
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {
@@ -407,7 +359,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull().should.be.rejected;
+                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6}).should.be.rejected;
                     });
                 });
 
@@ -417,17 +369,13 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull().should.be.rejected;
+                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6}).should.be.rejected;
                     });
                 });
 
                 describe('if nonce is greater than previously settled nonce for wallet and currency', () => {
                     it('should settle successfully', async () => {
-                        await ethersNullSettlement.settleNull({gasLimit: 1e6});
-
-                        (await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics[0]
-                        ))).should.have.lengthOf(1);
+                        await ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.StageEvent.topics[0]
@@ -436,12 +384,6 @@ module.exports = (glob) => {
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersNullSettlement.interface.events.SettleNullEvent.topics[0]
                         ))).should.have.lengthOf(1);
-
-                        const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
-                        settledBalanceUpdate[0].should.equal(utils.getAddress(glob.owner));
-                        settledBalanceUpdate[1]._bn.should.eq.BN(0);
-                        settledBalanceUpdate[2].should.equal(mocks.address0);
-                        settledBalanceUpdate[3]._bn.should.eq.BN(0);
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -460,11 +402,12 @@ module.exports = (glob) => {
 
                 describe('if nonce is smaller than or equal to previously settled nonce for wallet and currency', () => {
                     beforeEach(async () => {
-                        await ethersNullSettlement.settleNull({gasLimit: 1e6});
+                        await ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6});
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull({gasLimit: 1e6}).should.be.rejected;
+                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                            .should.be.rejected;
                     });
                 });
             });
@@ -477,66 +420,14 @@ module.exports = (glob) => {
                 wallet = Wallet.createRandom().address;
             });
 
-            describe('if called from non-deployer', () => {
+            describe('if called by non-operator', () => {
                 beforeEach(async () => {
                     ethersNullSettlement = ethersNullSettlement.connect(glob.signer_a);
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
-                });
-            });
-
-            describe('if configuration contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
-                });
-            });
-
-            describe('if client fund contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
-                });
-            });
-
-            describe('if community vote contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.changeClientFund(ethersClientFund.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
-                });
-            });
-
-            describe('if null settlement challenge contract is not initialized', () => {
-                beforeEach(async () => {
-                    web3NullSettlement = await NullSettlement.new(glob.owner);
-                    ethersNullSettlement = new Contract(web3NullSettlement.address, NullSettlement.abi, glob.signer_owner);
-
-                    await ethersNullSettlement.changeConfiguration(ethersConfiguration.address);
-                    await ethersNullSettlement.changeClientFund(ethersClientFund.address);
-                    await ethersNullSettlement.changeCommunityVote(ethersCommunityVote.address);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
 
@@ -545,11 +436,12 @@ module.exports = (glob) => {
                     await ethersClientFund._reset({gasLimit: 1e6});
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Disqualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified'));
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6}).should.be.rejected;
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
 
@@ -566,12 +458,12 @@ module.exports = (glob) => {
                     await ethersCommunityVote._reset();
                     await ethersNullSettlementChallenge._reset();
 
-                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.proposalStatuses.indexOf('Qualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(
+                        wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    );
                     await ethersNullSettlementChallenge._setProposalNonce(1);
-                    await ethersNullSettlementChallenge._setProposalCurrency({ct: mocks.address0, id: 0});
-                    await ethersNullSettlementChallenge._setProposalStageAmount(10);
+                    await ethersNullSettlementChallenge._addProposalStageAmount(10);
                     await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(0);
-                    await ethersNullSettlementChallenge.setProposalChallenger(wallet, challenger);
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {
@@ -580,7 +472,8 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                            .should.be.rejected;
                     });
                 });
 
@@ -590,17 +483,14 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet).should.be.rejected;
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                            .should.be.rejected;
                     });
                 });
 
                 describe('if nonce is greater than previously settled nonce for wallet and currency', () => {
                     it('should settle successfully', async () => {
-                        await ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6});
-
-                        (await provider.getLogs(await fromBlockTopicsFilter(
-                            ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics[0]
-                        ))).should.have.lengthOf(1);
+                        await ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.StageEvent.topics[0]
@@ -609,12 +499,6 @@ module.exports = (glob) => {
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersNullSettlement.interface.events.SettleNullByProxyEvent.topics[0]
                         ))).should.have.lengthOf(1);
-
-                        const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
-                        settledBalanceUpdate[0].should.equal(wallet);
-                        settledBalanceUpdate[1]._bn.should.eq.BN(0);
-                        settledBalanceUpdate[2].should.equal(mocks.address0);
-                        settledBalanceUpdate[3]._bn.should.eq.BN(0);
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -633,11 +517,14 @@ module.exports = (glob) => {
 
                 describe('if nonce is smaller than or equal to previously settled nonce for wallet and currency', () => {
                     beforeEach(async () => {
-                        await ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6});
+                        await ethersNullSettlement.settleNullByProxy(
+                            wallet, mocks.address0, 0, {gasLimit: 1e6}
+                        );
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet, {gasLimit: 1e6}).should.be.rejected;
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                            .should.be.rejected;
                     });
                 });
             });

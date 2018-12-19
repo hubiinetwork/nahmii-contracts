@@ -6,14 +6,14 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 
 /**
-@title Servable
-@notice An ownable that contains registered services and their actions
-*/
+ * @title Servable
+ * @notice An ownable that contains registered services and their actions
+ */
 contract Servable is Ownable {
     //
     // Types
@@ -63,7 +63,7 @@ contract Servable is Ownable {
     onlyDeployer
     notNullOrThisAddress(service)
     {
-        registerServicePrivate(service, 0);
+        _registerService(service, 0);
 
         // Emit event
         emit RegisterServiceEvent(service);
@@ -76,7 +76,7 @@ contract Servable is Ownable {
     onlyDeployer
     notNullOrThisAddress(service)
     {
-        registerServicePrivate(service, serviceActivationTimeout);
+        _registerService(service, serviceActivationTimeout);
 
         // Emit event
         emit RegisterServiceDeferredEvent(service, serviceActivationTimeout);
@@ -184,7 +184,7 @@ contract Servable is Ownable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerServicePrivate(address service, uint256 timeout)
+    function _registerService(address service, uint256 timeout)
     private
     {
         if (!registeredServicesMap[service].registered) {
@@ -196,18 +196,13 @@ contract Servable is Ownable {
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyRegisteredActiveService() {
+    modifier onlyActiveService() {
         require(isRegisteredActiveService(msg.sender));
         _;
     }
 
     modifier onlyEnabledServiceAction(string action) {
         require(isEnabledServiceAction(msg.sender, action));
-        _;
-    }
-
-    modifier onlyDeployerOrEnabledServiceAction(string action) {
-        require(isDeployer() || isEnabledServiceAction(msg.sender, action));
         _;
     }
 }

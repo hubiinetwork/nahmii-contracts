@@ -12,7 +12,7 @@
 
 
 ## Methods
-### depositEthersTo(address)
+### receiveEthersTo(address,string)
 
 
 **Execution cost**: No bound available
@@ -23,10 +23,11 @@
 Params:
 
 1. **wallet** *of type `address`*
+2. **balance** *of type `string`*
 
 
 --- 
-### depositTokensTo(address,int256,address,uint256,string)
+### receiveTokensTo(address,string,int256,address,uint256,string)
 
 
 **Execution cost**: No bound available
@@ -35,10 +36,11 @@ Params:
 Params:
 
 1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-5. **standard** *of type `string`*
+2. **balance** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
 
 
 [Back to the top ↑](#beneficiary)

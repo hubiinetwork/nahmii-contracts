@@ -6,15 +6,15 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 
 /**
-@title MockedDriipSettlementDispute
-@notice Mocked implementation of driip settlement dispute contract
-*/
+ * @title MockedDriipSettlementDispute
+ * @notice Mocked implementation of driip settlement dispute contract
+ */
 contract MockedDriipSettlementDispute {
     uint256 public _challengeByOrderCount;
     uint256 public _unchallengeOrderCandidateByTradeCount;
@@ -30,41 +30,28 @@ contract MockedDriipSettlementDispute {
         _challengeByPaymentCount = 0;
     }
 
-    function challengeByOrder(NahmiiTypesLib.Order order, address challenger)
+    function challengeByOrder(NahmiiTypesLib.Order, address)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(order.nonce == order.nonce);
-        require(challenger == challenger);
         _challengeByOrderCount++;
     }
 
-    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address challenger)
+    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order, NahmiiTypesLib.Trade,
+        address)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(order.nonce == order.nonce);
-        require(trade.nonce == trade.nonce);
-        require(challenger == challenger);
         _unchallengeOrderCandidateByTradeCount++;
     }
 
-    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade, address challenger)
+    function challengeByTrade(address, NahmiiTypesLib.Trade, address)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(trade.nonce == trade.nonce);
-        require(challenger == challenger);
         _challengeByTradeCount++;
     }
 
-    function challengeByPayment(NahmiiTypesLib.Payment payment, address challenger)
+    function challengeByPayment(address, NahmiiTypesLib.Payment, address)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(payment.nonce == payment.nonce);
-        require(challenger == challenger);
         _challengeByPaymentCount++;
     }
 }

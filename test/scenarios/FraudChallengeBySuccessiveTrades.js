@@ -7,7 +7,7 @@ const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
-const MockedClientFund = artifacts.require('MockedClientFund');
+const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -22,7 +22,7 @@ module.exports = (glob) => {
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
-        let web3ClientFund, ethersClientFund;
+        let web3WalletLocker, ethersWalletLocker;
         let blockNumber0, blockNumber10, blockNumber20;
 
         before(async () => {
@@ -37,19 +37,26 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
-            web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
+            web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
-            web3ClientFund = await MockedClientFund.new(/*glob.owner*/);
-            ethersClientFund = new Contract(web3ClientFund.address, MockedClientFund.abi, glob.signer_owner);
+            web3WalletLocker = await MockedWalletLocker.new();
+            ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
 
-            await ethersFraudChallengeBySuccessiveTrades.changeFraudChallenge(ethersFraudChallenge.address);
-            await ethersFraudChallengeBySuccessiveTrades.changeConfiguration(ethersConfiguration.address);
-            await ethersFraudChallengeBySuccessiveTrades.changeValidator(ethersValidator.address);
-            await ethersFraudChallengeBySuccessiveTrades.changeSecurityBond(ethersSecurityBond.address);
-            await ethersFraudChallengeBySuccessiveTrades.changeClientFund(ethersClientFund.address);
+            await ethersFraudChallengeBySuccessiveTrades.setFraudChallenge(ethersFraudChallenge.address);
+            await ethersFraudChallengeBySuccessiveTrades.setConfiguration(ethersConfiguration.address);
+            await ethersFraudChallengeBySuccessiveTrades.setValidator(ethersValidator.address);
+            await ethersFraudChallengeBySuccessiveTrades.setSecurityBond(ethersSecurityBond.address);
+            await ethersFraudChallengeBySuccessiveTrades.setWalletLocker(ethersWalletLocker.address, false);
+
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
 
             await ethersConfiguration.registerService(ethersFraudChallengeBySuccessiveTrades.address);
-            await ethersConfiguration.enableServiceAction(ethersFraudChallengeBySuccessiveTrades.address, 'operational_mode');
+            await ethersConfiguration.enableServiceAction(
+                ethersFraudChallengeBySuccessiveTrades.address, 'operational_mode', {gasLimit: 1e6}
+            );
+
+            await web3Configuration.setFraudStakeFraction(web3.eth.blockNumber + 1, 5e17);
         });
 
         beforeEach(async () => {
@@ -65,17 +72,17 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeDeployer()', () => {
+        describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeBySuccessiveTrades.changeDeployer(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeBySuccessiveTrades.setDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeBySuccessiveTrades.changeDeployer(glob.user_a);
+                    const result = await web3FraudChallengeBySuccessiveTrades.setDeployer(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+                    result.logs[0].event.should.equal('SetDeployerEvent');
 
                     (await web3FraudChallengeBySuccessiveTrades.deployer.call()).should.equal(glob.user_a);
                 });
@@ -83,22 +90,22 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeBySuccessiveTrades.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeBySuccessiveTrades.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('changeOperator()', () => {
+        describe('setOperator()', () => {
             describe('if called with (current) operator as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeBySuccessiveTrades.changeOperator(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeBySuccessiveTrades.setOperator(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeBySuccessiveTrades.changeOperator(glob.user_a);
+                    const result = await web3FraudChallengeBySuccessiveTrades.setOperator(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+                    result.logs[0].event.should.equal('SetOperatorEvent');
 
                     (await web3FraudChallengeBySuccessiveTrades.operator.call()).should.equal(glob.user_a);
                 });
@@ -106,7 +113,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeBySuccessiveTrades.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeBySuccessiveTrades.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -118,14 +125,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeFraudChallenge()', () => {
+        describe('setFraudChallenge()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
@@ -133,21 +140,21 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeBySuccessiveTrades.changeFraudChallenge(fraudChallenge);
+                    await web3FraudChallengeBySuccessiveTrades.setFraudChallenge(fraudChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeBySuccessiveTrades.changeFraudChallenge(address);
+                    const result = await web3FraudChallengeBySuccessiveTrades.setFraudChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeFraudChallengeEvent');
+                    result.logs[0].event.should.equal('SetFraudChallengeEvent');
                     const fraudChallenge = await web3FraudChallengeBySuccessiveTrades.fraudChallenge();
                     utils.getAddress(fraudChallenge).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeBySuccessiveTrades.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeBySuccessiveTrades.setFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -159,14 +166,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -174,21 +181,21 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeBySuccessiveTrades.changeConfiguration(configuration);
+                    await web3FraudChallengeBySuccessiveTrades.setConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeBySuccessiveTrades.changeConfiguration(address);
+                    const result = await web3FraudChallengeBySuccessiveTrades.setConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
                     const configuration = await web3FraudChallengeBySuccessiveTrades.configuration();
                     utils.getAddress(configuration).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeBySuccessiveTrades.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeBySuccessiveTrades.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -200,14 +207,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeValidator()', () => {
+        describe('setValidator()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -215,62 +222,63 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeBySuccessiveTrades.changeValidator(validator);
+                    await web3FraudChallengeBySuccessiveTrades.setValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeBySuccessiveTrades.changeValidator(address);
+                    const result = await web3FraudChallengeBySuccessiveTrades.setValidator(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    result.logs[0].event.should.equal('SetValidatorEvent');
                     const validator = await web3FraudChallengeBySuccessiveTrades.validator();
                     utils.getAddress(validator).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeBySuccessiveTrades.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeBySuccessiveTrades.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('clientFund()', () => {
+        describe('walletLocker()', () => {
             it('should equal value initialized', async () => {
-                const clientFund = await ethersFraudChallengeBySuccessiveTrades.clientFund();
-                clientFund.should.equal(utils.getAddress(ethersClientFund.address));
+                const walletLocker = await ethersFraudChallengeBySuccessiveTrades.walletLocker();
+                walletLocker.should.equal(utils.getAddress(ethersWalletLocker.address));
             });
         });
 
-        describe('changeClientFund()', () => {
+        describe('setWalletLocker()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
-                let clientFund;
+            describe('if called by deployer', () => {
+                let walletLocker;
 
                 beforeEach(async () => {
-                    clientFund = await web3FraudChallengeBySuccessiveTrades.clientFund.call();
+                    walletLocker = await web3FraudChallengeBySuccessiveTrades.walletLocker.call();
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeBySuccessiveTrades.changeClientFund(clientFund);
+                    await web3FraudChallengeBySuccessiveTrades.setWalletLocker(walletLocker, false);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeBySuccessiveTrades.changeClientFund(address);
+                    const result = await web3FraudChallengeBySuccessiveTrades.setWalletLocker(address, false);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeClientFundEvent');
-                    const clientFund = await web3FraudChallengeBySuccessiveTrades.clientFund();
-                    utils.getAddress(clientFund).should.equal(address);
+                    result.logs[0].event.should.equal('SetWalletLockerEvent');
+                    const walletLocker = await web3FraudChallengeBySuccessiveTrades.walletLocker();
+                    utils.getAddress(walletLocker).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeBySuccessiveTrades.changeClientFund(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeBySuccessiveTrades.setWalletLocker(address, false, {from: glob.user_a})
+                        .should.be.rejected;
                 });
             });
         });
@@ -287,7 +295,7 @@ module.exports = (glob) => {
                 await ethersFraudChallenge._reset(overrideOptions);
                 await ethersValidator._reset(overrideOptions);
                 await ethersSecurityBond._reset(overrideOptions);
-                await ethersClientFund._reset(overrideOptions);
+                await ethersWalletLocker._reset(overrideOptions);
 
                 firstTrade = await mocks.mockTrade(glob.owner, {
                     buyer: {wallet: glob.user_a},
@@ -457,20 +465,18 @@ module.exports = (glob) => {
                         firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
                         firstTrade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersClientFund.seizedWalletsCount(),
-                        ethersClientFund.seizedWallets(0),
-                        ethersClientFund.seizures(0),
+                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker.locks(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
-                    seizedWalletsCount.eq(1).should.be.true;
-                    seizedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    seizure.source.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    seizure.target.should.equal(utils.getAddress(glob.owner));
+                    lockedWalletsCount.eq(1).should.be.true;
+                    lock.lockedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });
@@ -485,20 +491,18 @@ module.exports = (glob) => {
                         firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
                         firstTrade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, seizedWalletsCount, seizedWallet, seizure, logs] = await Promise.all([
+                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersClientFund.seizedWalletsCount(),
-                        ethersClientFund.seizedWallets(0),
-                        ethersClientFund.seizures(0),
+                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker.locks(0),
                         provider.getLogs(filter)
                     ]);
                     operationalModeExit.should.be.true;
                     fraudulentTradeHashesCount.eq(1).should.be.true;
-                    seizedWalletsCount.eq(1).should.be.true;
-                    seizedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    seizure.source.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    seizure.target.should.equal(utils.getAddress(glob.owner));
+                    lockedWalletsCount.eq(1).should.be.true;
+                    lock.lockedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     logs.should.have.lengthOf(1);
                 });
             });

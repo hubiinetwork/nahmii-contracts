@@ -1,345 +1,538 @@
-const Helpers = require('../helpers');
 const chai = require('chai');
-const {utils} = require('ethers');
+const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
+const {Wallet, Contract, utils} = require('ethers');
+const mocks = require('../mocks');
+const ERC20Token = artifacts.require('TestERC20');
+const TransferControllerManager = artifacts.require('TransferControllerManager');
+const RevenueFund = artifacts.require('RevenueFund');
+const MockedAccrualBeneficiary = artifacts.require('MockedAccrualBeneficiary');
 
+chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    var testCounter = Helpers.TestCounter();
+    describe('RevenueFund', function () {
+        let provider;
+        let web3TransferControllerManager;
+        let web3ERC20, ethersERC20;
+        let web3RevenueFund, ethersRevenueFund;
+        let web3MockedAccrualBeneficiary99, ethersMockedAccrualBeneficiary99;
+        let web3MockedAccrualBeneficiary01, ethersMockedAccrualBeneficiary01;
 
-    describe.skip('RevenueFund', function () {
-        it(testCounter.next() + ': MUST SUCCEED [payable]: UnitTestHelpers_MISC_1 \'collaborates\' with 1.2 Ethers', async () => {
-            try {
-                let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
-                let oldAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
+        before(async () => {
+            provider = glob.signer_owner.provider;
 
-                await glob.web3UnitTestHelpers_MISC_1.send_money(glob.web3RevenueFund.address, web3.toWei(1.2, 'ether'), {gasLimit: glob.gasLimit});
+            web3TransferControllerManager = await TransferControllerManager.deployed();
 
-                let newPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
-                let newAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
-
-                assert.equal(newPeriodAccrualBalance.sub(oldPeriodAccrualBalance), web3.toWei(1.2, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newPeriodAccrualBalance.sub(oldPeriodAccrualBalance), 'ether') + ' ethers].');
-                assert.equal(newAggregateAccrualBalance.sub(oldAggregateAccrualBalance), web3.toWei(1.2, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newAggregateAccrualBalance.sub(oldAggregateAccrualBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            web3MockedAccrualBeneficiary99 = await MockedAccrualBeneficiary.new(glob.owner);
+            ethersMockedAccrualBeneficiary99 = new Contract(web3MockedAccrualBeneficiary99.address, MockedAccrualBeneficiary.abi, glob.signer_owner);
+            web3MockedAccrualBeneficiary01 = await MockedAccrualBeneficiary.new(glob.owner);
+            ethersMockedAccrualBeneficiary01 = new Contract(web3MockedAccrualBeneficiary01.address, MockedAccrualBeneficiary.abi, glob.signer_owner);
         });
 
-        //-------------------------------------------------------------------------
+        beforeEach(async () => {
+            web3ERC20 = await ERC20Token.new();
+            ethersERC20 = new Contract(web3ERC20.address, ERC20Token.abi, glob.signer_owner);
 
-        it(testCounter.next() + ': MUST SUCCEED [payable]: UnitTestHelpers_MISC_2 \'collaborates\' with 0.6 Ethers', async () => {
-            try {
-                let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
-                let oldAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
+            await web3ERC20.mint(glob.user_a, 1000);
 
-                await glob.web3UnitTestHelpers_MISC_2.send_money(glob.web3RevenueFund.address, web3.toWei(0.6, 'ether'), {gasLimit: glob.gasLimit});
+            await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
 
-                let newPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(0);
-                let newAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(0);
+            web3RevenueFund = await RevenueFund.new(glob.owner);
+            ethersRevenueFund = new Contract(web3RevenueFund.address, RevenueFund.abi, glob.signer_owner);
 
-                assert.equal(newPeriodAccrualBalance.sub(oldPeriodAccrualBalance), web3.toWei(0.6, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newPeriodAccrualBalance.sub(oldPeriodAccrualBalance), 'ether') + ' ethers].');
-                assert.equal(newAggregateAccrualBalance.sub(oldAggregateAccrualBalance), web3.toWei(0.6, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(newAggregateAccrualBalance.sub(oldAggregateAccrualBalance), 'ether') + ' ethers].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            await web3RevenueFund.setTransferControllerManager(web3TransferControllerManager.address);
+            await web3RevenueFund.registerFractionalBeneficiary(web3MockedAccrualBeneficiary99.address, 99e16);
+            await web3RevenueFund.registerFractionalBeneficiary(web3MockedAccrualBeneficiary01.address, 1e16);
         });
 
-        // it(testCounter.next() + ': MUST FAIL [payable]: Cannot be called from owner', async () => {
-        //     try {
-        //         await web3.eth.sendTransactionPromise({
-        //             from: glob.owner,
-        //             to: glob.web3RevenueFund.address,
-        //             value: web3.toWei(10, 'ether'),
-        //             gas: glob.gasLimit
-        //         });
-        //         assert(false, 'This test must fail.');
-        //     }
-        //     catch (err) {
-        //         assert(err.toString().includes('revert'), err.toString());
-        //     }
-        // });
+        describe('constructor()', () => {
+            it('should initialize fields', async () => {
+                (await web3RevenueFund.deployer.call()).should.equal(glob.owner);
+                (await web3RevenueFund.operator.call()).should.equal(glob.owner);
+            });
+        });
 
-        //-------------------------------------------------------------------------
+        describe('depositsCount()', () => {
+            it('should return initial value', async () => {
+                (await ethersRevenueFund.depositsCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
 
-        it(testCounter.next() + ': MUST FAIL [payable]: cannot be called with 0 ethers', async () => {
-            try {
-                await web3.eth.sendTransactionPromise({
-                    from: glob.user_d,
-                    to: glob.web3RevenueFund.address,
-                    value: web3.toWei(0, 'ether'),
-                    gas: glob.gasLimit
+        describe('periodAccrualBalance()', () => {
+            it('should return initial value', async () => {
+                (await ethersRevenueFund.periodAccrualBalance(mocks.address0, 0))
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('aggregateAccrualBalance()', () => {
+            it('should return initial value', async () => {
+                (await ethersRevenueFund.aggregateAccrualBalance(mocks.address0, 0))
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('periodCurrenciesCount()', () => {
+            it('should return initial value', async () => {
+                (await ethersRevenueFund.periodCurrenciesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('aggregateCurrenciesCount()', () => {
+            it('should return initial value', async () => {
+                (await ethersRevenueFund.aggregateCurrenciesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('fallback function', () => {
+            describe('first reception', () => {
+                it('should add initial deposit and increment deposited balance', async () => {
+                    await web3.eth.sendTransactionPromise({
+                        from: glob.user_a,
+                        to: web3RevenueFund.address,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
+                    });
+
+                    (await ethersRevenueFund.depositsCount())
+                        ._bn.should.eq.BN(1);
+
+                    (await ethersRevenueFund.periodAccrualBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersRevenueFund.aggregateAccrualBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
                 });
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            });
+
+            describe('second reception', () => {
+                beforeEach(async () => {
+                    await web3.eth.sendTransactionPromise({
+                        from: glob.user_a,
+                        to: web3RevenueFund.address,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
+                    });
+                });
+
+                it('should add on top of the first deposit', async () => {
+                    await web3.eth.sendTransactionPromise({
+                        from: glob.user_a,
+                        to: web3RevenueFund.address,
+                        value: web3.toWei(1, 'ether'),
+                        gas: 1e6
+                    });
+
+                    (await ethersRevenueFund.depositsCount())
+                        ._bn.should.eq.BN(2);
+
+                    (await ethersRevenueFund.periodAccrualBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                    (await ethersRevenueFund.aggregateAccrualBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('receiveEthersTo()', () => {
+            describe('first reception', () => {
+                it('should add initial deposit and increment deposited balance', async () => {
+                    const result = await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '',
+                        {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    );
 
-        it(testCounter.next() + ': MUST SUCCEED [receiveTokens]: UnitTestHelpers_MISC_1 \'collaborates\' with 10 tokens', async () => {
-            try {
-                await glob.web3UnitTestHelpers_MISC_1.callToApprove_ERC20(glob.web3Erc20.address, glob.web3RevenueFund.address, 10);
-            }
-            catch (err) {
-                assert(false, 'Error: ERC20 failed to approve token transfer. [Error: ' + err.toString() + ']');
-            }
-            try {
-                let oldPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(glob.web3Erc20.address);
-                let oldAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(glob.web3Erc20.address);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ReceiveEvent');
 
-                await glob.web3UnitTestHelpers_MISC_1.callToDepositTokens_REVENUEFUND(glob.web3RevenueFund.address, glob.web3Erc20.address, 10, {gasLimit: glob.gasLimit});
+                    (await ethersRevenueFund.depositsCount())
+                        ._bn.should.eq.BN(1);
 
-                let newPeriodAccrualBalance = await glob.web3RevenueFund.periodAccrualBalance(glob.web3Erc20.address);
-                let newAggregateAccrualBalance = await glob.web3RevenueFund.aggregateAccrualBalance(glob.web3Erc20.address);
+                    (await ethersRevenueFund.periodAccrualBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    (await ethersRevenueFund.aggregateAccrualBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('1')._bn);
+                });
+            });
 
-                assert.equal(newPeriodAccrualBalance.sub(oldPeriodAccrualBalance), 10, 'Wrong balance [Diff ' + newPeriodAccrualBalance.sub(oldPeriodAccrualBalance).toString() + ' tokens].');
-                assert.equal(newAggregateAccrualBalance.sub(oldAggregateAccrualBalance), 10, 'Wrong balance [Diff ' + newAggregateAccrualBalance.sub(oldAggregateAccrualBalance).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            describe('second reception', () => {
+                beforeEach(async () => {
+                    await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '',
+                        {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    );
+                });
+
+                it('should add on top of the first deposit', async () => {
+                    await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '',
+                        {
+                            from: glob.user_a,
+                            value: web3.toWei(1, 'ether'),
+                            gas: 1e6
+                        }
+                    );
+
+                    (await ethersRevenueFund.depositsCount())
+                        ._bn.should.eq.BN(2);
+
+                    (await ethersRevenueFund.periodAccrualBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                    (await ethersRevenueFund.aggregateAccrualBalance(mocks.address0, 0))
+                        ._bn.should.eq.BN(utils.parseEther('2')._bn);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('receiveTokens()', () => {
+            describe('of ERC20 token', () => {
+                describe('if called with zero amount', () => {
+                    it('should revert', async () => {
+                        web3RevenueFund.receiveTokens('', 0, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
 
-        it(testCounter.next() + ': MUST FAIL [receiveTokens]: Cannot be called from owner', async () => {
-            try {
-                await glob.web3RevenueFund.receiveTokens('', glob.web3Erc20.address, 0, {from: glob.owner});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                describe('if called without prior approval', () => {
+                    it('should revert', async () => {
+                        web3RevenueFund.receiveTokens('', 10, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with excessive amount', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(web3RevenueFund.address, 9999, {
+                            from: glob.user_a,
+                            gas: 1e6
+                        });
+                    });
+
+                    it('should revert', async () => {
+                        web3RevenueFund.receiveTokens('', 9999, web3ERC20.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('first reception', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3RevenueFund.address, 10, {from: glob.user_a, gas: 1e6}
+                        );
+                    });
+
+                    it('should add initial deposit and increment deposited balance', async () => {
+                        const result = await web3RevenueFund.receiveTokens(
+                            '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        );
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('ReceiveEvent');
+
+                        (await ethersRevenueFund.depositsCount())
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersRevenueFund.periodAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(10);
+                        (await ethersRevenueFund.aggregateAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(10);
+                    });
+                });
+
+                describe('second reception', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3RevenueFund.address, 20, {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3RevenueFund.receiveTokens(
+                            '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        );
+                    });
+
+                    it('should add on top of the first deposit', async () => {
+                        await web3RevenueFund.receiveTokens(
+                            '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        );
+
+                        (await ethersRevenueFund.depositsCount())
+                            ._bn.should.eq.BN(2);
+
+                        (await ethersRevenueFund.periodAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(20);
+                        (await ethersRevenueFund.aggregateAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(20);
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('receiveTokensTo()', () => {
+            describe('of ERC20 token', () => {
+                describe('if called with zero amount', () => {
+                    it('should revert', async () => {
+                        web3RevenueFund.receiveTokensTo(
+                            glob.user_a, '', 0, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
+                    });
+                });
 
-        it(testCounter.next() + ': MUST FAIL [receiveTokens]: cannot be called with 0 tokens', async () => {
-            try {
-                await glob.web3UnitTestHelpers_MISC_2.callToDepositTokens_REVENUEFUND(glob.web3RevenueFund.address, glob.web3Erc20.address, 0);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                describe('if called without prior approval', () => {
+                    it('should revert', async () => {
+                        web3RevenueFund.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
+                    });
+                });
+
+                describe('if called with excessive amount', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(web3RevenueFund.address, 9999, {
+                            from: glob.user_a,
+                            gas: 1e6
+                        });
+                    });
+
+                    it('should revert', async () => {
+                        web3RevenueFund.receiveTokensTo(
+                            glob.user_a, '', 9999, web3ERC20.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
+                    });
+                });
+
+                describe('first reception', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3RevenueFund.address, 10, {from: glob.user_a, gas: 1e6}
+                        );
+                    });
+
+                    it('should add initial deposit and increment deposited balance', async () => {
+                        const result = await web3RevenueFund.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        );
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('ReceiveEvent');
+
+                        (await ethersRevenueFund.depositsCount())
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersRevenueFund.periodAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(10);
+                        (await ethersRevenueFund.aggregateAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(10);
+                    });
+                });
+
+                describe('second reception', () => {
+                    beforeEach(async () => {
+                        await web3ERC20.approve(
+                            web3RevenueFund.address, 20, {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3RevenueFund.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        );
+                    });
+
+                    it('should add on top of the first deposit', async () => {
+                        await web3RevenueFund.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                        );
+
+                        (await ethersRevenueFund.depositsCount())
+                            ._bn.should.eq.BN(2);
+
+                        (await ethersRevenueFund.periodAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(20);
+                        (await ethersRevenueFund.aggregateAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(20);
+                    });
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('deposit()', () => {
+            describe('before first reception', () => {
+                it('should revert', async () => {
+                    web3RevenueFund.deposit.call(0).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ': MUST FAIL [receiveTokens]: Cannot be called with null address', async () => {
-            try {
-                await glob.web3RevenueFund.receiveTokens('', 0, 5, {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const deposit = await ethersRevenueFund.deposit(0);
+
+                    deposit.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
+                    deposit.blockNumber.should.exist;
+                    deposit.currencyCt.should.equal(mocks.address0);
+                    deposit.currencyId._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3RevenueFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3RevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const deposit = await ethersRevenueFund.deposit(0);
+
+                    deposit.amount._bn.should.eq.BN(10);
+                    deposit.blockNumber.should.exist;
+                    deposit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
+                    deposit.currencyId._bn.should.eq.BN(0);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('periodCurrenciesByIndices()', () => {
+            describe('before first reception', () => {
+                it('should revert', async () => {
+                    web3RevenueFund.periodCurrenciesByIndices.call(0, 0).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ': MUST SUCCEED [registerFractionalBeneficiary]: Register UnitTestHelpers_MISC_1 as 60% beneficiary', async () => {
-            try {
-                let fraction = utils.bigNumberify(1e18);
-                fraction = fraction.mul(0.6);
-                await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersRevenueFund.periodCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(mocks.address0);
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3RevenueFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3RevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersRevenueFund.periodCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(utils.getAddress(web3ERC20.address));
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
         });
 
-        //-------------------------------------------------------------------------
+        describe('aggregateCurrenciesByIndices()', () => {
+            describe('before first reception', () => {
+                it('should revert', async () => {
+                    web3RevenueFund.aggregateCurrenciesByIndices.call(0, 0).should.be.rejected;
+                });
+            });
 
-        it(testCounter.next() + ': MUST FAIL [registerFractionalBeneficiary]: Cannot be called from non-owner', async () => {
-            try {
-                let fraction = utils.bigNumberify(1e18);
-                fraction = fraction.mul(0.6);
-                await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction, {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersRevenueFund.aggregateCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(mocks.address0);
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3RevenueFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3RevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersRevenueFund.aggregateCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(utils.getAddress(web3ERC20.address));
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
         });
+        describe('closeAccrualPeriod()', () => {
+            describe('if called by non-operator', () => {
+                beforeEach(() => {
+                    ethersRevenueFund = ethersRevenueFund.connect(glob.signer_b);
+                });
 
-        //-------------------------------------------------------------------------
+                it('should revert', async () => {
+                    ethersRevenueFund.closeAccrualPeriod([]).should.be.rejected;
+                });
+            });
 
-        // it(testCounter.next() + ': MUST FAIL [registerFractionalBeneficiary]: Cannot register UnitTestHelpers_MISC_1 twice', async () => {
-        //     try {
-        //         let fraction = await glob.web3RevenueFund.PARTS_PER();
-        //         fraction = fraction.mul(0.4);
-        //         await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_1.address, fraction);
-        //         assert(false, 'This test must fail.');
-        //     }
-        //     catch (err) {
-        //         assert(err.toString().includes('revert'), err.toString());
-        //     }
-        // });
+            describe('if called by operator', () => {
+                let currencies;
 
-        //-------------------------------------------------------------------------
+                beforeEach(async () => {
+                    await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '',
+                        {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
 
-        it(testCounter.next() + ': MUST FAIL [registerFractionalBeneficiary]: Trying to register UnitTestHelpers_MISC_2 as 50% beneficiary', async () => {
-            try {
-                let fraction = utils.bigNumberify(1e18);
-                fraction = fraction.mul(0.5);
-                await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_2.address, fraction);
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
+                    await web3ERC20.approve(
+                        web3RevenueFund.address, 10,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3RevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
 
-        //-------------------------------------------------------------------------
+                    currencies = [{ct: mocks.address0, id: 0}, {ct: web3ERC20.address, id: 0}];
+                });
 
-        it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Calling without 100% beneficiaries', async () => {
-            try {
-                await glob.web3RevenueFund.closeAccrualPeriod();
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
+                it('should successfully close accrual period of given currencies', async () => {
+                    await ethersRevenueFund.closeAccrualPeriod(currencies, {gasLimit: 1e6});
 
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [registerFractionalBeneficiary]: Register UnitTestHelpers_MISC_2 as 40% beneficiary', async () => {
-            try {
-                let fraction = utils.bigNumberify(1e18);
-                fraction = fraction.mul(0.4);
-
-                await glob.web3RevenueFund.registerFractionalBeneficiary(glob.web3UnitTestHelpers_MISC_2.address, fraction);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Cannot be called from non-owner', async () => {
-            try {
-                await glob.web3RevenueFund.closeAccrualPeriod({from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [closeAccrualPeriod]: Calling with 100% beneficiaries', async () => {
-            try {
-                let oldPeriodAccrualBalanceForEthers = await glob.web3RevenueFund.periodAccrualBalance(0);
-                let oldAggregateAccrualBalanceForEthers = await glob.web3RevenueFund.aggregateAccrualBalance(0);
-                let oldPeriodAccrualBalanceForTokens = await glob.web3RevenueFund.periodAccrualBalance(glob.web3Erc20.address);
-                let oldAggregateAccrualBalanceForTokens = await glob.web3RevenueFund.aggregateAccrualBalance(glob.web3Erc20.address);
-                let oldEthersBalanceForUT1 = await web3.eth.getBalancePromise(glob.web3UnitTestHelpers_MISC_1.address);
-                let oldEthersBalanceForUT2 = await web3.eth.getBalancePromise(glob.web3UnitTestHelpers_MISC_2.address);
-                let oldTokensBalanceForUT1 = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_MISC_1.address);
-                let oldTokensBalanceForUT2 = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_MISC_2.address);
-
-                await glob.web3RevenueFund.closeAccrualPeriod();
-
-                let newPeriodAccrualBalanceForEthers = await glob.web3RevenueFund.periodAccrualBalance(0);
-                let newAggregateAccrualBalanceForEthers = await glob.web3RevenueFund.aggregateAccrualBalance(0);
-                let newPeriodAccrualBalanceForTokens = await glob.web3RevenueFund.periodAccrualBalance(glob.web3Erc20.address);
-                let newAggregateAccrualBalanceForTokens = await glob.web3RevenueFund.aggregateAccrualBalance(glob.web3Erc20.address);
-                let newEthersBalanceForUT1 = await web3.eth.getBalancePromise(glob.web3UnitTestHelpers_MISC_1.address);
-                let newEthersBalanceForUT2 = await web3.eth.getBalancePromise(glob.web3UnitTestHelpers_MISC_2.address);
-                let newTokensBalanceForUT1 = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_MISC_1.address);
-                let newTokensBalanceForUT2 = await glob.web3Erc20.balanceOf(glob.web3UnitTestHelpers_MISC_2.address);
-
-                assert.equal(oldPeriodAccrualBalanceForEthers.sub(newPeriodAccrualBalanceForEthers), web3.toWei(1.8, 'ether'), 'Wrong balance [Diff ' + web3.fromWei(oldPeriodAccrualBalanceForEthers.sub(newPeriodAccrualBalanceForEthers), 'ether') + ' ethers].');
-                assert.equal(oldAggregateAccrualBalanceForEthers.toString(), newAggregateAccrualBalanceForEthers.toString(), 'Wrong balance [' + web3.fromWei(oldAggregateAccrualBalanceForEthers, 'ether') + ' ethers].');
-
-                assert.equal(oldPeriodAccrualBalanceForTokens.sub(newPeriodAccrualBalanceForTokens), 10, 'Wrong balance [' + oldPeriodAccrualBalanceForTokens.sub(newPeriodAccrualBalanceForTokens).toString() + ' tokens].');
-                assert.equal(oldAggregateAccrualBalanceForTokens.toString(), newAggregateAccrualBalanceForTokens.toString(), 'Wrong balance [' + oldAggregateAccrualBalanceForTokens.toString() + ' tokens].');
-
-                assert.equal(newEthersBalanceForUT1.sub(oldEthersBalanceForUT1), (new web3.BigNumber(web3.toWei(1.8, 'ether'))).mul(0.6).toString(), 'Wrong balance [Diff ' + web3.fromWei(newEthersBalanceForUT1.sub(oldEthersBalanceForUT1), 'ether') + ' ethers].');
-                assert.equal(newEthersBalanceForUT2.sub(oldEthersBalanceForUT2), (new web3.BigNumber(web3.toWei(1.8, 'ether'))).mul(0.4).toString(), 'Wrong balance [Diff ' + web3.fromWei(newEthersBalanceForUT2.sub(oldEthersBalanceForUT2), 'ether') + ' ethers].');
-                assert.equal(newTokensBalanceForUT1.sub(oldTokensBalanceForUT1), 6, 'Wrong balance [Diff ' + newTokensBalanceForUT1.sub(oldTokensBalanceForUT1).toString() + ' tokens].');
-                assert.equal(newTokensBalanceForUT2.sub(oldTokensBalanceForUT2), 4, 'Wrong balance [Diff ' + newTokensBalanceForUT2.sub(oldTokensBalanceForUT2).toString() + ' tokens].');
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [deregisterBeneficiary]: Unregister UnitTestHelpers_MISC_2 as beneficiary', async () => {
-            try {
-                await glob.web3RevenueFund.deregisterBeneficiary(glob.web3UnitTestHelpers_MISC_2.address);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST FAIL [registerService]: Register UnitTestHelpers_FAIL SC as a service from non-owner', async () => {
-            try {
-                await glob.web3RevenueFund.registerService(glob.web3UnitTestHelpers_FAIL_TESTS.address, {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [registerService]: Register UnitTestHelpers_SUCCESS SC as a service', async () => {
-            try {
-                await glob.web3RevenueFund.registerService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST FAIL [deregisterService]: Deregister UnitTestHelpers_FAIL SC as a service from non-owner', async () => {
-            try {
-                await glob.web3RevenueFund.deregisterService(glob.web3UnitTestHelpers_FAIL_TESTS.address, {from: glob.user_a});
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST SUCCEED [deregisterService]: Deregister UnitTestHelpers_SUCCESS SC as a service', async () => {
-            try {
-                await glob.web3RevenueFund.deregisterService(glob.web3UnitTestHelpers_SUCCESS_TESTS.address);
-            }
-            catch (err) {
-                assert(false, 'This test must succeed. [Error: ' + err.toString() + ']');
-            }
-        });
-
-        //-------------------------------------------------------------------------
-
-        it(testCounter.next() + ': MUST FAIL [closeAccrualPeriod]: Calling without 100% beneficiaries again', async () => {
-            try {
-                await glob.web3RevenueFund.closeAccrualPeriod();
-                assert(false, 'This test must fail.');
-            }
-            catch (err) {
-                assert(err.toString().includes('revert'), err.toString());
-            }
+                    (await ethersMockedAccrualBeneficiary99._closedAccrualPeriodsCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersMockedAccrualBeneficiary01._closedAccrualPeriodsCount())
+                        ._bn.should.eq.BN(1);
+                });
+            });
         });
     });
 };
+

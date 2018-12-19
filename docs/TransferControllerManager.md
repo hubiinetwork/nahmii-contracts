@@ -15,7 +15,7 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
 ### BlacklistCurrencyEvent(address)
@@ -27,30 +27,6 @@ Params:
 Params:
 
 1. **currencyCt** *of type `address`*
-
---- 
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
 
 --- 
 ### DeregisterCurrencyEvent(address)
@@ -101,6 +77,30 @@ Params:
 2. **controller** *of type `address`*
 
 --- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
+
+--- 
 ### WhitelistCurrencyEvent(address)
 
 
@@ -113,15 +113,19 @@ Params:
 
 
 ## Methods
-### triggerDestroy()
+### setDeployer(address)
 >
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
+>Set the deployer of this contract
 
 
-**Execution cost**: No bound available
+**Execution cost**: less than 22867 gas
 
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
 
 
 
@@ -138,27 +142,10 @@ Params:
 
 
 --- 
-### changeDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: less than 22954 gas
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
 ### blacklistCurrency(address)
 
 
-**Execution cost**: less than 22431 gas
+**Execution cost**: less than 22409 gas
 
 
 Params:
@@ -170,7 +157,7 @@ Params:
 ### deployer()
 
 
-**Execution cost**: less than 735 gas
+**Execution cost**: less than 757 gas
 
 **Attributes**: constant
 
@@ -182,29 +169,12 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: less than 22757 gas
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
 ### destructor()
 >
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 581 gas
+**Execution cost**: less than 559 gas
 
 **Attributes**: constant
 
@@ -240,7 +210,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 625 gas
+**Execution cost**: less than 603 gas
 
 **Attributes**: constant
 
@@ -292,10 +262,40 @@ Params:
 
 
 --- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: less than 22910 gas
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
+
+--- 
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
 ### whitelistCurrency(address)
 
 
-**Execution cost**: less than 22460 gas
+**Execution cost**: less than 22438 gas
 
 
 Params:

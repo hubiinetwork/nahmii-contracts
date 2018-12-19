@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -17,9 +17,9 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByDuplicateDriipNonceOfPayments
-@notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
-*/
+ * @title FraudChallengeByDuplicateDriipNonceOfPayments
+ * @notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
+ */
 contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable {
     //
@@ -31,7 +31,7 @@ SecurityBondable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -47,14 +47,9 @@ SecurityBondable {
     )
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedPayment(payment1)
     onlySealedPayment(payment2)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(securityBond != address(0));
-
         require(payment1.seals.wallet.hash != payment2.seals.wallet.hash);
         require(payment1.nonce == payment2.nonce);
 
@@ -63,7 +58,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentPaymentHash(payment2.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
         emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(
             payment1.seals.operator.hash, payment2.seals.operator.hash, msg.sender

@@ -6,16 +6,16 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {Validator} from "./Validator.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title Validatable
-@notice An ownable that has a validator property
-*/
+ * @title Validatable
+ * @notice An ownable that has a validator property
+ */
 contract Validatable is Ownable {
     //
     // Variables
@@ -25,23 +25,25 @@ contract Validatable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeValidatorEvent(Validator oldAddress, Validator newAddress);
+    event SetValidatorEvent(Validator oldValidator, Validator newValidator);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the validator contract
-    /// @param newAddress The (address of) Validator contract instance
-    function changeValidator(Validator newAddress) public onlyDeployer
-    notNullAddress(newAddress)
-    notSameAddresses(newAddress, validator)
+    /// @notice Set the validator contract
+    /// @param newValidator The (address of) Validator contract instance
+    function setValidator(Validator newValidator)
+    public
+    onlyDeployer
+    notNullAddress(newValidator)
+    notSameAddresses(newValidator, validator)
     {
         //set new validator
-        Validator oldAddress = validator;
-        validator = newAddress;
+        Validator oldValidator = validator;
+        validator = newValidator;
 
         // Emit event
-        emit ChangeValidatorEvent(oldAddress, newAddress);
+        emit SetValidatorEvent(oldValidator, newValidator);
     }
 
     //
@@ -52,13 +54,13 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyOperatorSealedOrder(NahmiiTypesLib.Order order) {
-        require(validator.isGenuineOrderOperatorSeal(order));
+    modifier onlySealedOrder(NahmiiTypesLib.Order order) {
+        require(validator.isGenuineOrderSeals(order));
         _;
     }
 
-    modifier onlySealedOrder(NahmiiTypesLib.Order order) {
-        require(validator.isGenuineOrderSeals(order));
+    modifier onlyOperatorSealedOrder(NahmiiTypesLib.Order order) {
+        require(validator.isGenuineOrderOperatorSeal(order));
         _;
     }
 
@@ -82,7 +84,7 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlyPaymentSender(NahmiiTypesLib.Payment payment, address wallet) {
+    modifier onlyPaymentParty(NahmiiTypesLib.Payment payment, address wallet) {
         require(validator.isPaymentParty(payment, wallet));
         _;
     }

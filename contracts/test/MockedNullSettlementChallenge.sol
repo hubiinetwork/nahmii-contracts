@@ -6,66 +6,65 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 
 /**
-@title MockedNullSettlementChallenge
-@notice Mocked implementation of null settlement challenge
-*/
+ * @title MockedNullSettlementChallenge
+ * @notice Mocked implementation of null settlement challenge
+ */
 contract MockedNullSettlementChallenge {
-
-    NahmiiTypesLib.ChallengePhase public _challengePhase;
+    bool public _proposalExpired;
     uint256 public _proposalNonce;
     uint256 public _proposalBlockNumber;
-    MonetaryTypesLib.Currency _proposalCurrency;
-    int256 public _proposalStageAmount;
+    int256[] public _proposalStageAmounts;
+    uint256 public _proposalStageAmountIndex;
     int256 public _proposalTargetBalanceAmount;
+    uint256 public _proposalExpirationTime;
+    SettlementTypesLib.Status public _proposalStatus;
     bool public _proposalBalanceReward;
-    SettlementTypesLib.ProposalStatus public _proposalStatus;
-    SettlementTypesLib.CandidateType public _proposalCandidateType;
-    uint256 public _proposalCandidateIndex;
-    address public _proposalChallenger;
-    uint256 public _challengeCandidateOrderHashesCount;
-    uint256 public _challengeCandidateTradeHashesCount;
-    uint256 public _challengeCandidatePaymentHashesCount;
+    SettlementTypesLib.CandidateType public _disqualificationCandidateType;
+    bytes32 public _disqualificationCandidateHash;
+    address public _disqualificationChallenger;
     NullSettlementDispute public _nullSettlementDispute;
+    bool _lockedWallet;
+    uint256 _disqualificationsCount;
 
     function _reset()
     public
     {
-        delete _challengePhase;
+        delete _proposalExpired;
         delete _proposalNonce;
         delete _proposalBlockNumber;
         delete _proposalTargetBalanceAmount;
-        delete _proposalBalanceReward;
+        delete _proposalExpirationTime;
         delete _proposalStatus;
-        delete _proposalCandidateType;
-        delete _proposalCandidateIndex;
-        delete _proposalChallenger;
-        delete _challengeCandidateOrderHashesCount;
-        delete _challengeCandidateTradeHashesCount;
-        delete _challengeCandidatePaymentHashesCount;
+        delete _proposalBalanceReward;
+        delete _disqualificationCandidateType;
+        delete _disqualificationCandidateHash;
+        delete _disqualificationChallenger;
+        delete _lockedWallet;
+        delete _disqualificationsCount;
+
+        _proposalStageAmounts.length = 0;
+        _proposalStageAmountIndex = 0;
     }
 
-    function _setChallengePhase(NahmiiTypesLib.ChallengePhase challengePhase)
+    function _setProposalExpired(bool proposalExpired)
     public
     {
-        _challengePhase = challengePhase;
+        _proposalExpired = proposalExpired;
     }
 
-    function challengePhase(address wallet)
+    function hasProposalExpired(address, address, uint256)
     public
     view
-    returns (NahmiiTypesLib.ChallengePhase) {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        return _challengePhase;
+    returns (bool) {
+        return _proposalExpired;
     }
 
     function _setProposalNonce(uint256 proposalNonce)
@@ -74,13 +73,11 @@ contract MockedNullSettlementChallenge {
         _proposalNonce = proposalNonce;
     }
 
-    function proposalNonce(address wallet)
+    function proposalNonce(address, address, uint256)
     public
     view
     returns (uint256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
         return _proposalNonce;
     }
 
@@ -90,48 +87,25 @@ contract MockedNullSettlementChallenge {
         _proposalBlockNumber = proposalBlockNumber;
     }
 
-    function proposalBlockNumber(address wallet)
+    function proposalBlockNumber(address, address, uint256)
     public
     view
     returns (uint256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
         return _proposalBlockNumber;
     }
 
-    function _setProposalCurrency(MonetaryTypesLib.Currency proposalCurrency)
+    function _addProposalStageAmount(int256 proposalStageAmount)
     public
     {
-        _proposalCurrency = proposalCurrency;
+        _proposalStageAmounts.push(proposalStageAmount);
     }
 
-    function proposalCurrency(address wallet, uint256 index)
+    function proposalStageAmount(address, address, uint256)
     public
-    view
-    returns (MonetaryTypesLib.Currency)
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(index == index);
-        return _proposalCurrency;
-    }
-
-    function _setProposalStageAmount(int256 proposalStageAmount)
-    public
-    {
-        _proposalStageAmount = proposalStageAmount;
-    }
-
-    function proposalStageAmount(address wallet, MonetaryTypesLib.Currency currency)
-    public
-    view
     returns (int256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currency.ct == currency.ct);
-        return _proposalStageAmount;
+        return _proposalStageAmounts.length == 0 ? 0 : _proposalStageAmounts[_proposalStageAmountIndex++];
     }
 
     function _setProposalTargetBalanceAmount(int256 proposalTargetBalanceAmount)
@@ -140,15 +114,42 @@ contract MockedNullSettlementChallenge {
         _proposalTargetBalanceAmount = proposalTargetBalanceAmount;
     }
 
-    function proposalTargetBalanceAmount(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalTargetBalanceAmount(address, address, uint256)
     public
     view
     returns (int256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currency.ct == currency.ct);
         return _proposalTargetBalanceAmount;
+    }
+
+    function setProposalExpirationTime(address, address, uint256,
+        uint256 expirationTime)
+    public
+    {
+        _proposalExpirationTime = expirationTime;
+    }
+
+    function proposalExpirationTime(address, address, uint256)
+    public
+    view
+    returns (uint256)
+    {
+        return _proposalExpirationTime;
+    }
+
+    function setProposalStatus(address, address, uint256,
+        SettlementTypesLib.Status status)
+    public
+    {
+        _proposalStatus = status;
+    }
+
+    function proposalStatus(address, address, uint256)
+    public
+    view
+    returns (SettlementTypesLib.Status)
+    {
+        return _proposalStatus;
     }
 
     function _setProposalBalanceReward(bool balanceReward)
@@ -157,137 +158,57 @@ contract MockedNullSettlementChallenge {
         _proposalBalanceReward = balanceReward;
     }
 
-    function proposalBalanceReward(address wallet)
+    function proposalBalanceReward(address, address, uint256)
     public
     view
     returns (bool)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
         return _proposalBalanceReward;
     }
 
-    function setProposalStatus(address wallet, SettlementTypesLib.ProposalStatus status)
+    function _setDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalStatus = status;
+        _disqualificationCandidateType = candidateType;
     }
 
-    function proposalStatus(address wallet)
-    public
-    view
-    returns (SettlementTypesLib.ProposalStatus)
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        return _proposalStatus;
-    }
-
-    function setProposalCandidateType(address wallet, SettlementTypesLib.CandidateType candidateType)
-    public
-    {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalCandidateType = candidateType;
-    }
-
-    function proposalCandidateType(address wallet)
+    function disqualificationCandidateType(address, address, uint256)
     public
     view
     returns (SettlementTypesLib.CandidateType)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        return _proposalCandidateType;
+        return _disqualificationCandidateType;
     }
 
-    function setProposalCandidateIndex(address wallet, uint256 candidateIndex)
+    function _setDisqualificationCandidateHash(bytes32 candidateHash)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalCandidateIndex = candidateIndex;
+        _disqualificationCandidateHash = candidateHash;
     }
 
-    function proposalCandidateIndex(address wallet)
+    function disqualificationCandidateHash(address, address, uint256)
     public
     view
-    returns (uint256)
+    returns (bytes32)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        return _proposalCandidateIndex;
+        return _disqualificationCandidateHash;
     }
 
-    function setProposalChallenger(address wallet, address challenger)
+    function _setDisqualificationChallenger(address challenger)
     public
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        _proposalChallenger = challenger;
+        _disqualificationChallenger = challenger;
     }
 
-    function proposalChallenger(address wallet)
+    function disqualificationChallenger(address, address, uint256)
     public
     view
     returns (address)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        return _proposalChallenger;
+        return _disqualificationChallenger;
     }
 
-    function addChallengeCandidateOrderHash(bytes32 hash)
-    public
-    {
-        // To silence unused function parameter compiler warning
-        require(hash == hash);
-        _challengeCandidateOrderHashesCount++;
-    }
-
-    function challengeCandidateOrderHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return _challengeCandidateOrderHashesCount;
-    }
-
-    function addChallengeCandidateTradeHash(bytes32 hash)
-    public
-    {
-        // To silence unused function parameter compiler warning
-        require(hash == hash);
-        _challengeCandidateTradeHashesCount++;
-    }
-
-    function challengeCandidateTradeHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return _challengeCandidateTradeHashesCount;
-    }
-
-    function addChallengeCandidatePaymentHash(bytes32 hash)
-    public
-    {
-        // To silence unused function parameter compiler warning
-        require(hash == hash);
-        _challengeCandidatePaymentHashesCount++;
-    }
-
-    function challengeCandidatePaymentHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return _challengeCandidatePaymentHashesCount;
-    }
-
-    function changeNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
+    function setNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
     public
     {
         _nullSettlementDispute = nullSettlementDispute;
@@ -305,9 +226,50 @@ contract MockedNullSettlementChallenge {
         _nullSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
-    function challengeByPayment(NahmiiTypesLib.Payment payment)
+    function challengeByPayment(address wallet, NahmiiTypesLib.Payment payment)
     public
     {
-        _nullSettlementDispute.challengeByPayment(payment, msg.sender);
+        _nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
+    }
+
+    function disqualificationsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _disqualificationsCount;
+    }
+
+    function lockWallet(address)
+    public
+    {
+        _lockedWallet = true;
+    }
+
+    function isLockedWallet(address)
+    public
+    view
+    returns (bool)
+    {
+        return _lockedWallet;
+    }
+
+    function _setDisqualificationsCount(uint256 count)
+    public
+    {
+        _disqualificationsCount = count;
+    }
+
+    function addDisqualification(address, address, uint256, bytes32,
+        SettlementTypesLib.CandidateType, address)
+    public
+    {
+        _disqualificationsCount++;
+    }
+
+    function removeDisqualification(address, address, uint256)
+    public
+    {
+        _disqualificationsCount--;
     }
 }

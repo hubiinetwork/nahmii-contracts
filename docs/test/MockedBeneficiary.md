@@ -3,47 +3,26 @@
 > MockedBeneficiary
 
 
-**Execution cost**: less than 524 gas
+**Execution cost**: less than 645 gas
 
-**Deployment cost**: less than 486600 gas
+**Deployment cost**: less than 613400 gas
 
-**Combined cost**: less than 487124 gas
+**Combined cost**: less than 614045 gas
 
 
 
 
 ## Methods
-### depositEthersTo(address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: payable
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-
---- 
-### depositTokensTo(address,int256,address,uint256,string)
+### _reset()
 
 
 **Execution cost**: No bound available
 
 
-Params:
-
-1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-5. **standard** *of type `string`*
 
 
 --- 
-### deposits(uint256)
+### benefits(uint256)
 
 
 **Execution cost**: No bound available
@@ -59,11 +38,12 @@ Returns:
 
 
 1. **wallet** *of type `address`*
-2. **figure** *of type `tuple`*
-3. **standard** *of type `string`*
+2. **balance** *of type `string`*
+3. **figure** *of type `tuple`*
+4. **standard** *of type `string`*
 
 --- 
-### getDeposit(uint256)
+### getBenefit(uint256)
 
 
 **Execution cost**: No bound available
@@ -79,18 +59,42 @@ Returns:
 
 
 1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-5. **standard** *of type `string`*
+2. **balance** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
 
 --- 
-### reset()
+### receiveEthersTo(address,string)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: payable
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **balance** *of type `string`*
+
+
+--- 
+### receiveTokensTo(address,string,int256,address,uint256,string)
 
 
 **Execution cost**: No bound available
 
 
+Params:
+
+1. **wallet** *of type `address`*
+2. **balance** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
 
 
 [Back to the top ↑](#mockedbeneficiary)

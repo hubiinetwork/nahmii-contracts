@@ -10,8 +10,9 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe.only('NahmiiToken', function () {
-        let provider, web3NahmiiToken, ethersNahmiiToken;
+    describe('NahmiiToken', function () {
+        let provider;
+        let web3NahmiiToken, ethersNahmiiToken;
 
         before(() => {
             provider = glob.signer_owner.provider;

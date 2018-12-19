@@ -14,7 +14,7 @@
 
 
 ## Events
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -26,7 +26,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -39,44 +39,10 @@ Params:
 
 
 ## Methods
-### changeDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: less than 22888 gas
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: less than 22735 gas
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
 ### deployer()
 
 
-**Execution cost**: less than 669 gas
+**Execution cost**: less than 691 gas
 
 **Attributes**: constant
 
@@ -93,7 +59,7 @@ Returns:
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 603 gas
+**Execution cost**: less than 581 gas
 
 **Attributes**: constant
 
@@ -108,7 +74,7 @@ Returns:
 ### last_completed_migration()
 
 
-**Execution cost**: less than 428 gas
+**Execution cost**: less than 406 gas
 
 **Attributes**: constant
 
@@ -123,7 +89,7 @@ Returns:
 ### operator()
 
 
-**Execution cost**: less than 625 gas
+**Execution cost**: less than 603 gas
 
 **Attributes**: constant
 
@@ -144,6 +110,40 @@ Returns:
 Params:
 
 1. **completed** *of type `uint256`*
+
+
+--- 
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: less than 22845 gas
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: less than 22866 gas
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
 
 
 --- 

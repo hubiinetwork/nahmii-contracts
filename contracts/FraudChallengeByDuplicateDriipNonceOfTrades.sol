@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -17,9 +17,9 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByDuplicateDriipNonceOfTrades
-@notice Where driips are challenged wrt fraud by duplicate drip nonce of trades
-*/
+ * @title FraudChallengeByDuplicateDriipNonceOfTrades
+ * @notice Where driips are challenged wrt fraud by duplicate drip nonce of trades
+ */
 contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable {
     //
@@ -31,7 +31,7 @@ SecurityBondable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -47,14 +47,9 @@ SecurityBondable {
     )
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedTrade(trade1)
     onlySealedTrade(trade2)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(securityBond != address(0));
-
         require(trade1.seal.hash != trade2.seal.hash);
         require(trade1.nonce == trade2.nonce);
 
@@ -63,7 +58,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentTradeHash(trade2.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
         emit ChallengeByDuplicateDriipNonceOfTradesEvent(
             trade1.seal.hash, trade2.seal.hash, msg.sender

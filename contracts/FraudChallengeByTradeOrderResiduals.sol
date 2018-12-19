@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -14,25 +14,25 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByTradeOrderResiduals
-@notice Where driips are challenged wrt fraud by mismatch in trade order residuals
-*/
+ * @title FraudChallengeByTradeOrderResiduals
+ * @notice Where driips are challenged wrt fraud by mismatch in trade order residuals
+ */
 contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChallengeByTradeOrderResidualsEvent(bytes32 firstTradeHash, bytes32 lastTradeHash,
-        address challenger, address seizedWallet);
+        address challenger, address lockedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -42,9 +42,9 @@ SecurityBondable, ClientFundable {
     /// trade order residual differences
     /// @param firstTrade Reference trade
     /// @param lastTrade Fraudulent trade candidate
-    /// @param wallet Address of concerned wallet
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function challenge(
         NahmiiTypesLib.Trade firstTrade,
         NahmiiTypesLib.Trade lastTrade,
@@ -54,14 +54,9 @@ SecurityBondable, ClientFundable {
     )
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedTrade(firstTrade)
     onlySealedTrade(lastTrade)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(clientFund != address(0));
-
         require(validator.isTradeParty(firstTrade, wallet));
         require(validator.isTradeParty(lastTrade, wallet));
         require(currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id);
@@ -84,9 +79,9 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        clientFund.seizeAllBalances(wallet, msg.sender);
+//        walletLocker.lockByProxy(wallet, msg.sender);
 
         emit ChallengeByTradeOrderResidualsEvent(
             firstTrade.seal.hash, lastTrade.seal.hash, msg.sender, wallet

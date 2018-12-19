@@ -6,17 +6,16 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {SignerManager} from "./SignerManager.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title SignerManageable
-@notice A contract to interface ACL
-*/
+ * @title SignerManageable
+ * @notice A contract to interface ACL
+ */
 contract SignerManageable is Ownable {
     //
     // Variables
@@ -26,7 +25,7 @@ contract SignerManageable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeSignerManagerEvent(address oldSignerManager, address newSignerManager);
+    event SetSignerManagerEvent(address oldSignerManager, address newSignerManager);
 
     //
     // Constructor
@@ -39,9 +38,9 @@ contract SignerManageable is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the signer manager of this contract
+    /// @notice Set the signer manager of this contract
     /// @param newSignerManager The address of the new signer
-    function changeSignerManager(address newSignerManager)
+    function setSignerManager(address newSignerManager)
     public
     onlyDeployer
     notNullOrThisAddress(newSignerManager)
@@ -52,7 +51,7 @@ contract SignerManageable is Ownable {
             signerManager = SignerManager(newSignerManager);
 
             // Emit event
-            emit ChangeSignerManagerEvent(oldSignerManager, newSignerManager);
+            emit SetSignerManagerEvent(oldSignerManager, newSignerManager);
         }
     }
 

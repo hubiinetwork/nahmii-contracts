@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -17,9 +17,9 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByOrder
-@notice Where order is challenged wrt signature error
-*/
+ * @title FraudChallengeByOrder
+ * @notice Where order is challenged wrt signature error
+ */
 contract FraudChallengeByOrder is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable {
     //
@@ -30,7 +30,7 @@ SecurityBondable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -41,13 +41,8 @@ SecurityBondable {
     function challenge(NahmiiTypesLib.Order order)
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlyOperatorSealedOrder(order)
     {
-        require(fraudChallenge != address(0));
-        require(configuration != address(0));
-        require(securityBond != address(0));
-
         require(validator.isGenuineOrderWalletHash(order));
 
         // Genuineness affected by wallet not having signed the payment
@@ -60,7 +55,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentOrderHash(order.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
         emit ChallengeByOrderEvent(order.seals.operator.hash, msg.sender);
     }

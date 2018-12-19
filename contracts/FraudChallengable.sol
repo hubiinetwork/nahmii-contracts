@@ -6,15 +6,15 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
 
 /**
-@title FraudChallengable
-@notice An ownable that has a fraud challenge property
-*/
+ * @title FraudChallengable
+ * @notice An ownable that has a fraud challenge property
+ */
 contract FraudChallengable is Ownable {
     //
     // Variables
@@ -24,14 +24,16 @@ contract FraudChallengable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
+    event SetFraudChallengeEvent(FraudChallenge oldFraudChallenge, FraudChallenge newFraudChallenge);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the fraud challenge contract
+    /// @notice Set the fraud challenge contract
     /// @param newFraudChallenge The (address of) FraudChallenge contract instance
-    function changeFraudChallenge(FraudChallenge newFraudChallenge) public onlyDeployer
+    function setFraudChallenge(FraudChallenge newFraudChallenge)
+    public
+    onlyDeployer
     notNullAddress(newFraudChallenge)
     notSameAddresses(newFraudChallenge, fraudChallenge)
     {
@@ -40,7 +42,7 @@ contract FraudChallengable is Ownable {
         fraudChallenge = newFraudChallenge;
 
         // Emit event
-        emit ChangeFraudChallengeEvent(oldFraudChallenge, newFraudChallenge);
+        emit SetFraudChallengeEvent(oldFraudChallenge, newFraudChallenge);
     }
 
     //

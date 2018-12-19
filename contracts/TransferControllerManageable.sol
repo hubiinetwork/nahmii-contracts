@@ -6,16 +6,16 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {TransferControllerManager} from "./TransferControllerManager.sol";
 import {TransferController} from "./TransferController.sol";
 
 /**
-@title FraudChallengable
-@notice An ownable that has a fraud challenge property
-*/
+ * @title TransferControllerManageable
+ * @notice An ownable with a transfer controller manager
+ */
 contract TransferControllerManageable is Ownable {
     //
     // Variables
@@ -25,28 +25,35 @@ contract TransferControllerManageable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeTransferControllerManagerEvent(TransferControllerManager oldTransferControllerManager, TransferControllerManager newTransferControllerManager);
+    event SetTransferControllerManagerEvent(TransferControllerManager oldTransferControllerManager,
+        TransferControllerManager newTransferControllerManager);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the currency manager contract
-    /// @param newAddress The (address of) TransferControllerManager contract instance
-    function changeTransferControllerManager(TransferControllerManager newAddress) public onlyDeployer
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, transferControllerManager)
+    /// @notice Set the currency manager contract
+    /// @param newTransferControllerManager The (address of) TransferControllerManager contract instance
+    function setTransferControllerManager(TransferControllerManager newTransferControllerManager)
+    public
+    onlyDeployer
+    notNullAddress(newTransferControllerManager)
+    notSameAddresses(newTransferControllerManager, transferControllerManager)
     {
         //set new currency manager
-        TransferControllerManager oldAddress = transferControllerManager;
-        transferControllerManager = newAddress;
+        TransferControllerManager oldTransferControllerManager = transferControllerManager;
+        transferControllerManager = newTransferControllerManager;
 
         // Emit event
-        emit ChangeTransferControllerManagerEvent(oldAddress, newAddress);
+        emit SetTransferControllerManagerEvent(oldTransferControllerManager, newTransferControllerManager);
     }
 
     /// @notice Get the transfer controller of the given currency contract address and standard
-    function getTransferController(address currencyCt, string standard) internal view transferControllerManagerInitialized returns(TransferController) {
-        return transferControllerManager.getTransferController(currencyCt, standard);
+    function transferController(address currencyCt, string standard)
+    internal
+    view
+    returns (TransferController)
+    {
+        return transferControllerManager.transferController(currencyCt, standard);
     }
 
     //

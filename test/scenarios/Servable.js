@@ -1,19 +1,21 @@
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const {Wallet, utils} = require('ethers');
+const {Wallet, Contract, utils} = require('ethers');
 const address0 = require('../mocks').address0;
 const setTimeoutPromise = require('util').promisify(setTimeout);
 
 chai.use(chaiAsPromised);
 chai.should();
 
+const Servable = artifacts.require('TestServable');
+
 module.exports = (glob) => {
     describe('Servable', () => {
         let web3Servable, ethersServable;
 
         before(async () => {
-            web3Servable = glob.web3Servable;
-            ethersServable = glob.ethersIoServable;
+            web3Servable = await Servable.new(glob.owner);
+            ethersServable = new Contract(web3Servable.address, Servable.abi, glob.signer_owner);
         });
         
         describe('constructor', () => {

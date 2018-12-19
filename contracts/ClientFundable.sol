@@ -6,16 +6,15 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {ClientFund} from "./ClientFund.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title ClientFundable
-@notice An ownable that has a client fund property
-*/
+ * @title ClientFundable
+ * @notice An ownable that has a client fund property
+ */
 contract ClientFundable is Ownable {
     //
     // Variables
@@ -25,23 +24,24 @@ contract ClientFundable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeClientFundEvent(ClientFund oldAddress, ClientFund newAddress);
+    event SetClientFundEvent(ClientFund oldClientFund, ClientFund newClientFund);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the client fund contract
-    /// @param newAddress The (address of) ClientFund contract instance
-    function changeClientFund(ClientFund newAddress) public onlyDeployer
-    notNullAddress(newAddress)
-    notSameAddresses(newAddress, clientFund)
+    /// @notice Set the client fund contract
+    /// @param newClientFund The (address of) ClientFund contract instance
+    function setClientFund(ClientFund newClientFund) public
+    onlyDeployer
+    notNullAddress(newClientFund)
+    notSameAddresses(newClientFund, clientFund)
     {
-        //set new community vote
-        ClientFund oldAddress = clientFund;
-        clientFund = newAddress;
+        // Update field
+        ClientFund oldClientFund = clientFund;
+        clientFund = newClientFund;
 
         // Emit event
-        emit ChangeClientFundEvent(oldAddress, newAddress);
+        emit SetClientFundEvent(oldClientFund, newClientFund);
     }
 
     //

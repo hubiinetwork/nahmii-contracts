@@ -6,15 +6,18 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 
 /**
-@title SignerManager
-@notice A contract to control who can execute some specific actions
-*/
+ * @title SignerManager
+ * @notice A contract to control who can execute some specific actions
+ */
 contract SignerManager is Ownable {
+    using SafeMathUintLib for uint256;
+    
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -73,7 +76,7 @@ contract SignerManager is Ownable {
     /// @param newSigner The address of the signer to register
     function registerSigner(address newSigner)
     public
-    onlyDeployer
+    onlyOperator
     notNullOrThisAddress(newSigner)
     {
         if (0 == signerIndicesMap[newSigner]) {
@@ -95,10 +98,10 @@ contract SignerManager is Ownable {
     view
     returns (address[])
     {
+        require(0 < signers.length);
         require(low <= up);
 
-        low = low < 0 ? 0 : low;
-        up = up > signers.length - 1 ? signers.length - 1 : up;
+        up = up.clampMax(signers.length - 1);
         address[] memory _signers = new address[](up - low + 1);
         for (uint256 i = low; i <= up; i++)
             _signers[i - low] = signers[i];

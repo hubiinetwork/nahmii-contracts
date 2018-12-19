@@ -6,33 +6,33 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByTradeSucceedingPayment
-@notice Where driips are challenged wrt fraud by mismatch in trade succeeding payment
-*/
+ * @title FraudChallengeByTradeSucceedingPayment
+ * @notice Where driips are challenged wrt fraud by mismatch in trade succeeding payment
+ */
 contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChallengeByTradeSucceedingPaymentEvent(bytes32 paymentHash, bytes32 tradeHash,
-        address challenger, address seizedWallet);
+        address challenger, address lockedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -42,9 +42,9 @@ SecurityBondable, ClientFundable {
     /// to be tested for succession differences
     /// @param payment Reference payment
     /// @param trade Fraudulent trade candidate
-    /// @param wallet Address of concerned wallet
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function challenge(
         NahmiiTypesLib.Payment payment,
         NahmiiTypesLib.Trade trade,
@@ -53,15 +53,10 @@ SecurityBondable, ClientFundable {
         uint256 currencyId
     )
     public
-    validatorInitialized
     onlyOperationalModeNormal
     onlySealedPayment(payment)
     onlySealedTrade(trade)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(clientFund != address(0));
-
         require(validator.isTradeParty(trade, wallet));
         require(validator.isPaymentParty(payment, wallet));
         require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
@@ -84,9 +79,9 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        clientFund.seizeAllBalances(wallet, msg.sender);
+//        walletLocker.lockByProxy(wallet, msg.sender);
 
         emit ChallengeByTradeSucceedingPaymentEvent(
             payment.seals.operator.hash, trade.seal.hash, msg.sender, wallet

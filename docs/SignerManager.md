@@ -18,7 +18,18 @@ Params:
 1. **deployer** *of type `address`*
 
 ## Events
-### ChangeDeployerEvent(address,address)
+### RegisterSignerEvent(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **signer** *of type `address`*
+
+--- 
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -30,7 +41,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -41,108 +52,14 @@ Params:
 1. **oldOperator** *of type `address`*
 2. **newOperator** *of type `address`*
 
---- 
-### RegisterSignerEvent(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **signer** *of type `address`*
-
 
 ## Methods
-### registerSigner(address)
->
->Registers a signer
-
-
-**Execution cost**: less than 63124 gas
-
-
-Params:
-
-1. **newSigner** *of type `address`*
-
-    > The address of the signer to register
-
-
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: less than 22735 gas
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
-
---- 
-### changeDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: less than 22976 gas
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
-### deployer()
-
-
-**Execution cost**: less than 757 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 625 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### isSigner(address)
 >
 >Gauge whether an address is registered signer
 
 
-**Execution cost**: less than 769 gas
+**Execution cost**: less than 747 gas
 
 **Attributes**: constant
 
@@ -161,10 +78,28 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### operator()
+### signerIndicesMap(address)
 
 
-**Execution cost**: less than 647 gas
+**Execution cost**: less than 531 gas
+
+**Attributes**: constant
+
+
+Params:
+
+1. **param_0** *of type `address`*
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
+### deployer()
+
+
+**Execution cost**: less than 779 gas
 
 **Attributes**: constant
 
@@ -176,12 +111,61 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
+
+
+**Execution cost**: less than 603 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### operator()
+
+
+**Execution cost**: less than 625 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### registerSigner(address)
+>
+>Registers a signer
+
+
+**Execution cost**: less than 63102 gas
+
+
+Params:
+
+1. **newSigner** *of type `address`*
+
+    > The address of the signer to register
+
+
+
+--- 
 ### signerIndex(address)
 >
 >Get the 0 based index of the given address in the list of signers
 
 
-**Execution cost**: less than 1061 gas
+**Execution cost**: less than 1039 gas
 
 **Attributes**: constant
 
@@ -200,28 +184,44 @@ Returns:
 1. **output_0** *of type `uint256`*
 
 --- 
-### signerIndicesMap(address)
+### setOperator(address)
+>
+>Set the operator of this contract
 
 
-**Execution cost**: less than 553 gas
-
-**Attributes**: constant
+**Execution cost**: less than 22954 gas
 
 
 Params:
 
-1. **param_0** *of type `address`*
+1. **newOperator** *of type `address`*
 
-Returns:
+    > The address of the new operator
 
 
-1. **output_0** *of type `uint256`*
+
+--- 
+### setDeployer(address)
+>
+>Set the deployer of this contract
+
+
+**Execution cost**: less than 22933 gas
+
+
+Params:
+
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
 
 --- 
 ### signers(uint256)
 
 
-**Execution cost**: less than 903 gas
+**Execution cost**: less than 881 gas
 
 **Attributes**: constant
 
@@ -238,7 +238,7 @@ Returns:
 --- 
 ### signersByIndices(uint256,uint256)
 >
->Get a subset of registered signers in the given 0 based index range
+>Get the subset of registered signers in the given 0 based index range
 
 
 **Execution cost**: No bound available

@@ -40,6 +40,15 @@ Params:
 
 
 ## Methods
+### _reset()
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
 ### cancelOrders(tuple[])
 
 
@@ -81,15 +90,6 @@ Returns:
 
 
 1. **output_0** *of type `bool`*
-
---- 
-### reset()
-
-
-**Execution cost**: No bound available
-
-
-
 
 --- 
 ### cancelOrders((uint256,address,(uint8,int256,((address,uint256),(address,uint256)),int256,(int256,int256)),((bytes32,(bytes32,bytes32,uint8)),(bytes32,(bytes32,bytes32,uint8))),uint256,uint256)[])

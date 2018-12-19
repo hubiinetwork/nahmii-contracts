@@ -17,10 +17,10 @@
 
 
 ## Methods
-### doubleSpenderWalletStatsIndex()
+### dataAvailable()
 
 
-**Execution cost**: less than 538 gas
+**Execution cost**: less than 550 gas
 
 **Attributes**: constant
 
@@ -29,7 +29,7 @@
 Returns:
 
 
-1. **output_0** *of type `uint256`*
+1. **output_0** *of type `bool`*
 
 --- 
 ### doubleSpenderWalletStats(uint256)
@@ -50,19 +50,13 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### dataAvailable()
+### _reset()
 
 
-**Execution cost**: less than 528 gas
-
-**Attributes**: constant
+**Execution cost**: No bound available
 
 
 
-Returns:
-
-
-1. **output_0** *of type `bool`*
 
 --- 
 ### addDoubleSpenderWallet(bool)
@@ -81,10 +75,25 @@ Returns:
 1. **output_0** *of type `address[3]`*
 
 --- 
+### doubleSpenderWalletStatsIndex()
+
+
+**Execution cost**: less than 560 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `uint256`*
+
+--- 
 ### getMaxDriipNonce()
 
 
-**Execution cost**: less than 407 gas
+**Execution cost**: less than 429 gas
 
 **Attributes**: constant
 
@@ -99,7 +108,7 @@ Returns:
 ### getMaxNullNonce()
 
 
-**Execution cost**: less than 604 gas
+**Execution cost**: less than 626 gas
 
 **Attributes**: constant
 
@@ -114,7 +123,7 @@ Returns:
 ### isDataAvailable()
 
 
-**Execution cost**: less than 594 gas
+**Execution cost**: less than 616 gas
 
 **Attributes**: constant
 
@@ -129,7 +138,7 @@ Returns:
 ### isDoubleSpenderWallet(address)
 
 
-**Execution cost**: less than 22990 gas
+**Execution cost**: less than 23012 gas
 
 
 Params:
@@ -145,7 +154,7 @@ Returns:
 ### maxDriipNonce()
 
 
-**Execution cost**: less than 472 gas
+**Execution cost**: less than 494 gas
 
 **Attributes**: constant
 
@@ -160,7 +169,7 @@ Returns:
 ### maxNullNonce()
 
 
-**Execution cost**: less than 450 gas
+**Execution cost**: less than 472 gas
 
 **Attributes**: constant
 
@@ -170,15 +179,6 @@ Returns:
 
 
 1. **output_0** *of type `uint256`*
-
---- 
-### reset()
-
-
-**Execution cost**: No bound available
-
-
-
 
 --- 
 ### setDataAvailable(bool)
@@ -200,7 +200,7 @@ Returns:
 ### setMaxDriipNonce(uint256)
 
 
-**Execution cost**: less than 20240 gas
+**Execution cost**: less than 20262 gas
 
 
 Params:

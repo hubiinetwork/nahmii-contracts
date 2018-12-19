@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Modifiable} from "./Modifiable.sol";
@@ -16,17 +16,20 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {BlockNumbUintsLib} from "./BlockNumbUintsLib.sol";
 import {BlockNumbIntsLib} from "./BlockNumbIntsLib.sol";
 import {BlockNumbDisdIntsLib} from "./BlockNumbDisdIntsLib.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {BlockNumbCurrenciesLib} from "./BlockNumbCurrenciesLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
-@title Configuration
-@notice An oracle for configurations values
-*/
+ * @title Configuration
+ * @notice An oracle for configurations values
+ */
 contract Configuration is Modifiable, Ownable, Servable {
     using SafeMathIntLib for int256;
     using BlockNumbUintsLib for BlockNumbUintsLib.BlockNumbUints;
     using BlockNumbIntsLib for BlockNumbIntsLib.BlockNumbInts;
     using BlockNumbDisdIntsLib for BlockNumbDisdIntsLib.BlockNumbDisdInts;
+    using BlockNumbCurrenciesLib for BlockNumbCurrenciesLib.BlockNumbCurrencies;
 
     //
     // Constants
@@ -43,77 +46,74 @@ contract Configuration is Modifiable, Ownable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     OperationalMode public operationalMode = OperationalMode.Normal;
 
-    BlockNumbUintsLib.BlockNumbUints updateDelayBlocksByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints confirmationBlocksByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private updateDelayBlocksByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private confirmationBlocksByBlockNumber;
 
-    BlockNumbDisdIntsLib.BlockNumbDisdInts tradeMakerFeeByBlockNumber;
-    BlockNumbDisdIntsLib.BlockNumbDisdInts tradeTakerFeeByBlockNumber;
-    BlockNumbDisdIntsLib.BlockNumbDisdInts paymentFeeByBlockNumber;
-    mapping(address => mapping(uint256 => BlockNumbDisdIntsLib.BlockNumbDisdInts)) currencyPaymentFeeByBlockNumber;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts private tradeMakerFeeByBlockNumber;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts private tradeTakerFeeByBlockNumber;
+    BlockNumbDisdIntsLib.BlockNumbDisdInts private paymentFeeByBlockNumber;
+    mapping(address => mapping(uint256 => BlockNumbDisdIntsLib.BlockNumbDisdInts)) private currencyPaymentFeeByBlockNumber;
 
-    BlockNumbIntsLib.BlockNumbInts tradeMakerMinimumFeeByBlockNumber;
-    BlockNumbIntsLib.BlockNumbInts tradeTakerMinimumFeeByBlockNumber;
-    BlockNumbIntsLib.BlockNumbInts paymentMinimumFeeByBlockNumber;
-    mapping(address => mapping(uint256 => BlockNumbIntsLib.BlockNumbInts)) currencyPaymentMinimumFeeByBlockNumber;
+    BlockNumbIntsLib.BlockNumbInts private tradeMakerMinimumFeeByBlockNumber;
+    BlockNumbIntsLib.BlockNumbInts private tradeTakerMinimumFeeByBlockNumber;
+    BlockNumbIntsLib.BlockNumbInts private paymentMinimumFeeByBlockNumber;
+    mapping(address => mapping(uint256 => BlockNumbIntsLib.BlockNumbInts)) private currencyPaymentMinimumFeeByBlockNumber;
 
-    BlockNumbUintsLib.BlockNumbUints cancelOrderChallengeTimeoutByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints settlementChallengeTimeoutByBlockNumber;
+    BlockNumbCurrenciesLib.BlockNumbCurrencies private feeCurrencies;
 
-    BlockNumbUintsLib.BlockNumbUints walletSettlementStakeFractionByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints operatorSettlementStakeFractionByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints fraudStakeFractionByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private walletLockTimeoutByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private cancelOrderChallengeTimeoutByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private settlementChallengeTimeoutByBlockNumber;
+
+    BlockNumbUintsLib.BlockNumbUints private walletSettlementStakeFractionByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private operatorSettlementStakeFractionByBlockNumber;
+    BlockNumbUintsLib.BlockNumbUints private fraudStakeFractionByBlockNumber;
+
+    uint256 public earliestSettlementBlockNumber;
+    bool public earliestSettlementBlockNumberUpdateDisabled;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetOperationalModeExitEvent();
-    event SetUpdateDelayBlocksEvent(uint256 blockNumber, uint256 newBlocks);
-    event SetConfirmationBlocksEvent(uint256 blockNumber, uint256 newBlocks);
-    event SetTradeMakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
-    event SetTradeTakerFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
-    event SetPaymentFeeEvent(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
-    event SetCurrencyPaymentFeeEvent(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal,
+    event SetUpdateDelayBlocksEvent(uint256 fromBlockNumber, uint256 newBlocks);
+    event SetConfirmationBlocksEvent(uint256 fromBlockNumber, uint256 newBlocks);
+    event SetTradeMakerFeeEvent(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
+    event SetTradeTakerFeeEvent(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
+    event SetPaymentFeeEvent(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues);
+    event SetCurrencyPaymentFeeEvent(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal,
         int256[] discountTiers, int256[] discountValues);
-    event SetTradeMakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
-    event SetTradeTakerMinimumFeeEvent(uint256 blockNumber, int256 nominal);
-    event SetPaymentMinimumFeeEvent(uint256 blockNumber, int256 nominal);
-    event SetCurrencyPaymentMinimumFeeEvent(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal);
-    event SetCancelOrderChallengeTimeoutEvent(uint256 blockNumber, uint256 timeoutInSeconds);
-    event SetSettlementChallengeTimeoutEvent(uint256 blockNumber, uint256 timeoutInSeconds);
-    event SetWalletSettlementStakeFractionEvent(uint256 blockNumber, uint256 stakeFraction);
-    event SetOperatorSettlementStakeFractionEvent(uint256 blockNumber, uint256 stakeFraction);
-    event SetFraudStakeFractionEvent(uint256 blockNumber, uint256 stakeFraction);
+    event SetTradeMakerMinimumFeeEvent(uint256 fromBlockNumber, int256 nominal);
+    event SetTradeTakerMinimumFeeEvent(uint256 fromBlockNumber, int256 nominal);
+    event SetPaymentMinimumFeeEvent(uint256 fromBlockNumber, int256 nominal);
+    event SetCurrencyPaymentMinimumFeeEvent(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal);
+    event SetFeeCurrencyEvent(uint256 fromBlockNumber, address referenceCurrencyCt, uint256 referenceCurrencyId,
+        address feeCurrencyCt, uint256 feeCurrencyId);
+    event SetWalletLockTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
+    event SetCancelOrderChallengeTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
+    event SetSettlementChallengeTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
+    event SetWalletSettlementStakeFractionEvent(uint256 fromBlockNumber, uint256 stakeFraction);
+    event SetOperatorSettlementStakeFractionEvent(uint256 fromBlockNumber, uint256 stakeFraction);
+    event SetFraudStakeFractionEvent(uint256 fromBlockNumber, uint256 stakeFraction);
+    event SetEarliestSettlementBlockNumberEvent(uint256 earliestSettlementBlockNumber);
+    event DisableEarliestSettlementBlockNumberUpdateEvent();
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
         updateDelayBlocksByBlockNumber.addEntry(block.number, 0);
-        confirmationBlocksByBlockNumber.addEntry(block.number, 12);
-
-        tradeMakerFeeByBlockNumber.addNominalEntry(block.number, 1e15);
-        tradeTakerFeeByBlockNumber.addNominalEntry(block.number, 2e15);
-        paymentFeeByBlockNumber.addNominalEntry(block.number, 1e15);
-        tradeMakerMinimumFeeByBlockNumber.addEntry(block.number, 1e14);
-        tradeTakerMinimumFeeByBlockNumber.addEntry(block.number, 2e14);
-        paymentMinimumFeeByBlockNumber.addEntry(block.number, 1e14);
-
-        cancelOrderChallengeTimeoutByBlockNumber.addEntry(block.number, 3 days);
-        settlementChallengeTimeoutByBlockNumber.addEntry(block.number, 5 days);
-
-        walletSettlementStakeFractionByBlockNumber.addEntry(block.number, 1e17);
-        operatorSettlementStakeFractionByBlockNumber.addEntry(block.number, 5e17);
-        fraudStakeFractionByBlockNumber.addEntry(block.number, 5e17);
     }
 
     //
+
     // Public functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set operational mode to Exit
     /// @dev Once operational mode is set to Exit it may not be set back to Normal
     function setOperationalModeExit()
     public
-    onlyDeployerOrEnabledServiceAction(OPERATIONAL_MODE_ACTION)
+    onlyEnabledServiceAction(OPERATIONAL_MODE_ACTION)
     {
         operationalMode = OperationalMode.Exit;
         emit SetOperationalModeExitEvent();
@@ -158,15 +158,15 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set the number of update delay blocks
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param newUpdateDelayBlocks The new update delay blocks value
-    function setUpdateDelayBlocks(uint256 blockNumber, uint256 newUpdateDelayBlocks)
+    function setUpdateDelayBlocks(uint256 fromBlockNumber, uint256 newUpdateDelayBlocks)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        updateDelayBlocksByBlockNumber.addEntry(blockNumber, newUpdateDelayBlocks);
-        emit SetUpdateDelayBlocksEvent(blockNumber, newUpdateDelayBlocks);
+        updateDelayBlocksByBlockNumber.addEntry(fromBlockNumber, newUpdateDelayBlocks);
+        emit SetUpdateDelayBlocksEvent(fromBlockNumber, newUpdateDelayBlocks);
     }
 
     /// @notice Get the current value of confirmation blocks
@@ -190,15 +190,15 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set the number of confirmation blocks
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param newConfirmationBlocks The new confirmation blocks value
-    function setConfirmationBlocks(uint256 blockNumber, uint256 newConfirmationBlocks)
+    function setConfirmationBlocks(uint256 fromBlockNumber, uint256 newConfirmationBlocks)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        confirmationBlocksByBlockNumber.addEntry(blockNumber, newConfirmationBlocks);
-        emit SetConfirmationBlocksEvent(blockNumber, newConfirmationBlocks);
+        confirmationBlocksByBlockNumber.addEntry(fromBlockNumber, newConfirmationBlocks);
+        emit SetConfirmationBlocksEvent(fromBlockNumber, newConfirmationBlocks);
     }
 
     /// @notice Get number of trade maker fee block number tiers
@@ -211,8 +211,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get trade maker relative fee at given block number, possibly discounted by discount tier value
-    /// @param blockNumber Block number from which the update applies
-    /// @param discountTier Tiered value that determines discount
+    /// @param blockNumber The concerned block number
+    /// @param discountTier The concerned discount tier
     function tradeMakerFee(uint256 blockNumber, int256 discountTier)
     public
     view
@@ -222,17 +222,17 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set trade maker nominal relative fee and discount tiers and values at given block number tier
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeMakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    function setTradeMakerFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        tradeMakerFeeByBlockNumber.addDiscountedEntry(blockNumber, nominal, discountTiers, discountValues);
-        emit SetTradeMakerFeeEvent(blockNumber, nominal, discountTiers, discountValues);
+        tradeMakerFeeByBlockNumber.addDiscountedEntry(fromBlockNumber, nominal, discountTiers, discountValues);
+        emit SetTradeMakerFeeEvent(fromBlockNumber, nominal, discountTiers, discountValues);
     }
 
     /// @notice Get number of trade taker fee block number tiers
@@ -245,8 +245,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get trade taker relative fee at given block number, possibly discounted by discount tier value
-    /// @param blockNumber Block number from which the update applies
-    /// @param discountTier Tiered value that determines discount
+    /// @param blockNumber The concerned block number
+    /// @param discountTier The concerned discount tier
     function tradeTakerFee(uint256 blockNumber, int256 discountTier)
     public
     view
@@ -256,17 +256,17 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set trade taker nominal relative fee and discount tiers and values at given block number tier
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeTakerFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    function setTradeTakerFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        tradeTakerFeeByBlockNumber.addDiscountedEntry(blockNumber, nominal, discountTiers, discountValues);
-        emit SetTradeTakerFeeEvent(blockNumber, nominal, discountTiers, discountValues);
+        tradeTakerFeeByBlockNumber.addDiscountedEntry(fromBlockNumber, nominal, discountTiers, discountValues);
+        emit SetTradeTakerFeeEvent(fromBlockNumber, nominal, discountTiers, discountValues);
     }
 
     /// @notice Get number of payment fee block number tiers
@@ -279,8 +279,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get payment relative fee at given block number, possibly discounted by discount tier value
-    /// @param blockNumber Block number from which the update applies
-    /// @param discountTier Tiered value that determines discount
+    /// @param blockNumber The concerned block number
+    /// @param discountTier The concerned discount tier
     function paymentFee(uint256 blockNumber, int256 discountTier)
     public
     view
@@ -290,22 +290,22 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set payment nominal relative fee and discount tiers and values at given block number tier
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setPaymentFee(uint256 blockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    function setPaymentFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        paymentFeeByBlockNumber.addDiscountedEntry(blockNumber, nominal, discountTiers, discountValues);
-        emit SetPaymentFeeEvent(blockNumber, nominal, discountTiers, discountValues);
+        paymentFeeByBlockNumber.addDiscountedEntry(fromBlockNumber, nominal, discountTiers, discountValues);
+        emit SetPaymentFeeEvent(fromBlockNumber, nominal, discountTiers, discountValues);
     }
 
     /// @notice Get number of payment fee block number tiers of given currency
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function currencyPaymentFeesCount(address currencyCt, uint256 currencyId)
     public
     view
@@ -316,11 +316,11 @@ contract Configuration is Modifiable, Ownable, Servable {
 
     /// @notice Get payment relative fee for given currency at given block number, possibly discounted by
     /// discount tier value
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
-    /// @param blockNumber Block number from which the update applies
-    /// @param discountTier Tiered value that determines discount
-    function currencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 discountTier)
+    /// @param blockNumber The concerned block number
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param discountTier The concerned discount tier
+    function currencyPaymentFee(uint256 blockNumber, address currencyCt, uint256 currencyId, int256 discountTier)
     public
     view
     returns (int256)
@@ -335,23 +335,23 @@ contract Configuration is Modifiable, Ownable, Servable {
 
     /// @notice Set payment nominal relative fee and discount tiers and values for given currency at given
     /// block number tier
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setCurrencyPaymentFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal,
+    function setCurrencyPaymentFee(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal,
         int256[] discountTiers, int256[] discountValues)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
         currencyPaymentFeeByBlockNumber[currencyCt][currencyId].addDiscountedEntry(
-            blockNumber, nominal, discountTiers, discountValues
+            fromBlockNumber, nominal, discountTiers, discountValues
         );
         emit SetCurrencyPaymentFeeEvent(
-            currencyCt, currencyId, blockNumber, nominal, discountTiers, discountValues
+            fromBlockNumber, currencyCt, currencyId, nominal, discountTiers, discountValues
         );
     }
 
@@ -365,7 +365,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get trade maker minimum relative fee at given block number
-    /// @param blockNumber Block number from which the update applies
+    /// @param blockNumber The concerned block number
     function tradeMakerMinimumFee(uint256 blockNumber)
     public
     view
@@ -375,15 +375,15 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set trade maker minimum relative fee at given block number tier
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param nominal Minimum relative fee
-    function setTradeMakerMinimumFee(uint256 blockNumber, int256 nominal)
+    function setTradeMakerMinimumFee(uint256 fromBlockNumber, int256 nominal)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        tradeMakerMinimumFeeByBlockNumber.addEntry(blockNumber, nominal);
-        emit SetTradeMakerMinimumFeeEvent(blockNumber, nominal);
+        tradeMakerMinimumFeeByBlockNumber.addEntry(fromBlockNumber, nominal);
+        emit SetTradeMakerMinimumFeeEvent(fromBlockNumber, nominal);
     }
 
     /// @notice Get number of minimum trade taker fee block number tiers
@@ -396,7 +396,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get trade taker minimum relative fee at given block number
-    /// @param blockNumber Block number from which the update applies
+    /// @param blockNumber The concerned block number
     function tradeTakerMinimumFee(uint256 blockNumber)
     public
     view
@@ -406,15 +406,15 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set trade taker minimum relative fee at given block number tier
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param nominal Minimum relative fee
-    function setTradeTakerMinimumFee(uint256 blockNumber, int256 nominal)
+    function setTradeTakerMinimumFee(uint256 fromBlockNumber, int256 nominal)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        tradeTakerMinimumFeeByBlockNumber.addEntry(blockNumber, nominal);
-        emit SetTradeTakerMinimumFeeEvent(blockNumber, nominal);
+        tradeTakerMinimumFeeByBlockNumber.addEntry(fromBlockNumber, nominal);
+        emit SetTradeTakerMinimumFeeEvent(fromBlockNumber, nominal);
     }
 
     /// @notice Get number of minimum payment fee block number tiers
@@ -427,7 +427,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get payment minimum relative fee at given block number
-    /// @param blockNumber Block number from which the update applies
+    /// @param blockNumber The concerned block number
     function paymentMinimumFee(uint256 blockNumber)
     public
     view
@@ -437,20 +437,20 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set payment minimum relative fee at given block number tier
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param nominal Minimum relative fee
-    function setPaymentMinimumFee(uint256 blockNumber, int256 nominal)
+    function setPaymentMinimumFee(uint256 fromBlockNumber, int256 nominal)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        paymentMinimumFeeByBlockNumber.addEntry(blockNumber, nominal);
-        emit SetPaymentMinimumFeeEvent(blockNumber, nominal);
+        paymentMinimumFeeByBlockNumber.addEntry(fromBlockNumber, nominal);
+        emit SetPaymentMinimumFeeEvent(fromBlockNumber, nominal);
     }
 
     /// @notice Get number of minimum payment fee block number tiers for given currency
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function currencyPaymentMinimumFeesCount(address currencyCt, uint256 currencyId)
     public
     view
@@ -460,10 +460,10 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Get payment minimum relative fee for given currency at given block number
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
-    /// @param blockNumber Block number from which the update applies
-    function currencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber)
+    /// @param blockNumber The concerned block number
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function currencyPaymentMinimumFee(uint256 blockNumber, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256)
@@ -475,17 +475,87 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set payment minimum relative fee for given currency at given block number tier
-    /// @param currencyCt Concerned currency contract address (address(0) == ETH)
-    /// @param currencyId Concerned currency ID (0 for ETH and ERC20)
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param nominal Minimum relative fee
-    function setCurrencyPaymentMinimumFee(address currencyCt, uint256 currencyId, uint256 blockNumber, int256 nominal)
+    function setCurrencyPaymentMinimumFee(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].addEntry(blockNumber, nominal);
-        emit SetCurrencyPaymentMinimumFeeEvent(currencyCt, currencyId, blockNumber, nominal);
+        currencyPaymentMinimumFeeByBlockNumber[currencyCt][currencyId].addEntry(fromBlockNumber, nominal);
+        emit SetCurrencyPaymentMinimumFeeEvent(fromBlockNumber, currencyCt, currencyId, nominal);
+    }
+
+    /// @notice Get number of fee currencies for the given reference currency
+    /// @param currencyCt The address of the concerned reference currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned reference currency (0 for ETH and ERC20)
+    function feeCurrenciesCount(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return feeCurrencies.count(MonetaryTypesLib.Currency(currencyCt, currencyId));
+    }
+
+    /// @notice Get the fee currency for the given reference currency at given block number
+    /// @param blockNumber The concerned block number
+    /// @param currencyCt The address of the concerned reference currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned reference currency (0 for ETH and ERC20)
+    function feeCurrency(uint256 blockNumber, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (address ct, uint256 id)
+    {
+        MonetaryTypesLib.Currency storage _feeCurrency = feeCurrencies.currencyAt(
+            MonetaryTypesLib.Currency(currencyCt, currencyId), blockNumber
+        );
+        ct = _feeCurrency.ct;
+        id = _feeCurrency.id;
+    }
+
+    /// @notice Set the fee currency for the given reference currency at given block number
+    /// @param fromBlockNumber Block number from which the update applies
+    /// @param referenceCurrencyCt The address of the concerned reference currency contract (address(0) == ETH)
+    /// @param referenceCurrencyId The ID of the concerned reference currency (0 for ETH and ERC20)
+    /// @param feeCurrencyCt The address of the concerned fee currency contract (address(0) == ETH)
+    /// @param feeCurrencyId The ID of the concerned fee currency (0 for ETH and ERC20)
+    function setFeeCurrency(uint256 fromBlockNumber, address referenceCurrencyCt, uint256 referenceCurrencyId,
+        address feeCurrencyCt, uint256 feeCurrencyId)
+    public
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
+    {
+        feeCurrencies.addEntry(
+            fromBlockNumber,
+            MonetaryTypesLib.Currency(referenceCurrencyCt, referenceCurrencyId),
+            MonetaryTypesLib.Currency(feeCurrencyCt, feeCurrencyId)
+        );
+        emit SetFeeCurrencyEvent(fromBlockNumber, referenceCurrencyCt, referenceCurrencyId,
+            feeCurrencyCt, feeCurrencyId);
+    }
+
+    /// @notice Get the current value of wallet lock timeout
+    /// @return The value of wallet lock timeout
+    function walletLockTimeout()
+    public
+    view
+    returns (uint256)
+    {
+        return walletLockTimeoutByBlockNumber.currentValue();
+    }
+
+    /// @notice Set timeout of wallet lock
+    /// @param fromBlockNumber Block number from which the update applies
+    /// @param timeoutInSeconds Timeout duration in seconds
+    function setWalletLockTimeout(uint256 fromBlockNumber, uint256 timeoutInSeconds)
+    public
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
+    {
+        walletLockTimeoutByBlockNumber.addEntry(fromBlockNumber, timeoutInSeconds);
+        emit SetWalletLockTimeoutEvent(fromBlockNumber, timeoutInSeconds);
     }
 
     /// @notice Get the current value of cancel order challenge timeout
@@ -499,15 +569,15 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set timeout of cancel order challenge
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param timeoutInSeconds Timeout duration in seconds
-    function setCancelOrderChallengeTimeout(uint256 blockNumber, uint256 timeoutInSeconds)
+    function setCancelOrderChallengeTimeout(uint256 fromBlockNumber, uint256 timeoutInSeconds)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        cancelOrderChallengeTimeoutByBlockNumber.addEntry(blockNumber, timeoutInSeconds);
-        emit SetCancelOrderChallengeTimeoutEvent(blockNumber, timeoutInSeconds);
+        cancelOrderChallengeTimeoutByBlockNumber.addEntry(fromBlockNumber, timeoutInSeconds);
+        emit SetCancelOrderChallengeTimeoutEvent(fromBlockNumber, timeoutInSeconds);
     }
 
     /// @notice Get the current value of settlement challenge timeout
@@ -521,15 +591,15 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     /// @notice Set timeout of settlement challenges
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param timeoutInSeconds Timeout duration in seconds
-    function setSettlementChallengeTimeout(uint256 blockNumber, uint256 timeoutInSeconds)
+    function setSettlementChallengeTimeout(uint256 fromBlockNumber, uint256 timeoutInSeconds)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        settlementChallengeTimeoutByBlockNumber.addEntry(blockNumber, timeoutInSeconds);
-        emit SetSettlementChallengeTimeoutEvent(blockNumber, timeoutInSeconds);
+        settlementChallengeTimeoutByBlockNumber.addEntry(fromBlockNumber, timeoutInSeconds);
+        emit SetSettlementChallengeTimeoutEvent(fromBlockNumber, timeoutInSeconds);
     }
 
     /// @notice Get the current value of wallet settlement stake fraction
@@ -544,15 +614,15 @@ contract Configuration is Modifiable, Ownable, Servable {
 
     /// @notice Set fraction of security bond that will be gained from successfully challenging
     /// in settlement challenge triggered by wallet
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param stakeFraction The fraction gained
-    function setWalletSettlementStakeFraction(uint256 blockNumber, uint256 stakeFraction)
+    function setWalletSettlementStakeFraction(uint256 fromBlockNumber, uint256 stakeFraction)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        walletSettlementStakeFractionByBlockNumber.addEntry(blockNumber, stakeFraction);
-        emit SetWalletSettlementStakeFractionEvent(blockNumber, stakeFraction);
+        walletSettlementStakeFractionByBlockNumber.addEntry(fromBlockNumber, stakeFraction);
+        emit SetWalletSettlementStakeFractionEvent(fromBlockNumber, stakeFraction);
     }
 
     /// @notice Get the current value of operator settlement stake fraction
@@ -567,15 +637,15 @@ contract Configuration is Modifiable, Ownable, Servable {
 
     /// @notice Set fraction of security bond that will be gained from successfully challenging
     /// in settlement challenge triggered by operator
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param stakeFraction The fraction gained
-    function setOperatorSettlementStakeFraction(uint256 blockNumber, uint256 stakeFraction)
+    function setOperatorSettlementStakeFraction(uint256 fromBlockNumber, uint256 stakeFraction)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        operatorSettlementStakeFractionByBlockNumber.addEntry(blockNumber, stakeFraction);
-        emit SetOperatorSettlementStakeFractionEvent(blockNumber, stakeFraction);
+        operatorSettlementStakeFractionByBlockNumber.addEntry(fromBlockNumber, stakeFraction);
+        emit SetOperatorSettlementStakeFractionEvent(fromBlockNumber, stakeFraction);
     }
 
     /// @notice Get the current value of fraud stake fraction
@@ -590,22 +660,45 @@ contract Configuration is Modifiable, Ownable, Servable {
 
     /// @notice Set fraction of security bond that will be gained from successfully challenging
     /// in fraud challenge
-    /// @param blockNumber Block number from which the update applies
+    /// @param fromBlockNumber Block number from which the update applies
     /// @param stakeFraction The fraction gained
-    function setFraudStakeFraction(uint256 blockNumber, uint256 stakeFraction)
+    function setFraudStakeFraction(uint256 fromBlockNumber, uint256 stakeFraction)
     public
-    onlyDeployer
-    onlyDelayedBlockNumber(blockNumber)
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
     {
-        fraudStakeFractionByBlockNumber.addEntry(blockNumber, stakeFraction);
-        emit SetFraudStakeFractionEvent(blockNumber, stakeFraction);
+        fraudStakeFractionByBlockNumber.addEntry(fromBlockNumber, stakeFraction);
+        emit SetFraudStakeFractionEvent(fromBlockNumber, stakeFraction);
+    }
+
+    /// @notice Set the block number of the earliest settlement initiation
+    /// @param _earliestSettlementBlockNumber The block number of the earliest settlement
+    function setEarliestSettlementBlockNumber(uint256 _earliestSettlementBlockNumber)
+    public
+    onlyOperator
+    {
+        earliestSettlementBlockNumber = _earliestSettlementBlockNumber;
+        emit SetEarliestSettlementBlockNumberEvent(earliestSettlementBlockNumber);
+    }
+
+    /// @notice Disable further updates to the earliest settlement block number
+    /// @dev This operation can not be undone
+    function disableEarliestSettlementBlockNumberUpdate()
+    public
+    onlyOperator
+    {
+        earliestSettlementBlockNumberUpdateDisabled = true;
+        emit DisableEarliestSettlementBlockNumberUpdateEvent();
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyDelayedBlockNumber(uint256 blockNumber) {
-        require(0 == updateDelayBlocksByBlockNumber.count() || blockNumber >= block.number + updateDelayBlocksByBlockNumber.currentValue());
+        require(
+            0 == updateDelayBlocksByBlockNumber.count() ||
+        blockNumber >= block.number + updateDelayBlocksByBlockNumber.currentValue()
+        );
         _;
     }
 }

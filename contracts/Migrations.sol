@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 
@@ -19,17 +19,23 @@ contract Migrations is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor() public Ownable(msg.sender)  {
+    constructor() Ownable(msg.sender) public  {
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function setCompleted(uint completed) public onlyDeployer {
+    function setCompleted(uint completed)
+    public
+    onlyDeployer
+    {
         last_completed_migration = completed;
     }
 
-    function upgrade(address newAddress) public onlyDeployer {
+    function upgrade(address newAddress)
+    public
+    onlyDeployer
+    {
         Migrations upgraded = Migrations(newAddress);
         upgraded.setCompleted(last_completed_migration);
     }

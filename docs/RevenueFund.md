@@ -3,11 +3,11 @@
 > RevenueFund
 
 
-**Execution cost**: less than 42913 gas
+**Execution cost**: less than 43336 gas
 
-**Deployment cost**: less than 1715400 gas
+**Deployment cost**: less than 2096800 gas
 
-**Combined cost**: less than 1758313 gas
+**Combined cost**: less than 2140136 gas
 
 ## Constructor
 
@@ -15,10 +15,10 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### RegisterAccrualBeneficiaryEvent(address,uint256)
+### RegisterAccrualBeneficiaryEvent(address,int256)
 
 
 **Execution cost**: No bound available
@@ -27,54 +27,10 @@ Params:
 Params:
 
 1. **beneficiary** *of type `address`*
-2. **fraction** *of type `uint256`*
+2. **fraction** *of type `int256`*
 
 --- 
-### ChangeOperatorEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldOperator** *of type `address`*
-2. **newOperator** *of type `address`*
-
---- 
-### ChangeDeployerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldDeployer** *of type `address`*
-2. **newDeployer** *of type `address`*
-
---- 
-### ChangeTransferControllerManagerEvent(address,address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **oldTransferControllerManager** *of type `address`*
-2. **newTransferControllerManager** *of type `address`*
-
---- 
-### CloseAccrualPeriodEvent()
-
-
-**Execution cost**: No bound available
-
-
-
---- 
-### DepositEvent(address,int256,address,uint256)
+### ReceiveEvent(address,string,int256,address,uint256)
 
 
 **Execution cost**: No bound available
@@ -83,20 +39,10 @@ Params:
 Params:
 
 1. **from** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-
---- 
-### DeregisterAccrualBeneficiaryEvent(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **beneficiary** *of type `address`*
+2. **balanceType** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
 
 --- 
 ### DeregisterBeneficiaryEvent(address)
@@ -121,6 +67,25 @@ Params:
 1. **service** *of type `address`*
 
 --- 
+### DeregisterAccrualBeneficiaryEvent(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **beneficiary** *of type `address`*
+
+--- 
+### CloseAccrualPeriodEvent()
+
+
+**Execution cost**: No bound available
+
+
+
+--- 
 ### RegisterBeneficiaryEvent(address)
 
 
@@ -142,6 +107,42 @@ Params:
 
 1. **service** *of type `address`*
 
+--- 
+### SetDeployerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldDeployer** *of type `address`*
+2. **newDeployer** *of type `address`*
+
+--- 
+### SetOperatorEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldOperator** *of type `address`*
+2. **newOperator** *of type `address`*
+
+--- 
+### SetTransferControllerManagerEvent(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **oldTransferControllerManager** *of type `address`*
+2. **newTransferControllerManager** *of type `address`*
+
 ## Fallback
 
 
@@ -152,64 +153,41 @@ Params:
 
 
 ## Methods
-### depositTokensTo(address,int256,address,uint256,string)
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
 
 
 **Execution cost**: No bound available
 
 
-Params:
-
-1. **wallet** *of type `address`*
-2. **amount** *of type `int256`*
-3. **currencyCt** *of type `address`*
-4. **currencyId** *of type `uint256`*
-5. **standard** *of type `string`*
 
 
 --- 
-### PARTS_PER()
+### isRegisteredBeneficiary(address)
+>
+>Gauge whether the given address is the one of a registered beneficiary
 
 
-**Execution cost**: less than 348 gas
+**Execution cost**: No bound available
 
 **Attributes**: constant
 
 
+Params:
+
+1. **beneficiary** *of type `address`*
+
+    > Address of beneficiary
+
 
 Returns:
 
+> true if beneficiary is registered, else false
 
-1. **output_0** *of type `uint256`*
-
---- 
-### deregisterService(address)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **service** *of type `address`*
-
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newOperator** *of type `address`*
-
-    > The address of the new operator
-
-
+1. **output_0** *of type `bool`*
 
 --- 
 ### aggregateAccrualBalance(address,uint256)
@@ -231,36 +209,6 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
-### changeDeployer(address)
->
->Change the deployer of this contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newDeployer** *of type `address`*
-
-    > The address of the new deployer
-
-
-
---- 
-### triggerDestroy()
->
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
 ### getBeneficiaryFraction(address)
 
 
@@ -276,39 +224,7 @@ Params:
 Returns:
 
 
-1. **output_0** *of type `uint256`*
-
---- 
-### depositTokens(int256,address,uint256,string)
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **amount** *of type `int256`*
-2. **currencyCt** *of type `address`*
-3. **currencyId** *of type `uint256`*
-4. **standard** *of type `string`*
-
-
---- 
-### destructor()
->
->Return the address that is able to initiate self-destruction
-
-
-**Execution cost**: less than 897 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
+1. **output_0** *of type `int256`*
 
 --- 
 ### closeAccrualPeriod()
@@ -320,10 +236,54 @@ Returns:
 
 
 --- 
+### destructor()
+>
+>Return the address that is able to initiate self-destruction
+
+
+**Execution cost**: less than 809 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### getTotalBeneficiaryFraction()
+
+
+**Execution cost**: less than 680 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `int256`*
+
+--- 
+### deregisterService(address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **service** *of type `address`*
+
+
+--- 
 ### deployer()
 
 
-**Execution cost**: less than 1094 gas
+**Execution cost**: less than 1138 gas
 
 **Attributes**: constant
 
@@ -351,41 +311,10 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### changeTransferControllerManager(address)
->
->Change the currency manager contract
+### DEPOSIT_BALANCE_TYPE()
 
 
 **Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) TransferControllerManager contract instance
-
-
-
---- 
-### depositEthersTo(address)
-
-
-**Execution cost**: No bound available
-
-**Attributes**: payable
-
-
-Params:
-
-1. **wallet** *of type `address`*
-
-
---- 
-### getTotalBeneficiaryFraction()
-
-
-**Execution cost**: less than 768 gas
 
 **Attributes**: constant
 
@@ -394,46 +323,35 @@ Params:
 Returns:
 
 
-1. **output_0** *of type `uint256`*
+1. **output_0** *of type `string`*
 
 --- 
-### isRegisteredBeneficiary(address)
->
->Gauge whether the given address is the one of a registered beneficiary
+### receiveTokens(string,int256,address,uint256,string)
 
 
 **Execution cost**: No bound available
 
-**Attributes**: constant
+
+Params:
+
+1. **balanceType** *of type `string`*
+2. **amount** *of type `int256`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
+5. **standard** *of type `string`*
+
+
+--- 
+### registerService(address)
+
+
+**Execution cost**: No bound available
 
 
 Params:
 
-1. **beneficiary** *of type `address`*
+1. **service** *of type `address`*
 
-    > Address of beneficiary
-
-
-Returns:
-
-> true if beneficiary is registered, else false
-
-1. **output_0** *of type `bool`*
-
---- 
-### operator()
-
-
-**Execution cost**: less than 984 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
 
 --- 
 ### periodAccrualBalance(address,uint256)
@@ -455,6 +373,70 @@ Returns:
 1. **output_0** *of type `int256`*
 
 --- 
+### receiveEthersTo(address,string)
+
+
+**Execution cost**: No bound available
+
+**Attributes**: payable
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **balanceType** *of type `string`*
+
+
+--- 
+### registerFractionalBeneficiary(address,int256)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **beneficiary** *of type `address`*
+2. **fraction** *of type `int256`*
+
+Returns:
+
+
+1. **output_0** *of type `bool`*
+
+--- 
+### operator()
+
+
+**Execution cost**: less than 874 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### receiveTokensTo(address,string,int256,address,uint256,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **balanceType** *of type `string`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
+
+
+--- 
 ### registerBeneficiary(address)
 
 
@@ -471,16 +453,17 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### registerFractionalBeneficiary(address,uint256)
+### registeredServicesMap(address)
 
 
 **Execution cost**: No bound available
 
+**Attributes**: constant
+
 
 Params:
 
-1. **beneficiary** *of type `address`*
-2. **fraction** *of type `uint256`*
+1. **param_0** *of type `address`*
 
 Returns:
 
@@ -488,7 +471,9 @@ Returns:
 1. **output_0** *of type `bool`*
 
 --- 
-### registerService(address)
+### setDeployer(address)
+>
+>Set the deployer of this contract
 
 
 **Execution cost**: No bound available
@@ -496,7 +481,44 @@ Returns:
 
 Params:
 
-1. **service** *of type `address`*
+1. **newDeployer** *of type `address`*
+
+    > The address of the new deployer
+
+
+
+--- 
+### setOperator(address)
+>
+>Set the operator of this contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newOperator** *of type `address`*
+
+    > The address of the new operator
+
+
+
+--- 
+### setTransferControllerManager(address)
+>
+>Set the currency manager contract
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **newAddress** *of type `address`*
+
+    > The (address of) TransferControllerManager contract instance
+
 
 
 --- 

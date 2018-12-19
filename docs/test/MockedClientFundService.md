@@ -3,11 +3,11 @@
 > MockedClientFundService
 
 
-**Execution cost**: less than 41637 gas
+**Execution cost**: less than 41815 gas
 
-**Deployment cost**: less than 493000 gas
+**Deployment cost**: less than 677200 gas
 
-**Combined cost**: less than 534637 gas
+**Combined cost**: less than 719015 gas
 
 ## Constructor
 
@@ -15,10 +15,10 @@
 
 Params:
 
-1. **owner** *of type `address`*
+1. **deployer** *of type `address`*
 
 ## Events
-### ChangeClientFundEvent(address,address)
+### SetClientFundEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -30,7 +30,7 @@ Params:
 2. **newAddress** *of type `address`*
 
 --- 
-### ChangeDeployerEvent(address,address)
+### SetDeployerEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -42,7 +42,7 @@ Params:
 2. **newDeployer** *of type `address`*
 
 --- 
-### ChangeOperatorEvent(address,address)
+### SetOperatorEvent(address,address)
 
 
 **Execution cost**: No bound available
@@ -55,22 +55,9 @@ Params:
 
 
 ## Methods
-### triggerDestroy()
+### setOperator(address)
 >
->Destroy this contract
->
-> Requires that msg.sender is the defined destructor
-
-
-**Execution cost**: No bound available
-
-
-
-
---- 
-### changeOperator(address)
->
->Change the operator of this contract
+>Set the operator of this contract
 
 
 **Execution cost**: No bound available
@@ -85,9 +72,70 @@ Params:
 
 
 --- 
-### changeDeployer(address)
+### transferToBeneficiary(address,int256,address,uint256,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **beneficiary** *of type `address`*
+2. **amount** *of type `int256`*
+3. **currencyCt** *of type `address`*
+4. **currencyId** *of type `uint256`*
+5. **standard** *of type `string`*
+
+
+--- 
+### operator()
+
+
+**Execution cost**: less than 679 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### lockBalancesByProxy(address,address)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **lockedWallet** *of type `address`*
+2. **lockerWallet** *of type `address`*
+
+
+--- 
+### stageToBeneficiary(address,address,int256,address,uint256,string)
+
+
+**Execution cost**: No bound available
+
+
+Params:
+
+1. **wallet** *of type `address`*
+2. **beneficiary** *of type `address`*
+3. **amount** *of type `int256`*
+4. **currencyCt** *of type `address`*
+5. **currencyId** *of type `uint256`*
+6. **standard** *of type `string`*
+
+
+--- 
+### setDeployer(address)
 >
->Change the deployer of this contract
+>Set the deployer of this contract
 
 
 **Execution cost**: No bound available
@@ -98,23 +146,6 @@ Params:
 1. **newDeployer** *of type `address`*
 
     > The address of the new deployer
-
-
-
---- 
-### changeClientFund(address)
->
->Change the client fund contract
-
-
-**Execution cost**: No bound available
-
-
-Params:
-
-1. **newAddress** *of type `address`*
-
-    > The (address of) ClientFund contract instance
 
 
 
@@ -134,27 +165,12 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### deployer()
-
-
-**Execution cost**: less than 833 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
 ### destructor()
 >
 >Return the address that is able to initiate self-destruction
 
 
-**Execution cost**: less than 701 gas
+**Execution cost**: less than 657 gas
 
 **Attributes**: constant
 
@@ -166,22 +182,9 @@ Returns:
 1. **output_0** *of type `address`*
 
 --- 
-### operator()
-
-
-**Execution cost**: less than 723 gas
-
-**Attributes**: constant
-
-
-
-Returns:
-
-
-1. **output_0** *of type `address`*
-
---- 
-### seizeAllBalances(address,address)
+### setClientFund(address)
+>
+>Set the client fund contract
 
 
 **Execution cost**: No bound available
@@ -189,8 +192,10 @@ Returns:
 
 Params:
 
-1. **sourceWallet** *of type `address`*
-2. **targetWallet** *of type `address`*
+1. **newAddress** *of type `address`*
+
+    > The (address of) ClientFund contract instance
+
 
 
 --- 
@@ -209,7 +214,35 @@ Params:
 
 
 --- 
-### stageToBeneficiaryUntargeted(address,address,int256,address,uint256)
+### deployer()
+
+
+**Execution cost**: less than 855 gas
+
+**Attributes**: constant
+
+
+
+Returns:
+
+
+1. **output_0** *of type `address`*
+
+--- 
+### triggerDestroy()
+>
+>Destroy this contract
+>
+> Requires that msg.sender is the defined destructor
+
+
+**Execution cost**: No bound available
+
+
+
+
+--- 
+### unlockBalancesByProxy(address)
 
 
 **Execution cost**: No bound available
@@ -217,11 +250,7 @@ Params:
 
 Params:
 
-1. **sourceWallet** *of type `address`*
-2. **beneficiary** *of type `address`*
-3. **amount** *of type `int256`*
-4. **currencyCt** *of type `address`*
-5. **currencyId** *of type `uint256`*
+1. **wallet** *of type `address`*
 
 
 --- 

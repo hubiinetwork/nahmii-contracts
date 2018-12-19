@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -14,25 +14,25 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeByPayment
-@notice Where driips are challenged wrt fraud by mismatch in single trade property values
-*/
+ * @title FraudChallengeByPayment
+ * @notice Where driips are challenged wrt fraud by mismatch in single trade property values
+ */
 contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChallengeByPaymentEvent(bytes32 paymentHash, address challenger,
-        address seizedWallet);
+        address lockedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -43,14 +43,8 @@ SecurityBondable, ClientFundable {
     function challenge(NahmiiTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlyOperatorSealedPayment(payment)
     {
-        require(fraudChallenge != address(0));
-        require(configuration != address(0));
-        require(securityBond != address(0));
-        require(clientFund != address(0));
-
         require(validator.isGenuinePaymentWalletHash(payment));
 
         // Genuineness affected by wallet not having signed the payment
@@ -58,12 +52,20 @@ SecurityBondable, ClientFundable {
             payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet
         );
 
-        // Genuineness affected by sender
-        bool genuineSenderAndFee = validator.isGenuinePaymentSender(payment) &&
-        validator.isGenuinePaymentFee(payment);
+        // Genuineness affected by sender and recipient
+        bool genuineSenderAndFee;
+        bool genuineRecipient;
+        if (validator.isPaymentCurrencyNonFungible(payment)) {
+            genuineSenderAndFee = validator.isGenuinePaymentSenderOfNonFungible(payment)
+            && validator.isGenuinePaymentFeeOfNonFungible(payment);
 
-        // Genuineness affected by recipient
-        bool genuineRecipient = validator.isGenuinePaymentRecipient(payment);
+            genuineRecipient = validator.isGenuinePaymentRecipientOfNonFungible(payment);
+        } else {
+            genuineSenderAndFee = validator.isGenuinePaymentSenderOfFungible(payment)
+            && validator.isGenuinePaymentFeeOfFungible(payment);
+
+            genuineRecipient = validator.isGenuinePaymentRecipientOfFungible(payment);
+        }
 
         require(!genuineWalletSignature || !genuineSenderAndFee || !genuineRecipient);
 
@@ -71,16 +73,16 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        address seizedWallet;
+        address lockedWallet;
         if (!genuineSenderAndFee)
-            seizedWallet = payment.sender.wallet;
+            lockedWallet = payment.sender.wallet;
         if (!genuineRecipient)
-            seizedWallet = payment.recipient.wallet;
-        if (address(0) != seizedWallet)
-            clientFund.seizeAllBalances(seizedWallet, msg.sender);
+            lockedWallet = payment.recipient.wallet;
+//        if (address(0) != lockedWallet)
+//            walletLocker.lockByProxy(lockedWallet, msg.sender);
 
-        emit ChallengeByPaymentEvent(payment.seals.operator.hash, msg.sender, seizedWallet);
+        emit ChallengeByPaymentEvent(payment.seals.operator.hash, msg.sender, lockedWallet);
     }
 }

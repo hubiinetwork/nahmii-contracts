@@ -39,13 +39,16 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
-            web3SecurityBond = await MockedSecurityBond.new(/*glob.owner*/);
+            web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
 
-            await ethersFraudChallengeByDuplicateDriipNonceOfPayments.changeFraudChallenge(ethersFraudChallenge.address);
-            await ethersFraudChallengeByDuplicateDriipNonceOfPayments.changeConfiguration(ethersConfiguration.address);
-            await ethersFraudChallengeByDuplicateDriipNonceOfPayments.changeValidator(ethersValidator.address);
-            await ethersFraudChallengeByDuplicateDriipNonceOfPayments.changeSecurityBond(ethersSecurityBond.address);
+            await ethersFraudChallengeByDuplicateDriipNonceOfPayments.setFraudChallenge(ethersFraudChallenge.address);
+            await ethersFraudChallengeByDuplicateDriipNonceOfPayments.setConfiguration(ethersConfiguration.address);
+            await ethersFraudChallengeByDuplicateDriipNonceOfPayments.setValidator(ethersValidator.address);
+            await ethersFraudChallengeByDuplicateDriipNonceOfPayments.setSecurityBond(ethersSecurityBond.address);
+
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
 
             await ethersConfiguration.registerService(ethersFraudChallengeByDuplicateDriipNonceOfPayments.address);
             await ethersConfiguration.enableServiceAction(
@@ -56,6 +59,8 @@ module.exports = (glob) => {
             await ethersFraudChallenge.enableServiceAction(
                 ethersFraudChallengeByDuplicateDriipNonceOfPayments.address, 'add_fraudulent_payment', {gasLimit: 1e6}
             );
+
+            await web3Configuration.setFraudStakeFraction(web3.eth.blockNumber + 1, 5e17);
         });
 
         beforeEach(async () => {
@@ -71,17 +76,17 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeDeployer()', () => {
+        describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeDeployer(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.setDeployer(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeDeployer(glob.user_a);
+                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.setDeployer(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeDeployerEvent');
+                    result.logs[0].event.should.equal('SetDeployerEvent');
 
                     (await web3FraudChallengeByDuplicateDriipNonceOfPayments.deployer.call()).should.equal(glob.user_a);
                 });
@@ -89,22 +94,22 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDriipNonceOfPayments.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
-        describe('changeOperator()', () => {
+        describe('setOperator()', () => {
             describe('if called with (current) operator as sender', () => {
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOperator(glob.owner, {from: glob.user_a});
+                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.setOperator(glob.owner, {from: glob.user_a});
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOperator(glob.user_a);
+                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.setOperator(glob.user_a);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeOperatorEvent');
+                    result.logs[0].event.should.equal('SetOperatorEvent');
 
                     (await web3FraudChallengeByDuplicateDriipNonceOfPayments.operator.call()).should.equal(glob.user_a);
                 });
@@ -112,7 +117,7 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDriipNonceOfPayments.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -124,14 +129,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeFraudChallenge()', () => {
+        describe('setFraudChallenge()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let fraudChallenge;
 
                 beforeEach(async () => {
@@ -139,21 +144,21 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeFraudChallenge(fraudChallenge);
+                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.setFraudChallenge(fraudChallenge);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeFraudChallenge(address);
+                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.setFraudChallenge(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeFraudChallengeEvent');
+                    result.logs[0].event.should.equal('SetFraudChallengeEvent');
                     const fraudChallenge = await web3FraudChallengeByDuplicateDriipNonceOfPayments.fraudChallenge();
                     utils.getAddress(fraudChallenge).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDriipNonceOfPayments.setFraudChallenge(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -165,14 +170,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeConfiguration()', () => {
+        describe('setConfiguration()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let configuration;
 
                 beforeEach(async () => {
@@ -180,21 +185,21 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeConfiguration(configuration);
+                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.setConfiguration(configuration);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeConfiguration(address);
+                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.setConfiguration(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeConfigurationEvent');
+                    result.logs[0].event.should.equal('SetConfigurationEvent');
                     const configuration = await web3FraudChallengeByDuplicateDriipNonceOfPayments.configuration();
                     utils.getAddress(configuration).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeConfiguration(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDriipNonceOfPayments.setConfiguration(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -206,14 +211,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeValidator()', () => {
+        describe('setValidator()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let validator;
 
                 beforeEach(async () => {
@@ -221,21 +226,21 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeValidator(validator);
+                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.setValidator(validator);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeValidator(address);
+                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.setValidator(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeValidatorEvent');
+                    result.logs[0].event.should.equal('SetValidatorEvent');
                     const validator = await web3FraudChallengeByDuplicateDriipNonceOfPayments.validator();
                     utils.getAddress(validator).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeValidator(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDriipNonceOfPayments.setValidator(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
@@ -247,14 +252,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('changeSecurityBond()', () => {
+        describe('setSecurityBond()', () => {
             let address;
 
             before(() => {
                 address = Wallet.createRandom().address;
             });
 
-            describe('if called with deployer as sender', () => {
+            describe('if called by deployer', () => {
                 let securityBond;
 
                 beforeEach(async () => {
@@ -262,21 +267,21 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeSecurityBond(securityBond);
+                    await web3FraudChallengeByDuplicateDriipNonceOfPayments.setSecurityBond(securityBond);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.changeSecurityBond(address);
+                    const result = await web3FraudChallengeByDuplicateDriipNonceOfPayments.setSecurityBond(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ChangeSecurityBondEvent');
+                    result.logs[0].event.should.equal('SetSecurityBondEvent');
                     const securityBond = await web3FraudChallengeByDuplicateDriipNonceOfPayments.securityBond();
                     utils.getAddress(securityBond).should.equal(address);
                 });
             });
 
-            describe('if called with sender that is not deployer', () => {
+            describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByDuplicateDriipNonceOfPayments.changeSecurityBond(address, {from: glob.user_a}).should.be.rejected;
+                    web3FraudChallengeByDuplicateDriipNonceOfPayments.setSecurityBond(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

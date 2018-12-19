@@ -6,20 +6,20 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 
 /**
-@title Benefactor
-@notice An ownable that contains registered beneficiaries
-*/
+ * @title Benefactor
+ * @notice An ownable that contains registered beneficiaries
+ */
 contract Benefactor is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     address[] internal beneficiaries;
-    mapping(address => uint256) internal beneficiariesMap;
+    mapping(address => uint256) internal beneficiaryIndexByAddress;
 
     //
     // Events
@@ -38,11 +38,11 @@ contract Benefactor is Ownable {
     notNullAddress(beneficiary)
     returns (bool)
     {
-        if (beneficiariesMap[beneficiary] > 0)
+        if (beneficiaryIndexByAddress[beneficiary] > 0)
             return false;
 
         beneficiaries.push(beneficiary);
-        beneficiariesMap[beneficiary] = beneficiaries.length;
+        beneficiaryIndexByAddress[beneficiary] = beneficiaries.length;
 
         // Emit event
         emit RegisterBeneficiaryEvent(beneficiary);
@@ -58,24 +58,17 @@ contract Benefactor is Ownable {
     notNullAddress(beneficiary)
     returns (bool)
     {
-        if (beneficiariesMap[beneficiary] == 0)
+        if (beneficiaryIndexByAddress[beneficiary] == 0)
             return false;
 
-        uint256 idx = beneficiariesMap[beneficiary] - 1;
+        uint256 idx = beneficiaryIndexByAddress[beneficiary] - 1;
         if (idx < beneficiaries.length - 1) {
-            //remap the last item in the array to this index
+            // Remap the last item in the array to this index
             beneficiaries[idx] = beneficiaries[beneficiaries.length - 1];
-            beneficiariesMap[beneficiaries[idx]] = idx + 1;
-
-            //delete the last item in the array
-            delete beneficiaries[beneficiaries.length - 1];
-        }
-        else {
-            //it is the last item in the array
-            delete beneficiaries[idx];
+            beneficiaryIndexByAddress[beneficiaries[idx]] = idx + 1;
         }
         beneficiaries.length--;
-        beneficiariesMap[beneficiary] = 0;
+        beneficiaryIndexByAddress[beneficiary] = 0;
 
         // Emit event
         emit DeregisterBeneficiaryEvent(beneficiary);
@@ -91,6 +84,16 @@ contract Benefactor is Ownable {
     view
     returns (bool)
     {
-        return beneficiariesMap[beneficiary] > 0;
+        return beneficiaryIndexByAddress[beneficiary] > 0;
+    }
+
+    /// @notice Get the count of registered beneficiaries
+    /// @return The count of registered beneficiaries
+    function registeredBeneficiariesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return beneficiaries.length;
     }
 }

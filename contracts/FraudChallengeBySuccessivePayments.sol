@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -14,25 +14,25 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {ClientFundable} from "./ClientFundable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
-@title FraudChallengeBySuccessivePayments
-@notice Where driips are challenged wrt fraud by mismatch in successive payments
-*/
+ * @title FraudChallengeBySuccessivePayments
+ * @notice Where driips are challenged wrt fraud by mismatch in successive payments
+ */
 contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, ClientFundable {
+SecurityBondable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChallengeBySuccessivePaymentsEvent(bytes32 firstPaymentHash,
-        bytes32 lastPaymentHash, address challenger, address seizedWallet);
+        bytes32 lastPaymentHash, address challenger, address lockedWallet);
 
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address owner) Ownable(owner) public {
+    constructor(address deployer) Ownable(deployer) public {
     }
 
     //
@@ -42,7 +42,7 @@ SecurityBondable, ClientFundable {
     /// to be tested for succession differences
     /// @param firstPayment Reference payment
     /// @param lastPayment Fraudulent payment candidate
-    /// @param wallet Address of concerned wallet
+    /// @param wallet The address of the concerned wallet
     function challenge(
         NahmiiTypesLib.Payment firstPayment,
         NahmiiTypesLib.Payment lastPayment,
@@ -50,14 +50,9 @@ SecurityBondable, ClientFundable {
     )
     public
     onlyOperationalModeNormal
-    validatorInitialized
     onlySealedPayment(firstPayment)
     onlySealedPayment(lastPayment)
     {
-        require(configuration != address(0));
-        require(fraudChallenge != address(0));
-        require(clientFund != address(0));
-
         require(validator.isPaymentParty(firstPayment, wallet));
         require(validator.isPaymentParty(lastPayment, wallet));
         require(firstPayment.currency.ct == lastPayment.currency.ct && firstPayment.currency.id == lastPayment.currency.id);
@@ -76,9 +71,9 @@ SecurityBondable, ClientFundable {
         fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction());
+        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        clientFund.seizeAllBalances(wallet, msg.sender);
+//        walletLocker.lockByProxy(wallet, msg.sender);
 
         emit ChallengeBySuccessivePaymentsEvent(
             firstPayment.seals.operator.hash, lastPayment.seals.operator.hash, msg.sender, wallet

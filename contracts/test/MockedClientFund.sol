@@ -6,29 +6,25 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {Beneficiary} from "../Beneficiary.sol";
 
 /**
-@title MockedClientFund
-@notice Mocked implementation of client fund contract
-*/
+ * @title MockedClientFund
+ * @notice Mocked implementation of client fund contract
+ */
 contract MockedClientFund {
-
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct Seizure {
-        address source;
-        address target;
-    }
-
-    struct WalletUpdate {
+    struct Update {
         address sourceWallet;
         address targetWallet;
         MonetaryTypesLib.Figure figure;
+        string standard;
+        uint256 blockNumber;
     }
 
     struct BalanceLogEntry {
@@ -39,168 +35,149 @@ contract MockedClientFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Seizure[] public seizures;
-    address[] public seizedWallets;
-    mapping(address => bool) public seizuresByWallet;
-
-    WalletUpdate[] public settledBalanceUpdates;
-    WalletUpdate[] public stages;
-    BalanceLogEntry[] public activeBalanceLogEntries;
+    Update[] public settledBalanceUpdates;
+    Update[] public stages;
+    Update[] public beneficiaryTransfers;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SeizeAllBalancesEvent(address sourceWallet, address targetWallet);
-    event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
-    event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
-
-    //
-    // Constructor
-    // -----------------------------------------------------------------------------------------------------------------
-    constructor() public {
-    }
+    event LockBalancesEvent(address lockedWallet, address lockerWallet);
+    event UnlockBalancesEvent(address lockedWallet, address lockerWallet);
+    event UpdateSettledBalanceEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
+    event StageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
-        seizures.length = 0;
-        for (uint256 i = 0; i < seizedWallets.length; i++)
-            seizuresByWallet[seizedWallets[i]] = false;
-        seizedWallets.length = 0;
-
-        settledBalanceUpdates.length = 0;
-        stages.length = 0;
-        activeBalanceLogEntries.length = 0;
-    }
-
-    function seizeAllBalances(address sourceWallet, address targetWallet)
+    function _reset()
     public
     {
-        seizures.push(Seizure(sourceWallet, targetWallet));
-
-        if (!seizuresByWallet[sourceWallet]) {
-            seizuresByWallet[sourceWallet] = true;
-            seizedWallets.push(sourceWallet);
-        }
-
-        emit SeizeAllBalancesEvent(sourceWallet, targetWallet);
+        settledBalanceUpdates.length = 0;
+        stages.length = 0;
+        beneficiaryTransfers.length = 0;
     }
 
-    function seizedWalletsCount()
+    function updateSettledBalance(address wallet, int256 value, address currencyCt,
+        uint256 currencyId, string standard, uint256 blockNumber)
+    public
+    {
+        settledBalanceUpdates.push(
+            Update(
+                wallet,
+                address(0),
+                MonetaryTypesLib.Figure(
+                    value,
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
+                ),
+                standard,
+                blockNumber
+            )
+        );
+        emit UpdateSettledBalanceEvent(wallet, value, currencyCt, currencyId);
+    }
+
+    function _settledBalanceUpdatesCount()
     public
     view
     returns (uint256)
     {
-        return seizedWallets.length;
-    }
-
-    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId)
-    public
-    {
-        settledBalanceUpdates.push(
-            WalletUpdate(
-                wallet,
-                address(0),
-                MonetaryTypesLib.Figure(
-                    amount,
-                    MonetaryTypesLib.Currency(currencyCt, currencyId)
-                )
-            )
-        );
-        emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
+        return settledBalanceUpdates.length;
     }
 
     function _settledBalanceUpdates(uint256 index)
     public
     view
-    returns (address, int256, address, uint256) {
+    returns (address, int256, address, uint256, string) {
         return (
         settledBalanceUpdates[index].sourceWallet,
         settledBalanceUpdates[index].figure.amount,
         settledBalanceUpdates[index].figure.currency.ct,
-        settledBalanceUpdates[index].figure.currency.id
+        settledBalanceUpdates[index].figure.currency.id,
+        settledBalanceUpdates[index].standard
         );
     }
 
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        string standard)
     public
     {
         stages.push(
-            WalletUpdate(
+            Update(
                 wallet,
                 address(0),
                 MonetaryTypesLib.Figure(
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
-                )
+                ),
+                standard,
+                0
             )
         );
         emit StageEvent(wallet, amount, currencyCt, currencyId);
     }
 
-    function stageToBeneficiaryUntargeted(address sourceWallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId)
+    function _stagesCount()
     public
+    view
+    returns (uint256)
     {
-        stages.push(
-            WalletUpdate(
-                sourceWallet,
-                address(beneficiary),
-                MonetaryTypesLib.Figure(
-                    amount,
-                    MonetaryTypesLib.Currency(currencyCt, currencyId)
-                )
-            )
-        );
-    }
-
-    function _stagesCount() public view returns (uint256) {
         return stages.length;
     }
 
     function _stages(uint256 index)
     public
     view
-    returns (address, address, int256, address, uint256) {
+    returns (address, address, int256, address, uint256, string)
+    {
         return (
         stages[index].sourceWallet,
         stages[index].targetWallet,
         stages[index].figure.amount,
         stages[index].figure.currency.ct,
-        stages[index].figure.currency.id
+        stages[index].figure.currency.id,
+        stages[index].standard
         );
     }
 
-    function activeBalanceLogEntriesCount(address wallet, address currencyCt, uint256 currencyId)
+    function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
+        address currencyCt, uint256 currencyId, string standard)
+    public
+    {
+        beneficiaryTransfers.push(
+            Update(
+                wallet,
+                address(beneficiary),
+                MonetaryTypesLib.Figure(
+                    amount,
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
+                ),
+                standard,
+                0
+            )
+        );
+    }
+
+    function _beneficiaryTransfersCount()
     public
     view
     returns (uint256)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
-        return activeBalanceLogEntries.length;
+        return beneficiaryTransfers.length;
     }
 
-    function activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId, uint256 index)
+    function _beneficiaryTransfers(uint256 index)
     public
     view
-    returns (int256 amount, uint256 blockNumber)
+    returns (address, address, int256, address, uint256, string)
     {
-        // To silence unused function parameter compiler warning
-        require(wallet == wallet);
-        require(currencyCt == currencyCt);
-        require(currencyId == currencyId);
-        require(index == index);
-        amount = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].amount;
-        blockNumber = activeBalanceLogEntries[activeBalanceLogEntries.length - 1].blockNumber;
-    }
-
-    function _addActiveBalanceLogEntry(int256 amount, uint256 blockNumber)
-    public
-    {
-        activeBalanceLogEntries.push(BalanceLogEntry(amount, blockNumber));
+        return (
+        beneficiaryTransfers[index].sourceWallet,
+        beneficiaryTransfers[index].targetWallet,
+        beneficiaryTransfers[index].figure.amount,
+        beneficiaryTransfers[index].figure.currency.ct,
+        beneficiaryTransfers[index].figure.currency.id,
+        beneficiaryTransfers[index].standard
+        );
     }
 }

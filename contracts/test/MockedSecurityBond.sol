@@ -6,16 +6,14 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 pragma experimental ABIEncoderV2;
 
-import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
-
 /**
-@title MockedSecurityBond
-@notice Mocked implementation of security bond contract
-*/
+ * @title MockedSecurityBond
+ * @notice Mocked implementation of security bond contract
+ */
 contract MockedSecurityBond {
     //
     // Structures
@@ -23,17 +21,20 @@ contract MockedSecurityBond {
     struct Reward {
         address wallet;
         uint256 rewardFraction;
+        uint256 unlockTimeoutInSeconds;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     Reward[] public rewards;
+    address[] public deprivals;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RewardEvent(address wallet, uint256 rewardFraction);
+    event RewardEvent(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds);
+    event DepriveEvent(address wallet);
 
     //
     // Constructor
@@ -44,16 +45,40 @@ contract MockedSecurityBond {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset() public {
+    function _reset()
+    public
+    {
         rewards.length = 0;
+        deprivals.length = 0;
     }
 
-    function _rewardsCount() public view returns (uint256) {
+    function _rewardsCount()
+    public
+    view
+    returns (uint256)
+    {
         return rewards.length;
     }
 
-    function reward(address wallet, uint256 rewardFraction) public {
-        rewards.push(Reward(wallet, rewardFraction));
-        emit RewardEvent(msg.sender, rewardFraction);
+    function _deprivalsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return deprivals.length;
+    }
+
+    function reward(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds)
+    public
+    {
+        rewards.push(Reward(wallet, rewardFraction, unlockTimeoutInSeconds));
+        emit RewardEvent(msg.sender, rewardFraction, unlockTimeoutInSeconds);
+    }
+
+    function deprive(address wallet)
+    public
+    {
+        deprivals.push(wallet);
+        emit DepriveEvent(msg.sender);
     }
 }

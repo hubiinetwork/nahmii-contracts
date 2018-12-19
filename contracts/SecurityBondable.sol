@@ -6,15 +6,15 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
 import {SecurityBond} from "./SecurityBond.sol";
 
 /**
-@title SecurityBondable
-@notice An ownable that has a security bond property
-*/
+ * @title SecurityBondable
+ * @notice An ownable that has a security bond property
+ */
 contract SecurityBondable is Ownable {
     //
     // Variables
@@ -24,23 +24,25 @@ contract SecurityBondable is Ownable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event ChangeSecurityBondEvent(SecurityBond oldAddress, SecurityBond newAddress);
+    event SetSecurityBondEvent(SecurityBond oldSecurityBond, SecurityBond newSecurityBond);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Change the security bond contract
-    /// @param newAddress The (address of) SecurityBond contract instance
-    function changeSecurityBond(SecurityBond newAddress) public onlyDeployer
-        notNullAddress(newAddress)
-        notSameAddresses(newAddress, securityBond)
+    /// @notice Set the security bond contract
+    /// @param newSecurityBond The (address of) SecurityBond contract instance
+    function setSecurityBond(SecurityBond newSecurityBond)
+    public
+    onlyDeployer
+    notNullAddress(newSecurityBond)
+    notSameAddresses(newSecurityBond, securityBond)
     {
         //set new security bond
-        SecurityBond oldAddress = securityBond;
-        securityBond = newAddress;
+        SecurityBond oldSecurityBond = securityBond;
+        securityBond = newSecurityBond;
 
         // Emit event
-        emit ChangeSecurityBondEvent(oldAddress, newAddress);
+        emit SetSecurityBondEvent(oldSecurityBond, newSecurityBond);
     }
 
     //
