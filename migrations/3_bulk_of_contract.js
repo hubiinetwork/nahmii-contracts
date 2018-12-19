@@ -209,8 +209,8 @@ module.exports = (deployer, network, accounts) => {
 
             await execDeploy(ctl, 'Configuration', '', Configuration);
 
-            await execDeploy(ctl, 'RevenueTokenManager', 'RevenueTokenManager', RevenueTokenManager);
-
+            // await execDeploy(ctl, 'RevenueTokenManager', 'RevenueTokenManager', RevenueTokenManager);
+            //
             // await execDeploy(ctl, 'SignerManager', '', SignerManager);
             //
             // await execDeploy(ctl, 'Hasher', '', Hasher);
@@ -371,10 +371,10 @@ module.exports = (deployer, network, accounts) => {
             instance = await TransactionTracker.at(addressStorage.get('TransactionTracker'));
             await instance.registerService(addressStorage.get('ClientFund'));
 
-            instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
-            if (!network.startsWith('ropsten')) {
-                await instance.setToken(addressStorage.get('NahmiiToken'));
-                await instance.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
+            // instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
+            // if (!network.startsWith('ropsten')) {
+            //     await instance.setToken(addressStorage.get('NahmiiToken'));
+            //     await instance.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
 
                 // let earliestReleaseTimes = [];
                 // let amounts = [];
@@ -392,7 +392,7 @@ module.exports = (deployer, network, accounts) => {
 
                 // await instance.defineReleases(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
                 // await instance.defineReleases(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
-            }
+            // }
 
             // instance = await CancelOrdersChallenge.at(addressStorage.get('CancelOrdersChallenge'));
             // await instance.setValidator(addressStorage.get('Validator'));
