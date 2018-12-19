@@ -9,13 +9,16 @@
 pragma solidity ^0.4.25;
 
 import {TransferController} from "./TransferController.sol";
-import {ERC721} from "./ERC721.sol";
+import {IERC721} from "openzeppelin-solidity/contracts/token/ERC721/IERC721.sol";
 
 /**
  * @title ERC721TransferController
  * @notice Handles transfers of ERC721 tokens
  */
 contract ERC721TransferController is TransferController {
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
     function isFungible()
     public
     view
@@ -24,39 +27,36 @@ contract ERC721TransferController is TransferController {
         return false;
     }
 
-    function receive(address from, address to, uint256 amount, address currencyCt, uint256 currencyId)
+    function receive(address from, address to, uint256 id, address currencyCt, uint256 currencyId)
     public
     {
-        require(amount == 1);
-        require(currencyId != 0);
+        require(currencyId == 0);
 
-        ERC721(currencyCt).safeTransferFrom(from, to, currencyId);
+        //        IERC721(currencyCt).transferFrom(from, to, id);
 
         // Emit event
-        emit CurrencyTransferred(from, to, 1, currencyCt, currencyId);
+        emit CurrencyTransferred(from, to, id, currencyCt, currencyId);
     }
 
     /// @notice MUST be called with DELEGATECALL
-    function approve(address to, uint256 amount, address currencyCt, uint256 currencyId)
+    function approve(address to, uint256 id, address currencyCt, uint256 currencyId)
     public
     {
-        require(amount == 1);
-        require(currencyId != 0);
+        require(currencyId == 0);
 
-        ERC721(currencyCt).approve(to, currencyId);
+        //        IERC721(currencyCt).approve(to, id);
     }
 
     /// @notice MUST be called with DELEGATECALL
-    function dispatch(address from, address to, uint256 amount, address currencyCt, uint256 currencyId)
+    function dispatch(address from, address to, uint256 id, address currencyCt, uint256 currencyId)
     public
     {
-        require(amount == 1);
-        require(currencyId != 0);
+        require(currencyId == 0);
 
-        ERC721(currencyCt).approve(from, currencyId);
-        ERC721(currencyCt).safeTransferFrom(from, to, currencyId);
+        //        IERC721(currencyCt).approve(from, id);
+        //        IERC721(currencyCt).transferFrom(from, to, id);
 
-        // Emit event
-        emit CurrencyTransferred(from, to, 1, currencyCt, currencyId);
+        // Emit eventid
+        emit CurrencyTransferred(from, to, id, currencyCt, currencyId);
     }
 }
