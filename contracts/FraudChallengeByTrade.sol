@@ -66,8 +66,8 @@ SecurityBondable, WalletLockable {
             lockedWallet = trade.buyer.wallet;
         if (!genuineSellerAndFee)
             lockedWallet = trade.seller.wallet;
-        if (address(0) != lockedWallet)
-            walletLocker.lockByProxy(lockedWallet, msg.sender);
+//        if (address(0) != lockedWallet)
+//            walletLocker.lockByProxy(lockedWallet, msg.sender);
 
         emit ChallengeByTradeEvent(trade.seal.hash, msg.sender, lockedWallet);
     }

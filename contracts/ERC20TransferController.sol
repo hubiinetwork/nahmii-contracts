@@ -9,22 +9,17 @@
 pragma solidity ^0.4.25;
 
 import {TransferController} from "./TransferController.sol";
-import {ERC20} from "./ERC20.sol";
+import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title ERC20TransferController
  * @notice Handles transfers of ERC20 tokens
  */
 contract ERC20TransferController is TransferController {
-    function isTyped()
-    public
-    view
-    returns (bool)
-    {
-        return false;
-    }
-
-    function isQuantifiable()
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function isFungible()
     public
     view
     returns (bool)
@@ -40,7 +35,7 @@ contract ERC20TransferController is TransferController {
         require(amount > 0);
         require(currencyId == 0);
 
-        require(ERC20(currencyCt).transferFrom(from, to, amount));
+        require(IERC20(currencyCt).transferFrom(from, to, amount));
 
         // Emit event
         emit CurrencyTransferred(from, to, amount, currencyCt, currencyId);
@@ -53,7 +48,7 @@ contract ERC20TransferController is TransferController {
         require(amount > 0);
         require(currencyId == 0);
 
-        require(ERC20(currencyCt).approve(to, amount));
+        require(IERC20(currencyCt).approve(to, amount));
     }
 
     /// @notice MUST be called with DELEGATECALL
@@ -63,8 +58,8 @@ contract ERC20TransferController is TransferController {
         require(amount > 0);
         require(currencyId == 0);
 
-        require(ERC20(currencyCt).approve(from, amount));
-        require(ERC20(currencyCt).transferFrom(from, to, amount));
+        require(IERC20(currencyCt).approve(from, amount));
+        require(IERC20(currencyCt).transferFrom(from, to, amount));
 
         // Emit event
         emit CurrencyTransferred(from, to, amount, currencyCt, currencyId);

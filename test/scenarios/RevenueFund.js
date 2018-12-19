@@ -4,7 +4,7 @@ const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const ERC20Token = artifacts.require('StandardTokenEx');
+const ERC20Token = artifacts.require('TestERC20');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const RevenueFund = artifacts.require('RevenueFund');
 const MockedAccrualBeneficiary = artifacts.require('MockedAccrualBeneficiary');
@@ -37,7 +37,7 @@ module.exports = function (glob) {
             web3ERC20 = await ERC20Token.new();
             ethersERC20 = new Contract(web3ERC20.address, ERC20Token.abi, glob.signer_owner);
 
-            await web3ERC20.testMint(glob.user_a, 1000);
+            await web3ERC20.mint(glob.user_a, 1000);
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
 
@@ -73,6 +73,20 @@ module.exports = function (glob) {
         describe('aggregateAccrualBalance()', () => {
             it('should return initial value', async () => {
                 (await ethersRevenueFund.aggregateAccrualBalance(mocks.address0, 0))
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('periodCurrenciesCount()', () => {
+            it('should return initial value', async () => {
+                (await ethersRevenueFund.periodCurrenciesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('aggregateCurrenciesCount()', () => {
+            it('should return initial value', async () => {
+                (await ethersRevenueFund.aggregateCurrenciesCount())
                     ._bn.should.eq.BN(0);
             });
         });
@@ -396,6 +410,87 @@ module.exports = function (glob) {
             });
         });
 
+        describe('periodCurrenciesByIndices()', () => {
+            describe('before first reception', () => {
+                it('should revert', async () => {
+                    web3RevenueFund.periodCurrenciesByIndices.call(0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersRevenueFund.periodCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(mocks.address0);
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3RevenueFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3RevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersRevenueFund.periodCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(utils.getAddress(web3ERC20.address));
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('aggregateCurrenciesByIndices()', () => {
+            describe('before first reception', () => {
+                it('should revert', async () => {
+                    web3RevenueFund.aggregateCurrenciesByIndices.call(0, 0).should.be.rejected;
+                });
+            });
+
+            describe('of Ether', () => {
+                beforeEach(async () => {
+                    await web3RevenueFund.receiveEthersTo(
+                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersRevenueFund.aggregateCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(mocks.address0);
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('of ERC20 token', () => {
+                beforeEach(async () => {
+                    await web3ERC20.approve(
+                        web3RevenueFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3RevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should return deposit', async () => {
+                    const inUseCurrencies = await ethersRevenueFund.aggregateCurrenciesByIndices(0, 0);
+
+                    inUseCurrencies[0].ct.should.equal(utils.getAddress(web3ERC20.address));
+                    inUseCurrencies[0].id._bn.should.eq.BN(0);
+                });
+            });
+        });
         describe('closeAccrualPeriod()', () => {
             describe('if called by non-operator', () => {
                 beforeEach(() => {

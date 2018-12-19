@@ -80,8 +80,8 @@ SecurityBondable, WalletLockable {
             lockedWallet = payment.sender.wallet;
         if (!genuineRecipient)
             lockedWallet = payment.recipient.wallet;
-        if (address(0) != lockedWallet)
-            walletLocker.lockByProxy(lockedWallet, msg.sender);
+//        if (address(0) != lockedWallet)
+//            walletLocker.lockByProxy(lockedWallet, msg.sender);
 
         emit ChallengeByPaymentEvent(payment.seals.operator.hash, msg.sender, lockedWallet);
     }

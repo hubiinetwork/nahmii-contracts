@@ -11,8 +11,9 @@ pragma solidity ^0.4.25;
 import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
-import {BalanceLib} from "./BalanceLib.sol";
-import {BalanceLogLib} from "./BalanceLogLib.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {FungibleBalanceLib} from "./FungibleBalanceLib.sol";
+import {NonFungibleBalanceLib} from "./NonFungibleBalanceLib.sol";
 
 /**
  * @title Balance tracker
@@ -20,8 +21,9 @@ import {BalanceLogLib} from "./BalanceLogLib.sol";
  */
 contract BalanceTracker is Ownable, Servable {
     using SafeMathIntLib for int256;
-    using BalanceLib for BalanceLib.Balance;
-    using BalanceLogLib for BalanceLogLib.BalanceLog;
+    using SafeMathUintLib for uint256;
+    using FungibleBalanceLib for FungibleBalanceLib.Balance;
+    using NonFungibleBalanceLib for NonFungibleBalanceLib.Balance;
 
     //
     // Constants
@@ -34,8 +36,8 @@ contract BalanceTracker is Ownable, Servable {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Wallet {
-        mapping(bytes32 => BalanceLib.Balance) balanceByType;
-        mapping(bytes32 => BalanceLogLib.BalanceLog) balanceLogByType;
+        mapping(bytes32 => FungibleBalanceLib.Balance) fungibleBalanceByType;
+        mapping(bytes32 => NonFungibleBalanceLib.Balance) nonFungibleBalanceByType;
     }
 
     //
@@ -44,10 +46,17 @@ contract BalanceTracker is Ownable, Servable {
     bytes32 public depositedBalanceType;
     bytes32 public settledBalanceType;
     bytes32 public stagedBalanceType;
-    bytes32[] public balanceTypes;
-    mapping(bytes32 => bool) public balanceTypeMap;
+
+    bytes32[] public _allBalanceTypes;
+    bytes32[] public _activeBalanceTypes;
+
+    bytes32[] public trackedBalanceTypes;
+    mapping(bytes32 => bool) public trackedBalanceTypeMap;
 
     mapping(address => Wallet) private walletMap;
+
+    address[] public trackedWallets;
+    mapping(address => uint256) public trackedWalletIndexByWallet;
 
     //
     // Constructor
@@ -58,12 +67,19 @@ contract BalanceTracker is Ownable, Servable {
         depositedBalanceType = keccak256(abi.encodePacked(DEPOSITED_BALANCE_TYPE));
         settledBalanceType = keccak256(abi.encodePacked(SETTLED_BALANCE_TYPE));
         stagedBalanceType = keccak256(abi.encodePacked(STAGED_BALANCE_TYPE));
+
+        _allBalanceTypes.push(settledBalanceType);
+        _allBalanceTypes.push(depositedBalanceType);
+        _allBalanceTypes.push(stagedBalanceType);
+
+        _activeBalanceTypes.push(settledBalanceType);
+        _activeBalanceTypes.push(depositedBalanceType);
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Get the balance of the given wallet, type and currency
+    /// @notice Get the fungible balance (amount) of the given wallet, type and currency
     /// @param wallet The address of the concerned wallet
     /// @param _type The balance type
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
@@ -74,226 +90,415 @@ contract BalanceTracker is Ownable, Servable {
     view
     returns (int256)
     {
-        return walletMap[wallet].balanceByType[_type].get(currencyCt, currencyId);
+        return walletMap[wallet].fungibleBalanceByType[_type].get(currencyCt, currencyId);
     }
 
-    /// @notice Set the balance of the given wallet, type and currency to the given amount
+    /// @notice Get the non-fungible balance (IDs) of the given wallet, type, currency and index range
     /// @param wallet The address of the concerned wallet
     /// @param _type The balance type
-    /// @param amount The concerned amount
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function set(address wallet, bytes32 _type, int256 amount, address currencyCt, uint256 currencyId)
-    public
-    onlyActiveService
-    {
-        // Update the balance
-        walletMap[wallet].balanceByType[_type].set(amount, currencyCt, currencyId);
-
-        // Update log
-        _updateBalanceLog(wallet, _type, currencyCt, currencyId);
-
-        // Update balance type hashes
-        _updateBalanceTypes(_type);
-    }
-
-    /// @notice Reset all balances of the given wallet and currency
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function reset(address wallet, address currencyCt, uint256 currencyId)
-    public
-    onlyActiveService
-    {
-        for (uint256 i = 0; i < balanceTypes.length; i++) {
-            // Set the balance
-            set(wallet, balanceTypes[i], 0, currencyCt, currencyId);
-        }
-    }
-
-    /// @notice Add the given amount to the balance of the given wallet, type and currency
-    /// @param wallet The address of the concerned wallet
-    /// @param _type The balance type
-    /// @param amount The concerned amount
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function add(address wallet, bytes32 _type, int256 amount, address currencyCt, uint256 currencyId)
-    public
-    onlyActiveService
-    {
-        // Update the balance
-        walletMap[wallet].balanceByType[_type].add(amount, currencyCt, currencyId);
-
-        // Update log
-        _updateBalanceLog(wallet, _type, currencyCt, currencyId);
-
-        // Update balance type hashes
-        _updateBalanceTypes(_type);
-    }
-
-    /// @notice Subtract the given amount from the balance of the given wallet, type and currency
-    /// @param wallet The address of the concerned wallet
-    /// @param _type The balance type
-    /// @param amount The concerned amount
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function sub(address wallet, bytes32 _type, int256 amount, address currencyCt, uint256 currencyId)
-    public
-    onlyActiveService
-    {
-        // Update the balance
-        walletMap[wallet].balanceByType[_type].sub(amount, currencyCt, currencyId);
-
-        // Update log
-        _updateBalanceLog(wallet, _type, currencyCt, currencyId);
-    }
-
-    /// @notice Transfer the given amount from the balance of fromType to the balance toType
-    /// of the given wallet, type and currency
-    /// @param wallet The address of the concerned wallet
-    /// @param fromType The balance from-type
-    /// @param toType The balance to-type
-    /// @param amount The concerned amount
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function transfer(address wallet, bytes32 fromType, bytes32 toType, int256 amount, address currencyCt,
-        uint256 currencyId)
-    public
-    onlyActiveService
-    {
-        // Update the balances
-        walletMap[wallet].balanceByType[fromType].sub(amount, currencyCt, currencyId);
-        walletMap[wallet].balanceByType[toType].add(amount, currencyCt, currencyId);
-
-        // Update logs
-        _updateBalanceLog(wallet, fromType, currencyCt, currencyId);
-        _updateBalanceLog(wallet, toType, currencyCt, currencyId);
-
-        // Update balance type hashes
-        _updateBalanceTypes(toType);
-    }
-
-    /// @notice Sum all balances of the given wallet and currency
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The sum of balance
-    function sum(address wallet, address currencyCt, uint256 currencyId)
+    /// @param indexLow The lower index of IDs
+    /// @param indexUp The upper index of IDs
+    /// @return The stored balance
+    function getByIndices(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
+        uint256 indexLow, uint256 indexUp)
     public
     view
-    returns (int256)
+    returns (int256[])
     {
-        int256 _sum = 0;
-        for (uint256 i = 0; i < balanceTypes.length; i++) {
-            _sum = _sum.add(get(wallet, balanceTypes[i], currencyCt, currencyId));
-        }
-        return _sum;
+        return walletMap[wallet].nonFungibleBalanceByType[_type].getByIndices(
+            currencyCt, currencyId, indexLow, indexUp
+        );
     }
 
-    /// @notice Gauge whether this tracker has data for the given wallet, type and currency
+    /// @notice Get all the non-fungible balance (IDs) of the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The stored balance
+    function getAll(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256[])
+    {
+        return walletMap[wallet].nonFungibleBalanceByType[_type].get(
+            currencyCt, currencyId
+        );
+    }
+
+    /// @notice Get the count of non-fungible IDs of the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of IDs
+    function idsCount(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return walletMap[wallet].nonFungibleBalanceByType[_type].idsCount(
+            currencyCt, currencyId
+        );
+    }
+
+    /// @notice Gauge whether the ID is included in the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param id The ID of the concerned unit
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return true if ID is included, else false
+    function hasId(address wallet, bytes32 _type, int256 id, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool)
+    {
+        return walletMap[wallet].nonFungibleBalanceByType[_type].hasId(
+            id, currencyCt, currencyId
+        );
+    }
+
+    /// @notice Set the balance of the given wallet, type and currency to the given value
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param value The value (amount of fungible, id of non-fungible) to set
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param fungible True if setting fungible balance, else false
+    function set(address wallet, bytes32 _type, int256 value, address currencyCt, uint256 currencyId, bool fungible)
+    public
+    onlyActiveService
+    {
+        // Update the balance
+        if (fungible)
+            walletMap[wallet].fungibleBalanceByType[_type].set(
+                value, currencyCt, currencyId
+            );
+
+        else
+            walletMap[wallet].nonFungibleBalanceByType[_type].set(
+                value, currencyCt, currencyId
+            );
+
+        // Update balance type hashes
+        _updateTrackedBalanceTypes(_type);
+
+        // Update tracked wallets
+        _updateTrackedWallets(wallet);
+    }
+
+    /// @notice Set the non-fungible balance IDs of the given wallet, type and currency to the given value
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param ids The ids of non-fungible) to set
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function setIds(address wallet, bytes32 _type, int256[] ids, address currencyCt, uint256 currencyId)
+    public
+    onlyActiveService
+    {
+        // Update the balance
+        walletMap[wallet].nonFungibleBalanceByType[_type].set(
+            ids, currencyCt, currencyId
+        );
+
+        // Update balance type hashes
+        _updateTrackedBalanceTypes(_type);
+
+        // Update tracked wallets
+        _updateTrackedWallets(wallet);
+    }
+
+    /// @notice Add the given value to the balance of the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param value The value (amount of fungible, id of non-fungible) to add
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param fungible True if adding fungible balance, else false
+    function add(address wallet, bytes32 _type, int256 value, address currencyCt, uint256 currencyId,
+        bool fungible)
+    public
+    onlyActiveService
+    {
+        // Update the balance
+        if (fungible)
+            walletMap[wallet].fungibleBalanceByType[_type].add(
+                value, currencyCt, currencyId
+            );
+        else
+            walletMap[wallet].nonFungibleBalanceByType[_type].add(
+                value, currencyCt, currencyId
+            );
+
+        // Update balance type hashes
+        _updateTrackedBalanceTypes(_type);
+
+        // Update tracked wallets
+        _updateTrackedWallets(wallet);
+    }
+
+    /// @notice Subtract the given value from the balance of the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param value The value (amount of fungible, id of non-fungible) to subtract
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param fungible True if subtracting fungible balance, else false
+    function sub(address wallet, bytes32 _type, int256 value, address currencyCt, uint256 currencyId,
+        bool fungible)
+    public
+    onlyActiveService
+    {
+        // Update the balance
+        if (fungible)
+            walletMap[wallet].fungibleBalanceByType[_type].sub(
+                value, currencyCt, currencyId
+            );
+        else
+            walletMap[wallet].nonFungibleBalanceByType[_type].sub(
+                value, currencyCt, currencyId
+            );
+
+        // Update tracked wallets
+        _updateTrackedWallets(wallet);
+    }
+
+    /// @notice Gauge whether this tracker has in-use data for the given wallet, type and currency
     /// @param wallet The address of the concerned wallet
     /// @param _type The balance type
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return true if data is stored, else false
-    function hasCurrency(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    function hasInUseCurrency(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
     public
     view
     returns (bool)
     {
-        return walletMap[wallet].balanceByType[_type].hasCurrency(currencyCt, currencyId);
+        return walletMap[wallet].fungibleBalanceByType[_type].hasInUseCurrency(currencyCt, currencyId)
+        || walletMap[wallet].nonFungibleBalanceByType[_type].hasInUseCurrency(currencyCt, currencyId);
     }
 
-    /// @notice Get the number of balance log entries for the given wallet, type and currency
+    /// @notice Gauge whether this tracker has ever-used data for the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return true if data is stored, else false
+    function hasEverUsedCurrency(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool)
+    {
+        return walletMap[wallet].fungibleBalanceByType[_type].hasEverUsedCurrency(currencyCt, currencyId)
+        || walletMap[wallet].nonFungibleBalanceByType[_type].hasEverUsedCurrency(currencyCt, currencyId);
+    }
+
+    /// @notice Get the count of fungible balance records for the given wallet, type and currency
     /// @param wallet The address of the concerned wallet
     /// @param _type The balance type
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The count of balance log entries
-    function logSize(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    function fungibleRecordsCount(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
-        return walletMap[wallet].balanceLogByType[_type].count(currencyCt, currencyId);
+        return walletMap[wallet].fungibleBalanceByType[_type].recordsCount(currencyCt, currencyId);
     }
 
-    /// @notice Get the log entry for the given wallet, type and currency by the given
+    /// @notice Get the fungible balance record for the given wallet, type, currency
     /// log entry index
     /// @param wallet The address of the concerned wallet
     /// @param _type The balance type
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param index The concerned log index
-    /// @return The log entry
-    function logByIndex(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
+    /// @param index The concerned record index
+    /// @return The balance record
+    function fungibleRecordByIndex(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
         uint256 index)
     public
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        return walletMap[wallet].balanceLogByType[_type].getByIndex(currencyCt, currencyId, index);
+        return walletMap[wallet].fungibleBalanceByType[_type].recordByIndex(currencyCt, currencyId, index);
     }
 
-    /// @notice Get the log entry for the given wallet, type and currency by the given
+    /// @notice Get the non-fungible balance record for the given wallet, type, currency
     /// block number
     /// @param wallet The address of the concerned wallet
     /// @param _type The balance type
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param _blockNumber The concerned block number
-    /// @return The log entry
-    function logByBlockNumber(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
+    /// @return The balance record
+    function fungibleRecordByBlockNumber(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
         uint256 _blockNumber)
     public
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        return walletMap[wallet].balanceLogByType[_type].getByBlockNumber(currencyCt, currencyId, _blockNumber);
+        return walletMap[wallet].fungibleBalanceByType[_type].recordByBlockNumber(currencyCt, currencyId, _blockNumber);
     }
 
-    /// @notice Get the last (most recent) log entry for the given wallet, type and currency
+    /// @notice Get the last (most recent) non-fungible balance record for the given wallet, type and currency
     /// @param wallet The address of the concerned wallet
     /// @param _type The balance type
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The last log entry
-    function lastLog(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    function lastFungibleRecord(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        return walletMap[wallet].balanceLogByType[_type].getLast(currencyCt, currencyId);
+        return walletMap[wallet].fungibleBalanceByType[_type].lastRecord(currencyCt, currencyId);
     }
 
-    /// @notice Get the count of balance types stored
-    /// @return The count of balance types
-    function balanceTypesCount()
+    /// @notice Get the count of non-fungible balance records for the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The count of balance log entries
+    function nonFungibleRecordsCount(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
-        return balanceTypes.length;
+        return walletMap[wallet].nonFungibleBalanceByType[_type].recordsCount(currencyCt, currencyId);
+    }
+
+    /// @notice Get the non-fungible balance record for the given wallet, type, currency
+    /// and record index
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param index The concerned record index
+    /// @return The balance record
+    function nonFungibleRecordByIndex(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
+        uint256 index)
+    public
+    view
+    returns (int256[] ids, uint256 blockNumber)
+    {
+        return walletMap[wallet].nonFungibleBalanceByType[_type].recordByIndex(currencyCt, currencyId, index);
+    }
+
+    /// @notice Get the non-fungible balance record for the given wallet, type, currency
+    /// and block number
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param _blockNumber The concerned block number
+    /// @return The balance record
+    function nonFungibleRecordByBlockNumber(address wallet, bytes32 _type, address currencyCt, uint256 currencyId,
+        uint256 _blockNumber)
+    public
+    view
+    returns (int256[] ids, uint256 blockNumber)
+    {
+        return walletMap[wallet].nonFungibleBalanceByType[_type].recordByBlockNumber(currencyCt, currencyId, _blockNumber);
+    }
+
+    /// @notice Get the last (most recent) non-fungible balance record for the given wallet, type and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param _type The balance type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The last log entry
+    function lastNonFungibleRecord(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (int256[] ids, uint256 blockNumber)
+    {
+        return walletMap[wallet].nonFungibleBalanceByType[_type].lastRecord(currencyCt, currencyId);
+    }
+
+    /// @notice Get the count of tracked balance types
+    /// @return The count of tracked balance types
+    function trackedBalanceTypesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return trackedBalanceTypes.length;
+    }
+
+    /// @notice Get the count of tracked wallets
+    /// @return The count of tracked wallets
+    function trackedWalletsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return trackedWallets.length;
+    }
+
+    /// @notice Get the default full set of balance types
+    /// @return The set of all balance types
+    function allBalanceTypes()
+    public
+    view
+    returns (bytes32[])
+    {
+        return _allBalanceTypes;
+    }
+
+    /// @notice Get the default set of active balance types
+    /// @return The set of active balance types
+    function activeBalanceTypes()
+    public
+    view
+    returns (bytes32[])
+    {
+        return _activeBalanceTypes;
+    }
+
+    /// @notice Get the subset of tracked wallets in the given index range
+    /// @param low The lower index
+    /// @param up The upper index
+    /// @return The subset of tracked wallets
+    function trackedWalletsByIndices(uint256 low, uint256 up)
+    public
+    view
+    returns (address[])
+    {
+        require(0 < trackedWallets.length);
+        require(low <= up);
+
+        up = up.clampMax(trackedWallets.length - 1);
+        address[] memory _trackedWallets = new address[](up - low + 1);
+        for (uint256 i = low; i <= up; i++)
+            _trackedWallets[i - low] = trackedWallets[i];
+
+        return _trackedWallets;
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _updateBalanceLog(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
+    function _updateTrackedBalanceTypes(bytes32 _type)
     private
     {
-        // Add a new log entry
-        walletMap[wallet].balanceLogByType[_type].add(
-            get(wallet, _type, currencyCt, currencyId), currencyCt, currencyId
-        );
+        if (!trackedBalanceTypeMap[_type]) {
+            trackedBalanceTypeMap[_type] = true;
+            trackedBalanceTypes.push(_type);
+        }
     }
 
-    function _updateBalanceTypes(bytes32 _type)
+    function _updateTrackedWallets(address wallet)
     private
     {
-        if (!balanceTypeMap[_type]) {
-            balanceTypeMap[_type] = true;
-            balanceTypes.push(_type);
+        if (0 == trackedWalletIndexByWallet[wallet]) {
+            trackedWallets.push(wallet);
+            trackedWalletIndexByWallet[wallet] = trackedWallets.length;
         }
     }
 }

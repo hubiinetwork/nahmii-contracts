@@ -18,7 +18,7 @@
     "exec:script:mainnet": "truffle compile && truffle exec scripts/common/script_template.js --network mainnet-infura",
     "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
     "exec:release_nii_tokens:ropsten": "truffle exec scripts/common/release_nii_tokens.js --network ropsten-infura",
-    "test": "concurrently -r -s first --kill-others 'ganache-cli -e 1000 >/dev/null' 'truffle test'",
+    "test": "concurrently -r -s first --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test'",
     "test:ganache": "truffle compile && truffle test --ganache",
     "version:compiler": "solcjs --version",
     "version:truffle": "truffle version"
@@ -33,6 +33,7 @@
     "async": "^2.6.0",
     "ethers": "^3.0.7",
     "ganache-cli": "^6.1.0",
+    "moment": "^2.23.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.0.0",
     "solc": "^0.4.25",

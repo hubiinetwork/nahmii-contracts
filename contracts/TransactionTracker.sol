@@ -21,7 +21,7 @@ contract TransactionTracker is Ownable, Servable {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct TransactionRecord {
-        int256 amount;
+        int256 value;
         uint256 blockNumber;
         address currencyCt;
         uint256 currencyId;
@@ -59,13 +59,13 @@ contract TransactionTracker is Ownable, Servable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Add a transaction record of the given wallet, type, amount and currency
+    /// @notice Add a transaction record of the given wallet, type, value and currency
     /// @param wallet The address of the concerned wallet
     /// @param _type The transaction type
-    /// @param amount The concerned amount
+    /// @param value The concerned value (amount of fungible, id of non-fungible)
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function add(address wallet, bytes32 _type, int256 amount, address currencyCt,
+    function add(address wallet, bytes32 _type, int256 value, address currencyCt,
         uint256 currencyId)
     public
     onlyActiveService
@@ -74,7 +74,7 @@ contract TransactionTracker is Ownable, Servable {
 
         uint256 index = transactionLogByWalletType[wallet][_type].records.length - 1;
 
-        transactionLogByWalletType[wallet][_type].records[index].amount = amount;
+        transactionLogByWalletType[wallet][_type].records[index].value = value;
         transactionLogByWalletType[wallet][_type].records[index].blockNumber = block.number;
         transactionLogByWalletType[wallet][_type].records[index].currencyCt = currencyCt;
         transactionLogByWalletType[wallet][_type].records[index].currencyId = currencyId;
@@ -102,10 +102,10 @@ contract TransactionTracker is Ownable, Servable {
     function getByIndex(address wallet, bytes32 _type, uint256 index)
     public
     view
-    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    returns (int256 value, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         TransactionRecord storage entry = transactionLogByWalletType[wallet][_type].records[index];
-        amount = entry.amount;
+        value = entry.value;
         blockNumber = entry.blockNumber;
         currencyCt = entry.currencyCt;
         currencyId = entry.currencyId;
@@ -119,7 +119,7 @@ contract TransactionTracker is Ownable, Servable {
     function getByBlockNumber(address wallet, bytes32 _type, uint256 _blockNumber)
     public
     view
-    returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
+    returns (int256 value, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         return getByIndex(wallet, _type, _indexByBlockNumber(wallet, _type, _blockNumber));
     }
@@ -148,12 +148,12 @@ contract TransactionTracker is Ownable, Servable {
         uint256 currencyId, uint256 index)
     public
     view
-    returns (int256 amount, uint256 blockNumber)
+    returns (int256 value, uint256 blockNumber)
     {
         uint256 entryIndex = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId][index];
 
         TransactionRecord storage entry = transactionLogByWalletType[wallet][_type].records[entryIndex];
-        amount = entry.amount;
+        value = entry.value;
         blockNumber = entry.blockNumber;
     }
 
@@ -166,7 +166,7 @@ contract TransactionTracker is Ownable, Servable {
         uint256 currencyId, uint256 _blockNumber)
     public
     view
-    returns (int256 amount, uint256 blockNumber)
+    returns (int256 value, uint256 blockNumber)
     {
         return getByCurrencyIndex(
             wallet, _type, currencyCt, currencyId,

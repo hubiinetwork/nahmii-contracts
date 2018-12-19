@@ -9,57 +9,57 @@ module.exports = {
             host: "localhost",
             port: 8545,
             network_id: "*",
-            gas: 6500000
+            gas: 8000000
         },
         develop: {
             host: "localhost",
             port: 9545,
             network_id: "*",
-            gas: 6500000
+            gas: 8000000
         },
         ganache: {
             host: "localhost",
             port: 7545,
             network_id: "*",
-            gas: 6500000
+            gas: 8000000
         },
         "ganache-cli": {
             host: "localhost",
             port: 8545,
             network_id: "*",
-            gas: 6500000
+            gas: 8000000
         },
         ropsten: {
             host: "geth-ropsten.ethereum",
             port: 80,
             network_id: "*",
-            gas: 6500000
+            gas: 8000000
         },
         "ropsten-infura": {
             provider: function() {
                 return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3");
             },
             network_id: "*",
-            gas: 6500000
+            gas: 8000000
         },
         rinkeby: {
             host: "geth-rinkeby.ethereum",
             port: 80,
             network_id: "*",
-            gas: 6500000
+            gas: 8000000
         },
         mainnet: {
             host: "geth-homestead.ethereum",
             port: 80,
             network_id: "1",
-            gas: 6500000
+            gas: 8000000
         },
         "mainnet-infura": {
             provider: function() {
                 return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3");
             },
             network_id: "*",
-            gas: 6500000
+            gas: 8000000
         }
     },
     solc: {

@@ -39,19 +39,20 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     event SetTokenHolderRevenueFundEvent(TokenHolderRevenueFund oldTokenHolderRevenueFund,
         TokenHolderRevenueFund newTokenHolderRevenueFund);
-    event ReceiveEvent(address wallet, string balanceType, int256 amount, address currencyCt,
+    event ReceiveEvent(address wallet, string balanceType, int256 value, address currencyCt,
         uint256 currencyId, string standard);
-    event WithdrawEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+    event WithdrawEvent(address wallet, int256 value, address currencyCt, uint256 currencyId,
         string standard);
-    event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
-    event UnstageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
-    event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt,
+    event StageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
+    event UnstageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
+    event UpdateSettledBalanceEvent(address wallet, int256 value, address currencyCt,
         uint256 currencyId);
-    event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 amount,
+    event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 value,
         address currencyCt, uint256 currencyId, string standard);
-    event TransferToBeneficiaryEvent(address wallet, address beneficiary, int256 amount,
+    event TransferToBeneficiaryEvent(address wallet, address beneficiary, int256 value,
         address currencyCt, uint256 currencyId);
-    event SeizeBalancesEvent(address seizedWallet, address seizerWallet);
+    event SeizeBalancesEvent(address seizedWallet, address seizerWallet, int256 value,
+        address currencyCt, uint256 currencyId);
     event ClaimRevenueEvent(address claimer, string balanceType, address currencyCt,
         uint256 currencyId, string standard);
 
@@ -98,176 +99,191 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     public
     payable
     {
-        int256 amount = SafeMathIntLib.toNonZeroInt256(msg.value);
+        int256 value = SafeMathIntLib.toNonZeroInt256(msg.value);
 
         // Register reception
-        _receiveTo(wallet, balanceType, amount, address(0), 0);
+        _receiveTo(wallet, balanceType, value, address(0), 0, true);
 
         // Emit event
-        emit ReceiveEvent(wallet, balanceType, amount, address(0), 0, "");
+        emit ReceiveEvent(wallet, balanceType, value, address(0), 0, "");
     }
 
     /// @notice Receive token to msg.sender's balance of the given type
     /// @dev The wallet must approve of this ClientFund's transfer prior to calling this function
     /// @param balanceType The target balance type
-    /// @param amount The amount to deposit
+    /// @param value The value (amount of fungible, id of non-fungible) to receive
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function receiveTokens(string balanceType, int256 amount, address currencyCt,
+    function receiveTokens(string balanceType, int256 value, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
-        receiveTokensTo(msg.sender, balanceType, amount, currencyCt, currencyId, standard);
+        receiveTokensTo(msg.sender, balanceType, value, currencyCt, currencyId, standard);
     }
 
     /// @notice Receive token to the given wallet's balance of the given type
     /// @dev The wallet must approve of this ClientFund's transfer prior to calling this function
     /// @param wallet The address of the concerned wallet
     /// @param balanceType The target balance type
-    /// @param amount The amount to deposit
+    /// @param value The value (amount of fungible, id of non-fungible) to receive
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
+    function receiveTokensTo(address wallet, string balanceType, int256 value, address currencyCt,
         uint256 currencyId, string standard)
     public
     {
-        require(amount.isNonZeroPositiveInt256());
+        require(value.isNonZeroPositiveInt256());
+
+        // Get transfer controller
+        TransferController controller = transferController(currencyCt, standard);
 
         // Execute transfer
-        TransferController controller = transferController(currencyCt, standard);
         require(
             address(controller).delegatecall(
-                controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
+                controller.getReceiveSignature(), msg.sender, this, uint256(value), currencyCt, currencyId
             )
         );
 
         // Register reception
-        _receiveTo(wallet, balanceType, amount, currencyCt, currencyId);
+        _receiveTo(wallet, balanceType, value, currencyCt, currencyId, controller.isFungible());
 
         // Emit event
-        emit ReceiveEvent(wallet, balanceType, amount, currencyCt, currencyId, standard);
+        emit ReceiveEvent(wallet, balanceType, value, currencyCt, currencyId, standard);
     }
 
     /// @notice Update the settled balance by the difference between provided off-chain balance amount
     /// and deposited on-chain balance, where deposited balance is resolved at the given block number
     /// @param wallet The address of the concerned wallet
-    /// @param amount The off-chain balance amount
+    /// @param value The target balance value (amount of fungible, id of non-fungible), i.e. off-chain balance
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     /// @param blockNumber The block number to which the settled balance is updated
-    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId,
-        uint256 blockNumber)
+    function updateSettledBalance(address wallet, int256 value, address currencyCt, uint256 currencyId,
+        string standard, uint256 blockNumber)
     public
     onlyAuthorizedService(wallet)
     notNullAddress(wallet)
     {
-        require(amount.isPositiveInt256());
+        require(value.isPositiveInt256());
 
-        (int256 depositedAmount,) = balanceTracker.logByBlockNumber(
-            wallet, balanceTracker.depositedBalanceType(), currencyCt, currencyId, blockNumber
-        );
+        if (_isFungible(currencyCt, currencyId, standard)) {
+            (int256 depositedValue,) = balanceTracker.fungibleRecordByBlockNumber(
+                wallet, balanceTracker.depositedBalanceType(), currencyCt, currencyId, blockNumber
+            );
+            balanceTracker.set(
+                wallet, balanceTracker.settledBalanceType(), value.sub(depositedValue),
+                currencyCt, currencyId, true
+            );
 
-        int256 settledBalanceAmount = amount.sub(depositedAmount);
-        balanceTracker.set(
-            wallet, balanceTracker.settledBalanceType(), settledBalanceAmount, currencyCt, currencyId
-        );
+        } else {
+            balanceTracker.sub(
+                wallet, balanceTracker.depositedBalanceType(), value, currencyCt, currencyId, false
+            );
+            balanceTracker.add(
+                wallet, balanceTracker.settledBalanceType(), value, currencyCt, currencyId, false
+            );
+        }
 
         // Emit event
-        emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
+        emit UpdateSettledBalanceEvent(wallet, value, currencyCt, currencyId);
     }
 
-    /// @notice Stage the amount for subsequent withdrawal
+    /// @notice Stage a value for subsequent withdrawal
     /// @param wallet The address of the concerned wallet
-    /// @param stageAmount The concerned amount to stage
+    /// @param value The value (amount of fungible, id of non-fungible) to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function stage(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId)
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
+    function stage(address wallet, int256 value, address currencyCt, uint256 currencyId,
+        string standard)
     public
     onlyAuthorizedService(wallet)
     {
-        require(stageAmount.isNonZeroPositiveInt256());
+        require(value.isNonZeroPositiveInt256());
 
-        // Subtract stage amount from settled, possibly also from deposited
-        _stageSubtract(wallet, stageAmount, currencyCt, currencyId);
+        // Deduce fungibility
+        bool fungible = _isFungible(currencyCt, currencyId, standard);
+
+        // Subtract stage value from settled, possibly also from deposited
+        value = _subtractSequentially(wallet, balanceTracker.activeBalanceTypes(), value, currencyCt, currencyId, fungible);
 
         // Add to staged
         balanceTracker.add(
-            wallet, balanceTracker.stagedBalanceType(), stageAmount, currencyCt, currencyId
+            wallet, balanceTracker.stagedBalanceType(), value, currencyCt, currencyId, fungible
         );
 
         // Emit event
-        emit StageEvent(wallet, stageAmount, currencyCt, currencyId);
+        emit StageEvent(wallet, value, currencyCt, currencyId);
     }
 
-    /// @notice Unstage a staged amount
-    /// @param unstageAmount The concerned balance amount to unstage
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function unstage(int256 unstageAmount, address currencyCt, uint256 currencyId)
-    public
-    {
-        require(unstageAmount.isNonZeroPositiveInt256());
-
-        // Clamp amount to unstage
-        unstageAmount = unstageAmount.clampMax(
-            balanceTracker.get(
-                msg.sender, balanceTracker.stagedBalanceType(), currencyCt, currencyId
-            )
-        );
-        if (unstageAmount == 0)
-            return;
-
-        // Move from staged balance to deposited balance
-        balanceTracker.transfer(
-            msg.sender, balanceTracker.stagedBalanceType(), balanceTracker.depositedBalanceType(),
-            unstageAmount, currencyCt, currencyId
-        );
-
-        // Emit event
-        emit UnstageEvent(msg.sender, unstageAmount, currencyCt, currencyId);
-    }
-
-    /// @notice Stage the amount from wallet to the given beneficiary and targeted to wallet
-    /// @param wallet The address of the concerned wallet
-    /// @param beneficiary The (address of) concerned beneficiary contract
-    /// @param stageAmount The concerned amount to stage
+    /// @notice Unstage a staged value
+    /// @param value The value (amount of fungible, id of non-fungible) to deposit
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 stageAmount,
+    function unstage(int256 value, address currencyCt, uint256 currencyId, string standard)
+    public
+    {
+        require(value.isNonZeroPositiveInt256());
+
+        // Deduce fungibility
+        bool fungible = _isFungible(currencyCt, currencyId, standard);
+
+        // Subtract unstage value from staged
+        value = _subtractFromStaged(msg.sender, value, currencyCt, currencyId, fungible);
+
+        balanceTracker.add(
+            msg.sender, balanceTracker.depositedBalanceType(), value, currencyCt, currencyId, fungible
+        );
+
+        // Emit event
+        emit UnstageEvent(msg.sender, value, currencyCt, currencyId);
+    }
+
+    /// @notice Stage the value from wallet to the given beneficiary and targeted to wallet
+    /// @param wallet The address of the concerned wallet
+    /// @param beneficiary The (address of) concerned beneficiary contract
+    /// @param value The value (amount of fungible, id of non-fungible) to stage
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
+    function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 value,
         address currencyCt, uint256 currencyId, string standard)
     public
     onlyAuthorizedService(wallet)
     {
-        // Subtract stage amount from settled, possibly also from deposited
-        _stageSubtract(wallet, stageAmount, currencyCt, currencyId);
+        // Deduce fungibility
+        bool fungible = _isFungible(currencyCt, currencyId, standard);
 
-        // Transfer to beneficiary
-        _transferToBeneficiary(wallet, beneficiary, stageAmount, currencyCt, currencyId, standard);
+        // Subtract stage value from settled, possibly also from deposited
+        value = _subtractSequentially(wallet, balanceTracker.activeBalanceTypes(), value, currencyCt, currencyId, fungible);
+
+        // Execute transfer
+        _transferToBeneficiary(wallet, beneficiary, value, currencyCt, currencyId, standard);
 
         // Emit event
-        emit StageToBeneficiaryEvent(wallet, beneficiary, stageAmount, currencyCt, currencyId, standard);
+        emit StageToBeneficiaryEvent(wallet, beneficiary, value, currencyCt, currencyId, standard);
     }
 
-    /// @notice Transfer the given amount of currency to the given beneficiary without target wallet
+    /// @notice Transfer the given value of currency to the given beneficiary without target wallet
     /// @param wallet The address of the concerned wallet
     /// @param beneficiary The (address of) concerned beneficiary contract
-    /// @param transferAmount The concerned amount
+    /// @param value The value (amount of fungible, id of non-fungible) to transfer
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 transferAmount,
+    function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 value,
         address currencyCt, uint256 currencyId, string standard)
     public
     onlyAuthorizedService(wallet)
     {
-        // Transfer to beneficiary
-        _transferToBeneficiary(wallet, beneficiary, transferAmount, currencyCt, currencyId, standard);
+        // Execute transfer
+        _transferToBeneficiary(wallet, beneficiary, value, currencyCt, currencyId, standard);
 
         // Emit event
-        emit TransferToBeneficiaryEvent(wallet, beneficiary, transferAmount, currencyCt, currencyId);
+        emit TransferToBeneficiaryEvent(wallet, beneficiary, value, currencyCt, currencyId);
     }
 
     /// @notice Seize balances in the given currency of the given wallet, provided that the wallet
@@ -275,78 +291,52 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param wallet The address of the concerned wallet whose balances are seized
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function seizeBalances(address wallet, address currencyCt, uint256 currencyId)
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
+    function seizeBalances(address wallet, address currencyCt, uint256 currencyId, string standard)
     public
     {
-        require(walletLocker.isLockedBy(wallet, msg.sender));
+        if (_isFungible(currencyCt, currencyId, standard))
+            _seizeFungibleBalances(wallet, msg.sender, currencyCt, currencyId);
 
-        // Get sum of balances for locked wallet
-        int256 amount = balanceTracker.sum(wallet, currencyCt, currencyId);
-
-        // Zero locked wallet's balances
-        balanceTracker.reset(wallet, currencyCt, currencyId);
-
-        // Add to staged balance of sender
-        balanceTracker.add(
-            msg.sender, balanceTracker.stagedBalanceType(), amount, currencyCt, currencyId
-        );
+        else
+            _seizeNonFungibleBalances(wallet, msg.sender, currencyCt, currencyId);
 
         // Add to the store of seized wallets
         if (!seizedByWallet[wallet]) {
             seizedByWallet[wallet] = true;
             seizedWallets.push(wallet);
         }
-
-        // Emit event
-        emit SeizeBalancesEvent(wallet, msg.sender);
     }
 
     /// @notice Withdraw the given amount from staged balance
-    /// @param amount The concerned amount to withdraw
+    /// @param value The value (amount of fungible, id of non-fungible) to withdraw
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function withdraw(int256 value, address currencyCt, uint256 currencyId, string standard)
     public
     {
-        require(amount.isNonZeroPositiveInt256());
+        require(value.isNonZeroPositiveInt256());
 
-        // Require that msg.sender is not locked
-        require(!walletLocker.isLocked(msg.sender));
+        // Require that msg.sender and currency is not locked
+        require(!walletLocker.isLocked(msg.sender, currencyCt, currencyId));
 
-        amount = amount.clampMax(
-            balanceTracker.get(
-                msg.sender, balanceTracker.stagedBalanceType(), currencyCt, currencyId
-            )
-        );
-        if (amount <= 0)
-            return;
+        // Deduce fungibility
+        bool fungible = _isFungible(currencyCt, currencyId, standard);
 
-        // Subtract to per-wallet staged balance
-        balanceTracker.sub(
-            msg.sender, balanceTracker.stagedBalanceType(), amount, currencyCt, currencyId
-        );
+        // Subtract unstage value from staged
+        value = _subtractFromStaged(msg.sender, value, currencyCt, currencyId, fungible);
 
         // Log record of this transaction
         transactionTracker.add(
-            msg.sender, transactionTracker.withdrawalTransactionType(), amount, currencyCt, currencyId
+            msg.sender, transactionTracker.withdrawalTransactionType(), value, currencyCt, currencyId
         );
 
         // Execute transfer
-        if (address(0) == currencyCt && 0 == currencyId)
-            msg.sender.transfer(uint256(amount));
-
-        else {
-            TransferController controller = transferController(currencyCt, standard);
-            require(
-                address(controller).delegatecall(
-                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId
-                )
-            );
-        }
+        _transferToWallet(msg.sender, value, currencyCt, currencyId, standard);
 
         // Emit event
-        emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId, standard);
+        emit WithdrawEvent(msg.sender, value, currencyCt, currencyId, standard);
     }
 
     /// @notice Get the seized status of given wallet
@@ -393,28 +383,29 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _receiveTo(address wallet, string balanceType, int256 amount, address currencyCt,
-        uint256 currencyId)
+    function _receiveTo(address wallet, string balanceType, int256 value, address currencyCt,
+        uint256 currencyId, bool fungible)
     private
     {
         bytes32 balanceHash = 0 < bytes(balanceType).length ?
         keccak256(abi.encodePacked(balanceType)) :
         balanceTracker.depositedBalanceType();
 
+        // Add to per-wallet staged balance
         if (balanceTracker.stagedBalanceType() == balanceHash)
             balanceTracker.add(
-                wallet, balanceTracker.stagedBalanceType(), amount, currencyCt, currencyId
+                wallet, balanceTracker.stagedBalanceType(), value, currencyCt, currencyId, fungible
             );
 
+        // Add to per-wallet deposited balance
         else if (balanceTracker.depositedBalanceType() == balanceHash) {
-            // Add to per-wallet deposited balance
             balanceTracker.add(
-                wallet, balanceTracker.depositedBalanceType(), amount, currencyCt, currencyId
+                wallet, balanceTracker.depositedBalanceType(), value, currencyCt, currencyId, fungible
             );
 
             // Log record of this transaction
             transactionTracker.add(
-                wallet, transactionTracker.depositTransactionType(), amount, currencyCt, currencyId
+                wallet, transactionTracker.depositTransactionType(), value, currencyCt, currencyId
             );
         }
 
@@ -422,65 +413,194 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
             revert();
     }
 
-    function _stageSubtract(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId)
+    function _subtractSequentially(address wallet, bytes32[] balanceTypes, int256 value, address currencyCt,
+        uint256 currencyId, bool fungible)
     private
+    returns (int256)
     {
+        if (fungible)
+            return _subtractFungibleSequentially(wallet, balanceTypes, value, currencyCt, currencyId);
+        else
+            return _subtractNonFungibleSequentially(wallet, balanceTypes, value, currencyCt, currencyId);
+    }
+
+    function _subtractFungibleSequentially(address wallet, bytes32[] balanceTypes, int256 amount, address currencyCt, uint256 currencyId)
+    private
+    returns (int256)
+    {
+        // Require positive amount
+        require(0 <= amount);
+
+        uint256 i;
+        int256 totalBalanceAmount = 0;
+        for (i = 0; i < balanceTypes.length; i++)
+            totalBalanceAmount = totalBalanceAmount.add(
+                balanceTracker.get(
+                    wallet, balanceTypes[i], currencyCt, currencyId
+                )
+            );
+
         // Clamp amount to stage
-        stageAmount = stageAmount.clampMax(
-            balanceTracker.get(
-                wallet, balanceTracker.depositedBalanceType(), currencyCt, currencyId
-            ).add(
-                balanceTracker.get(wallet, balanceTracker.settledBalanceType(), currencyCt, currencyId)
-            )
-        );
-        if (stageAmount <= 0)
-            return;
+        amount = amount.clampMax(totalBalanceAmount);
 
-        // Get settled balance amount
-        int256 settledBalanceAmount = balanceTracker.get(
-            wallet, balanceTracker.settledBalanceType(), currencyCt, currencyId
-        );
-
-        // If settled is greater than or equal to amount then amount can be deducted from settled
-        if (settledBalanceAmount >= stageAmount)
-            balanceTracker.sub(
-                wallet, balanceTracker.settledBalanceType(), stageAmount, currencyCt, currencyId
+        int256 _amount = amount;
+        for (i = 0; i < balanceTypes.length; i++) {
+            int256 typeAmount = balanceTracker.get(
+                wallet, balanceTypes[i], currencyCt, currencyId
             );
 
-        // Else settled will be zeroed and (stage amount - settled) is deducted from deposited
-        else {
-            balanceTracker.add(
-                wallet, balanceTracker.depositedBalanceType(), settledBalanceAmount.sub(stageAmount),
-                currencyCt, currencyId
-            );
-            balanceTracker.set(
-                wallet, balanceTracker.settledBalanceType(), 0, currencyCt, currencyId
-            );
+            if (typeAmount >= _amount) {
+                balanceTracker.sub(
+                    wallet, balanceTypes[i], _amount, currencyCt, currencyId, true
+                );
+                break;
+
+            } else {
+                balanceTracker.set(
+                    wallet, balanceTypes[i], 0, currencyCt, currencyId, true
+                );
+                _amount = _amount.sub(typeAmount);
+            }
         }
+
+        return amount;
+    }
+
+    function _subtractNonFungibleSequentially(address wallet, bytes32[] balanceTypes, int256 id, address currencyCt, uint256 currencyId)
+    private
+    returns (int256)
+    {
+        for (uint256 i = 0; i < balanceTypes.length; i++)
+            if (balanceTracker.hasId(wallet, balanceTypes[i], id, currencyCt, currencyId)) {
+                balanceTracker.sub(wallet, balanceTypes[i], id, currencyCt, currencyId, false);
+                break;
+            }
+
+        return id;
+    }
+
+    function _subtractFromStaged(address wallet, int256 value, address currencyCt, uint256 currencyId, bool fungible)
+    private
+    returns (int256)
+    {
+        if (fungible) {
+            // Clamp value to unstage
+            value = value.clampMax(
+                balanceTracker.get(wallet, balanceTracker.stagedBalanceType(), currencyCt, currencyId)
+            );
+
+            // Require positive value
+            require(0 <= value);
+
+        } else {
+            // Require that value is included in staged balance
+            require(balanceTracker.hasId(wallet, balanceTracker.stagedBalanceType(), value, currencyCt, currencyId));
+        }
+
+        // Subtract from deposited balance
+        balanceTracker.sub(wallet, balanceTracker.stagedBalanceType(), value, currencyCt, currencyId, fungible);
+
+        return value;
     }
 
     function _transferToBeneficiary(address destWallet, Beneficiary beneficiary,
-        int256 transferAmount, address currencyCt, uint256 currencyId, string standard)
+        int256 value, address currencyCt, uint256 currencyId, string standard)
     private
     {
-        require(transferAmount.isNonZeroPositiveInt256());
+        require(value.isNonZeroPositiveInt256());
         require(isRegisteredBeneficiary(beneficiary));
 
         // Transfer funds to the beneficiary
         if (address(0) == currencyCt && 0 == currencyId)
-            beneficiary.receiveEthersTo.value(uint256(transferAmount))(destWallet, "");
+            beneficiary.receiveEthersTo.value(uint256(value))(destWallet, "");
 
         else {
             // Approve of beneficiary
             TransferController controller = transferController(currencyCt, standard);
             require(
                 address(controller).delegatecall(
-                    controller.getApproveSignature(), beneficiary, uint256(transferAmount), currencyCt, currencyId
+                    controller.getApproveSignature(), beneficiary, uint256(value), currencyCt, currencyId
                 )
             );
 
             // Transfer funds to the beneficiary
-            beneficiary.receiveTokensTo(destWallet, "", transferAmount, currencyCt, currencyId, standard);
+            beneficiary.receiveTokensTo(destWallet, "", value, currencyCt, currencyId, standard);
         }
+    }
+
+    function _transferToWallet(address wallet,
+        int256 value, address currencyCt, uint256 currencyId, string standard)
+    private
+    {
+        // Transfer ETH
+        if (address(0) == currencyCt && 0 == currencyId)
+            wallet.transfer(uint256(value));
+
+        // Transfer token
+        else {
+            TransferController controller = transferController(currencyCt, standard);
+            require(
+                address(controller).delegatecall(
+                    controller.getDispatchSignature(), this, wallet, uint256(value), currencyCt, currencyId
+                )
+            );
+        }
+    }
+
+    function _seizeFungibleBalances(address lockedWallet, address lockerWallet, address currencyCt,
+        uint256 currencyId)
+    private
+    {
+        // Get the locked amount
+        int256 amount = walletLocker.lockedAmount(lockedWallet, lockerWallet, currencyCt, currencyId);
+
+        // Require that locked amount is strictly positive
+        require(amount > 0);
+
+        // Subtract stage value from settled, possibly also from deposited
+        _subtractFungibleSequentially(lockedWallet, balanceTracker.allBalanceTypes(), amount, currencyCt, currencyId);
+
+        // Add to staged balance of sender
+        balanceTracker.add(
+            lockerWallet, balanceTracker.stagedBalanceType(), amount, currencyCt, currencyId, true
+        );
+
+        // Emit event
+        emit SeizeBalancesEvent(lockedWallet, lockerWallet, amount, currencyCt, currencyId);
+    }
+
+    function _seizeNonFungibleBalances(address lockedWallet, address lockerWallet, address currencyCt,
+        uint256 currencyId)
+    private
+    {
+        // Require that locked ids has entries
+        uint256 lockedIdsCount = walletLocker.lockedIdsCount(lockedWallet, lockerWallet, currencyCt, currencyId);
+        require(0 < lockedIdsCount);
+
+        // Get the locked amount
+        int256[] memory ids = walletLocker.lockedIdsByIndices(
+            lockedWallet, lockerWallet, currencyCt, currencyId, 0, lockedIdsCount - 1
+        );
+
+        for (uint256 i = 0; i < ids.length; i++) {
+            // Subtract from settled, possibly also from deposited
+            _subtractNonFungibleSequentially(lockedWallet, balanceTracker.allBalanceTypes(), ids[i], currencyCt, currencyId);
+
+            // Add to staged balance of sender
+            balanceTracker.add(
+                lockerWallet, balanceTracker.stagedBalanceType(), ids[i], currencyCt, currencyId, false
+            );
+
+            // Emit event
+            emit SeizeBalancesEvent(lockedWallet, lockerWallet, ids[i], currencyCt, currencyId);
+        }
+    }
+
+    function _isFungible(address currencyCt, uint256 currencyId, string standard)
+    private
+    view
+    returns (bool)
+    {
+        return (address(0) == currencyCt && 0 == currencyId) || transferController(currencyCt, standard).isFungible();
     }
 }

@@ -135,7 +135,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         );
 
         // Stage the proposed amount
-        clientFund.stage(wallet, stageAmount, currencyCt, currencyId);
+        clientFund.stage(wallet, stageAmount, currencyCt, currencyId, "");
 
         // If payment nonce is beyond max null settlement nonce then update max null nonce
         if (nonce > maxNullNonce)

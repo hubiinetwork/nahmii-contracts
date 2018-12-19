@@ -299,15 +299,15 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, party.balances.intended.current, trade.currencies.intended.ct, trade.currencies.intended.id, trade.blockNumber
+                wallet, party.balances.intended.current, trade.currencies.intended.ct,
+                    trade.currencies.intended.id, "", trade.blockNumber
             );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet,
                 driipSettlementChallenge.proposalStageAmount(wallet, trade.currencies.intended.ct, trade.currencies.intended.id),
-                trade.currencies.intended.ct,
-                trade.currencies.intended.id
+                trade.currencies.intended.ct, trade.currencies.intended.id, ""
             );
         }
 
@@ -319,15 +319,15 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, party.balances.conjugate.current, trade.currencies.conjugate.ct, trade.currencies.conjugate.id, trade.blockNumber
+                wallet, party.balances.conjugate.current, trade.currencies.conjugate.ct,
+                trade.currencies.conjugate.id, "", trade.blockNumber
             );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet,
                 driipSettlementChallenge.proposalStageAmount(wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id),
-                trade.currencies.conjugate.ct,
-                trade.currencies.conjugate.id
+                trade.currencies.conjugate.ct, trade.currencies.conjugate.id, ""
             );
         }
 
@@ -405,12 +405,14 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             walletCurrencyMaxDriipNonce[wallet][payment.currency.ct][payment.currency.id] = payment.nonce;
 
             // Update settled balance
-            clientFund.updateSettledBalance(wallet, currentBalance, payment.currency.ct, payment.currency.id, payment.blockNumber);
+            clientFund.updateSettledBalance(
+                wallet, currentBalance, payment.currency.ct, payment.currency.id, "", payment.blockNumber
+            );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet, driipSettlementChallenge.proposalStageAmount(wallet, payment.currency.ct, payment.currency.id),
-                payment.currency.ct, payment.currency.id
+                payment.currency.ct, payment.currency.id, ""
             );
         }
 

@@ -12,15 +12,13 @@ pragma experimental ABIEncoderV2;
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
-// TODO Rename to InUseCurrenciesLib
-library InUseCurrencyLib {
+library CurrenciesLib {
     using SafeMathUintLib for uint256;
 
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Rename to InUseCurrencies
-    struct InUseCurrency {
+    struct Currencies {
         MonetaryTypesLib.Currency[] currencies;
         mapping(address => mapping(uint256 => uint256)) indexByCurrency;
     }
@@ -28,8 +26,7 @@ library InUseCurrencyLib {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Rename to add
-    function addItem(InUseCurrency storage self, address currencyCt, uint256 currencyId)
+    function add(Currencies storage self, address currencyCt, uint256 currencyId)
     internal
     {
         // Index is 1-based
@@ -39,18 +36,16 @@ library InUseCurrencyLib {
         }
     }
 
-    // TODO Rename to removeByCurrency
-    function removeItem(InUseCurrency storage self, address currencyCt, uint256 currencyId)
+    function removeByCurrency(Currencies storage self, address currencyCt, uint256 currencyId)
     internal
     {
         // Index is 1-based
         uint256 index = self.indexByCurrency[currencyCt][currencyId];
         if (0 < index)
-            removeItemAt(self, index - 1);
+            removeByIndex(self, index - 1);
     }
 
-    // TODO Rename to removeByIndex
-    function removeItemAt(InUseCurrency storage self, uint256 index)
+    function removeByIndex(Currencies storage self, uint256 index)
     internal
     {
         require(index < self.currencies.length);
@@ -66,7 +61,7 @@ library InUseCurrencyLib {
         self.indexByCurrency[currencyCt][currencyId] = 0;
     }
 
-    function count(InUseCurrency storage self)
+    function count(Currencies storage self)
     internal
     view
     returns (uint256)
@@ -74,7 +69,7 @@ library InUseCurrencyLib {
         return self.currencies.length;
     }
 
-    function has(InUseCurrency storage self, address currencyCt, uint256 currencyId)
+    function has(Currencies storage self, address currencyCt, uint256 currencyId)
     internal
     view
     returns (bool)
@@ -82,7 +77,7 @@ library InUseCurrencyLib {
         return 0 != self.indexByCurrency[currencyCt][currencyId];
     }
 
-    function getByIndex(InUseCurrency storage self, uint256 index)
+    function getByIndex(Currencies storage self, uint256 index)
     internal
     view
     returns (MonetaryTypesLib.Currency)
@@ -91,11 +86,12 @@ library InUseCurrencyLib {
         return self.currencies[index];
     }
 
-    function getByIndices(InUseCurrency storage self, uint256 low, uint256 up)
+    function getByIndices(Currencies storage self, uint256 low, uint256 up)
     internal
     view
     returns (MonetaryTypesLib.Currency[])
     {
+        require(0 < self.currencies.length);
         require(low <= up);
 
         up = up.clampMax(self.currencies.length - 1);

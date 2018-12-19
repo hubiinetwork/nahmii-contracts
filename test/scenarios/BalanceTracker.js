@@ -2,7 +2,7 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
-const {Contract} = require('ethers');
+const {Contract, utils} = require('ethers');
 const cryptography = require('omphalos-commons').util.cryptography;
 const {address0} = require('../mocks');
 const BalanceTracker = artifacts.require('BalanceTracker');
@@ -76,14 +76,14 @@ module.exports = function (glob) {
             });
         });
 
-        describe('balanceTypesCount()', () => {
+        describe('trackedBalanceTypesCount()', () => {
             it('should equal value initialized', async () => {
-                (await ethersBalanceTracker.balanceTypesCount())
+                (await ethersBalanceTracker.trackedBalanceTypesCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
-        describe('balanceTypeMap()', () => {
+        describe('trackedBalanceTypeMap()', () => {
             let type;
 
             beforeEach(async () => {
@@ -91,12 +91,26 @@ module.exports = function (glob) {
             });
 
             it('should equal value initialized', async () => {
-                (await web3BalanceTracker.balanceTypeMap.call(type))
+                (await web3BalanceTracker.trackedBalanceTypeMap.call(type))
                     .should.be.false;
             });
         });
 
-        describe('hasCurrency()', () => {
+        describe('trackedWalletsCount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersBalanceTracker.trackedWalletsCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('trackedWalletsByIndices()', () => {
+            it('should revert', async () => {
+                ethersBalanceTracker.trackedWalletsByIndices(0, 0)
+                    .should.be.rejected;
+            });
+        });
+
+        describe('hasInUseCurrency()', () => {
             let type;
 
             beforeEach(async () => {
@@ -104,12 +118,25 @@ module.exports = function (glob) {
             });
 
             it('should equal false', async () => {
-                (await web3BalanceTracker.hasCurrency.call(glob.user_a, type, address0, 0))
+                (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
                     .should.be.false;
             });
         });
 
-        describe('logSize()', () => {
+        describe('hasEverUsedCurrency()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            it('should equal false', async () => {
+                (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                    .should.be.false;
+            });
+        });
+
+        describe('fungibleRecordsCount()', () => {
             let type;
 
             beforeEach(async () => {
@@ -117,12 +144,12 @@ module.exports = function (glob) {
             });
 
             it('should equal value initialized', async () => {
-                (await ethersBalanceTracker.logSize(glob.user_a, type, address0, 0))
+                (await ethersBalanceTracker.fungibleRecordsCount(glob.user_a, type, address0, 0))
                     ._bn.should.eq.BN(0);
             });
         });
 
-        describe('logByIndex()', () => {
+        describe('fungibleRecordByIndex()', () => {
             let type;
 
             beforeEach(async () => {
@@ -130,14 +157,14 @@ module.exports = function (glob) {
             });
 
             it('should revert', async () => {
-                const logRecord = await ethersBalanceTracker.logByIndex(glob.user_a, type, address0, 0, 0);
+                const record = await ethersBalanceTracker.fungibleRecordByIndex(glob.user_a, type, address0, 0, 0);
 
-                logRecord.amount._bn.should.eq.BN(0);
-                logRecord.blockNumber._bn.should.eq.BN(0);
+                record.amount._bn.should.eq.BN(0);
+                record.blockNumber._bn.should.eq.BN(0);
             });
         });
 
-        describe('logByBlockNumber()', () => {
+        describe('fungibleRecordByBlockNumber()', () => {
             let type, blockNumber;
 
             beforeEach(async () => {
@@ -147,14 +174,14 @@ module.exports = function (glob) {
             });
 
             it('should revert', async () => {
-                const logRecord = await ethersBalanceTracker.logByBlockNumber(glob.user_a, type, address0, 0, blockNumber);
+                const record = await ethersBalanceTracker.fungibleRecordByBlockNumber(glob.user_a, type, address0, 0, blockNumber);
 
-                logRecord.amount._bn.should.eq.BN(0);
-                logRecord.blockNumber._bn.should.eq.BN(0);
+                record.amount._bn.should.eq.BN(0);
+                record.blockNumber._bn.should.eq.BN(0);
             });
         });
 
-        describe('lastLog()', () => {
+        describe('lastFungibleRecord()', () => {
             let type;
 
             beforeEach(async () => {
@@ -162,10 +189,96 @@ module.exports = function (glob) {
             });
 
             it('should revert', async () => {
-                const logRecord = await ethersBalanceTracker.lastLog(glob.user_a, type, address0, 0);
+                const record = await ethersBalanceTracker.lastFungibleRecord(glob.user_a, type, address0, 0);
 
-                logRecord.amount._bn.should.eq.BN(0);
-                logRecord.blockNumber._bn.should.eq.BN(0);
+                record.amount._bn.should.eq.BN(0);
+                record.blockNumber._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('nonFungibleRecordsCount()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            it('should equal value initialized', async () => {
+                (await ethersBalanceTracker.nonFungibleRecordsCount(glob.user_a, type, address0, 0))
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('nonFungibleRecordByIndex()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            it('should revert', async () => {
+                const record = await ethersBalanceTracker.nonFungibleRecordByIndex(glob.user_a, type, address0, 0, 0);
+
+                record.ids.should.be.an('array').that.is.empty;
+                record.blockNumber._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('nonFungibleRecordByBlockNumber()', () => {
+            let type, blockNumber;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+
+                blockNumber = await provider.getBlockNumber();
+            });
+
+            it('should revert', async () => {
+                const record = await ethersBalanceTracker.nonFungibleRecordByBlockNumber(glob.user_a, type, address0, 0, blockNumber);
+
+                record.ids.should.be.an('array').that.is.empty;
+                record.blockNumber._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('lastNonFungibleRecord()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            it('should revert', async () => {
+                const record = await ethersBalanceTracker.lastNonFungibleRecord(glob.user_a, type, address0, 0);
+
+                record.ids.should.be.an('array').that.is.empty;
+                record.blockNumber._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('idsCount()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            it('should equal value initialized', async () => {
+                (await ethersBalanceTracker.idsCount(glob.user_a, type, address0, 0))
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('hasId()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            it('should equal value initialized', async () => {
+                (await ethersBalanceTracker.hasId(glob.user_a, type, 10, address0, 0))
+                    .should.be.false;
             });
         });
 
@@ -182,6 +295,34 @@ module.exports = function (glob) {
             });
         });
 
+        describe('getByIndices()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            it('should equal initial value', async () => {
+                (await ethersBalanceTracker.getByIndices(
+                        glob.user_a, type, address0, 0, 0, 1)
+                ).should.be.an('array').that.is.empty;
+            });
+        });
+
+        describe('getAll()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            it('should equal initial value', async () => {
+                (await ethersBalanceTracker.getByIndices(
+                        glob.user_a, type, address0, 0, 0, 1)
+                ).should.be.an('array').that.is.empty;
+            });
+        });
+
         describe('set()', () => {
             let type;
 
@@ -191,7 +332,98 @@ module.exports = function (glob) {
 
             describe('if called by unregistered service', () => {
                 it('should revert', async () => {
-                    web3BalanceTracker.set(glob.user_a, type, 10, address0, 0, {from: glob.user_a})
+                    web3BalanceTracker.set(glob.user_a, type, 10, address0, 0, true, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called to set fungible balance', () => {
+                let blockNumber;
+
+                beforeEach(async () => {
+                    blockNumber = await provider.getBlockNumber();
+                });
+
+                it('should successfully set balance', async () => {
+                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0, true);
+
+                    (await ethersBalanceTracker.get(glob.user_a, type, address0, 0))
+                        ._bn.should.eq.BN(10);
+                    (await web3BalanceTracker.trackedBalanceTypeMap.call(type))
+                        .should.be.true;
+                    (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
+                        .should.be.true;
+                    (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.fungibleRecordsCount(glob.user_a, type, address0, 0))
+                        ._bn.should.eq.BN(1);
+                    (await ethersBalanceTracker.trackedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await web3BalanceTracker.trackedWalletsByIndices.call(0, 0))
+                        .should.be.an('array').that.deep.includes(glob.user_a);
+
+                    const recordByIndex = await ethersBalanceTracker.fungibleRecordByIndex(
+                        glob.user_a, type, address0, 0, 0
+                    );
+                    recordByIndex.amount._bn.should.eq.BN(10);
+                    recordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+
+                    const recordByBlockNumber = await ethersBalanceTracker.fungibleRecordByBlockNumber(
+                        glob.user_a, type, address0, 0, blockNumber + 10
+                    );
+                    recordByBlockNumber.should.deep.equal(recordByIndex);
+                });
+            });
+
+            describe('if called to set non-fungible balance', () => {
+                let blockNumber;
+
+                beforeEach(async () => {
+                    blockNumber = await provider.getBlockNumber();
+                });
+
+                it('should successfully set balance', async () => {
+                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0, false);
+
+                    (await ethersBalanceTracker.getAll(glob.user_a, type, address0, 0))
+                        .should.be.an('array').that.deep.includes(utils.bigNumberify(10));
+                    (await web3BalanceTracker.trackedBalanceTypeMap.call(type))
+                        .should.be.true;
+                    (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
+                        .should.be.true;
+                    (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.nonFungibleRecordsCount(glob.user_a, type, address0, 0))
+                        ._bn.should.eq.BN(1);
+                    (await ethersBalanceTracker.idsCount(glob.user_a, type, address0, 0))
+                        ._bn.should.eq.BN(1);
+                    (await ethersBalanceTracker.hasId(glob.user_a, type, 10, address0, 0))
+                        .should.be.true;
+
+                    const recordByIndex = await ethersBalanceTracker.nonFungibleRecordByIndex(
+                        glob.user_a, type, address0, 0, 0
+                    );
+                    recordByIndex.ids.should.be.an('array').that.deep.includes(utils.bigNumberify(10));
+                    recordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+
+                    const recordByBlockNumber = await ethersBalanceTracker.nonFungibleRecordByBlockNumber(
+                        glob.user_a, type, address0, 0, blockNumber + 10
+                    );
+                    recordByBlockNumber.should.deep.equal(recordByIndex);
+                });
+            });
+        });
+
+        describe('setIds()', () => {
+            let type;
+
+            beforeEach(async () => {
+                type = await web3BalanceTracker.depositedBalanceType.call();
+            });
+
+            describe('if called by unregistered service', () => {
+                it('should revert', async () => {
+                    web3BalanceTracker.setIds(glob.user_a, type, [10, 20, 30], address0, 0, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -204,70 +436,45 @@ module.exports = function (glob) {
                 });
 
                 it('should successfully set balance', async () => {
-                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0);
+                    await web3BalanceTracker.setIds(glob.user_a, type, [10, 20, 30], address0, 0);
 
-                    (await ethersBalanceTracker.get(glob.user_a, type, address0, 0))
-                        ._bn.should.eq.BN(10);
-                    (await web3BalanceTracker.balanceTypeMap.call(type))
+                    (await ethersBalanceTracker.getAll(glob.user_a, type, address0, 0))
+                        .should.be.an('array').that.deep.includes.members(
+                        [utils.bigNumberify(10), utils.bigNumberify(20), utils.bigNumberify(30)]
+                    );
+                    (await web3BalanceTracker.trackedBalanceTypeMap.call(type))
                         .should.be.true;
-                    (await web3BalanceTracker.hasCurrency.call(glob.user_a, type, address0, 0))
+                    (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
                         .should.be.true;
-                    (await ethersBalanceTracker.logSize(glob.user_a, type, address0, 0))
+                    (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.nonFungibleRecordsCount(glob.user_a, type, address0, 0))
                         ._bn.should.eq.BN(1);
+                    (await ethersBalanceTracker.idsCount(glob.user_a, type, address0, 0))
+                        ._bn.should.eq.BN(3);
+                    (await ethersBalanceTracker.hasId(glob.user_a, type, 10, address0, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.hasId(glob.user_a, type, 20, address0, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.hasId(glob.user_a, type, 30, address0, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.trackedWalletsCount())
+                        ._bn.should.eq.BN(1);
+                    (await web3BalanceTracker.trackedWalletsByIndices(0, 0))
+                        .should.be.an('array').that.includes(glob.user_a);
 
-                    const logByIndex = await ethersBalanceTracker.logByIndex(
+                    const recordByIndex = await ethersBalanceTracker.nonFungibleRecordByIndex(
                         glob.user_a, type, address0, 0, 0
                     );
-                    logByIndex.amount._bn.should.eq.BN(10);
-                    logByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+                    recordByIndex.ids.should.be.an('array').that.deep.includes.members(
+                        [utils.bigNumberify(10), utils.bigNumberify(20), utils.bigNumberify(30)]
+                    );
+                    recordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
 
-                    const logByBlockNumber = await ethersBalanceTracker.logByBlockNumber(
+                    const recordByBlockNumber = await ethersBalanceTracker.nonFungibleRecordByBlockNumber(
                         glob.user_a, type, address0, 0, blockNumber + 10
                     );
-                    logByBlockNumber.should.deep.equal(logByIndex);
-                });
-            });
-        });
-
-        describe('reset()', () => {
-            describe('if called by unregistered service', () => {
-                it('should revert', async () => {
-                    web3BalanceTracker.reset(glob.user_a, address0, 0, {from: glob.user_a})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                let type, blockNumber;
-
-                beforeEach(async () => {
-                    type = await web3BalanceTracker.depositedBalanceType.call();
-
-                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0);
-
-                    blockNumber = await provider.getBlockNumber();
-                });
-
-                it('should successfully reset balance', async () => {
-                    await web3BalanceTracker.reset(glob.user_a, address0, 0);
-
-                    (await ethersBalanceTracker.get(glob.user_a, type, address0, 0))
-                        ._bn.should.eq.BN(0);
-                    (await web3BalanceTracker.hasCurrency.call(glob.user_a, type, address0, 0))
-                        .should.be.false;
-                    (await ethersBalanceTracker.logSize(glob.user_a, type, address0, 0))
-                        ._bn.should.eq.BN(2);
-
-                    const logByIndex = await ethersBalanceTracker.logByIndex(
-                        glob.user_a, type, address0, 0, 1
-                    );
-                    logByIndex.amount._bn.should.eq.BN(0);
-                    logByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
-
-                    const logByBlockNumber = await ethersBalanceTracker.logByBlockNumber(
-                        glob.user_a, type, address0, 0, blockNumber + 10
-                    );
-                    logByBlockNumber.should.deep.equal(logByIndex);
+                    recordByBlockNumber.should.deep.equal(recordByIndex);
                 });
             });
         });
@@ -281,40 +488,122 @@ module.exports = function (glob) {
 
             describe('if called by unregistered service', () => {
                 it('should revert', async () => {
-                    web3BalanceTracker.add(glob.user_a, type, 10, address0, 0, {from: glob.user_a})
+                    web3BalanceTracker.add(glob.user_a, type, 10, address0, 0, true, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
 
-            describe('if within operational constraints', () => {
+            describe('if called to add to fungible balance', () => {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0);
+                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0, true);
 
                     blockNumber = await provider.getBlockNumber();
                 });
 
                 it('should successfully add balance', async () => {
-                    await web3BalanceTracker.add(glob.user_a, type, 10, address0, 0);
+                    await web3BalanceTracker.add(glob.user_a, type, 10, address0, 0, true);
 
                     (await ethersBalanceTracker.get(glob.user_a, type, address0, 0))
                         ._bn.should.eq.BN(20);
-                    (await web3BalanceTracker.hasCurrency.call(glob.user_a, type, address0, 0))
+                    (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
                         .should.be.true;
-                    (await ethersBalanceTracker.logSize(glob.user_a, type, address0, 0))
+                    (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.fungibleRecordsCount(glob.user_a, type, address0, 0))
                         ._bn.should.eq.BN(2);
 
-                    const logByIndex = await ethersBalanceTracker.logByIndex(
+                    const fungibleRecordByIndex = await ethersBalanceTracker.fungibleRecordByIndex(
                         glob.user_a, type, address0, 0, 1
                     );
-                    logByIndex.amount._bn.should.eq.BN(20);
-                    logByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+                    fungibleRecordByIndex.amount._bn.should.eq.BN(20);
+                    fungibleRecordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
 
-                    const logByBlockNumber = await ethersBalanceTracker.logByBlockNumber(
+                    const fungibleRecordByBlockNumber = await ethersBalanceTracker.fungibleRecordByBlockNumber(
                         glob.user_a, type, address0, 0, blockNumber + 10
                     );
-                    logByBlockNumber.should.deep.equal(logByIndex);
+                    fungibleRecordByBlockNumber.should.deep.equal(fungibleRecordByIndex);
+                });
+            });
+
+            describe('if called to add to non-fungible balance', () => {
+                let blockNumber;
+
+                beforeEach(async () => {
+                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0, false);
+
+                    blockNumber = await provider.getBlockNumber();
+                });
+
+                describe('if called to add new ID', () => {
+                    it('should successfully add balance', async () => {
+                        await web3BalanceTracker.add(glob.user_a, type, 20, address0, 0, false);
+
+                        (await ethersBalanceTracker.getAll(glob.user_a, type, address0, 0))
+                            .should.be.an('array').that.deep.includes.members(
+                            [utils.bigNumberify(10), utils.bigNumberify(20)]
+                        );
+                        (await web3BalanceTracker.trackedBalanceTypeMap.call(type))
+                            .should.be.true;
+                        (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
+                            .should.be.true;
+                        (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                            .should.be.true;
+                        (await ethersBalanceTracker.nonFungibleRecordsCount(glob.user_a, type, address0, 0))
+                            ._bn.should.eq.BN(2);
+                        (await ethersBalanceTracker.idsCount(glob.user_a, type, address0, 0))
+                            ._bn.should.eq.BN(2);
+                        (await ethersBalanceTracker.hasId(glob.user_a, type, 10, address0, 0))
+                            .should.be.true;
+                        (await ethersBalanceTracker.hasId(glob.user_a, type, 20, address0, 0))
+                            .should.be.true;
+
+                        const recordByIndex = await ethersBalanceTracker.nonFungibleRecordByIndex(
+                            glob.user_a, type, address0, 0, 1
+                        );
+                        recordByIndex.ids.should.be.an('array').that.deep.includes.members(
+                            [utils.bigNumberify(10), utils.bigNumberify(20)]
+                        );
+                        recordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+
+                        const recordByBlockNumber = await ethersBalanceTracker.nonFungibleRecordByBlockNumber(
+                            glob.user_a, type, address0, 0, blockNumber + 10
+                        );
+                        recordByBlockNumber.should.deep.equal(recordByIndex);
+                    });
+                });
+
+                describe('if called to add ID existent in wallet\'s balance', () => {
+                    it('should not change balance state', async () => {
+                        await web3BalanceTracker.add(glob.user_a, type, 10, address0, 0, false);
+
+                        (await ethersBalanceTracker.getAll(glob.user_a, type, address0, 0))
+                            .should.be.an('array').that.deep.includes(utils.bigNumberify(10));
+                        (await web3BalanceTracker.trackedBalanceTypeMap.call(type))
+                            .should.be.true;
+                        (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
+                            .should.be.true;
+                        (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                            .should.be.true;
+                        (await ethersBalanceTracker.nonFungibleRecordsCount(glob.user_a, type, address0, 0))
+                            ._bn.should.eq.BN(1);
+                        (await ethersBalanceTracker.idsCount(glob.user_a, type, address0, 0))
+                            ._bn.should.eq.BN(1);
+                        (await ethersBalanceTracker.hasId(glob.user_a, type, 10, address0, 0))
+                            .should.be.true;
+
+                        const recordByIndex = await ethersBalanceTracker.nonFungibleRecordByIndex(
+                            glob.user_a, type, address0, 0, 0
+                        );
+                        recordByIndex.ids.should.be.an('array').that.deep.includes(utils.bigNumberify(10));
+                        recordByIndex.blockNumber._bn.should.eq.BN(blockNumber);
+
+                        const recordByBlockNumber = await ethersBalanceTracker.nonFungibleRecordByBlockNumber(
+                            glob.user_a, type, address0, 0, blockNumber + 10
+                        );
+                        recordByBlockNumber.should.deep.equal(recordByIndex);
+                    });
                 });
             });
         });
@@ -333,100 +622,110 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if within operational constraints', () => {
+            describe('if called to subtract from fungible balance', () => {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0);
+                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0, true);
 
                     blockNumber = await provider.getBlockNumber();
                 });
 
                 it('should successfully subtract balance', async () => {
-                    await web3BalanceTracker.sub(glob.user_a, type, 20, address0, 0);
+                    await web3BalanceTracker.sub(glob.user_a, type, 20, address0, 0, true);
 
                     (await ethersBalanceTracker.get(glob.user_a, type, address0, 0))
                         ._bn.should.eq.BN(-10);
-                    (await web3BalanceTracker.hasCurrency.call(glob.user_a, type, address0, 0))
+                    (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
                         .should.be.true;
-                    (await ethersBalanceTracker.logSize(glob.user_a, type, address0, 0))
+                    (await ethersBalanceTracker.fungibleRecordsCount(glob.user_a, type, address0, 0))
                         ._bn.should.eq.BN(2);
 
-                    const logByIndex = await ethersBalanceTracker.logByIndex(
+                    const fungibleRecordByIndex = await ethersBalanceTracker.fungibleRecordByIndex(
                         glob.user_a, type, address0, 0, 1
                     );
-                    logByIndex.amount._bn.should.eq.BN(-10);
-                    logByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+                    fungibleRecordByIndex.amount._bn.should.eq.BN(-10);
+                    fungibleRecordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
 
-                    const logByBlockNumber = await ethersBalanceTracker.logByBlockNumber(
+                    const fungibleRecordByBlockNumber = await ethersBalanceTracker.fungibleRecordByBlockNumber(
                         glob.user_a, type, address0, 0, blockNumber + 10
                     );
-                    logByBlockNumber.should.deep.equal(logByIndex);
-                });
-            });
-        });
-
-        describe('transfer()', () => {
-            let fromType, toType;
-
-            beforeEach(async () => {
-                fromType = await web3BalanceTracker.depositedBalanceType.call();
-                toType = await web3BalanceTracker.settledBalanceType.call();
-            });
-
-            describe('if called by unregistered service', () => {
-                it('should revert', async () => {
-                    web3BalanceTracker.transfer(glob.user_a, fromType, toType, 10, address0, 0, {from: glob.user_a})
-                        .should.be.rejected;
+                    fungibleRecordByBlockNumber.should.deep.equal(fungibleRecordByIndex);
                 });
             });
 
-            describe('if within operational constraints', () => {
+            describe('if called to subtract from non-fungible balance', () => {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3BalanceTracker.set(glob.user_a, fromType, 10, address0, 0);
+                    await web3BalanceTracker.set(glob.user_a, type, 10, address0, 0, false);
 
                     blockNumber = await provider.getBlockNumber();
                 });
 
-                it('should successfully transfer balance between types', async () => {
-                    await web3BalanceTracker.transfer(glob.user_a, fromType, toType, 4, address0, 0);
+                describe('if called to subtract ID existent in wallet\'s balance', () => {
+                    it('should successfully subtract balance', async () => {
+                        await web3BalanceTracker.sub(glob.user_a, type, 10, address0, 0, false);
 
-                    (await ethersBalanceTracker.get(glob.user_a, fromType, address0, 0))
-                        ._bn.should.eq.BN(6);
-                    (await ethersBalanceTracker.get(glob.user_a, toType, address0, 0))
-                        ._bn.should.eq.BN(4);
-                    (await web3BalanceTracker.balanceTypeMap.call(fromType))
-                        .should.be.true;
-                    (await web3BalanceTracker.balanceTypeMap.call(toType))
-                        .should.be.true;
-                    (await web3BalanceTracker.hasCurrency.call(glob.user_a, fromType, address0, 0))
-                        .should.be.true;
-                    (await web3BalanceTracker.hasCurrency.call(glob.user_a, toType, address0, 0))
-                        .should.be.true;
-                    (await ethersBalanceTracker.logSize(glob.user_a, fromType, address0, 0))
-                        ._bn.should.eq.BN(2);
-                    (await ethersBalanceTracker.logSize(glob.user_a, toType, address0, 0))
-                        ._bn.should.eq.BN(1);
+                        (await ethersBalanceTracker.getAll(glob.user_a, type, address0, 0))
+                            .should.be.an('array').that.is.empty;
+                        (await web3BalanceTracker.trackedBalanceTypeMap.call(type))
+                            .should.be.true;
+                        (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
+                            .should.be.false;
+                        (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                            .should.be.true;
+                        (await ethersBalanceTracker.nonFungibleRecordsCount(glob.user_a, type, address0, 0))
+                            ._bn.should.eq.BN(2);
+                        (await ethersBalanceTracker.idsCount(glob.user_a, type, address0, 0))
+                            ._bn.should.eq.BN(0);
+                        (await ethersBalanceTracker.hasId(glob.user_a, type, 10, address0, 0))
+                            .should.be.false;
+
+                        const recordByIndex = await ethersBalanceTracker.nonFungibleRecordByIndex(
+                            glob.user_a, type, address0, 0, 1
+                        );
+                        recordByIndex.ids.should.be.an('array').that.is.empty;
+                        recordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
+
+                        const recordByBlockNumber = await ethersBalanceTracker.nonFungibleRecordByBlockNumber(
+                            glob.user_a, type, address0, 0, blockNumber + 10
+                        );
+                        recordByBlockNumber.should.deep.equal(recordByIndex);
+                    });
                 });
-            });
-        });
 
-        describe('sum()', () => {
-            let type1, type2;
+                describe('if called to subtract ID not existent in wallet\'s balance', () => {
+                    it('should not change balance state', async () => {
+                        await web3BalanceTracker.sub(glob.user_a, type, 20, address0, 0, false);
 
-            beforeEach(async () => {
-                type1 = await web3BalanceTracker.depositedBalanceType.call();
-                type2 = await web3BalanceTracker.settledBalanceType.call();
+                        (await ethersBalanceTracker.getAll(glob.user_a, type, address0, 0))
+                            .should.be.an('array').that.deep.includes(utils.bigNumberify(10));
+                        (await web3BalanceTracker.trackedBalanceTypeMap.call(type))
+                            .should.be.true;
+                        (await web3BalanceTracker.hasInUseCurrency.call(glob.user_a, type, address0, 0))
+                            .should.be.true;
+                        (await web3BalanceTracker.hasEverUsedCurrency.call(glob.user_a, type, address0, 0))
+                            .should.be.true;
+                        (await ethersBalanceTracker.nonFungibleRecordsCount(glob.user_a, type, address0, 0))
+                            ._bn.should.eq.BN(1);
+                        (await ethersBalanceTracker.idsCount(glob.user_a, type, address0, 0))
+                            ._bn.should.eq.BN(1);
+                        (await ethersBalanceTracker.hasId(glob.user_a, type, 10, address0, 0))
+                            .should.be.true;
 
-                await web3BalanceTracker.set(glob.user_a, type1, 10, address0, 0);
-                await web3BalanceTracker.set(glob.user_a, type2, 20, address0, 0);
-            });
+                        const recordByIndex = await ethersBalanceTracker.nonFungibleRecordByIndex(
+                            glob.user_a, type, address0, 0, 0
+                        );
+                        recordByIndex.ids.should.be.an('array').that.deep.includes(utils.bigNumberify(10));
+                        recordByIndex.blockNumber._bn.should.eq.BN(blockNumber);
 
-            it('should successfully sum balances', async () => {
-                (await ethersBalanceTracker.sum(glob.user_a, address0, 0))
-                    ._bn.should.eq.BN(30);
+                        const recordByBlockNumber = await ethersBalanceTracker.nonFungibleRecordByBlockNumber(
+                            glob.user_a, type, address0, 0, blockNumber + 10
+                        );
+                        recordByBlockNumber.should.deep.equal(recordByIndex);
+                    });
+                });
             });
         });
     });

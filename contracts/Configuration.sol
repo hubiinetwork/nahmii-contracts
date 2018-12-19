@@ -106,6 +106,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     //
+
     // Public functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set operational mode to Exit

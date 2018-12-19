@@ -4,7 +4,7 @@ const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const ERC20Token = artifacts.require('StandardTokenEx');
+const ERC20Token = artifacts.require('TestERC20');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const SecurityBond = artifacts.require('SecurityBond');
 const MockedSecurityBondService = artifacts.require('MockedSecurityBondService');
@@ -37,7 +37,7 @@ module.exports = function (glob) {
             web3ERC20 = await ERC20Token.new();
             ethersERC20 = new Contract(web3ERC20.address, ERC20Token.abi, glob.signer_owner);
 
-            await web3ERC20.testMint(glob.user_a, 1000);
+            await web3ERC20.mint(glob.user_a, 1000);
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
 

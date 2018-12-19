@@ -29,6 +29,9 @@ contract MockedWalletLocker {
 
     bool public locked;
     bool public lockedBy;
+    int256 public _lockedAmount;
+    uint256 public _lockedIdsCount;
+    int256[] public _lockedIdsByIndices;
 
     //
     // Events
@@ -46,6 +49,9 @@ contract MockedWalletLocker {
         unlocks.length = 0;
         locked = false;
         lockedBy = false;
+        _lockedAmount = 0;
+        _lockedIdsCount = 0;
+        _lockedIdsByIndices.length = 0;
     }
 
     function lockByProxy(address lockedWallet, address lockerWallet)
@@ -78,7 +84,7 @@ contract MockedWalletLocker {
         return unlocks.length;
     }
 
-    function isLocked(address)
+    function isLocked(address, address, uint256)
     public
     view
     returns (bool)
@@ -92,7 +98,7 @@ contract MockedWalletLocker {
         locked = _locked;
     }
 
-    function isLockedBy(address, address)
+    function isLockedBy(address, address, address, uint256)
     public
     view
     returns (bool)
@@ -104,5 +110,47 @@ contract MockedWalletLocker {
     public
     {
         lockedBy = _lockedBy;
+    }
+
+    function lockedAmount(address, address, address, uint256)
+    public
+    view
+    returns (int256)
+    {
+        return _lockedAmount;
+    }
+
+    function _setLockedAmount(int256 amount)
+    public
+    {
+        _lockedAmount = amount;
+    }
+
+    function lockedIdsCount(address, address, address, uint256)
+    public
+    view
+    returns (uint256)
+    {
+        return _lockedIdsCount;
+    }
+
+    function _setLockedIdsCount(uint256 count)
+    public
+    {
+        _lockedIdsCount = count;
+    }
+
+    function lockedIdsByIndices(address, address, address, uint256, uint256, uint256)
+    public
+    view
+    returns (int256[])
+    {
+        return _lockedIdsByIndices;
+    }
+
+    function _setLockedIdsByIndices(int256[] ids)
+    public
+    {
+        _lockedIdsByIndices = ids;
     }
 }

@@ -4,7 +4,8 @@ const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const ERC20Token = artifacts.require('StandardTokenEx');
+const ERC20Token = artifacts.require('TestERC20');
+const ERC721Token = artifacts.require('TestERC721');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const ClientFund = artifacts.require('ClientFund');
 const BalanceTracker = artifacts.require('BalanceTracker');
@@ -23,6 +24,7 @@ module.exports = function (glob) {
         let provider;
         let web3TransferControllerManager;
         let web3ERC20, ethersERC20;
+        let web3ERC721, ethersERC721;
         let web3BalanceTracker, ethersBalanceTracker;
         let web3TransactionTracker, ethersTransactionTracker;
         let web3MockedWalletLocker, ethersMockedWalletLocker;
@@ -49,9 +51,17 @@ module.exports = function (glob) {
             web3ERC20 = await ERC20Token.new();
             ethersERC20 = new Contract(web3ERC20.address, ERC20Token.abi, glob.signer_owner);
 
-            await web3ERC20.testMint(glob.user_a, 1000);
+            await web3ERC20.mint(glob.user_a, 1000);
+
+            web3ERC721 = await ERC20Token.new();
+            ethersERC721 = new Contract(web3ERC721.address, ERC721Token.abi, glob.signer_owner);
+
+            await web3ERC721.mint(glob.user_a, 10);
+            await web3ERC721.mint(glob.user_a, 20);
+            await web3ERC721.mint(glob.user_a, 30);
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
+            await web3TransferControllerManager.registerCurrency(web3ERC721.address, 'ERC721', {from: glob.owner});
 
             web3ClientFund = await ClientFund.new(glob.owner);
             ethersClientFund = new Contract(web3ClientFund.address, ClientFund.abi, glob.signer_owner);
@@ -76,9 +86,12 @@ module.exports = function (glob) {
             await web3MockedClientFundUnauthorizedService.setClientFund(web3ClientFund.address);
 
             await web3ClientFund.setTransferControllerManager(web3TransferControllerManager.address);
-            await web3ClientFund.setBalanceTracker(web3BalanceTracker.address, true);
-            await web3ClientFund.setTransactionTracker(web3TransactionTracker.address, true);
-            await web3ClientFund.setWalletLocker(web3MockedWalletLocker.address, true);
+            await web3ClientFund.setBalanceTracker(web3BalanceTracker.address);
+            await web3ClientFund.freezeBalanceTracker();
+            await web3ClientFund.setTransactionTracker(web3TransactionTracker.address);
+            await web3ClientFund.freezeTransactionTracker();
+            await web3ClientFund.setWalletLocker(web3MockedWalletLocker.address);
+            await web3ClientFund.freezeWalletLocker();
             await web3ClientFund.setTokenHolderRevenueFund(web3MockedTokenHolderRevenueFund.address);
             await web3ClientFund.registerBeneficiary(web3MockedBeneficiary.address);
 
@@ -361,6 +374,20 @@ module.exports = function (glob) {
         });
 
         describe('receiveTokens()', () => {
+            describe('if called with zero value', () => {
+                it('should revert', async () => {
+                    web3ClientFund.receiveTokens('', 0, Wallet.createRandom().address, 0, '', {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe.skip('if called with zero currency contract address', () => {
+                it('should revert', async () => {
+                    web3ClientFund.receiveTokens('', 10, mocks.address0, 0, '', {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
             describe('of ERC20 token', () => {
                 describe('if called with zero amount', () => {
                     it('should revert', async () => {
@@ -535,26 +562,89 @@ module.exports = function (glob) {
                     });
                 });
             });
+
+            describe('of ERC721 token', () => {
+                describe.skip('if called without prior approval', () => {
+                    it('should revert', async () => {
+                        web3ClientFund.receiveTokens('', 10, web3ERC721.address, 0, '', {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('to default balance', () => {
+                    describe('first reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC721.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add initial deposit and increment deposited balance', async () => {
+                            await web3ClientFund.receiveTokens(
+                                '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+
+                            (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
+                                ._bn.should.eq.BN(1);
+
+                            (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                                .should.be.true;
+                            (await ethersBalanceTracker.hasId(glob.user_a, settledBalanceType, 10, web3ERC721.address, 0))
+                                .should.be.false;
+                            (await ethersBalanceTracker.hasId(glob.user_a, stagedBalanceType, 10, web3ERC721.address, 0))
+                                .should.be.false;
+                        });
+                    });
+
+                    describe('second reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC721.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ERC721.approve(
+                                web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ClientFund.receiveTokens(
+                                '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add on top of the first deposit', async () => {
+                            await web3ClientFund.receiveTokens(
+                                '', 20, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+
+                            (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
+                                ._bn.should.eq.BN(2);
+
+                            (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                                .should.be.true;
+                            (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 20, web3ERC721.address, 0))
+                                .should.be.true;
+                        });
+                    });
+                });
+            });
         });
 
         describe('receiveTokensTo()', () => {
+            describe('if called with zero amount', () => {
+                it('should revert', async () => {
+                    web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 0, web3ERC20.address, 0, '', {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe.skip('if called with zero currency contract address', () => {
+                it('should revert', async () => {
+                    web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, mocks.address0, 0, '', {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('of ERC20 token', () => {
-                describe('if called with zero amount', () => {
-                    it('should revert', async () => {
-                        web3ClientFund.receiveTokensTo(
-                            glob.user_a, '', 0, web3ERC20.address, 0, '', {from: glob.user_a}
-                        ).should.be.rejected;
-                    });
-                });
-
-                describe('if called with zero ERC20 contract address', () => {
-                    it('should revert', async () => {
-                        web3ClientFund.receiveTokensTo(
-                            glob.user_a, '', 10, 0, 0, '', {from: glob.user_a}
-                        ).should.be.rejected;
-                    });
-                });
-
                 describe('if called without prior approval', () => {
                     it('should revert', async () => {
                         web3ClientFund.receiveTokensTo(
@@ -719,13 +809,77 @@ module.exports = function (glob) {
                     });
                 });
             });
+
+            describe('of ERC721 token', () => {
+                describe.skip('if called without prior approval', () => {
+                    it('should revert', async () => {
+                        web3ClientFund.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
+                    });
+                });
+
+                describe('to default balance', () => {
+                    describe('first reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC721.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add initial deposit and increment deposited balance', async () => {
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+
+                            (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
+                                ._bn.should.eq.BN(1);
+
+                            (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                                .should.be.true;
+                            (await ethersBalanceTracker.hasId(glob.user_a, settledBalanceType, 10, web3ERC721.address, 0))
+                                .should.be.false;
+                            (await ethersBalanceTracker.hasId(glob.user_a, stagedBalanceType, 10, web3ERC721.address, 0))
+                                .should.be.false;
+                        });
+                    });
+
+                    describe('second reception', () => {
+                        beforeEach(async () => {
+                            await web3ERC721.approve(
+                                web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ERC721.approve(
+                                web3ClientFund.address, 20, {from: glob.user_a, gas: 1e6}
+                            );
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+                        });
+
+                        it('should add on top of the first deposit', async () => {
+                            await web3ClientFund.receiveTokensTo(
+                                glob.user_a, '', 20, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                            );
+
+                            (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
+                                ._bn.should.eq.BN(2);
+
+                            (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                                .should.be.true;
+                            (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 20, web3ERC721.address, 0))
+                                .should.be.true;
+                        });
+                    });
+                });
+            });
         });
 
         describe('updateSettledBalance()', () => {
             describe('by sender other than registered active service', () => {
                 it('should revert', async () => {
                     ethersClientFund.updateSettledBalance(
-                        Wallet.createRandom().address, 1, Wallet.createRandom().address, 0, 0, {gasLimit: 1e6}
+                        Wallet.createRandom().address, 1, Wallet.createRandom().address, 0, '', 0, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
             });
@@ -733,7 +887,7 @@ module.exports = function (glob) {
             describe('called with null wallet address', () => {
                 it('should revert', async () => {
                     ethersMockedClientFundAuthorizedService.updateSettledBalance(
-                        mocks.address0, utils.parseEther('1'), mocks.address0, 0, 0, {gasLimit: 1e6}
+                        mocks.address0, utils.parseEther('1'), mocks.address0, 0, '', 0, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
             });
@@ -741,7 +895,7 @@ module.exports = function (glob) {
             describe('called by unauthorized service', () => {
                 it('should revert', async () => {
                     ethersMockedClientFundUnauthorizedService.updateSettledBalance(
-                        glob.user_a, utils.parseEther('1'), mocks.address0, 0, 0, {gasLimit: 1e6}
+                        glob.user_a, utils.parseEther('1'), mocks.address0, 0, '', 0, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
             });
@@ -749,7 +903,7 @@ module.exports = function (glob) {
             describe('called with negative amount', () => {
                 it('should revert', async () => {
                     ethersMockedClientFundAuthorizedService.updateSettledBalance(
-                        glob.user_a, utils.parseEther('-1'), mocks.address0, 0, 0, {gasLimit: 1e6}
+                        glob.user_a, utils.parseEther('-1'), mocks.address0, 0, '', 0, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
             });
@@ -764,7 +918,7 @@ module.exports = function (glob) {
                 it('should successfully update settled balance of Ether', async () => {
                     await ethersMockedClientFundAuthorizedService.updateSettledBalance(
                         glob.user_a, utils.parseEther('0.4'), mocks.address0, 0,
-                        await provider.getBlockNumber(), {gasLimit: 1e6}
+                        '', await provider.getBlockNumber(), {gasLimit: 1e6}
                     );
 
                     (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, mocks.address0, 0))
@@ -788,7 +942,7 @@ module.exports = function (glob) {
 
                 it('should successfully update settled balance of ERC20 token', async () => {
                     await ethersMockedClientFundAuthorizedService.updateSettledBalance(
-                        glob.user_a, 4, web3ERC20.address, 0, await provider.getBlockNumber(), {gasLimit: 1e6}
+                        glob.user_a, 4, web3ERC20.address, 0, '', await provider.getBlockNumber(), {gasLimit: 1e6}
                     );
 
                     (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, web3ERC20.address, 0))
@@ -799,13 +953,37 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(0);
                 });
             });
+
+            describe('of ERC721 token', () => {
+                beforeEach(async () => {
+                    await web3ERC721.approve(
+                        web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should successfully update settled balance of ERC721 token', async () => {
+                    await ethersMockedClientFundAuthorizedService.updateSettledBalance(
+                        glob.user_a, 10, web3ERC721.address, 0, '', await provider.getBlockNumber(), {gasLimit: 1e6}
+                    );
+
+                    (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, settledBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.hasId(glob.user_a, stagedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                });
+            });
         });
 
         describe('stage()', () => {
             describe('by sender other than registered active service', () => {
                 it('should revert', async () => {
                     ethersClientFund.stage(
-                        Wallet.createRandom().address, 1, Wallet.createRandom().address, 0
+                        Wallet.createRandom().address, 1, Wallet.createRandom().address, 0, ''
                     ).should.be.rejected;
                 });
             });
@@ -813,7 +991,7 @@ module.exports = function (glob) {
             describe('called by unauthorized service', () => {
                 it('should revert', async () => {
                     ethersMockedClientFundUnauthorizedService.stage(
-                        glob.user_a, utils.parseEther('1'), mocks.address0, 0
+                        glob.user_a, utils.parseEther('1'), mocks.address0, 0, ''
                     ).should.be.rejected;
                 });
             });
@@ -821,7 +999,7 @@ module.exports = function (glob) {
             describe('called with negative amount', () => {
                 it('should revert', async () => {
                     ethersMockedClientFundAuthorizedService.stage(
-                        glob.user_a, utils.parseEther('-1'), mocks.address0, 0
+                        glob.user_a, utils.parseEther('-1'), mocks.address0, 0, ''
                     ).should.be.rejected;
                 });
             });
@@ -837,13 +1015,13 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await web3MockedClientFundAuthorizedService.updateSettledBalance(
                             glob.user_a, web3.toWei(1.4, 'ether'), mocks.address0, 0,
-                            await provider.getBlockNumber(), {gas: 1e6}
+                            '', await provider.getBlockNumber(), {gas: 1e6}
                         );
                     });
 
                     it('should successfully stage by deducting from settled', async () => {
                         await ethersMockedClientFundAuthorizedService.stage(
-                            glob.user_a, utils.parseEther('0.3'), mocks.address0, 0, {gasLimit: 1e6}
+                            glob.user_a, utils.parseEther('0.3'), mocks.address0, 0, '', {gasLimit: 1e6}
                         );
 
                         (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, mocks.address0, 0))
@@ -859,13 +1037,13 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await web3MockedClientFundAuthorizedService.updateSettledBalance(
                             glob.user_a, web3.toWei(0.4, 'ether'), mocks.address0, 0,
-                            await provider.getBlockNumber(), {gas: 1e6}
+                            '', await provider.getBlockNumber(), {gas: 1e6}
                         );
                     });
 
                     it('should successfully stage by deducting from deposited and rebalance settled to 0', async () => {
                         await ethersMockedClientFundAuthorizedService.stage(
-                            glob.user_a, utils.parseEther('0.3'), mocks.address0, 0, {gasLimit: 1e6}
+                            glob.user_a, utils.parseEther('0.3'), mocks.address0, 0, '', {gasLimit: 1e6}
                         );
 
                         (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, mocks.address0, 0))
@@ -892,13 +1070,13 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await ethersMockedClientFundAuthorizedService.updateSettledBalance(
                             glob.user_a, 14, web3ERC20.address, 0,
-                            await provider.getBlockNumber(), {gasLimit: 1e6}
+                            '', await provider.getBlockNumber(), {gasLimit: 1e6}
                         );
                     });
 
                     it('should successfully stage by deducting from settled', async () => {
                         await ethersMockedClientFundAuthorizedService.stage(
-                            glob.user_a, 3, web3ERC20.address, 0, {gasLimit: 1e6}
+                            glob.user_a, 3, web3ERC20.address, 0, '', {gasLimit: 1e6}
                         );
 
                         (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, web3ERC20.address, 0))
@@ -914,13 +1092,13 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await ethersMockedClientFundAuthorizedService.updateSettledBalance(
                             glob.user_a, 4, web3ERC20.address, 0,
-                            await provider.getBlockNumber(), {gasLimit: 1e6}
+                            '', await provider.getBlockNumber(), {gasLimit: 1e6}
                         );
                     });
 
                     it('should successfully stage by deducting from deposited and rebalance settled to 0', async () => {
                         await ethersMockedClientFundAuthorizedService.stage(
-                            glob.user_a, 3, web3ERC20.address, 0, {gasLimit: 1e6}
+                            glob.user_a, 3, web3ERC20.address, 0, '', {gasLimit: 1e6}
                         );
 
                         (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, web3ERC20.address, 0))
@@ -932,13 +1110,44 @@ module.exports = function (glob) {
                     });
                 });
             });
+
+            describe('of ERC721 token', () => {
+                beforeEach(async () => {
+                    await web3ERC721.approve(
+                        web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                beforeEach(async () => {
+                    await ethersMockedClientFundAuthorizedService.updateSettledBalance(
+                        glob.user_a, 10, web3ERC721.address, 0,
+                        '', await provider.getBlockNumber(), {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully stage by deducting from settled', async () => {
+                    await ethersMockedClientFundAuthorizedService.stage(
+                        glob.user_a, 10, web3ERC721.address, 0, '', {gasLimit: 1e6}
+                    );
+
+                    (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, settledBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, stagedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.true;
+                });
+            });
         });
 
         describe('unstage()', () => {
             describe('called with negative amount', () => {
                 it('should revert', async () => {
                     web3ClientFund.unstage(
-                        web3.toWei(-0.2, 'ether'), mocks.address0, 0, {from: glob.user_a}
+                        web3.toWei(-0.2, 'ether'), mocks.address0, 0, '', {from: glob.user_a}
                     ).should.be.rejected;
                 });
             });
@@ -949,13 +1158,13 @@ module.exports = function (glob) {
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gas: 1e6}
+                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, '', {gas: 1e6}
                     );
                 });
 
                 it('should successfully unstage', async () => {
                     await web3ClientFund.unstage(
-                        web3.toWei(0.2, 'ether'), mocks.address0, 0, {from: glob.user_a}
+                        web3.toWei(0.2, 'ether'), mocks.address0, 0, '', {from: glob.user_a}
                     );
 
                     (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, mocks.address0, 0))
@@ -976,13 +1185,13 @@ module.exports = function (glob) {
                         glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedClientFundAuthorizedService.stage(
-                        glob.user_a, 3, web3ERC20.address, 0, {gasLimit: 1e6}
+                        glob.user_a, 3, web3ERC20.address, 0, '', {gasLimit: 1e6}
                     );
                 });
 
                 it('should successfully unstage', async () => {
                     await web3ClientFund.unstage(
-                        2, web3ERC20.address, 0, {from: glob.user_a}
+                        2, web3ERC20.address, 0, '', {from: glob.user_a}
                     );
 
                     (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, web3ERC20.address, 0))
@@ -991,6 +1200,33 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(0);
                     (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, web3ERC20.address, 0))
                         ._bn.should.eq.BN(1);
+                });
+            });
+
+            describe('of ERC721 token', () => {
+                beforeEach(async () => {
+                    await web3ERC721.approve(
+                        web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedClientFundAuthorizedService.stage(
+                        glob.user_a, 10, web3ERC721.address, 0, '', {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully unstage', async () => {
+                    await web3ClientFund.unstage(
+                        10, web3ERC721.address, 0, '', {from: glob.user_a}
+                    );
+
+                    (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.true;
+                    (await ethersBalanceTracker.hasId(glob.user_a, settledBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, stagedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
                 });
             });
         });
@@ -1049,7 +1285,7 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await web3MockedClientFundAuthorizedService.updateSettledBalance(
                             glob.user_a, web3.toWei(1.4, 'ether'), mocks.address0, 0,
-                            await provider.getBlockNumber(), {gas: 1e6}
+                            '', await provider.getBlockNumber(), {gas: 1e6}
                         );
                     });
 
@@ -1081,7 +1317,7 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await web3MockedClientFundAuthorizedService.updateSettledBalance(
                             glob.user_a, web3.toWei(0.4, 'ether'), mocks.address0, 0,
-                            await provider.getBlockNumber(), {gas: 1e6}
+                            '', await provider.getBlockNumber(), {gas: 1e6}
                         );
                     });
 
@@ -1126,7 +1362,7 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await ethersMockedClientFundAuthorizedService.updateSettledBalance(
                             glob.user_a, 14, web3ERC20.address, 0,
-                            await provider.getBlockNumber(), {gasLimit: 1e6}
+                            '', await provider.getBlockNumber(), {gasLimit: 1e6}
                         );
                     });
 
@@ -1159,7 +1395,7 @@ module.exports = function (glob) {
                     beforeEach(async () => {
                         await ethersMockedClientFundAuthorizedService.updateSettledBalance(
                             glob.user_a, 4, web3ERC20.address, 0,
-                            await provider.getBlockNumber(), {gasLimit: 1e6}
+                            '', await provider.getBlockNumber(), {gasLimit: 1e6}
                         );
                     });
 
@@ -1186,6 +1422,43 @@ module.exports = function (glob) {
                         benefit.currencyId._bn.should.eq.BN(0);
                         benefit.standard.should.be.a('string').that.is.empty;
                     });
+                });
+            });
+
+            describe('of ERC721 token', () => {
+                beforeEach(async () => {
+                    await web3MockedBeneficiary._reset();
+
+                    await web3ERC721.approve(
+                        web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                beforeEach(async () => {
+                    await ethersMockedClientFundAuthorizedService.updateSettledBalance(
+                        glob.user_a, 10, web3ERC721.address, 0,
+                        '', await provider.getBlockNumber(), {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully stage by deducting from settled', async () => {
+                    await web3MockedClientFundAuthorizedService.stageToBeneficiary(
+                        glob.user_a, web3MockedBeneficiary.address, 10, web3ERC721.address, 0, '', {
+                            from: glob.user_a,
+                            gas: 1e6
+                        }
+                    );
+
+                    (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, settledBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, stagedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+
                 });
             });
         });
@@ -1232,8 +1505,6 @@ module.exports = function (glob) {
             });
 
             describe('of ERC20 token', () => {
-                let wallet;
-
                 beforeEach(async () => {
                     await web3MockedBeneficiary._reset();
 
@@ -1259,57 +1530,120 @@ module.exports = function (glob) {
                     benefit.standard.should.be.a('string').that.is.empty;
                 });
             });
+
+            describe('of ERC721 token', () => {
+                beforeEach(async () => {
+                    await web3MockedBeneficiary._reset();
+
+                    await web3ERC721.approve(
+                        web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                });
+
+                it('should successfully stage by deducting from settled', async () => {
+                    await web3MockedClientFundAuthorizedService.transferToBeneficiary(
+                        glob.user_b, web3MockedBeneficiary.address, 10, web3ERC721.address, 0, '', {gas: 1e6}
+                    );
+
+                    (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.true;
+
+                });
+            });
         });
 
         describe('seizeBalances()', () => {
-            describe('if wallet is not locked', () => {
+            describe('if locked amount is zero', () => {
                 beforeEach(async () => {
-                    await web3MockedWalletLocker._setLockedBy(false);
+                    await web3MockedWalletLocker._setLockedAmount(0);
                 });
 
                 it('should revert', async () => {
                     web3ClientFund.seizeBalances(
-                        glob.user_a, mocks.address0, 0, {from: glob.user_c, gas: 1e6}
+                        glob.user_a, mocks.address0, 0, '', {from: glob.user_c, gas: 1e6}
                     ).should.be.rejected;
                 });
             });
 
-            describe('if within operational constraints', () => {
+            describe('of ETH', () => {
                 beforeEach(async () => {
                     await web3ClientFund.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.updateSettledBalance(
                         glob.user_a, web3.toWei(1.4, 'ether'), mocks.address0, 0,
-                        await provider.getBlockNumber(), {gas: 1e6}
+                        '', await provider.getBlockNumber(), {gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gas: 1e6}
+                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, '', {gas: 1e6}
                     );
-                    await web3MockedWalletLocker._setLockedBy(true);
+                    await web3MockedWalletLocker._setLockedAmount(web3.toWei(0.5, 'ether'));
                 });
 
                 it('should successfully seize balances', async () => {
                     const result = await web3ClientFund.seizeBalances(
-                        glob.user_a, mocks.address0, 0, {from: glob.user_b, gas: 1e6}
+                        glob.user_a, mocks.address0, 0, '', {from: glob.user_b, gas: 1e6}
                     );
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SeizeBalancesEvent');
 
                     (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, mocks.address0, 0))
-                        ._bn.should.eq.BN(0);
+                        ._bn.should.eq.BN(utils.parseEther('0.6')._bn);
                     (await ethersBalanceTracker.get(glob.user_a, settledBalanceType, mocks.address0, 0))
                         ._bn.should.eq.BN(0);
                     (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, mocks.address0, 0))
-                        ._bn.should.eq.BN(0);
+                        ._bn.should.eq.BN(utils.parseEther('0.3')._bn);
 
                     (await ethersBalanceTracker.get(glob.user_b, depositedBalanceType, mocks.address0, 0))
                         ._bn.should.eq.BN(0);
                     (await ethersBalanceTracker.get(glob.user_b, settledBalanceType, mocks.address0, 0))
                         ._bn.should.eq.BN(0);
                     (await ethersBalanceTracker.get(glob.user_b, stagedBalanceType, mocks.address0, 0))
-                        ._bn.should.eq.BN(utils.parseEther('1.4')._bn);
+                        ._bn.should.eq.BN(utils.parseEther('0.5')._bn);
+                });
+            });
+
+            describe('of ERC721', () => {
+                beforeEach(async () => {
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3MockedClientFundAuthorizedService.updateSettledBalance(
+                        glob.user_a, 10, web3ERC721.address, 0,
+                        '', await provider.getBlockNumber(), {gas: 1e6}
+                    );
+                    await web3MockedClientFundAuthorizedService.stage(
+                        glob.user_a, 10, web3ERC721.address, 0, '', {gas: 1e6}
+                    );
+                    await web3MockedWalletLocker._setLockedIdsCount(1);
+                    await web3MockedWalletLocker._setLockedIdsByIndices([10]);
+                });
+
+                it('should successfully seize balances', async () => {
+                    const result = await web3ClientFund.seizeBalances(
+                        glob.user_a, web3ERC721.address, 0, '', {from: glob.user_b, gas: 1e6}
+                    );
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SeizeBalancesEvent');
+
+                    (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, settledBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, stagedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+
+                    (await ethersBalanceTracker.hasId(glob.user_b, depositedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_b, settledBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_b, stagedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.true;
                 });
             });
         });
@@ -1328,7 +1662,7 @@ module.exports = function (glob) {
                     );
                     await web3MockedWalletLocker._setLockedBy(true);
                     await web3ClientFund.seizeBalances(
-                        glob.user_a, mocks.address0, 0, {from: glob.user_b, gas: 1e6}
+                        glob.user_a, mocks.address0, 0, '', {from: glob.user_b, gas: 1e6}
                     )
                 });
 
@@ -1339,7 +1673,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe('withdraw()', () => {
+        describe.skip('withdraw()', () => {
             beforeEach(async () => {
                 await web3MockedWalletLocker._reset();
             });
@@ -1370,7 +1704,7 @@ module.exports = function (glob) {
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
                     await web3MockedClientFundAuthorizedService.stage(
-                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, {gas: 1e6}
+                        glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, '', {gas: 1e6}
                     );
                 });
 
@@ -1397,7 +1731,7 @@ module.exports = function (glob) {
                         glob.user_b, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedClientFundAuthorizedService.stage(
-                        glob.user_b, 3, web3ERC20.address, 0, {gasLimit: 1e6}
+                        glob.user_b, 3, web3ERC20.address, 0, '', {gasLimit: 1e6}
                     );
                 });
 
@@ -1417,9 +1751,36 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(2);
                 });
             });
+
+            describe('of ERC721 token', () => {
+                beforeEach(async () => {
+                    await web3ERC721.approve(
+                        web3ClientFund.address, 10, {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3ClientFund.receiveTokensTo(
+                        glob.user_b, '', 10, web3ERC721.address, 0, '', {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedClientFundAuthorizedService.stage(
+                        glob.user_b, 10, web3ERC721.address, 0, '', {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully unstage', async () => {
+                    await web3ClientFund.withdraw(
+                        10, web3ERC721.address, 0, '', {from: glob.user_b}
+                    );
+
+                    (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, settledBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                    (await ethersBalanceTracker.hasId(glob.user_a, stagedBalanceType, 10, web3ERC721.address, 0))
+                        .should.be.false;
+                });
+            });
         });
 
-        describe('claimRevenue', () => {
+        describe.skip('claimRevenue', () => {
             let balanceType;
 
             beforeEach(async () => {

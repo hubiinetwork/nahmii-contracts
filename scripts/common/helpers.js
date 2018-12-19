@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 exports.getOwnerAccountFromArgs = function () {
     let i;
 
@@ -88,3 +90,13 @@ exports.networkIdToName = function(id) {
             return '';
     }
 };
+
+exports.airdriipReleases = () => {
+    let date = new moment('1 Dec 2018 00:00:00 UT');
+    const releases = [{earliestReleaseTime: moment(date).subtract(1, 'hour').unix(), amount: 1e24, blockNumber: 6803256}];
+    for (let i = 1; i < 120; i++) {
+        date = moment(date).add(1, 'month');
+        releases.push({earliestReleaseTime: moment(date).subtract(1, 'hour').unix(), amount: 1e24});
+    }
+    return releases;
+}

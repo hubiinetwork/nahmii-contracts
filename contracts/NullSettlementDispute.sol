@@ -123,7 +123,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
-            walletLocker.lockByProxy(order.wallet, challenger);
+            walletLocker.lockFungibleByProxy(order.wallet, challenger, transferAmount, currency.ct, currency.id);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
@@ -202,7 +202,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
-            walletLocker.lockByProxy(wallet, challenger);
+            walletLocker.lockFungibleByProxy(wallet, challenger, transferAmount, currency.ct, currency.id);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
@@ -264,7 +264,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (nullSettlementChallenge.proposalBalanceReward(wallet, payment.currency.ct, payment.currency.id))
-            walletLocker.lockByProxy(wallet, challenger);
+            walletLocker.lockFungibleByProxy(wallet, challenger, payment.transfers.single.abs(), payment.currency.ct, payment.currency.id);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 

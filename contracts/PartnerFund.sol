@@ -14,7 +14,7 @@ import {Ownable} from "./Ownable.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {TransferController} from "./TransferController.sol";
-import {BalanceLib} from "./BalanceLib.sol";
+import {FungibleBalanceLib} from "./FungibleBalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {Strings} from "solidity-util/lib/Strings.sol";
@@ -24,7 +24,7 @@ import {Strings} from "solidity-util/lib/Strings.sol";
  * @notice Where partners’ fees are managed
  */
 contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
-    using BalanceLib for BalanceLib.Balance;
+    using FungibleBalanceLib for FungibleBalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathIntLib for int256;
     using Strings for string;
@@ -42,8 +42,8 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         bool operatorCanUpdate;
         bool partnerCanUpdate;
 
-        BalanceLib.Balance active;
-        BalanceLib.Balance staged;
+        FungibleBalanceLib.Balance active;
+        FungibleBalanceLib.Balance staged;
 
         TxHistoryLib.TxHistory txHistory;
         FullBalanceHistory[] fullBalanceHistory;

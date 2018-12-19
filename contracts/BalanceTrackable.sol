@@ -20,36 +20,46 @@ contract BalanceTrackable is Ownable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     BalanceTracker public balanceTracker;
-    bool frozen;
+    bool public balanceTrackerFrozen;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetBalanceTrackerEvent(BalanceTracker oldBalanceTracker, BalanceTracker newBalanceTracker,
-        bool freeze);
+    event SetBalanceTrackerEvent(BalanceTracker oldBalanceTracker, BalanceTracker newBalanceTracker);
+    event FreezeBalanceTrackerEvent();
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the balance tracker contract
     /// @param newBalanceTracker The (address of) BalanceTracker contract instance
-    /// @param freeze Indicator of whether later updates are allowed or not
-    function setBalanceTracker(BalanceTracker newBalanceTracker, bool freeze)
+    function setBalanceTracker(BalanceTracker newBalanceTracker)
     public
     onlyDeployer
     notNullAddress(newBalanceTracker)
     notSameAddresses(newBalanceTracker, balanceTracker)
     {
         // Require that this contract has not been frozen
-        require(!frozen);
+        require(!balanceTrackerFrozen);
 
         // Update fields
         BalanceTracker oldBalanceTracker = balanceTracker;
         balanceTracker = newBalanceTracker;
-        frozen = freeze;
 
         // Emit event
-        emit SetBalanceTrackerEvent(oldBalanceTracker, newBalanceTracker, freeze);
+        emit SetBalanceTrackerEvent(oldBalanceTracker, newBalanceTracker);
+    }
+
+    /// @notice Freeze the balance tracker from further updates
+    /// @dev This operation can not be undone
+    function freezeBalanceTracker()
+    public
+    onlyDeployer
+    {
+        balanceTrackerFrozen = true;
+
+        // Emit event
+        emit FreezeBalanceTrackerEvent();
     }
 
     //

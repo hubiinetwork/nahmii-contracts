@@ -4,7 +4,7 @@ const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const ERC20Token = artifacts.require('StandardTokenEx');
+const ERC20Token = artifacts.require('TestERC20');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const MockedTokenHolderRevenueFundService = artifacts.require('MockedTokenHolderRevenueFundService');
@@ -46,7 +46,7 @@ module.exports = function (glob) {
             web3ERC20 = await ERC20Token.new();
             ethersERC20 = new Contract(web3ERC20.address, ERC20Token.abi, glob.signer_owner);
 
-            await web3ERC20.testMint(glob.user_a, 1000);
+            await web3ERC20.mint(glob.user_a, 1000);
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
 
@@ -122,16 +122,16 @@ module.exports = function (glob) {
             });
         });
 
-        describe('periodInUseCurrenciesCount()', () => {
+        describe('periodCurrenciesCount()', () => {
             it('should return initial value', async () => {
-                (await ethersTokenHolderRevenueFund.periodInUseCurrenciesCount())
+                (await ethersTokenHolderRevenueFund.periodCurrenciesCount())
                     ._bn.should.eq.BN(0);
             });
         });
 
-        describe('aggregateInUseCurrenciesCount()', () => {
+        describe('aggregateCurrenciesCount()', () => {
             it('should return initial value', async () => {
-                (await ethersTokenHolderRevenueFund.aggregateInUseCurrenciesCount())
+                (await ethersTokenHolderRevenueFund.aggregateCurrenciesCount())
                     ._bn.should.eq.BN(0);
             });
         });
@@ -455,10 +455,10 @@ module.exports = function (glob) {
             });
         });
 
-        describe('periodInUseCurrenciesByIndices()', () => {
+        describe('periodCurrenciesByIndices()', () => {
             describe('before first reception', () => {
                 it('should revert', async () => {
-                    web3TokenHolderRevenueFund.periodInUseCurrenciesByIndices.call(0, 0).should.be.rejected;
+                    web3TokenHolderRevenueFund.periodCurrenciesByIndices.call(0, 0).should.be.rejected;
                 });
             });
 
@@ -470,7 +470,7 @@ module.exports = function (glob) {
                 });
 
                 it('should return deposit', async () => {
-                    const inUseCurrencies = await ethersTokenHolderRevenueFund.periodInUseCurrenciesByIndices(0, 0);
+                    const inUseCurrencies = await ethersTokenHolderRevenueFund.periodCurrenciesByIndices(0, 0);
 
                     inUseCurrencies[0].ct.should.equal(mocks.address0);
                     inUseCurrencies[0].id._bn.should.eq.BN(0);
@@ -488,7 +488,7 @@ module.exports = function (glob) {
                 });
 
                 it('should return deposit', async () => {
-                    const inUseCurrencies = await ethersTokenHolderRevenueFund.periodInUseCurrenciesByIndices(0, 0);
+                    const inUseCurrencies = await ethersTokenHolderRevenueFund.periodCurrenciesByIndices(0, 0);
 
                     inUseCurrencies[0].ct.should.equal(utils.getAddress(web3ERC20.address));
                     inUseCurrencies[0].id._bn.should.eq.BN(0);
@@ -496,10 +496,10 @@ module.exports = function (glob) {
             });
         });
 
-        describe('aggregateInUseCurrenciesByIndices()', () => {
+        describe('aggregateCurrenciesByIndices()', () => {
             describe('before first reception', () => {
                 it('should revert', async () => {
-                    web3TokenHolderRevenueFund.aggregateInUseCurrenciesByIndices.call(0, 0).should.be.rejected;
+                    web3TokenHolderRevenueFund.aggregateCurrenciesByIndices.call(0, 0).should.be.rejected;
                 });
             });
 
@@ -511,7 +511,7 @@ module.exports = function (glob) {
                 });
 
                 it('should return deposit', async () => {
-                    const inUseCurrencies = await ethersTokenHolderRevenueFund.aggregateInUseCurrenciesByIndices(0, 0);
+                    const inUseCurrencies = await ethersTokenHolderRevenueFund.aggregateCurrenciesByIndices(0, 0);
 
                     inUseCurrencies[0].ct.should.equal(mocks.address0);
                     inUseCurrencies[0].id._bn.should.eq.BN(0);
@@ -529,7 +529,7 @@ module.exports = function (glob) {
                 });
 
                 it('should return deposit', async () => {
-                    const inUseCurrencies = await ethersTokenHolderRevenueFund.aggregateInUseCurrenciesByIndices(0, 0);
+                    const inUseCurrencies = await ethersTokenHolderRevenueFund.aggregateCurrenciesByIndices(0, 0);
 
                     inUseCurrencies[0].ct.should.equal(utils.getAddress(web3ERC20.address));
                     inUseCurrencies[0].id._bn.should.eq.BN(0);
@@ -724,4 +724,3 @@ module.exports = function (glob) {
         });
     });
 };
-

@@ -509,10 +509,10 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
     returns (int256 amount, uint256 blockNumber)
     {
         // Get last log record of deposited and settled balances
-        (int256 depositedAmount, uint256 depositedBlockNumber) = balanceTracker.lastLog(
+        (int256 depositedAmount, uint256 depositedBlockNumber) = balanceTracker.lastFungibleRecord(
             wallet, balanceTracker.depositedBalanceType(), currencyCt, currencyId
         );
-        (int256 settledAmount, uint256 settledBlockNumber) = balanceTracker.lastLog(
+        (int256 settledAmount, uint256 settledBlockNumber) = balanceTracker.lastFungibleRecord(
             wallet, balanceTracker.settledBalanceType(), currencyCt, currencyId
         );
 

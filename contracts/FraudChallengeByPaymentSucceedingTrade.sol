@@ -81,7 +81,7 @@ SecurityBondable, WalletLockable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        walletLocker.lockByProxy(wallet, msg.sender);
+//        walletLocker.lockByProxy(wallet, msg.sender);
 
         emit ChallengeByPaymentSucceedingTradeEvent(
             trade.seal.hash, payment.seals.operator.hash, msg.sender, wallet
