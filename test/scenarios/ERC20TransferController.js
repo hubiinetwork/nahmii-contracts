@@ -3,7 +3,7 @@ const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Contract} = require('ethers');
-const ERC20Token = artifacts.require('StandardTokenEx');
+const ERC20Token = artifacts.require('TestERC20');
 const ERC20TransferController = artifacts.require('ERC20TransferController');
 
 chai.use(chaiAsPromised);
@@ -31,7 +31,7 @@ module.exports = function (glob) {
 
         describe('receive()', () => {
             beforeEach(async () => {
-                await web3ERC20.testMint(glob.user_a, 100);
+                await web3ERC20.mint(glob.user_a, 100);
                 await web3ERC20.approve(web3ERC20TransferController.address, 10, {from: glob.user_a, gas: 1e6});
             });
 
@@ -65,7 +65,7 @@ module.exports = function (glob) {
 
         describe('approve()', () => {
             beforeEach(async () => {
-                await web3ERC20.testMint(web3ERC20TransferController.address, 100);
+                await web3ERC20.mint(web3ERC20TransferController.address, 100);
             });
 
             describe('if amount is 0 or negative', () => {
@@ -94,7 +94,7 @@ module.exports = function (glob) {
 
         describe('dispatch()', () => {
             beforeEach(async () => {
-                await web3ERC20.testMint(web3ERC20TransferController.address, 100);
+                await web3ERC20.mint(web3ERC20TransferController.address, 100);
             });
 
             describe('if amount is 0 or negative', () => {

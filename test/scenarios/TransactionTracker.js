@@ -174,7 +174,7 @@ module.exports = function (glob) {
                     const transactionRecordByIndex = await ethersTransactionTracker.getByIndex(
                         glob.user_a, type, 0
                     );
-                    transactionRecordByIndex.amount._bn.should.eq.BN(10);
+                    transactionRecordByIndex.value._bn.should.eq.BN(10);
                     transactionRecordByIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
                     transactionRecordByIndex.currencyCt.should.equal(address0);
                     transactionRecordByIndex.currencyId._bn.should.eq.BN(0);
@@ -187,7 +187,7 @@ module.exports = function (glob) {
                     const transactionRecordByCurrencyIndex = await ethersTransactionTracker.getByCurrencyIndex(
                         glob.user_a, type, address0, 0, 0
                     );
-                    transactionRecordByCurrencyIndex.amount._bn.should.eq.BN(10);
+                    transactionRecordByCurrencyIndex.value._bn.should.eq.BN(10);
                     transactionRecordByCurrencyIndex.blockNumber._bn.should.eq.BN(blockNumber + 1);
 
                     const transactionRecordByCurrencyBlockNumber = await ethersTransactionTracker.getByCurrencyBlockNumber(

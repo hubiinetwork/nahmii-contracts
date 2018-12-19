@@ -5,7 +5,7 @@ const bnChai = require('bn-chai');
 const {Contract, utils} = require('ethers');
 const {address0} = require('../mocks');
 const cryptography = require('omphalos-commons').util.cryptography;
-const ERC20Token = artifacts.require('StandardTokenEx');
+const ERC20Token = artifacts.require('TestERC20');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const PartnerFund = artifacts.require('PartnerFund');
 
@@ -25,7 +25,7 @@ module.exports = function (glob) {
 
         beforeEach(async () => {
             web3ERC20 = await ERC20Token.new();
-            await web3ERC20.testMint(glob.user_a, 1000);
+            await web3ERC20.mint(glob.user_a, 1000);
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
 

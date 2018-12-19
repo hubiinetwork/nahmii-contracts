@@ -151,19 +151,20 @@ module.exports = function (glob) {
         });
 
         describe('defineReleases()', () => {
-            let releaseTimes, amounts;
+            let earliestReleaseTimes, amounts, blockNumbers;
 
             beforeEach(async () => {
                 await web3TokenMultiTimelock.setToken(web3RevenueToken.address);
 
-                releaseTimes = [futureEpoch(10), futureEpoch(20), futureEpoch(30)];
+                earliestReleaseTimes = [futureEpoch(10), futureEpoch(20), futureEpoch(30)];
                 amounts = [1000, 2000, 3000];
+                blockNumbers = [1000000, 2000000];
             });
 
             describe('if called by non-operator', () => {
                 it('should revert', async () => {
                     web3TokenMultiTimelock.defineReleases(
-                        releaseTimes, amounts, {from: glob.user_a}
+                        earliestReleaseTimes, amounts, blockNumbers, {from: glob.user_a}
                     ).should.be.rejected;
                 });
             });
@@ -178,7 +179,7 @@ module.exports = function (glob) {
 
                 it('should revert', async () => {
                     web3TokenMultiTimelock.defineReleases(
-                        releaseTimes, amounts
+                        earliestReleaseTimes, amounts, blockNumbers
                     ).should.be.rejected;
                 });
             });
@@ -190,18 +191,31 @@ module.exports = function (glob) {
 
                 it('should revert', async () => {
                     web3TokenMultiTimelock.defineReleases(
-                        releaseTimes, amounts
+                        earliestReleaseTimes, amounts, blockNumbers
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if number of release times is smaller than the count of block numbers', () => {
+                beforeEach(() => {
+                    blockNumbers.push(4000000);
+                    blockNumbers.push(5000000);
+                });
+
+                it('should revert', async () => {
+                    web3TokenMultiTimelock.defineReleases(
+                        earliestReleaseTimes, amounts, blockNumbers
                     ).should.be.rejected;
                 });
             });
 
             describe('if posterior total locked amount becomes greater than contracts token balance', () => {
                 it('should revert', async () => {
-                    releaseTimes.push(futureEpoch(40));
+                    earliestReleaseTimes.push(futureEpoch(40));
                     amounts.push(10000);
 
                     web3TokenMultiTimelock.defineReleases(
-                        releaseTimes, amounts
+                        earliestReleaseTimes, amounts, blockNumbers
                     ).should.be.rejected;
                 });
             });
@@ -209,7 +223,7 @@ module.exports = function (glob) {
             describe('if within operational constraints', () => {
                 it('should successfully define release', async () => {
                     const result = await web3TokenMultiTimelock.defineReleases(
-                        releaseTimes, amounts
+                        earliestReleaseTimes, amounts, blockNumbers
                     );
 
                     result.logs.should.be.an('array').and.have.lengthOf(3);
@@ -231,7 +245,7 @@ module.exports = function (glob) {
                 await web3TokenMultiTimelock.setBeneficiary(glob.user_a);
 
                 await web3TokenMultiTimelock.defineReleases(
-                    [futureEpoch(1)], [1000]
+                    [futureEpoch(1)], [1000], []
                 );
             });
 
@@ -252,7 +266,7 @@ module.exports = function (glob) {
                     await web3RevenueToken.mint(web3TokenMultiTimelock.address, 1000);
 
                     await web3TokenMultiTimelock.defineReleases(
-                        [futureEpoch(10)], [1000]
+                        [futureEpoch(10)], [1000], []
                     );
                 });
 

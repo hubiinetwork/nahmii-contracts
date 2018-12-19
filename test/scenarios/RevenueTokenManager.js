@@ -52,7 +52,7 @@ module.exports = function (glob) {
                         await web3NahmiiToken.mint(web3RevenueTokenManager.address, 1000);
 
                         await web3RevenueTokenManager.defineReleases(
-                            [futureEpoch(1)], [1000]
+                            [futureEpoch(1)], [1000], []
                         );
                     });
 
@@ -88,7 +88,7 @@ module.exports = function (glob) {
                         await web3NahmiiToken.mint(web3RevenueTokenManager.address, 2000);
 
                         await web3RevenueTokenManager.defineReleases(
-                            [futureEpoch(1), futureEpoch(2)], [1000, 1000]
+                            [futureEpoch(1), futureEpoch(2)], [1000, 1000], [1000000]
                         );
                     });
 
@@ -124,7 +124,7 @@ module.exports = function (glob) {
                         (await ethersRevenueTokenManager.totalReleasedAmountBlocks(1))
                             ._bn.should.eq.BN(1000);
                         (await ethersRevenueTokenManager.releaseBlockNumbers(0))
-                            ._bn.should.eq.BN(await provider.getBlockNumber() - 1);
+                            ._bn.should.eq.BN(1000000);
                         (await ethersRevenueTokenManager.releaseBlockNumbers(1))
                             ._bn.should.eq.BN(await provider.getBlockNumber());
                     });
@@ -148,7 +148,8 @@ module.exports = function (glob) {
 
                     await web3RevenueTokenManager.defineReleases(
                         [futureEpoch(1), futureEpoch(1), futureEpoch(1)],
-                        [1000, 2000, 3000]
+                        [1000, 2000, 3000],
+                        []
                     );
 
                     await sleep(1500);
