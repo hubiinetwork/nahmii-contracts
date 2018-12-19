@@ -16,9 +16,9 @@ import {Servable} from "./Servable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {BalanceLib} from "./BalanceLib.sol";
+import {FungibleBalanceLib} from "./FungibleBalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
-import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+import {CurrenciesLib} from "./CurrenciesLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {TransferController} from "./TransferController.sol";
@@ -31,9 +31,9 @@ import {ConstantsLib} from "./ConstantsLib.sol";
 contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
-    using BalanceLib for BalanceLib.Balance;
+    using FungibleBalanceLib for FungibleBalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
-    using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
+    using CurrenciesLib for CurrenciesLib.Currencies;
 
     //
     // Constants
@@ -54,12 +54,12 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    BalanceLib.Balance private deposited;
+    FungibleBalanceLib.Balance private deposited;
     TxHistoryLib.TxHistory private txHistory;
-    InUseCurrencyLib.InUseCurrency private inUseCurrencies;
+    CurrenciesLib.Currencies private inUseCurrencies;
 
     mapping(address => RewardMeta) public rewardMetaByWallet;
-    mapping(address => BalanceLib.Balance) private stagedByWallet;
+    mapping(address => FungibleBalanceLib.Balance) private stagedByWallet;
 
     //
     // Events
@@ -99,7 +99,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         txHistory.addDeposit(amount, address(0), 0);
 
         // Add currency to in-use list
-        inUseCurrencies.addItem(address(0), 0);
+        inUseCurrencies.add(address(0), 0);
 
         // Emit event
         emit ReceiveEvent(wallet, amount, address(0), 0);
@@ -142,7 +142,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         txHistory.addDeposit(amount, currencyCt, currencyId);
 
         // Add currency to in-use list
-        inUseCurrencies.addItem(currencyCt, currencyId);
+        inUseCurrencies.add(currencyCt, currencyId);
 
         // Emit event
         emit ReceiveEvent(wallet, amount, currencyCt, currencyId);

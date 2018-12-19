@@ -16,9 +16,9 @@ import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {TransferController} from "./TransferController.sol";
-import {BalanceLib} from "./BalanceLib.sol";
+import {FungibleBalanceLib} from "./FungibleBalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
-import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+import {CurrenciesLib} from "./CurrenciesLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
@@ -29,20 +29,20 @@ import {ConstantsLib} from "./ConstantsLib.sol";
  *   and one for revenue from payments.
  */
 contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, TransferControllerManageable {
-    using BalanceLib for BalanceLib.Balance;
+    using FungibleBalanceLib for FungibleBalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
-    using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
+    using CurrenciesLib for CurrenciesLib.Currencies;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    BalanceLib.Balance periodAccrual;
-    InUseCurrencyLib.InUseCurrency inUsePeriodAccrual;
+    FungibleBalanceLib.Balance periodAccrual;
+    CurrenciesLib.Currencies periodCurrencies;
 
-    BalanceLib.Balance aggregateAccrual;
-    InUseCurrencyLib.InUseCurrency inUseAggregateAccrual;
+    FungibleBalanceLib.Balance aggregateAccrual;
+    CurrenciesLib.Currencies aggregateCurrencies;
 
     TxHistoryLib.TxHistory private txHistory;
 
@@ -80,9 +80,9 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         periodAccrual.add(amount, address(0), 0);
         aggregateAccrual.add(amount, address(0), 0);
 
-        // Add currency to in-use list
-        inUsePeriodAccrual.addItem(address(0), 0);
-        inUseAggregateAccrual.addItem(address(0), 0);
+        // Add currency to stores of currencies
+        periodCurrencies.add(address(0), 0);
+        aggregateCurrencies.add(address(0), 0);
 
         // Add to transaction history
         txHistory.addDeposit(amount, address(0), 0);
@@ -127,9 +127,9 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         periodAccrual.add(amount, currencyCt, currencyId);
         aggregateAccrual.add(amount, currencyCt, currencyId);
 
-        // Add currency to in-use list
-        inUsePeriodAccrual.addItem(currencyCt, currencyId);
-        inUseAggregateAccrual.addItem(currencyCt, currencyId);
+        // Add currency to stores of currencies
+        periodCurrencies.add(currencyCt, currencyId);
+        aggregateCurrencies.add(currencyCt, currencyId);
 
         // Add to transaction history
         txHistory.addDeposit(amount, currencyCt, currencyId);
@@ -161,6 +161,50 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     returns (int256)
     {
         return aggregateAccrual.get(currencyCt, currencyId);
+    }
+
+    /// @notice Get the count of currencies recorded in the accrual period
+    /// @return The number of currencies in the current accrual period
+    function periodCurrenciesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return periodCurrencies.count();
+    }
+
+    /// @notice Get the currencies with indices in the given range that have been recorded in the current accrual period
+    /// @param low The lower currency index
+    /// @param up The upper currency index
+    /// @return The currencies of the given index range in the current accrual period
+    function periodCurrenciesByIndices(uint256 low, uint256 up)
+    public
+    view
+    returns (MonetaryTypesLib.Currency[])
+    {
+        return periodCurrencies.getByIndices(low, up);
+    }
+
+    /// @notice Get the count of currencies ever recorded
+    /// @return The number of currencies ever recorded
+    function aggregateCurrenciesCount()
+    public
+    view
+    returns (uint256)
+    {
+        return aggregateCurrencies.count();
+    }
+
+    /// @notice Get the currencies with indices in the given range that have ever been recorded
+    /// @param low The lower currency index
+    /// @param up The upper currency index
+    /// @return The currencies of the given index range ever recorded
+    function aggregateCurrenciesByIndices(uint256 low, uint256 up)
+    public
+    view
+    returns (MonetaryTypesLib.Currency[])
+    {
+        return aggregateCurrencies.getByIndices(low, up);
     }
 
     /// @notice Get the count of deposits

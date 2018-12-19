@@ -15,10 +15,10 @@ import {Servable} from "./Servable.sol";
 import {TransferControllerManageable} from "./TransferControllerManageable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {BalanceLib} from "./BalanceLib.sol";
+import {FungibleBalanceLib} from "./FungibleBalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {InUseCurrencyLib} from "./InUseCurrencyLib.sol";
+import {CurrenciesLib} from "./CurrenciesLib.sol";
 import {RevenueToken} from "./RevenueToken.sol";
 import {RevenueTokenManager} from "./RevenueTokenManager.sol";
 import {TransferController} from "./TransferController.sol";
@@ -31,9 +31,9 @@ import {Beneficiary} from "./Beneficiary.sol";
 contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, TransferControllerManageable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
-    using BalanceLib for BalanceLib.Balance;
+    using FungibleBalanceLib for FungibleBalanceLib.Balance;
     using TxHistoryLib for TxHistoryLib.TxHistory;
-    using InUseCurrencyLib for InUseCurrencyLib.InUseCurrency;
+    using CurrenciesLib for CurrenciesLib.Currencies;
 
     //
     // Constants
@@ -45,11 +45,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // -----------------------------------------------------------------------------------------------------------------
     RevenueTokenManager public revenueTokenManager;
 
-    BalanceLib.Balance private periodAccrual;
-    InUseCurrencyLib.InUseCurrency private periodInUseCurrencies;
+    FungibleBalanceLib.Balance private periodAccrual;
+    CurrenciesLib.Currencies private periodCurrencies;
 
-    BalanceLib.Balance private aggregateAccrual;
-    InUseCurrencyLib.InUseCurrency private aggregateInUseCurrencies;
+    FungibleBalanceLib.Balance private aggregateAccrual;
+    CurrenciesLib.Currencies private aggregateCurrencies;
 
     TxHistoryLib.TxHistory private txHistory;
 
@@ -58,7 +58,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     mapping(address => mapping(uint256 => uint256[])) public accrualBlockNumbersByCurrency;
     mapping(address => mapping(uint256 => mapping(uint256 => int256))) aggregateAccrualAmountByCurrencyBlockNumber;
 
-    mapping(address => BalanceLib.Balance) private stagedByWallet;
+    mapping(address => FungibleBalanceLib.Balance) private stagedByWallet;
 
     //
     // Events
@@ -122,8 +122,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         aggregateAccrual.add(amount, address(0), 0);
 
         // Add currency to in-use lists
-        periodInUseCurrencies.addItem(address(0), 0);
-        aggregateInUseCurrencies.addItem(address(0), 0);
+        periodCurrencies.add(address(0), 0);
+        aggregateCurrencies.add(address(0), 0);
 
         // Add to transaction history
         txHistory.addDeposit(amount, address(0), 0);
@@ -169,8 +169,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         aggregateAccrual.add(amount, currencyCt, currencyId);
 
         // Add currency to in-use lists
-        periodInUseCurrencies.addItem(currencyCt, currencyId);
-        aggregateInUseCurrencies.addItem(currencyCt, currencyId);
+        periodCurrencies.add(currencyCt, currencyId);
+        aggregateCurrencies.add(currencyCt, currencyId);
 
         // Add to transaction history
         txHistory.addDeposit(amount, currencyCt, currencyId);
@@ -206,46 +206,46 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
     /// @notice Get the count of currencies recorded in the accrual period
     /// @return The number of currencies in the current accrual period
-    function periodInUseCurrenciesCount()
+    function periodCurrenciesCount()
     public
     view
     returns (uint256)
     {
-        return periodInUseCurrencies.count();
+        return periodCurrencies.count();
     }
 
     /// @notice Get the currencies with indices in the given range that have been recorded in the current accrual period
     /// @param low The lower currency index
     /// @param up The upper currency index
     /// @return The currencies of the given index range in the current accrual period
-    function periodInUseCurrenciesByIndices(uint256 low, uint256 up)
+    function periodCurrenciesByIndices(uint256 low, uint256 up)
     public
     view
     returns (MonetaryTypesLib.Currency[])
     {
-        return periodInUseCurrencies.getByIndices(low, up);
+        return periodCurrencies.getByIndices(low, up);
     }
 
     /// @notice Get the count of currencies ever recorded
     /// @return The number of currencies ever recorded
-    function aggregateInUseCurrenciesCount()
+    function aggregateCurrenciesCount()
     public
     view
     returns (uint256)
     {
-        return aggregateInUseCurrencies.count();
+        return aggregateCurrencies.count();
     }
 
     /// @notice Get the currencies with indices in the given range that have ever been recorded
     /// @param low The lower currency index
     /// @param up The upper currency index
     /// @return The currencies of the given index range ever recorded
-    function aggregateInUseCurrenciesByIndices(uint256 low, uint256 up)
+    function aggregateCurrenciesByIndices(uint256 low, uint256 up)
     public
     view
     returns (MonetaryTypesLib.Currency[])
     {
-        return aggregateInUseCurrencies.getByIndices(low, up);
+        return aggregateCurrencies.getByIndices(low, up);
     }
 
     /// @notice Get the count of deposits
@@ -307,7 +307,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                 periodAccrual.set(0, currency.ct, currency.id);
 
                 // Remove currency from period in-use list
-                periodInUseCurrencies.removeItem(currency.ct, currency.id);
+                periodCurrencies.removeByCurrency(currency.ct, currency.id);
             }
 
             // Emit event

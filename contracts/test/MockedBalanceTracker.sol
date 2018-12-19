@@ -72,7 +72,7 @@ contract MockedBalanceTracker {
         _lastLogTypes.length = 0;
     }
 
-    function logSize(address, bytes32 _type, address, uint256)
+    function fungibleRecordsCount(address, bytes32 _type, address, uint256)
     public
     view
     returns (uint256)
@@ -90,7 +90,7 @@ contract MockedBalanceTracker {
         }
     }
 
-    function lastLog(address, bytes32 _type, address, uint256)
+    function lastFungibleRecord(address, bytes32 _type, address, uint256)
     public
     view
     returns (int256 amount, uint256 blockNumber)

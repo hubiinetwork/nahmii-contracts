@@ -44,8 +44,8 @@ contract MockedClientFund {
     // -----------------------------------------------------------------------------------------------------------------
     event LockBalancesEvent(address lockedWallet, address lockerWallet);
     event UnlockBalancesEvent(address lockedWallet, address lockerWallet);
-    event UpdateSettledBalanceEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
-    event StageEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId);
+    event UpdateSettledBalanceEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
+    event StageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
 
     //
     // Functions
@@ -58,8 +58,8 @@ contract MockedClientFund {
         beneficiaryTransfers.length = 0;
     }
 
-    function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId,
-        uint256 blockNumber)
+    function updateSettledBalance(address wallet, int256 value, address currencyCt,
+        uint256 currencyId, string standard, uint256 blockNumber)
     public
     {
         settledBalanceUpdates.push(
@@ -67,14 +67,14 @@ contract MockedClientFund {
                 wallet,
                 address(0),
                 MonetaryTypesLib.Figure(
-                    amount,
+                    value,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
-                "",
+                standard,
                 blockNumber
             )
         );
-        emit UpdateSettledBalanceEvent(wallet, amount, currencyCt, currencyId);
+        emit UpdateSettledBalanceEvent(wallet, value, currencyCt, currencyId);
     }
 
     function _settledBalanceUpdatesCount()
@@ -88,16 +88,18 @@ contract MockedClientFund {
     function _settledBalanceUpdates(uint256 index)
     public
     view
-    returns (address, int256, address, uint256) {
+    returns (address, int256, address, uint256, string) {
         return (
         settledBalanceUpdates[index].sourceWallet,
         settledBalanceUpdates[index].figure.amount,
         settledBalanceUpdates[index].figure.currency.ct,
-        settledBalanceUpdates[index].figure.currency.id
+        settledBalanceUpdates[index].figure.currency.id,
+        settledBalanceUpdates[index].standard
         );
     }
 
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId)
+    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        string standard)
     public
     {
         stages.push(
@@ -108,7 +110,7 @@ contract MockedClientFund {
                     amount,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
-                "",
+                standard,
                 0
             )
         );
@@ -126,14 +128,15 @@ contract MockedClientFund {
     function _stages(uint256 index)
     public
     view
-    returns (address, address, int256, address, uint256)
+    returns (address, address, int256, address, uint256, string)
     {
         return (
         stages[index].sourceWallet,
         stages[index].targetWallet,
         stages[index].figure.amount,
         stages[index].figure.currency.ct,
-        stages[index].figure.currency.id
+        stages[index].figure.currency.id,
+        stages[index].standard
         );
     }
 

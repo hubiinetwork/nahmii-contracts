@@ -20,36 +20,46 @@ contract TransactionTrackable is Ownable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     TransactionTracker public transactionTracker;
-    bool frozen;
+    bool public transactionTrackerFrozen;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetTransactionTrackerEvent(TransactionTracker oldTransactionTracker, TransactionTracker newTransactionTracker,
-        bool freeze);
+    event SetTransactionTrackerEvent(TransactionTracker oldTransactionTracker, TransactionTracker newTransactionTracker);
+    event FreezeTransactionTrackerEvent();
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the transaction tracker contract
     /// @param newTransactionTracker The (address of) TransactionTracker contract instance
-    /// @param freeze Indicator of whether later updates are allowed or not
-    function setTransactionTracker(TransactionTracker newTransactionTracker, bool freeze)
+    function setTransactionTracker(TransactionTracker newTransactionTracker)
     public
     onlyDeployer
     notNullAddress(newTransactionTracker)
     notSameAddresses(newTransactionTracker, transactionTracker)
     {
         // Require that this contract has not been frozen
-        require(!frozen);
+        require(!transactionTrackerFrozen);
 
         // Update fields
         TransactionTracker oldTransactionTracker = transactionTracker;
         transactionTracker = newTransactionTracker;
-        frozen = freeze;
 
         // Emit event
-        emit SetTransactionTrackerEvent(oldTransactionTracker, newTransactionTracker, freeze);
+        emit SetTransactionTrackerEvent(oldTransactionTracker, newTransactionTracker);
+    }
+
+    /// @notice Freeze the transaction tracker from further updates
+    /// @dev This operation can not be undone
+    function freezeTransactionTracker()
+    public
+    onlyDeployer
+    {
+        transactionTrackerFrozen = true;
+
+        // Emit event
+        emit FreezeTransactionTrackerEvent();
     }
 
     //

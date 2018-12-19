@@ -20,36 +20,46 @@ contract WalletLockable is Ownable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     WalletLocker public walletLocker;
-    bool frozen;
+    bool public walletLockerFrozen;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetWalletLockerEvent(WalletLocker oldWalletLocker, WalletLocker newWalletLocker,
-        bool freeze);
+    event SetWalletLockerEvent(WalletLocker oldWalletLocker, WalletLocker newWalletLocker);
+    event FreezeWalletLockerEvent();
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the wallet locker contract
     /// @param newWalletLocker The (address of) WalletLocker contract instance
-    /// @param freeze Indicator of whether later updates are allowed or not
-    function setWalletLocker(WalletLocker newWalletLocker, bool freeze)
+    function setWalletLocker(WalletLocker newWalletLocker)
     public
     onlyDeployer
     notNullAddress(newWalletLocker)
     notSameAddresses(newWalletLocker, walletLocker)
     {
         // Require that this contract has not been frozen
-        require(!frozen);
+        require(!walletLockerFrozen);
 
         // Update fields
         WalletLocker oldWalletLocker = walletLocker;
         walletLocker = newWalletLocker;
-        frozen = freeze;
 
         // Emit event
-        emit SetWalletLockerEvent(oldWalletLocker, newWalletLocker, freeze);
+        emit SetWalletLockerEvent(oldWalletLocker, newWalletLocker);
+    }
+
+    /// @notice Freeze the balance tracker from further updates
+    /// @dev This operation can not be undone
+    function freezeWalletLocker()
+    public
+    onlyDeployer
+    {
+        walletLockerFrozen = true;
+
+        // Emit event
+        emit FreezeWalletLockerEvent();
     }
 
     //
