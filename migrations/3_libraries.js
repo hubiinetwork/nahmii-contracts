@@ -150,10 +150,15 @@ module.exports = (deployer, network, accounts) => {
                 // await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
 
             } else if (network.startsWith('mainnet')) {
+                addressStorage.set('BlockNumbDisdIntsLib', '0x92caece328a4f746c18630c6289d74a5417185b2');
+                addressStorage.set('BlockNumbCurrenciesLib', '0x1285bdda4c9353bd0ae87af7e9433f9cfd7a4029');
                 addressStorage.set('BlockNumbIntsLib', '0xcb1a97acac9597b9ea177348ed669667ecea9657');
                 addressStorage.set('BlockNumbUintsLib', '0x412be41435959fb66540ad1d4c41bf85216a7369');
                 addressStorage.set('ConstantsLib', '0x5fcf3704016b90ded3c81d75613ceab0a6a26025');
+                addressStorage.set('CurrenciesLib', '0xa22d375e6e62512e0f4161604ac7a2fb2e9b456c');
+                addressStorage.set('FungibleBalanceLib', '0x64dbf08fd66c408f1205e6107c60d05ab3ad872d');
                 addressStorage.set('MonetaryTypesLib', '0x73b58f0d337b596e534a8385399f6bcce1f2ce0e');
+                addressStorage.set('NonFungibleBalanceLib', '0x4f6f9422b8509b4df036c738f9d3e2827e29af6a');
                 addressStorage.set('SafeMathIntLib', '0x2fcb98529d58669e229c453de4b4705bb6b2d414');
                 addressStorage.set('SafeMathUintLib', '0x0ff948c236c8d4dfcd0168bf243314c8ff8ec967');
             }
