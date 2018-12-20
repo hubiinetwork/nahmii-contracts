@@ -91,6 +91,7 @@ module.exports = (deployer, network, accounts) => {
 
         if (helpers.isTestNetwork(network))
             ownerAccount = accounts[0];
+
         else {
             ownerAccount = helpers.getOwnerAccountFromArgs();
 
@@ -108,15 +109,28 @@ module.exports = (deployer, network, accounts) => {
                 ownerAccount: ownerAccount
             };
 
-            await execDeploy(ctl, 'BlockNumbIntsLib', '', BlockNumbIntsLib);
-            await execDeploy(ctl, 'BlockNumbUintsLib', '', BlockNumbUintsLib);
-            await execDeploy(ctl, 'ConstantsLib', '', ConstantsLib);
-            await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
-            await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
-            await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
-            // await execDeploy(ctl, 'Strings', '', Strings);
-            // await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
+            BlockNumbCurrenciesLib.address = addressStorage.get('BlockNumbCurrenciesLib');
+            BlockNumbDisdIntsLib.address = addressStorage.get('BlockNumbDisdIntsLib');
+            BlockNumbIntsLib.address = addressStorage.get('BlockNumbIntsLib');
+            BlockNumbUintsLib.address = addressStorage.get('BlockNumbUintsLib');
+            ConstantsLib.address = addressStorage.get('ConstantsLib');
+            FungibleBalanceLib.address = addressStorage.get('FungibleBalanceLib');
+            CurrenciesLib.address = addressStorage.get('CurrenciesLib');
+            MonetaryTypesLib.address = addressStorage.get('MonetaryTypesLib');
+            // NahmiiTypesLib.address = addressStorage.get('NahmiiTypesLib');
+            NonFungibleBalanceLib.address = addressStorage.get('NonFungibleBalanceLib');
+            SafeMathIntLib.address = addressStorage.get('SafeMathIntLib');
+            SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
+            // SettlementTypesLib.address = addressStorage.get('SettlementTypesLib');
+            // Strings.address = addressStorage.get('Strings');
+            // TxHistoryLib.address = addressStorage.get('TxHistoryLib');
 
+            await deployer.link(BlockNumbCurrenciesLib, [
+                Configuration
+            ]);
+            await deployer.link(BlockNumbDisdIntsLib, [
+                Configuration
+            ]);
             await deployer.link(BlockNumbIntsLib, [
                 Configuration
             ]);
@@ -124,54 +138,20 @@ module.exports = (deployer, network, accounts) => {
                 Configuration
             ]);
             await deployer.link(ConstantsLib, [
-                AccrualBenefactor, BlockNumbDisdIntsLib, Configuration, MockedConfiguration,
+                AccrualBenefactor, Configuration, MockedConfiguration,
                 RevenueFund, SecurityBond, Validator
-            ]);
-            await deployer.link(MonetaryTypesLib, [
-                BlockNumbCurrenciesLib, Configuration, CurrenciesLib, DriipSettlement, DriipSettlementChallenge,
-                DriipSettlementDispute, Hasher, MockedBeneficiary, MockedClientFund,
-                NahmiiTypesLib, NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond,
-                TokenHolderRevenueFund, Validator
-            ]);
-            await deployer.link(SafeMathIntLib, [
-                AccrualBenefactor, FungibleBalanceLib, BalanceTracker, BlockNumbDisdIntsLib, CancelOrdersChallenge,
-                ClientFund, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
-                NonFungibleBalanceLib, NullSettlement, NullSettlementChallenge, NullSettlementDispute, PartnerFund,
-                RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
-            ]);
-            await deployer.link(SafeMathUintLib, [
-                FungibleBalanceLib, BalanceTracker, CancelOrdersChallenge, ClientFund, CurrenciesLib,
-                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
-                NonFungibleBalanceLib, NullSettlement, NullSettlementChallenge, NullSettlementDispute,
-                RevenueFund, RevenueTokenManager, SecurityBond, SignerManager, TokenHolderRevenueFund,
-                Validator, WalletLocker
-            ]);
-            // await deployer.link(Strings, [
-            //     PartnerFund
-            // ]);
-            // await deployer.link(TxHistoryLib, [
-            //     ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
-            // ]);
-
-            await execDeploy(ctl, 'BlockNumbCurrenciesLib', '', BlockNumbCurrenciesLib);
-            await execDeploy(ctl, 'CurrenciesLib', '', CurrenciesLib);
-
-            await deployer.link(BlockNumbCurrenciesLib, [
-                Configuration
             ]);
             await deployer.link(CurrenciesLib, [
                 FungibleBalanceLib, BalanceTracker, NonFungibleBalanceLib, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
-
-            await execDeploy(ctl, 'FungibleBalanceLib', '', FungibleBalanceLib);
-            await execDeploy(ctl, 'NonFungibleBalanceLib', '', NonFungibleBalanceLib);
-            // await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
-
             await deployer.link(FungibleBalanceLib, [
                 BalanceTracker, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             ]);
-            await deployer.link(NonFungibleBalanceLib, [
-                BalanceTracker
+            await deployer.link(MonetaryTypesLib, [
+                Configuration, DriipSettlement, DriipSettlementChallenge,
+                DriipSettlementDispute, Hasher, MockedBeneficiary, MockedClientFund,
+                NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond,
+                TokenHolderRevenueFund, Validator
             ]);
             // await deployer.link(NahmiiTypesLib, [
             //     CancelOrdersChallenge, ClientFundable, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
@@ -182,17 +162,32 @@ module.exports = (deployer, network, accounts) => {
             //     MockedNullSettlementChallenge, MockedNullSettlementDispute, MockedValidator, NullSettlementChallenge, NullSettlementDispute,
             //     SettlementTypesLib, Validatable, Validator
             // ]);
-
-            await execDeploy(ctl, 'BlockNumbDisdIntsLib', '', BlockNumbDisdIntsLib);
-            // await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
-
-            await deployer.link(BlockNumbDisdIntsLib, [
-                Configuration
+            await deployer.link(NonFungibleBalanceLib, [
+                BalanceTracker
+            ]);
+            await deployer.link(SafeMathIntLib, [
+                AccrualBenefactor, BalanceTracker, CancelOrdersChallenge,
+                ClientFund, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
+                NullSettlement, NullSettlementChallenge, NullSettlementDispute, PartnerFund,
+                RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
+            ]);
+            await deployer.link(SafeMathUintLib, [
+                BalanceTracker, CancelOrdersChallenge, ClientFund,
+                DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
+                NullSettlement, NullSettlementChallenge, NullSettlementDispute,
+                RevenueFund, RevenueTokenManager, SecurityBond, SignerManager, TokenHolderRevenueFund,
+                Validator, WalletLocker
             ]);
             // await deployer.link(SettlementTypesLib, [
             //     DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
             //     MockedDriipSettlementChallenge, MockedNullSettlementChallenge,
             //     NullSettlement, NullSettlementChallenge, NullSettlementDispute
+            // ]);
+            // await deployer.link(Strings, [
+            //     PartnerFund
+            // ]);
+            // await deployer.link(TxHistoryLib, [
+            //     ClientFund, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund
             // ]);
 
             await execDeploy(ctl, 'ClientFund', '', ClientFund);
@@ -370,29 +365,6 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await TransactionTracker.at(addressStorage.get('TransactionTracker'));
             await instance.registerService(addressStorage.get('ClientFund'));
-
-            // instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
-            // if (!network.startsWith('ropsten')) {
-            //     await instance.setToken(addressStorage.get('NahmiiToken'));
-            //     await instance.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
-
-                // let earliestReleaseTimes = [];
-                // let amounts = [];
-                // let blockNumbers = [];
-                // helpers.airdriipReleases().forEach((d) => {
-                //    earliestReleaseTimes.push(d.earliestReleaseTime);
-                //    amounts.push(d.amount);
-                //    if (d.blockNumber)
-                //         blockNumbers.push(d.blockNumber);
-                // });
-                // console.log(earliestReleaseTimes);
-                // console.log(amounts);
-                // console.log(blockNumbers);
-                // await instance.defineReleases(earliestReleaseTimes, amounts, blockNumbers);
-
-                // await instance.defineReleases(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
-                // await instance.defineReleases(Math.floor(new Date('2019-01-01T00:00:00Z').getTime() / 1000), 1e24);
-            // }
 
             // instance = await CancelOrdersChallenge.at(addressStorage.get('CancelOrdersChallenge'));
             // await instance.setValidator(addressStorage.get('Validator'));
@@ -598,24 +570,17 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerService(addressStorage.get('NullSettlementDispute'));
             // await instance.authorizeInitialService(addressStorage.get('NullSettlementDispute'));
 
-            console.log('Saving addresses...');
-            await addressStorage.save();
-        } catch (err) {
+        } finally {
             if (!helpers.isTestNetwork(network)) {
                 if (web3.eth.personal)
                     web3.eth.personal.lockAccount(ownerAccount);
                 else
                     web3.personal.lockAccount(ownerAccount);
             }
-            throw err;
         }
 
-        if (!helpers.isTestNetwork(network)) {
-            if (web3.eth.personal)
-                web3.eth.personal.lockAccount(ownerAccount);
-            else
-                web3.personal.lockAccount(ownerAccount);
-        }
+        console.log(`Saving addresses in ${__filename}...`);
+        await addressStorage.save();
     });
 };
 

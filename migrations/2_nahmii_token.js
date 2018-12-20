@@ -23,16 +23,17 @@ module.exports = (deployer, network, accounts) => {
         // if (helpers.isResetArgPresent())
         //     addressStorage.clear();
 
-        if (helpers.isTestNetwork(network)) {
+        if (helpers.isTestNetwork(network))
             ownerAccount = accounts[0];
 
-            let ctl = {
-                deployer: deployer,
-                deployFilters: helpers.getFiltersFromArgs(),
-                addressStorage: addressStorage,
-                ownerAccount: ownerAccount
-            };
+        let ctl = {
+            deployer,
+            deployFilters: helpers.getFiltersFromArgs(),
+            addressStorage,
+            ownerAccount
+        };
 
+        if (helpers.isTestNetwork(network)) {
             await execDeploy(ctl, 'SafeMath', '', SafeMath);
 
             await deployer.link(SafeMath, NahmiiToken);
@@ -45,19 +46,14 @@ module.exports = (deployer, network, accounts) => {
 
             console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
             console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
-        }
 
-        else if (network.startsWith('ropsten')) {
+        } else if (network.startsWith('ropsten'))
             addressStorage.set('NahmiiToken', '0x65905e653b750bcb8f903374bc93cbd8e2e71b71');
-            console.log(`Referenced NahmiiToken: 0x65905e653b750bcb8f903374bc93cbd8e2e71b71`);
-        }
 
-        else if (network.startsWith('mainnet')) {
+        else if (network.startsWith('mainnet'))
             addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
-            console.log(`Referenced NahmiiToken: 0xac4f2f204b38390b92d0540908447d5ed352799a`);
-        }
 
-        console.log('Saving addresses...');
+        console.log(`Saving addresses in ${__filename}...`);
         await addressStorage.save();
     });
 };
