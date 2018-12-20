@@ -10,35 +10,34 @@ const helpers = require('../scripts/common/helpers.js');
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = (deployer, network, accounts) => {
-    let ownerAccount;
+    deployer.then(async () => {
+        let ownerAccount;
 
-    if (helpers.isTestNetwork(network))
-        ownerAccount = accounts[0];
-    else {
-        ownerAccount = helpers.getOwnerAccountFromArgs();
+        if (helpers.isTestNetwork(network))
+            ownerAccount = accounts[0];
+        else {
+            ownerAccount = helpers.getOwnerAccountFromArgs();
 
-        if (web3.eth.personal)
-            web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
-        else
-            web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
-    }
-
-    deployer.deploy(Migrations, {
-        from: ownerAccount
-    }).then(() => {
-        if (!helpers.isTestNetwork(network)) {
             if (web3.eth.personal)
-                web3.eth.personal.lockAccount(ownerAccount);
+                web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
             else
-                web3.personal.lockAccount(ownerAccount);
+                web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
         }
-    }).catch((err) => {
-        if (!helpers.isTestNetwork(network)) {
-            if (web3.eth.personal)
-                web3.eth.personal.lockAccount(ownerAccount);
+
+        try {
+            if (helpers.isTestNetwork(network) || network.startsWith('ropsten'))
+                await deployer.deploy(Migrations, {from: ownerAccount});
+
             else
-                web3.personal.lockAccount(ownerAccount);
+                Migrations.address = '0x355c39f9f709dee1ddfa8e236edcbb29e35287ba';
+
+        } finally {
+            if (!helpers.isTestNetwork(network)) {
+                if (web3.eth.personal)
+                    web3.eth.personal.lockAccount(ownerAccount);
+                else
+                    web3.personal.lockAccount(ownerAccount);
+            }
         }
-        throw err;
-    })
+    });
 };
