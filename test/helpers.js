@@ -24,11 +24,6 @@ module.exports.TestCounter = function ()
 	return new TestCounter();
 };
 
-module.exports.sleep = function (ms)
-{
-	return new Promise(resolve => setTimeout(resolve, ms));
-};
-
 module.exports.futureEpoch = (futureInSeconds) => {
 	return Math.floor(Date.now() / 1000) + futureInSeconds;
 };
