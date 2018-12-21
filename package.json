@@ -18,7 +18,7 @@
     "exec:script:mainnet": "truffle compile && truffle exec scripts/common/script_template.js --network mainnet-infura",
     "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
     "exec:release_nii_tokens:ropsten": "truffle exec scripts/common/release_nii_tokens.js --network ropsten-infura",
-    "test": "concurrently -r -s first --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test'",
+    "test": "concurrently --raw --success all --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test'",
     "test:ganache": "truffle compile && truffle test --ganache",
     "version:compiler": "solcjs --version",
     "version:truffle": "truffle version"
