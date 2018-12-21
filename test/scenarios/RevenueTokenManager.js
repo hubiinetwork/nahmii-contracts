@@ -13,7 +13,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe.only('RevenueTokenManager', function () {
+    describe('RevenueTokenManager', function () {
         let provider;
         let web3NahmiiToken, ethersNahmiiToken;
         let web3RevenueTokenManager, ethersRevenueTokenManager;
