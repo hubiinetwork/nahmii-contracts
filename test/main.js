@@ -477,9 +477,9 @@ contract('Smart contract checks', function () {
     require('./scenarios/ClientFund')(glob);
     require('./scenarios/Configuration')(glob);
     require('./scenarios/ERC20TransferController')(glob);
-    // require('./scenarios/RevenueTokenManager')(glob);
+    require('./scenarios/RevenueTokenManager')(glob);
     require('./scenarios/Servable')(glob);
-    // require('./scenarios/TokenMultiTimelock')(glob);
+    require('./scenarios/TokenMultiTimelock')(glob);
     require('./scenarios/TransactionTracker')(glob);
     // require('./scenarios/CancelOrdersChallenge')(glob);
     // require('./scenarios/CommunityVote')(glob);

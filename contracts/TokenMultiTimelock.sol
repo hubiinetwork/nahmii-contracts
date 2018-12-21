@@ -42,7 +42,8 @@ contract TokenMultiTimelock is Ownable {
 
     event SetTokenEvent(IERC20 token);
     event SetBeneficiaryEvent(address beneficiary);
-    event AddReleaseEvent(uint256 earliestReleaseTime, uint256 amount, uint256 blockNumber);
+    event DefineReleaseEvent(uint256 earliestReleaseTime, uint256 amount, uint256 blockNumber);
+    event SetReleaseBlockNumberEvent(uint256 index, uint256 blockNumber);
     event ReleaseEvent(uint256 index, uint256 blockNumber, uint256 earliestReleaseTime,
         uint256 actualReleaseTime, uint256 amount);
 
@@ -119,7 +120,7 @@ contract TokenMultiTimelock is Ownable {
             releases.push(Release(earliestReleaseTimes[i], amounts[i], blockNumber, false));
 
             // Emit event
-            emit AddReleaseEvent(earliestReleaseTimes[i], amounts[i], blockNumber);
+            emit DefineReleaseEvent(earliestReleaseTimes[i], amounts[i], blockNumber);
         }
     }
 
@@ -131,6 +132,22 @@ contract TokenMultiTimelock is Ownable {
     returns (uint256)
     {
         return releases.length;
+    }
+
+    /// @notice Set the block number of a release that is not done
+    /// @param index The index of the release
+    /// @param blockNumber The updated block number
+    function setReleaseBlockNumber(uint256 index, uint256 blockNumber)
+    onlyOperator
+    {
+        // Require that the release is not done
+        require(!releases[index].done);
+
+        // Update the release block number
+        releases[index].blockNumber = blockNumber;
+
+        // Emit event
+        emit SetReleaseBlockNumberEvent(index, blockNumber);
     }
 
     /// @notice Transfers tokens held in the indicated release to beneficiary.

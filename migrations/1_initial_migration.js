@@ -5,13 +5,20 @@
  */
 
 const Migrations = artifacts.require('Migrations');
+
+const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
+const AddressStorage = require('../scripts/common/address_storage.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
+        let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
         let ownerAccount;
+        let instance;
+
+        await addressStorage.load();
 
         if (helpers.isTestNetwork(network))
             ownerAccount = accounts[0];
@@ -25,11 +32,14 @@ module.exports = (deployer, network, accounts) => {
         }
 
         try {
-            if (helpers.isTestNetwork(network) || network.startsWith('ropsten'))
-                await deployer.deploy(Migrations, {from: ownerAccount});
+            if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
+                instance = await deployer.deploy(Migrations, {from: ownerAccount});
+                addressStorage.set('Migrations', instance.address);
 
-            else
+            } else {
                 Migrations.address = '0x355c39f9f709dee1ddfa8e236edcbb29e35287ba';
+                addressStorage.set('Migrations', '0x355c39f9f709dee1ddfa8e236edcbb29e35287ba');
+            }
 
         } finally {
             if (!helpers.isTestNetwork(network)) {
@@ -39,5 +49,8 @@ module.exports = (deployer, network, accounts) => {
                     web3.personal.lockAccount(ownerAccount);
             }
         }
+
+        console.log(`Saving addresses in ${__filename}...`);
+        await addressStorage.save();
     });
 };

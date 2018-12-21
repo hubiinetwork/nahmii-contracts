@@ -3,7 +3,8 @@ const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Contract} = require('ethers');
-const {sleep, futureEpoch} = require('../helpers');
+const {sleep} = require('../../scripts/common/helpers');
+const {futureEpoch} = require('../helpers');
 const NahmiiToken = artifacts.require('NahmiiToken');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 
@@ -12,7 +13,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe('RevenueTokenManager', function () {
+    describe.only('RevenueTokenManager', function () {
         let provider;
         let web3NahmiiToken, ethersNahmiiToken;
         let web3RevenueTokenManager, ethersRevenueTokenManager;
@@ -88,7 +89,7 @@ module.exports = function (glob) {
                         await web3NahmiiToken.mint(web3RevenueTokenManager.address, 2000);
 
                         await web3RevenueTokenManager.defineReleases(
-                            [futureEpoch(1), futureEpoch(2)], [1000, 1000], [1000000]
+                            [futureEpoch(1), futureEpoch(2)], [1000, 1000], []
                         );
                     });
 
@@ -124,7 +125,7 @@ module.exports = function (glob) {
                         (await ethersRevenueTokenManager.totalReleasedAmountBlocks(1))
                             ._bn.should.eq.BN(1000);
                         (await ethersRevenueTokenManager.releaseBlockNumbers(0))
-                            ._bn.should.eq.BN(1000000);
+                            ._bn.should.eq.BN((await provider.getBlockNumber()) - 1);
                         (await ethersRevenueTokenManager.releaseBlockNumbers(1))
                             ._bn.should.eq.BN(await provider.getBlockNumber());
                     });
