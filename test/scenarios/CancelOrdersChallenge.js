@@ -6,6 +6,7 @@ const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
+const SignerManager = artifacts.require('SignerManager');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
 
@@ -17,6 +18,7 @@ chai.should();
 module.exports = (glob) => {
     describe('CancelOrdersChallenge', () => {
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
+        let web3SignerManager;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let provider;
@@ -24,9 +26,11 @@ module.exports = (glob) => {
         before(async () => {
             provider = glob.signer_owner.provider;
 
+            web3SignerManager = await SignerManager.new(glob.owner);
+
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
+            web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
             await ethersConfiguration.registerService(glob.owner);

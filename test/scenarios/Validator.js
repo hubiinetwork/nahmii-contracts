@@ -2,6 +2,10 @@ const chai = require('chai');
 const {Wallet, utils} = require('ethers');
 const cryptography = require('omphalos-commons').util.cryptography;
 const mocks = require('../mocks');
+const Hasher = artifacts.require('Hasher');
+const Configuration = artifacts.require('Configuration');
+const SignerManager = artifacts.require('SignerManager');
+const Validator = artifacts.require('Validator');
 
 chai.should();
 
@@ -9,7 +13,7 @@ module.exports = function (glob) {
     describe('Validator', () => {
         let provider;
         let blockNumberAhead;
-        let ethersHasher;
+        let web3Hasher, ethersHasher;
         let web3Configuration, ethersConfiguration;
         let web3SignerManager, ethersSignerManager;
         let web3Validator, ethersValidator;
@@ -18,15 +22,16 @@ module.exports = function (glob) {
         before(async () => {
             provider = glob.signer_owner.provider;
 
-            ethersHasher = glob.ethersIoHasher;
-            web3Configuration = glob.web3Configuration;
-            ethersConfiguration = glob.ethersIoConfiguration;
-            web3SignerManager = glob.web3SignerManager;
-            ethersSignerManager = glob.ethersIoSignerManager;
-            web3Validator = glob.web3Validator;
-            ethersValidator = glob.ethersIoValidator;
+            web3Hasher = await Hasher.new(glob.owner);
+            ethersHasher = new Contract(web3Hasher.address, Hasher.abi, glob.signer_owner);
+            web3Configuration = await Configuration.new(glob.owner);
+            ethersConfiguration = new Contract(web3Configuration.address, Configuration.abi, glob.signer_owner);
+            web3SignerManager = await SignerManager.new(glob.owner);
+            ethersSignerManager = new Contract(web3SignerManager.address, SignerManager.abi, glob.signer_owner);
 
-            await ethersValidator.setSignerManager(ethersSignerManager.address);
+            web3Validator = await Validator.new(glob.owner, web3SignerManager.address);
+            ethersValidator = new Contract(web3Validator.address, Validator.abi, glob.signer_owner);
+
             await ethersValidator.setConfiguration(ethersConfiguration.address);
             await ethersValidator.setHasher(ethersHasher.address);
 

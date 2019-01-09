@@ -4,6 +4,7 @@ const chaiAsPromised = require('chai-as-promised');
 const {Wallet, Contract} = require('ethers');
 const mocks = require('../mocks');
 const NullSettlementDispute = artifacts.require('NullSettlementDispute');
+const SignerManager = artifacts.require('SignerManager');
 const MockedNullSettlementChallenge = artifacts.require('MockedNullSettlementChallenge');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
@@ -19,6 +20,7 @@ chai.should();
 module.exports = (glob) => {
     describe('NullSettlementDispute', () => {
         let web3NullSettlementDispute, ethersNullSettlementDispute;
+        let web3SignerManager;
         let web3NullSettlementChallenge, ethersNullSettlementChallenge;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
@@ -32,11 +34,13 @@ module.exports = (glob) => {
         before(async () => {
             provider = glob.signer_owner.provider;
 
+            web3SignerManager = await SignerManager.new(glob.owner);
+
             web3NullSettlementChallenge = await MockedNullSettlementChallenge.new(glob.owner);
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, MockedNullSettlementChallenge.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
+            web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
@@ -57,7 +61,7 @@ module.exports = (glob) => {
             await ethersNullSettlementDispute.setConfiguration(ethersConfiguration.address);
             await ethersNullSettlementDispute.setValidator(ethersValidator.address);
             await ethersNullSettlementDispute.setSecurityBond(ethersSecurityBond.address);
-            await ethersNullSettlementDispute.setWalletLocker(ethersWalletLocker.address, false);
+            await ethersNullSettlementDispute.setWalletLocker(ethersWalletLocker.address);
             await ethersNullSettlementDispute.setFraudChallenge(ethersFraudChallenge.address);
             await ethersNullSettlementDispute.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
             await ethersNullSettlementDispute.setNullSettlementChallenge(ethersNullSettlementChallenge.address);
