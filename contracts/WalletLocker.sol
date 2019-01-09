@@ -46,12 +46,6 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    //    mapping(address => mapping(address => mapping(uint256 => FungibleLock[]))) public fungibleLocksMap;
-    //    mapping(address => mapping(address => mapping(uint256 => mapping(address => uint256)))) public fungibleLockIndexMap;
-    //
-    //    mapping(address => mapping(address => mapping(uint256 => NonFungibleLock[]))) public nonFungibleLocksMap;
-    //    mapping(address => mapping(address => mapping(uint256 => mapping(address => uint256)))) public nonFungibleLockIndexMap;
-
     mapping(address => Wallet) private walletMap;
 
     //

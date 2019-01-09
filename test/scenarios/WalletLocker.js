@@ -319,32 +319,5 @@ module.exports = function (glob) {
                 });
             });
         });
-
-
-        describe.skip('unlockByProxy()', () => {
-            beforeEach(async () => {
-                await web3WalletLocker.lockByProxy(glob.user_b, glob.user_c, {from: glob.user_a});
-            });
-
-            describe('if called by unregistered service', () => {
-                it('should revert', async () => {
-                    web3WalletLocker.unlockByProxy(glob.user_b, {from: glob.user_b})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                it('should successfully unlock', async () => {
-                    await web3WalletLocker.unlockByProxy(glob.user_b, {from: glob.user_a});
-
-                    (await ethersWalletLocker.lockedWalletsCount())
-                        ._bn.should.eq.BN(0);
-                    (await web3WalletLocker.isLocked(glob.user_b))
-                        .should.be.false;
-                    (await web3WalletLocker.isLockedBy(glob.user_b, glob.user_c))
-                        .should.be.false;
-                });
-            });
-        });
     });
 };

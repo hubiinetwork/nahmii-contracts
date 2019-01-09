@@ -642,7 +642,7 @@ module.exports = (glob) => {
 
                         (await ethersDriipSettlementChallenge._proposalStatus())
                             .should.equal(mocks.settlementStatuses.indexOf('Qualified'));
-                        (await ethersWalletLocker._unlocksCount())
+                        (await ethersWalletLocker._fungibleUnlocksCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._deprivalsCount())
                             ._bn.should.eq.BN(1);
@@ -664,7 +664,7 @@ module.exports = (glob) => {
 
                         (await ethersDriipSettlementChallenge._proposalStatus())
                             .should.equal(mocks.settlementStatuses.indexOf('Qualified'));
-                        (await ethersWalletLocker._unlocksCount())
+                        (await ethersWalletLocker._fungibleUnlocksCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._deprivalsCount())
                             ._bn.should.eq.BN(0);
