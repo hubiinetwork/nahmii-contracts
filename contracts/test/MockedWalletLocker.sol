@@ -16,16 +16,31 @@ contract MockedWalletLocker {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct LockUnlock {
+    struct FungibleLockUnlock {
         address lockedWallet;
         address lockerWallet;
+        int256 amount;
+        address currencyCt;
+        uint256 currencyId;
+    }
+
+    struct NonFungibleLockUnlock {
+        address lockedWallet;
+        address lockerWallet;
+        int256[] ids;
+        address currencyCt;
+        uint256 currencyId;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    LockUnlock[] public locks;
-    LockUnlock[] public unlocks;
+    FungibleLockUnlock[] public fungibleLocks;
+    FungibleLockUnlock[] public fungibleUnlocks;
+    NonFungibleLockUnlock[] public nonFungibleLocks;
+    NonFungibleLockUnlock[] public nonFungibleUnlocks;
+
+    address[] public lockedWallets;
 
     bool public locked;
     bool public lockedBy;
@@ -36,8 +51,18 @@ contract MockedWalletLocker {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event LockByProxyEvent(address lockedWallet, address lockerWallet);
-    event UnlockByProxyEvent(address lockedWallet, address lockerWallet);
+    event LockFungibleByProxyEvent(address lockedWallet, address lockerWallet, int256 amount,
+        address currencyCt, uint256 currencyId);
+    event LockNonFungibleByProxyEvent(address lockedWallet, address lockerWallet, int256[] ids,
+        address currencyCt, uint256 currencyId);
+    event UnlockFungibleEvent(address lockedWallet, address lockerWallet, int256 amount, address currencyCt,
+        uint256 currencyId);
+    event UnlockFungibleByProxyEvent(address lockedWallet, address lockerWallet, int256 amount, address currencyCt,
+        uint256 currencyId);
+    event UnlockNonFungibleEvent(address lockedWallet, address lockerWallet, int256[] ids, address currencyCt,
+        uint256 currencyId);
+    event UnlockNonFungibleByProxyEvent(address lockedWallet, address lockerWallet, int256[] ids, address currencyCt,
+        uint256 currencyId);
 
     //
     // Functions
@@ -45,8 +70,11 @@ contract MockedWalletLocker {
     function _reset()
     public
     {
-        locks.length = 0;
-        unlocks.length = 0;
+        fungibleLocks.length = 0;
+        fungibleUnlocks.length = 0;
+        nonFungibleLocks.length = 0;
+        nonFungibleUnlocks.length = 0;
+        lockedWallets.length = 0;
         locked = false;
         lockedBy = false;
         _lockedAmount = 0;
@@ -54,18 +82,54 @@ contract MockedWalletLocker {
         _lockedIdsByIndices.length = 0;
     }
 
-    function lockByProxy(address lockedWallet, address lockerWallet)
+    function lockFungibleByProxy(address lockedWallet, address lockerWallet, int256 amount,
+        address currencyCt, uint256 currencyId)
     public
     {
-        locks.push(LockUnlock(lockedWallet, lockerWallet));
-        emit LockByProxyEvent(lockedWallet, lockerWallet);
+        fungibleLocks.push(FungibleLockUnlock(lockedWallet, lockerWallet, amount, currencyCt, currencyId));
+        lockedWallets.push(lockedWallet);
+        emit LockFungibleByProxyEvent(lockedWallet, lockerWallet, amount, currencyCt, currencyId);
     }
 
-    function unlockByProxy(address wallet)
+    function lockNonFungibleByProxy(address lockedWallet, address lockerWallet, int256[] ids,
+        address currencyCt, uint256 currencyId)
     public
     {
-        unlocks.push(LockUnlock(wallet, address(0)));
-        emit UnlockByProxyEvent(wallet, address(0));
+        nonFungibleLocks.push(NonFungibleLockUnlock(lockedWallet, lockerWallet, ids, currencyCt, currencyId));
+        lockedWallets.push(lockedWallet);
+        emit LockNonFungibleByProxyEvent(lockedWallet, lockerWallet, ids, currencyCt, currencyId);
+    }
+
+    function unlockFungible(address lockedWallet, address lockerWallet, int256 amount,
+        address currencyCt, uint256 currencyId)
+    public
+    {
+        fungibleUnlocks.push(FungibleLockUnlock(lockedWallet, lockerWallet, amount, currencyCt, currencyId));
+        emit UnlockFungibleEvent(lockedWallet, lockerWallet, amount, currencyCt, currencyId);
+    }
+
+    function unlockFungibleByProxy(address lockedWallet, address lockerWallet, int256 amount,
+        address currencyCt, uint256 currencyId)
+    public
+    {
+        fungibleUnlocks.push(FungibleLockUnlock(lockedWallet, lockerWallet, amount, currencyCt, currencyId));
+        emit UnlockFungibleByProxyEvent(lockedWallet, lockerWallet, amount, currencyCt, currencyId);
+    }
+
+    function unlockNonFungible(address lockedWallet, address lockerWallet, int256[] ids,
+        address currencyCt, uint256 currencyId)
+    public
+    {
+        nonFungibleUnlocks.push(NonFungibleLockUnlock(lockedWallet, lockerWallet, ids, currencyCt, currencyId));
+        emit UnlockNonFungibleEvent(lockedWallet, lockerWallet, ids, currencyCt, currencyId);
+    }
+
+    function unlockNonFungibleByProxy(address lockedWallet, address lockerWallet, int256[] ids,
+        address currencyCt, uint256 currencyId)
+    public
+    {
+        nonFungibleUnlocks.push(NonFungibleLockUnlock(lockedWallet, lockerWallet, ids, currencyCt, currencyId));
+        emit UnlockNonFungibleByProxyEvent(lockedWallet, lockerWallet, ids, currencyCt, currencyId);
     }
 
     function lockedWalletsCount()
@@ -73,15 +137,39 @@ contract MockedWalletLocker {
     view
     returns (uint256)
     {
-        return locks.length;
+        return lockedWallets.length;
     }
 
-    function _unlocksCount()
+    function _fungibleLocksCount()
     public
     view
     returns (uint256)
     {
-        return unlocks.length;
+        return fungibleLocks.length;
+    }
+
+    function _fungibleUnlocksCount()
+    public
+    view
+    returns (uint256)
+    {
+        return fungibleUnlocks.length;
+    }
+
+    function _nonFungibleLocksCount()
+    public
+    view
+    returns (uint256)
+    {
+        return nonFungibleLocks.length;
+    }
+
+    function _nonFungibleUnlocksCount()
+    public
+    view
+    returns (uint256)
+    {
+        return nonFungibleUnlocks.length;
     }
 
     function isLocked(address, address, uint256)
