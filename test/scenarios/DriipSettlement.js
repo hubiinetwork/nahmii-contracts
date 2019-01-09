@@ -6,6 +6,7 @@ const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const DriipSettlement = artifacts.require('DriipSettlement');
+const SignerManager = artifacts.require('SignerManager');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedBeneficiary = artifacts.require('MockedBeneficiary');
@@ -24,6 +25,7 @@ let provider;
 module.exports = (glob) => {
     describe('DriipSettlement', () => {
         let web3DriipSettlement, ethersDriipSettlement;
+        let web3SignerManager;
         let web3Configuration, ethersConfiguration;
         let web3ClientFund, ethersClientFund;
         let web3RevenueFund, ethersRevenueFund;
@@ -34,6 +36,8 @@ module.exports = (glob) => {
 
         before(async () => {
             provider = glob.signer_owner.provider;
+
+            web3SignerManager = await SignerManager.new(glob.owner);
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
@@ -47,7 +51,7 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3DriipSettlementChallenge = await MockedDriipSettlementChallenge.new();
             ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, MockedDriipSettlementChallenge.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
+            web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
 
             await web3Configuration.registerService(glob.owner);

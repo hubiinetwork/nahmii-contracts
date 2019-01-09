@@ -3,6 +3,8 @@ const sinonChai = require('sinon-chai');
 const chaiAsPromised = require('chai-as-promised');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
+const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
+const SignerManager = artifacts.require('SignerManager');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
@@ -18,6 +20,7 @@ let provider;
 module.exports = (glob) => {
     describe('FraudChallengeByTrade', () => {
         let web3FraudChallengeByTrade, ethersFraudChallengeByTrade;
+        let web3SignerManager;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3Configuration, ethersConfiguration;
         let web3WalletLocker, ethersWalletLocker;
@@ -28,14 +31,16 @@ module.exports = (glob) => {
         before(async () => {
             provider = glob.signer_owner.provider;
 
-            web3FraudChallengeByTrade = glob.web3FraudChallengeByTrade;
-            ethersFraudChallengeByTrade = glob.ethersIoFraudChallengeByTrade;
+            web3FraudChallengeByTrade = await FraudChallengeByTrade.new(glob.owner);
+            ethersFraudChallengeByTrade = new Contract(web3FraudChallengeByTrade.address, FraudChallengeByTrade.abi, glob.signer_owner);
+
+            web3SignerManager = await SignerManager.new(glob.owner);
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
-            web3Validator = await MockedValidator.new(glob.owner, glob.web3SignerManager.address);
+            web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
@@ -46,7 +51,7 @@ module.exports = (glob) => {
             await ethersFraudChallengeByTrade.setConfiguration(ethersConfiguration.address);
             await ethersFraudChallengeByTrade.setValidator(ethersValidator.address);
             await ethersFraudChallengeByTrade.setSecurityBond(ethersSecurityBond.address);
-            await ethersFraudChallengeByTrade.setWalletLocker(ethersWalletLocker.address, false);
+            await ethersFraudChallengeByTrade.setWalletLocker(ethersWalletLocker.address);
 
             await ethersConfiguration.registerService(glob.owner);
             await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
@@ -263,11 +268,11 @@ module.exports = (glob) => {
                 });
 
                 afterEach(async () => {
-                    await web3FraudChallengeByTrade.setWalletLocker(walletLocker, false);
+                    await web3FraudChallengeByTrade.setWalletLocker(walletLocker);
                 });
 
                 it('should set new value and emit event', async () => {
-                    const result = await web3FraudChallengeByTrade.setWalletLocker(address, false);
+                    const result = await web3FraudChallengeByTrade.setWalletLocker(address);
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetWalletLockerEvent');
                     const walletLocker = await web3FraudChallengeByTrade.walletLocker();
@@ -277,7 +282,7 @@ module.exports = (glob) => {
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3FraudChallengeByTrade.setWalletLocker(address, false, {from: glob.user_a})
+                    web3FraudChallengeByTrade.setWalletLocker(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
