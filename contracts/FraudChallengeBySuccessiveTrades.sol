@@ -16,6 +16,7 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 /**
  * @title FraudChallengeBySuccessiveTrades
@@ -23,6 +24,8 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
  */
 contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable, WalletLockable {
+    using SafeMathIntLib for int256;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -59,10 +62,14 @@ SecurityBondable, WalletLockable {
     {
         require(validator.isTradeParty(firstTrade, wallet));
         require(validator.isTradeParty(lastTrade, wallet));
-        require((currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id) ||
-            (currencyCt == firstTrade.currencies.conjugate.ct && currencyId == firstTrade.currencies.conjugate.id));
-        require((currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id) ||
-            (currencyCt == lastTrade.currencies.conjugate.ct && currencyId == lastTrade.currencies.conjugate.id));
+        require(
+            (currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id) ||
+            (currencyCt == firstTrade.currencies.conjugate.ct && currencyId == firstTrade.currencies.conjugate.id)
+        );
+        require(
+            (currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id) ||
+            (currencyCt == lastTrade.currencies.conjugate.ct && currencyId == lastTrade.currencies.conjugate.id)
+        );
 
         NahmiiTypesLib.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
         NahmiiTypesLib.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
@@ -72,19 +79,29 @@ SecurityBondable, WalletLockable {
         NahmiiTypesLib.CurrencyRole firstTradeCurrencyRole = (currencyCt == firstTrade.currencies.intended.ct && currencyId == firstTrade.currencies.intended.id ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
         NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole = (currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
 
-        require(
-            !validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstTradeCurrencyRole, lastTrade, lastTradePartyRole, lastTradeCurrencyRole) ||
-        !validator.isGenuineSuccessiveTradesTotalFees(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole)
-        );
+        // Require existence of fraud signal
+        require(!(
+            (validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstTradeCurrencyRole, lastTrade, lastTradePartyRole, lastTradeCurrencyRole)) &&
+            (validator.isGenuineSuccessiveTradesTotalFees(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole))
+        ));
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag last trade (hash) as fraudulent
         fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-//        walletLocker.lockByProxy(wallet, msg.sender);
+        // Lock amount of size equivalent to trade intended or conjugate amount of recipient
+        walletLocker.lockFungibleByProxy(
+            wallet, msg.sender,
+            NahmiiTypesLib.CurrencyRole.Intended == lastTradeCurrencyRole ? lastTrade.amount : lastTrade.amount.div(lastTrade.rate),
+            currencyCt, currencyId
+        );
 
+        // Emit event
         emit ChallengeBySuccessiveTradesEvent(
             firstTrade.seal.hash, lastTrade.seal.hash, msg.sender, wallet
         );
