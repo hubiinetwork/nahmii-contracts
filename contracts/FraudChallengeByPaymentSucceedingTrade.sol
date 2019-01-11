@@ -59,8 +59,10 @@ SecurityBondable, WalletLockable {
     {
         require(validator.isTradeParty(trade, wallet));
         require(validator.isPaymentParty(payment, wallet));
-        require((currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id)
-            || (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id));
+        require(
+            (currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id) ||
+            (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id)
+        );
         require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
 
         NahmiiTypesLib.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
@@ -70,19 +72,27 @@ SecurityBondable, WalletLockable {
 
         NahmiiTypesLib.CurrencyRole tradeCurrencyRole = (currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
 
-        require(
-            !validator.isGenuineSuccessiveTradePaymentBalances(trade, tradePartyRole, tradeCurrencyRole, payment, paymentPartyRole) ||
-        !validator.isGenuineSuccessiveTradePaymentTotalFees(trade, tradePartyRole, payment)
-        );
+        // Require existence of fraud signal
+        require(!(
+            (validator.isGenuineSuccessiveTradePaymentBalances(trade, tradePartyRole, tradeCurrencyRole, payment, paymentPartyRole)) &&
+            (validator.isGenuineSuccessiveTradePaymentTotalFees(trade, tradePartyRole, payment))
+        ));
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag payment (hash) as fraudulent
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-//        walletLocker.lockByProxy(wallet, msg.sender);
+        // Lock amount of size equivalent to payment amount
+        walletLocker.lockFungibleByProxy(
+            wallet, msg.sender, payment.amount, payment.currency.ct, payment.currency.id
+        );
 
+        // Emit event
         emit ChallengeByPaymentSucceedingTradeEvent(
             trade.seal.hash, payment.seals.operator.hash, msg.sender, wallet
         );

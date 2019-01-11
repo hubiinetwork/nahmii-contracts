@@ -55,25 +55,35 @@ SecurityBondable, WalletLockable {
     {
         require(validator.isPaymentParty(firstPayment, wallet));
         require(validator.isPaymentParty(lastPayment, wallet));
-        require(firstPayment.currency.ct == lastPayment.currency.ct && firstPayment.currency.id == lastPayment.currency.id);
+        require(
+            firstPayment.currency.ct == lastPayment.currency.ct &&
+            firstPayment.currency.id == lastPayment.currency.id
+        );
 
         NahmiiTypesLib.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
         NahmiiTypesLib.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
-        require(
-            !validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole) ||
-        !validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)
-        );
+        // Require existence of fraud signal
+        require(!(
+            (validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)) &&
+            (validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment))
+        ));
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag payment (hash) as fraudulent
         fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-//        walletLocker.lockByProxy(wallet, msg.sender);
+        // Lock amount of size equivalent to payment amount
+        walletLocker.lockFungibleByProxy(
+            wallet, msg.sender, lastPayment.amount, lastPayment.currency.ct, lastPayment.currency.id
+        );
 
         emit ChallengeBySuccessivePaymentsEvent(
             firstPayment.seals.operator.hash, lastPayment.seals.operator.hash, msg.sender, wallet

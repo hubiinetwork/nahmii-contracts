@@ -50,16 +50,23 @@ SecurityBondable {
     onlySealedPayment(payment1)
     onlySealedPayment(payment2)
     {
-        require(payment1.seals.wallet.hash != payment2.seals.wallet.hash);
-        require(payment1.nonce == payment2.nonce);
+        // Require existence of fraud signal
+        require(
+            payment1.seals.wallet.hash != payment2.seals.wallet.hash &&
+            payment1.nonce == payment2.nonce
+        );
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag trades (hashes) as fraudulent
         fraudChallenge.addFraudulentPaymentHash(payment1.seals.operator.hash);
         fraudChallenge.addFraudulentPaymentHash(payment2.seals.operator.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
+        // Emit event
         emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(
             payment1.seals.operator.hash, payment2.seals.operator.hash, msg.sender
         );

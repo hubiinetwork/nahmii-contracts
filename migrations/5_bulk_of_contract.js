@@ -153,13 +153,15 @@ module.exports = (deployer, network, accounts) => {
                 TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(NahmiiTypesLib, [
-                CancelOrdersChallenge, ClientFundable, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
-                FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments, FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
-                FraudChallengeByDuplicateDriipNonceOfTrades, FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
-                FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
-                FraudChallengeByTradeSucceedingPayment, Hasher, MockedCancelOrdersChallenge, MockedDriipSettlementChallenge, MockedDriipSettlementDispute,
-                MockedNullSettlementChallenge, MockedNullSettlementDispute, MockedValidator, NullSettlementChallenge, NullSettlementDispute,
-                Validatable, Validator
+                CancelOrdersChallenge, ClientFundable, DriipSettlement, DriipSettlementChallenge,
+                DriipSettlementDispute, FraudChallengeByDoubleSpentOrders, FraudChallengeByDuplicateDriipNonceOfPayments,
+                FraudChallengeByDuplicateDriipNonceOfTradeAndPayment, FraudChallengeByDuplicateDriipNonceOfTrades,
+                FraudChallengeByOrder, FraudChallengeByPayment, FraudChallengeByPaymentSucceedingTrade,
+                FraudChallengeBySuccessivePayments, FraudChallengeBySuccessiveTrades, FraudChallengeByTrade,
+                FraudChallengeByTradeOrderResiduals, FraudChallengeByTradeSucceedingPayment, Hasher,
+                MockedCancelOrdersChallenge, MockedDriipSettlementChallenge, MockedDriipSettlementDispute,
+                MockedNullSettlementChallenge, MockedNullSettlementDispute, MockedValidator, NullSettlementChallenge,
+                NullSettlementDispute, Validatable, Validator
             ]);
             await deployer.link(NonFungibleBalanceLib, [
                 BalanceTracker
@@ -167,8 +169,9 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(SafeMathIntLib, [
                 AccrualBenefactor, BalanceTracker, CancelOrdersChallenge,
                 ClientFund, Configuration, DriipSettlement, DriipSettlementChallenge, DriipSettlementDispute,
-                NullSettlement, NullSettlementChallenge, NullSettlementDispute, PartnerFund,
-                RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
+                FraudChallengeBySuccessiveTrades, FraudChallengeByTrade, FraudChallengeByTradeOrderResiduals,
+                FraudChallengeByTradeSucceedingPayment, NullSettlement, NullSettlementChallenge,
+                NullSettlementDispute, PartnerFund, RevenueFund, SecurityBond, TokenHolderRevenueFund, Validator
             ]);
             await deployer.link(SafeMathUintLib, [
                 BalanceTracker, CancelOrdersChallenge, ClientFund,
