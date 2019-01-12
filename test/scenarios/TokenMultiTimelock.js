@@ -259,15 +259,15 @@ module.exports = function (glob) {
                 );
             });
 
-            describe('if called by non-operator', () => {
+            describe('if called by non-beneficiary', () => {
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.release(0, {from: glob.user_a}).should.be.rejected;
+                    web3TokenMultiTimelock.release(0, {from: glob.user_b}).should.be.rejected;
                 });
             });
 
             describe('if called with non-existent index', () => {
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.release(1).should.be.rejected;
+                    web3TokenMultiTimelock.release(1, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
@@ -281,7 +281,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.release(1).should.be.rejected;
+                    web3TokenMultiTimelock.release(1, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
@@ -289,7 +289,7 @@ module.exports = function (glob) {
                 it('should successfully release', async () => {
                     await sleep(1500);
 
-                    const result = await web3TokenMultiTimelock.release(0, {gas: 1e6});
+                    const result = await web3TokenMultiTimelock.release(0, {from: glob.user_a, gas: 1e6});
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ReleaseEvent');
@@ -314,7 +314,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.release(0, {gas: 1e6}).should.be.rejected;
+                    web3TokenMultiTimelock.release(0, {from: glob.user_a, gas: 1e6}).should.be.rejected;
                 });
             });
         });
@@ -331,9 +331,15 @@ module.exports = function (glob) {
                 );
             });
 
+            describe('if called by non-beneficiary', () => {
+                it('should revert', async () => {
+                    web3TokenMultiTimelock.setReleaseBlockNumber(0, 1000000, {from: glob.user_b}).should.be.rejected;
+                });
+            });
+
             describe('if called with index that has not been released', () => {
                 it('should successfully update the release block number', async () => {
-                    const result = await web3TokenMultiTimelock.setReleaseBlockNumber(0, 1000000);
+                    const result = await web3TokenMultiTimelock.setReleaseBlockNumber(0, 1000000, {from: glob.user_a});
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetReleaseBlockNumberEvent');
@@ -347,11 +353,11 @@ module.exports = function (glob) {
                 beforeEach(async () => {
                     await sleep(1500);
 
-                    await web3TokenMultiTimelock.release(0, {gas: 1e6});
+                    await web3TokenMultiTimelock.release(0, {from: glob.user_a, gas: 1e6});
                 });
 
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.setReleaseBlockNumber(0, 1000000)
+                    web3TokenMultiTimelock.setReleaseBlockNumber(0, 1000000, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });

@@ -41,9 +41,9 @@ module.exports = function (glob) {
         });
 
         describe('release()', () => {
-            describe('if called by non-operator', () => {
+            describe('if called by non-beneficiary', () => {
                 it('should revert', async () => {
-                    web3RevenueTokenManager.release(0, {from: glob.user_a}).should.be.rejected;
+                    web3RevenueTokenManager.release(0, {from: glob.user_b, gas: 1e6}).should.be.rejected;
                 });
             });
 
@@ -60,7 +60,7 @@ module.exports = function (glob) {
                     it('should successfully release and update amount blocks', async () => {
                         await sleep(1500);
 
-                        const result = await web3RevenueTokenManager.release(0);
+                        const result = await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6});
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('ReleaseEvent');
@@ -96,12 +96,12 @@ module.exports = function (glob) {
                     it('should successfully release and update amount blocks', async () => {
                         await sleep(2500);
 
-                        let result = await web3RevenueTokenManager.release(0);
+                        let result = await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6});
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('ReleaseEvent');
 
-                        result = await web3RevenueTokenManager.release(1);
+                        result = await web3RevenueTokenManager.release(1, {from: glob.user_a, gas: 1e6});
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('ReleaseEvent');
@@ -155,9 +155,9 @@ module.exports = function (glob) {
 
                     await sleep(1500);
 
-                    await web3RevenueTokenManager.release(0);
-                    await web3RevenueTokenManager.release(1);
-                    await web3RevenueTokenManager.release(2);
+                    await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6});
+                    await web3RevenueTokenManager.release(1, {from: glob.user_a, gas: 1e6});
+                    await web3RevenueTokenManager.release(2, {from: glob.user_a, gas: 1e6});
 
                     blockNumber = await provider.getBlockNumber();
                 });

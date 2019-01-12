@@ -40,6 +40,9 @@ contract TokenMultiTimelock is Ownable {
     uint256 public totalLockedAmount;
     uint256 public executedReleasesCount;
 
+    //
+    // Events
+    // -----------------------------------------------------------------------------------------------------------------
     event SetTokenEvent(IERC20 token);
     event SetBeneficiaryEvent(address beneficiary);
     event DefineReleaseEvent(uint256 earliestReleaseTime, uint256 amount, uint256 blockNumber);
@@ -138,7 +141,8 @@ contract TokenMultiTimelock is Ownable {
     /// @param index The index of the release
     /// @param blockNumber The updated block number
     function setReleaseBlockNumber(uint256 index, uint256 blockNumber)
-    onlyOperator
+    public
+    onlyBeneficiary
     {
         // Require that the release is not done
         require(!releases[index].done);
@@ -154,7 +158,7 @@ contract TokenMultiTimelock is Ownable {
     /// @param index The index of the release
     function release(uint256 index)
     public
-    onlyOperator
+    onlyBeneficiary
     {
         // Get the release object
         Release storage _release = releases[index];
@@ -182,5 +186,12 @@ contract TokenMultiTimelock is Ownable {
 
         // Emit event
         emit ReleaseEvent(index, blockNumber, _release.earliestReleaseTime, block.timestamp, _release.amount);
+    }
+
+    // Modifiers
+    // -----------------------------------------------------------------------------------------------------------------
+    modifier onlyBeneficiary() {
+        require(msg.sender == beneficiary);
+        _;
     }
 }
