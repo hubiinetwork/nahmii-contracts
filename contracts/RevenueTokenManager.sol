@@ -39,7 +39,7 @@ contract RevenueTokenManager is TokenMultiTimelock {
     /// @param index The index of the release
     function release(uint256 index)
     public
-    onlyOperator
+    onlyBeneficiary
     {
         // Add amount blocks
         _addAmountBlocks(index);
@@ -47,7 +47,6 @@ contract RevenueTokenManager is TokenMultiTimelock {
         // Call release of multi timelock
         super.release(index);
     }
-
 
     /// @notice Calculate the released amount blocks, i.e. the area under the curve (AUC) of
     /// release amount as function of block number
