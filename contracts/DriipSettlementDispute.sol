@@ -352,7 +352,10 @@ CancelOrdersChallengable {
             wallet, payment.currency.ct, payment.currency.id
         ));
 
-        // Update proposal status and block number
+        // Update proposal
+        driipSettlementChallenge.setProposalExpirationTime(
+            wallet, payment.currency.ct, payment.currency.id, block.timestamp.add(configuration.settlementChallengeTimeout())
+        );
         driipSettlementChallenge.setProposalStatus(
             wallet, payment.currency.ct, payment.currency.id, SettlementTypesLib.Status.Disqualified
         );
