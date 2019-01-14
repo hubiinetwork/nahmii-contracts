@@ -104,7 +104,7 @@ CancelOrdersChallengable {
         ));
 
         // Require that order's block number is not earlier than proposal's block number
-        require(order.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+        require(order.blockNumber > driipSettlementChallenge.proposalBlockNumber(
             order.wallet, currency.ct, currency.id
         ));
 
@@ -267,8 +267,8 @@ CancelOrdersChallengable {
         // Wallet is seller in (candidate) trade -> Intended transfer and currency
         (int256 transferAmount, MonetaryTypesLib.Currency memory currency) = (
         validator.isTradeBuyer(trade, wallet) ?
-        (trade.transfers.conjugate.single.abs(), trade.currencies.conjugate) :
-    (trade.transfers.intended.single.abs(), trade.currencies.intended)
+        (trade.transfers.conjugate.single, trade.currencies.conjugate) :
+    (trade.transfers.intended.single, trade.currencies.intended)
         );
 
         // Require that proposal has not expired
@@ -280,7 +280,7 @@ CancelOrdersChallengable {
         ));
 
         // Require that trade's block number is not earlier than proposal's block number
-        require(trade.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+        require(trade.blockNumber > driipSettlementChallenge.proposalBlockNumber(
             wallet, currency.ct, currency.id
         ));
 
@@ -343,17 +343,14 @@ CancelOrdersChallengable {
             wallet, payment.currency.ct, payment.currency.id
         ));
 
-        // Require that payment's block number is not earlier than proposal's block number
-        require(payment.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+        // Require that payment candidate's block number is not earlier than proposal's block number
+        require(payment.blockNumber > driipSettlementChallenge.proposalBlockNumber(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
-        // Get the payment's signed transfer amount, where positive transfer is always in direction from sender to recipient
-        int256 transferAmount = validator.isPaymentSender(payment, wallet) ? payment.transfers.single : payment.transfers.single.mul(- 1);
-
         // Require that transfer amount is strictly greater than the proposal's target balance amount
-        // for this payment to be a valid challenge candidate
-        require(transferAmount > driipSettlementChallenge.proposalTargetBalanceAmount(
+        // for the provided payment to be a valid challenge candidate
+        require(payment.transfers.single > driipSettlementChallenge.proposalTargetBalanceAmount(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
@@ -373,7 +370,7 @@ CancelOrdersChallengable {
 
         // Slash wallet's balances or reward challenger by stake fraction
         if (driipSettlementChallenge.proposalBalanceReward(wallet, payment.currency.ct, payment.currency.id))
-            walletLocker.lockFungibleByProxy(wallet, challenger, transferAmount.abs(), payment.currency.ct, payment.currency.id);
+            walletLocker.lockFungibleByProxy(wallet, challenger, payment.transfers.single, payment.currency.ct, payment.currency.id);
         else
             securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
