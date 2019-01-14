@@ -617,11 +617,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
             ));
 
         // Create proposals
-        addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, balanceReward);
-        addConjugateProposalFromTrade(wallet, trade, conjugateStageAmount, balanceReward);
+        _addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, balanceReward);
+        _addConjugateProposalFromTrade(wallet, trade, conjugateStageAmount, balanceReward);
 
         // Add wallet to store of challenge wallets
-        addToChallengeWallets(wallet);
+        _addToChallengeWallets(wallet);
 
         // Store driip hashes
         challengeTradeHashes.push(trade.seal.hash);
@@ -645,37 +645,37 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
             ));
 
         // Create proposal
-        addProposalFromPayment(wallet, payment, stageAmount, balanceReward);
+        _addProposalFromPayment(wallet, payment, stageAmount, balanceReward);
 
         // Add wallet to store of challenge wallets
-        addToChallengeWallets(wallet);
+        _addToChallengeWallets(wallet);
 
         // Store driip hashes
         challengePaymentHashes.push(payment.seals.operator.hash);
         challengePaymentHashIndicesByWallet[wallet].push(challengePaymentHashes.length);
     }
 
-    function addIntendedProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
+    function _addIntendedProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
     private
     {
-        addProposalFromTrade(
+        _addProposalFromTrade(
             wallet, trade, stageAmount,
             validator.isTradeBuyer(trade, wallet) ? trade.buyer.balances.intended.current : trade.seller.balances.intended.current,
             trade.currencies.intended, balanceReward
         );
     }
 
-    function addConjugateProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
+    function _addConjugateProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
     private
     {
-        addProposalFromTrade(
+        _addProposalFromTrade(
             wallet, trade, stageAmount,
             validator.isTradeBuyer(trade, wallet) ? trade.buyer.balances.conjugate.current : trade.seller.balances.conjugate.current,
             trade.currencies.conjugate, balanceReward
         );
     }
 
-    function addProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount, int256 balanceAmount, MonetaryTypesLib.Currency currency, bool balanceReward)
+    function _addProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount, int256 balanceAmount, MonetaryTypesLib.Currency currency, bool balanceReward)
     private
     {
         // Require that stage amount is positive
@@ -706,7 +706,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         proposalIndicesByWallet[wallet].push(proposals.length);
     }
 
-    function addProposalFromPayment(address wallet, NahmiiTypesLib.Payment payment, int256 stageAmount, bool balanceReward)
+    function _addProposalFromPayment(address wallet, NahmiiTypesLib.Payment payment, int256 stageAmount, bool balanceReward)
     private
     {
         // Require that stage amount is positive
@@ -744,7 +744,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
         proposalIndicesByWallet[wallet].push(proposals.length);
     }
 
-    function addToChallengeWallets(address wallet)
+    function _addToChallengeWallets(address wallet)
     private
     {
         if (!challengeByWallets[wallet]) {
