@@ -908,9 +908,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with wallet that is not payment party', () => {
+            describe('if called with wallet that is not payment sender', () => {
                 beforeEach(async () => {
-                    await web3Validator.setPaymentParty(false);
+                    await web3Validator.setPaymentSender(false);
                 });
 
                 it('should revert', async () => {

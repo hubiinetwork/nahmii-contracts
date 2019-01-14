@@ -265,11 +265,9 @@ CancelOrdersChallengable {
         // Get the relevant currency
         // Wallet is buyer in (candidate) trade -> Conjugate transfer and currency
         // Wallet is seller in (candidate) trade -> Intended transfer and currency
-        (int256 transferAmount, MonetaryTypesLib.Currency memory currency) = (
+        (int256 transferAmount, MonetaryTypesLib.Currency memory currency) =
         validator.isTradeBuyer(trade, wallet) ?
-        (trade.transfers.conjugate.single, trade.currencies.conjugate) :
-    (trade.transfers.intended.single, trade.currencies.intended)
-        );
+        (trade.transfers.conjugate.single, trade.currencies.conjugate) : (trade.transfers.intended.single, trade.currencies.intended);
 
         // Require that proposal has not expired
         require(!driipSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
@@ -330,7 +328,7 @@ CancelOrdersChallengable {
     public
     onlyDriipSettlementChallenge
     onlySealedPayment(payment)
-    onlyPaymentParty(payment, wallet)
+    onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
@@ -349,7 +347,7 @@ CancelOrdersChallengable {
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
-        // for the provided payment to be a valid challenge candidate
+        // for the provided payment to be a valid challenge candidate.
         require(payment.transfers.single > driipSettlementChallenge.proposalTargetBalanceAmount(
             wallet, payment.currency.ct, payment.currency.id
         ));
