@@ -352,9 +352,12 @@ CancelOrdersChallengable {
             wallet, payment.currency.ct, payment.currency.id
         ));
 
-        // Update proposal status
+        // Update proposal status and block number
         driipSettlementChallenge.setProposalStatus(
             wallet, payment.currency.ct, payment.currency.id, SettlementTypesLib.Status.Disqualified
+        );
+        driipSettlementChallenge.setProposalBlockNumber(
+            wallet, payment.currency.ct, payment.currency.id, payment.blockNumber
         );
 
         // Lock wallet
@@ -386,11 +389,6 @@ CancelOrdersChallengable {
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier driipSettlementChallengeInitialized() {
-        require(driipSettlementChallenge != address(0));
-        _;
-    }
-
     modifier onlyDriipSettlementChallenge() {
         require(msg.sender == address(driipSettlementChallenge));
         _;
