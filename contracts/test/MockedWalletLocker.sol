@@ -43,7 +43,6 @@ contract MockedWalletLocker {
     address[] public lockedWallets;
 
     bool public locked;
-    bool public lockedBy;
     int256 public _lockedAmount;
     uint256 public _lockedIdsCount;
     int256[] public _lockedIdsByIndices;
@@ -76,7 +75,6 @@ contract MockedWalletLocker {
         nonFungibleUnlocks.length = 0;
         lockedWallets.length = 0;
         locked = false;
-        lockedBy = false;
         _lockedAmount = 0;
         _lockedIdsCount = 0;
         _lockedIdsByIndices.length = 0;
@@ -172,7 +170,23 @@ contract MockedWalletLocker {
         return nonFungibleUnlocks.length;
     }
 
+    function isLocked(address)
+    public
+    view
+    returns (bool)
+    {
+        return locked;
+    }
+
     function isLocked(address, address, uint256)
+    public
+    view
+    returns (bool)
+    {
+        return locked;
+    }
+
+    function isLocked(address, address, address, uint256)
     public
     view
     returns (bool)
@@ -184,20 +198,6 @@ contract MockedWalletLocker {
     public
     {
         locked = _locked;
-    }
-
-    function isLockedBy(address, address, address, uint256)
-    public
-    view
-    returns (bool)
-    {
-        return lockedBy;
-    }
-
-    function _setLockedBy(bool _lockedBy)
-    public
-    {
-        lockedBy = _lockedBy;
     }
 
     function lockedAmount(address, address, address, uint256)

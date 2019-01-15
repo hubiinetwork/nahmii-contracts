@@ -15,7 +15,7 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 
 /**
  * @title Wallet locker
- * @notice An ownable to lock and unlock wallets
+ * @notice An ownable to lock and unlock wallets' balance holdings of specific currency(ies)
  */
 contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     using SafeMathUintLib for uint256;
@@ -25,28 +25,30 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     // -----------------------------------------------------------------------------------------------------------------
     struct FungibleLock {
         address locker;
+        address currencyCt;
+        uint256 currencyId;
         int256 amount;
         uint256 unlockTime;
     }
 
     struct NonFungibleLock {
         address locker;
+        address currencyCt;
+        uint256 currencyId;
         int256[] ids;
         uint256 unlockTime;
-    }
-
-    struct Wallet {
-        mapping(address => mapping(uint256 => FungibleLock[])) fungibleLocksMap;
-        mapping(address => mapping(uint256 => mapping(address => uint256))) fungibleLockIndexMap;
-
-        mapping(address => mapping(uint256 => NonFungibleLock[])) nonFungibleLocksMap;
-        mapping(address => mapping(uint256 => mapping(address => uint256))) nonFungibleLockIndexMap;
     }
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => Wallet) private walletMap;
+    mapping(address => FungibleLock[]) public walletFungibleLocks;
+    mapping(address => mapping(address => mapping(uint256 => mapping(address => uint256)))) public lockedCurrencyLockerFungibleLockIndex;
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyFungibleLockCount;
+
+    mapping(address => NonFungibleLock[]) public walletNonFungibleLocks;
+    mapping(address => mapping(address => mapping(uint256 => mapping(address => uint256)))) public lockedCurrencyLockerNonFungibleLockIndex;
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyNonFungibleLockCount;
 
     //
     // Events
@@ -90,24 +92,29 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
         // Require that locked and locker wallets are not identical
         require(lockedWallet != lockerWallet);
 
-        uint256 lockIndex = walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        // Get index of lock
+        uint256 lockIndex = lockedCurrencyLockerFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockedWallet];
 
-        // Require that there is no existing conflicting lock set
+        // Require that there is no existing conflicting lock
         require(
-            0 == lockIndex ||
-        block.timestamp >= walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex - 1].unlockTime
+            (0 == lockIndex) ||
+            (block.timestamp >= walletFungibleLocks[lockedWallet][lockIndex - 1].unlockTime)
         );
 
+        // Add lock object for this triplet of locked wallet, currency and locker wallet if it does not exist
         if (0 == lockIndex) {
-            walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId].length++;
-            lockIndex = walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId].length;
-            walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][lockerWallet] = lockIndex;
+            lockIndex = ++(walletFungibleLocks[lockedWallet].length);
+            lockedCurrencyLockerFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet] = lockIndex;
+            walletCurrencyFungibleLockCount[lockedWallet][currencyCt][currencyId]++;
         }
 
-        // Lock and set release time
-        walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex - 1].locker = lockerWallet;
-        walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex - 1].amount = amount;
-        walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex - 1].unlockTime = block.timestamp.add(configuration.walletLockTimeout());
+        // Update lock parameters
+        walletFungibleLocks[lockedWallet][lockIndex - 1].locker = lockerWallet;
+        walletFungibleLocks[lockedWallet][lockIndex - 1].amount = amount;
+        walletFungibleLocks[lockedWallet][lockIndex - 1].currencyCt = currencyCt;
+        walletFungibleLocks[lockedWallet][lockIndex - 1].currencyId = currencyId;
+        walletFungibleLocks[lockedWallet][lockIndex - 1].unlockTime =
+        block.timestamp.add(configuration.walletLockTimeout());
 
         // Emit event
         emit LockFungibleByProxyEvent(lockedWallet, lockerWallet, amount, currencyCt, currencyId);
@@ -127,24 +134,29 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
         // Require that locked and locker wallets are not identical
         require(lockedWallet != lockerWallet);
 
-        uint256 lockIndex = walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        // Get index of lock
+        uint256 lockIndex = lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockedWallet];
 
-        // Require that there is no existing conflicting lock set
+        // Require that there is no existing conflicting lock
         require(
-            0 == lockIndex ||
-        block.timestamp >= walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1].unlockTime
+            (0 == lockIndex) ||
+            (block.timestamp >= walletNonFungibleLocks[lockedWallet][lockIndex - 1].unlockTime)
         );
 
+        // Add lock object for this triplet of locked wallet, currency and locker wallet if it does not exist
         if (0 == lockIndex) {
-            walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId].length++;
-            lockIndex = walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId].length;
-            walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet] = lockIndex;
+            lockIndex = ++(walletNonFungibleLocks[lockedWallet].length);
+            lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet] = lockIndex;
+            walletCurrencyNonFungibleLockCount[lockedWallet][currencyCt][currencyId]++;
         }
 
-        // Lock and set release time
-        walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1].locker = lockerWallet;
-        walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1].ids = ids;
-        walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1].unlockTime = block.timestamp.add(configuration.walletLockTimeout());
+        // Update lock parameters
+        walletNonFungibleLocks[lockedWallet][lockIndex - 1].locker = lockerWallet;
+        walletNonFungibleLocks[lockedWallet][lockIndex - 1].ids = ids;
+        walletNonFungibleLocks[lockedWallet][lockIndex - 1].currencyCt = currencyCt;
+        walletNonFungibleLocks[lockedWallet][lockIndex - 1].currencyId = currencyId;
+        walletNonFungibleLocks[lockedWallet][lockIndex - 1].unlockTime =
+        block.timestamp.add(configuration.walletLockTimeout());
 
         // Emit event
         emit LockNonFungibleByProxyEvent(lockedWallet, lockerWallet, ids, currencyCt, currencyId);
@@ -159,17 +171,20 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     function unlockFungible(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId)
     public
     {
-        uint256 lockIndex = walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        // Get index of lock
+        uint256 lockIndex = lockedCurrencyLockerFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
+
+        // Return if no lock exists
         if (0 == lockIndex)
             return;
 
-        // Require that release timeout has expired
+        // Require that unlock timeout has expired
         require(
-            block.timestamp >= walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex].unlockTime
+            block.timestamp >= walletFungibleLocks[lockedWallet][lockIndex - 1].unlockTime
         );
 
         // Unlock
-        int256 amount = _unlockFungible(lockedWallet, lockerWallet, currencyCt, currencyId);
+        int256 amount = _unlockFungible(lockedWallet, lockerWallet, currencyCt, currencyId, lockIndex);
 
         // Emit event
         emit UnlockFungibleEvent(lockedWallet, lockerWallet, amount, currencyCt, currencyId);
@@ -185,12 +200,15 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     public
     onlyAuthorizedService(lockedWallet)
     {
-        uint256 lockIndex = walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        // Get index of lock
+        uint256 lockIndex = lockedCurrencyLockerFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
+
+        // Return if no lock exists
         if (0 == lockIndex)
             return;
 
         // Unlock
-        int256 amount = _unlockFungible(lockedWallet, lockerWallet, currencyCt, currencyId);
+        int256 amount = _unlockFungible(lockedWallet, lockerWallet, currencyCt, currencyId, lockIndex);
 
         // Emit event
         emit UnlockFungibleByProxyEvent(lockedWallet, lockerWallet, amount, currencyCt, currencyId);
@@ -205,17 +223,20 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     function unlockNonFungible(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId)
     public
     {
-        uint256 lockIndex = walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        // Get index of lock
+        uint256 lockIndex = lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
+
+        // Return if no lock exists
         if (0 == lockIndex)
             return;
 
-        // Require that release timeout has expired
+        // Require that unlock timeout has expired
         require(
-            block.timestamp >= walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex].unlockTime
+            block.timestamp >= walletNonFungibleLocks[lockedWallet][lockIndex - 1].unlockTime
         );
 
         // Unlock
-        int256[] memory ids = _unlockNonFungible(lockedWallet, lockerWallet, currencyCt, currencyId);
+        int256[] memory ids = _unlockNonFungible(lockedWallet, lockerWallet, currencyCt, currencyId, lockIndex);
 
         // Emit event
         emit UnlockNonFungibleEvent(lockedWallet, lockerWallet, ids, currencyCt, currencyId);
@@ -231,12 +252,15 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     public
     onlyAuthorizedService(lockedWallet)
     {
-        uint256 lockIndex = walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        // Get index of lock
+        uint256 lockIndex = lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
+
+        // Return if no lock exists
         if (0 == lockIndex)
             return;
 
         // Unlock
-        int256[] memory ids = _unlockNonFungible(lockedWallet, lockerWallet, currencyCt, currencyId);
+        int256[] memory ids = _unlockNonFungible(lockedWallet, lockerWallet, currencyCt, currencyId, lockIndex);
 
         // Emit event
         emit UnlockNonFungibleByProxyEvent(lockedWallet, lockerWallet, ids, currencyCt, currencyId);
@@ -253,11 +277,12 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     view
     returns (int256)
     {
-        uint256 lockIndex = walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        uint256 lockIndex = lockedCurrencyLockerFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
+
         if (0 == lockIndex)
             return 0;
 
-        return walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex - 1].amount;
+        return walletFungibleLocks[lockedWallet][lockIndex - 1].amount;
     }
 
     /// @notice Get the count of non-fungible IDs of the given currency held by locked wallet that is
@@ -271,11 +296,12 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     view
     returns (uint256)
     {
-        uint256 lockIndex = walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        uint256 lockIndex = lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
+
         if (0 == lockIndex)
             return 0;
 
-        return walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1].ids.length;
+        return walletNonFungibleLocks[lockedWallet][lockIndex - 1].ids.length;
     }
 
     /// @notice Get the set of non-fungible IDs of the given currency held by locked wallet that is
@@ -292,11 +318,12 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     view
     returns (int256[])
     {
-        uint256 lockIndex = walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        uint256 lockIndex = lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
+
         if (0 == lockIndex)
             return new int256[](0);
 
-        NonFungibleLock storage lock = walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1];
+        NonFungibleLock storage lock = walletNonFungibleLocks[lockedWallet][lockIndex - 1];
 
         if (0 == lock.ids.length)
             return new int256[](0);
@@ -309,73 +336,87 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
         return _ids;
     }
 
-    /// @notice Gauge whether the given locked wallet and currency is locked
-    /// @param lockedWallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return true if wallet/currency pair is locked, else false
-    function isLocked(address lockedWallet, address currencyCt, uint256 currencyId)
+    /// @notice Gauge whether the given wallet is locked
+    /// @param wallet The address of the concerned wallet
+    /// @return true if wallet is locked, else false
+    function isLocked(address wallet)
     public
     view
     returns (bool)
     {
-        return (0 < walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId].length ||
-        0 < walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId].length);
+        return 0 < walletFungibleLocks[wallet].length ||
+        0 < walletNonFungibleLocks[wallet].length;
+    }
+
+    /// @notice Gauge whether the given wallet and currency is locked
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return true if wallet/currency pair is locked, else false
+    function isLocked(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool)
+    {
+        return 0 < walletCurrencyFungibleLockCount[wallet][currencyCt][currencyId] ||
+        0 < walletCurrencyNonFungibleLockCount[wallet][currencyCt][currencyId];
     }
 
     /// @notice Gauge whether the given locked wallet and currency is locked by the given locker wallet
     /// @param lockedWallet The address of the concerned locked wallet
     /// @param lockerWallet The address of the concerned locker wallet
     /// @return true if lockedWallet is locked by lockerWallet, else false
-    function isLockedBy(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId)
+    function isLocked(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bool)
     {
-        return (0 < walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][lockerWallet] ||
-        0 < walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet]);
+        return 0 < lockedCurrencyLockerFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet] ||
+        0 < lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
     }
 
     //
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _unlockFungible(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId)
+    function _unlockFungible(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId, uint256 lockIndex)
     private
     returns (int256)
     {
-        uint256 lockIndex = walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        int256 amount = walletFungibleLocks[lockedWallet][lockIndex - 1].amount;
 
-        int256 amount = walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex - 1].amount;
+        if (lockIndex < walletFungibleLocks[lockedWallet].length) {
+            walletFungibleLocks[lockedWallet][lockIndex - 1] =
+            walletFungibleLocks[lockedWallet][walletFungibleLocks[lockedWallet].length - 1];
 
-//        if (lockIndex < walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId].length) {
-//            walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex - 1] =
-//            walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId].length - 1];
-//
-//            walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId][lockIndex - 1].locker] = lockIndex;
-//        }
-        walletMap[lockedWallet].fungibleLocksMap[currencyCt][currencyId].length--;
-        walletMap[lockedWallet].fungibleLockIndexMap[currencyCt][currencyId][lockerWallet] = 0;
+            lockedCurrencyLockerFungibleLockIndex[lockedWallet][currencyCt][currencyId][walletFungibleLocks[lockedWallet][lockIndex - 1].locker] = lockIndex;
+        }
+        walletFungibleLocks[lockedWallet].length--;
+
+        lockedCurrencyLockerFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet] = 0;
+
+        walletCurrencyFungibleLockCount[lockedWallet][currencyCt][currencyId]--;
 
         return amount;
     }
 
-    function _unlockNonFungible(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId)
+    function _unlockNonFungible(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId, uint256 lockIndex)
     private
     returns (int256[])
     {
-        uint256 lockIndex = walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet];
+        int256[] memory ids = walletNonFungibleLocks[lockedWallet][lockIndex - 1].ids;
 
-        int256[] memory ids = walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1].ids;
+        if (lockIndex < walletNonFungibleLocks[lockedWallet].length) {
+            walletNonFungibleLocks[lockedWallet][lockIndex - 1] =
+            walletNonFungibleLocks[lockedWallet][walletNonFungibleLocks[lockedWallet].length - 1];
 
-        if (lockIndex < walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId].length) {
-            walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1] =
-            walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId].length - 1];
-
-            walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId][lockIndex - 1].locker] = lockIndex;
+            lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][walletNonFungibleLocks[lockedWallet][lockIndex - 1].locker] = lockIndex;
         }
-        walletMap[lockedWallet].nonFungibleLocksMap[currencyCt][currencyId].length--;
-        walletMap[lockedWallet].nonFungibleLockIndexMap[currencyCt][currencyId][lockerWallet] = 0;
+        walletNonFungibleLocks[lockedWallet].length--;
+
+        lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet] = 0;
+
+        walletCurrencyNonFungibleLockCount[lockedWallet][currencyCt][currencyId]--;
 
         return ids;
     }
