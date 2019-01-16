@@ -31,7 +31,6 @@ contract MockedNullSettlementChallenge {
     bytes32 public _disqualificationCandidateHash;
     address public _disqualificationChallenger;
     NullSettlementDispute public _nullSettlementDispute;
-    bool _lockedWallet;
     uint256 _disqualificationsCount;
 
     function _reset()
@@ -47,7 +46,6 @@ contract MockedNullSettlementChallenge {
         delete _disqualificationCandidateType;
         delete _disqualificationCandidateHash;
         delete _disqualificationChallenger;
-        delete _lockedWallet;
         delete _disqualificationsCount;
 
         _proposalStageAmounts.length = 0;
@@ -238,20 +236,6 @@ contract MockedNullSettlementChallenge {
     returns (uint256)
     {
         return _disqualificationsCount;
-    }
-
-    function lockWallet(address)
-    public
-    {
-        _lockedWallet = true;
-    }
-
-    function isLockedWallet(address)
-    public
-    view
-    returns (bool)
-    {
-        return _lockedWallet;
     }
 
     function _setDisqualificationsCount(uint256 count)

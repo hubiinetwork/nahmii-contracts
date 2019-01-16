@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Challenge} from "./Challenge.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDispute} from "./NullSettlementDispute.sol";
@@ -22,7 +23,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
  * @title NullSettlementChallenge
  * @notice Where null settlements are started and challenged
  */
-contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
+contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -35,10 +36,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
 
     address[] public challengeWallets;
     mapping(address => bool) challengeByWallets;
-
-    address[] public lockedWallets;
-    mapping(address => bool) public lockedByWallet;
-    mapping(address => uint) public unlockTimeByWallet;
 
     SettlementTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
@@ -90,16 +87,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
         return challengeWallets.length;
     }
 
-    /// @notice Get the number of locked wallets, i.e. wallets whose null settlement challenge has disqualified
-    /// @return The number of locked wallets
-    function lockedWalletsCount()
-    public
-    view
-    returns (uint256)
-    {
-        return lockedWallets.length;
-    }
-
     /// @notice Get the number of proposals
     /// @return The number of proposals
     function proposalsCount()
@@ -127,8 +114,8 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
     function startChallenge(int256 amount, address currencyCt, uint256 currencyId)
     public
     {
-        // Require that wallet is not temporarily disqualified
-        require(!isLockedWallet(msg.sender));
+        // Require that wallet is not locked
+        require(!walletLocker.isLocked(msg.sender));
 
         // Start challenge for wallet
         _startChallenge(msg.sender, amount, currencyCt, currencyId, true);
@@ -387,32 +374,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable {
     returns (uint256)
     {
         return candidateHashes.length;
-    }
-
-    /// @notice Disqualify the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The address of the concerned wallet
-    function lockWallet(address wallet)
-    public
-    onlyNullSettlementDispute
-    {
-        if (0 == unlockTimeByWallet[wallet]) {
-            lockedWallets.push(wallet);
-            lockedByWallet[wallet] = true;
-        }
-
-        unlockTimeByWallet[wallet] = block.timestamp.add(configuration.walletLockTimeout());
-    }
-
-    /// @notice Gauge whether the wallet is (temporarily) locked
-    /// @param wallet The address of the concerned wallet
-    /// @return true if wallet is locked, else false
-    function isLockedWallet(address wallet)
-    public
-    view
-    returns (bool)
-    {
-        return block.timestamp < unlockTimeByWallet[wallet];
     }
 
     /// @notice Add a disqualification instance
