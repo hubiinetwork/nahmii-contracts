@@ -11,6 +11,7 @@ const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
+const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 const MockedDriipSettlementChallenge = artifacts.require('MockedDriipSettlementChallenge');
 const MockedCommunityVote = artifacts.require('MockedCommunityVote');
 const MockedValidator = artifacts.require('MockedValidator');
@@ -31,6 +32,7 @@ module.exports = (glob) => {
         let web3RevenueFund, ethersRevenueFund;
         let web3CommunityVote, ethersCommunityVote;
         let web3FraudChallenge, ethersFraudChallenge;
+        let web3WalletLocker, ethersWalletLocker;
         let web3DriipSettlementChallenge, ethersDriipSettlementChallenge;
         let web3Validator, ethersValidator;
 
@@ -49,6 +51,8 @@ module.exports = (glob) => {
             ethersCommunityVote = new Contract(web3CommunityVote.address, MockedCommunityVote.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
+            web3WalletLocker = await MockedWalletLocker.new();
+            ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
             web3DriipSettlementChallenge = await MockedDriipSettlementChallenge.new();
             ethersDriipSettlementChallenge = new Contract(web3DriipSettlementChallenge.address, MockedDriipSettlementChallenge.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
@@ -67,6 +71,7 @@ module.exports = (glob) => {
             await ethersDriipSettlement.setClientFund(web3ClientFund.address);
             await ethersDriipSettlement.setCommunityVote(web3CommunityVote.address);
             await ethersDriipSettlement.setFraudChallenge(web3FraudChallenge.address);
+            await ethersDriipSettlement.setWalletLocker(web3WalletLocker.address);
             await ethersDriipSettlement.setDriipSettlementChallenge(web3DriipSettlementChallenge.address);
             await ethersDriipSettlement.setTradesRevenueFund(web3RevenueFund.address);
             await ethersDriipSettlement.setPaymentsRevenueFund(web3RevenueFund.address);
@@ -531,6 +536,7 @@ module.exports = (glob) => {
                 await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
                 await ethersFraudChallenge._reset({gasLimit: 1e6});
+                await ethersWalletLocker._reset({gasLimit: 1e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
@@ -580,7 +586,7 @@ module.exports = (glob) => {
 
             describe('if wallet is locked', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                    await ethersWalletLocker._setLocked(true);
                 });
 
                 it('should revert', async () => {
@@ -798,6 +804,7 @@ module.exports = (glob) => {
                 await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
                 await ethersFraudChallenge._reset({gasLimit: 1e6});
+                await ethersWalletLocker._reset({gasLimit: 1e6});
 
                 trade = await mocks.mockTrade(glob.owner);
 
@@ -857,7 +864,7 @@ module.exports = (glob) => {
 
             describe('if wallet is locked', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                    await ethersWalletLocker._setLocked(true);
                 });
 
                 it('should revert', async () => {
@@ -1073,6 +1080,7 @@ module.exports = (glob) => {
                 await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
                 await ethersFraudChallenge._reset({gasLimit: 1e6});
+                await ethersWalletLocker._reset({gasLimit: 1e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
@@ -1122,7 +1130,7 @@ module.exports = (glob) => {
 
             describe('if wallet is locked', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                    await ethersWalletLocker._setLocked(true);
                 });
 
                 it('should revert', async () => {
@@ -1306,6 +1314,7 @@ module.exports = (glob) => {
                 await ethersValidator._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallenge._reset({gasLimit: 1e6});
                 await ethersFraudChallenge._reset({gasLimit: 1e6});
+                await ethersWalletLocker._reset({gasLimit: 1e6});
 
                 payment = await mocks.mockPayment(glob.owner);
 
@@ -1365,7 +1374,7 @@ module.exports = (glob) => {
 
             describe('if wallet is locked', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.lockWallet(glob.owner);
+                    await ethersWalletLocker._setLocked(true);
                 });
 
                 it('should revert', async () => {
