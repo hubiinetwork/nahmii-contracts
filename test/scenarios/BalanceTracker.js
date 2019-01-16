@@ -3,7 +3,7 @@ const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Contract, utils} = require('ethers');
-const cryptography = require('omphalos-commons').util.cryptography;
+const {util: {cryptography}} = require('omphalos-commons');
 const {address0} = require('../mocks');
 const BalanceTracker = artifacts.require('BalanceTracker');
 

@@ -1,6 +1,6 @@
 const chai = require('chai');
 const {Wallet, utils} = require('ethers');
-const cryptography = require('omphalos-commons').util.cryptography;
+const {util: {cryptography}} = require('omphalos-commons');
 const mocks = require('../mocks');
 const Hasher = artifacts.require('Hasher');
 const Configuration = artifacts.require('Configuration');
