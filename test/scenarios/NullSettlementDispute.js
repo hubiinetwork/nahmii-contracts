@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe('NullSettlementDispute', () => {
+    describe.only('NullSettlementDispute', () => {
         let web3NullSettlementDispute, ethersNullSettlementDispute;
         let web3SignerManager;
         let web3NullSettlementChallenge, ethersNullSettlementChallenge;

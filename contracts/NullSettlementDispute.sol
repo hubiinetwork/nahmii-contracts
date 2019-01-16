@@ -112,9 +112,6 @@ FraudChallengable, CancelOrdersChallengable {
             order.wallet, currency.ct, currency.id, SettlementTypesLib.Status.Disqualified
         );
 
-        // Lock wallet
-        nullSettlementChallenge.lockWallet(order.wallet);
-
         // Add disqualification
         nullSettlementChallenge.addDisqualification(
             order.wallet, currency.ct, currency.id, order.seals.operator.hash,
@@ -191,9 +188,6 @@ FraudChallengable, CancelOrdersChallengable {
             wallet, currency.ct, currency.id, SettlementTypesLib.Status.Disqualified
         );
 
-        // Lock wallet
-        nullSettlementChallenge.lockWallet(wallet);
-
         // Add disqualification
         nullSettlementChallenge.addDisqualification(
             wallet, currency.ct, currency.id, trade.seal.hash,
@@ -252,9 +246,6 @@ FraudChallengable, CancelOrdersChallengable {
         nullSettlementChallenge.setProposalStatus(
             wallet, payment.currency.ct, payment.currency.id, SettlementTypesLib.Status.Disqualified
         );
-
-        // Lock wallet
-        nullSettlementChallenge.lockWallet(wallet);
 
         // Add disqualification
         nullSettlementChallenge.addDisqualification(
