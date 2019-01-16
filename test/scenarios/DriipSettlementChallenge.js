@@ -10,6 +10,7 @@ const SignerManager = artifacts.require('SignerManager');
 const MockedDriipSettlementDispute = artifacts.require('MockedDriipSettlementDispute');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
+const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
@@ -26,6 +27,7 @@ module.exports = (glob) => {
         let web3DriipSettlementDispute, ethersDriipSettlementDispute;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
+        let web3WalletLocker, ethersWalletLocker;
         let web3SecurityBond, ethersSecurityBond;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
@@ -42,6 +44,8 @@ module.exports = (glob) => {
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
             ethersValidator = new Contract(web3Validator.address, MockedValidator.abi, glob.signer_owner);
+            web3WalletLocker = await MockedWalletLocker.new();
+            ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
@@ -57,6 +61,7 @@ module.exports = (glob) => {
             await ethersDriipSettlementChallenge.setConfiguration(ethersConfiguration.address);
             await ethersDriipSettlementChallenge.setValidator(ethersValidator.address);
             await ethersDriipSettlementChallenge.setDriipSettlementDispute(ethersDriipSettlementDispute.address);
+            await ethersDriipSettlementChallenge.setWalletLocker(ethersWalletLocker.address);
 
             await ethersConfiguration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 1e4);
             await ethersConfiguration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 60 * 60 * 24 * 30);
@@ -194,13 +199,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('lockedWalletsCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersDriipSettlementChallenge.lockedWalletsCount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
         describe('proposalsCount()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.proposalsCount())
@@ -250,15 +248,14 @@ module.exports = (glob) => {
 
             beforeEach(async () => {
                 await ethersValidator._reset({gasLimit: 4e6});
+                await ethersWalletLocker._reset();
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
             });
 
-            describe('if wallet has previous disqualified driip settlement challenge', () => {
+            describe('if wallet is locked', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-
-                    await web3DriipSettlementChallenge.lockWallet(glob.owner);
+                    await web3WalletLocker._setLocked(true);
                 });
 
                 it('should revert', async () => {
@@ -572,15 +569,14 @@ module.exports = (glob) => {
 
             beforeEach(async () => {
                 await ethersValidator._reset({gasLimit: 4e6});
+                await ethersWalletLocker._reset();
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
             });
 
-            describe('if wallet has previous disqualified driip settlement challenge', () => {
+            describe('if wallet is locked', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-
-                    await web3DriipSettlementChallenge.lockWallet(glob.owner);
+                    await web3WalletLocker._setLocked(true);
                 });
 
                 it('should revert', async () => {
@@ -1306,65 +1302,6 @@ module.exports = (glob) => {
         describe('candidateHashesCount()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlementChallenge.candidateHashesCount())._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('lockWallet()', () => {
-            describe('if called from other than settlement dispute', () => {
-                it('should revert', async () => {
-                    web3DriipSettlementChallenge.lockWallet(glob.user_a)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called from settlement dispute', () => {
-                beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-                });
-
-                it('should successfully push the array element', async () => {
-                    await ethersDriipSettlementChallenge.lockWallet(glob.user_a, {gasLimit: 1e6});
-
-                    (await ethersDriipSettlementChallenge.lockedByWallet(glob.user_a))
-                        .should.be.true;
-                });
-            });
-        });
-
-        describe('isLockedWallet()', () => {
-            beforeEach(async () => {
-                await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-            });
-
-            describe('if called on unlocked wallet', () => {
-                it('should return false', async () => {
-                    (await web3DriipSettlementChallenge.isLockedWallet(glob.user_a))
-                        .should.be.false;
-                });
-            });
-
-            describe('if called before lock timeout', () => {
-                beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.lockWallet(glob.user_a, {gasLimit: 1e6});
-                });
-
-                it('should successfully push the array element', async () => {
-                    (await ethersDriipSettlementChallenge.isLockedWallet(glob.user_a))
-                        .should.be.true;
-                });
-            });
-
-            describe('if called after lock timeout', () => {
-                beforeEach(async () => {
-                    await ethersConfiguration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 0);
-
-                    await ethersDriipSettlementChallenge.lockWallet(glob.user_a, {gasLimit: 1e6});
-                });
-
-                it('should successfully push the array element', async () => {
-                    (await ethersDriipSettlementChallenge.isLockedWallet(glob.user_a))
-                        .should.be.false;
-                });
             });
         });
 

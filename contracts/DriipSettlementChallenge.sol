@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
@@ -23,7 +24,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
  * @title DriipSettlementChallenge
  * @notice Where driip settlements are started and challenged
  */
-contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
+contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -34,10 +35,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
 
     address[] public challengeWallets;
     mapping(address => bool) challengeByWallets;
-
-    address[] public lockedWallets;
-    mapping(address => bool) public lockedByWallet;
-    mapping(address => uint) public unlockTimeByWallet;
 
     SettlementTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
@@ -96,16 +93,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     returns (uint256)
     {
         return challengeWallets.length;
-    }
-
-    /// @notice Get the number of locked wallets, i.e. wallets whose driip settlement challenge has disqualified
-    /// @return The number of locked wallets
-    function lockedWalletsCount()
-    public
-    view
-    returns (uint256)
-    {
-        return lockedWallets.length;
     }
 
     /// @notice Get the number of proposals
@@ -179,7 +166,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     public
     {
         // Require that wallet is not temporarily disqualified
-        require(!isLockedWallet(msg.sender));
+        require(!walletLocker.isLocked(msg.sender));
 
         // Start challenge
         _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
@@ -212,7 +199,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     public
     {
         // Require that wallet is not temporarily disqualified
-        require(!isLockedWallet(msg.sender));
+        require(!walletLocker.isLocked(msg.sender));
 
         // Start challenge for wallet
         _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
@@ -530,32 +517,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable {
     returns (uint256)
     {
         return candidateHashes.length;
-    }
-
-    /// @notice Disqualify the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The address of the concerned wallet
-    function lockWallet(address wallet)
-    public
-    onlyDriipSettlementDispute
-    {
-        if (0 == unlockTimeByWallet[wallet]) {
-            lockedWallets.push(wallet);
-            lockedByWallet[wallet] = true;
-        }
-
-        unlockTimeByWallet[wallet] = block.timestamp.add(configuration.walletLockTimeout());
-    }
-
-    /// @notice Gauge whether the wallet is (temporarily) locked
-    /// @param wallet The address of the concerned wallet
-    /// @return true if wallet is locked, else false
-    function isLockedWallet(address wallet)
-    public
-    view
-    returns (bool)
-    {
-        return block.timestamp < unlockTimeByWallet[wallet];
     }
 
     /// @notice Add a disqualification instance
