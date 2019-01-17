@@ -1,6 +1,6 @@
 const {Wallet, utils} = require('ethers');
 const ethutil = require('ethereumjs-util');
-const cryptography = require('omphalos-commons').util.cryptography;
+const {util: {cryptography}} = require('omphalos-commons');
 
 exports.liquidityRoles = ['Maker', 'Taker'];
 exports.intentions = ['Buy', 'Sell'];
@@ -10,6 +10,7 @@ exports.challengePhases = ['Dispute', 'Closed'];
 exports.settlementStatuses = ['Qualified', 'Disqualified'];
 exports.candidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
+exports.hash0 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 exports.address0 = '0x0000000000000000000000000000000000000000';
 
 let globalNonce = 1;

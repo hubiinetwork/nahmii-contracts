@@ -362,7 +362,7 @@ module.exports = (glob) => {
 
             describe('if called on order whose block number is smaller than the proposal block number', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge._setProposalBlockNumber(
+                    await ethersDriipSettlementChallenge.setProposalBlockNumber(
                         order.blockNumber.add(10)
                     );
                 });
@@ -405,8 +405,10 @@ module.exports = (glob) => {
 
                         (await ethersDriipSettlementChallenge._proposalStatus())
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        (await ethersDriipSettlementChallenge.disqualificationsCount())
-                            ._bn.should.eq.BN(1);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationChallenger())
+                            .should.not.equal(mocks.address0);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationCandidateType())
+                            .should.equal(mocks.candidateTypes.indexOf('Order'));
                         (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
@@ -463,10 +465,10 @@ module.exports = (glob) => {
                 await web3DriipSettlementChallenge.setProposalStatus(
                     glob.user_a, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                 );
-                await web3DriipSettlementChallenge._setDisqualificationCandidateType(
+                await web3DriipSettlementChallenge._setProposalDisqualificationCandidateType(
                     mocks.candidateTypes.indexOf('Order')
                 );
-                await web3DriipSettlementChallenge._setDisqualificationCandidateHash(
+                await web3DriipSettlementChallenge._setProposalDisqualificationCandidateHash(
                     order.seals.operator.hash, {gasLimit: 1e6}
                 );
             });
@@ -556,7 +558,7 @@ module.exports = (glob) => {
 
             describe('if called on driip settlement challenge whose disqualification candidate type is not order', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setDisqualificationCandidateType(
+                    await web3DriipSettlementChallenge._setProposalDisqualificationCandidateType(
                         mocks.candidateTypes.indexOf('Trade')
                     );
                 });
@@ -597,7 +599,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     candidateOrder = await mocks.mockOrder(glob.owner);
-                    await ethersDriipSettlementChallenge._setDisqualificationCandidateHash(
+                    await ethersDriipSettlementChallenge._setProposalDisqualificationCandidateHash(
                         candidateOrder.seals.operator.hash, {gasLimit: 1e6}
                     );
                 });
@@ -791,7 +793,7 @@ module.exports = (glob) => {
 
             describe('if called on trade whose block number is lower than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge._setProposalBlockNumber(
+                    await ethersDriipSettlementChallenge.setProposalBlockNumber(
                         trade.blockNumber.add(10)
                     );
                 });
@@ -838,8 +840,10 @@ module.exports = (glob) => {
 
                         (await ethersDriipSettlementChallenge._proposalStatus())
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        (await ethersDriipSettlementChallenge.disqualificationsCount())
-                            ._bn.should.eq.BN(1);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationChallenger())
+                            .should.not.equal(mocks.address0);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationCandidateType())
+                            .should.equal(mocks.candidateTypes.indexOf('Trade'));
                         (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
@@ -856,8 +860,8 @@ module.exports = (glob) => {
 
                         (await ethersDriipSettlementChallenge._proposalStatus())
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        (await ethersDriipSettlementChallenge.disqualificationsCount())
-                            ._bn.should.eq.BN(1);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationChallenger())
+                            .should.not.equal(mocks.address0);
                         (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
@@ -960,7 +964,7 @@ module.exports = (glob) => {
 
             describe('if called on payment whose block number is lower than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge._setProposalBlockNumber(
+                    await ethersDriipSettlementChallenge.setProposalBlockNumber(
                         payment.blockNumber.add(10)
                     );
                 });
@@ -1009,8 +1013,10 @@ module.exports = (glob) => {
 
                         (await ethersDriipSettlementChallenge._proposalStatus())
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        (await ethersDriipSettlementChallenge.disqualificationsCount())
-                            ._bn.should.eq.BN(1);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationChallenger())
+                            .should.not.equal(mocks.address0);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationCandidateType())
+                            .should.equal(mocks.candidateTypes.indexOf('Payment'));
                         (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
@@ -1028,8 +1034,10 @@ module.exports = (glob) => {
 
                         (await ethersDriipSettlementChallenge._proposalStatus())
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        (await ethersDriipSettlementChallenge.disqualificationsCount())
-                            ._bn.should.eq.BN(1);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationChallenger())
+                            .should.not.equal(mocks.address0);
+                        (await ethersDriipSettlementChallenge._proposalDisqualificationCandidateType())
+                            .should.equal(mocks.candidateTypes.indexOf('Payment'));
                         (await ethersWalletLocker.lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())

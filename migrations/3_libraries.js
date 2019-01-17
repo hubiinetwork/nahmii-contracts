@@ -70,7 +70,7 @@ module.exports = (deployer, network, accounts) => {
                     BlockNumbDisdIntsLib
                 ]);
                 await deployer.link(MonetaryTypesLib, [
-                    BlockNumbCurrenciesLib, CurrenciesLib, NahmiiTypesLib
+                    BlockNumbCurrenciesLib, CurrenciesLib, NahmiiTypesLib, SettlementTypesLib
                 ]);
                 await deployer.link(SafeMathIntLib, [
                     FungibleBalanceLib, BlockNumbDisdIntsLib, NonFungibleBalanceLib
