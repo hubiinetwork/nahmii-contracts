@@ -321,7 +321,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 let topic, filter;
 
-                beforeEach( async () => {
+                beforeEach(async () => {
                     topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeEvent'].topics[0];
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
@@ -485,7 +485,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 let topic, filter;
 
-                beforeEach( async () => {
+                beforeEach(async () => {
                     topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromTradeByProxyEvent'].topics[0];
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
@@ -638,7 +638,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 let topic, filter;
 
-                beforeEach( async () => {
+                beforeEach(async () => {
                     topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentEvent'].topics[0];
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
@@ -767,7 +767,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 let topic, filter;
 
-                beforeEach( async () => {
+                beforeEach(async () => {
                     topic = ethersDriipSettlementChallenge.interface.events['StartChallengeFromPaymentByProxyEvent'].topics[0];
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
@@ -1278,17 +1278,21 @@ module.exports = (glob) => {
         });
 
         describe('disqualifyProposal()', () => {
-            let payment;
+            let challengedPayment, candidatePayment;
 
             beforeEach(async () => {
-                payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+                challengedPayment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+
+                candidatePayment = await mocks.mockPayment(
+                    glob.owner, {sender: {wallet: glob.owner}, blockNumber: challengedPayment.blockNumber.add(1)}
+                );
             });
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.disqualifyProposal(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, glob.user_a,
-                        payment.blockNumber, payment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
+                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
                         {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
@@ -1301,8 +1305,26 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.disqualifyProposal(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, glob.user_a,
-                        payment.blockNumber, payment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
+                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if candidate block number is not strictly greater than proposal block number', () => {
+                beforeEach(async () => {
+                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
+
+                    await ethersDriipSettlementChallenge.startChallengeFromPayment(
+                        challengedPayment, challengedPayment.sender.balances.current, {gasLimit: 3e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.disqualifyProposal(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
+                        challengedPayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
                         {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
@@ -1313,40 +1335,51 @@ module.exports = (glob) => {
                     await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
 
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 3e6}
+                        challengedPayment, challengedPayment.sender.balances.current, {gasLimit: 3e6}
                     );
                 });
 
                 it('should successfully push the array element', async () => {
                     await ethersDriipSettlementChallenge.disqualifyProposal(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, glob.user_a,
-                        payment.blockNumber, payment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
+                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
                         {gasLimit: 3e6}
                     );
 
-                    (await ethersDriipSettlementChallenge.proposalDisqualificationChallenger())
-                        .should.equal(utils.getAddress(glob.user_a));
-                    (await ethersDriipSettlementChallenge.proposalDisqualificationBlockNumber())
-                        ._bn.should.eq.BN(payment.blockNumber);
-                    (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateHash())
-                        .should.equal(payment.seals.operator.hash);
-                    (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateType())
-                        .should.equal(mocks.candidateTypes.indexOf('Payment'));
+                    (await ethersDriipSettlementChallenge.proposalStatus(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    )).should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+                    (await ethersDriipSettlementChallenge.proposalDisqualificationChallenger(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    )).should.equal(utils.getAddress(glob.user_a));
+                    (await ethersDriipSettlementChallenge.proposalDisqualificationBlockNumber(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    ))._bn.should.eq.BN(candidatePayment.blockNumber._bn);
+                    (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateHash(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    )).should.equal(candidatePayment.seals.operator.hash);
+                    (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateType(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    )).should.equal(mocks.candidateTypes.indexOf('Payment'));
                 });
             });
         });
 
         describe('qualifyProposal()', () => {
-            let payment;
+            let challengedPayment, candidatePayment;
 
             beforeEach(async () => {
-                payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+                challengedPayment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+
+                candidatePayment = await mocks.mockPayment(
+                    glob.owner, {sender: {wallet: glob.owner}, blockNumber: challengedPayment.blockNumber.add(1)}
+                );
             });
 
             describe('if called from other than settlement dispute', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.qualifyProposal(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, {gasLimit: 3e6}
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -1358,7 +1391,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.qualifyProposal(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, {gasLimit: 3e6}
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -1368,29 +1401,36 @@ module.exports = (glob) => {
                     await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
 
                     await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 3e6}
+                        challengedPayment, challengedPayment.sender.balances.current, {gasLimit: 3e6}
                     );
 
                     await ethersDriipSettlementChallenge.disqualifyProposal(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, glob.user_a,
-                        payment.blockNumber, payment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
+                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
                         {gasLimit: 3e6}
                     );
                 });
 
                 it('should successfully push the array element', async () => {
                     await ethersDriipSettlementChallenge.qualifyProposal(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, {gasLimit: 3e6}
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, {gasLimit: 3e6}
                     );
 
-                    (await ethersDriipSettlementChallenge.proposalDisqualificationChallenger())
-                        .should.equal(mocks.address0);
-                    (await ethersDriipSettlementChallenge.proposalDisqualificationBlockNumber())
-                        ._bn.should.eq.BN(0);
-                    (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateHash())
-                        .should.equal(mocks.hash0);
-                    (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateType())
-                        .should.equal(mocks.candidateTypes.indexOf('None'));
+                    (await ethersDriipSettlementChallenge.proposalStatus(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    )).should.equal(mocks.settlementStatuses.indexOf('Qualified'));
+                    (await ethersDriipSettlementChallenge.proposalDisqualificationChallenger(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    )).should.equal(mocks.address0);
+                    (await ethersDriipSettlementChallenge.proposalDisqualificationBlockNumber(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    ))._bn.should.eq.BN(0);
+                    (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateHash(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    )).should.equal(mocks.hash0);
+                    (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateType(
+                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
+                    )).should.equal(mocks.candidateTypes.indexOf('None'));
                 });
             });
         });
@@ -1457,12 +1497,6 @@ module.exports = (glob) => {
 
                 (await ethersDriipSettlementDispute._challengeByPaymentCount())
                     ._bn.should.eq.BN(1);
-            });
-        });
-
-        describe('candidateHashesCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersDriipSettlementChallenge.candidateHashesCount())._bn.should.eq.BN(0);
             });
         });
     });
