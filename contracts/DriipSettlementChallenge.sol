@@ -46,8 +46,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     bytes32[] public challengePaymentHashes;
     mapping(address => uint256[]) public challengePaymentHashIndicesByWallet;
 
-    bytes32[] public candidateHashes;
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -505,10 +503,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         proposals[index - 1].disqualification.candidateHash = candidateHash;
         proposals[index - 1].disqualification.candidateType = candidateType;
 
-        // Store candidate hash
-        // TODO Consider the need for candidateHashes
-        candidateHashes.push(candidateHash);
-
         // Emit event
         emit DisqualifyProposalEvent(
             challengedWallet, currencyCt, currencyId, challengerWallet, candidateHash, candidateType
@@ -581,16 +575,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     onlyOperationalModeNormal
     {
         driipSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
-    }
-
-    /// @notice Get the count of challenge candidate hashes
-    /// @return The count of challenge candidate order hashes
-    function candidateHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return candidateHashes.length;
     }
 
     //
