@@ -381,7 +381,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe.skip('if called with zero currency contract address', () => {
+            describe('if called with zero currency contract address', () => {
                 it('should revert', async () => {
                     web3ClientFund.receiveTokens('', 10, mocks.address0, 0, '', {from: glob.user_a})
                         .should.be.rejected;
@@ -434,6 +434,9 @@ module.exports = function (glob) {
                                 '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                             );
 
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(10);
+
                             (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
                                 ._bn.should.eq.BN(1);
 
@@ -460,6 +463,9 @@ module.exports = function (glob) {
                             await web3ClientFund.receiveTokens(
                                 '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                             );
+
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(20);
 
                             (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
                                 ._bn.should.eq.BN(2);
@@ -483,6 +489,9 @@ module.exports = function (glob) {
                                 'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                             );
 
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(10);
+
                             (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
                                 ._bn.should.eq.BN(1);
 
@@ -510,6 +519,9 @@ module.exports = function (glob) {
                                 'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                             );
 
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(20);
+
                             (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
                                 ._bn.should.eq.BN(2);
 
@@ -531,6 +543,9 @@ module.exports = function (glob) {
                             await web3ClientFund.receiveTokens(
                                 'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                             );
+
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(10);
 
                             (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, web3ERC20.address, 0))
                                 ._bn.should.eq.BN(0);
@@ -555,6 +570,9 @@ module.exports = function (glob) {
                             await web3ClientFund.receiveTokens(
                                 'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                             );
+
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(20);
 
                             (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, web3ERC20.address, 0))
                                 ._bn.should.eq.BN(20);
@@ -636,7 +654,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe.skip('if called with zero currency contract address', () => {
+            describe('if called with zero currency contract address', () => {
                 it('should revert', async () => {
                     web3ClientFund.receiveTokensTo(
                         glob.user_a, '', 10, mocks.address0, 0, '', {from: glob.user_a}
@@ -681,6 +699,9 @@ module.exports = function (glob) {
                                 glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                             );
 
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(10);
+
                             (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
                                 ._bn.should.eq.BN(1);
 
@@ -707,6 +728,9 @@ module.exports = function (glob) {
                             await web3ClientFund.receiveTokensTo(
                                 glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                             );
+
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(20);
 
                             (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
                                 ._bn.should.eq.BN(2);
@@ -730,6 +754,9 @@ module.exports = function (glob) {
                                 glob.user_a, 'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                             );
 
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(10);
+
                             (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
                                 ._bn.should.eq.BN(1);
 
@@ -757,6 +784,9 @@ module.exports = function (glob) {
                                 glob.user_a, 'deposited', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                             );
 
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(20);
+
                             (await ethersTransactionTracker.count(glob.user_a, depositTransactionType))
                                 ._bn.should.eq.BN(2);
 
@@ -778,6 +808,9 @@ module.exports = function (glob) {
                             await web3ClientFund.receiveTokensTo(
                                 glob.user_a, 'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                             );
+
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(10);
 
                             (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, web3ERC20.address, 0))
                                 ._bn.should.eq.BN(0);
@@ -802,6 +835,9 @@ module.exports = function (glob) {
                             await web3ClientFund.receiveTokensTo(
                                 glob.user_a, 'staged', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                             );
+
+                            (await ethersERC20.balanceOf(ethersClientFund.address))
+                                ._bn.should.eq.BN(20);
 
                             (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, web3ERC20.address, 0))
                                 ._bn.should.eq.BN(20);
@@ -1655,25 +1691,25 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if called after seizure', () => {
+            describe('if non-zero amount is locked', () => {
                 beforeEach(async () => {
                     await web3ClientFund.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedWalletLocker._setLockedBy(true);
+                    await web3MockedWalletLocker._setLockedAmount(web3.toWei(0.3, 'ether'));
                     await web3ClientFund.seizeBalances(
                         glob.user_a, mocks.address0, 0, '', {from: glob.user_b, gas: 1e6}
                     )
                 });
 
-                it('should revert', async () => {
+                it('should successfully return seized wallets', async () => {
                     (await ethersClientFund.seizedWallets(0))
                         .should.equal(utils.getAddress(glob.user_a));
                 })
             });
         });
 
-        describe.skip('withdraw()', () => {
+        describe('withdraw()', () => {
             beforeEach(async () => {
                 await web3MockedWalletLocker._reset();
             });
@@ -1780,7 +1816,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe.skip('claimRevenue', () => {
+        describe('claimRevenue', () => {
             let balanceType;
 
             beforeEach(async () => {

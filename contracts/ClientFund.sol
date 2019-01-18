@@ -360,7 +360,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         return seizedWallets.length;
     }
 
-    /// @notice Claim revenue from token holder revenue fund based this contract's holdings of the
+    /// @notice Claim revenue from token holder revenue fund based on this contract's holdings of the
     /// revenue token, this so that revenue may be shared amongst revenue token holders in nahmii
     /// @param claimer The concerned address of claimer that will subsequently distribute revenue in nahmii
     /// @param balanceType The target balance type for the reception in this contract
