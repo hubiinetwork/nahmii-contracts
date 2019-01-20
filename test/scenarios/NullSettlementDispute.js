@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('NullSettlementDispute', () => {
+    describe('NullSettlementDispute', () => {
         let web3NullSettlementDispute, ethersNullSettlementDispute;
         let web3SignerManager;
         let web3NullSettlementChallenge, ethersNullSettlementChallenge;
@@ -306,7 +306,7 @@ module.exports = (glob) => {
 
             describe('if called on order whose block number is smaller than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setProposalBlockNumber(
+                    await ethersNullSettlementChallenge.setProposalBlockNumber(
                         order.blockNumber.add(10)
                     );
                 });
@@ -355,7 +355,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersWalletLocker.lockedWalletsCount())
+                        (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
@@ -373,7 +373,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersWalletLocker.lockedWalletsCount())
+                        (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(1);
@@ -499,7 +499,7 @@ module.exports = (glob) => {
 
             describe('if called on trade whose block number is smaller than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setProposalBlockNumber(
+                    await ethersNullSettlementChallenge.setProposalBlockNumber(
                         trade.blockNumber.add(10)
                     );
                 });
@@ -550,7 +550,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersWalletLocker.lockedWalletsCount())
+                        (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
@@ -570,7 +570,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersWalletLocker.lockedWalletsCount())
+                        (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(1);
@@ -671,7 +671,7 @@ module.exports = (glob) => {
 
             describe('if called on payment whose block number is smaller than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge._setProposalBlockNumber(
+                    await ethersNullSettlementChallenge.setProposalBlockNumber(
                         payment.blockNumber.add(10)
                     );
                 });
@@ -722,7 +722,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersWalletLocker.lockedWalletsCount())
+                        (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(1);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(0);
@@ -742,7 +742,7 @@ module.exports = (glob) => {
                             .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         (await ethersNullSettlementChallenge.disqualificationsCount())
                             ._bn.should.eq.BN(1);
-                        (await ethersWalletLocker.lockedWalletsCount())
+                        (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
                         (await ethersSecurityBond._rewardsCount())
                             ._bn.should.eq.BN(1);

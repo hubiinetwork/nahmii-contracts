@@ -79,7 +79,7 @@ contract MockedNullSettlementChallenge {
         return _proposalNonce;
     }
 
-    function _setProposalBlockNumber(uint256 proposalBlockNumber)
+    function setProposalBlockNumber(uint256 proposalBlockNumber)
     public
     {
         _proposalBlockNumber = proposalBlockNumber;
@@ -164,7 +164,7 @@ contract MockedNullSettlementChallenge {
         return _proposalBalanceReward;
     }
 
-    function _setDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
+    function _setProposalDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
     public
     {
         _disqualificationCandidateType = candidateType;
@@ -178,7 +178,7 @@ contract MockedNullSettlementChallenge {
         return _disqualificationCandidateType;
     }
 
-    function _setDisqualificationCandidateHash(bytes32 candidateHash)
+    function _setProposalDisqualificationCandidateHash(bytes32 candidateHash)
     public
     {
         _disqualificationCandidateHash = candidateHash;
@@ -192,7 +192,7 @@ contract MockedNullSettlementChallenge {
         return _disqualificationCandidateHash;
     }
 
-    function _setDisqualificationChallenger(address challenger)
+    function _setProposalDisqualificationChallenger(address challenger)
     public
     {
         _disqualificationChallenger = challenger;
@@ -228,20 +228,6 @@ contract MockedNullSettlementChallenge {
     public
     {
         _nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
-    }
-
-    function disqualificationsCount()
-    public
-    view
-    returns (uint256)
-    {
-        return _disqualificationsCount;
-    }
-
-    function _setDisqualificationsCount(uint256 count)
-    public
-    {
-        _disqualificationsCount = count;
     }
 
     function addDisqualification(address, address, uint256, bytes32,

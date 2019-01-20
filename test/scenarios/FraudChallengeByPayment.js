@@ -432,7 +432,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker._lockedWalletsCount(),
                         ethersWalletLocker.locks(0),
                         provider.getLogs(filter)
                     ]);
@@ -457,7 +457,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker._lockedWalletsCount(),
                         ethersWalletLocker.locks(0),
                         provider.getLogs(filter)
                     ]);
@@ -482,7 +482,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker._lockedWalletsCount(),
                         ethersWalletLocker.locks(0),
                         provider.getLogs(filter)
                     ]);

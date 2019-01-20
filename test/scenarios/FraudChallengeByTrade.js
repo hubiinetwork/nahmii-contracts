@@ -356,7 +356,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker._lockedWalletsCount(),
                         ethersWalletLocker.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
@@ -383,7 +383,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker._lockedWalletsCount(),
                         ethersWalletLocker.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
@@ -407,7 +407,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker._lockedWalletsCount(),
                         ethersWalletLocker.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
@@ -431,7 +431,7 @@ module.exports = (glob) => {
                     const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
                         ethersConfiguration.isOperationalModeExit(),
                         ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker.lockedWalletsCount(),
+                        ethersWalletLocker._lockedWalletsCount(),
                         ethersWalletLocker.locks(utils.bigNumberify(0)),
                         provider.getLogs(filter)
                     ]);
