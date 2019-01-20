@@ -358,24 +358,6 @@ module.exports = (deployer, network, accounts) => {
             await instance.authorizeInitialService(addressStorage.get('DriipSettlement'));
             await instance.registerService(addressStorage.get('NullSettlement'));
             await instance.authorizeInitialService(addressStorage.get('NullSettlement'));
-            // await instance.registerService(addressStorage.get('DriipSettlementDispute'));
-            // await instance.authorizeInitialService(addressStorage.get('DriipSettlementDispute'));
-            // await instance.registerService(addressStorage.get('NullSettlementDispute'));
-            // await instance.authorizeInitialService(addressStorage.get('NullSettlementDispute'));
-            // await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
-            // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
-            // await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
-            // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByPayment'));
-            // await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
-            // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
-            // await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
-            // await instance.authorizeInitialService(addressStorage.get('FraudChallengeBySuccessivePayments'));
-            // await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
-            // await instance.authorizeInitialService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
-            // await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
-            // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTrade'));
-            // await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
-            // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
             // await instance.disableInitialServiceAuthorization();
 
             instance = await CancelOrdersChallenge.at(addressStorage.get('CancelOrdersChallenge'));
