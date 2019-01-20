@@ -244,7 +244,7 @@ contract MockedDriipSettlementChallenge {
         bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType)
     public
     {
-        _proposalStatus = SettlementTypesLib.Status.Qualified;
+        _proposalStatus = SettlementTypesLib.Status.Disqualified;
         //        _proposalExpirationTime = 0;
         _proposalDisqualificationChallenger = challenger;
         _proposalDisqualificationBlockNumber = blockNumber;
