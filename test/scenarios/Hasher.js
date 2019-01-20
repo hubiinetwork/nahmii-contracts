@@ -1,5 +1,6 @@
 const chai = require('chai');
 const mocks = require('../mocks');
+const {Contract} = require('ethers');
 const Hasher = artifacts.require('Hasher');
 
 chai.should();

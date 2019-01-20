@@ -1,5 +1,5 @@
 const chai = require('chai');
-const {Wallet, utils} = require('ethers');
+const {Wallet, utils, Contract} = require('ethers');
 const {util: {cryptography}} = require('omphalos-commons');
 const mocks = require('../mocks');
 const Hasher = artifacts.require('Hasher');
