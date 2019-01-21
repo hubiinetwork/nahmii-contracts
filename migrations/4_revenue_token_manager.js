@@ -59,7 +59,6 @@ module.exports = (deployer, network, accounts) => {
 
                 instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
                 await instance.transfer(addressStorage.get('RevenueTokenManager'), 120e24);
-                // await instance.disableMinting();
 
                 while (0 == (await instance.balanceOf(addressStorage.get('RevenueTokenManager'))).toNumber()) {
                     console.log(`Waiting 60s token transfer to be mined`);
@@ -71,14 +70,16 @@ module.exports = (deployer, network, accounts) => {
                     await instance.setToken(addressStorage.get('NahmiiToken'));
                     await instance.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
 
+                    const releases = airdriipReleases();
+
                     const earliestReleaseTimes = [];
                     const amounts = [];
                     const blockNumbers = [];
-                    airdriipReleases().forEach((d) => {
-                        earliestReleaseTimes.push(d.earliestReleaseTime);
-                        amounts.push(d.amount);
-                        if (d.blockNumber)
-                            blockNumbers.push(d.blockNumber);
+                    releases.forEach((r) => {
+                        earliestReleaseTimes.push(r.earliestReleaseTime);
+                        amounts.push(r.amount);
+                        if (r.blockNumber)
+                            blockNumbers.push(r.blockNumber);
                     });
 
                     let result = await instance.defineReleases(
@@ -108,6 +109,11 @@ module.exports = (deployer, network, accounts) => {
                         console.log(`Waiting 60s for second batch of releases to be mined...`);
                         await helpers.sleep(60000);
                     }
+
+                    console.log(`Releases:`);
+                    releases.forEach((r) => {
+                        console.log(`  ${moment.unix(r.earliestReleaseTime)} - ${r.blockNumber ? r.blockNumber : ''}`);
+                    });
 
                     const firstRelease = await instance.releases(0);
                     console.log(`First release of ${firstRelease[1].toString()} at ${new Date(1000 * firstRelease[0].toNumber())} with block number ${firstRelease[2].toNumber()}`);
@@ -171,14 +177,21 @@ function shouldDeploy(contractName, deployFilters) {
 
 function airdriipReleases() {
     let date = new moment('1 Dec 2018 00:00:00 UT');
-    const releases = [{
-        earliestReleaseTime: moment(date).subtract(1, 'hour').unix(),
-        amount: 1e24,
-        blockNumber: 6803256
-    }];
-    for (let i = 1; i < 120; i++) {
+
+    const releases = [];
+    const blockNumbers = [6803256, 6988615];
+    for (let i = 0; i < 120; i++) {
+        const release = {
+            earliestReleaseTime: moment(date).subtract(1, 'hour').unix(),
+            amount: 1e24
+        };
+
+        if (blockNumbers[i])
+            release.blockNumber = blockNumbers[i];
+
+        releases.push(release);
+
         date = moment(date).add(1, 'month');
-        releases.push({earliestReleaseTime: moment(date).subtract(1, 'hour').unix(), amount: 1e24});
     }
     return releases;
 }

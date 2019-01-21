@@ -78,6 +78,10 @@ require('../scripts/common/promisify_web3.js')(web3);
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = (deployer, network, accounts) => {
+
+    if (network.startsWith('mainnet'))
+        return;
+
     deployer.then(async () => {
         let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
         let ownerAccount;
