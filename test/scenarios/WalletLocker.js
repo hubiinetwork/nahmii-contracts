@@ -2,7 +2,7 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
-const {Contract} = require('ethers');
+const {Contract, Wallet} = require('ethers');
 const {address0} = require('../mocks');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const WalletLocker = artifacts.require('WalletLocker');
@@ -43,17 +43,33 @@ module.exports = function (glob) {
             });
         });
 
-        describe('isLocked()', () => {
+        describe('isLocked(address)', () => {
             it('should equal value initialized', async () => {
-                (await web3WalletLocker.isLocked(glob.user_a, address0, 0))
+                (await ethersWalletLocker['isLocked(address)'](glob.user_a))
                     .should.be.false;
+                // Alternative:
+                // (await web3WalletLocker.isLocked.call(glob.user_a))
+                //     .should.be.false;
             });
         });
 
-        describe('isLockedBy()', () => {
+        describe('isLocked(address,address,uint256)', () => {
             it('should equal value initialized', async () => {
-                (await web3WalletLocker.isLockedBy(glob.user_a, glob.user_b, address0, 0))
+                (await ethersWalletLocker['isLocked(address,address,uint256)'](glob.user_a, address0, 0))
                     .should.be.false;
+                // Alternative:
+                // (await web3WalletLocker.contract.isLocked['address,address,uint256'].call(glob.user_a, address0, 0))
+                //     .should.be.false;
+            });
+        });
+
+        describe('isLocked(address,address,address,uint256)', () => {
+            it('should equal value initialized', async () => {
+                (await ethersWalletLocker['isLocked(address,address,address,uint256)'](glob.user_a, glob.user_b, address0, 0))
+                    .should.be.false;
+                // Alternative:
+                // (await web3WalletLocker.contract.isLocked['address,address,address,uint256'].call(glob.user_a, glob.user_b, address0, 0))
+                //     .should.be.false;
             });
         });
 
@@ -79,14 +95,6 @@ module.exports = function (glob) {
         });
 
         describe('lockFungibleByProxy()', () => {
-            describe.skip('if called with zero locked address', () => {
-                it('should revert', async () => {
-                    await web3WalletLocker.lockFungibleByProxy(
-                        address0, glob.user_c, 10, address0, 0, {from: glob.user_a}
-                    ).should.be.rejected;
-                });
-            });
-
             describe('if called by unregistered service', () => {
                 it('should revert', async () => {
                     await web3WalletLocker.lockFungibleByProxy(
@@ -105,13 +113,18 @@ module.exports = function (glob) {
 
             describe('if within operational constraints', () => {
                 it('should successfully lock', async () => {
-                    await web3WalletLocker.lockFungibleByProxy(
+                    const result = await web3WalletLocker.lockFungibleByProxy(
                         glob.user_b, glob.user_c, 10, address0, 0, {from: glob.user_a}
                     );
 
-                    (await web3WalletLocker.isLocked(glob.user_b, address0, 0))
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('LockFungibleByProxyEvent');
+
+                    (await ethersWalletLocker['isLocked(address)'](glob.user_b))
                         .should.be.true;
-                    (await web3WalletLocker.isLockedBy(glob.user_b, glob.user_c, address0, 0))
+                    (await ethersWalletLocker['isLocked(address,address,uint256)'](glob.user_b, address0, 0))
+                        .should.be.true;
+                    (await ethersWalletLocker['isLocked(address,address,address,uint256)'](glob.user_b, glob.user_c, address0, 0))
                         .should.be.true;
                     (await ethersWalletLocker.lockedAmount(glob.user_b, glob.user_c, address0, 0))
                         ._bn.should.eq.BN(10);
@@ -120,14 +133,6 @@ module.exports = function (glob) {
         });
 
         describe('lockNonFungibleByProxy()', () => {
-            describe.skip('if called with zero locked address', () => {
-                it('should revert', async () => {
-                    await web3WalletLocker.lockNonFungibleByProxy(
-                        address0, glob.user_c, [10, 20, 30], address0, 0, {from: glob.user_a}
-                    ).should.be.rejected;
-                });
-            });
-
             describe('if called by unregistered service', () => {
                 it('should revert', async () => {
                     await web3WalletLocker.lockNonFungibleByProxy(
@@ -146,13 +151,18 @@ module.exports = function (glob) {
 
             describe('if within operational constraints', () => {
                 it('should successfully lock', async () => {
-                    await web3WalletLocker.lockNonFungibleByProxy(
+                    const result = await web3WalletLocker.lockNonFungibleByProxy(
                         glob.user_b, glob.user_c, [10, 20, 30], address0, 0, {from: glob.user_a}
                     );
 
-                    (await web3WalletLocker.isLocked(glob.user_b, address0, 0))
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('LockNonFungibleByProxyEvent');
+
+                    (await ethersWalletLocker['isLocked(address)'](glob.user_b))
                         .should.be.true;
-                    (await web3WalletLocker.isLockedBy(glob.user_b, glob.user_c, address0, 0))
+                    (await ethersWalletLocker['isLocked(address,address,uint256)'](glob.user_b, address0, 0))
+                        .should.be.true;
+                    (await ethersWalletLocker['isLocked(address,address,address,uint256)'](glob.user_b, glob.user_c, address0, 0))
                         .should.be.true;
                     (await ethersWalletLocker.lockedIdsCount(glob.user_b, glob.user_c, address0, 0))
                         ._bn.should.eq.BN(3);
@@ -176,7 +186,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if lock has timed out', () => {
+            describe('if within operational constraints', () => {
                 beforeEach(async () => {
                     await web3Configuration.setWalletLockTimeout(
                         (await provider.getBlockNumber()) + 1, 0
@@ -188,12 +198,19 @@ module.exports = function (glob) {
                 });
 
                 it('should successfully unlock', async () => {
-                    await web3WalletLocker.unlockFungible(glob.user_b, glob.user_c, address0, 0);
+                    const result = await web3WalletLocker.unlockFungible(glob.user_b, glob.user_c, address0, 0);
 
-                    // (await web3WalletLocker.isLocked(glob.user_b, address0, 0))
-                    //     .should.be.false;
-                    // (await web3WalletLocker.isLockedBy(glob.user_b, glob.user_c, address0, 0))
-                    //     .should.be.false;
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('UnlockFungibleEvent');
+
+                    (await ethersWalletLocker['isLocked(address)'](glob.user_b))
+                        .should.be.false;
+                    (await ethersWalletLocker['isLocked(address,address,uint256)'](glob.user_b, address0, 0))
+                        .should.be.false;
+                    (await ethersWalletLocker['isLocked(address,address,address,uint256)'](glob.user_b, glob.user_c, address0, 0))
+                        .should.be.false;
+                    (await ethersWalletLocker.lockedAmount(glob.user_b, glob.user_c, address0, 0))
+                        ._bn.should.eq.BN(0);
                 });
             });
         });
@@ -206,20 +223,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if lock has not timed out', () => {
-                beforeEach(async () => {
-                    await web3WalletLocker.lockFungibleByProxy(
-                        glob.user_b, glob.user_c, 10, address0, 0, {from: glob.user_a}
-                    );
-                });
-
-                it('should revert', async () => {
-                    web3WalletLocker.unlockFungibleByProxy(glob.user_b, glob.user_c, address0, 0)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if lock has timed out', () => {
+            describe('if within operational constraints', () => {
                 beforeEach(async () => {
                     await web3Configuration.setWalletLockTimeout(
                         (await provider.getBlockNumber()) + 1, 0
@@ -231,12 +235,19 @@ module.exports = function (glob) {
                 });
 
                 it('should successfully unlock', async () => {
-                    await web3WalletLocker.unlockFungibleByProxy(glob.user_b, glob.user_c, address0, 0);
+                    const result = await web3WalletLocker.unlockFungibleByProxy(glob.user_b, glob.user_c, address0, 0, {from: glob.user_a});
 
-                    (await web3WalletLocker.isLocked(glob.user_b, address0, 0))
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('UnlockFungibleByProxyEvent');
+
+                    (await ethersWalletLocker['isLocked(address)'](glob.user_b))
                         .should.be.false;
-                    (await web3WalletLocker.isLockedBy(glob.user_b, glob.user_c, address0, 0))
+                    (await ethersWalletLocker['isLocked(address,address,uint256)'](glob.user_b, address0, 0))
                         .should.be.false;
+                    (await ethersWalletLocker['isLocked(address,address,address,uint256)'](glob.user_b, glob.user_c, address0, 0))
+                        .should.be.false;
+                    (await ethersWalletLocker.lockedAmount(glob.user_b, glob.user_c, address0, 0))
+                        ._bn.should.eq.BN(0);
                 });
             });
         });
@@ -255,7 +266,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if lock has timed out', () => {
+            describe('if within operational constraints', () => {
                 beforeEach(async () => {
                     await web3Configuration.setWalletLockTimeout(
                         (await provider.getBlockNumber()) + 1, 0
@@ -267,12 +278,21 @@ module.exports = function (glob) {
                 });
 
                 it('should successfully unlock', async () => {
-                    await web3WalletLocker.unlockNonFungible(glob.user_b, glob.user_c, address0, 0);
+                    const result = await web3WalletLocker.unlockNonFungible(glob.user_b, glob.user_c, address0, 0);
 
-                    (await web3WalletLocker.isLocked(glob.user_b, address0, 0))
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('UnlockNonFungibleEvent');
+
+                    (await ethersWalletLocker['isLocked(address)'](glob.user_b))
                         .should.be.false;
-                    (await web3WalletLocker.isLockedBy(glob.user_b, glob.user_c, address0, 0))
+                    (await ethersWalletLocker['isLocked(address,address,uint256)'](glob.user_b, address0, 0))
                         .should.be.false;
+                    (await ethersWalletLocker['isLocked(address,address,address,uint256)'](glob.user_b, glob.user_c, address0, 0))
+                        .should.be.false;
+                    (await ethersWalletLocker.lockedIdsCount(glob.user_b, glob.user_c, address0, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersWalletLocker.lockedIdsByIndices(glob.user_b, glob.user_c, address0, 0, 0, 2))
+                        .should.be.an('array').that.is.empty;
                 });
             });
         });
@@ -285,20 +305,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if lock has not timed out', () => {
-                beforeEach(async () => {
-                    await web3WalletLocker.lockNonFungibleByProxy(
-                        glob.user_b, glob.user_c, [10, 20, 30], address0, 0, {from: glob.user_a}
-                    );
-                });
-
-                it('should revert', async () => {
-                    web3WalletLocker.unlockNonFungibleByProxy(glob.user_b, glob.user_c, address0, 0)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if lock has timed out', () => {
+            describe('if within operational constraints', () => {
                 beforeEach(async () => {
                     await web3Configuration.setWalletLockTimeout(
                         (await provider.getBlockNumber()) + 1, 0
@@ -310,39 +317,21 @@ module.exports = function (glob) {
                 });
 
                 it('should successfully unlock', async () => {
-                    await web3WalletLocker.unlockNonFungibleByProxy(glob.user_b, glob.user_c, address0, 0);
+                    const result = await web3WalletLocker.unlockNonFungibleByProxy(glob.user_b, glob.user_c, address0, 0, {from: glob.user_a});
 
-                    (await web3WalletLocker.isLocked(glob.user_b, address0, 0))
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('UnlockNonFungibleByProxyEvent');
+
+                    (await ethersWalletLocker['isLocked(address)'](glob.user_b))
                         .should.be.false;
-                    (await web3WalletLocker.isLockedBy(glob.user_b, glob.user_c, address0, 0))
+                    (await ethersWalletLocker['isLocked(address,address,uint256)'](glob.user_b, address0, 0))
                         .should.be.false;
-                });
-            });
-        });
-
-
-        describe.skip('unlockByProxy()', () => {
-            beforeEach(async () => {
-                await web3WalletLocker.lockByProxy(glob.user_b, glob.user_c, {from: glob.user_a});
-            });
-
-            describe('if called by unregistered service', () => {
-                it('should revert', async () => {
-                    web3WalletLocker.unlockByProxy(glob.user_b, {from: glob.user_b})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                it('should successfully unlock', async () => {
-                    await web3WalletLocker.unlockByProxy(glob.user_b, {from: glob.user_a});
-
-                    (await ethersWalletLocker.lockedWalletsCount())
+                    (await ethersWalletLocker['isLocked(address,address,address,uint256)'](glob.user_b, glob.user_c, address0, 0))
+                        .should.be.false;
+                    (await ethersWalletLocker.lockedIdsCount(glob.user_b, glob.user_c, address0, 0))
                         ._bn.should.eq.BN(0);
-                    (await web3WalletLocker.isLocked(glob.user_b))
-                        .should.be.false;
-                    (await web3WalletLocker.isLockedBy(glob.user_b, glob.user_c))
-                        .should.be.false;
+                    (await ethersWalletLocker.lockedIdsByIndices(glob.user_b, glob.user_c, address0, 0, 0, 2))
+                        .should.be.an('array').that.is.empty;
                 });
             });
         });

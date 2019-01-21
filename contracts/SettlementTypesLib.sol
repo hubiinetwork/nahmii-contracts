@@ -9,6 +9,7 @@
 pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
@@ -23,6 +24,7 @@ library SettlementTypesLib {
     enum CandidateType {None, Order, Trade, Payment}
     enum SettlementRole {Origin, Target}
 
+    // TODO Replace by ProposalThick throughout
     struct Proposal {
         address wallet;
         uint256 nonce;
@@ -51,6 +53,49 @@ library SettlementTypesLib {
         bool balanceReward;
     }
 
+    // TODO Rename to Proposal
+    struct ProposalThick {
+        address wallet;
+        uint256 nonce;
+        uint256 blockNumber;
+
+        uint256 expirationTime;
+
+        // Status
+        Status status;
+
+        // Currency
+        MonetaryTypesLib.Currency currency;
+
+        // Stage info
+        int256 stageAmount;
+
+        // Balances after amounts have been staged
+        int256 targetBalanceAmount;
+
+        // Driip info
+        bytes32 driipHash;
+        NahmiiTypesLib.DriipType driipType;
+
+        // True if reward is from wallet balance
+        bool balanceReward;
+
+        // Disqualification
+        DisqualificationThin disqualification;
+    }
+
+    // TODO Rename to Disqualification
+    struct DisqualificationThin {
+        // Challenger
+        address challenger;
+        uint256 blockNumber;
+
+        // Candidate info
+        bytes32 candidateHash;
+        CandidateType candidateType;
+    }
+
+    // TODO Replace by DisqualificationThin throughout
     struct Disqualification {
         address wallet;
         uint256 nonce;

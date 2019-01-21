@@ -50,15 +50,20 @@ SecurityBondable {
     onlySealedTrade(trade)
     onlySealedPayment(payment)
     {
+        // Require existence of fraud signal
         require(trade.nonce == payment.nonce);
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag trades (hashes) as fraudulent
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
+        // Emit event
         emit ChallengeByDuplicateDriipNonceOfTradeAndPaymentEvent(
             trade.seal.hash, payment.seals.operator.hash, msg.sender
         );

@@ -130,7 +130,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
         walletOrderCancelledTimeoutMap[msg.sender] = block.timestamp.add(configuration.cancelOrderChallengeTimeout());
 
-        emit CancelOrdersEvent(orderOperatorHashes(orders), msg.sender);
+        emit CancelOrdersEvent(_orderOperatorHashes(orders), msg.sender);
     }
 
     /// @notice Challenge cancelled order
@@ -170,7 +170,10 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
             return NahmiiTypesLib.ChallengePhase.Closed;
     }
 
-    function orderOperatorHashes(NahmiiTypesLib.Order[] orders)
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function _orderOperatorHashes(NahmiiTypesLib.Order[] orders)
     private
     pure
     returns (bytes32[])

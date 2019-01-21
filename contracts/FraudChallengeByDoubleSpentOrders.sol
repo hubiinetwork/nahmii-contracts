@@ -49,24 +49,30 @@ SecurityBondable {
         bool doubleSpentBuyOrder = trade1.buyer.order.hashes.operator == trade2.buyer.order.hashes.operator;
         bool doubleSpentSellOrder = trade1.seller.order.hashes.operator == trade2.seller.order.hashes.operator;
 
+        // Require existence of fraud signal
         require(doubleSpentBuyOrder || doubleSpentSellOrder);
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag trades (hashes) as fraudulent
         fraudChallenge.addFraudulentTradeHash(trade1.seal.hash);
         fraudChallenge.addFraudulentTradeHash(trade2.seal.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
+        // Tag wallet(s) as double spender(s)
         if (doubleSpentBuyOrder) {
             fraudChallenge.addDoubleSpenderWallet(trade1.buyer.wallet);
-            fraudChallenge.addDoubleSpenderWallet(trade2.buyer.wallet);
         }
         if (doubleSpentSellOrder) {
             fraudChallenge.addDoubleSpenderWallet(trade1.seller.wallet);
-            fraudChallenge.addDoubleSpenderWallet(trade2.seller.wallet);
         }
 
-        emit ChallengeByDoubleSpentOrdersEvent(trade1.seal.hash, trade2.seal.hash, msg.sender);
+        // Emit event
+        emit ChallengeByDoubleSpentOrdersEvent(
+            trade1.seal.hash, trade2.seal.hash, msg.sender
+        );
     }
 }

@@ -49,14 +49,20 @@ SecurityBondable {
         bool genuineWalletSignature = validator.isGenuineWalletSignature(
             order.seals.wallet.hash, order.seals.wallet.signature, order.wallet
         );
+
+        // Require existence of fraud signal
         require(!genuineWalletSignature);
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag order (hash) as fraudulent
         fraudChallenge.addFraudulentOrderHash(order.seals.operator.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
+        // Emit event
         emit ChallengeByOrderEvent(order.seals.operator.hash, msg.sender);
     }
 }

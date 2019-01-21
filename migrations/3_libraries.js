@@ -16,6 +16,9 @@ const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
 const NonFungibleBalanceLib = artifacts.require('NonFungibleBalanceLib');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
+const SettlementTypesLib = artifacts.require('SettlementTypesLib');
+const Strings = artifacts.require('Strings');
+const TxHistoryLib = artifacts.require('TxHistoryLib');
 
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
@@ -62,14 +65,12 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
                 await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
                 await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
-                // await execDeploy(ctl, 'Strings', '', Strings);
-                // await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
 
                 await deployer.link(ConstantsLib, [
                     BlockNumbDisdIntsLib
                 ]);
                 await deployer.link(MonetaryTypesLib, [
-                    BlockNumbCurrenciesLib, CurrenciesLib, NahmiiTypesLib
+                    BlockNumbCurrenciesLib, CurrenciesLib, NahmiiTypesLib, SettlementTypesLib
                 ]);
                 await deployer.link(SafeMathIntLib, [
                     FungibleBalanceLib, BlockNumbDisdIntsLib, NonFungibleBalanceLib
@@ -88,13 +89,15 @@ module.exports = (deployer, network, accounts) => {
 
                 await execDeploy(ctl, 'FungibleBalanceLib', '', FungibleBalanceLib);
                 await execDeploy(ctl, 'NonFungibleBalanceLib', '', NonFungibleBalanceLib);
-                // await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
+                await execDeploy(ctl, 'Strings', '', Strings);
+                await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
+                await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
 
-                // await deployer.link(NahmiiTypesLib, [
-                //     SettlementTypesLib
-                // ]);
+                await deployer.link(NahmiiTypesLib, [
+                    SettlementTypesLib
+                ]);
 
-                // await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
+                await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
 
             } else if (network.startsWith('mainnet')) {
                 addressStorage.set('BlockNumbDisdIntsLib', '0x92caece328a4f746c18630c6289d74a5417185b2');

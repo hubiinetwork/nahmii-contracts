@@ -15,6 +15,7 @@ import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {PartnerFund} from "./PartnerFund.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
@@ -29,7 +30,8 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
  * @title DriipSettlement
  * @notice Where driip settlements are finalized
  */
-contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable, FraudChallengable {
+contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable,
+FraudChallengable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -241,7 +243,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
         // Require that wallet is not locked
-        require(!driipSettlementChallenge.isLockedWallet(wallet));
+        require(!walletLocker.isLocked(wallet));
 
         // Require that proposal has expired
         require(driipSettlementChallenge.hasProposalExpired(wallet, trade.currencies.intended.ct, trade.currencies.intended.id));
@@ -300,7 +302,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
             // Update settled balance
             clientFund.updateSettledBalance(
                 wallet, party.balances.intended.current, trade.currencies.intended.ct,
-                    trade.currencies.intended.id, "", trade.blockNumber
+                trade.currencies.intended.id, "", trade.blockNumber
             );
 
             // Stage (stage function assures positive amount only)
@@ -349,7 +351,7 @@ contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, 
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
         // Require that wallet is not locked
-        require(!driipSettlementChallenge.isLockedWallet(wallet));
+        require(!walletLocker.isLocked(wallet));
 
         // Require that proposal has expired
         require(driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));

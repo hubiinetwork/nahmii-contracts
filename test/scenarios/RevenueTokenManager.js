@@ -3,7 +3,8 @@ const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Contract} = require('ethers');
-const {sleep, futureEpoch} = require('../helpers');
+const {sleep} = require('../../scripts/common/helpers');
+const {futureEpoch} = require('../helpers');
 const NahmiiToken = artifacts.require('NahmiiToken');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 
@@ -40,94 +41,92 @@ module.exports = function (glob) {
         });
 
         describe('release()', () => {
-            describe('if called by non-operator', () => {
+            describe('if called by non-beneficiary', () => {
                 it('should revert', async () => {
-                    web3RevenueTokenManager.release(0, {from: glob.user_a}).should.be.rejected;
+                    web3RevenueTokenManager.release(0, {from: glob.user_b, gas: 1e6}).should.be.rejected;
                 });
             });
 
-            describe('if within operational constraints', () => {
-                describe('if called once', () => {
-                    beforeEach(async () => {
-                        await web3NahmiiToken.mint(web3RevenueTokenManager.address, 1000);
+            describe('if called once', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.mint(web3RevenueTokenManager.address, 1000);
 
-                        await web3RevenueTokenManager.defineReleases(
-                            [futureEpoch(1)], [1000], []
-                        );
-                    });
-
-                    it('should successfully release and update amount blocks', async () => {
-                        await sleep(1500);
-
-                        const result = await web3RevenueTokenManager.release(0);
-
-                        result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('ReleaseEvent');
-
-                        (await ethersRevenueTokenManager.totalLockedAmount())
-                            ._bn.should.eq.BN(0);
-                        (await ethersRevenueTokenManager.releasesCount())
-                            ._bn.should.eq.BN(1);
-                        (await ethersRevenueTokenManager.executedReleasesCount())
-                            ._bn.should.eq.BN(1);
-
-                        (await ethersNahmiiToken.balanceOf(glob.user_a))
-                            ._bn.should.eq.BN(1000);
-
-                        (await ethersRevenueTokenManager.totalReleasedAmounts(0))
-                            ._bn.should.eq.BN(1000);
-                        (await ethersRevenueTokenManager.totalReleasedAmountBlocks(0))
-                            ._bn.should.eq.BN(0);
-                        (await ethersRevenueTokenManager.releaseBlockNumbers(0))
-                            ._bn.should.eq.BN(await provider.getBlockNumber());
-                    });
+                    await web3RevenueTokenManager.defineReleases(
+                        [futureEpoch(1)], [1000], []
+                    );
                 });
 
-                describe('if called twice', () => {
-                    beforeEach(async () => {
-                        await web3NahmiiToken.mint(web3RevenueTokenManager.address, 2000);
+                it('should successfully release and update amount blocks', async () => {
+                    await sleep(1500);
 
-                        await web3RevenueTokenManager.defineReleases(
-                            [futureEpoch(1), futureEpoch(2)], [1000, 1000], [1000000]
-                        );
-                    });
+                    const result = await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6});
 
-                    it('should successfully release and update amount blocks', async () => {
-                        await sleep(2500);
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ReleaseEvent');
 
-                        let result = await web3RevenueTokenManager.release(0);
+                    (await ethersRevenueTokenManager.totalLockedAmount())
+                        ._bn.should.eq.BN(0);
+                    (await ethersRevenueTokenManager.releasesCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersRevenueTokenManager.executedReleasesCount())
+                        ._bn.should.eq.BN(1);
 
-                        result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('ReleaseEvent');
+                    (await ethersRevenueTokenManager.totalReleasedAmounts(0))
+                        ._bn.should.eq.BN(1000);
+                    (await ethersRevenueTokenManager.totalReleasedAmountBlocks(0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersRevenueTokenManager.releaseBlockNumbers(0))
+                        ._bn.should.eq.BN(await provider.getBlockNumber());
 
-                        result = await web3RevenueTokenManager.release(1);
+                    (await ethersNahmiiToken.balanceOf(glob.user_a))
+                        ._bn.should.eq.BN(1000);
+                });
+            });
 
-                        result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('ReleaseEvent');
+            describe('if called twice', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.mint(web3RevenueTokenManager.address, 2000);
 
-                        (await ethersRevenueTokenManager.totalLockedAmount())
-                            ._bn.should.eq.BN(0);
-                        (await ethersRevenueTokenManager.releasesCount())
-                            ._bn.should.eq.BN(2);
-                        (await ethersRevenueTokenManager.executedReleasesCount())
-                            ._bn.should.eq.BN(2);
+                    await web3RevenueTokenManager.defineReleases(
+                        [futureEpoch(1), futureEpoch(2)], [1000, 1000], []
+                    );
+                });
 
-                        (await ethersNahmiiToken.balanceOf(glob.user_a))
-                            ._bn.should.eq.BN(2000);
+                it('should successfully release and update amount blocks', async () => {
+                    await sleep(2500);
 
-                        (await ethersRevenueTokenManager.totalReleasedAmounts(0))
-                            ._bn.should.eq.BN(1000);
-                        (await ethersRevenueTokenManager.totalReleasedAmounts(1))
-                            ._bn.should.eq.BN(2000);
-                        (await ethersRevenueTokenManager.totalReleasedAmountBlocks(0))
-                            ._bn.should.eq.BN(0);
-                        (await ethersRevenueTokenManager.totalReleasedAmountBlocks(1))
-                            ._bn.should.eq.BN(1000);
-                        (await ethersRevenueTokenManager.releaseBlockNumbers(0))
-                            ._bn.should.eq.BN(1000000);
-                        (await ethersRevenueTokenManager.releaseBlockNumbers(1))
-                            ._bn.should.eq.BN(await provider.getBlockNumber());
-                    });
+                    let result = await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6});
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ReleaseEvent');
+
+                    result = await web3RevenueTokenManager.release(1, {from: glob.user_a, gas: 1e6});
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('ReleaseEvent');
+
+                    (await ethersRevenueTokenManager.totalLockedAmount())
+                        ._bn.should.eq.BN(0);
+                    (await ethersRevenueTokenManager.releasesCount())
+                        ._bn.should.eq.BN(2);
+                    (await ethersRevenueTokenManager.executedReleasesCount())
+                        ._bn.should.eq.BN(2);
+
+                    (await ethersRevenueTokenManager.totalReleasedAmounts(0))
+                        ._bn.should.eq.BN(1000);
+                    (await ethersRevenueTokenManager.totalReleasedAmounts(1))
+                        ._bn.should.eq.BN(2000);
+                    (await ethersRevenueTokenManager.totalReleasedAmountBlocks(0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersRevenueTokenManager.totalReleasedAmountBlocks(1))
+                        ._bn.should.eq.BN(1000);
+                    (await ethersRevenueTokenManager.releaseBlockNumbers(0))
+                        ._bn.should.eq.BN((await provider.getBlockNumber()) - 1);
+                    (await ethersRevenueTokenManager.releaseBlockNumbers(1))
+                        ._bn.should.eq.BN(await provider.getBlockNumber());
+
+                    (await ethersNahmiiToken.balanceOf(glob.user_a))
+                        ._bn.should.eq.BN(2000);
                 });
             });
         });
@@ -154,9 +153,9 @@ module.exports = function (glob) {
 
                     await sleep(1500);
 
-                    await web3RevenueTokenManager.release(0);
-                    await web3RevenueTokenManager.release(1);
-                    await web3RevenueTokenManager.release(2);
+                    await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6});
+                    await web3RevenueTokenManager.release(1, {from: glob.user_a, gas: 1e6});
+                    await web3RevenueTokenManager.release(2, {from: glob.user_a, gas: 1e6});
 
                     blockNumber = await provider.getBlockNumber();
                 });

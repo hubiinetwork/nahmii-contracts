@@ -8,6 +8,8 @@ const walletFactory = require('./wallet_factory');
 const contractFactory = require('./contract_factory');
 const provider = contractFactory.provider;
 
+const {sleep} = require('../../scripts/common/helpers');
+
 // -----------------------------------------------------------------------------------------------------------------
 
 (async () => {
@@ -67,8 +69,4 @@ const provider = contractFactory.provider;
     // tx = await revenueTokenManager.release(16, {gasLimit: 1e6, nonce: tx.nonce + 1});
     // console.log(tx);
 })();
-
-const sleep = (ms) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-};
 

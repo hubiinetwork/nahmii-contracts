@@ -16,6 +16,7 @@ import {Validatable} from "./Validatable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 /**
  * @title FraudChallengeByTradeSucceedingPayment
@@ -23,6 +24,8 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
  */
 contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable, WalletLockable {
+    using SafeMathIntLib for int256;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -60,8 +63,10 @@ SecurityBondable, WalletLockable {
         require(validator.isTradeParty(trade, wallet));
         require(validator.isPaymentParty(payment, wallet));
         require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
-        require((currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id)
-            || (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id));
+        require(
+            (currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id) ||
+            (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id)
+        );
 
         NahmiiTypesLib.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
         NahmiiTypesLib.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
@@ -70,18 +75,27 @@ SecurityBondable, WalletLockable {
 
         NahmiiTypesLib.CurrencyRole tradeCurrencyRole = (currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
 
-        require(
-            !validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, tradeCurrencyRole) ||
-        !validator.isGenuineSuccessivePaymentTradeTotalFees(payment, paymentPartyRole, trade, tradePartyRole)
-        );
+        // Require existence of fraud signal
+        require(!(
+            (validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, tradeCurrencyRole)) &&
+            (validator.isGenuineSuccessivePaymentTradeTotalFees(payment, paymentPartyRole, trade, tradePartyRole))
+        ));
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag payment (hash) as fraudulent
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-//        walletLocker.lockByProxy(wallet, msg.sender);
+        // Lock amount of size equivalent to trade amount of currency of wallet
+        walletLocker.lockFungibleByProxy(
+            wallet, msg.sender,
+            NahmiiTypesLib.CurrencyRole.Intended == tradeCurrencyRole ? trade.amount : trade.amount.div(trade.rate),
+            currencyCt, currencyId
+        );
 
         emit ChallengeByTradeSucceedingPaymentEvent(
             payment.seals.operator.hash, trade.seal.hash, msg.sender, wallet

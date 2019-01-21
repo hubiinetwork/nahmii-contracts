@@ -27,7 +27,7 @@ SecurityBondable, WalletLockable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ChallengeByPaymentEvent(bytes32 paymentHash, address challenger,
-        address lockedWallet);
+        address lockedSender, address lockedRecipient);
 
     //
     // Constructor
@@ -53,36 +53,46 @@ SecurityBondable, WalletLockable {
         );
 
         // Genuineness affected by sender and recipient
-        bool genuineSenderAndFee;
-        bool genuineRecipient;
-        if (validator.isPaymentCurrencyNonFungible(payment)) {
-            genuineSenderAndFee = validator.isGenuinePaymentSenderOfNonFungible(payment)
-            && validator.isGenuinePaymentFeeOfNonFungible(payment);
+        (bool genuineSenderAndFee, bool genuineRecipient) =
+        validator.isPaymentCurrencyNonFungible(payment) ?
+        (
+            validator.isGenuinePaymentSenderOfNonFungible(payment) && validator.isGenuinePaymentFeeOfNonFungible(payment),
+            validator.isGenuinePaymentRecipientOfNonFungible(payment)
+        ) :
+        (
+            validator.isGenuinePaymentSenderOfFungible(payment) && validator.isGenuinePaymentFeeOfFungible(payment),
+            validator.isGenuinePaymentRecipientOfFungible(payment)
+        );
 
-            genuineRecipient = validator.isGenuinePaymentRecipientOfNonFungible(payment);
-        } else {
-            genuineSenderAndFee = validator.isGenuinePaymentSenderOfFungible(payment)
-            && validator.isGenuinePaymentFeeOfFungible(payment);
+        // Require existence of fraud signal
+        require(!(genuineWalletSignature && genuineSenderAndFee && genuineRecipient));
 
-            genuineRecipient = validator.isGenuinePaymentRecipientOfFungible(payment);
-        }
-
-        require(!genuineWalletSignature || !genuineSenderAndFee || !genuineRecipient);
-
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag payment (hash) as fraudulent
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        address lockedWallet;
+        // Lock amount of size equivalent to payment amount of sender
         if (!genuineSenderAndFee)
-            lockedWallet = payment.sender.wallet;
-        if (!genuineRecipient)
-            lockedWallet = payment.recipient.wallet;
-//        if (address(0) != lockedWallet)
-//            walletLocker.lockByProxy(lockedWallet, msg.sender);
+            walletLocker.lockFungibleByProxy(
+                payment.sender.wallet, msg.sender, payment.amount, payment.currency.ct, payment.currency.id
+            );
 
-        emit ChallengeByPaymentEvent(payment.seals.operator.hash, msg.sender, lockedWallet);
+        // Lock amount of size equivalent to payment amount of recipient
+        if (!genuineRecipient)
+            walletLocker.lockFungibleByProxy(
+                payment.recipient.wallet, msg.sender, payment.amount, payment.currency.ct, payment.currency.id
+            );
+
+        // Emit event
+        emit ChallengeByPaymentEvent(
+            payment.seals.operator.hash, msg.sender,
+            genuineSenderAndFee ? address(0) : payment.sender.wallet,
+            genuineRecipient ? address(0) : payment.recipient.wallet
+        );
     }
 }
