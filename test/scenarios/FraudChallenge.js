@@ -1,9 +1,10 @@
 const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const chaiAsPromised = require('chai-as-promised');
-const {Wallet} = require('ethers');
+const {Wallet, Contract} = require('ethers');
 const mocks = require('../mocks');
-const cryptography = require('omphalos-commons').util.cryptography;
+const {util: {cryptography}} = require('omphalos-commons');
+const FraudChallenge = artifacts.require('FraudChallenge');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -15,8 +16,8 @@ module.exports = (glob) => {
         let ethersFraudChallengeUserA, ethersFraudChallengeUserB;
 
         before(async () => {
-            web3FraudChallenge = glob.web3FraudChallenge;
-            ethersFraudChallengeOwner = glob.ethersIoFraudChallenge;
+            web3FraudChallenge = await FraudChallenge.deployed();
+            ethersFraudChallengeOwner = new Contract(web3FraudChallenge.address, FraudChallenge.abi, glob.signer_owner);
             ethersFraudChallengeUserA = ethersFraudChallengeOwner.connect(glob.signer_a);
             ethersFraudChallengeUserB = ethersFraudChallengeOwner.connect(glob.signer_b);
         });

@@ -310,7 +310,7 @@ module.exports = function (glob) {
                 beforeEach(async () => {
                     await sleep(1500);
 
-                    await web3TokenMultiTimelock.release(0, {gas: 1e6});
+                    await web3TokenMultiTimelock.release(0, {from: glob.user_a, gas: 1e6});
                 });
 
                 it('should revert', async () => {

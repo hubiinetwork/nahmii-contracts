@@ -16,6 +16,7 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 /**
  * @title FraudChallengeByTradeOrderResiduals
@@ -23,6 +24,8 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
  */
 contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Challenge, Validatable,
 SecurityBondable, WalletLockable {
+    using SafeMathIntLib for int256;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -73,16 +76,26 @@ SecurityBondable, WalletLockable {
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
+        // Require existence of fraud signal
         require(!validator.isGenuineSuccessiveTradeOrderResiduals(firstTrade, lastTrade, firstTradePartyRole));
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag last trade (hash) as fraudulent
         fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-//        walletLocker.lockByProxy(wallet, msg.sender);
+        // Lock amount of size equivalent to trade amount of currency of wallet
+        walletLocker.lockFungibleByProxy(
+            wallet, msg.sender,
+            (currencyCt == lastTrade.currencies.intended.ct && currencyId == lastTrade.currencies.intended.id) ? lastTrade.amount : lastTrade.amount.div(lastTrade.rate),
+            currencyCt, currencyId
+        );
 
+        // Emit event
         emit ChallengeByTradeOrderResidualsEvent(
             firstTrade.seal.hash, lastTrade.seal.hash, msg.sender, wallet
         );

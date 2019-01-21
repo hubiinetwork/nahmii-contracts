@@ -88,4 +88,9 @@ contract Validatable is Ownable {
         require(validator.isPaymentParty(payment, wallet));
         _;
     }
+
+    modifier onlyPaymentSender(NahmiiTypesLib.Payment payment, address wallet) {
+        require(validator.isPaymentSender(payment, wallet));
+        _;
+    }
 }

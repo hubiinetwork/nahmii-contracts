@@ -50,16 +50,23 @@ SecurityBondable {
     onlySealedTrade(trade1)
     onlySealedTrade(trade2)
     {
-        require(trade1.seal.hash != trade2.seal.hash);
-        require(trade1.nonce == trade2.nonce);
+        // Require existence of fraud signal
+        require(
+            trade1.seal.hash != trade2.seal.hash &&
+            trade1.nonce == trade2.nonce
+        );
 
+        // Toggle operational mode exit
         configuration.setOperationalModeExit();
+
+        // Tag trades (hashes) as fraudulent
         fraudChallenge.addFraudulentTradeHash(trade1.seal.hash);
         fraudChallenge.addFraudulentTradeHash(trade2.seal.hash);
 
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
+        // Emit event
         emit ChallengeByDuplicateDriipNonceOfTradesEvent(
             trade1.seal.hash, trade2.seal.hash, msg.sender
         );

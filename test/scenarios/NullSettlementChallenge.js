@@ -5,11 +5,12 @@ const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const cryptography = require('omphalos-commons').util.cryptography;
+const {util: {cryptography}} = require('omphalos-commons');
 const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const MockedNullSettlementDispute = artifacts.require('MockedNullSettlementDispute');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedBalanceTracker = artifacts.require('MockedBalanceTracker');
+const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
@@ -25,6 +26,7 @@ module.exports = (glob) => {
         let web3NullSettlementDispute, ethersNullSettlementDispute;
         let web3Configuration, ethersConfiguration;
         let web3BalanceTracker, ethersBalanceTracker;
+        let web3WalletLocker, ethersWalletLocker;
         let web3SecurityBond, ethersSecurityBond;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
@@ -39,6 +41,8 @@ module.exports = (glob) => {
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3BalanceTracker = await MockedBalanceTracker.new();
             ethersBalanceTracker = new Contract(web3BalanceTracker.address, MockedBalanceTracker.abi, glob.signer_owner);
+            web3WalletLocker = await MockedWalletLocker.new();
+            ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
             web3SecurityBond = await MockedSecurityBond.new();
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
@@ -62,13 +66,15 @@ module.exports = (glob) => {
             ethersNullSettlementChallenge = new Contract(web3NullSettlementChallenge.address, NullSettlementChallenge.abi, glob.signer_owner);
 
             await ethersNullSettlementChallenge.setConfiguration(ethersConfiguration.address);
-            await ethersNullSettlementChallenge.setBalanceTracker(ethersBalanceTracker.address, false);
+            await ethersNullSettlementChallenge.setBalanceTracker(ethersBalanceTracker.address);
+            await ethersNullSettlementChallenge.setWalletLocker(ethersWalletLocker.address);
             await ethersNullSettlementChallenge.setNullSettlementDispute(ethersNullSettlementDispute.address);
 
             blockNumber = await provider.getBlockNumber();
 
             await web3Configuration._reset();
             await web3BalanceTracker._reset();
+            await web3WalletLocker._reset();
 
             await ethersConfiguration.setCancelOrderChallengeTimeout((await provider.getBlockNumber()) + 1, 1e3);
             await ethersConfiguration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 1e4);
@@ -178,13 +184,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('lockedWalletsCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersNullSettlementChallenge.lockedWalletsCount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
         describe('proposalsCount()', () => {
             it('should equal value initialized', async () => {
                 (await ethersNullSettlementChallenge.proposalsCount())
@@ -202,9 +201,7 @@ module.exports = (glob) => {
         describe('startChallenge()', () => {
             describe('if wallet has previous disqualified null settlement challenge', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
-
-                    await web3NullSettlementChallenge.lockWallet(glob.owner);
+                    await web3WalletLocker._setLocked(true);
                 });
 
                 it('should revert', async () => {
@@ -783,65 +780,6 @@ module.exports = (glob) => {
         describe('candidateHashesCount()', () => {
             it('should equal value initialized', async () => {
                 (await ethersNullSettlementChallenge.candidateHashesCount())._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('lockWallet()', () => {
-            describe('if called from other than settlement dispute', () => {
-                it('should revert', async () => {
-                    web3NullSettlementChallenge.lockWallet(glob.user_a)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called from settlement dispute', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
-                });
-
-                it('should successfully push the array element', async () => {
-                    await ethersNullSettlementChallenge.lockWallet(glob.user_a, {gasLimit: 1e6});
-
-                    (await ethersNullSettlementChallenge.lockedByWallet(glob.user_a))
-                        .should.be.true;
-                });
-            });
-        });
-
-        describe('isLockedWallet()', () => {
-            describe('if called on unlocked wallet', () => {
-                it('should return false', async () => {
-                    (await web3NullSettlementChallenge.isLockedWallet(glob.user_a))
-                        .should.be.false;
-                });
-            });
-
-            describe('if called before lock timeout', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
-
-                    await ethersNullSettlementChallenge.lockWallet(glob.user_a, {gasLimit: 1e6});
-                });
-
-                it('should return true', async () => {
-                    (await ethersNullSettlementChallenge.isLockedWallet(glob.user_a))
-                        .should.be.true;
-                });
-            });
-
-            describe('if called after lock timeout', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
-
-                    await ethersConfiguration.setWalletLockTimeout((await provider.getBlockNumber()) + 1, 0);
-
-                    await ethersNullSettlementChallenge.lockWallet(glob.user_a, {gasLimit: 1e6});
-                });
-
-                it('should return false', async () => {
-                    (await ethersNullSettlementChallenge.isLockedWallet(glob.user_a))
-                        .should.be.false;
-                });
             });
         });
 

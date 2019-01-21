@@ -1,14 +1,17 @@
 const chai = require('chai');
 const mocks = require('../mocks');
+const {Contract} = require('ethers');
+const Hasher = artifacts.require('Hasher');
 
 chai.should();
 
 module.exports = function (glob) {
     describe('Hasher', () => {
-        let ethersHasher;
+        let web3Hasher, ethersHasher;
 
-        before(() => {
-            ethersHasher = glob.ethersIoHasher;
+        before(async () => {
+            web3Hasher = await Hasher.new(glob.owner);
+            ethersHasher = new Contract(web3Hasher.address, Hasher.abi, glob.signer_owner);
         });
 
         describe('hashTrade()', () => {
