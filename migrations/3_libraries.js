@@ -89,6 +89,15 @@ module.exports = (deployer, network, accounts) => {
 
                 await execDeploy(ctl, 'FungibleBalanceLib', '', FungibleBalanceLib);
                 await execDeploy(ctl, 'NonFungibleBalanceLib', '', NonFungibleBalanceLib);
+                await execDeploy(ctl, 'Strings', '', Strings);
+                await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
+                await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
+
+                await deployer.link(NahmiiTypesLib, [
+                    SettlementTypesLib
+                ]);
+
+                await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
 
             } else if (network.startsWith('mainnet')) {
                 addressStorage.set('BlockNumbDisdIntsLib', '0x92caece328a4f746c18630c6289d74a5417185b2');
@@ -103,16 +112,6 @@ module.exports = (deployer, network, accounts) => {
                 addressStorage.set('SafeMathIntLib', '0x2fcb98529d58669e229c453de4b4705bb6b2d414');
                 addressStorage.set('SafeMathUintLib', '0x0ff948c236c8d4dfcd0168bf243314c8ff8ec967');
             }
-
-            await execDeploy(ctl, 'Strings', '', Strings);
-            await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
-            await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
-
-            await deployer.link(NahmiiTypesLib, [
-                SettlementTypesLib
-            ]);
-
-            await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
 
         } finally {
             if (!helpers.isTestNetwork(network)) {

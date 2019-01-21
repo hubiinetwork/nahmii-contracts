@@ -18,7 +18,6 @@ contract RevenueTokenManager is TokenMultiTimelock {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint256[] public releaseBlockNumbers;
     uint256[] public totalReleasedAmounts;
     uint256[] public totalReleasedAmountBlocks;
 
@@ -41,11 +40,11 @@ contract RevenueTokenManager is TokenMultiTimelock {
     public
     onlyBeneficiary
     {
-        // Add amount blocks
-        _addAmountBlocks(index);
-
         // Call release of multi timelock
         super.release(index);
+
+        // Add amount blocks
+        _addAmountBlocks(index);
     }
 
     /// @notice Calculate the released amount blocks, i.e. the area under the curve (AUC) of
@@ -60,51 +59,62 @@ contract RevenueTokenManager is TokenMultiTimelock {
     {
         require(startBlock < endBlock);
 
-        if (releaseBlockNumbers.length == 0 || endBlock < releaseBlockNumbers[0])
+        if (executedReleasesCount == 0 || endBlock < releases[0].blockNumber)
             return 0;
 
         uint256 i = 0;
-        while (i < releaseBlockNumbers.length && releaseBlockNumbers[i] < startBlock)
+        while (i < executedReleasesCount && releases[i].blockNumber < startBlock)
             i++;
 
         uint256 r;
-        if (i >= releaseBlockNumbers.length)
-            r = totalReleasedAmounts[releaseBlockNumbers.length - 1].mul(endBlock.sub(startBlock));
+        if (i >= executedReleasesCount)
+            r = totalReleasedAmounts[executedReleasesCount - 1].mul(endBlock.sub(startBlock));
 
         else {
-            uint256 l = (i == 0) ? startBlock : releaseBlockNumbers[i - 1];
+            uint256 l = (i == 0) ? startBlock : releases[i - 1].blockNumber;
 
-            uint256 h = releaseBlockNumbers[i];
+            uint256 h = releases[i].blockNumber;
             if (h > endBlock)
                 h = endBlock;
 
             h = h.sub(startBlock);
-            r = (h == 0) ? 0 : totalReleasedAmountBlocks[i].mul(h).div(releaseBlockNumbers[i].sub(l));
+            r = (h == 0) ? 0 : totalReleasedAmountBlocks[i].mul(h).div(releases[i].blockNumber.sub(l));
             i++;
 
-            while (i < releaseBlockNumbers.length && releaseBlockNumbers[i] < endBlock) {
+            while (i < executedReleasesCount && releases[i].blockNumber < endBlock) {
                 r = r.add(totalReleasedAmountBlocks[i]);
                 i++;
             }
 
-            if (i >= releaseBlockNumbers.length)
+            if (i >= executedReleasesCount)
                 r = r.add(
-                    totalReleasedAmounts[releaseBlockNumbers.length - 1].mul(
-                        endBlock.sub(releaseBlockNumbers[releaseBlockNumbers.length - 1])
+                    totalReleasedAmounts[executedReleasesCount - 1].mul(
+                        endBlock.sub(releases[executedReleasesCount - 1].blockNumber)
                     )
                 );
 
-            else if (releaseBlockNumbers[i - 1] < endBlock)
+            else if (releases[i - 1].blockNumber < endBlock)
                 r = r.add(
                     totalReleasedAmountBlocks[i].mul(
-                        endBlock.sub(releaseBlockNumbers[i - 1])
+                        endBlock.sub(releases[i - 1].blockNumber)
                     ).div(
-                        releaseBlockNumbers[i].sub(releaseBlockNumbers[i - 1])
+                        releases[i].blockNumber.sub(releases[i - 1].blockNumber)
                     )
                 );
         }
 
         return r;
+    }
+
+    /// @notice Get the block number of the release
+    /// @param index The index of the release
+    /// @return The block number of the release;
+    function releaseBlockNumbers(uint256 index)
+    public
+    view
+    returns (uint256)
+    {
+        return releases[index].blockNumber;
     }
 
     //
@@ -113,27 +123,20 @@ contract RevenueTokenManager is TokenMultiTimelock {
     function _addAmountBlocks(uint256 index)
     private
     {
-        // Use block number defined in release if it is non-null
-        uint256 blockNumber = 0 < releases[index].blockNumber ? releases[index].blockNumber : block.number;
-
-        // Store the new total amount released by adding this release' amount to
-        // previous total amount
-        totalReleasedAmounts.push(
-            (0 == totalReleasedAmounts.length ? 0 : totalReleasedAmounts[totalReleasedAmounts.length - 1])
-            + releases[index].amount
-        );
-
-        // Add to total released amount blocks
-        if (0 < executedReleasesCount)
+        // Push total amount released and total released amount blocks
+        if (0 < index) {
+            totalReleasedAmounts.push(
+                totalReleasedAmounts[index - 1] + releases[index].amount
+            );
             totalReleasedAmountBlocks.push(
-                totalReleasedAmounts[executedReleasesCount - 1].mul(
-                    blockNumber.sub(releaseBlockNumbers[executedReleasesCount - 1])
+                totalReleasedAmounts[index - 1].mul(
+                    releases[index].blockNumber.sub(releases[index - 1].blockNumber)
                 )
             );
-        else
-            totalReleasedAmountBlocks.push(0);
 
-        // Store the block number of the release
-        releaseBlockNumbers.push(blockNumber);
+        } else {
+            totalReleasedAmounts.push(releases[index].amount);
+            totalReleasedAmountBlocks.push(0);
+        }
     }
 }

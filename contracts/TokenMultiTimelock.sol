@@ -163,6 +163,9 @@ contract TokenMultiTimelock is Ownable {
         // Get the release object
         Release storage _release = releases[index];
 
+        // Require that this release has been properly defined by having non-zero amount
+        require(0 < _release.amount);
+
         // Require that this release has not already been executed
         require(!_release.done);
 
@@ -171,6 +174,10 @@ contract TokenMultiTimelock is Ownable {
 
         // Set release done
         _release.done = true;
+
+        // Set release block number if not previously set
+        if (0 == _release.blockNumber)
+            _release.blockNumber = block.number;
 
         // Bump number of executed releases
         executedReleasesCount++;
@@ -181,11 +188,8 @@ contract TokenMultiTimelock is Ownable {
         // Execute transfer
         token.safeTransfer(beneficiary, _release.amount);
 
-        // Get block number
-        uint256 blockNumber = 0 < _release.blockNumber ? _release.blockNumber : block.number;
-
         // Emit event
-        emit ReleaseEvent(index, blockNumber, _release.earliestReleaseTime, block.timestamp, _release.amount);
+        emit ReleaseEvent(index, _release.blockNumber, _release.earliestReleaseTime, block.timestamp, _release.amount);
     }
 
     // Modifiers

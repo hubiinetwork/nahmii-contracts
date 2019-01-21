@@ -42,7 +42,7 @@ module.exports = (deployer, network, accounts) => {
 
             const instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
             await instance.mint(ownerAccount, 120e24);
-            // await instance.disableMinting();
+            await instance.disableMinting();
 
             console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
             console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);

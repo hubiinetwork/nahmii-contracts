@@ -253,10 +253,6 @@ module.exports = function (glob) {
 
                 await web3TokenMultiTimelock.setToken(web3RevenueToken.address);
                 await web3TokenMultiTimelock.setBeneficiary(glob.user_a);
-
-                await web3TokenMultiTimelock.defineReleases(
-                    [futureEpoch(1)], [1000], []
-                );
             });
 
             describe('if called by non-beneficiary', () => {
@@ -265,49 +261,94 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if called with non-existent index', () => {
+            describe('if called with index of undefined release', () => {
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.release(1, {from: glob.user_a}).should.be.rejected;
+                    web3TokenMultiTimelock.release(0, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if release timer has not expired', () => {
                 beforeEach(async () => {
-                    await web3RevenueToken.mint(web3TokenMultiTimelock.address, 1000);
-
                     await web3TokenMultiTimelock.defineReleases(
                         [futureEpoch(10)], [1000], []
                     );
                 });
 
                 it('should revert', async () => {
-                    web3TokenMultiTimelock.release(1, {from: glob.user_a}).should.be.rejected;
+                    web3TokenMultiTimelock.release(0, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
             describe('if within operational constraints', () => {
-                it('should successfully release', async () => {
-                    await sleep(1500);
+                describe('if block number is preset', () => {
+                    beforeEach(async () => {
+                        await web3TokenMultiTimelock.defineReleases(
+                            [futureEpoch(1)], [1000], [1000000]
+                        );
 
-                    const result = await web3TokenMultiTimelock.release(0, {from: glob.user_a, gas: 1e6});
+                        await sleep(1500);
+                    });
 
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ReleaseEvent');
+                    it('should successfully release with preset block number', async () => {
+                        const result = await web3TokenMultiTimelock.release(0, {from: glob.user_a, gas: 1e6});
 
-                    (await ethersTokenMultiTimelock.totalLockedAmount())
-                        ._bn.should.eq.BN(0);
-                    (await ethersTokenMultiTimelock.releasesCount())
-                        ._bn.should.eq.BN(1);
-                    (await ethersTokenMultiTimelock.executedReleasesCount())
-                        ._bn.should.eq.BN(1);
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('ReleaseEvent');
 
-                    (await ethersRevenueToken.balanceOf(glob.user_a))
-                        ._bn.should.eq.BN(1000);
+                        (await ethersTokenMultiTimelock.totalLockedAmount())
+                            ._bn.should.eq.BN(0);
+                        (await ethersTokenMultiTimelock.releasesCount())
+                            ._bn.should.eq.BN(1);
+                        (await ethersTokenMultiTimelock.executedReleasesCount())
+                            ._bn.should.eq.BN(1);
+
+                        const release = await ethersTokenMultiTimelock.releases(0);
+                        release.done.should.be.true;
+                        release.blockNumber._bn.should.eq.BN(1000000);
+
+                        (await ethersRevenueToken.balanceOf(glob.user_a))
+                            ._bn.should.eq.BN(1000);
+                    });
+                });
+
+                describe('if block number is not preset', () => {
+                    beforeEach(async () => {
+                        await web3TokenMultiTimelock.defineReleases(
+                            [futureEpoch(1)], [1000], []
+                        );
+
+                        await sleep(1500);
+                    });
+
+                    it('should successfully release with current block number', async () => {
+                        const result = await web3TokenMultiTimelock.release(0, {from: glob.user_a, gas: 1e6});
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('ReleaseEvent');
+
+                        (await ethersTokenMultiTimelock.totalLockedAmount())
+                            ._bn.should.eq.BN(0);
+                        (await ethersTokenMultiTimelock.releasesCount())
+                            ._bn.should.eq.BN(1);
+                        (await ethersTokenMultiTimelock.executedReleasesCount())
+                            ._bn.should.eq.BN(1);
+
+                        const release = await ethersTokenMultiTimelock.releases(0);
+                        release.done.should.be.true;
+                        release.blockNumber._bn.should.eq.BN(await provider.getBlockNumber());
+
+                        (await ethersRevenueToken.balanceOf(glob.user_a))
+                            ._bn.should.eq.BN(1000);
+                    });
                 });
             });
 
             describe('if called with index that has already been released', () => {
                 beforeEach(async () => {
+                    await web3TokenMultiTimelock.defineReleases(
+                        [futureEpoch(1)], [1000], []
+                    );
+
                     await sleep(1500);
 
                     await web3TokenMultiTimelock.release(0, {from: glob.user_a, gas: 1e6});
