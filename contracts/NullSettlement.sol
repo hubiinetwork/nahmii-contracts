@@ -110,11 +110,15 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     function _settleNull(address wallet, address currencyCt, uint256 currencyId)
     private
     {
+        // Require that proposal has expired
+        require(nullSettlementChallenge.hasProposalExpired(wallet, currencyCt, currencyId));
+
         // Require that driip settlement challenge qualified
         require(SettlementTypesLib.Status.Qualified == nullSettlementChallenge.proposalStatus(
             wallet, currencyCt, currencyId
         ));
 
+        // Get proposal nonce
         uint256 nonce = nullSettlementChallenge.proposalNonce(wallet, currencyCt, currencyId);
 
         // Require that operational mode is normal and data is available, or that nonce is
@@ -129,13 +133,14 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         // Update settled nonce of wallet and currency
         walletCurrencyMaxNullNonce[wallet][currencyCt][currencyId] = nonce;
 
-        // Get proposal's stage amount
-        int256 stageAmount = nullSettlementChallenge.proposalStageAmount(
-            wallet, currencyCt, currencyId
-        );
-
         // Stage the proposed amount
-        clientFund.stage(wallet, stageAmount, currencyCt, currencyId, "");
+        clientFund.stage(
+            wallet,
+            nullSettlementChallenge.proposalStageAmount(
+                wallet, currencyCt, currencyId
+            ),
+            currencyCt, currencyId, ""
+        );
 
         // If payment nonce is beyond max null settlement nonce then update max null nonce
         if (nonce > maxNullNonce)

@@ -607,9 +607,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         require(validator.isPaymentParty(payment, wallet));
 
         // Require that wallet has no overlap with active proposal
-        require(hasProposalExpired(
+        require(
+            hasProposalExpired(
                 wallet, payment.currency.ct, payment.currency.id
-            ));
+            )
+        );
 
         // Create proposal
         _addProposalFromPayment(wallet, payment, stageAmount, balanceReward);
