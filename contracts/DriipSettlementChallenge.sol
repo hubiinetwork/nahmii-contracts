@@ -36,7 +36,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     address[] public challengeWallets;
     mapping(address => bool) challengeByWallets;
 
-    SettlementTypesLib.ProposalThick[] public proposals;
+    SettlementTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
     mapping(address => uint256[]) public proposalIndicesByWallet;
 
@@ -456,22 +456,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
         proposals[index - 1].status = status;
-    }
-
-    /// @notice Set settlement proposal block number property of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param blockNumber The block number value
-    function setProposalBlockNumber(address wallet, address currencyCt, uint256 currencyId,
-        uint256 blockNumber)
-    public
-    onlyDriipSettlementDispute
-    {
-        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
-        require(0 != index);
-        proposals[index - 1].blockNumber = blockNumber;
     }
 
     /// @notice Disqualify a proposal

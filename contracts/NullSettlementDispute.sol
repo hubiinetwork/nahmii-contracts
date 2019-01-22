@@ -128,7 +128,7 @@ FraudChallengable, CancelOrdersChallengable {
         emit ChallengeByOrderEvent(
             order.wallet,
             nullSettlementChallenge.proposalNonce(order.wallet, currency.ct, currency.id),
-            nullSettlementChallenge.disqualificationCandidateHash(order.wallet, currency.ct, currency.id),
+            nullSettlementChallenge.proposalDisqualificationCandidateHash(order.wallet, currency.ct, currency.id),
             challenger
         );
     }
@@ -204,7 +204,7 @@ FraudChallengable, CancelOrdersChallengable {
         emit ChallengeByTradeEvent(
             wallet,
             nullSettlementChallenge.proposalNonce(wallet, currency.ct, currency.id),
-            nullSettlementChallenge.disqualificationCandidateHash(wallet, currency.ct, currency.id),
+            nullSettlementChallenge.proposalDisqualificationCandidateHash(wallet, currency.ct, currency.id),
             challenger
         );
     }
@@ -263,7 +263,7 @@ FraudChallengable, CancelOrdersChallengable {
         emit ChallengeByPaymentEvent(
             wallet,
             nullSettlementChallenge.proposalNonce(wallet, payment.currency.ct, payment.currency.id),
-            nullSettlementChallenge.disqualificationCandidateHash(wallet, payment.currency.ct, payment.currency.id),
+            nullSettlementChallenge.proposalDisqualificationCandidateHash(wallet, payment.currency.ct, payment.currency.id),
             challenger
         );
     }

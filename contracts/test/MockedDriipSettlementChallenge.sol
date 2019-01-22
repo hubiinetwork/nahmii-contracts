@@ -83,7 +83,7 @@ contract MockedDriipSettlementChallenge {
         return _proposalNonce;
     }
 
-    function setProposalBlockNumber(uint256 proposalBlockNumber)
+    function _setProposalBlockNumber(uint256 proposalBlockNumber)
     public
     {
         _proposalBlockNumber = proposalBlockNumber;

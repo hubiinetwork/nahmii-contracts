@@ -41,11 +41,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
     mapping(address => uint256[]) public proposalIndicesByWallet;
 
-    SettlementTypesLib.Disqualification[] public disqualifications;
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public disqualificationIndexByWalletCurrency;
-
-    bytes32[] public candidateHashes;
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -55,6 +50,9 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         uint stageCurrencyId);
     event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
         address stageCurrencyCt, uint stageCurrencyId);
+    // TODO Emit event
+    event DisqualifyProposalEvent(address challengedWallet, address currencyCt, uint256 currencyId,
+        address challengerWallet, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType);
 
     //
     // Constructor
@@ -95,16 +93,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     returns (uint256)
     {
         return proposals.length;
-    }
-
-    /// @notice Get the number of challenges
-    /// @return The number of challenges
-    function disqualificationsCount()
-    public
-    view
-    returns (uint256)
-    {
-        return disqualifications.length;
     }
 
     /// @notice Start settlement challenge
@@ -264,19 +252,49 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         return proposals[index - 1].balanceReward;
     }
 
+    /// @notice Get the disqualification challenger of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The challenger of the settlement disqualification
+    function proposalDisqualificationChallenger(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (address)
+    {
+        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
+        require(0 != index);
+        return proposals[index - 1].disqualification.challenger;
+    }
+
+    /// @notice Get the disqualification block number of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The block number of the settlement disqualification
+    function proposalDisqualificationBlockNumber(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
+        require(0 != index);
+        return proposals[index - 1].disqualification.blockNumber;
+    }
+
     /// @notice Get the disqualification candidate type of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The candidate type of the settlement disqualification
-    function disqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
+    function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (SettlementTypesLib.CandidateType)
     {
-        uint256 index = disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId];
+        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
-        return disqualifications[index - 1].candidateType;
+        return proposals[index - 1].disqualification.candidateType;
     }
 
     /// @notice Get the disqualification candidate hash of the given wallet and currency
@@ -284,29 +302,14 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The candidate hash of the settlement disqualification
-    function disqualificationCandidateHash(address wallet, address currencyCt, uint256 currencyId)
+    function proposalDisqualificationCandidateHash(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bytes32)
     {
-        uint256 index = disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId];
+        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
-        return disqualifications[index - 1].candidateHash;
-    }
-
-    /// @notice Get the disqualification challenger of the given wallet and currency
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The challenger of the settlement disqualification
-    function disqualificationChallenger(address wallet, address currencyCt, uint256 currencyId)
-    public
-    view
-    returns (address)
-    {
-        uint256 index = disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId];
-        require(0 != index);
-        return disqualifications[index - 1].challenger;
+        return proposals[index - 1].disqualification.candidateHash;
     }
 
     /// @notice Set settlement proposal end time property of the given wallet
@@ -337,6 +340,8 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         proposals[index - 1].status = status;
     }
 
+    // TODO Add disqualifyProposal
+
     /// @notice Challenge the settlement by providing order candidate
     /// @param order The order candidate that challenges the null
     function challengeByOrder(NahmiiTypesLib.Order order)
@@ -366,16 +371,7 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
     }
 
-    /// @notice Get the count of challenge candidate hashes
-    /// @return The count of challenge candidate order hashes
-    function candidateHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return candidateHashes.length;
-    }
-
+    // TODO Remove
     /// @notice Add a disqualification instance
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
@@ -383,33 +379,33 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     /// @param candidateHash The candidate hash
     /// @param candidateType The candidate type
     /// @param challenger The concerned challenger
-    function addDisqualification(address wallet, address currencyCt, uint256 currencyId, bytes32 candidateHash,
-        SettlementTypesLib.CandidateType candidateType, address challenger)
-    public
-    onlyNullSettlementDispute
-    {
-        // Get the proposal index
-        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
-        require(0 != index);
-
-        // Create disqualification
-        disqualifications.length++;
-
-        // Populate disqualification
-        disqualifications[disqualifications.length - 1].wallet = wallet;
-        disqualifications[disqualifications.length - 1].nonce = proposals[index - 1].nonce;
-        disqualifications[disqualifications.length - 1].currencyCt = currencyCt;
-        disqualifications[disqualifications.length - 1].currencyId = currencyId;
-        disqualifications[disqualifications.length - 1].candidateHash = candidateHash;
-        disqualifications[disqualifications.length - 1].candidateType = candidateType;
-        disqualifications[disqualifications.length - 1].challenger = challenger;
-
-        // Store disqualification index
-        disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId] = disqualifications.length;
-
-        // Store candidate hash
-        candidateHashes.push(candidateHash);
-    }
+    //    function addDisqualification(address wallet, address currencyCt, uint256 currencyId, bytes32 candidateHash,
+    //        SettlementTypesLib.CandidateType candidateType, address challenger)
+    //    public
+    //    onlyNullSettlementDispute
+    //    {
+    //        // Get the proposal index
+    //        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
+    //        require(0 != index);
+    //
+    //        // Create disqualification
+    //        disqualifications.length++;
+    //
+    //        // Populate disqualification
+    //        disqualifications[disqualifications.length - 1].wallet = wallet;
+    //        disqualifications[disqualifications.length - 1].nonce = proposals[index - 1].nonce;
+    //        disqualifications[disqualifications.length - 1].currencyCt = currencyCt;
+    //        disqualifications[disqualifications.length - 1].currencyId = currencyId;
+    //        disqualifications[disqualifications.length - 1].candidateHash = candidateHash;
+    //        disqualifications[disqualifications.length - 1].candidateType = candidateType;
+    //        disqualifications[disqualifications.length - 1].challenger = challenger;
+    //
+    //        // Store disqualification index
+    //        disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId] = disqualifications.length;
+    //
+    //        // Store candidate hash
+    //        candidateHashes.push(candidateHash);
+    //    }
 
     //
     // Private functions

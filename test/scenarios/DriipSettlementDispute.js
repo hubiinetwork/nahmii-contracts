@@ -356,7 +356,7 @@ module.exports = (glob) => {
 
             describe('if called on order whose block number is smaller than the proposal block number', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.setProposalBlockNumber(
+                    await ethersDriipSettlementChallenge._setProposalBlockNumber(
                         order.blockNumber.add(10)
                     );
                 });
@@ -934,7 +934,7 @@ module.exports = (glob) => {
 
             describe('if called on trade whose block number is lower than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.setProposalBlockNumber(
+                    await ethersDriipSettlementChallenge._setProposalBlockNumber(
                         trade.blockNumber.add(10)
                     );
                 });
@@ -1225,7 +1225,7 @@ module.exports = (glob) => {
 
             describe('if called on payment whose block number is lower than the one of the proposal', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.setProposalBlockNumber(
+                    await ethersDriipSettlementChallenge._setProposalBlockNumber(
                         payment.blockNumber.add(10)
                     );
                 });

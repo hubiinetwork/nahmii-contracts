@@ -27,11 +27,10 @@ contract MockedNullSettlementChallenge {
     uint256 public _proposalExpirationTime;
     SettlementTypesLib.Status public _proposalStatus;
     bool public _proposalBalanceReward;
-    SettlementTypesLib.CandidateType public _disqualificationCandidateType;
-    bytes32 public _disqualificationCandidateHash;
-    address public _disqualificationChallenger;
+    address public _proposalDisqualificationChallenger;
+    SettlementTypesLib.CandidateType public _proposalDisqualificationCandidateType;
+    bytes32 public _proposalDisqualificationCandidateHash;
     NullSettlementDispute public _nullSettlementDispute;
-    uint256 _disqualificationsCount;
 
     function _reset()
     public
@@ -43,10 +42,9 @@ contract MockedNullSettlementChallenge {
         delete _proposalExpirationTime;
         delete _proposalStatus;
         delete _proposalBalanceReward;
-        delete _disqualificationCandidateType;
-        delete _disqualificationCandidateHash;
-        delete _disqualificationChallenger;
-        delete _disqualificationsCount;
+        delete _proposalDisqualificationChallenger;
+    delete _proposalDisqualificationCandidateType;
+    delete _proposalDisqualificationCandidateHash;
 
         _proposalStageAmounts.length = 0;
         _proposalStageAmountIndex = 0;
@@ -79,7 +77,7 @@ contract MockedNullSettlementChallenge {
         return _proposalNonce;
     }
 
-    function setProposalBlockNumber(uint256 proposalBlockNumber)
+    function _setProposalBlockNumber(uint256 proposalBlockNumber)
     public
     {
         _proposalBlockNumber = proposalBlockNumber;
@@ -164,46 +162,46 @@ contract MockedNullSettlementChallenge {
         return _proposalBalanceReward;
     }
 
+    function _setProposalDisqualificationChallenger(address challenger)
+    public
+    {
+        _proposalDisqualificationChallenger = challenger;
+    }
+
+    function proposalDisqualificationChallenger(address, address, uint256)
+    public
+    view
+    returns (address)
+    {
+        return _proposalDisqualificationChallenger;
+    }
+
     function _setProposalDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
     public
     {
-        _disqualificationCandidateType = candidateType;
+        _proposalDisqualificationCandidateType = candidateType;
     }
 
-    function disqualificationCandidateType(address, address, uint256)
+    function proposalDisqualificationCandidateType(address, address, uint256)
     public
     view
     returns (SettlementTypesLib.CandidateType)
     {
-        return _disqualificationCandidateType;
+        return _proposalDisqualificationCandidateType;
     }
 
     function _setProposalDisqualificationCandidateHash(bytes32 candidateHash)
     public
     {
-        _disqualificationCandidateHash = candidateHash;
+        _proposalDisqualificationCandidateHash = candidateHash;
     }
 
-    function disqualificationCandidateHash(address, address, uint256)
+    function proposalDisqualificationCandidateHash(address, address, uint256)
     public
     view
     returns (bytes32)
     {
-        return _disqualificationCandidateHash;
-    }
-
-    function _setProposalDisqualificationChallenger(address challenger)
-    public
-    {
-        _disqualificationChallenger = challenger;
-    }
-
-    function disqualificationChallenger(address, address, uint256)
-    public
-    view
-    returns (address)
-    {
-        return _disqualificationChallenger;
+        return _proposalDisqualificationCandidateHash;
     }
 
     function setNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
@@ -228,18 +226,5 @@ contract MockedNullSettlementChallenge {
     public
     {
         _nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
-    }
-
-    function addDisqualification(address, address, uint256, bytes32,
-        SettlementTypesLib.CandidateType, address)
-    public
-    {
-        _disqualificationsCount++;
-    }
-
-    function removeDisqualification(address, address, uint256)
-    public
-    {
-        _disqualificationsCount--;
     }
 }
