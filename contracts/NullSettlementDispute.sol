@@ -87,9 +87,13 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
-        // TODO Replace by wallet nonce
-        // Require that order's block number is not earlier than proposal's block number
+        // TODO Replace by wallet nonce?
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(order.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
+            order.wallet, currency.ct, currency.id
+        ));
+        require(order.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
             order.wallet, currency.ct, currency.id
         ));
 
@@ -146,9 +150,13 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
-        // TODO Replace by wallet nonce
-        // Require that trade's block number is not earlier than proposal's block number
+        // TODO Replace by wallet nonce?
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(trade.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
+            wallet, currency.ct, currency.id
+        ));
+        require(trade.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
             wallet, currency.ct, currency.id
         ));
 
@@ -193,9 +201,13 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
-        // TODO Replace by wallet nonce
-        // Require that payment's block number is not earlier than proposal's block number
+        // TODO Replace by wallet nonce?
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
+            wallet, payment.currency.ct, payment.currency.id
+        ));
+        require(payment.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
             wallet, payment.currency.ct, payment.currency.id
         ));
 

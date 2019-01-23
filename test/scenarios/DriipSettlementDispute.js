@@ -566,7 +566,6 @@ module.exports = (glob) => {
                     logs[logs.length - 1].topics[0].should.equal(topic);
                 });
             });
-
         });
 
         describe('unchallengeOrderCandidateByTrade()', () => {
@@ -792,7 +791,7 @@ module.exports = (glob) => {
                 let topic, filter;
 
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setProposalBalanceReward(true);
+                    await ethersDriipSettlementChallenge._setProposalBalanceReward(true);
 
                     await ethersDriipSettlementChallenge.setProposalStatus(
                         trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
@@ -988,7 +987,7 @@ module.exports = (glob) => {
 
             describe('if called with balance reward and proposal initially is qualified', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setProposalBalanceReward(true);
+                    await ethersDriipSettlementChallenge._setProposalBalanceReward(true);
                 });
 
                 it('should disqualify proposal and reward new challenger by locking challenged wallet', async () => {
@@ -1032,7 +1031,7 @@ module.exports = (glob) => {
 
             describe('if called with balance reward and proposal initially is disqualified', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge._setProposalBalanceReward(true);
+                    await ethersDriipSettlementChallenge._setProposalBalanceReward(true);
 
                     await ethersDriipSettlementChallenge.setProposalStatus(
                         trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,

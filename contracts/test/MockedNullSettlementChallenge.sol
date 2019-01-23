@@ -235,6 +235,7 @@ contract MockedNullSettlementChallenge {
     function setNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
     public
     {
+
         _nullSettlementDispute = nullSettlementDispute;
     }
 
