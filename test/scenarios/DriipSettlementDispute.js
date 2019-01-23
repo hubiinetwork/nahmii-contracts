@@ -366,6 +366,18 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called on order whose block number is smaller than the proposal disqualification block number', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalDisqualificationBlockNumber(
+                        order.blockNumber.add(10)
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.challengeByOrder(order).should.be.rejected;
+                });
+            });
+
             describe('if called on order whose amount is smaller than the proposal target balance amount', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalTargetBalanceAmount(
@@ -932,9 +944,23 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on trade whose block number is lower than the one of the proposal', () => {
+            describe('if called on trade whose block number is smaller than the proposal block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBlockNumber(
+                        trade.blockNumber.add(10)
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.challengeByTrade(
+                        trade.buyer.wallet, trade, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called on trade whose block number is smaller than the proposal disqualification block number', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalDisqualificationBlockNumber(
                         trade.blockNumber.add(10)
                     );
                 });
@@ -1223,9 +1249,23 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on payment whose block number is lower than the one of the proposal', () => {
+            describe('if called on payment whose block number is smaller than the proposal block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBlockNumber(
+                        payment.blockNumber.add(10)
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallenge.challengeByPayment(
+                        payment.sender.wallet, payment, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called on payment whose block number is smaller than the proposal disqualification block number', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallenge._setProposalDisqualificationBlockNumber(
                         payment.blockNumber.add(10)
                     );
                 });

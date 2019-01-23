@@ -93,8 +93,12 @@ FraudChallengable, CancelOrdersChallengable {
         require(!driipSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
         // TODO Replace by wallet nonce
-        // Require that order's block number is not earlier than proposal's block number
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(order.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+            order.wallet, currency.ct, currency.id
+        ));
+        require(order.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
             order.wallet, currency.ct, currency.id
         ));
 
@@ -226,8 +230,12 @@ FraudChallengable, CancelOrdersChallengable {
         require(!driipSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
         // TODO Replace by wallet nonce
-        // Require that trade's block number is not earlier than proposal's block number
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(trade.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+            wallet, currency.ct, currency.id
+        ));
+        require(trade.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
             wallet, currency.ct, currency.id
         ));
 
@@ -275,8 +283,12 @@ FraudChallengable, CancelOrdersChallengable {
         require(!driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
         // TODO Replace by wallet nonce
-        // Require that payment candidate's block number is not earlier than proposal's block number
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(payment.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+            wallet, payment.currency.ct, payment.currency.id
+        ));
+        require(payment.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
             wallet, payment.currency.ct, payment.currency.id
         ));
 

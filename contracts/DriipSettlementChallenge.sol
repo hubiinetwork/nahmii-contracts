@@ -476,9 +476,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         uint256 index = proposalIndexByWalletCurrency[challengedWallet][currencyCt][currencyId];
         require(0 != index);
 
-        // Require that candidate it at greater block height than any existent disqualification
-        require(blockNumber > proposals[index - 1].disqualification.blockNumber);
-
         // Update proposal
         proposals[index - 1].status = SettlementTypesLib.Status.Disqualified;
         proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
@@ -504,9 +501,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
-
-        // Require that proposal has been previously disqualified
-        require(SettlementTypesLib.Status.Disqualified == proposals[index - 1].status);
 
         // Emit event
         emit QualifyProposalEvent(
