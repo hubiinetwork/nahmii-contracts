@@ -317,11 +317,33 @@ module.exports = (glob) => {
         });
 
         describe('settleNull()', () => {
+            beforeEach(async () => {
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersNullSettlementChallenge._reset({gasLimit: 1e6});
+
+                await ethersNullSettlementChallenge.setProposalStatus(
+                    glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                );
+                await ethersNullSettlementChallenge._setProposalNonce(1);
+                await ethersNullSettlementChallenge._setProposalExpired(true);
+                await ethersNullSettlementChallenge._addProposalStageAmount(10);
+                await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(0);
+            });
+
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6}).should.be.rejected;
+                });
+            });
+
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersClientFund._reset({gasLimit: 1e6});
-                    await ethersNullSettlementChallenge._reset();
-
                     await ethersNullSettlementChallenge.setProposalStatus(
                         glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -337,20 +359,6 @@ module.exports = (glob) => {
 
                 before(() => {
                     challenger = Wallet.createRandom().address;
-                });
-
-                beforeEach(async () => {
-                    await ethersConfiguration._reset();
-                    await ethersClientFund._reset({gasLimit: 1e6});
-                    await ethersCommunityVote._reset();
-                    await ethersNullSettlementChallenge._reset();
-
-                    await ethersNullSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                    );
-                    await ethersNullSettlementChallenge._setProposalNonce(1);
-                    await ethersNullSettlementChallenge._addProposalStageAmount(10);
-                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(0);
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {
@@ -416,7 +424,20 @@ module.exports = (glob) => {
         describe('settleNullByProxy()', () => {
             let wallet;
 
-            beforeEach(() => {
+            beforeEach(async () => {
+                await ethersClientFund._reset({gasLimit: 1e6});
+                await ethersCommunityVote._reset({gasLimit: 1e6});
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersNullSettlementChallenge._reset({gasLimit: 1e6});
+
+                await ethersNullSettlementChallenge.setProposalStatus(
+                    glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                );
+                await ethersNullSettlementChallenge._setProposalNonce(1);
+                await ethersNullSettlementChallenge._setProposalExpired(true);
+                await ethersNullSettlementChallenge._addProposalStageAmount(10);
+                await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(0);
+
                 wallet = Wallet.createRandom().address;
             });
 
@@ -431,12 +452,22 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if proposal has not expired', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallenge._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersClientFund._reset({gasLimit: 1e6});
-                    await ethersNullSettlementChallenge._reset();
-
-                    await ethersNullSettlementChallenge.setProposalStatus(wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified'));
+                    await ethersNullSettlementChallenge.setProposalStatus(
+                        wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    );
                 });
 
                 it('should revert', async () => {
@@ -450,20 +481,6 @@ module.exports = (glob) => {
 
                 before(() => {
                     challenger = Wallet.createRandom().address;
-                });
-
-                beforeEach(async () => {
-                    await ethersConfiguration._reset();
-                    await ethersClientFund._reset({gasLimit: 1e6});
-                    await ethersCommunityVote._reset();
-                    await ethersNullSettlementChallenge._reset();
-
-                    await ethersNullSettlementChallenge.setProposalStatus(
-                        wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                    );
-                    await ethersNullSettlementChallenge._setProposalNonce(1);
-                    await ethersNullSettlementChallenge._addProposalStageAmount(10);
-                    await ethersNullSettlementChallenge._setProposalTargetBalanceAmount(0);
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {

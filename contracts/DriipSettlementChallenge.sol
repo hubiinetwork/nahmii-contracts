@@ -36,7 +36,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     address[] public challengeWallets;
     mapping(address => bool) challengeByWallets;
 
-    SettlementTypesLib.ProposalThick[] public proposals;
+    SettlementTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
     mapping(address => uint256[]) public proposalIndicesByWallet;
 
@@ -458,22 +458,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         proposals[index - 1].status = status;
     }
 
-    /// @notice Set settlement proposal block number property of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param blockNumber The block number value
-    function setProposalBlockNumber(address wallet, address currencyCt, uint256 currencyId,
-        uint256 blockNumber)
-    public
-    onlyDriipSettlementDispute
-    {
-        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
-        require(0 != index);
-        proposals[index - 1].blockNumber = blockNumber;
-    }
-
     /// @notice Disqualify a proposal
     /// @dev A call to this function will intentionally override previous disqualifications if existent
     /// @param challengedWallet The address of the concerned challenged wallet
@@ -491,9 +475,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[challengedWallet][currencyCt][currencyId];
         require(0 != index);
-
-        // Require that candidate it at greater block height than any existent disqualification
-        require(blockNumber > proposals[index - 1].disqualification.blockNumber);
 
         // Update proposal
         proposals[index - 1].status = SettlementTypesLib.Status.Disqualified;
@@ -520,9 +501,6 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
-
-        // Require that proposal has been previously disqualified
-        require(SettlementTypesLib.Status.Disqualified == proposals[index - 1].status);
 
         // Emit event
         emit QualifyProposalEvent(
@@ -623,9 +601,11 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         require(validator.isPaymentParty(payment, wallet));
 
         // Require that wallet has no overlap with active proposal
-        require(hasProposalExpired(
+        require(
+            hasProposalExpired(
                 wallet, payment.currency.ct, payment.currency.id
-            ));
+            )
+        );
 
         // Create proposal
         _addProposalFromPayment(wallet, payment, stageAmount, balanceReward);
@@ -643,7 +623,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     {
         _addProposalFromTrade(
             wallet, trade, stageAmount,
-            validator.isTradeBuyer(trade, wallet) ? trade.buyer.balances.intended.current : trade.seller.balances.intended.current,
+            _tradeIntendedBalanceAmount(trade, wallet),
             trade.currencies.intended, balanceReward
         );
     }
@@ -653,7 +633,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     {
         _addProposalFromTrade(
             wallet, trade, stageAmount,
-            validator.isTradeBuyer(trade, wallet) ? trade.buyer.balances.conjugate.current : trade.seller.balances.conjugate.current,
+            _tradeConjugateBalanceAmount(trade, wallet),
             trade.currencies.conjugate, balanceReward
         );
     }
@@ -697,11 +677,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         require(stageAmount.isPositiveInt256());
 
         // Deduce the concerned balance amount
-        int256 balanceAmount = (
-        validator.isPaymentSender(payment, wallet) ?
-        payment.sender.balances.current :
-        payment.recipient.balances.current
-        );
+        int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
 
         // Require that balance amount is not less than stage amount
         require(balanceAmount >= stageAmount);
@@ -725,6 +701,36 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         // Store proposal index
         proposalIndexByWalletCurrency[wallet][payment.currency.ct][payment.currency.id] = proposals.length;
         proposalIndicesByWallet[wallet].push(proposals.length);
+    }
+
+    function _tradeIntendedBalanceAmount(NahmiiTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (int256)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.buyer.balances.intended.current :
+        trade.seller.balances.intended.current;
+    }
+
+    function _tradeConjugateBalanceAmount(NahmiiTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (int256)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.buyer.balances.conjugate.current :
+        trade.seller.balances.conjugate.current;
+    }
+
+    function _paymentBalanceAmount(NahmiiTypesLib.Payment payment, address wallet)
+    private
+    view
+    returns (int256)
+    {
+        return validator.isPaymentSender(payment, wallet) ?
+        payment.sender.balances.current :
+        payment.recipient.balances.current;
     }
 
     function _addToChallengeWallets(address wallet)

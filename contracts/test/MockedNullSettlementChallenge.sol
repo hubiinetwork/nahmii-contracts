@@ -27,11 +27,11 @@ contract MockedNullSettlementChallenge {
     uint256 public _proposalExpirationTime;
     SettlementTypesLib.Status public _proposalStatus;
     bool public _proposalBalanceReward;
-    SettlementTypesLib.CandidateType public _disqualificationCandidateType;
-    bytes32 public _disqualificationCandidateHash;
-    address public _disqualificationChallenger;
+    address public _proposalDisqualificationChallenger;
+    uint256 public _proposalDisqualificationBlockNumber;
+    bytes32 public _proposalDisqualificationCandidateHash;
+    SettlementTypesLib.CandidateType public _proposalDisqualificationCandidateType;
     NullSettlementDispute public _nullSettlementDispute;
-    uint256 _disqualificationsCount;
 
     function _reset()
     public
@@ -43,10 +43,10 @@ contract MockedNullSettlementChallenge {
         delete _proposalExpirationTime;
         delete _proposalStatus;
         delete _proposalBalanceReward;
-        delete _disqualificationCandidateType;
-        delete _disqualificationCandidateHash;
-        delete _disqualificationChallenger;
-        delete _disqualificationsCount;
+        delete _proposalDisqualificationChallenger;
+        delete _proposalDisqualificationBlockNumber;
+        delete _proposalDisqualificationCandidateHash;
+        delete _proposalDisqualificationCandidateType;
 
         _proposalStageAmounts.length = 0;
         _proposalStageAmountIndex = 0;
@@ -79,7 +79,7 @@ contract MockedNullSettlementChallenge {
         return _proposalNonce;
     }
 
-    function setProposalBlockNumber(uint256 proposalBlockNumber)
+    function _setProposalBlockNumber(uint256 proposalBlockNumber)
     public
     {
         _proposalBlockNumber = proposalBlockNumber;
@@ -164,51 +164,78 @@ contract MockedNullSettlementChallenge {
         return _proposalBalanceReward;
     }
 
-    function _setProposalDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
+    function _setProposalDisqualificationChallenger(address challenger)
     public
     {
-        _disqualificationCandidateType = candidateType;
+        _proposalDisqualificationChallenger = challenger;
     }
 
-    function disqualificationCandidateType(address, address, uint256)
+    function proposalDisqualificationChallenger(address, address, uint256)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (address)
     {
-        return _disqualificationCandidateType;
+        return _proposalDisqualificationChallenger;
+    }
+
+    function _setProposalDisqualificationBlockNumber(uint256 blockNumber)
+    public
+    {
+        _proposalDisqualificationBlockNumber = blockNumber;
+    }
+
+    function proposalDisqualificationBlockNumber(address, address, uint256)
+    public
+    view
+    returns (uint256)
+    {
+        return _proposalDisqualificationBlockNumber;
     }
 
     function _setProposalDisqualificationCandidateHash(bytes32 candidateHash)
     public
     {
-        _disqualificationCandidateHash = candidateHash;
+        _proposalDisqualificationCandidateHash = candidateHash;
     }
 
-    function disqualificationCandidateHash(address, address, uint256)
+    function proposalDisqualificationCandidateHash(address, address, uint256)
     public
     view
     returns (bytes32)
     {
-        return _disqualificationCandidateHash;
+        return _proposalDisqualificationCandidateHash;
     }
 
-    function _setProposalDisqualificationChallenger(address challenger)
+    function _setProposalDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
     public
     {
-        _disqualificationChallenger = challenger;
+        _proposalDisqualificationCandidateType = candidateType;
     }
 
-    function disqualificationChallenger(address, address, uint256)
+    function proposalDisqualificationCandidateType(address, address, uint256)
     public
     view
-    returns (address)
+    returns (SettlementTypesLib.CandidateType)
     {
-        return _disqualificationChallenger;
+        return _proposalDisqualificationCandidateType;
+    }
+
+    function disqualifyProposal(address, address, uint256, address challenger, uint256 blockNumber,
+        bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType)
+    public
+    {
+        _proposalStatus = SettlementTypesLib.Status.Disqualified;
+        //        _proposalExpirationTime = 0;
+        _proposalDisqualificationChallenger = challenger;
+        _proposalDisqualificationBlockNumber = blockNumber;
+        _proposalDisqualificationCandidateHash = candidateHash;
+        _proposalDisqualificationCandidateType = candidateType;
     }
 
     function setNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
     public
     {
+
         _nullSettlementDispute = nullSettlementDispute;
     }
 
@@ -228,18 +255,5 @@ contract MockedNullSettlementChallenge {
     public
     {
         _nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
-    }
-
-    function addDisqualification(address, address, uint256, bytes32,
-        SettlementTypesLib.CandidateType, address)
-    public
-    {
-        _disqualificationsCount++;
-    }
-
-    function removeDisqualification(address, address, uint256)
-    public
-    {
-        _disqualificationsCount--;
     }
 }

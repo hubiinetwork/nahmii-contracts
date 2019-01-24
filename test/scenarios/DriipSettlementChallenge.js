@@ -1312,24 +1312,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if candidate block number is not strictly greater than proposal block number', () => {
-                beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-
-                    await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        challengedPayment, challengedPayment.sender.balances.current, {gasLimit: 3e6}
-                    );
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlementChallenge.disqualifyProposal(
-                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
-                        challengedPayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
-                        {gasLimit: 3e6}
-                    ).should.be.rejected;
-                });
-            });
-
             describe('if within operational constraints', () => {
                 beforeEach(async () => {
                     await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
@@ -1377,18 +1359,6 @@ module.exports = (glob) => {
             });
 
             describe('if called from other than settlement dispute', () => {
-                it('should revert', async () => {
-                    ethersDriipSettlementChallenge.qualifyProposal(
-                        challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, {gasLimit: 3e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if settlement challenge has not been disqualified for the wallet and currency', () => {
-                beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-                });
-
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.qualifyProposal(
                         challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, {gasLimit: 3e6}
