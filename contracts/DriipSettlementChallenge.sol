@@ -623,7 +623,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     {
         _addProposalFromTrade(
             wallet, trade, stageAmount,
-            validator.isTradeBuyer(trade, wallet) ? trade.buyer.balances.intended.current : trade.seller.balances.intended.current,
+            _tradeIntendedBalanceAmount(trade, wallet),
             trade.currencies.intended, balanceReward
         );
     }
@@ -633,7 +633,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     {
         _addProposalFromTrade(
             wallet, trade, stageAmount,
-            validator.isTradeBuyer(trade, wallet) ? trade.buyer.balances.conjugate.current : trade.seller.balances.conjugate.current,
+            _tradeConjugateBalanceAmount(trade, wallet),
             trade.currencies.conjugate, balanceReward
         );
     }
@@ -677,11 +677,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         require(stageAmount.isPositiveInt256());
 
         // Deduce the concerned balance amount
-        int256 balanceAmount = (
-        validator.isPaymentSender(payment, wallet) ?
-        payment.sender.balances.current :
-        payment.recipient.balances.current
-        );
+        int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
 
         // Require that balance amount is not less than stage amount
         require(balanceAmount >= stageAmount);
@@ -705,6 +701,36 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         // Store proposal index
         proposalIndexByWalletCurrency[wallet][payment.currency.ct][payment.currency.id] = proposals.length;
         proposalIndicesByWallet[wallet].push(proposals.length);
+    }
+
+    function _tradeIntendedBalanceAmount(NahmiiTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (int256)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.buyer.balances.intended.current :
+        trade.seller.balances.intended.current;
+    }
+
+    function _tradeConjugateBalanceAmount(NahmiiTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (int256)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.buyer.balances.conjugate.current :
+        trade.seller.balances.conjugate.current;
+    }
+
+    function _paymentBalanceAmount(NahmiiTypesLib.Payment payment, address wallet)
+    private
+    view
+    returns (int256)
+    {
+        return validator.isPaymentSender(payment, wallet) ?
+        payment.sender.balances.current :
+        payment.recipient.balances.current;
     }
 
     function _addToChallengeWallets(address wallet)
