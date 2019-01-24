@@ -16,6 +16,7 @@ Services on behalf of your employer, You represent that You have
 authority to bind and act on behalf of such employer.**
 
 1.  **SERVICES**
+
     1. *Grant*. Subject to Your ongoing compliance with these Terms,
  Hubii grants You a non-exclusive, limited, revocable, non-transferable
  right, to access and use the Hubii Services.
