@@ -1,6 +1,8 @@
 const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
@@ -13,6 +15,7 @@ const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 let provider;
@@ -320,9 +323,10 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trade is genuine', () => {
+            describe('if trade is not sealed', () => {
                 beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    await ethersValidator.setGenuineTradeSeal(false);
+                    trade = await mocks.mockTrade(glob.user_a, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
                 it('should revert', async () => {
@@ -330,10 +334,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trade is not sealed', () => {
+            describe('if trade is genuine', () => {
                 beforeEach(async () => {
-                    await ethersValidator.setGenuineTradeSeal(false);
-                    trade = await mocks.mockTrade(glob.user_a, {blockNumber: utils.bigNumberify(blockNumber10)});
+                    trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
                 it('should revert', async () => {
@@ -350,22 +353,28 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
-                it('should set operational mode exit, store fraudulent trade and reward', async () => {
+                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
 
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(utils.bigNumberify(0)),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
-                    lock.lockedWallet.should.equal(trade.buyer.wallet);
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentTradeHashesCount())._bn.should.eq.BN(1);
+
+                    const intendedLock = await ethersWalletLocker.fungibleLocks(0);
+                    intendedLock.lockedWallet.should.equal(trade.buyer.wallet);
+                    intendedLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    intendedLock.amount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                    intendedLock.currencyCt.should.equal(trade.currencies.intended.ct);
+                    intendedLock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+
+                    const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
+                    conjugateLock.lockedWallet.should.equal(trade.buyer.wallet);
+                    conjugateLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    conjugateLock.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
+                    conjugateLock.currencyCt.should.equal(trade.currencies.conjugate.ct);
+                    conjugateLock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
 
@@ -380,19 +389,26 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent trade and seize seller\'s funds', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(utils.bigNumberify(0)),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
-                    lock.lockedWallet.should.equal(trade.seller.wallet);
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentTradeHashesCount())._bn.should.eq.BN(1);
+
+                    const intendedLock = await ethersWalletLocker.fungibleLocks(0);
+                    intendedLock.lockedWallet.should.equal(trade.seller.wallet);
+                    intendedLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    intendedLock.amount._bn.should.eq.BN(trade.seller.balances.intended.current._bn);
+                    intendedLock.currencyCt.should.equal(trade.currencies.intended.ct);
+                    intendedLock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+
+                    const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
+                    conjugateLock.lockedWallet.should.equal(trade.seller.wallet);
+                    conjugateLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    conjugateLock.amount._bn.should.eq.BN(trade.seller.balances.conjugate.current._bn);
+                    conjugateLock.currencyCt.should.equal(trade.currencies.conjugate.ct);
+                    conjugateLock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
 
@@ -402,21 +418,28 @@ module.exports = (glob) => {
                     trade = await mocks.mockTrade(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
-                it('should set operational mode exit, store fraudulent trade and reward', async () => {
+                it('should set operational mode exit, store fraudulent trade and seize buyer\'s funds', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(utils.bigNumberify(0)),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
-                    lock.lockedWallet.should.equal(trade.buyer.wallet);
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentTradeHashesCount())._bn.should.eq.BN(1);
+
+                    const intendedLock = await ethersWalletLocker.fungibleLocks(0);
+                    intendedLock.lockedWallet.should.equal(trade.buyer.wallet);
+                    intendedLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    intendedLock.amount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                    intendedLock.currencyCt.should.equal(trade.currencies.intended.ct);
+                    intendedLock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+
+                    const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
+                    conjugateLock.lockedWallet.should.equal(trade.buyer.wallet);
+                    conjugateLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    conjugateLock.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
+                    conjugateLock.currencyCt.should.equal(trade.currencies.conjugate.ct);
+                    conjugateLock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
 
@@ -428,19 +451,26 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent trade and seize seller\'s funds', async () => {
                     await ethersFraudChallengeByTrade.challenge(trade, overrideOptions);
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(utils.bigNumberify(0)),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
-                    lock.lockedWallet.should.equal(trade.seller.wallet);
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentTradeHashesCount())._bn.should.eq.BN(1);
+
+                    const intendedLock = await ethersWalletLocker.fungibleLocks(0);
+                    intendedLock.lockedWallet.should.equal(trade.seller.wallet);
+                    intendedLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    intendedLock.amount._bn.should.eq.BN(trade.seller.balances.intended.current._bn);
+                    intendedLock.currencyCt.should.equal(trade.currencies.intended.ct);
+                    intendedLock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+
+                    const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
+                    conjugateLock.lockedWallet.should.equal(trade.seller.wallet);
+                    conjugateLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    conjugateLock.amount._bn.should.eq.BN(trade.seller.balances.conjugate.current._bn);
+                    conjugateLock.currencyCt.should.equal(trade.currencies.conjugate.ct);
+                    conjugateLock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
         });
