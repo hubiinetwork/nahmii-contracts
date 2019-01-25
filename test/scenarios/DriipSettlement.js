@@ -556,7 +556,7 @@ module.exports = (glob) => {
 
             describe('if trade is flagged as fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersFraudChallenge.setFraudulentTradeHash(true);
+                    await ethersFraudChallenge.addFraudulentTradeHash(trade.seal.hash);
                 });
 
                 it('should revert', async () => {
@@ -834,7 +834,7 @@ module.exports = (glob) => {
 
             describe('if trade is flagged as fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersFraudChallenge.setFraudulentTradeHash(true);
+                    await ethersFraudChallenge.addFraudulentTradeHash(trade.seal.hash);
                 });
 
                 it('should revert', async () => {
@@ -1100,7 +1100,7 @@ module.exports = (glob) => {
 
             describe('if payment is flagged as fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersFraudChallenge.setFraudulentPaymentOperatorHash(true);
+                    await ethersFraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
                 });
 
                 it('should revert', async () => {
@@ -1344,7 +1344,7 @@ module.exports = (glob) => {
 
             describe('if payment is flagged as fraudulent', () => {
                 beforeEach(async () => {
-                    await ethersFraudChallenge.setFraudulentPaymentOperatorHash(true);
+                    await ethersFraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
                 });
 
                 it('should revert', async () => {
