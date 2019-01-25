@@ -40,12 +40,18 @@ SecurityBondable {
     /// trade order double spenditure
     /// @param trade1 First trade with double spent order
     /// @param trade2 Last trade with double spent order
-    function challenge(NahmiiTypesLib.Trade trade1, NahmiiTypesLib.Trade trade2)
+    function challenge(
+        NahmiiTypesLib.Trade trade1,
+        NahmiiTypesLib.Trade trade2
+    )
     public
     onlyOperationalModeNormal
     onlySealedTrade(trade1)
     onlySealedTrade(trade2)
     {
+        require(trade1.seal.hash != trade2.seal.hash);
+
+        // Gauge double expenditure in both sides of the trade
         bool doubleSpentBuyOrder = trade1.buyer.order.hashes.operator == trade2.buyer.order.hashes.operator;
         bool doubleSpentSellOrder = trade1.seller.order.hashes.operator == trade2.seller.order.hashes.operator;
 
@@ -63,12 +69,10 @@ SecurityBondable {
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
         // Tag wallet(s) as double spender(s)
-        if (doubleSpentBuyOrder) {
-            fraudChallenge.addDoubleSpenderWallet(trade1.buyer.wallet);
-        }
-        if (doubleSpentSellOrder) {
-            fraudChallenge.addDoubleSpenderWallet(trade1.seller.wallet);
-        }
+        if (doubleSpentBuyOrder)
+            fraudChallenge.addDoubleSpenderWallet(trade2.buyer.wallet);
+        if (doubleSpentSellOrder)
+            fraudChallenge.addDoubleSpenderWallet(trade2.seller.wallet);
 
         // Emit event
         emit ChallengeByDoubleSpentOrdersEvent(
