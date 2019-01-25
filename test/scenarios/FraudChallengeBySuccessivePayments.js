@@ -1,6 +1,8 @@
 const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const FraudChallengeBySuccessivePayments = artifacts.require('FraudChallengeBySuccessivePayments');
@@ -13,6 +15,7 @@ const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 let provider;
@@ -330,14 +333,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payments are genuine', () => {
-                it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessivePayments.challenge(
-                        firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
-                    ).should.be.rejected;
-                });
-            });
-
             describe('if first payment is not sealed', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuinePaymentSeals(false);
@@ -426,7 +421,15 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not genuine successive payments\' balances', () => {
+            describe('if payments are genuine', () => {
+                it('should revert', async () => {
+                    return ethersFraudChallengeBySuccessivePayments.challenge(
+                        firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if not genuine successive payments\' balances in sender', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineSuccessivePaymentsBalances(false);
                 });
@@ -435,23 +438,50 @@ module.exports = (glob) => {
                     await ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(utils.getAddress(firstPayment.sender.wallet));
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(lastPayment.sender.balances.current._bn);
+                    lock.currencyCt.should.equal(lastPayment.currency.ct);
+                    lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
+
+                    (await provider.getLogs(filter))
+                        .should.have.lengthOf(1);
                 });
             });
 
-            describe('if not genuine successive payments\' total fees', () => {
+            describe('if not genuine successive payments\' balances in recipient', () => {
+                beforeEach(async () => {
+                    await ethersValidator.setGenuineSuccessivePaymentsBalances(false);
+                });
+
+                it('should set operational mode exit, store fraudulent payment and reward', async () => {
+                    await ethersFraudChallengeBySuccessivePayments.challenge(
+                        firstPayment, lastPayment, firstPayment.recipient.wallet, overrideOptions
+                    );
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
+                    lock.lockedWallet.should.equal(utils.getAddress(firstPayment.recipient.wallet));
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    lock.amount._bn.should.eq.BN(lastPayment.recipient.balances.current._bn);
+                    lock.currencyCt.should.equal(lastPayment.currency.ct);
+                    lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
+
+                    (await provider.getLogs(filter))
+                        .should.have.lengthOf(1);
+                });
+            });
+
+            describe('if not genuine successive payments\' total fees in sender', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineSuccessivePaymentsTotalFees(false);
                 });
@@ -460,19 +490,46 @@ module.exports = (glob) => {
                     await ethersFraudChallengeBySuccessivePayments.challenge(
                         firstPayment, lastPayment, firstPayment.sender.wallet, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(utils.getAddress(firstPayment.sender.wallet));
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(lastPayment.sender.balances.current._bn);
+                    lock.currencyCt.should.equal(lastPayment.currency.ct);
+                    lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
+
+                    (await provider.getLogs(filter))
+                        .should.have.lengthOf(1);
+                });
+            });
+
+            describe('if not genuine successive payments\' total fees in recipient', () => {
+                beforeEach(async () => {
+                    await ethersValidator.setGenuineSuccessivePaymentsTotalFees(false);
+                });
+
+                it('should set operational mode exit, store fraudulent payment and reward', async () => {
+                    await ethersFraudChallengeBySuccessivePayments.challenge(
+                        firstPayment, lastPayment, firstPayment.recipient.wallet, overrideOptions
+                    );
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
+                    lock.lockedWallet.should.equal(utils.getAddress(firstPayment.recipient.wallet));
+                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    lock.amount._bn.should.eq.BN(lastPayment.recipient.balances.current._bn);
+                    lock.currencyCt.should.equal(lastPayment.currency.ct);
+                    lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
+
+                    (await provider.getLogs(filter))
+                        .should.have.lengthOf(1);
                 });
             });
         });

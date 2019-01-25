@@ -82,7 +82,9 @@ SecurityBondable, WalletLockable {
 
         // Lock amount of size equivalent to payment amount
         walletLocker.lockFungibleByProxy(
-            wallet, msg.sender, lastPayment.amount, lastPayment.currency.ct, lastPayment.currency.id
+            wallet, msg.sender,
+            NahmiiTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances.current : lastPayment.recipient.balances.current,
+            lastPayment.currency.ct, lastPayment.currency.id
         );
 
         emit ChallengeBySuccessivePaymentsEvent(
