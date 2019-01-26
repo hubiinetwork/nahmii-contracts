@@ -93,12 +93,33 @@ SecurityBondable, WalletLockable {
         // Lock amount of size equivalent to trade amount of currency of wallet
         walletLocker.lockFungibleByProxy(
             wallet, msg.sender,
-            NahmiiTypesLib.CurrencyRole.Intended == tradeCurrencyRole ? trade.amount : trade.amount.div(trade.rate),
+            _tradeLockAmount(trade, tradePartyRole, tradeCurrencyRole),
             currencyCt, currencyId
         );
 
         emit ChallengeByTradeSucceedingPaymentEvent(
             payment.seals.operator.hash, trade.seal.hash, msg.sender, wallet
         );
+    }
+
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function _tradeLockAmount(NahmiiTypesLib.Trade trade, NahmiiTypesLib.TradePartyRole tradePartyRole,
+        NahmiiTypesLib.CurrencyRole currencyRole)
+    private
+    pure
+    returns (int256)
+    {
+        if (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole)
+            if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
+                return trade.buyer.balances.intended.current;
+            else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
+                return trade.buyer.balances.conjugate.current;
+        else // NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
+            if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
+                return trade.seller.balances.intended.current;
+            else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
+                return trade.seller.balances.conjugate.current;
     }
 }

@@ -330,14 +330,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trade and payment are genuine', () => {
-                it('should revert', async () => {
-                    return ethersFraudChallengeByTradeSucceedingPayment.challenge(
-                        payment, trade, payment.sender.wallet, payment.currency.ct, payment.currency.id, overrideOptions
-                    ).should.be.rejected;
-                });
-            });
-
             describe('if payment is not sealed', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuinePaymentSeals(false);
@@ -454,6 +446,14 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if trade and payment are genuine', () => {
+                it('should revert', async () => {
+                    return ethersFraudChallengeByTradeSucceedingPayment.challenge(
+                        payment, trade, payment.sender.wallet, payment.currency.ct, payment.currency.id, overrideOptions
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if not genuine successive balances', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineSuccessivePaymentTradeBalances(false);
@@ -463,19 +463,23 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByTradeSucceedingPayment.challenge(
                         payment, trade, payment.sender.wallet, payment.currency.ct, payment.currency.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(utils.bigNumberify(0)),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+                    
+                    (await ethersFraudChallenge.isFraudulentTradeHash(trade.seal.hash)).should.be.true;
+
+                    const reward = await ethersSecurityBond.rewards(0);
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                    lock.currencyCt.should.equal(trade.currencies.intended.ct);
+                    lock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
 
@@ -488,19 +492,23 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByTradeSucceedingPayment.challenge(
                         payment, trade, payment.sender.wallet, payment.currency.ct, payment.currency.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(utils.bigNumberify(0)),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.isFraudulentTradeHash(trade.seal.hash)).should.be.true;
+
+                    const reward = await ethersSecurityBond.rewards(0);
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                    lock.currencyCt.should.equal(trade.currencies.intended.ct);
+                    lock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
         });
