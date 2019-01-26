@@ -62,6 +62,8 @@ SecurityBondable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
+        // TODO Consider balance reward when balance of spending currency has been added to order
+
         // Emit event
         emit ChallengeByOrderEvent(order.seals.operator.hash, msg.sender);
     }

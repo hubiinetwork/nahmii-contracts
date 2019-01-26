@@ -298,6 +298,8 @@ module.exports = (glob) => {
                 await ethersValidator._reset(overrideOptions);
                 await ethersSecurityBond._reset(overrideOptions);
 
+                order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+
                 filter = await fromBlockTopicsFilter(
                     ...ethersFraudChallengeByOrder.interface.events.ChallengeByOrderEvent.topics
                 );
@@ -308,20 +310,6 @@ module.exports = (glob) => {
                     await ethersConfiguration.setOperationalModeExit();
                 });
 
-                beforeEach(async () => {
-                    order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                });
-
-                it('should revert', async () => {
-                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
-                });
-            });
-
-            describe('if order is genuine', () => {
-                beforeEach(async () => {
-                    order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                });
-
                 it('should revert', async () => {
                     return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
                 });
@@ -330,7 +318,6 @@ module.exports = (glob) => {
             describe('if order is not sealed by operator', () => {
                 beforeEach(async () => {
                     ethersValidator.setGenuineOrderOperatorSeal(false);
-                    order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
                 it('should revert', async () => {
@@ -341,9 +328,14 @@ module.exports = (glob) => {
             describe('if order is not properly hashed by wallet', () => {
                 beforeEach(async () => {
                     ethersValidator.setGenuineOrderWalletHash(false);
-                    order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
+                it('should revert', async () => {
+                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if order is genuine', () => {
                 it('should revert', async () => {
                     return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
                 });
@@ -352,24 +344,20 @@ module.exports = (glob) => {
             describe('if order wallet signature is fraudulent', () => {
                 beforeEach(async () => {
                     ethersValidator.setGenuineWalletSignature(false);
-                    order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
                 it('should set operational mode exit, store fraudulent order and reward in security bond', async () => {
                     await ethersFraudChallengeByOrder.challenge(order, overrideOptions);
-                    const [operationalModeExit, fraudulentOrderHashesCount, rewardsCount, reward, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentOrderHashesCount(),
-                        ethersSecurityBond._rewardsCount(),
-                        ethersSecurityBond.rewards(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentOrderHashesCount.eq(1).should.be.true;
-                    rewardsCount.eq(1).should.be.true;
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
+
+                    const reward = await ethersSecurityBond.rewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
                     reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    logs.should.have.lengthOf(1);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
         });
