@@ -80,7 +80,7 @@ SecurityBondable, WalletLockable {
         // Reward stake fraction
         securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        // Lock amount of size equivalent to payment amount
+        // Lock amount of size equivalent to payment balance
         walletLocker.lockFungibleByProxy(
             wallet, msg.sender,
             NahmiiTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances.current : lastPayment.recipient.balances.current,
