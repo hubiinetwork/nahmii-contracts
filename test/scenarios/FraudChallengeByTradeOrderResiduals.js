@@ -75,7 +75,7 @@ module.exports = (glob) => {
                 (await web3FraudChallengeByTradeOrderResiduals.operator.call()).should.equal(glob.owner);
             });
         });
-        
+
         describe('setDeployer()', () => {
             describe('if called with (current) deployer as sender', () => {
                 afterEach(async () => {
@@ -352,17 +352,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if trades are genuine', () => {
-                it('should revert', async () => {
-                    return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -374,8 +364,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -388,8 +377,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -403,8 +391,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, lastTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, lastTrade.buyer.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -418,66 +405,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if currency is not in first trade', () => {
-                beforeEach(async () => {
-                    firstTrade = await mocks.mockTrade(glob.owner, {
-                        buyer: {
-                            wallet: glob.user_a
-                        },
-                        seller: {
-                            wallet: glob.user_b
-                        },
-                        currencies: {
-                            intended: {
-                                ct: Wallet.createRandom().address
-                            },
-                            conjugate: {
-                                ct: Wallet.createRandom().address
-                            },
-                        },
-                        blockNumber: utils.bigNumberify(blockNumber10)
-                    });
-                });
-
-                it('should revert', async () => {
-                    return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, lastTrade.currencies.intended.ct,
-                        lastTrade.currencies.intended.id, overrideOptions
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if currency is not in last trade', () => {
-                beforeEach(async () => {
-                    lastTrade = await mocks.mockTrade(glob.owner, {
-                        buyer: {
-                            wallet: glob.user_a
-                        },
-                        seller: {
-                            wallet: glob.user_b
-                        },
-                        currencies: {
-                            intended: {
-                                ct: Wallet.createRandom().address
-                            },
-                            conjugate: {
-                                ct: Wallet.createRandom().address
-                            },
-                        },
-                        blockNumber: utils.bigNumberify(blockNumber20)
-                    });
-                });
-
-                it('should revert', async () => {
-                    return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -493,8 +421,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, lastTrade.currencies.intended.ct,
-                        lastTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -534,8 +461,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, lastTrade.currencies.intended.ct,
-                        lastTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -574,8 +500,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.seller.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.seller.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -587,8 +512,15 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if trades are genuine', () => {
+                it('should revert', async () => {
+                    return ethersFraudChallengeByTradeOrderResiduals.challenge(
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
                     ).should.be.rejected;
                 });
             });
@@ -600,22 +532,28 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent trade and reward', async () => {
                     await ethersFraudChallengeByTradeOrderResiduals.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(utils.bigNumberify(0)),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
-                    lock.lockedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.isFraudulentTradeHash(lastTrade.seal.hash)).should.be.true;
+
+                    const intendedLock = await ethersWalletLocker.fungibleLocks(0);
+                    intendedLock.lockedWallet.should.equal(utils.getAddress(lastTrade.buyer.wallet));
+                    intendedLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    intendedLock.amount._bn.should.eq.BN(lastTrade.buyer.balances.intended.current._bn);
+                    intendedLock.currencyCt.should.equal(lastTrade.currencies.intended.ct);
+                    intendedLock.currencyId._bn.should.eq.BN(lastTrade.currencies.intended.id._bn);
+
+                    const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
+                    conjugateLock.lockedWallet.should.equal(utils.getAddress(lastTrade.buyer.wallet));
+                    conjugateLock.lockerWallet.should.equal(utils.getAddress(glob.owner));
+                    conjugateLock.amount._bn.should.eq.BN(lastTrade.buyer.balances.conjugate.current._bn);
+                    conjugateLock.currencyCt.should.equal(lastTrade.currencies.conjugate.ct);
+                    conjugateLock.currencyId._bn.should.eq.BN(lastTrade.currencies.conjugate.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
         });

@@ -42,7 +42,8 @@ SecurityBondable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(NahmiiTypesLib.Trade trade) public
+    function challenge(NahmiiTypesLib.Trade trade)
+    public
     onlyOperationalModeNormal
     onlySealedTrade(trade)
     {
@@ -71,20 +72,20 @@ SecurityBondable, WalletLockable {
         // Lock amount of size equivalent to trade intended and conjugate amounts of buyer
         if (!genuineBuyerAndFee) {
             walletLocker.lockFungibleByProxy(
-                trade.buyer.wallet, msg.sender, trade.amount, trade.currencies.intended.ct, trade.currencies.intended.id
+                trade.buyer.wallet, msg.sender, trade.buyer.balances.intended.current, trade.currencies.intended.ct, trade.currencies.intended.id
             );
             walletLocker.lockFungibleByProxy(
-                trade.buyer.wallet, msg.sender, trade.amount.div(trade.rate), trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                trade.buyer.wallet, msg.sender, trade.buyer.balances.conjugate.current, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
             );
         }
 
         // Lock amount of size equivalent to trade intended and conjugate amounts of seller
         if (!genuineSellerAndFee) {
             walletLocker.lockFungibleByProxy(
-                trade.seller.wallet, msg.sender, trade.amount, trade.currencies.intended.ct, trade.currencies.intended.id
+                trade.seller.wallet, msg.sender, trade.seller.balances.intended.current, trade.currencies.intended.ct, trade.currencies.intended.id
             );
             walletLocker.lockFungibleByProxy(
-                trade.seller.wallet, msg.sender, trade.amount.div(trade.rate), trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                trade.seller.wallet, msg.sender, trade.seller.balances.conjugate.current, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
             );
         }
 

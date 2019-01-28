@@ -17,13 +17,6 @@ import {FraudChallenge} from "../FraudChallenge.sol";
  */
 contract MockedFraudChallenge is FraudChallenge {
     //
-    // Variables
-    // -----------------------------------------------------------------------------------------------------------------
-    bool public fraudulentOrderHash;
-    bool public fraudulentTradeHash;
-    bool public fraudulentPaymentHash;
-
-    //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address owner) public FraudChallenge(owner) {
@@ -35,19 +28,26 @@ contract MockedFraudChallenge is FraudChallenge {
     function _reset()
     public
     {
+        uint256 i;
+        for (i = 0; i < fraudulentOrderHashes.length; i++)
+            fraudulentByOrderHash[fraudulentOrderHashes[i]] = false;
         fraudulentOrderHashes.length = 0;
+        for (i = 0; i < fraudulentTradeHashes.length; i++)
+            fraudulentByTradeHash[fraudulentTradeHashes[i]] = false;
         fraudulentTradeHashes.length = 0;
+        for (i = 0; i < fraudulentPaymentHashes.length; i++)
+            fraudulentByPaymentHash[fraudulentPaymentHashes[i]] = false;
         fraudulentPaymentHashes.length = 0;
+        for (i = 0; i < doubleSpenderWallets.length; i++)
+            doubleSpenderByWallet[doubleSpenderWallets[i]] = false;
         doubleSpenderWallets.length = 0;
-        fraudulentOrderHash = false;
-        fraudulentTradeHash = false;
-        fraudulentPaymentHash = false;
     }
 
     function addFraudulentOrderHash(bytes32 hash)
     public
     {
         fraudulentOrderHashes.push(hash);
+        fraudulentByOrderHash[hash] = true;
         emit AddFraudulentOrderHashEvent(hash);
     }
 
@@ -55,6 +55,7 @@ contract MockedFraudChallenge is FraudChallenge {
     public
     {
         fraudulentTradeHashes.push(hash);
+        fraudulentByTradeHash[hash] = true;
         emit AddFraudulentTradeHashEvent(hash);
     }
 
@@ -62,6 +63,7 @@ contract MockedFraudChallenge is FraudChallenge {
     public
     {
         fraudulentPaymentHashes.push(hash);
+        fraudulentByPaymentHash[hash] = true;
         emit AddFraudulentPaymentHashEvent(hash);
     }
 
@@ -69,48 +71,7 @@ contract MockedFraudChallenge is FraudChallenge {
     public
     {
         doubleSpenderWallets.push(wallet);
+        doubleSpenderByWallet[wallet] = true;
         emit AddDoubleSpenderWalletEvent(wallet);
-    }
-
-    function setFraudulentOrderOperatorHash(bool _fraudulentOrderHash)
-    public
-    {
-        fraudulentOrderHash = _fraudulentOrderHash;
-    }
-
-    function isFraudulentOrderHash(bytes32)
-    public
-    view
-    returns (bool)
-    {
-        return fraudulentOrderHash;
-    }
-
-    function setFraudulentTradeHash(bool _fraudulentTradeHash)
-    public
-    {
-        fraudulentTradeHash = _fraudulentTradeHash;
-    }
-
-    function isFraudulentTradeHash(bytes32)
-    public
-    view
-    returns (bool)
-    {
-        return fraudulentTradeHash;
-    }
-
-    function setFraudulentPaymentOperatorHash(bool _fraudulentPaymentHash)
-    public
-    {
-        fraudulentPaymentHash = _fraudulentPaymentHash;
-    }
-
-    function isFraudulentPaymentHash(bytes32)
-    public
-    view
-    returns (bool)
-    {
-        return fraudulentPaymentHash;
     }
 }
