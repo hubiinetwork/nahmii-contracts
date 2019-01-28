@@ -4,9 +4,10 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-const BlockNumbCurrenciesLib = artifacts.require('BlockNumbCurrenciesLib');
 const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
+const BlockNumbFiguresLib = artifacts.require('BlockNumbFiguresLib');
 const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
+const BlockNumbReferenceCurrenciesLib = artifacts.require('BlockNumbReferenceCurrenciesLib');
 const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
 const ConstantsLib = artifacts.require('ConstantsLib');
 const CurrenciesLib = artifacts.require('CurrenciesLib');
@@ -70,7 +71,7 @@ module.exports = (deployer, network, accounts) => {
                     BlockNumbDisdIntsLib
                 ]);
                 await deployer.link(MonetaryTypesLib, [
-                    BlockNumbCurrenciesLib, CurrenciesLib, NahmiiTypesLib, SettlementTypesLib
+                    BlockNumbFiguresLib, BlockNumbReferenceCurrenciesLib, CurrenciesLib, NahmiiTypesLib, SettlementTypesLib
                 ]);
                 await deployer.link(SafeMathIntLib, [
                     FungibleBalanceLib, BlockNumbDisdIntsLib, NonFungibleBalanceLib
@@ -79,8 +80,9 @@ module.exports = (deployer, network, accounts) => {
                     FungibleBalanceLib, CurrenciesLib, NonFungibleBalanceLib
                 ]);
 
-                await execDeploy(ctl, 'BlockNumbCurrenciesLib', '', BlockNumbCurrenciesLib);
                 await execDeploy(ctl, 'BlockNumbDisdIntsLib', '', BlockNumbDisdIntsLib);
+                await execDeploy(ctl, 'BlockNumbFiguresLib', '', BlockNumbFiguresLib);
+                await execDeploy(ctl, 'BlockNumbReferenceCurrenciesLib', '', BlockNumbReferenceCurrenciesLib);
                 await execDeploy(ctl, 'CurrenciesLib', '', CurrenciesLib);
 
                 await deployer.link(CurrenciesLib, [
@@ -101,7 +103,7 @@ module.exports = (deployer, network, accounts) => {
 
             } else if (network.startsWith('mainnet')) {
                 addressStorage.set('BlockNumbDisdIntsLib', '0x92caece328a4f746c18630c6289d74a5417185b2');
-                addressStorage.set('BlockNumbCurrenciesLib', '0x1285bdda4c9353bd0ae87af7e9433f9cfd7a4029');
+                // addressStorage.set('BlockNumbCurrenciesLib', '0x1285bdda4c9353bd0ae87af7e9433f9cfd7a4029');
                 addressStorage.set('BlockNumbIntsLib', '0xcb1a97acac9597b9ea177348ed669667ecea9657');
                 addressStorage.set('BlockNumbUintsLib', '0x412be41435959fb66540ad1d4c41bf85216a7369');
                 addressStorage.set('ConstantsLib', '0x5fcf3704016b90ded3c81d75613ceab0a6a26025');

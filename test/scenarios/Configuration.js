@@ -11,7 +11,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe('Configuration', () => {
+    describe.only('Configuration', () => {
             let web3Configuration, ethersConfiguration;
             let provider;
 
@@ -803,6 +803,34 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('fraudStakeFraction()', () => {
+                it('should revert', async () => {
+                    ethersConfiguration.fraudStakeFraction()
+                        .should.be.rejected;
+                });
+            });
+
+            describe('setFraudStakeFraction()', () => {
+                describe('if called by non-operator', () => {
+                    it('should revert', async () => {
+                        web3Configuration.setFraudStakeFraction((await provider.getBlockNumber()) + 1, 1e18, {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if within operational constraints', () => {
+                    it('should successfully set new values and emit event', async () => {
+                        const result = await web3Configuration.setFraudStakeFraction((await provider.getBlockNumber()) + 1, 1e18);
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('SetFraudStakeFractionEvent');
+
+                        (await ethersConfiguration.fraudStakeFraction())
+                            ._bn.should.eq.BN(1e18.toString());
+                    });
+                });
+            });
+
             describe('walletSettlementStakeFraction()', () => {
                 it('should revert', async () => {
                     ethersConfiguration.walletSettlementStakeFraction()
@@ -859,30 +887,35 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('fraudStakeFraction()', () => {
+            describe('operatorSettlementStake()', () => {
                 it('should revert', async () => {
-                    ethersConfiguration.fraudStakeFraction()
+                    ethersConfiguration.operatorSettlementStake()
                         .should.be.rejected;
                 });
             });
 
-            describe('setFraudStakeFraction()', () => {
+            describe('setOperatorSettlementStake()', () => {
                 describe('if called by non-operator', () => {
                     it('should revert', async () => {
-                        web3Configuration.setFraudStakeFraction((await provider.getBlockNumber()) + 1, 1e18, {from: glob.user_a})
-                            .should.be.rejected;
+                        web3Configuration.setOperatorSettlementStake(
+                            (await provider.getBlockNumber()) + 1, 1e18, address0, 0, {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
                 describe('if within operational constraints', () => {
                     it('should successfully set new values and emit event', async () => {
-                        const result = await web3Configuration.setFraudStakeFraction((await provider.getBlockNumber()) + 1, 1e18);
+                        const result = await web3Configuration.setOperatorSettlementStake(
+                            (await provider.getBlockNumber()) + 1, 1e18, address0, 0
+                        );
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('SetFraudStakeFractionEvent');
+                        result.logs[0].event.should.equal('SetOperatorSettlementStakeEvent');
 
-                        (await ethersConfiguration.fraudStakeFraction())
-                            ._bn.should.eq.BN(1e18.toString());
+                        const stake = await ethersConfiguration.operatorSettlementStake();
+                        stake.amount._bn.should.eq.BN(1e18.toString());
+                        stake.currencyCt.should.equal(address0);
+                        stake.currencyId._bn.should.eq.BN(0);
                     });
                 });
             });

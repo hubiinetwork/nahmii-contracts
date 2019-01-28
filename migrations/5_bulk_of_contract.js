@@ -6,9 +6,10 @@
 
 const AccrualBenefactor = artifacts.require('AccrualBenefactor');
 const BalanceTracker = artifacts.require('BalanceTracker');
-const BlockNumbCurrenciesLib = artifacts.require('BlockNumbCurrenciesLib');
 const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
+const BlockNumbFiguresLib = artifacts.require('BlockNumbFiguresLib');
 const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
+const BlockNumbReferenceCurrenciesLib = artifacts.require('BlockNumbReferenceCurrenciesLib');
 const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
 const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
 const ClientFund = artifacts.require('ClientFund');
@@ -109,9 +110,10 @@ module.exports = (deployer, network, accounts) => {
                 ownerAccount: ownerAccount
             };
 
-            BlockNumbCurrenciesLib.address = addressStorage.get('BlockNumbCurrenciesLib');
             BlockNumbDisdIntsLib.address = addressStorage.get('BlockNumbDisdIntsLib');
+            BlockNumbFiguresLib.address = addressStorage.get('BlockNumbFiguresLib');
             BlockNumbIntsLib.address = addressStorage.get('BlockNumbIntsLib');
+            BlockNumbReferenceCurrenciesLib.address = addressStorage.get('BlockNumbReferenceCurrenciesLib');
             BlockNumbUintsLib.address = addressStorage.get('BlockNumbUintsLib');
             ConstantsLib.address = addressStorage.get('ConstantsLib');
             CurrenciesLib.address = addressStorage.get('CurrenciesLib');
@@ -125,13 +127,16 @@ module.exports = (deployer, network, accounts) => {
             Strings.address = addressStorage.get('Strings');
             TxHistoryLib.address = addressStorage.get('TxHistoryLib');
 
-            await deployer.link(BlockNumbCurrenciesLib, [
-                Configuration
-            ]);
             await deployer.link(BlockNumbDisdIntsLib, [
                 Configuration
             ]);
+            await deployer.link(BlockNumbFiguresLib, [
+                Configuration
+            ]);
             await deployer.link(BlockNumbIntsLib, [
+                Configuration
+            ]);
+            await deployer.link(BlockNumbReferenceCurrenciesLib, [
                 Configuration
             ]);
             await deployer.link(BlockNumbUintsLib, [
