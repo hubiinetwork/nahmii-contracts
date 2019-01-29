@@ -27,15 +27,22 @@ contract MockedSecurityBondService is Ownable, SecurityBondable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function reward(address wallet, uint256 rewardFraction, uint256 unlockTimeoutInSeconds)
+    function rewardByFraction(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds)
     public
     {
-        securityBond.reward(wallet, rewardFraction, unlockTimeoutInSeconds);
+        securityBond.rewardByFraction(wallet, fraction, unlockTimeoutInSeconds);
     }
 
-    function deprive(address wallet)
+    function rewardByAmount(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 unlockTimeoutInSeconds)
     public
     {
-        securityBond.deprive(wallet);
+        securityBond.rewardByAmount(wallet, amount, currencyCt, currencyId, unlockTimeoutInSeconds);
+    }
+
+    function deprive(address wallet, address currencyCt, uint256 currencyId)
+    public
+    {
+        securityBond.deprive(wallet, currencyCt, currencyId);
     }
 }

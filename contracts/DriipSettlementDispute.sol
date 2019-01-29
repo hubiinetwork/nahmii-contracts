@@ -183,7 +183,7 @@ FraudChallengable, CancelOrdersChallengable {
         if (driipSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
             walletLocker.unlockFungibleByProxy(order.wallet, challenger, currency.ct, currency.id);
         else
-            securityBond.deprive(challenger);
+            securityBond.deprive(challenger, currency.ct, currency.id);
 
         // Requalify proposal
         driipSettlementChallenge.qualifyProposal(
@@ -191,7 +191,7 @@ FraudChallengable, CancelOrdersChallengable {
         );
 
         // Reward unchallenger
-        securityBond.reward(unchallenger, configuration.walletSettlementStakeFraction(), 0);
+        securityBond.rewardFraction(unchallenger, configuration.walletSettlementStakeFraction(), 0);
 
         // Emit event
         emit UnchallengeOrderCandidateByTradeEvent(
@@ -436,12 +436,15 @@ FraudChallengable, CancelOrdersChallengable {
         if (SettlementTypesLib.Status.Disqualified == driipSettlementChallenge.proposalStatus(
             wallet, currency.ct, currency.id
         ))
-            securityBond.deprive(driipSettlementChallenge.proposalDisqualificationChallenger(
+            securityBond.deprive(
+                driipSettlementChallenge.proposalDisqualificationChallenger(
                     wallet, currency.ct, currency.id
-                ));
+                ),
+                currency.ct, currency.id
+            );
 
         // Reward new challenger
-        securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(),
+        securityBond.rewardFraction(challenger, configuration.operatorSettlementStakeFraction(),
             unlockTimeoutInSeconds);
     }
 

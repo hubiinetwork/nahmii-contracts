@@ -352,12 +352,15 @@ FraudChallengable, CancelOrdersChallengable {
         if (SettlementTypesLib.Status.Disqualified == nullSettlementChallenge.proposalStatus(
             wallet, currency.ct, currency.id
         ))
-            securityBond.deprive(nullSettlementChallenge.proposalDisqualificationChallenger(
+            securityBond.deprive(
+                nullSettlementChallenge.proposalDisqualificationChallenger(
                     wallet, currency.ct, currency.id
-                ));
+                ),
+                currency.ct, currency.id
+            );
 
         // Reward new challenger
-        securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(),
+        securityBond.rewardFraction(challenger, configuration.operatorSettlementStakeFraction(),
             unlockTimeoutInSeconds);
     }
 

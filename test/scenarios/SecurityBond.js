@@ -451,12 +451,23 @@ module.exports = function (glob) {
             });
         });
 
-        describe('rewardMetaByWallet()', () => {
+        describe('fractionalRewardByWallet()', () => {
             it('should successfully return meta', async () => {
-                const result = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
+                const result = await ethersSecurityBond.fractionalRewardByWallet(glob.user_a);
 
-                result.rewardFraction._bn.should.eq.BN(0);
-                result.rewardNonce._bn.should.eq.BN(0);
+                result.fraction._bn.should.eq.BN(0);
+                result.nonce._bn.should.eq.BN(0);
+                result.unlockTime._bn.should.eq.BN(0);
+            })
+        });
+
+        describe('amountedRewardByWalletCurrency()', () => {
+            it('should successfully return meta', async () => {
+                const result = await ethersSecurityBond.amountedRewardByWalletCurrency(glob.user_a, mocks.address0, 0);
+
+                result.amount._bn.should.eq.BN(0);
+                result.nonce._bn.should.eq.BN(0);
+                result.unlockTime._bn.should.eq.BN(0);
             })
         });
 
@@ -467,10 +478,10 @@ module.exports = function (glob) {
             })
         });
 
-        describe('reward()', () => {
+        describe('rewardByFraction()', () => {
             describe('if called with null address', () => {
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.reward(
+                    web3MockedSecurityBondService.rewardByFraction(
                         mocks.address0, 1e18, 0
                     ).should.be.rejected;
                 });
@@ -483,7 +494,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.reward(
+                    web3MockedSecurityBondService.rewardByFraction(
                         glob.user_a, 1e18, 0
                     ).should.be.rejected;
                 });
@@ -497,7 +508,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.reward(
+                    web3MockedSecurityBondService.rewardByFraction(
                         glob.user_a, 1e18, 0
                     ).should.be.rejected;
                 });
@@ -505,14 +516,64 @@ module.exports = function (glob) {
 
             describe('if within operational constraints', () => {
                 it('should successfully reward', async () => {
-                    await web3MockedSecurityBondService.reward(
+                    await web3MockedSecurityBondService.rewardByFraction(
                         glob.user_a, 1e18, 0
                     );
 
-                    const meta = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
-                    meta.rewardFraction._bn.should.eq.BN(1e18.toString());
-                    meta.rewardNonce._bn.should.eq.BN(1);
-                    meta.unlockTime._bn.should.be.gt.BN(0);
+                    const reward = await ethersSecurityBond.fractionalRewardByWallet(glob.user_a);
+                    reward.fraction._bn.should.eq.BN(1e18.toString());
+                    reward.nonce._bn.should.eq.BN(1);
+                    reward.unlockTime._bn.should.be.gt.BN(0);
+                });
+            });
+        });
+
+        describe('rewardByAmount()', () => {
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.rewardByAmount(
+                        mocks.address0, 1e18, mocks.address0, 0, 0
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called by service that is not registered', () => {
+                beforeEach(async () => {
+                    web3SecurityBond = await SecurityBond.new(glob.owner);
+                    await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
+                });
+
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 1e18, mocks.address0, 0, 0
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called by registered service with action not enabled', () => {
+                beforeEach(async () => {
+                    web3SecurityBond = await SecurityBond.new(glob.owner);
+                    await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
+                    await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
+                });
+
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 1e18, mocks.address0, 0, 0
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully reward', async () => {
+                    await web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 1e18, mocks.address0, 0, 0
+                    );
+
+                    const reward = await ethersSecurityBond.amountedRewardByWalletCurrency(glob.user_a, mocks.address0, 0);
+                    reward.amount._bn.should.eq.BN(1e18.toString());
+                    reward.nonce._bn.should.eq.BN(1);
+                    reward.unlockTime._bn.should.be.gt.BN(0);
                 });
             });
         });
@@ -525,7 +586,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.deprive(glob.user_a).should.be.rejected;
+                    web3MockedSecurityBondService.deprive(glob.user_a, mocks.address0, 0).should.be.rejected;
                 });
             });
 
@@ -537,38 +598,73 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.deprive(glob.user_a).should.be.rejected;
+                    web3MockedSecurityBondService.deprive(glob.user_a, mocks.address0, 0).should.be.rejected;
                 });
             });
 
             describe('if within operational constraints', () => {
                 beforeEach(async () => {
-                    await web3MockedSecurityBondService.reward(
-                        glob.user_a, 1e18, 0
+                    await web3MockedSecurityBondService.rewardByFraction(
+                        glob.user_a, 5e17, 0
+                    );
+                    await web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                 });
 
                 it('should successfully reward', async () => {
-                    await web3MockedSecurityBondService.deprive(glob.user_a);
+                    await web3MockedSecurityBondService.deprive(glob.user_a, mocks.address0, 0);
 
-                    const meta = await ethersSecurityBond.rewardMetaByWallet(glob.user_a);
-                    meta.rewardFraction._bn.should.eq.BN(0);
-                    meta.rewardNonce._bn.should.eq.BN(2);
-                    meta.unlockTime._bn.should.eq.BN(0);
+                    const fractionalReward = await ethersSecurityBond.fractionalRewardByWallet(glob.user_a);
+                    fractionalReward.fraction._bn.should.eq.BN(0);
+                    fractionalReward.nonce._bn.should.eq.BN(3);
+                    fractionalReward.unlockTime._bn.should.eq.BN(0);
+
+                    const amountReward = await ethersSecurityBond.amountedRewardByWalletCurrency(glob.user_a, mocks.address0, 0);
+                    amountReward.amount._bn.should.eq.BN(0);
+                    amountReward.nonce._bn.should.eq.BN(4);
+                    amountReward.unlockTime._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('depositedFractionalBalance()', () => {
+            describe('if security bond has zero deposited balance', () => {
+                it('should return 0', async () => {
+                    (await ethersSecurityBond.depositedFractionalBalance(mocks.address0, 0, 5e17.toString()))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('if fraction is 0', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.receiveEthersTo(
+                        mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should return 0', async () => {
+                    (await ethersSecurityBond.depositedFractionalBalance(mocks.address0, 0, 0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('if security bond has non-zero deposited balance and fraction is non-zero', () => {
+                beforeEach(async () => {
+                    await web3SecurityBond.receiveEthersTo(
+                        mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+                });
+
+                it('should fractional fractional balance', async () => {
+                    (await ethersSecurityBond.depositedFractionalBalance(mocks.address0, 0, 5e17.toString()))
+                        ._bn.should.eq.BN(utils.parseEther('0.5')._bn);
                 });
             });
         });
 
         describe('claimAndTransferToBeneficiary()', () => {
-            describe('if called without in-use currencies present', () => {
-                it('should revert', async () => {
-                    web3SecurityBond.claimAndTransferToBeneficiary(
-                        web3MockedBeneficiary.address, 'staged', mocks.address0, 0, '', {from: glob.user_a}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if no reward has been granted', () => {
+            describe('if no reward has been given', () => {
                 beforeEach(async () => {
                     await web3SecurityBond.receiveEthersTo(
                         mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
@@ -582,13 +678,33 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if called before reward has been unlocked', () => {
+            describe('if reward has not been unlocked', () => {
                 beforeEach(async () => {
                     await web3SecurityBond.receiveEthersTo(
                         mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedSecurityBondService.reward(
+                    await web3MockedSecurityBondService.rewardByFraction(
                         glob.user_a, 5e17, 1e3
+                    );
+                    await web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 3e17, mocks.address0, 0, 1e3
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3SecurityBond.claimAndTransferToBeneficiary(
+                        web3MockedBeneficiary.address, 'staged', mocks.address0, 0, '', {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if security bond has zero deposited balance', () => {
+                beforeEach(async () => {
+                    await web3MockedSecurityBondService.rewardByFraction(
+                        glob.user_a, 5e17, 0
+                    );
+                    await web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                 });
 
@@ -605,8 +721,11 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.reward(
+                        await web3MockedSecurityBondService.rewardByFraction(
                             glob.user_a, 5e17, 0
+                        );
+                        await web3MockedSecurityBondService.rewardByAmount(
+                            glob.user_a, 3e17, mocks.address0, 0, 0
                         );
                     });
 
@@ -619,7 +738,7 @@ module.exports = function (glob) {
                         result.logs[0].event.should.equal('ClaimAndTransferToBeneficiaryEvent');
 
                         (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
-                            ._bn.should.eq.BN(utils.parseEther('0.5')._bn);
+                            ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
                     });
                 });
 
@@ -631,8 +750,11 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveTokensTo(
                             mocks.address0, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.reward(
+                        await web3MockedSecurityBondService.rewardByFraction(
                             glob.user_a, 5e17, 0
+                        );
+                        await web3MockedSecurityBondService.rewardByAmount(
+                            glob.user_a, 3, web3ERC20.address, 0, 0
                         );
                     });
 
@@ -645,18 +767,21 @@ module.exports = function (glob) {
                         result.logs[0].event.should.equal('ClaimAndTransferToBeneficiaryEvent');
 
                         (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
-                            ._bn.should.eq.BN(5);
+                            ._bn.should.eq.BN(2);
                     });
                 });
             });
 
-            describe('if called twice on the same nonce', () => {
+            describe('if claiming the same reward twice', () => {
                 beforeEach(async () => {
                     await web3SecurityBond.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedSecurityBondService.reward(
+                    await web3MockedSecurityBondService.rewardByFraction(
                         glob.user_a, 5e17, 0
+                    );
+                    await web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                     await web3SecurityBond.claimAndTransferToBeneficiary(
                         web3MockedBeneficiary.address, 'staged', mocks.address0, 0, '', {from: glob.user_a}
@@ -672,15 +797,7 @@ module.exports = function (glob) {
         });
 
         describe('claimAndStage()', () => {
-            describe('if called without in-use currencies present', () => {
-                it('should revert', async () => {
-                    web3SecurityBond.claimAndStage(
-                        mocks.address0, 0, {from: glob.user_a}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if no reward has been granted', () => {
+            describe('if no reward has been given', () => {
                 beforeEach(async () => {
                     await web3SecurityBond.receiveEthersTo(
                         mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
@@ -694,13 +811,33 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if called before reward has been unlocked', () => {
+            describe('if reward has not been unlocked', () => {
                 beforeEach(async () => {
                     await web3SecurityBond.receiveEthersTo(
                         mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedSecurityBondService.reward(
-                        glob.user_a, 4e17, 1e3
+                    await web3MockedSecurityBondService.rewardByFraction(
+                        glob.user_a, 5e17, 1e3
+                    );
+                    await web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 3e17, mocks.address0, 0, 1e3
+                    );
+                });
+
+                it('should revert', async () => {
+                    web3SecurityBond.claimAndStage(
+                        mocks.address0, 0, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if security bond has zero deposited balance', () => {
+                beforeEach(async () => {
+                    await web3MockedSecurityBondService.rewardByFraction(
+                        glob.user_a, 5e17, 0
+                    );
+                    await web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                 });
 
@@ -717,8 +854,11 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.reward(
-                            glob.user_a, 4e17, 0
+                        await web3MockedSecurityBondService.rewardByFraction(
+                            glob.user_a, 5e17, 0
+                        );
+                        await web3MockedSecurityBondService.rewardByAmount(
+                            glob.user_a, 3e17, mocks.address0, 0, 0
                         );
                     });
 
@@ -731,9 +871,9 @@ module.exports = function (glob) {
                         result.logs[0].event.should.equal('ClaimAndStageEvent');
 
                         (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
-                            ._bn.should.eq.BN(utils.parseEther('0.6')._bn);
+                            ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
                         (await ethersSecurityBond.stagedBalance(glob.user_a, mocks.address0, 0))
-                            ._bn.should.eq.BN(utils.parseEther('0.4')._bn);
+                            ._bn.should.eq.BN(utils.parseEther('0.8')._bn);
                     });
                 });
 
@@ -745,8 +885,11 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveTokensTo(
                             mocks.address0, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.reward(
-                            glob.user_a, 4e17, 0
+                        await web3MockedSecurityBondService.rewardByFraction(
+                            glob.user_a, 5e17, 0
+                        );
+                        await web3MockedSecurityBondService.rewardByAmount(
+                            glob.user_a, 3, web3ERC20.address, 0, 0
                         );
                     });
 
@@ -759,20 +902,23 @@ module.exports = function (glob) {
                         result.logs[0].event.should.equal('ClaimAndStageEvent');
 
                         (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
-                            ._bn.should.eq.BN(6);
+                            ._bn.should.eq.BN(2);
                         (await ethersSecurityBond.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(4);
+                            ._bn.should.eq.BN(8);
                     });
                 });
             });
 
-            describe('if called twice on the same nonce', () => {
+            describe('if claiming the same reward twice', () => {
                 beforeEach(async () => {
                     await web3SecurityBond.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedSecurityBondService.reward(
-                        glob.user_a, 4e17, 0
+                    await web3MockedSecurityBondService.rewardByFraction(
+                        glob.user_a, 5e17, 0
+                    );
+                    await web3MockedSecurityBondService.rewardByAmount(
+                        glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                     await web3SecurityBond.claimAndStage(
                         mocks.address0, 0, {from: glob.user_a}
@@ -802,8 +948,11 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.reward(
-                            glob.user_b, 4e17, 0
+                        await web3MockedSecurityBondService.rewardByFraction(
+                            glob.user_b, 5e17, 0
+                        );
+                        await web3MockedSecurityBondService.rewardByAmount(
+                            glob.user_b, 3e17, mocks.address0, 0, 0
                         );
                         await web3SecurityBond.claimAndStage(
                             mocks.address0, 0, {from: glob.user_b}
@@ -812,16 +961,16 @@ module.exports = function (glob) {
 
                     it('should successfully withdraw', async () => {
                         const result = await web3SecurityBond.withdraw(
-                            web3.toWei(0.2, 'ether'), mocks.address0, 0, '', {from: glob.user_b}
+                            web3.toWei(0.1, 'ether'), mocks.address0, 0, '', {from: glob.user_b}
                         );
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('WithdrawEvent');
 
                         (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
-                            ._bn.should.eq.BN(utils.parseEther('0.6')._bn);
-                        (await ethersSecurityBond.stagedBalance(glob.user_b, mocks.address0, 0))
                             ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
+                        (await ethersSecurityBond.stagedBalance(glob.user_b, mocks.address0, 0))
+                            ._bn.should.eq.BN(utils.parseEther('0.7')._bn);
                     });
                 });
 
@@ -833,8 +982,11 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveTokensTo(
                             mocks.address0, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.reward(
-                            glob.user_b, 4e17, 0
+                        await web3MockedSecurityBondService.rewardByFraction(
+                            glob.user_b, 5e17, 0
+                        );
+                        await web3MockedSecurityBondService.rewardByAmount(
+                            glob.user_b, 3, web3ERC20.address, 0, 0
                         );
                         await web3SecurityBond.claimAndStage(
                             web3ERC20.address, 0, {from: glob.user_b}
@@ -843,18 +995,18 @@ module.exports = function (glob) {
 
                     it('should successfully withdraw', async () => {
                         const result = await web3SecurityBond.withdraw(
-                            2, web3ERC20.address, 0, '', {from: glob.user_b}
+                            1, web3ERC20.address, 0, '', {from: glob.user_b}
                         );
 
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('WithdrawEvent');
 
                         (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
-                            ._bn.should.eq.BN(6);
+                            ._bn.should.eq.BN(2);
                         (await ethersSecurityBond.stagedBalance(glob.user_b, web3ERC20.address, 0))
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(7);
                         (await ethersERC20.balanceOf(glob.user_b))
-                            ._bn.should.eq.BN(2);
+                            ._bn.should.eq.BN(1);
                     });
                 });
             });

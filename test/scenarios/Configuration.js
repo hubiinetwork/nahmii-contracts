@@ -11,7 +11,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('Configuration', () => {
+    describe('Configuration', () => {
             let web3Configuration, ethersConfiguration;
             let provider;
 

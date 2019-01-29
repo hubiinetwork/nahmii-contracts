@@ -353,9 +353,9 @@ module.exports = (glob) => {
 
                     (await ethersFraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
 
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });

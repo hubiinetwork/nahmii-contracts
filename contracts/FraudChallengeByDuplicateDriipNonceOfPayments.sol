@@ -64,7 +64,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentPaymentHash(payment2.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardByFraction(msg.sender, configuration.fraudStakeFraction(), 0);
 
         // Emit event
         emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(

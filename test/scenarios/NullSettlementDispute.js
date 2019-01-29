@@ -360,7 +360,7 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
@@ -412,7 +412,7 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
@@ -444,12 +444,12 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(1);
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    reward.unlockTimeoutInSeconds._bn.should.eq.BN(1000);
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+                    reward.unlockTime._bn.should.eq.BN(1000);
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -488,15 +488,15 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(1);
-                    (await ethersSecurityBond.deprivals(0))
-                        .should.equal(utils.getAddress(glob.user_a));
+                    const deprival = await ethersSecurityBond.deprivals(0);
+                    deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(1);
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    reward.unlockTimeoutInSeconds._bn.should.eq.BN(1000);
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+                    reward.unlockTime._bn.should.eq.BN(1000);
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -672,7 +672,7 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
@@ -726,7 +726,7 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
@@ -758,12 +758,12 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(1);
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    reward.unlockTimeoutInSeconds._bn.should.eq.BN(0);
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+                    reward.unlockTime._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -802,15 +802,15 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(1);
-                    (await ethersSecurityBond.deprivals(0))
-                        .should.equal(utils.getAddress(glob.user_a));
+                    const deprival = await ethersSecurityBond.deprivals(0);
+                    deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(1);
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    reward.unlockTimeoutInSeconds._bn.should.eq.BN(0);
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+                    reward.unlockTime._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -975,7 +975,7 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
@@ -1029,7 +1029,7 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
@@ -1063,12 +1063,12 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(1);
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    reward.unlockTimeoutInSeconds._bn.should.eq.BN(0);
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+                    reward.unlockTime._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
@@ -1109,15 +1109,15 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._deprivalsCount())
                         ._bn.should.eq.BN(1);
-                    (await ethersSecurityBond.deprivals(0))
-                        .should.equal(utils.getAddress(glob.user_a));
+                    const deprival = await ethersSecurityBond.deprivals(0);
+                    deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                    (await ethersSecurityBond._rewardsCount())
+                    (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(1);
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    reward.unlockTimeoutInSeconds._bn.should.eq.BN(0);
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+                    reward.unlockTime._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(topic);
