@@ -50,7 +50,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         uint256 unlockTime;
     }
 
-    struct AmountedReward {
+    struct AbsoluteReward {
         int256 amount;
         uint256 nonce;
         uint256 unlockTime;
@@ -65,8 +65,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
 
     mapping(address => FractionalReward) public fractionalRewardByWallet;
 
-    // TODO Rename amounted to absolute
-    mapping(address => mapping(address => mapping(uint256 => AmountedReward))) public amountedRewardByWalletCurrency;
+    mapping(address => mapping(address => mapping(uint256 => AbsoluteReward))) public absoluteRewardByWallet;
 
     mapping(address => mapping(address => mapping(uint256 => uint256))) public claimNonceByWalletCurrency;
 
@@ -78,10 +77,11 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event ReceiveEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
-    event RewardByFractionEvent(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds);
-    event RewardByAmountEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+    event RewardFractionalEvent(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds);
+    event RewardAbsoluteEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId,
         uint256 unlockTimeoutInSeconds);
-    event DepriveEvent(address wallet);
+    event DepriveFractionalEvent(address wallet);
+    event DepriveAbsoluteEvent(address wallet, address currencyCt, uint256 currencyId);
     event ClaimAndTransferToBeneficiaryEvent(address from, Beneficiary beneficiary, string balanceType, int256 amount,
         address currencyCt, uint256 currencyId, string standard);
     event ClaimAndStageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
@@ -250,7 +250,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     /// @param fraction The fraction of sums that the wallet is rewarded
     /// @param unlockTimeoutInSeconds The number of seconds for which the reward is locked and should
     /// be claimed
-    function rewardByFraction(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds)
+    function rewardFractional(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds)
     public
     notNullAddress(wallet)
     onlyEnabledServiceAction(REWARD_ACTION)
@@ -261,7 +261,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         fractionalRewardByWallet[wallet].unlockTime = block.timestamp.add(unlockTimeoutInSeconds);
 
         // Emit event
-        emit RewardByFractionEvent(wallet, fraction, unlockTimeoutInSeconds);
+        emit RewardFractionalEvent(wallet, fraction, unlockTimeoutInSeconds);
     }
 
     /// @notice Reward the given wallet the given amount of funds, where the reward is locked
@@ -272,36 +272,51 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     /// @param currencyId The ID of the currency that the wallet is rewarded
     /// @param unlockTimeoutInSeconds The number of seconds for which the reward is locked and should
     /// be claimed
-    function rewardByAmount(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+    function rewardAbsolute(address wallet, int256 amount, address currencyCt, uint256 currencyId,
         uint256 unlockTimeoutInSeconds)
     public
     notNullAddress(wallet)
     onlyEnabledServiceAction(REWARD_ACTION)
     {
-        // Update figural reward
-        amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].amount = amount;
-        amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].nonce = ++nonceByWallet[wallet];
-        amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].unlockTime = block.timestamp.add(unlockTimeoutInSeconds);
+        // Update absolute reward
+        absoluteRewardByWallet[wallet][currencyCt][currencyId].amount = amount;
+        absoluteRewardByWallet[wallet][currencyCt][currencyId].nonce = ++nonceByWallet[wallet];
+        absoluteRewardByWallet[wallet][currencyCt][currencyId].unlockTime = block.timestamp.add(unlockTimeoutInSeconds);
 
         // Emit event
-        emit RewardByAmountEvent(wallet, amount, currencyCt, currencyId, unlockTimeoutInSeconds);
+        emit RewardAbsoluteEvent(wallet, amount, currencyCt, currencyId, unlockTimeoutInSeconds);
     }
 
-
-    // TODO Split into depriveFractional and depriveAmounted (or depriveAbsolute)
-    /// @notice Deprive the given wallet of any reward it has been granted
+    /// @notice Deprive the given wallet of any fractional reward it has been granted
     /// @param wallet The concerned wallet
-    /// @param currencyCt The contract address of the currency that the wallet is deprived
-    /// @param currencyId The ID of the currency that the wallet is deprived
-    function deprive(address wallet, address currencyCt, uint256 currencyId)
+    function depriveFractional(address wallet)
     public
     onlyEnabledServiceAction(DEPRIVE_ACTION)
     {
-        _depriveFractional(wallet);
-        _depriveAmounted(wallet, currencyCt, currencyId);
+        // Update fractional reward
+        fractionalRewardByWallet[wallet].fraction = 0;
+        fractionalRewardByWallet[wallet].nonce = ++nonceByWallet[wallet];
+        fractionalRewardByWallet[wallet].unlockTime = 0;
 
         // Emit event
-        emit DepriveEvent(wallet);
+        emit DepriveFractionalEvent(wallet);
+    }
+
+    /// @notice Deprive the given wallet of any absolute reward it has been granted in the given currency
+    /// @param wallet The concerned wallet
+    /// @param currencyCt The contract address of the currency that the wallet is deprived
+    /// @param currencyId The ID of the currency that the wallet is deprived
+    function depriveAbsolute(address wallet, address currencyCt, uint256 currencyId)
+    public
+    onlyEnabledServiceAction(DEPRIVE_ACTION)
+    {
+        // Update absolute reward
+        absoluteRewardByWallet[wallet][currencyCt][currencyId].amount = 0;
+        absoluteRewardByWallet[wallet][currencyCt][currencyId].nonce = ++nonceByWallet[wallet];
+        absoluteRewardByWallet[wallet][currencyCt][currencyId].unlockTime = 0;
+
+        // Emit event
+        emit DepriveAbsoluteEvent(wallet, currencyCt, currencyId);
     }
 
     /// @notice Claim reward and transfer to beneficiary
@@ -394,31 +409,13 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _depriveFractional(address wallet)
-    private
-    {
-        // Update fractional reward
-        fractionalRewardByWallet[wallet].fraction = 0;
-        fractionalRewardByWallet[wallet].nonce = ++nonceByWallet[wallet];
-        fractionalRewardByWallet[wallet].unlockTime = 0;
-    }
-
-    function _depriveAmounted(address wallet, address currencyCt, uint256 currencyId)
-    private
-    {
-        // Update amounted reward
-        amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].amount = 0;
-        amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].nonce = ++nonceByWallet[wallet];
-        amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].unlockTime = 0;
-    }
-
     function _claim(address wallet, address currencyCt, uint256 currencyId)
     private
     returns (int256)
     {
         // Combine claim nonce from rewards
         uint256 claimNonce = fractionalRewardByWallet[wallet].nonce.clampMin(
-            amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].nonce
+            absoluteRewardByWallet[wallet][currencyCt][currencyId].nonce
         );
 
         // Require that new claim nonce is greater than current stored one
@@ -426,7 +423,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
 
         // Combine claim amount from rewards
         int256 claimAmount = _fractionalRewardAmountByWalletCurrency(wallet, currencyCt, currencyId).add(
-            _amountedRewardAmountByWalletCurrency(wallet, currencyCt, currencyId)
+            _absoluteRewardAmountByWalletCurrency(wallet, currencyCt, currencyId)
         ).clampMax(
             deposited.get(currencyCt, currencyId)
         );
@@ -457,16 +454,16 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
             return 0;
     }
 
-    function _amountedRewardAmountByWalletCurrency(address wallet, address currencyCt, uint256 currencyId)
+    function _absoluteRewardAmountByWalletCurrency(address wallet, address currencyCt, uint256 currencyId)
     private
     view
     returns (int256)
     {
         if (
-            claimNonceByWalletCurrency[wallet][currencyCt][currencyId] < amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].nonce &&
-            block.timestamp >= amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].unlockTime
+            claimNonceByWalletCurrency[wallet][currencyCt][currencyId] < absoluteRewardByWallet[wallet][currencyCt][currencyId].nonce &&
+            block.timestamp >= absoluteRewardByWallet[wallet][currencyCt][currencyId].unlockTime
         )
-            return amountedRewardByWalletCurrency[wallet][currencyCt][currencyId].amount.clampMax(
+            return absoluteRewardByWallet[wallet][currencyCt][currencyId].amount.clampMax(
                 deposited.get(currencyCt, currencyId)
             );
 

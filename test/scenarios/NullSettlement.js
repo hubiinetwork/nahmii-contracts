@@ -408,7 +408,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if nonce is smaller than or equal to previously settled nonce for wallet and currency', () => {
+                describe('if nonce is less than or equal to previously settled nonce for wallet and currency', () => {
                     beforeEach(async () => {
                         await ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6});
                     });
@@ -532,7 +532,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if nonce is smaller than or equal to previously settled nonce for wallet and currency', () => {
+                describe('if nonce is less than or equal to previously settled nonce for wallet and currency', () => {
                     beforeEach(async () => {
                         await ethersNullSettlement.settleNullByProxy(
                             wallet, mocks.address0, 0, {gasLimit: 1e6}

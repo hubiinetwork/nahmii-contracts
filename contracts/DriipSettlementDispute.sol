@@ -183,7 +183,7 @@ FraudChallengable, CancelOrdersChallengable {
         if (driipSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
             walletLocker.unlockFungibleByProxy(order.wallet, challenger, currency.ct, currency.id);
         else
-            securityBond.deprive(challenger, currency.ct, currency.id);
+            securityBond.depriveAbsolute(challenger, currency.ct, currency.id);
 
         // Requalify proposal
         driipSettlementChallenge.qualifyProposal(
@@ -191,7 +191,7 @@ FraudChallengable, CancelOrdersChallengable {
         );
 
         // Reward unchallenger
-        securityBond.rewardByFraction(unchallenger, configuration.walletSettlementStakeFraction(), 0);
+        securityBond.rewardFractional(unchallenger, configuration.walletSettlementStakeFraction(), 0);
 
         // Emit event
         emit UnchallengeOrderCandidateByTradeEvent(
@@ -441,7 +441,7 @@ FraudChallengable, CancelOrdersChallengable {
         if (SettlementTypesLib.Status.Disqualified == driipSettlementChallenge.proposalStatus(
             wallet, currency.ct, currency.id
         ))
-            securityBond.deprive(
+            securityBond.depriveAbsolute(
                 driipSettlementChallenge.proposalDisqualificationChallenger(
                     wallet, currency.ct, currency.id
                 ),
@@ -450,7 +450,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Reward the flat component
         MonetaryTypesLib.Figure memory flatReward = _flatReward();
-        securityBond.rewardByAmount(
+        securityBond.rewardAbsolute(
             challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
         );
 
@@ -458,7 +458,7 @@ FraudChallengable, CancelOrdersChallengable {
         int256 progressiveRewardAmount = walletAmount.clampMax(
             securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
         );
-        securityBond.rewardByAmount(
+        securityBond.rewardAbsolute(
             challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
         );
     }

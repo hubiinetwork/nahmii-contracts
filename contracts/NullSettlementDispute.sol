@@ -87,7 +87,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
-        // TODO Replace by wallet nonce?
+        // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
         require(order.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
@@ -105,10 +105,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Reward challenger
         // TODO Need balance as part of order to replace transfer amount (_orderTransferAmount(order)) in call below
-        _settleRewards(
-            order.wallet, _orderTransferAmount(order), currency, challenger,
-            configuration.settlementChallengeTimeout()
-        );
+        _settleRewards(order.wallet, _orderTransferAmount(order), currency, challenger, 0);
 
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallenge.disqualifyProposal(
@@ -150,7 +147,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
-        // TODO Replace by wallet nonce?
+        // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
         require(trade.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
@@ -201,7 +198,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
-        // TODO Replace by wallet nonce?
+        // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
         require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
@@ -357,7 +354,7 @@ FraudChallengable, CancelOrdersChallengable {
         if (SettlementTypesLib.Status.Disqualified == nullSettlementChallenge.proposalStatus(
             wallet, currency.ct, currency.id
         ))
-            securityBond.deprive(
+            securityBond.depriveAbsolute(
                 nullSettlementChallenge.proposalDisqualificationChallenger(
                     wallet, currency.ct, currency.id
                 ),
@@ -366,7 +363,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Reward the flat component
         MonetaryTypesLib.Figure memory flatReward = _flatReward();
-        securityBond.rewardByAmount(
+        securityBond.rewardAbsolute(
             challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
         );
 
@@ -374,7 +371,7 @@ FraudChallengable, CancelOrdersChallengable {
         int256 progressiveRewardAmount = walletAmount.clampMax(
             securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
         );
-        securityBond.rewardByAmount(
+        securityBond.rewardAbsolute(
             challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
         );
     }

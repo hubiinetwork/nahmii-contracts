@@ -355,7 +355,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on order whose block number is smaller than the proposal block number', () => {
+            describe('if called on order whose block number is less than the proposal block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBlockNumber(
                         order.blockNumber.add(10)
@@ -367,7 +367,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on order whose block number is smaller than the proposal disqualification block number', () => {
+            describe('if called on order whose block number is less than the proposal disqualification block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalDisqualificationBlockNumber(
                         order.blockNumber.add(10)
@@ -379,7 +379,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on order whose amount is smaller than the proposal target balance amount', () => {
+            describe('if called on order whose amount is less than the proposal target balance amount', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalTargetBalanceAmount(
                         order.placement.amount.div(order.placement.rate).mul(2)
@@ -422,7 +422,7 @@ module.exports = (glob) => {
                     lock.currencyCt.should.equal(order.placement.currencies.conjugate.ct);
                     lock.currencyId._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
 
-                    (await ethersSecurityBond._deprivalsCount())
+                    (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);
 
                     (await ethersSecurityBond._fractionalRewardsCount())
@@ -474,7 +474,7 @@ module.exports = (glob) => {
                     lock.currencyCt.should.equal(order.placement.currencies.conjugate.ct);
                     lock.currencyId._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
 
-                    (await ethersSecurityBond._deprivalsCount())
+                    (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);
 
                     (await ethersSecurityBond._fractionalRewardsCount())
@@ -511,20 +511,20 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(1000);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate).div(2)._bn);
                         progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
@@ -536,7 +536,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if wallet balance amount is smaller than fractional amount', () => {
+                describe('if wallet balance amount is less than fractional amount', () => {
                     beforeEach(async () => {
                         await ethersSecurityBond._setDepositedFractionalBalance(order.placement.amount.div(order.placement.rate).mul(2));
                     });
@@ -561,20 +561,20 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(1000);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate)._bn);
                         progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
@@ -622,23 +622,23 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(1);
 
-                        const deprival = await ethersSecurityBond.deprivals(0);
+                        const deprival = await ethersSecurityBond.absoluteDeprivals(0);
                         deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(1000);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate).div(2)._bn);
                         progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
@@ -650,7 +650,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if wallet balance amount is smaller than fractional amount', () => {
+                describe('if wallet balance amount is less than fractional amount', () => {
                     beforeEach(async () => {
                         await ethersSecurityBond._setDepositedFractionalBalance(order.placement.amount.div(order.placement.rate).mul(2));
                     });
@@ -675,23 +675,23 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(1);
 
-                        const deprival = await ethersSecurityBond.deprivals(0);
+                        const deprival = await ethersSecurityBond.absoluteDeprivals(0);
                         deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(1000);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate)._bn);
                         progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
@@ -914,10 +914,10 @@ module.exports = (glob) => {
                     (await ethersWalletLocker._fungibleUnlocksCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersSecurityBond._deprivalsCount())
+                    (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(1);
 
-                    const deprival = await ethersSecurityBond.deprivals(0);
+                    const deprival = await ethersSecurityBond.absoluteDeprivals(0);
                     deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
                     const logs = await provider.getLogs(filter);
@@ -967,7 +967,7 @@ module.exports = (glob) => {
                     unlock.lockedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     unlock.lockerWallet.should.equal(utils.getAddress(glob.user_a));
 
-                    (await ethersSecurityBond._deprivalsCount())
+                    (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);
 
                     const logs = await provider.getLogs(filter);
@@ -1081,7 +1081,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on trade whose block number is smaller than the proposal block number', () => {
+            describe('if called on trade whose block number is less than the proposal block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBlockNumber(
                         trade.blockNumber.add(10)
@@ -1095,7 +1095,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on trade whose block number is smaller than the proposal disqualification block number', () => {
+            describe('if called on trade whose block number is less than the proposal disqualification block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalDisqualificationBlockNumber(
                         trade.blockNumber.add(10)
@@ -1109,7 +1109,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on trade whose single transfer amount is smaller than the proposal target balance amount', () => {
+            describe('if called on trade whose single transfer amount is less than the proposal target balance amount', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalTargetBalanceAmount(
                         trade.transfers.conjugate.single.mul(2)
@@ -1156,7 +1156,7 @@ module.exports = (glob) => {
                     lock.currencyCt.should.equal(trade.currencies.conjugate.ct);
                     lock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
 
-                    (await ethersSecurityBond._deprivalsCount())
+                    (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);
 
                     (await ethersSecurityBond._fractionalRewardsCount())
@@ -1210,7 +1210,7 @@ module.exports = (glob) => {
                     lock.currencyCt.should.equal(trade.currencies.conjugate.ct);
                     lock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
 
-                    (await ethersSecurityBond._deprivalsCount())
+                    (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);
 
                     (await ethersSecurityBond._fractionalRewardsCount())
@@ -1247,20 +1247,20 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(0);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current.div(2)._bn);
                         progressiveReward.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -1272,7 +1272,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if wallet balance amount is smaller than fractional amount', () => {
+                describe('if wallet balance amount is less than fractional amount', () => {
                     beforeEach(async () => {
                         await ethersSecurityBond._setDepositedFractionalBalance(trade.buyer.balances.conjugate.current.mul(2));
                     });
@@ -1297,20 +1297,20 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(0);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                         progressiveReward.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -1358,23 +1358,23 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(1);
 
-                        const deprival = await ethersSecurityBond.deprivals(0);
+                        const deprival = await ethersSecurityBond.absoluteDeprivals(0);
                         deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(0);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current.div(2)._bn);
                         progressiveReward.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -1386,7 +1386,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if wallet balance amount is smaller than fractional amount', () => {
+                describe('if wallet balance amount is less than fractional amount', () => {
                     beforeEach(async () => {
                         await ethersSecurityBond._setDepositedFractionalBalance(trade.buyer.balances.conjugate.current.mul(2));
                     });
@@ -1411,23 +1411,23 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(1);
 
-                        const deprival = await ethersSecurityBond.deprivals(0);
+                        const deprival = await ethersSecurityBond.absoluteDeprivals(0);
                         deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(0);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                         progressiveReward.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -1522,7 +1522,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on payment whose block number is smaller than the proposal block number', () => {
+            describe('if called on payment whose block number is less than the proposal block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBlockNumber(
                         payment.blockNumber.add(10)
@@ -1536,7 +1536,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on payment whose block number is smaller than the proposal disqualification block number', () => {
+            describe('if called on payment whose block number is less than the proposal disqualification block number', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalDisqualificationBlockNumber(
                         payment.blockNumber.add(10)
@@ -1550,7 +1550,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on payment whose single transfer amount is smaller than the proposal target balance amount', () => {
+            describe('if called on payment whose single transfer amount is less than the proposal target balance amount', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalTargetBalanceAmount(
                         payment.transfers.single.mul(2)
@@ -1597,7 +1597,7 @@ module.exports = (glob) => {
                     lock.currencyCt.should.equal(payment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
 
-                    (await ethersSecurityBond._deprivalsCount())
+                    (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);
 
                     (await ethersSecurityBond._fractionalRewardsCount())
@@ -1651,7 +1651,7 @@ module.exports = (glob) => {
                     lock.currencyCt.should.equal(payment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
 
-                    (await ethersSecurityBond._deprivalsCount())
+                    (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);
 
                     (await ethersSecurityBond._fractionalRewardsCount())
@@ -1689,20 +1689,20 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(0);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(payment.sender.balances.current.div(2)._bn);
                         progressiveReward.currency.ct.should.equal(payment.currency.ct);
@@ -1714,7 +1714,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if wallet balance amount is smaller than fractional amount', () => {
+                describe('if wallet balance amount is less than fractional amount', () => {
                     beforeEach(async () => {
                         await ethersSecurityBond._setDepositedFractionalBalance(payment.sender.balances.current.mul(2));
                     });
@@ -1740,20 +1740,20 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(0);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(payment.sender.balances.current._bn);
                         progressiveReward.currency.ct.should.equal(payment.currency.ct);
@@ -1802,23 +1802,23 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(1);
 
-                        const deprival = await ethersSecurityBond.deprivals(0);
+                        const deprival = await ethersSecurityBond.absoluteDeprivals(0);
                         deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(0);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(payment.sender.balances.current.div(2)._bn);
                         progressiveReward.currency.ct.should.equal(payment.currency.ct);
@@ -1830,7 +1830,7 @@ module.exports = (glob) => {
                     });
                 });
 
-                describe('if wallet balance amount is smaller than fractional amount', () => {
+                describe('if wallet balance amount is less than fractional amount', () => {
                     beforeEach(async () => {
                         await ethersSecurityBond._setDepositedFractionalBalance(payment.sender.balances.current.mul(2));
                     });
@@ -1856,23 +1856,23 @@ module.exports = (glob) => {
                         (await ethersWalletLocker._lockedWalletsCount())
                             ._bn.should.eq.BN(0);
 
-                        (await ethersSecurityBond._deprivalsCount())
+                        (await ethersSecurityBond._absoluteDeprivalsCount())
                             ._bn.should.eq.BN(1);
 
-                        const deprival = await ethersSecurityBond.deprivals(0);
+                        const deprival = await ethersSecurityBond.absoluteDeprivals(0);
                         deprival.wallet.should.equal(utils.getAddress(glob.user_a));
 
-                        (await ethersSecurityBond._amountedRewardsCount())
+                        (await ethersSecurityBond._absoluteRewardsCount())
                             ._bn.should.eq.BN(2);
 
-                        const flatReward = await ethersSecurityBond.amountedRewards(0);
+                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
                         flatReward.wallet.should.equal(utils.getAddress(glob.owner));
                         flatReward.amount._bn.should.eq.BN(1e16.toString());
                         flatReward.currency.ct.should.equal(mocks.address0);
                         flatReward.currency.id._bn.should.eq.BN(0);
                         flatReward.unlockTime._bn.should.eq.BN(0);
 
-                        const progressiveReward = await ethersSecurityBond.amountedRewards(1);
+                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
                         progressiveReward.wallet.should.equal(utils.getAddress(glob.owner));
                         progressiveReward.amount._bn.should.eq.BN(payment.sender.balances.current._bn);
                         progressiveReward.currency.ct.should.equal(payment.currency.ct);

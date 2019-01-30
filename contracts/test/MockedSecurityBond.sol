@@ -26,14 +26,14 @@ contract MockedSecurityBond {
         uint256 unlockTime;
     }
 
-    struct AmountedReward {
+    struct AbsoluteReward {
         address wallet;
         int256 amount;
         MonetaryTypesLib.Currency currency;
         uint256 unlockTime;
     }
 
-    struct Deprival {
+    struct AbsoluteDeprival {
         address wallet;
         MonetaryTypesLib.Currency currency;
     }
@@ -45,16 +45,18 @@ contract MockedSecurityBond {
     int256 _depositedFractionalBalance;
 
     FractionalReward[] public fractionalRewards;
-    AmountedReward[] public amountedRewards;
-    Deprival[] public deprivals;
+    AbsoluteReward[] public absoluteRewards;
+    address[] public fractionalDeprivals;
+    AbsoluteDeprival[] public absoluteDeprivals;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RewardByFractionEvent(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds);
-    event RewardByAmountEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+    event RewardFractionalEvent(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds);
+    event RewardAbsoluteEvent(address wallet, int256 amount, address currencyCt, uint256 currencyId,
         uint256 unlockTimeoutInSeconds);
-    event DepriveEvent(address wallet, address currencyCt, uint256 currencyId);
+    event DepriveFractionalEvent(address wallet);
+    event DepriveAbsoluteEvent(address wallet, address currencyCt, uint256 currencyId);
 
     //
     // Constructor
@@ -71,8 +73,9 @@ contract MockedSecurityBond {
         _depositedBalance = 0;
         _depositedFractionalBalance = 0;
         fractionalRewards.length = 0;
-        amountedRewards.length = 0;
-        deprivals.length = 0;
+        absoluteRewards.length = 0;
+        fractionalDeprivals.length = 0;
+        absoluteDeprivals.length = 0;
     }
 
     function depositedBalance(address, uint256)
@@ -83,11 +86,11 @@ contract MockedSecurityBond {
         return _depositedBalance;
     }
 
-    function _setDepositedBalance(int256 depositedBalance)
+    function _setDepositedBalance(int256 balance)
     public
     returns (int256)
     {
-        _depositedBalance = depositedBalance;
+        _depositedBalance = balance;
     }
 
     function depositedFractionalBalance(address, uint256, uint256)
@@ -98,11 +101,11 @@ contract MockedSecurityBond {
         return _depositedFractionalBalance;
     }
 
-    function _setDepositedFractionalBalance(int256 depositedFractionalBalance)
+    function _setDepositedFractionalBalance(int256 balance)
     public
     returns (int256)
     {
-        _depositedFractionalBalance = depositedFractionalBalance;
+        _depositedFractionalBalance = balance;
     }
 
     function _fractionalRewardsCount()
@@ -113,40 +116,60 @@ contract MockedSecurityBond {
         return fractionalRewards.length;
     }
 
-    function _amountedRewardsCount()
+    function _absoluteRewardsCount()
     public
     view
     returns (uint256)
     {
-        return amountedRewards.length;
+        return absoluteRewards.length;
     }
 
-    function _deprivalsCount()
+    function _fractionalDeprivalsCount()
     public
     view
     returns (uint256)
     {
-        return deprivals.length;
+        return fractionalDeprivals.length;
     }
 
-    function rewardByFraction(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds)
+    function _absoluteDeprivalsCount()
     public
+    view
+    returns (uint256)
     {
-        fractionalRewards.push(FractionalReward(wallet, fraction, unlockTimeoutInSeconds));
-        emit RewardByFractionEvent(msg.sender, fraction, unlockTimeoutInSeconds);
+        return absoluteDeprivals.length;
     }
 
-    function rewardByAmount(address wallet, int256 amount, address currencyCt, uint256 currencyId, uint256 unlockTimeoutInSeconds)
+    function rewardFractional(address wallet, uint256 fraction, uint256 unlockTimeoutInSeconds)
     public
     {
-        amountedRewards.push(AmountedReward(wallet, amount, MonetaryTypesLib.Currency(currencyCt, currencyId), unlockTimeoutInSeconds));
-        emit RewardByAmountEvent(msg.sender, amount, currencyCt, currencyId, unlockTimeoutInSeconds);
+        fractionalRewards.push(
+            FractionalReward(wallet, fraction, unlockTimeoutInSeconds)
+        );
+        emit RewardFractionalEvent(msg.sender, fraction, unlockTimeoutInSeconds);
     }
 
-    function deprive(address wallet, address currencyCt, uint256 currencyId)
+    function rewardAbsolute(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 unlockTimeoutInSeconds)
     public
     {
-        deprivals.push(Deprival(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)));
-        emit DepriveEvent(msg.sender, currencyCt, currencyId);
+        absoluteRewards.push(
+            AbsoluteReward(wallet, amount, MonetaryTypesLib.Currency(currencyCt, currencyId), unlockTimeoutInSeconds)
+        );
+        emit RewardAbsoluteEvent(msg.sender, amount, currencyCt, currencyId, unlockTimeoutInSeconds);
+    }
+
+    function depriveFractional(address wallet)
+    public
+    {
+        fractionalDeprivals.push(wallet);
+        emit DepriveFractionalEvent(msg.sender);
+    }
+
+    function depriveAbsolute(address wallet, address currencyCt, uint256 currencyId)
+    public
+    {
+        absoluteDeprivals.push(AbsoluteDeprival(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)));
+        emit DepriveAbsoluteEvent(msg.sender, currencyCt, currencyId);
     }
 }

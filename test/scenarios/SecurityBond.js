@@ -461,9 +461,9 @@ module.exports = function (glob) {
             })
         });
 
-        describe('amountedRewardByWalletCurrency()', () => {
+        describe('absoluteRewardByWallet()', () => {
             it('should successfully return meta', async () => {
-                const result = await ethersSecurityBond.amountedRewardByWalletCurrency(glob.user_a, mocks.address0, 0);
+                const result = await ethersSecurityBond.absoluteRewardByWallet(glob.user_a, mocks.address0, 0);
 
                 result.amount._bn.should.eq.BN(0);
                 result.nonce._bn.should.eq.BN(0);
@@ -478,10 +478,10 @@ module.exports = function (glob) {
             })
         });
 
-        describe('rewardByFraction()', () => {
+        describe('rewardFractional()', () => {
             describe('if called with null address', () => {
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.rewardByFraction(
+                    web3MockedSecurityBondService.rewardFractional(
                         mocks.address0, 1e18, 0
                     ).should.be.rejected;
                 });
@@ -494,7 +494,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.rewardByFraction(
+                    web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 1e18, 0
                     ).should.be.rejected;
                 });
@@ -508,7 +508,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.rewardByFraction(
+                    web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 1e18, 0
                     ).should.be.rejected;
                 });
@@ -516,7 +516,7 @@ module.exports = function (glob) {
 
             describe('if within operational constraints', () => {
                 it('should successfully reward', async () => {
-                    await web3MockedSecurityBondService.rewardByFraction(
+                    await web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 1e18, 0
                     );
 
@@ -528,10 +528,10 @@ module.exports = function (glob) {
             });
         });
 
-        describe('rewardByAmount()', () => {
+        describe('rewardAbsolute()', () => {
             describe('if called with null address', () => {
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.rewardByAmount(
+                    web3MockedSecurityBondService.rewardAbsolute(
                         mocks.address0, 1e18, mocks.address0, 0, 0
                     ).should.be.rejected;
                 });
@@ -544,7 +544,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.rewardByAmount(
+                    web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 1e18, mocks.address0, 0, 0
                     ).should.be.rejected;
                 });
@@ -558,7 +558,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.rewardByAmount(
+                    web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 1e18, mocks.address0, 0, 0
                     ).should.be.rejected;
                 });
@@ -566,11 +566,11 @@ module.exports = function (glob) {
 
             describe('if within operational constraints', () => {
                 it('should successfully reward', async () => {
-                    await web3MockedSecurityBondService.rewardByAmount(
+                    await web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 1e18, mocks.address0, 0, 0
                     );
 
-                    const reward = await ethersSecurityBond.amountedRewardByWalletCurrency(glob.user_a, mocks.address0, 0);
+                    const reward = await ethersSecurityBond.absoluteRewardByWallet(glob.user_a, mocks.address0, 0);
                     reward.amount._bn.should.eq.BN(1e18.toString());
                     reward.nonce._bn.should.eq.BN(1);
                     reward.unlockTime._bn.should.be.gt.BN(0);
@@ -578,7 +578,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe('deprive()', () => {
+        describe('depriveFractional()', () => {
             describe('if called by service that is not registered', () => {
                 beforeEach(async () => {
                     web3SecurityBond = await SecurityBond.new(glob.owner);
@@ -586,7 +586,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.deprive(glob.user_a, mocks.address0, 0).should.be.rejected;
+                    web3MockedSecurityBondService.depriveFractional(glob.user_a).should.be.rejected;
                 });
             });
 
@@ -598,32 +598,66 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3MockedSecurityBondService.deprive(glob.user_a, mocks.address0, 0).should.be.rejected;
+                    web3MockedSecurityBondService.depriveFractional(glob.user_a).should.be.rejected;
                 });
             });
 
             describe('if within operational constraints', () => {
                 beforeEach(async () => {
-                    await web3MockedSecurityBondService.rewardByFraction(
+                    await web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 5e17, 0
                     );
-                    await web3MockedSecurityBondService.rewardByAmount(
+                });
+
+                it('should successfully reward', async () => {
+                    await web3MockedSecurityBondService.depriveFractional(glob.user_a);
+
+                    const reward = await ethersSecurityBond.fractionalRewardByWallet(glob.user_a);
+                    reward.fraction._bn.should.eq.BN(0);
+                    reward.nonce._bn.should.eq.BN(2);
+                    reward.unlockTime._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('depriveAbsolute()', () => {
+            describe('if called by service that is not registered', () => {
+                beforeEach(async () => {
+                    web3SecurityBond = await SecurityBond.new(glob.owner);
+                    await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
+                });
+
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.depriveAbsolute(glob.user_a, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('if called by registered service with action not enabled', () => {
+                beforeEach(async () => {
+                    web3SecurityBond = await SecurityBond.new(glob.owner);
+                    await web3SecurityBond.registerService(web3MockedSecurityBondService.address);
+                    await web3MockedSecurityBondService.setSecurityBond(web3SecurityBond.address);
+                });
+
+                it('should revert', async () => {
+                    web3MockedSecurityBondService.depriveAbsolute(glob.user_a, mocks.address0, 0).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                beforeEach(async () => {
+                    await web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                 });
 
                 it('should successfully reward', async () => {
-                    await web3MockedSecurityBondService.deprive(glob.user_a, mocks.address0, 0);
+                    await web3MockedSecurityBondService.depriveAbsolute(glob.user_a, mocks.address0, 0);
 
-                    const fractionalReward = await ethersSecurityBond.fractionalRewardByWallet(glob.user_a);
-                    fractionalReward.fraction._bn.should.eq.BN(0);
-                    fractionalReward.nonce._bn.should.eq.BN(3);
-                    fractionalReward.unlockTime._bn.should.eq.BN(0);
-
-                    const amountReward = await ethersSecurityBond.amountedRewardByWalletCurrency(glob.user_a, mocks.address0, 0);
-                    amountReward.amount._bn.should.eq.BN(0);
-                    amountReward.nonce._bn.should.eq.BN(4);
-                    amountReward.unlockTime._bn.should.eq.BN(0);
+                    const reward = await ethersSecurityBond.absoluteRewardByWallet(glob.user_a, mocks.address0, 0);
+                    reward.amount._bn.should.eq.BN(0);
+                    reward.nonce._bn.should.eq.BN(2);
+                    reward.unlockTime._bn.should.eq.BN(0);
                 });
             });
         });
@@ -683,10 +717,10 @@ module.exports = function (glob) {
                     await web3SecurityBond.receiveEthersTo(
                         mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedSecurityBondService.rewardByFraction(
+                    await web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 5e17, 1e3
                     );
-                    await web3MockedSecurityBondService.rewardByAmount(
+                    await web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 3e17, mocks.address0, 0, 1e3
                     );
                 });
@@ -700,10 +734,10 @@ module.exports = function (glob) {
 
             describe('if security bond has zero deposited balance', () => {
                 beforeEach(async () => {
-                    await web3MockedSecurityBondService.rewardByFraction(
+                    await web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 5e17, 0
                     );
-                    await web3MockedSecurityBondService.rewardByAmount(
+                    await web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                 });
@@ -721,10 +755,10 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.rewardByFraction(
+                        await web3MockedSecurityBondService.rewardFractional(
                             glob.user_a, 5e17, 0
                         );
-                        await web3MockedSecurityBondService.rewardByAmount(
+                        await web3MockedSecurityBondService.rewardAbsolute(
                             glob.user_a, 3e17, mocks.address0, 0, 0
                         );
                     });
@@ -750,10 +784,10 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveTokensTo(
                             mocks.address0, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.rewardByFraction(
+                        await web3MockedSecurityBondService.rewardFractional(
                             glob.user_a, 5e17, 0
                         );
-                        await web3MockedSecurityBondService.rewardByAmount(
+                        await web3MockedSecurityBondService.rewardAbsolute(
                             glob.user_a, 3, web3ERC20.address, 0, 0
                         );
                     });
@@ -777,10 +811,10 @@ module.exports = function (glob) {
                     await web3SecurityBond.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedSecurityBondService.rewardByFraction(
+                    await web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 5e17, 0
                     );
-                    await web3MockedSecurityBondService.rewardByAmount(
+                    await web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                     await web3SecurityBond.claimAndTransferToBeneficiary(
@@ -816,10 +850,10 @@ module.exports = function (glob) {
                     await web3SecurityBond.receiveEthersTo(
                         mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedSecurityBondService.rewardByFraction(
+                    await web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 5e17, 1e3
                     );
-                    await web3MockedSecurityBondService.rewardByAmount(
+                    await web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 3e17, mocks.address0, 0, 1e3
                     );
                 });
@@ -833,10 +867,10 @@ module.exports = function (glob) {
 
             describe('if security bond has zero deposited balance', () => {
                 beforeEach(async () => {
-                    await web3MockedSecurityBondService.rewardByFraction(
+                    await web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 5e17, 0
                     );
-                    await web3MockedSecurityBondService.rewardByAmount(
+                    await web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                 });
@@ -854,10 +888,10 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.rewardByFraction(
+                        await web3MockedSecurityBondService.rewardFractional(
                             glob.user_a, 5e17, 0
                         );
-                        await web3MockedSecurityBondService.rewardByAmount(
+                        await web3MockedSecurityBondService.rewardAbsolute(
                             glob.user_a, 3e17, mocks.address0, 0, 0
                         );
                     });
@@ -885,10 +919,10 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveTokensTo(
                             mocks.address0, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.rewardByFraction(
+                        await web3MockedSecurityBondService.rewardFractional(
                             glob.user_a, 5e17, 0
                         );
-                        await web3MockedSecurityBondService.rewardByAmount(
+                        await web3MockedSecurityBondService.rewardAbsolute(
                             glob.user_a, 3, web3ERC20.address, 0, 0
                         );
                     });
@@ -914,10 +948,10 @@ module.exports = function (glob) {
                     await web3SecurityBond.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                     );
-                    await web3MockedSecurityBondService.rewardByFraction(
+                    await web3MockedSecurityBondService.rewardFractional(
                         glob.user_a, 5e17, 0
                     );
-                    await web3MockedSecurityBondService.rewardByAmount(
+                    await web3MockedSecurityBondService.rewardAbsolute(
                         glob.user_a, 3e17, mocks.address0, 0, 0
                     );
                     await web3SecurityBond.claimAndStage(
@@ -948,10 +982,10 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.rewardByFraction(
+                        await web3MockedSecurityBondService.rewardFractional(
                             glob.user_b, 5e17, 0
                         );
-                        await web3MockedSecurityBondService.rewardByAmount(
+                        await web3MockedSecurityBondService.rewardAbsolute(
                             glob.user_b, 3e17, mocks.address0, 0, 0
                         );
                         await web3SecurityBond.claimAndStage(
@@ -982,10 +1016,10 @@ module.exports = function (glob) {
                         await web3SecurityBond.receiveTokensTo(
                             mocks.address0, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
-                        await web3MockedSecurityBondService.rewardByFraction(
+                        await web3MockedSecurityBondService.rewardFractional(
                             glob.user_b, 5e17, 0
                         );
-                        await web3MockedSecurityBondService.rewardByAmount(
+                        await web3MockedSecurityBondService.rewardAbsolute(
                             glob.user_b, 3, web3ERC20.address, 0, 0
                         );
                         await web3SecurityBond.claimAndStage(
