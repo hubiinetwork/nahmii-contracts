@@ -74,18 +74,18 @@ SecurityBondable, WalletLockable {
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
         // Lock amount of size equivalent to payment amount of sender
         if (!genuineSenderAndFee)
             walletLocker.lockFungibleByProxy(
-                payment.sender.wallet, msg.sender, payment.amount, payment.currency.ct, payment.currency.id
+                payment.sender.wallet, msg.sender, payment.sender.balances.current, payment.currency.ct, payment.currency.id
             );
 
         // Lock amount of size equivalent to payment amount of recipient
         if (!genuineRecipient)
             walletLocker.lockFungibleByProxy(
-                payment.recipient.wallet, msg.sender, payment.amount, payment.currency.ct, payment.currency.id
+                payment.recipient.wallet, msg.sender, payment.recipient.balances.current, payment.currency.ct, payment.currency.id
             );
 
         // Emit event

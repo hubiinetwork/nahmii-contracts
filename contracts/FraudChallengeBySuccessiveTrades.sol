@@ -92,12 +92,12 @@ SecurityBondable, WalletLockable {
         fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        // Lock amount of size equivalent to trade intended or conjugate amount of recipient
+        // Lock amount of size equivalent to wallet's balance of intended or conjugate currencies
         walletLocker.lockFungibleByProxy(
             wallet, msg.sender,
-            NahmiiTypesLib.CurrencyRole.Intended == lastTradeCurrencyRole ? lastTrade.amount : lastTrade.amount.div(lastTrade.rate),
+            _tradeLockAmount(lastTrade, lastTradePartyRole, lastTradeCurrencyRole),
             currencyCt, currencyId
         );
 
@@ -105,5 +105,26 @@ SecurityBondable, WalletLockable {
         emit ChallengeBySuccessiveTradesEvent(
             firstTrade.seal.hash, lastTrade.seal.hash, msg.sender, wallet
         );
+    }
+
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function _tradeLockAmount(NahmiiTypesLib.Trade trade, NahmiiTypesLib.TradePartyRole tradePartyRole,
+        NahmiiTypesLib.CurrencyRole currencyRole)
+    private
+    pure
+    returns (int256)
+    {
+        if (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole)
+            if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
+                return trade.buyer.balances.intended.current;
+            else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
+                return trade.buyer.balances.conjugate.current;
+        else // NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
+            if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
+                return trade.seller.balances.intended.current;
+            else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
+                return trade.seller.balances.conjugate.current;
     }
 }

@@ -50,7 +50,7 @@ module.exports = (deployer, network, accounts) => {
 
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
 
-            if (!network.startsWith('ropsten')) {
+            if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
                 await deployer.link(SafeMathUintLib, [
                     RevenueTokenManager
                 ]);
@@ -66,70 +66,75 @@ module.exports = (deployer, network, accounts) => {
                 }
 
                 instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
-                if (!network.startsWith('ropsten')) {
-                    await instance.setToken(addressStorage.get('NahmiiToken'));
+                await instance.setToken(addressStorage.get('NahmiiToken'));
+                if (helpers.isTestNetwork(network))
+                    await instance.setBeneficiary(ownerAccount);
+                else
                     await instance.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
 
-                    const releases = airdriipReleases();
+                const releases = airdriipReleases();
 
-                    const earliestReleaseTimes = [];
-                    const amounts = [];
-                    const blockNumbers = [];
-                    releases.forEach((r) => {
-                        earliestReleaseTimes.push(r.earliestReleaseTime);
-                        amounts.push(r.amount);
-                        if (r.blockNumber)
-                            blockNumbers.push(r.blockNumber);
-                    });
+                const earliestReleaseTimes = [];
+                const amounts = [];
+                const blockNumbers = [];
+                releases.forEach((r) => {
+                    earliestReleaseTimes.push(r.earliestReleaseTime);
+                    amounts.push(r.amount);
+                    if (r.blockNumber)
+                        blockNumbers.push(r.blockNumber);
+                });
 
-                    let result = await instance.defineReleases(
-                        earliestReleaseTimes.slice(0, 60),
-                        amounts.slice(0, 60),
-                        blockNumbers.slice(0, 60),
-                        {gas: 5e6}
-                    );
+                let result = await instance.defineReleases(
+                    earliestReleaseTimes.slice(0, 60),
+                    amounts.slice(0, 60),
+                    blockNumbers.slice(0, 60),
+                    {gas: 5e6}
+                );
 
-                    console.log(`First batch of releases defined in TX ${result.tx}...`);
+                console.log(`First batch of releases defined in TX ${result.tx}...`);
 
-                    while (null == (await web3.eth.getTransactionReceipt(result.tx)).blockNumber) {
-                        console.log(`Waiting 60s for first batch of releases to be mined...`);
-                        await helpers.sleep(60000);
-                    }
-
-                    result = await instance.defineReleases(
-                        earliestReleaseTimes.slice(60),
-                        amounts.slice(60),
-                        blockNumbers.slice(60),
-                        {gas: 5e6}
-                    );
-
-                    console.log(`Second batch of releases defined in TX ${result.tx}...`);
-
-                    while (null == (await web3.eth.getTransactionReceipt(result.tx)).blockNumber) {
-                        console.log(`Waiting 60s for second batch of releases to be mined...`);
-                        await helpers.sleep(60000);
-                    }
-
-                    console.log(`Releases:`);
-                    releases.forEach((r) => {
-                        console.log(`  ${moment.unix(r.earliestReleaseTime)} - ${r.blockNumber ? r.blockNumber : ''}`);
-                    });
-
-                    const firstRelease = await instance.releases(0);
-                    console.log(`First release of ${firstRelease[1].toString()} at ${new Date(1000 * firstRelease[0].toNumber())} with block number ${firstRelease[2].toNumber()}`);
-
-                    const secondRelease = await instance.releases(1);
-                    console.log(`Second release of ${secondRelease[1].toString()} at ${new Date(1000 * secondRelease[0].toNumber())} with block number ${secondRelease[2].toNumber()}`);
-
-                    const lastRelease = await instance.releases(119);
-                    console.log(`Last release of ${lastRelease[1].toString()} at ${new Date(1000 * lastRelease[0].toNumber())} with block number ${lastRelease[2].toNumber()}`);
-
-                    console.log(`Total locked amount: ${(await instance.totalLockedAmount()).toNumber()}`);
-                    console.log(`Releases count: ${(await instance.releasesCount()).toNumber()}`);
+                while (null == (await web3.eth.getTransactionReceipt(result.tx)).blockNumber) {
+                    console.log(`Waiting 60s for first batch of releases to be mined...`);
+                    await helpers.sleep(60000);
                 }
 
-            } else if (network.startsWith('ropsten')) {
-                addressStorage.set('RevenueTokenManager', '0x5c831d167cae523724c1f2503f7b852ab78387e4');
+                result = await instance.defineReleases(
+                    earliestReleaseTimes.slice(60),
+                    amounts.slice(60),
+                    blockNumbers.slice(60),
+                    {gas: 5e6}
+                );
+
+                console.log(`Second batch of releases defined in TX ${result.tx}...`);
+
+                while (null == (await web3.eth.getTransactionReceipt(result.tx)).blockNumber) {
+                    console.log(`Waiting 60s for second batch of releases to be mined...`);
+                    await helpers.sleep(60000);
+                }
+
+                for (let i = 0; i < 15; i++)
+                    await instance.release(i);
+
+                console.log(`Releases:`);
+                releases.forEach((r) => {
+                    console.log(`  ${moment.unix(r.earliestReleaseTime)} - ${r.blockNumber ? r.blockNumber : ''}`);
+                });
+
+                const firstRelease = await instance.releases(0);
+                console.log(`First release of ${firstRelease[1].toString()} at ${new Date(1000 * firstRelease[0].toNumber())} with block number ${firstRelease[2].toNumber()}`);
+
+                const secondRelease = await instance.releases(1);
+                console.log(`Second release of ${secondRelease[1].toString()} at ${new Date(1000 * secondRelease[0].toNumber())} with block number ${secondRelease[2].toNumber()}`);
+
+                const lastRelease = await instance.releases(119);
+                console.log(`Last release of ${lastRelease[1].toString()} at ${new Date(1000 * lastRelease[0].toNumber())} with block number ${lastRelease[2].toNumber()}`);
+
+                console.log(`Total locked amount: ${(await instance.totalLockedAmount()).toNumber()}`);
+                console.log(`Releases count: ${(await instance.releasesCount()).toNumber()}`);
+                console.log(`Executed releases count: ${(await instance.executedReleasesCount()).toNumber()}`);
+
+            } else if (network.startsWith('mainnet')) {
+                addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');
             }
 
         } finally {
@@ -176,10 +181,14 @@ function shouldDeploy(contractName, deployFilters) {
 }
 
 function airdriipReleases() {
-    let date = new moment('1 Dec 2018 00:00:00 UT');
+    let date = new moment('15 Jan 2019 00:00:00 UT');
 
     const releases = [];
-    const blockNumbers = [6803256, 6988615];
+    const blockNumbers = [
+        4828869, 4834113, 4841090, 4847145, 4852161, 4857914,
+        4864167, 4870652, 4876970, 4883180, 4889874, 4895788,
+        4901555, 4907444, 4913921, 4923471
+    ];
     for (let i = 0; i < 120; i++) {
         const release = {
             earliestReleaseTime: moment(date).subtract(1, 'hour').unix(),
@@ -191,7 +200,7 @@ function airdriipReleases() {
 
         releases.push(release);
 
-        date = moment(date).add(1, 'month');
+        date = moment(date).add(1, 'day');
     }
     return releases;
 }

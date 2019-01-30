@@ -204,7 +204,7 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if number of release times is smaller than the count of block numbers', () => {
+            describe('if number of release times is less than the count of block numbers', () => {
                 beforeEach(() => {
                     earliestReleaseTimes = [futureEpoch(10)];
                 });

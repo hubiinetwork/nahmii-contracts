@@ -81,54 +81,43 @@ FraudChallengable, CancelOrdersChallengable {
         require(!fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
         require(!cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash));
 
-        // Buy order -> Conjugate currency and amount
-        // Sell order -> Intended currency and amount
-        (int256 transferAmount, MonetaryTypesLib.Currency memory currency) =
-        (NahmiiTypesLib.Intention.Sell == order.placement.intention ?
-        (order.placement.amount, order.placement.currencies.intended) :
-    (order.placement.amount.div(order.placement.rate), order.placement.currencies.conjugate));
+        // Get the relevant currency
+        MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
 
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
-        // Require that proposal has not been disqualified already
-        require(SettlementTypesLib.Status.Disqualified != nullSettlementChallenge.proposalStatus(
+        // TODO Replace by wallet nonce
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
+        require(order.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
             order.wallet, currency.ct, currency.id
         ));
-
-        // Require that order's block number is not earlier than proposal's block number
-        require(order.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
+        require(order.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
             order.wallet, currency.ct, currency.id
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for this order to be a valid challenge candidate
-        require(transferAmount > nullSettlementChallenge.proposalTargetBalanceAmount(
+        require(_orderTransferAmount(order) > nullSettlementChallenge.proposalTargetBalanceAmount(
             order.wallet, currency.ct, currency.id
         ));
 
-        // Update proposal status
-        nullSettlementChallenge.setProposalStatus(
-            order.wallet, currency.ct, currency.id, SettlementTypesLib.Status.Disqualified
-        );
+        // Reward challenger
+        // TODO Need balance as part of order to replace transfer amount (_orderTransferAmount(order)) in call below
+        _settleRewards(order.wallet, _orderTransferAmount(order), currency, challenger, 0);
 
-        // Add disqualification
-        nullSettlementChallenge.addDisqualification(
-            order.wallet, currency.ct, currency.id, order.seals.operator.hash,
-            SettlementTypesLib.CandidateType.Order, challenger
+        // Disqualify proposal, effectively overriding any previous disqualification
+        nullSettlementChallenge.disqualifyProposal(
+            order.wallet, currency.ct, currency.id, challenger, order.blockNumber,
+            order.seals.operator.hash, SettlementTypesLib.CandidateType.Order
         );
-
-        // Slash wallet's balances or reward challenger by stake fraction
-        if (nullSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
-            walletLocker.lockFungibleByProxy(order.wallet, challenger, transferAmount, currency.ct, currency.id);
-        else
-            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
         // Emit event
         emit ChallengeByOrderEvent(
             order.wallet,
             nullSettlementChallenge.proposalNonce(order.wallet, currency.ct, currency.id),
-            nullSettlementChallenge.disqualificationCandidateHash(order.wallet, currency.ct, currency.id),
+            nullSettlementChallenge.proposalDisqualificationCandidateHash(order.wallet, currency.ct, currency.id),
             challenger
         );
     }
@@ -149,62 +138,45 @@ FraudChallengable, CancelOrdersChallengable {
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
 
         // Require that wallet's order in trade is not labelled fraudulent or cancelled
-        bytes32 orderHash = (trade.buyer.wallet == wallet ?
-        trade.buyer.order.hashes.operator :
-        trade.seller.order.hashes.operator);
-        require(!fraudChallenge.isFraudulentOrderHash(orderHash));
-        require(!cancelOrdersChallenge.isOrderCancelled(wallet, orderHash));
+        require(!fraudChallenge.isFraudulentOrderHash(_tradeOrderHash(trade, wallet)));
+        require(!cancelOrdersChallenge.isOrderCancelled(wallet, _tradeOrderHash(trade, wallet)));
 
         // Get the relevant currency
-        // Wallet is buyer in (candidate) trade -> Conjugate transfer and currency
-        // Wallet is seller in (candidate) trade -> Intended transfer and currency
-        (int256 transferAmount, MonetaryTypesLib.Currency memory currency) = (
-        validator.isTradeBuyer(trade, wallet) ?
-        (trade.transfers.conjugate.single.abs(), trade.currencies.conjugate) :
-    (trade.transfers.intended.single.abs(), trade.currencies.intended)
-        );
+        MonetaryTypesLib.Currency memory currency = _tradeCurrency(trade, wallet);
 
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
-        // Require that proposal has not been disqualified already
-        require(SettlementTypesLib.Status.Disqualified != nullSettlementChallenge.proposalStatus(
+        // TODO Replace by wallet nonce
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
+        require(trade.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
             wallet, currency.ct, currency.id
         ));
-
-        // Require that trade's block number is not earlier than proposal's block number
-        require(trade.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
+        require(trade.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
             wallet, currency.ct, currency.id
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for this trade to be a valid challenge candidate
-        require(transferAmount > nullSettlementChallenge.proposalTargetBalanceAmount(
+        require(_tradeTransferAmount(trade, wallet) > nullSettlementChallenge.proposalTargetBalanceAmount(
             wallet, currency.ct, currency.id
         ));
 
-        // Update proposal status
-        nullSettlementChallenge.setProposalStatus(
-            wallet, currency.ct, currency.id, SettlementTypesLib.Status.Disqualified
-        );
+        // Reward challenger
+        _settleRewards(wallet, _tradeBalanceAmount(trade, wallet), currency, challenger, 0);
 
-        // Add disqualification
-        nullSettlementChallenge.addDisqualification(
-            wallet, currency.ct, currency.id, trade.seal.hash,
-            SettlementTypesLib.CandidateType.Trade, challenger
+        // Disqualify proposal, effectively overriding any previous disqualification
+        nullSettlementChallenge.disqualifyProposal(
+            wallet, currency.ct, currency.id, challenger, trade.blockNumber,
+            trade.seal.hash, SettlementTypesLib.CandidateType.Trade
         );
-
-        // Slash wallet's balances or reward challenger by stake fraction
-        if (nullSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
-            walletLocker.lockFungibleByProxy(wallet, challenger, transferAmount, currency.ct, currency.id);
-        else
-            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
         // Emit event
         emit ChallengeByTradeEvent(
             wallet,
             nullSettlementChallenge.proposalNonce(wallet, currency.ct, currency.id),
-            nullSettlementChallenge.disqualificationCandidateHash(wallet, currency.ct, currency.id),
+            nullSettlementChallenge.proposalDisqualificationCandidateHash(wallet, currency.ct, currency.id),
             challenger
         );
     }
@@ -226,46 +198,191 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
-        // Require that proposal has not been disqualified already
-        require(SettlementTypesLib.Status.Disqualified != nullSettlementChallenge.proposalStatus(
+        // TODO Replace by wallet nonce
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
+        require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
             wallet, payment.currency.ct, payment.currency.id
         ));
-
-        // Require that payment's block number is not earlier than proposal's block number
-        require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
+        require(payment.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for this payment to be a valid challenge candidate
-        require(payment.transfers.single.abs() > nullSettlementChallenge.proposalTargetBalanceAmount(
+        require(payment.transfers.single > nullSettlementChallenge.proposalTargetBalanceAmount(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
-        // Update proposal status
-        nullSettlementChallenge.setProposalStatus(
-            wallet, payment.currency.ct, payment.currency.id, SettlementTypesLib.Status.Disqualified
-        );
+        // Reward challenger
+        _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger, 0);
 
-        // Add disqualification
-        nullSettlementChallenge.addDisqualification(
-            wallet, payment.currency.ct, payment.currency.id, payment.seals.operator.hash,
-            SettlementTypesLib.CandidateType.Payment, challenger
+        // Disqualify proposal, effectively overriding any previous disqualification
+        nullSettlementChallenge.disqualifyProposal(
+            wallet, payment.currency.ct, payment.currency.id, challenger, payment.blockNumber,
+            payment.seals.operator.hash, SettlementTypesLib.CandidateType.Payment
         );
-
-        // Slash wallet's balances or reward challenger by stake fraction
-        if (nullSettlementChallenge.proposalBalanceReward(wallet, payment.currency.ct, payment.currency.id))
-            walletLocker.lockFungibleByProxy(wallet, challenger, payment.transfers.single.abs(), payment.currency.ct, payment.currency.id);
-        else
-            securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(), 0);
 
         // Emit event
         emit ChallengeByPaymentEvent(
             wallet,
             nullSettlementChallenge.proposalNonce(wallet, payment.currency.ct, payment.currency.id),
-            nullSettlementChallenge.disqualificationCandidateHash(wallet, payment.currency.ct, payment.currency.id),
+            nullSettlementChallenge.proposalDisqualificationCandidateHash(wallet, payment.currency.ct, payment.currency.id),
             challenger
         );
+    }
+
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    // Get the candidate order currency
+    // Buy order -> Conjugate currency
+    // Sell order -> Intended currency
+    function _orderCurrency(NahmiiTypesLib.Order order)
+    private
+    pure
+    returns (MonetaryTypesLib.Currency)
+    {
+        return NahmiiTypesLib.Intention.Sell == order.placement.intention ?
+        order.placement.currencies.intended :
+        order.placement.currencies.conjugate;
+    }
+
+    // Get the candidate order transfer
+    // Buy order -> Conjugate transfer
+    // Sell order -> Intended transfer
+    function _orderTransferAmount(NahmiiTypesLib.Order order)
+    private
+    pure
+    returns (int256)
+    {
+        return NahmiiTypesLib.Intention.Sell == order.placement.intention ?
+        order.placement.amount :
+        order.placement.amount.div(order.placement.rate);
+    }
+
+    function _tradeOrderHash(NahmiiTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (bytes32)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.buyer.order.hashes.operator :
+        trade.seller.order.hashes.operator;
+    }
+
+    // Get the candidate trade currency
+    // Wallet is buyer in (candidate) trade -> Conjugate currency
+    // Wallet is seller in (candidate) trade -> Intended currency
+    function _tradeCurrency(NahmiiTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (MonetaryTypesLib.Currency)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.currencies.conjugate :
+        trade.currencies.intended;
+    }
+
+    // Get the candidate trade transfer amount
+    // Wallet is buyer in (candidate) trade -> Conjugate transfer
+    // Wallet is seller in (candidate) trade -> Intended transfer
+    function _tradeTransferAmount(NahmiiTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (int256)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.transfers.conjugate.single :
+        trade.transfers.intended.single;
+    }
+
+    // Get the candidate trade balance amount
+    // Wallet is buyer in (candidate) trade -> Buyer's conjugate balance
+    // Wallet is seller in (candidate) trade -> Seller's intended balance
+    function _tradeBalanceAmount(NahmiiTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (int256)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.buyer.balances.conjugate.current :
+        trade.seller.balances.intended.current;
+    }
+
+    function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+        address challenger, uint256 unlockTimeoutInSeconds)
+    private
+    {
+        if (nullSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
+            _settleBalanceReward(wallet, walletAmount, currency, challenger);
+
+        else
+            _settleSecurityBondReward(wallet, walletAmount, currency, challenger, unlockTimeoutInSeconds);
+    }
+
+    function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+        address challenger)
+    private
+    {
+        // Unlock wallet/currency for existing challenger if previously locked
+        if (SettlementTypesLib.Status.Disqualified == nullSettlementChallenge.proposalStatus(
+            wallet, currency.ct, currency.id
+        ))
+            walletLocker.unlockFungibleByProxy(
+                wallet,
+                nullSettlementChallenge.proposalDisqualificationChallenger(
+                    wallet, currency.ct, currency.id
+                ),
+                currency.ct, currency.id
+            );
+
+        // Lock wallet for new challenger
+        walletLocker.lockFungibleByProxy(wallet, challenger, walletAmount, currency.ct, currency.id);
+    }
+
+    // Settle the two-component reward from security bond.
+    // The first component is flat figure as obtained from Configuration
+    // The second component is progressive and calculated as
+    //    min(walletAmount, fraction of SecurityBond's deposited balance)
+    // both amounts for the given currency
+    function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+        address challenger, uint256 unlockTimeoutInSeconds)
+    private
+    {
+        // Deprive existing challenger of reward if previously locked
+        if (SettlementTypesLib.Status.Disqualified == nullSettlementChallenge.proposalStatus(
+            wallet, currency.ct, currency.id
+        ))
+            securityBond.depriveAbsolute(
+                nullSettlementChallenge.proposalDisqualificationChallenger(
+                    wallet, currency.ct, currency.id
+                ),
+                currency.ct, currency.id
+            );
+
+        // Reward the flat component
+        MonetaryTypesLib.Figure memory flatReward = _flatReward();
+        securityBond.rewardAbsolute(
+            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
+        );
+
+        // Reward the progressive component
+        int256 progressiveRewardAmount = walletAmount.clampMax(
+            securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
+        );
+        securityBond.rewardAbsolute(
+            challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
+        );
+    }
+
+    function _flatReward()
+    private
+    view
+    returns (MonetaryTypesLib.Figure)
+    {
+        (int256 amount, address currencyCt, uint256 currencyId) = configuration.operatorSettlementStake();
+        return MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
     }
 
     //

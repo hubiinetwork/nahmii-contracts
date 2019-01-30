@@ -92,8 +92,13 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!driipSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
-        // Require that order's block number is not earlier than proposal's block number
+        // TODO Replace by wallet nonce
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(order.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+            order.wallet, currency.ct, currency.id
+        ));
+        require(order.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
             order.wallet, currency.ct, currency.id
         ));
 
@@ -105,7 +110,10 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Reward challenger
         // TODO Need balance as part of order to replace transfer amount (_orderTransferAmount(order)) in call below
-        _settleRewards(order.wallet, _orderTransferAmount(order), currency, challenger, configuration.settlementChallengeTimeout());
+        _settleRewards(
+            order.wallet, _orderTransferAmount(order), currency, challenger,
+            configuration.settlementChallengeTimeout()
+        );
 
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallenge.disqualifyProposal(
@@ -175,7 +183,7 @@ FraudChallengable, CancelOrdersChallengable {
         if (driipSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
             walletLocker.unlockFungibleByProxy(order.wallet, challenger, currency.ct, currency.id);
         else
-            securityBond.deprive(challenger);
+            securityBond.depriveAbsolute(challenger, currency.ct, currency.id);
 
         // Requalify proposal
         driipSettlementChallenge.qualifyProposal(
@@ -183,7 +191,7 @@ FraudChallengable, CancelOrdersChallengable {
         );
 
         // Reward unchallenger
-        securityBond.reward(unchallenger, configuration.walletSettlementStakeFraction(), 0);
+        securityBond.rewardFractional(unchallenger, configuration.walletSettlementStakeFraction(), 0);
 
         // Emit event
         emit UnchallengeOrderCandidateByTradeEvent(
@@ -221,8 +229,13 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!driipSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
-        // Require that trade's block number is not earlier than proposal's block number
+        // TODO Replace by wallet nonce
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(trade.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+            wallet, currency.ct, currency.id
+        ));
+        require(trade.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
             wallet, currency.ct, currency.id
         ));
 
@@ -269,9 +282,13 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
-        // Require that payment candidate's block number is not earlier than proposal's block number
-        // TODO Replace by wallet nonce?
+        // TODO Replace by wallet nonce
+        // Require that payment's block number is not earlier than proposal's block number or its current
+        // disqualification block number
         require(payment.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
+            wallet, payment.currency.ct, payment.currency.id
+        ));
+        require(payment.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
             wallet, payment.currency.ct, payment.currency.id
         ));
 
@@ -380,18 +397,18 @@ FraudChallengable, CancelOrdersChallengable {
     }
 
     // Lock wallet's balances or reward challenger by stake fraction
-    function _settleRewards(address wallet, int256 lockAmount, MonetaryTypesLib.Currency currency,
+    function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
         if (driipSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
-            _unlockAndLockWallets(wallet, lockAmount, currency, challenger);
+            _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
-            _depriveAndReward(wallet, currency, challenger, unlockTimeoutInSeconds);
+            _settleSecurityBondReward(wallet, walletAmount, currency, challenger, unlockTimeoutInSeconds);
     }
 
-    function _unlockAndLockWallets(address wallet, int256 lockAmount, MonetaryTypesLib.Currency currency,
+    function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger)
     private
     {
@@ -408,24 +425,51 @@ FraudChallengable, CancelOrdersChallengable {
             );
 
         // Lock wallet for new challenger
-        walletLocker.lockFungibleByProxy(wallet, challenger, lockAmount, currency.ct, currency.id);
+        walletLocker.lockFungibleByProxy(wallet, challenger, walletAmount, currency.ct, currency.id);
     }
 
-    function _depriveAndReward(address wallet, MonetaryTypesLib.Currency currency, address challenger,
-        uint256 unlockTimeoutInSeconds)
+    // Settle the two-component reward from security bond.
+    // The first component is flat figure as obtained from Configuration
+    // The second component is progressive and calculated as
+    //    min(walletAmount, fraction of SecurityBond's deposited balance)
+    // both amounts for the given currency
+    function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+        address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
         // Deprive existing challenger of reward if previously locked
         if (SettlementTypesLib.Status.Disqualified == driipSettlementChallenge.proposalStatus(
             wallet, currency.ct, currency.id
         ))
-            securityBond.deprive(driipSettlementChallenge.proposalDisqualificationChallenger(
+            securityBond.depriveAbsolute(
+                driipSettlementChallenge.proposalDisqualificationChallenger(
                     wallet, currency.ct, currency.id
-                ));
+                ),
+                currency.ct, currency.id
+            );
 
-        // Reward new challenger
-        securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(),
-            unlockTimeoutInSeconds);
+        // Reward the flat component
+        MonetaryTypesLib.Figure memory flatReward = _flatReward();
+        securityBond.rewardAbsolute(
+            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
+        );
+
+        // Reward the progressive component
+        int256 progressiveRewardAmount = walletAmount.clampMax(
+            securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
+        );
+        securityBond.rewardAbsolute(
+            challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
+        );
+    }
+
+    function _flatReward()
+    private
+    view
+    returns (MonetaryTypesLib.Figure)
+    {
+        (int256 amount, address currencyCt, uint256 currencyId) = configuration.operatorSettlementStake();
+        return MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
     }
 
     //

@@ -39,7 +39,7 @@ SecurityBondable, WalletLockable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit trade and subsequent payment candidates in continuous Fraud Challenge (FC)
-    /// to be tested for succession differences
+    /// to be tested for succession differences in balance and fees
     /// @param trade Reference trade
     /// @param payment Fraudulent payment candidate
     /// @param wallet The address of the concerned wallet
@@ -85,11 +85,13 @@ SecurityBondable, WalletLockable {
         fraudChallenge.addFraudulentPaymentHash(payment.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
         // Lock amount of size equivalent to payment amount
         walletLocker.lockFungibleByProxy(
-            wallet, msg.sender, payment.amount, payment.currency.ct, payment.currency.id
+            wallet, msg.sender,
+            _paymentLockAmount(payment, paymentPartyRole),
+            payment.currency.ct, payment.currency.id
         );
 
         // Emit event
@@ -97,4 +99,18 @@ SecurityBondable, WalletLockable {
             trade.seal.hash, payment.seals.operator.hash, msg.sender, wallet
         );
     }
+
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function _paymentLockAmount(NahmiiTypesLib.Payment payment, NahmiiTypesLib.PaymentPartyRole paymentPartyRole)
+    private
+    pure
+    returns (int256)
+    {
+        return NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ?
+        payment.sender.balances.current :
+        payment.recipient.balances.current;
+    }
+
 }

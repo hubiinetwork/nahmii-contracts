@@ -1,6 +1,8 @@
 const chai = require('chai');
 const sinonChai = require('sinon-chai');
 const chaiAsPromised = require('chai-as-promised');
+const BN = require('bn.js');
+const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
 const FraudChallengeBySuccessiveTrades = artifacts.require('FraudChallengeBySuccessiveTrades');
@@ -13,6 +15,7 @@ const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(bnChai(BN));
 chai.should();
 
 let provider;
@@ -331,15 +334,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trades are genuine', () => {
-                it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessiveTrades.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, overrideOptions
-                    ).should.be.rejected;
-                });
-            });
-
             describe('if first trade is not sealed', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineTradeSeal(false);
@@ -460,6 +454,15 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if trades are genuine', () => {
+                it('should revert', async () => {
+                    return ethersFraudChallengeBySuccessiveTrades.challenge(
+                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
+                        firstTrade.currencies.intended.id, overrideOptions
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if not genuine successive trades\' balances', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineSuccessiveTradesBalances(false);
@@ -470,19 +473,19 @@ module.exports = (glob) => {
                         firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
                         firstTrade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
-                    lock.lockedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.isFraudulentTradeHash(lastTrade.seal.hash)).should.be.true;
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
+                    lock.lockedWallet.should.equal(utils.getAddress(lastTrade.buyer.wallet));
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(lastTrade.buyer.balances.intended.current._bn);
+                    lock.currencyCt.should.equal(lastTrade.currencies.intended.ct);
+                    lock.currencyId._bn.should.eq.BN(lastTrade.currencies.intended.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
 
@@ -496,19 +499,19 @@ module.exports = (glob) => {
                         firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
                         firstTrade.currencies.intended.id, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
-                    lock.lockedWallet.should.equal(utils.getAddress(firstTrade.buyer.wallet));
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.isFraudulentTradeHash(lastTrade.seal.hash)).should.be.true;
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
+                    lock.lockedWallet.should.equal(utils.getAddress(lastTrade.buyer.wallet));
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(lastTrade.buyer.balances.intended.current._bn);
+                    lock.currencyCt.should.equal(lastTrade.currencies.intended.ct);
+                    lock.currencyId._bn.should.eq.BN(lastTrade.currencies.intended.id._bn);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
         });

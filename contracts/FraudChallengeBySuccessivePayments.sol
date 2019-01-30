@@ -78,11 +78,13 @@ SecurityBondable, WalletLockable {
         fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        // Lock amount of size equivalent to payment amount
+        // Lock amount of size equivalent to payment balance
         walletLocker.lockFungibleByProxy(
-            wallet, msg.sender, lastPayment.amount, lastPayment.currency.ct, lastPayment.currency.id
+            wallet, msg.sender,
+            NahmiiTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances.current : lastPayment.recipient.balances.current,
+            lastPayment.currency.ct, lastPayment.currency.id
         );
 
         emit ChallengeBySuccessivePaymentsEvent(

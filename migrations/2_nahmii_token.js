@@ -33,7 +33,7 @@ module.exports = (deployer, network, accounts) => {
             ownerAccount
         };
 
-        if (helpers.isTestNetwork(network)) {
+        if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
             await execDeploy(ctl, 'SafeMath', '', SafeMath);
 
             await deployer.link(SafeMath, NahmiiToken);
@@ -42,15 +42,11 @@ module.exports = (deployer, network, accounts) => {
 
             const instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
             await instance.mint(ownerAccount, 120e24);
-            await instance.disableMinting();
-
             console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
+            // await instance.disableMinting();
             console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
 
-        } else if (network.startsWith('ropsten'))
-            addressStorage.set('NahmiiToken', '0x65905e653b750bcb8f903374bc93cbd8e2e71b71');
-
-        else if (network.startsWith('mainnet'))
+        } else if (network.startsWith('mainnet'))
             addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
 
         console.log(`Saving addresses in ${__filename}...`);

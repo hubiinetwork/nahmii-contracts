@@ -17,7 +17,8 @@ import {BlockNumbUintsLib} from "./BlockNumbUintsLib.sol";
 import {BlockNumbIntsLib} from "./BlockNumbIntsLib.sol";
 import {BlockNumbDisdIntsLib} from "./BlockNumbDisdIntsLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {BlockNumbCurrenciesLib} from "./BlockNumbCurrenciesLib.sol";
+import {BlockNumbReferenceCurrenciesLib} from "./BlockNumbReferenceCurrenciesLib.sol";
+import {BlockNumbFiguresLib} from "./BlockNumbFiguresLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
@@ -29,7 +30,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     using BlockNumbUintsLib for BlockNumbUintsLib.BlockNumbUints;
     using BlockNumbIntsLib for BlockNumbIntsLib.BlockNumbInts;
     using BlockNumbDisdIntsLib for BlockNumbDisdIntsLib.BlockNumbDisdInts;
-    using BlockNumbCurrenciesLib for BlockNumbCurrenciesLib.BlockNumbCurrencies;
+    using BlockNumbReferenceCurrenciesLib for BlockNumbReferenceCurrenciesLib.BlockNumbReferenceCurrencies;
+    using BlockNumbFiguresLib for BlockNumbFiguresLib.BlockNumbFigures;
 
     //
     // Constants
@@ -59,15 +61,17 @@ contract Configuration is Modifiable, Ownable, Servable {
     BlockNumbIntsLib.BlockNumbInts private paymentMinimumFeeByBlockNumber;
     mapping(address => mapping(uint256 => BlockNumbIntsLib.BlockNumbInts)) private currencyPaymentMinimumFeeByBlockNumber;
 
-    BlockNumbCurrenciesLib.BlockNumbCurrencies private feeCurrencies;
+    BlockNumbReferenceCurrenciesLib.BlockNumbReferenceCurrencies private feeCurrencyByCurrencyBlockNumber;
 
     BlockNumbUintsLib.BlockNumbUints private walletLockTimeoutByBlockNumber;
     BlockNumbUintsLib.BlockNumbUints private cancelOrderChallengeTimeoutByBlockNumber;
     BlockNumbUintsLib.BlockNumbUints private settlementChallengeTimeoutByBlockNumber;
 
+    BlockNumbUintsLib.BlockNumbUints private fraudStakeFractionByBlockNumber;
     BlockNumbUintsLib.BlockNumbUints private walletSettlementStakeFractionByBlockNumber;
     BlockNumbUintsLib.BlockNumbUints private operatorSettlementStakeFractionByBlockNumber;
-    BlockNumbUintsLib.BlockNumbUints private fraudStakeFractionByBlockNumber;
+
+    BlockNumbFiguresLib.BlockNumbFigures private operatorSettlementStakeByBlockNumber;
 
     uint256 public earliestSettlementBlockNumber;
     bool public earliestSettlementBlockNumberUpdateDisabled;
@@ -94,6 +98,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     event SetSettlementChallengeTimeoutEvent(uint256 fromBlockNumber, uint256 timeoutInSeconds);
     event SetWalletSettlementStakeFractionEvent(uint256 fromBlockNumber, uint256 stakeFraction);
     event SetOperatorSettlementStakeFractionEvent(uint256 fromBlockNumber, uint256 stakeFraction);
+    event SetOperatorSettlementStakeEvent(uint256 fromBlockNumber, int256 stakeAmount, address stakeCurrencyCt,
+        uint256 stakeCurrencyId);
     event SetFraudStakeFractionEvent(uint256 fromBlockNumber, uint256 stakeFraction);
     event SetEarliestSettlementBlockNumberEvent(uint256 earliestSettlementBlockNumber);
     event DisableEarliestSettlementBlockNumberUpdateEvent();
@@ -496,7 +502,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     view
     returns (uint256)
     {
-        return feeCurrencies.count(MonetaryTypesLib.Currency(currencyCt, currencyId));
+        return feeCurrencyByCurrencyBlockNumber.count(MonetaryTypesLib.Currency(currencyCt, currencyId));
     }
 
     /// @notice Get the fee currency for the given reference currency at given block number
@@ -508,7 +514,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     view
     returns (address ct, uint256 id)
     {
-        MonetaryTypesLib.Currency storage _feeCurrency = feeCurrencies.currencyAt(
+        MonetaryTypesLib.Currency storage _feeCurrency = feeCurrencyByCurrencyBlockNumber.currencyAt(
             MonetaryTypesLib.Currency(currencyCt, currencyId), blockNumber
         );
         ct = _feeCurrency.ct;
@@ -527,7 +533,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
-        feeCurrencies.addEntry(
+        feeCurrencyByCurrencyBlockNumber.addEntry(
             fromBlockNumber,
             MonetaryTypesLib.Currency(referenceCurrencyCt, referenceCurrencyId),
             MonetaryTypesLib.Currency(feeCurrencyCt, feeCurrencyId)
@@ -602,6 +608,29 @@ contract Configuration is Modifiable, Ownable, Servable {
         emit SetSettlementChallengeTimeoutEvent(fromBlockNumber, timeoutInSeconds);
     }
 
+    /// @notice Get the current value of fraud stake fraction
+    /// @return The value of fraud stake fraction
+    function fraudStakeFraction()
+    public
+    view
+    returns (uint256)
+    {
+        return fraudStakeFractionByBlockNumber.currentValue();
+    }
+
+    /// @notice Set fraction of security bond that will be gained from successfully challenging
+    /// in fraud challenge
+    /// @param fromBlockNumber Block number from which the update applies
+    /// @param stakeFraction The fraction gained
+    function setFraudStakeFraction(uint256 fromBlockNumber, uint256 stakeFraction)
+    public
+    onlyOperator
+    onlyDelayedBlockNumber(fromBlockNumber)
+    {
+        fraudStakeFractionByBlockNumber.addEntry(fromBlockNumber, stakeFraction);
+        emit SetFraudStakeFractionEvent(fromBlockNumber, stakeFraction);
+    }
+
     /// @notice Get the current value of wallet settlement stake fraction
     /// @return The value of wallet settlement stake fraction
     function walletSettlementStakeFraction()
@@ -648,27 +677,34 @@ contract Configuration is Modifiable, Ownable, Servable {
         emit SetOperatorSettlementStakeFractionEvent(fromBlockNumber, stakeFraction);
     }
 
-    /// @notice Get the current value of fraud stake fraction
-    /// @return The value of fraud stake fraction
-    function fraudStakeFraction()
+    /// @notice Get the current value of operator settlement stake
+    /// @return The value of operator settlement stake
+    function operatorSettlementStake()
     public
     view
-    returns (uint256)
+    returns (int256 amount, address currencyCt, uint256 currencyId)
     {
-        return fraudStakeFractionByBlockNumber.currentValue();
+        MonetaryTypesLib.Figure storage stake = operatorSettlementStakeByBlockNumber.currentValue();
+        amount = stake.amount;
+        currencyCt = stake.currency.ct;
+        currencyId = stake.currency.id;
     }
 
-    /// @notice Set fraction of security bond that will be gained from successfully challenging
-    /// in fraud challenge
+    /// @notice Set figure of security bond that will be gained from successfully challenging
+    /// in settlement challenge triggered by operator
     /// @param fromBlockNumber Block number from which the update applies
-    /// @param stakeFraction The fraction gained
-    function setFraudStakeFraction(uint256 fromBlockNumber, uint256 stakeFraction)
+    /// @param stakeAmount The amount gained
+    /// @param stakeCurrencyCt The address of currency gained
+    /// @param stakeCurrencyId The ID of currency gained
+    function setOperatorSettlementStake(uint256 fromBlockNumber, int256 stakeAmount,
+        address stakeCurrencyCt, uint256 stakeCurrencyId)
     public
     onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
     {
-        fraudStakeFractionByBlockNumber.addEntry(fromBlockNumber, stakeFraction);
-        emit SetFraudStakeFractionEvent(fromBlockNumber, stakeFraction);
+        MonetaryTypesLib.Figure memory stake = MonetaryTypesLib.Figure(stakeAmount, MonetaryTypesLib.Currency(stakeCurrencyCt, stakeCurrencyId));
+        operatorSettlementStakeByBlockNumber.addEntry(fromBlockNumber, stake);
+        emit SetOperatorSettlementStakeEvent(fromBlockNumber, stakeAmount, stakeCurrencyCt, stakeCurrencyId);
     }
 
     /// @notice Set the block number of the earliest settlement initiation

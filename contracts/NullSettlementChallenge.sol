@@ -16,6 +16,7 @@ import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDispute} from "./NullSettlementDispute.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
@@ -41,11 +42,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
     mapping(address => uint256[]) public proposalIndicesByWallet;
 
-    SettlementTypesLib.Disqualification[] public disqualifications;
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public disqualificationIndexByWalletCurrency;
-
-    bytes32[] public candidateHashes;
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -55,6 +51,8 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         uint stageCurrencyId);
     event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
         address stageCurrencyCt, uint stageCurrencyId);
+    event DisqualifyProposalEvent(address challengedWallet, address currencyCt, uint256 currencyId,
+        address challengerWallet, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType);
 
     //
     // Constructor
@@ -95,16 +93,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     returns (uint256)
     {
         return proposals.length;
-    }
-
-    /// @notice Get the number of challenges
-    /// @return The number of challenges
-    function disqualificationsCount()
-    public
-    view
-    returns (uint256)
-    {
-        return disqualifications.length;
     }
 
     /// @notice Start settlement challenge
@@ -264,19 +252,49 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         return proposals[index - 1].balanceReward;
     }
 
+    /// @notice Get the disqualification challenger of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The challenger of the settlement disqualification
+    function proposalDisqualificationChallenger(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (address)
+    {
+        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
+        require(0 != index);
+        return proposals[index - 1].disqualification.challenger;
+    }
+
+    /// @notice Get the disqualification block number of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return The block number of the settlement disqualification
+    function proposalDisqualificationBlockNumber(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
+        require(0 != index);
+        return proposals[index - 1].disqualification.blockNumber;
+    }
+
     /// @notice Get the disqualification candidate type of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The candidate type of the settlement disqualification
-    function disqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
+    function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (SettlementTypesLib.CandidateType)
     {
-        uint256 index = disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId];
+        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
-        return disqualifications[index - 1].candidateType;
+        return proposals[index - 1].disqualification.candidateType;
     }
 
     /// @notice Get the disqualification candidate hash of the given wallet and currency
@@ -284,29 +302,14 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The candidate hash of the settlement disqualification
-    function disqualificationCandidateHash(address wallet, address currencyCt, uint256 currencyId)
+    function proposalDisqualificationCandidateHash(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bytes32)
     {
-        uint256 index = disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId];
+        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
-        return disqualifications[index - 1].candidateHash;
-    }
-
-    /// @notice Get the disqualification challenger of the given wallet and currency
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The challenger of the settlement disqualification
-    function disqualificationChallenger(address wallet, address currencyCt, uint256 currencyId)
-    public
-    view
-    returns (address)
-    {
-        uint256 index = disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId];
-        require(0 != index);
-        return disqualifications[index - 1].challenger;
+        return proposals[index - 1].disqualification.candidateHash;
     }
 
     /// @notice Set settlement proposal end time property of the given wallet
@@ -335,6 +338,38 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
         proposals[index - 1].status = status;
+    }
+
+    /// @notice Disqualify a proposal
+    /// @dev A call to this function will intentionally override previous disqualifications if existent
+    /// @param challengedWallet The address of the concerned challenged wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param challengerWallet The address of the concerned challenger wallet
+    /// @param blockNumber The disqualification block number
+    /// @param candidateHash The candidate hash
+    /// @param candidateType The candidate type
+    function disqualifyProposal(address challengedWallet, address currencyCt, uint256 currencyId, address challengerWallet,
+        uint256 blockNumber, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType)
+    public
+    onlyNullSettlementDispute
+    {
+        // Get the proposal index
+        uint256 index = proposalIndexByWalletCurrency[challengedWallet][currencyCt][currencyId];
+        require(0 != index);
+
+        // Update proposal
+        proposals[index - 1].status = SettlementTypesLib.Status.Disqualified;
+        proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
+        proposals[index - 1].disqualification.challenger = challengerWallet;
+        proposals[index - 1].disqualification.blockNumber = blockNumber;
+        proposals[index - 1].disqualification.candidateHash = candidateHash;
+        proposals[index - 1].disqualification.candidateType = candidateType;
+
+        // Emit event
+        emit DisqualifyProposalEvent(
+            challengedWallet, currencyCt, currencyId, challengerWallet, candidateHash, candidateType
+        );
     }
 
     /// @notice Challenge the settlement by providing order candidate
@@ -366,51 +401,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
     }
 
-    /// @notice Get the count of challenge candidate hashes
-    /// @return The count of challenge candidate order hashes
-    function candidateHashesCount()
-    public
-    view
-    returns (uint256)
-    {
-        return candidateHashes.length;
-    }
-
-    /// @notice Add a disqualification instance
-    /// @param wallet The address of the concerned wallet
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param candidateHash The candidate hash
-    /// @param candidateType The candidate type
-    /// @param challenger The concerned challenger
-    function addDisqualification(address wallet, address currencyCt, uint256 currencyId, bytes32 candidateHash,
-        SettlementTypesLib.CandidateType candidateType, address challenger)
-    public
-    onlyNullSettlementDispute
-    {
-        // Get the proposal index
-        uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
-        require(0 != index);
-
-        // Create disqualification
-        disqualifications.length++;
-
-        // Populate disqualification
-        disqualifications[disqualifications.length - 1].wallet = wallet;
-        disqualifications[disqualifications.length - 1].nonce = proposals[index - 1].nonce;
-        disqualifications[disqualifications.length - 1].currencyCt = currencyCt;
-        disqualifications[disqualifications.length - 1].currencyId = currencyId;
-        disqualifications[disqualifications.length - 1].candidateHash = candidateHash;
-        disqualifications[disqualifications.length - 1].candidateType = candidateType;
-        disqualifications[disqualifications.length - 1].challenger = challenger;
-
-        // Store disqualification index
-        disqualificationIndexByWalletCurrency[wallet][currencyCt][currencyId] = disqualifications.length;
-
-        // Store candidate hash
-        candidateHashes.push(candidateHash);
-    }
-
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
@@ -421,9 +411,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         // Require that current block number is beyond the earliest settlement challenge block number
         require(block.number >= configuration.earliestSettlementBlockNumber());
 
-        // Require that stage amount is positive
-        require(stageAmount.isPositiveInt256());
-
         // Require that wallet has no overlap with active proposal
         require(
             hasProposalExpired(
@@ -431,9 +418,24 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
             )
         );
 
+        // Create proposal
+        _addProposal(wallet, stageAmount, currencyCt, currencyId, balanceReward);
+
+        // Add wallet to store of challenge wallets
+        _addToChallengeWallets(wallet);
+    }
+
+    function _addProposal(address wallet, int256 stageAmount, address currencyCt, uint256 currencyId,
+        bool balanceReward)
+    private
+    {
+        // Require that stage amount is positive
+        require(stageAmount.isPositiveInt256());
+
         // Get the last logged active balance amount and block number
-        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) =
-        _activeBalanceLogEntry(wallet, currencyCt, currencyId);
+        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = _activeBalanceLogEntry(
+            wallet, currencyCt, currencyId
+        );
 
         // Require that balance amount is not less than stage amount
         require(activeBalanceAmount >= stageAmount);
@@ -447,8 +449,7 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         proposals[proposals.length - 1].blockNumber = activeBalanceBlockNumber;
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementTypesLib.Status.Qualified;
-        proposals[proposals.length - 1].currencyCt = currencyCt;
-        proposals[proposals.length - 1].currencyId = currencyId;
+        proposals[proposals.length - 1].currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
         proposals[proposals.length - 1].stageAmount = stageAmount;
         proposals[proposals.length - 1].targetBalanceAmount = activeBalanceAmount.sub(stageAmount);
         proposals[proposals.length - 1].balanceReward = balanceReward;
@@ -456,12 +457,6 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
         // Store proposal index
         proposalIndexByWalletCurrency[wallet][currencyCt][currencyId] = proposals.length;
         proposalIndicesByWallet[wallet].push(proposals.length);
-
-        // Add wallet to store of challenge wallets
-        if (!challengeByWallets[wallet]) {
-            challengeByWallets[wallet] = true;
-            challengeWallets.push(wallet);
-        }
     }
 
     function _activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId)
@@ -482,6 +477,15 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
 
         // Set block number as the latest of deposited and settled
         blockNumber = depositedBlockNumber > settledBlockNumber ? depositedBlockNumber : settledBlockNumber;
+    }
+
+    function _addToChallengeWallets(address wallet)
+    private
+    {
+        if (!challengeByWallets[wallet]) {
+            challengeByWallets[wallet] = true;
+            challengeWallets.push(wallet);
+        }
     }
 
     //

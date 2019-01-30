@@ -694,7 +694,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if buyer\'s order\'s amount is smaller than its current residual', () => {
+        //     describe('if buyer\'s order\'s amount is less than its current residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 buyer: {
@@ -726,7 +726,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if buyer\'s order\'s amount is smaller than its previous residual', () => {
+        //     describe('if buyer\'s order\'s amount is less than its previous residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 buyer: {
@@ -758,7 +758,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if buyer\'s order\'s previous residual is smaller than its current residual', () => {
+        //     describe('if buyer\'s order\'s previous residual is less than its current residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 buyer: {
@@ -846,7 +846,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (buyer\'s) maker fee is smaller than the minimum maker fee', () => {
+        //     describe('if (buyer\'s) maker fee is less than the minimum maker fee', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 singleFees: {
@@ -965,7 +965,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if seller\'s order\'s amount is smaller than its current residual', () => {
+        //     describe('if seller\'s order\'s amount is less than its current residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 seller: {
@@ -997,7 +997,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if seller\'s order\'s amount is smaller than its previous residual', () => {
+        //     describe('if seller\'s order\'s amount is less than its previous residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 seller: {
@@ -1029,7 +1029,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if seller\'s order\'s previous residual is smaller than its current residual', () => {
+        //     describe('if seller\'s order\'s previous residual is less than its current residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 seller: {
@@ -1117,7 +1117,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (seller\'s) taker fee is smaller than the minimum taker fee', () => {
+        //     describe('if (seller\'s) taker fee is less than the minimum taker fee', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 singleFees: {
@@ -1319,7 +1319,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if buyer\'s order\'s amount is smaller than its current residual', () => {
+        //     describe('if buyer\'s order\'s amount is less than its current residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 buyer: {
@@ -1351,7 +1351,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if buyer\'s order\'s amount is smaller than its previous residual', () => {
+        //     describe('if buyer\'s order\'s amount is less than its previous residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 buyer: {
@@ -1383,7 +1383,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if buyer\'s order\'s previous residual is smaller than its current residual', () => {
+        //     describe('if buyer\'s order\'s previous residual is less than its current residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 buyer: {
@@ -1471,7 +1471,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (buyer\'s) maker fee is smaller than the minimum maker fee', () => {
+        //     describe('if (buyer\'s) maker fee is less than the minimum maker fee', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 singleFees: {
@@ -1590,7 +1590,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if seller\'s order\'s amount is smaller than its current residual', () => {
+        //     describe('if seller\'s order\'s amount is less than its current residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 seller: {
@@ -1622,7 +1622,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if seller\'s order\'s amount is smaller than its previous residual', () => {
+        //     describe('if seller\'s order\'s amount is less than its previous residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 seller: {
@@ -1654,7 +1654,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if seller\'s order\'s previous residual is smaller than its current residual', () => {
+        //     describe('if seller\'s order\'s previous residual is less than its current residual', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 seller: {
@@ -1742,7 +1742,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (seller\'s) taker fee is smaller than the minimum taker fee', () => {
+        //     describe('if (seller\'s) taker fee is less than the minimum taker fee', () => {
         //         beforeEach(async () => {
         //             trade = await mocks.mockTrade(glob.owner, {
         //                 singleFees: {
@@ -1967,7 +1967,7 @@ module.exports = function (glob) {
         //         });
         //     });
         //
-        //     describe('if (sender\'s) payment fee is smaller than the minimum payment fee', () => {
+        //     describe('if (sender\'s) payment fee is less than the minimum payment fee', () => {
         //         beforeEach(async () => {
         //             payment = await mocks.mockPayment(glob.owner, {
         //                 singleFee: utils.parseUnits('0.002', 18),

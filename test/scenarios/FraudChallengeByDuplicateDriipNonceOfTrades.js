@@ -342,14 +342,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if trades are genuine', () => {
-                it('should revert', async () => {
-                    return ethersFraudChallengeByDuplicateDriipNonceOfTrades.challenge(
-                        trade1, trade2, overrideOptions
-                    ).should.be.rejected;
-                });
-            });
-
             describe('if first trade is not sealed', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineTradeSeal(false);
@@ -390,6 +382,14 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if trades are genuine', () => {
+                it('should revert', async () => {
+                    return ethersFraudChallengeByDuplicateDriipNonceOfTrades.challenge(
+                        trade1, trade2, overrideOptions
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if nonces are equal', () => {
                 beforeEach(async () => {
                     trade1 = await mocks.mockTrade(glob.owner, {
@@ -417,19 +417,16 @@ module.exports = (glob) => {
                     await ethersFraudChallengeByDuplicateDriipNonceOfTrades.challenge(
                         trade1, trade2, overrideOptions
                     );
-                    const [operationalModeExit, fraudulentTradeHashesCount, rewardsCount, reward, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentTradeHashesCount(),
-                        ethersSecurityBond._rewardsCount(),
-                        ethersSecurityBond.rewards(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentTradeHashesCount.eq(2).should.be.true;
-                    rewardsCount.eq(1).should.be.true;
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentTradeHashesCount())._bn.should.eq.BN(2);
+
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    logs.should.have.lengthOf(1);
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
         });
