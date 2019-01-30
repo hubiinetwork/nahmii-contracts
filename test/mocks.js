@@ -11,7 +11,10 @@ exports.settlementStatuses = ['Qualified', 'Disqualified'];
 exports.candidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
 exports.hash0 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+
 exports.address0 = '0x0000000000000000000000000000000000000000';
+exports.address1 = '0x0000000000000000000000000000000000000001';
+exports.address2 = '0x0000000000000000000000000000000000000002';
 
 let globalNonce = 1;
 
@@ -26,11 +29,11 @@ exports.mockOrder = async (operator, params) => {
             amount: utils.parseUnits('1000', 18),
             currencies: {
                 intended: {
-                    ct: '0x0000000000000000000000000000000000000001',
+                    ct: exports.address1,
                     id: utils.bigNumberify(0)
                 },
                 conjugate: {
-                    ct: '0x0000000000000000000000000000000000000002',
+                    ct: exports.address2,
                     id: utils.bigNumberify(0)
                 }
             },
@@ -61,11 +64,11 @@ exports.mockTrade = async (operator, params) => {
         amount: utils.parseUnits('100', 18),
         currencies: {
             intended: {
-                ct: '0x0000000000000000000000000000000000000001',
+                ct: exports.address1,
                 id: utils.bigNumberify(0)
             },
             conjugate: {
-                ct: '0x0000000000000000000000000000000000000002',
+                ct: exports.address2,
                 id: utils.bigNumberify(0)
             }
         },
@@ -100,7 +103,7 @@ exports.mockTrade = async (operator, params) => {
                 single: {
                     amount: utils.parseUnits('0.1', 18),
                     currency: {
-                        ct: '0x0000000000000000000000000000000000000001',
+                        ct: exports.address1,
                         id: utils.bigNumberify(0)
                     }
                 },
@@ -110,7 +113,7 @@ exports.mockTrade = async (operator, params) => {
                         figure: {
                             amount: utils.parseUnits('0.2', 18),
                             currency: {
-                                ct: '0x0000000000000000000000000000000000000001',
+                                ct: exports.address1,
                                 id: utils.bigNumberify(0)
                             }
                         }
@@ -148,7 +151,7 @@ exports.mockTrade = async (operator, params) => {
                 single: {
                     amount: utils.parseUnits('0.0002', 18),
                     currency: {
-                        ct: '0x0000000000000000000000000000000000000002',
+                        ct: exports.address2,
                         id: utils.bigNumberify(0)
                     }
                 },
@@ -158,7 +161,7 @@ exports.mockTrade = async (operator, params) => {
                         figure: {
                             amount: utils.parseUnits('0.0004', 18),
                             currency: {
-                                ct: '0x0000000000000000000000000000000000000002',
+                                ct: exports.address2,
                                 id: utils.bigNumberify(0)
                             }
                         }
@@ -193,7 +196,7 @@ exports.mockPayment = async (operator, params) => {
         nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
         currency: {
-            ct: '0x0000000000000000000000000000000000000001',
+            ct: exports.address1,
             id: utils.bigNumberify(0)
         },
         sender: {
@@ -207,7 +210,7 @@ exports.mockPayment = async (operator, params) => {
                 single: {
                     amount: utils.parseUnits('0.2', 18),
                     currency: {
-                        ct: '0x0000000000000000000000000000000000000001',
+                        ct: exports.address1,
                         id: utils.bigNumberify(0)
                     }
                 },
@@ -217,7 +220,7 @@ exports.mockPayment = async (operator, params) => {
                         figure: {
                             amount: utils.parseUnits('0.2', 18),
                             currency: {
-                                ct: '0x0000000000000000000000000000000000000001',
+                                ct: exports.address1,
                                 id: utils.bigNumberify(0)
                             }
                         }
@@ -237,7 +240,7 @@ exports.mockPayment = async (operator, params) => {
                     // {
                     //     amount: utils.parseUnits('0.0', 18),
                     //     currency: {
-                    //         ct: '0x0000000000000000000000000000000000000001',
+                    //         ct: exports.address1,
                     //         id: utils.bigNumberify(0)
                     //     }
                     // }

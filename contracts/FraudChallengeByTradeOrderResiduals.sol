@@ -82,7 +82,7 @@ SecurityBondable, WalletLockable {
         fraudChallenge.addFraudulentTradeHash(lastTrade.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
         // Lock amounts of size equivalent to last trade's balances
         walletLocker.lockFungibleByProxy(

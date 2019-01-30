@@ -60,7 +60,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentOrderHash(order.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
         // TODO Consider balance reward when balance of spending currency has been added to order
 

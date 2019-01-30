@@ -87,7 +87,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
 
-        // TODO Replace by wallet nonce?
+        // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
         require(order.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
@@ -105,10 +105,7 @@ FraudChallengable, CancelOrdersChallengable {
 
         // Reward challenger
         // TODO Need balance as part of order to replace transfer amount (_orderTransferAmount(order)) in call below
-        _settleRewards(
-            order.wallet, _orderTransferAmount(order), currency, challenger,
-            configuration.settlementChallengeTimeout()
-        );
+        _settleRewards(order.wallet, _orderTransferAmount(order), currency, challenger, 0);
 
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallenge.disqualifyProposal(
@@ -150,7 +147,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
 
-        // TODO Replace by wallet nonce?
+        // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
         require(trade.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
@@ -201,7 +198,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Require that proposal has not expired
         require(!nullSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
 
-        // TODO Replace by wallet nonce?
+        // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
         require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
@@ -313,18 +310,18 @@ FraudChallengable, CancelOrdersChallengable {
         trade.seller.balances.intended.current;
     }
 
-    function _settleRewards(address wallet, int256 lockAmount, MonetaryTypesLib.Currency currency,
+    function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
         if (nullSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
-            _settleBalanceReward(wallet, lockAmount, currency, challenger);
+            _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
-            _settleSecurityBondReward(wallet, currency, challenger, unlockTimeoutInSeconds);
+            _settleSecurityBondReward(wallet, walletAmount, currency, challenger, unlockTimeoutInSeconds);
     }
 
-    function _settleBalanceReward(address wallet, int256 lockAmount, MonetaryTypesLib.Currency currency,
+    function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger)
     private
     {
@@ -341,24 +338,51 @@ FraudChallengable, CancelOrdersChallengable {
             );
 
         // Lock wallet for new challenger
-        walletLocker.lockFungibleByProxy(wallet, challenger, lockAmount, currency.ct, currency.id);
+        walletLocker.lockFungibleByProxy(wallet, challenger, walletAmount, currency.ct, currency.id);
     }
 
-    function _settleSecurityBondReward(address wallet, MonetaryTypesLib.Currency currency, address challenger,
-        uint256 unlockTimeoutInSeconds)
+    // Settle the two-component reward from security bond.
+    // The first component is flat figure as obtained from Configuration
+    // The second component is progressive and calculated as
+    //    min(walletAmount, fraction of SecurityBond's deposited balance)
+    // both amounts for the given currency
+    function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+        address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
         // Deprive existing challenger of reward if previously locked
         if (SettlementTypesLib.Status.Disqualified == nullSettlementChallenge.proposalStatus(
             wallet, currency.ct, currency.id
         ))
-            securityBond.deprive(nullSettlementChallenge.proposalDisqualificationChallenger(
+            securityBond.depriveAbsolute(
+                nullSettlementChallenge.proposalDisqualificationChallenger(
                     wallet, currency.ct, currency.id
-                ));
+                ),
+                currency.ct, currency.id
+            );
 
-        // Reward new challenger
-        securityBond.reward(challenger, configuration.operatorSettlementStakeFraction(),
-            unlockTimeoutInSeconds);
+        // Reward the flat component
+        MonetaryTypesLib.Figure memory flatReward = _flatReward();
+        securityBond.rewardAbsolute(
+            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
+        );
+
+        // Reward the progressive component
+        int256 progressiveRewardAmount = walletAmount.clampMax(
+            securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
+        );
+        securityBond.rewardAbsolute(
+            challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
+        );
+    }
+
+    function _flatReward()
+    private
+    view
+    returns (MonetaryTypesLib.Figure)
+    {
+        (int256 amount, address currencyCt, uint256 currencyId) = configuration.operatorSettlementStake();
+        return MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
     }
 
     //

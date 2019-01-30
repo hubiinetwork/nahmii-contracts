@@ -112,7 +112,7 @@ contract TokenMultiTimelock is Ownable {
             // Update the total amount locked by this contract
             totalLockedAmount += amounts[i];
 
-            // Require that total amount locked is smaller than or equal to the token balance of
+            // Require that total amount locked is less than or equal to the token balance of
             // this contract
             require(token.balanceOf(address(this)) >= totalLockedAmount);
 

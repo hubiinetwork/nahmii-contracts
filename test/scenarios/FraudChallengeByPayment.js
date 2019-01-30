@@ -411,9 +411,9 @@ module.exports = (glob) => {
 
                     (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
 
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
 
                     (await ethersWalletLocker._fungibleLocksCount())._bn.should.eq.BN(0);
 
@@ -434,9 +434,9 @@ module.exports = (glob) => {
 
                     (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
 
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
 
                     const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(payment.sender.wallet);
@@ -462,9 +462,9 @@ module.exports = (glob) => {
 
                     (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
 
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
 
                     const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(payment.sender.wallet);
@@ -490,9 +490,9 @@ module.exports = (glob) => {
 
                     (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
 
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
 
                     const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(payment.recipient.wallet);

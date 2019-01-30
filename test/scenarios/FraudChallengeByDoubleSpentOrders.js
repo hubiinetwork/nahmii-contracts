@@ -382,9 +382,9 @@ module.exports = (glob) => {
                     (await ethersFraudChallenge.isDoubleSpenderWallet(trade2.buyer.wallet)).should.be.true;
                     (await ethersFraudChallenge.isDoubleSpenderWallet(trade2.seller.wallet)).should.be.false;
 
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
@@ -437,9 +437,9 @@ module.exports = (glob) => {
                     (await ethersFraudChallenge.isDoubleSpenderWallet(trade2.buyer.wallet)).should.be.false;
                     (await ethersFraudChallenge.isDoubleSpenderWallet(trade2.seller.wallet)).should.be.true;
 
-                    const reward = await ethersSecurityBond.rewards(0);
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });

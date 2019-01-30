@@ -10,7 +10,7 @@ pragma solidity ^0.4.25;
 
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
-library BlockNumbCurrenciesLib {
+library BlockNumbReferenceCurrenciesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
@@ -19,14 +19,14 @@ library BlockNumbCurrenciesLib {
         MonetaryTypesLib.Currency currency;
     }
 
-    struct BlockNumbCurrencies {
+    struct BlockNumbReferenceCurrencies {
         mapping(address => mapping(uint256 => Entry[])) entriesByCurrency;
     }
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function currentCurrency(BlockNumbCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency)
+    function currentCurrency(BlockNumbReferenceCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency)
     internal
     view
     returns (MonetaryTypesLib.Currency storage)
@@ -34,7 +34,7 @@ library BlockNumbCurrenciesLib {
         return currencyAt(self, referenceCurrency, block.number);
     }
 
-    function currentEntry(BlockNumbCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency)
+    function currentEntry(BlockNumbReferenceCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency)
     internal
     view
     returns (Entry storage)
@@ -42,7 +42,7 @@ library BlockNumbCurrenciesLib {
         return entryAt(self, referenceCurrency, block.number);
     }
 
-    function currencyAt(BlockNumbCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency,
+    function currencyAt(BlockNumbReferenceCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency,
         uint256 _blockNumber)
     internal
     view
@@ -51,7 +51,7 @@ library BlockNumbCurrenciesLib {
         return entryAt(self, referenceCurrency, _blockNumber).currency;
     }
 
-    function entryAt(BlockNumbCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency,
+    function entryAt(BlockNumbReferenceCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency,
         uint256 _blockNumber)
     internal
     view
@@ -60,7 +60,7 @@ library BlockNumbCurrenciesLib {
         return self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id][indexByBlockNumber(self, referenceCurrency, _blockNumber)];
     }
 
-    function addEntry(BlockNumbCurrencies storage self, uint256 blockNumber,
+    function addEntry(BlockNumbReferenceCurrencies storage self, uint256 blockNumber,
         MonetaryTypesLib.Currency referenceCurrency, MonetaryTypesLib.Currency currency)
     internal
     {
@@ -72,7 +72,7 @@ library BlockNumbCurrenciesLib {
         self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].push(Entry(blockNumber, currency));
     }
 
-    function count(BlockNumbCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency)
+    function count(BlockNumbReferenceCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency)
     internal
     view
     returns (uint256)
@@ -80,7 +80,7 @@ library BlockNumbCurrenciesLib {
         return self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].length;
     }
 
-    function entriesByCurrency(BlockNumbCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency)
+    function entriesByCurrency(BlockNumbReferenceCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency)
     internal
     view
     returns (Entry[] storage)
@@ -88,7 +88,7 @@ library BlockNumbCurrenciesLib {
         return self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id];
     }
 
-    function indexByBlockNumber(BlockNumbCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency, uint256 blockNumber)
+    function indexByBlockNumber(BlockNumbReferenceCurrencies storage self, MonetaryTypesLib.Currency referenceCurrency, uint256 blockNumber)
     internal
     view
     returns (uint256)
