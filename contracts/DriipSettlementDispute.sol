@@ -191,7 +191,7 @@ FraudChallengable, CancelOrdersChallengable {
         );
 
         // Reward unchallenger
-        securityBond.rewardFraction(unchallenger, configuration.walletSettlementStakeFraction(), 0);
+        securityBond.rewardByFraction(unchallenger, configuration.walletSettlementStakeFraction(), 0);
 
         // Emit event
         emit UnchallengeOrderCandidateByTradeEvent(
@@ -397,18 +397,18 @@ FraudChallengable, CancelOrdersChallengable {
     }
 
     // Lock wallet's balances or reward challenger by stake fraction
-    function _settleRewards(address wallet, int256 lockAmount, MonetaryTypesLib.Currency currency,
+    function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
         if (driipSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
-            _settleBalanceReward(wallet, lockAmount, currency, challenger);
+            _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
-            _settleSecurityBondReward(wallet, currency, challenger, unlockTimeoutInSeconds);
+            _settleSecurityBondReward(wallet, walletAmount, currency, challenger, unlockTimeoutInSeconds);
     }
 
-    function _settleBalanceReward(address wallet, int256 lockAmount, MonetaryTypesLib.Currency currency,
+    function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger)
     private
     {
@@ -425,11 +425,16 @@ FraudChallengable, CancelOrdersChallengable {
             );
 
         // Lock wallet for new challenger
-        walletLocker.lockFungibleByProxy(wallet, challenger, lockAmount, currency.ct, currency.id);
+        walletLocker.lockFungibleByProxy(wallet, challenger, walletAmount, currency.ct, currency.id);
     }
 
-    function _settleSecurityBondReward(address wallet, MonetaryTypesLib.Currency currency, address challenger,
-        uint256 unlockTimeoutInSeconds)
+    // Settle the two-component reward from security bond.
+    // The first component is flat figure as obtained from Configuration
+    // The second component is progressive and calculated as
+    //    min(walletAmount, fraction of SecurityBond's deposited balance)
+    // both amounts for the given currency
+    function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+        address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
         // Deprive existing challenger of reward if previously locked
@@ -443,9 +448,28 @@ FraudChallengable, CancelOrdersChallengable {
                 currency.ct, currency.id
             );
 
-        // Reward new challenger
-        securityBond.rewardFraction(challenger, configuration.operatorSettlementStakeFraction(),
-            unlockTimeoutInSeconds);
+        // Reward the flat component
+        MonetaryTypesLib.Figure memory flatReward = _flatReward();
+        securityBond.rewardByAmount(
+            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
+        );
+
+        // Reward the progressive component
+        int256 progressiveRewardAmount = walletAmount.clampMax(
+            securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
+        );
+        securityBond.rewardByAmount(
+            challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
+        );
+    }
+
+    function _flatReward()
+    private
+    view
+    returns (MonetaryTypesLib.Figure)
+    {
+        (int256 amount, address currencyCt, uint256 currencyId) = configuration.operatorSettlementStake();
+        return MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
     }
 
     //
