@@ -26,28 +26,47 @@ module.exports = (deployer, network, accounts) => {
         if (helpers.isTestNetwork(network))
             ownerAccount = accounts[0];
 
-        let ctl = {
-            deployer,
-            deployFilters: helpers.getFiltersFromArgs(),
-            addressStorage,
-            ownerAccount
-        };
+        else {
+            ownerAccount = helpers.getOwnerAccountFromArgs();
 
-        if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
-            await execDeploy(ctl, 'SafeMath', '', SafeMath);
+            if (web3.eth.personal)
+                web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
+            else
+                web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
+        }
 
-            await deployer.link(SafeMath, NahmiiToken);
+        try {
+            if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
+                let ctl = {
+                    deployer,
+                    deployFilters: helpers.getFiltersFromArgs(),
+                    addressStorage,
+                    ownerAccount
+                };
 
-            await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+                await execDeploy(ctl, 'SafeMath', '', SafeMath);
 
-            const instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
-            await instance.mint(ownerAccount, 120e24);
-            console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
-            // await instance.disableMinting();
-            console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
+                await deployer.link(SafeMath, NahmiiToken);
 
-        } else if (network.startsWith('mainnet'))
-            addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
+                await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+
+                const instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
+                await instance.mint(ownerAccount, 120e24);
+                console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
+                // await instance.disableMinting();
+                console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
+
+            } else if (network.startsWith('mainnet'))
+                addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
+
+        } finally {
+            if (!helpers.isTestNetwork(network)) {
+                if (web3.eth.personal)
+                    web3.eth.personal.lockAccount(ownerAccount);
+                else
+                    web3.personal.lockAccount(ownerAccount);
+            }
+        }
 
         console.log(`Saving addresses in ${__filename}...`);
         await addressStorage.save();
