@@ -67,10 +67,7 @@ module.exports = (deployer, network, accounts) => {
 
                 instance = await RevenueTokenManager.at(addressStorage.get('RevenueTokenManager'));
                 await instance.setToken(addressStorage.get('NahmiiToken'));
-                if (helpers.isTestNetwork(network))
-                    await instance.setBeneficiary(ownerAccount);
-                else
-                    await instance.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
+                await instance.setBeneficiary(ownerAccount);
 
                 const releases = airdriipReleases();
 
@@ -114,6 +111,9 @@ module.exports = (deployer, network, accounts) => {
 
                 for (let i = 0; i < 15; i++)
                     await instance.release(i);
+
+                if (!helpers.isTestNetwork(network))
+                    await instance.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
 
                 console.log(`Releases:`);
                 releases.forEach((r) => {
