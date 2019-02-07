@@ -1,7 +1,7 @@
 {
   "name": "nahmii-contracts",
   "version": "1.0.0-ropsten.9",
-  "description": "Smart Contracts for Nahmii",
+  "description": "Smart contracts for nahmii",
   "main": "truffle.js",
   "directories": {
     "test": "test"
@@ -12,17 +12,24 @@
     "deploy": "npm run deploy:test",
     "deploy:ci": "truffle migrate",
     "deploy:ganache": "truffle compile && truffle migrate --network ganache",
+    "deploy:ganache-cli": "truffle compile && truffle migrate --network ganache-cli",
     "deploy:main": "truffle migrate --network mainnet",
     "deploy:test": "truffle migrate --network testnet",
     "docs": "soldoc",
     "exec:script:mainnet": "truffle compile && truffle exec scripts/common/script_template.js --network mainnet-infura",
     "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
     "exec:release_nii_tokens:ropsten": "truffle exec scripts/common/release_nii_tokens.js --network ropsten-infura",
-    "test": "concurrently --raw --success all --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test'",
-    "test:ganache": "truffle compile && truffle test --network ganache",
+    "sample:events": "concurrently --raw --success first --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test ./sample/events.js'",
+    "test:unit": "concurrently --raw --success first --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test'",
+    "test:unit:ganache": "truffle compile && truffle test --network ganache",
     "version:compiler": "solcjs --version",
     "version:truffle": "truffle version"
   },
+  "keywords": [
+    "nahmii",
+    "smart contracts",
+    "ethereum"
+  ],
   "author": "Hubii",
   "license": "LGPL-3.0",
   "repository": {
