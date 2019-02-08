@@ -42,7 +42,7 @@
     "ganache-cli": "^6.1.0",
     "moment": "^2.23.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
-    "openzeppelin-solidity": "^2.0.0",
+    "openzeppelin-solidity": "~2.0.0",
     "solc": "^0.4.25",
     "solidity-util": "github:willitscale/solidity-util",
     "truffle": "^4.1.14",
