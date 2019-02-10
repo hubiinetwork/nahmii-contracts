@@ -39,7 +39,7 @@
   "dependencies": {
     "async": "^2.6.0",
     "ethers": "^3.0.7",
-    "ganache-cli": "^6.1.0",
+    "ganache-cli": "~6.2.0",
     "moment": "^2.23.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "~2.0.0",
