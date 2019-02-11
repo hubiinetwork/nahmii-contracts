@@ -9,6 +9,7 @@
 pragma solidity ^0.4.25;
 
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
  * @title     TradeTypesLib
@@ -25,66 +26,31 @@ library TradeTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
-    struct OriginFigure {
-        uint256 originId;
-        MonetaryTypesLib.Figure figure;
+    struct OrderPlacement {
+        Intention intention;
+
+        int256 amount;
+        NahmiiTypesLib.IntendedConjugateCurrency currencies;
+        int256 rate;
+
+        NahmiiTypesLib.CurrentPreviousInt256 residuals;
     }
 
-    struct IntendedConjugateCurrency {
-        MonetaryTypesLib.Currency intended;
-        MonetaryTypesLib.Currency conjugate;
-    }
+    struct Order {
+        uint256 nonce;
+        address wallet;
 
-    struct SingleFigureTotalOriginFigures {
-        MonetaryTypesLib.Figure single;
-        OriginFigure[] total;
-    }
+        OrderPlacement placement;
 
-    struct CurrentPreviousInt256 {
-        int256 current;
-        int256 previous;
-    }
-
-    struct SingleTotalInt256 {
-        int256 single;
-        int256 total;
-    }
-
-    struct IntendedConjugateCurrentPreviousInt256 {
-        CurrentPreviousInt256 intended;
-        CurrentPreviousInt256 conjugate;
-    }
-
-    struct IntendedConjugateSingleTotalInt256 {
-        SingleTotalInt256 intended;
-        SingleTotalInt256 conjugate;
-    }
-
-    struct WalletOperatorHashes {
-        bytes32 wallet;
-        bytes32 operator;
+        NahmiiTypesLib.WalletOperatorSeal seals;
+        uint256 blockNumber;
+        uint256 operatorId;
     }
 
     struct TradeOrder {
         int256 amount;
-        WalletOperatorHashes hashes;
-        CurrentPreviousInt256 residuals;
-    }
-
-    struct Signature {
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-    }
-
-    struct Seal {
-        bytes32 hash;
-        Signature signature;
-    }
-
-    struct WalletOperatorSeal {
-        Seal wallet;
-        Seal operator;
+        NahmiiTypesLib.WalletOperatorHashes hashes;
+        NahmiiTypesLib.CurrentPreviousInt256 residuals;
     }
 
     struct TradeParty {
@@ -97,16 +63,16 @@ library TradeTypesLib {
 
         TradeOrder order;
 
-        IntendedConjugateCurrentPreviousInt256 balances;
+        NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 balances;
 
-        SingleFigureTotalOriginFigures fees;
+        NahmiiTypesLib.SingleFigureTotalOriginFigures fees;
     }
 
     struct Trade {
         uint256 nonce;
 
         int256 amount;
-        IntendedConjugateCurrency currencies;
+        NahmiiTypesLib.IntendedConjugateCurrency currencies;
         int256 rate;
 
         TradeParty buyer;
@@ -114,30 +80,9 @@ library TradeTypesLib {
 
         // Positive intended transfer is always in direction from seller to buyer
         // Positive conjugate transfer is always in direction from buyer to seller
-        IntendedConjugateSingleTotalInt256 transfers;
+        NahmiiTypesLib.IntendedConjugateSingleTotalInt256 transfers;
 
-        Seal seal;
-        uint256 blockNumber;
-        uint256 operatorId;
-    }
-
-    struct OrderPlacement {
-        Intention intention;
-
-        int256 amount;
-        IntendedConjugateCurrency currencies;
-        int256 rate;
-
-        CurrentPreviousInt256 residuals;
-    }
-
-    struct Order {
-        uint256 nonce;
-        address wallet;
-
-        OrderPlacement placement;
-
-        WalletOperatorSeal seals;
+        NahmiiTypesLib.Seal seal;
         uint256 blockNumber;
         uint256 operatorId;
     }

@@ -21,13 +21,13 @@ library NahmiiTypesLib {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
-    enum LiquidityRole {Maker, Taker}
+    enum LiquidityRole {Maker, Taker} // TODO Remove
     enum CurrencyRole {Intended, Conjugate}
-    enum DriipType {Trade, Payment}
-    enum Intention {Buy, Sell}
-    enum TradePartyRole {Buyer, Seller}
-    enum PaymentPartyRole {Sender, Recipient}
-    enum ChallengePhase {Dispute, Closed}
+    enum DriipType {Trade, Payment} // TODO Make dynamic
+    enum Intention {Buy, Sell} // TODO Remove
+    enum TradePartyRole {Buyer, Seller} // TODO Remove
+    enum PaymentPartyRole {Sender, Recipient} // TODO Remove
+    enum ChallengePhase {Dispute, Closed} // TODO Move
 
     //
     // Structures
@@ -36,7 +36,7 @@ library NahmiiTypesLib {
         uint256 originId;
         MonetaryTypesLib.Figure figure;
     }
-    
+
     struct IntendedConjugateCurrency {
         MonetaryTypesLib.Currency intended;
         MonetaryTypesLib.Currency conjugate;
@@ -76,12 +76,6 @@ library NahmiiTypesLib {
         bytes32 operator;
     }
 
-    struct TradeOrder {
-        int256 amount;
-        WalletOperatorHashes hashes;
-        CurrentPreviousInt256 residuals;
-    }
-
     struct Signature {
         bytes32 r;
         bytes32 s;
@@ -98,6 +92,14 @@ library NahmiiTypesLib {
         Seal operator;
     }
 
+    // TODO Remove
+    struct TradeOrder {
+        int256 amount;
+        WalletOperatorHashes hashes;
+        CurrentPreviousInt256 residuals;
+    }
+
+    // TODO Remove
     struct TradeParty {
         uint256 nonce;
         address wallet;
@@ -113,6 +115,7 @@ library NahmiiTypesLib {
         SingleFigureTotalOriginFigures fees;
     }
 
+    // TODO Remove
     struct Trade {
         uint256 nonce;
 
@@ -132,6 +135,7 @@ library NahmiiTypesLib {
         uint256 operatorId;
     }
 
+    // TODO Remove
     struct PaymentSenderParty {
         uint256 nonce;
         address wallet;
@@ -141,6 +145,7 @@ library NahmiiTypesLib {
         SingleFigureTotalOriginFigures fees;
     }
 
+    // TODO Remove
     struct PaymentRecipientParty {
         uint256 nonce;
         address wallet;
@@ -150,6 +155,7 @@ library NahmiiTypesLib {
         TotalOriginFigures fees;
     }
 
+    // TODO Remove
     struct Payment {
         uint256 nonce;
 
@@ -167,6 +173,7 @@ library NahmiiTypesLib {
         uint256 operatorId;
     }
 
+    // TODO Remove
     struct OrderPlacement {
         Intention intention;
 
@@ -177,6 +184,7 @@ library NahmiiTypesLib {
         CurrentPreviousInt256 residuals;
     }
 
+    // TODO Remove
     struct Order {
         uint256 nonce;
         address wallet;
