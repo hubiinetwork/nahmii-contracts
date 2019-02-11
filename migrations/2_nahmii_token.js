@@ -50,11 +50,11 @@ module.exports = (deployer, network, accounts) => {
 
                 await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
 
-                const instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
-                await instance.mint(ownerAccount, 120e24);
-                console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
-                // await instance.disableMinting();
-                console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
+                if (!helpers.isTestNetwork(network)) {
+                    console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
+                    // await instance.disableMinting();
+                    console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
+                }
 
             } else if (network.startsWith('mainnet'))
                 addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
