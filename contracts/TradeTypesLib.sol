@@ -10,24 +10,17 @@ pragma solidity ^0.4.25;
 
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
-// TODO Consider removal vs strip-down
-//   * possibly keep it for CurrencyRole, DriipType and ChallengePhase
-//   * DriipType is too rigid and should rather have dynamic size.
 /**
- * @title     NahmiiTypesLib
- * @dev       Data types of general nahmii character
+ * @title     TradeTypesLib
+ * @dev       Data types centered around trade
  */
-library NahmiiTypesLib {
+library TradeTypesLib {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
     enum LiquidityRole {Maker, Taker}
-    enum CurrencyRole {Intended, Conjugate}
-    enum DriipType {Trade, Payment}
     enum Intention {Buy, Sell}
     enum TradePartyRole {Buyer, Seller}
-    enum PaymentPartyRole {Sender, Recipient}
-    enum ChallengePhase {Dispute, Closed}
 
     //
     // Structures
@@ -36,7 +29,7 @@ library NahmiiTypesLib {
         uint256 originId;
         MonetaryTypesLib.Figure figure;
     }
-    
+
     struct IntendedConjugateCurrency {
         MonetaryTypesLib.Currency intended;
         MonetaryTypesLib.Currency conjugate;
@@ -44,10 +37,6 @@ library NahmiiTypesLib {
 
     struct SingleFigureTotalOriginFigures {
         MonetaryTypesLib.Figure single;
-        OriginFigure[] total;
-    }
-
-    struct TotalOriginFigures {
         OriginFigure[] total;
     }
 
@@ -128,41 +117,6 @@ library NahmiiTypesLib {
         IntendedConjugateSingleTotalInt256 transfers;
 
         Seal seal;
-        uint256 blockNumber;
-        uint256 operatorId;
-    }
-
-    struct PaymentSenderParty {
-        uint256 nonce;
-        address wallet;
-
-        CurrentPreviousInt256 balances;
-
-        SingleFigureTotalOriginFigures fees;
-    }
-
-    struct PaymentRecipientParty {
-        uint256 nonce;
-        address wallet;
-
-        CurrentPreviousInt256 balances;
-
-        TotalOriginFigures fees;
-    }
-
-    struct Payment {
-        uint256 nonce;
-
-        int256 amount;
-        MonetaryTypesLib.Currency currency;
-
-        PaymentSenderParty sender;
-        PaymentRecipientParty recipient;
-
-        // Positive transfer is always in direction from sender to recipient
-        SingleTotalInt256 transfers;
-
-        WalletOperatorSeal seals;
         uint256 blockNumber;
         uint256 operatorId;
     }
