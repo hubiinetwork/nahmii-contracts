@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 
 /**
  * @title FraudChallengeByOrder
@@ -38,7 +38,7 @@ SecurityBondable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit an order candidate in continuous Fraud Challenge (FC)
     /// @param order Fraudulent order candidate
-    function challenge(NahmiiTypesLib.Order order)
+    function challenge(TradeTypesLib.Order order)
     public
     onlyOperationalModeNormal
     onlyOperatorSealedOrder(order)

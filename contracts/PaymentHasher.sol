@@ -11,6 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 
 /**
@@ -99,7 +100,7 @@ contract PaymentHasher is Ownable {
     }
 
     function hashCurrentPreviousInt256(
-        PaymentTypesLib.CurrentPreviousInt256 currentPreviousInt256)
+        NahmiiTypesLib.CurrentPreviousInt256 currentPreviousInt256)
     public
     pure
     returns (bytes32)
@@ -111,7 +112,7 @@ contract PaymentHasher is Ownable {
     }
 
     function hashSingleTotalInt256(
-        PaymentTypesLib.SingleTotalInt256 singleTotalInt256)
+        NahmiiTypesLib.SingleTotalInt256 singleTotalInt256)
     public
     pure
     returns (bytes32)
@@ -134,7 +135,7 @@ contract PaymentHasher is Ownable {
             ));
     }
 
-    function hashOriginFigures(PaymentTypesLib.OriginFigure[] originFigures)
+    function hashOriginFigures(NahmiiTypesLib.OriginFigure[] originFigures)
     public
     pure
     returns (bytes32)
@@ -169,7 +170,7 @@ contract PaymentHasher is Ownable {
         return keccak256(abi.encodePacked(_address));
     }
 
-    function hashSignature(PaymentTypesLib.Signature signature)
+    function hashSignature(NahmiiTypesLib.Signature signature)
     public
     pure
     returns (bytes32)

@@ -11,6 +11,8 @@ pragma solidity ^0.4.25;
 import {Ownable} from "./Ownable.sol";
 import {Validator} from "./Validator.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 
 /**
  * @title Validatable
@@ -54,42 +56,42 @@ contract Validatable is Ownable {
         _;
     }
 
-    modifier onlySealedOrder(NahmiiTypesLib.Order order) {
+    modifier onlySealedOrder(TradeTypesLib.Order order) {
         require(validator.isGenuineOrderSeals(order));
         _;
     }
 
-    modifier onlyOperatorSealedOrder(NahmiiTypesLib.Order order) {
+    modifier onlyOperatorSealedOrder(TradeTypesLib.Order order) {
         require(validator.isGenuineOrderOperatorSeal(order));
         _;
     }
 
-    modifier onlySealedTrade(NahmiiTypesLib.Trade trade) {
+    modifier onlySealedTrade(TradeTypesLib.Trade trade) {
         require(validator.isGenuineTradeSeal(trade));
         _;
     }
 
-    modifier onlyOperatorSealedPayment(NahmiiTypesLib.Payment payment) {
+    modifier onlyOperatorSealedPayment(PaymentTypesLib.Payment payment) {
         require(validator.isGenuinePaymentOperatorSeal(payment));
         _;
     }
 
-    modifier onlySealedPayment(NahmiiTypesLib.Payment payment) {
+    modifier onlySealedPayment(PaymentTypesLib.Payment payment) {
         require(validator.isGenuinePaymentSeals(payment));
         _;
     }
 
-    modifier onlyTradeParty(NahmiiTypesLib.Trade trade, address wallet) {
+    modifier onlyTradeParty(TradeTypesLib.Trade trade, address wallet) {
         require(validator.isTradeParty(trade, wallet));
         _;
     }
 
-    modifier onlyPaymentParty(NahmiiTypesLib.Payment payment, address wallet) {
+    modifier onlyPaymentParty(PaymentTypesLib.Payment payment, address wallet) {
         require(validator.isPaymentParty(payment, wallet));
         _;
     }
 
-    modifier onlyPaymentSender(NahmiiTypesLib.Payment payment, address wallet) {
+    modifier onlyPaymentSender(PaymentTypesLib.Payment payment, address wallet) {
         require(validator.isPaymentSender(payment, wallet));
         _;
     }

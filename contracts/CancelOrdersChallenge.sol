@@ -15,6 +15,7 @@ import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {Ownable} from "./Ownable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 
 /**
  * @title CancelOrdersChallenge
@@ -112,7 +113,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Cancel orders of msg.sender
     /// @param orders The orders to cancel
-    function cancelOrders(NahmiiTypesLib.Order[] orders)
+    function cancelOrders(TradeTypesLib.Order[] orders)
     public
     onlyOperationalModeNormal
     {
@@ -136,7 +137,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
     /// @param wallet The address of the concerned wallet
-    function challenge(NahmiiTypesLib.Trade trade, address wallet)
+    function challenge(TradeTypesLib.Trade trade, address wallet)
     public
     onlyOperationalModeNormal
     onlySealedTrade(trade)
@@ -173,7 +174,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _orderOperatorHashes(NahmiiTypesLib.Order[] orders)
+    function _orderOperatorHashes(TradeTypesLib.Order[] orders)
     private
     pure
     returns (bytes32[])

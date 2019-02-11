@@ -16,6 +16,8 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 
 /**
  * @title FraudChallengeByPaymentSucceedingTrade
@@ -46,8 +48,8 @@ SecurityBondable, WalletLockable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function challenge(
-        NahmiiTypesLib.Trade trade,
-        NahmiiTypesLib.Payment payment,
+        TradeTypesLib.Trade trade,
+        PaymentTypesLib.Payment payment,
         address wallet,
         address currencyCt,
         uint256 currencyId
@@ -65,8 +67,8 @@ SecurityBondable, WalletLockable {
         );
         require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
 
-        NahmiiTypesLib.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
-        NahmiiTypesLib.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
+        TradeTypesLib.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? TradeTypesLib.TradePartyRole.Buyer : TradeTypesLib.TradePartyRole.Seller);
+        PaymentTypesLib.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? PaymentTypesLib.PaymentPartyRole.Sender : PaymentTypesLib.PaymentPartyRole.Recipient);
 
         require(validator.isSuccessiveTradePaymentPartyNonces(trade, tradePartyRole, payment, paymentPartyRole));
 
@@ -103,12 +105,12 @@ SecurityBondable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _paymentLockAmount(NahmiiTypesLib.Payment payment, NahmiiTypesLib.PaymentPartyRole paymentPartyRole)
+    function _paymentLockAmount(PaymentTypesLib.Payment payment, PaymentTypesLib.PaymentPartyRole paymentPartyRole)
     private
     pure
     returns (int256)
     {
-        return NahmiiTypesLib.PaymentPartyRole.Sender == paymentPartyRole ?
+        return PaymentTypesLib.PaymentPartyRole.Sender == paymentPartyRole ?
         payment.sender.balances.current :
         payment.recipient.balances.current;
     }

@@ -16,6 +16,8 @@ import {Validatable} from "./Validatable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 /**
@@ -49,8 +51,8 @@ SecurityBondable, WalletLockable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function challenge(
-        NahmiiTypesLib.Payment payment,
-        NahmiiTypesLib.Trade trade,
+        PaymentTypesLib.Payment payment,
+        TradeTypesLib.Trade trade,
         address wallet,
         address currencyCt,
         uint256 currencyId
@@ -68,8 +70,8 @@ SecurityBondable, WalletLockable {
             (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id)
         );
 
-        NahmiiTypesLib.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
-        NahmiiTypesLib.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
+        PaymentTypesLib.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? PaymentTypesLib.PaymentPartyRole.Sender : PaymentTypesLib.PaymentPartyRole.Recipient);
+        TradeTypesLib.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? TradeTypesLib.TradePartyRole.Buyer : TradeTypesLib.TradePartyRole.Seller);
 
         require(validator.isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
 
@@ -105,18 +107,18 @@ SecurityBondable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _tradeLockAmount(NahmiiTypesLib.Trade trade, NahmiiTypesLib.TradePartyRole tradePartyRole,
+    function _tradeLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole,
         NahmiiTypesLib.CurrencyRole currencyRole)
     private
     pure
     returns (int256)
     {
-        if (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole)
+        if (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole)
             if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
                 return trade.buyer.balances.intended.current;
             else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
                 return trade.buyer.balances.conjugate.current;
-        else // NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
+        else // TradeTypesLib.TradePartyRole.Seller == tradePartyRole)
             if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
                 return trade.seller.balances.intended.current;
             else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole

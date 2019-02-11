@@ -15,7 +15,7 @@ import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 /**
@@ -42,7 +42,7 @@ SecurityBondable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(NahmiiTypesLib.Trade trade)
+    function challenge(TradeTypesLib.Trade trade)
     public
     onlyOperationalModeNormal
     onlySealedTrade(trade)

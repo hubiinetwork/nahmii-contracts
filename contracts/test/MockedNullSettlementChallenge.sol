@@ -9,7 +9,8 @@
 pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
-import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "../PaymentTypesLib.sol";
+import {TradeTypesLib} from "../TradeTypesLib.sol";
 import {SettlementTypesLib} from "../SettlementTypesLib.sol";
 import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 
@@ -239,19 +240,19 @@ contract MockedNullSettlementChallenge {
         _nullSettlementDispute = nullSettlementDispute;
     }
 
-    function challengeByOrder(NahmiiTypesLib.Order order)
+    function challengeByOrder(TradeTypesLib.Order order)
     public
     {
         _nullSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
-    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade)
+    function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
     public
     {
         _nullSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
-    function challengeByPayment(address wallet, NahmiiTypesLib.Payment payment)
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
     public
     {
         _nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);

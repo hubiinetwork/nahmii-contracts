@@ -15,7 +15,7 @@ import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 
 /**
  * @title FraudChallengeByPayment
@@ -40,7 +40,7 @@ SecurityBondable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challenge(NahmiiTypesLib.Payment payment)
+    function challenge(PaymentTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
     onlyOperatorSealedPayment(payment)

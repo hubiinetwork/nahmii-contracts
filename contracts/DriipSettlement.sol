@@ -24,6 +24,8 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
@@ -64,10 +66,10 @@ FraudChallengable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SettleTradeEvent(address wallet, NahmiiTypesLib.Trade trade);
-    event SettleTradeByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Trade trade);
-    event SettlePaymentEvent(address wallet, NahmiiTypesLib.Payment payment);
-    event SettlePaymentByProxyEvent(address proxy, address wallet, NahmiiTypesLib.Payment payment);
+    event SettleTradeEvent(address wallet, TradeTypesLib.Trade trade);
+    event SettleTradeByProxyEvent(address proxy, address wallet, TradeTypesLib.Trade trade);
+    event SettlePaymentEvent(address wallet, PaymentTypesLib.Payment payment);
+    event SettlePaymentByProxyEvent(address proxy, address wallet, PaymentTypesLib.Payment payment);
     event SetDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
         DriipSettlementChallenge newDriipSettlementChallenge);
     event SetTradesRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
@@ -184,7 +186,7 @@ FraudChallengable, WalletLockable {
 
     /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
-    function settleTrade(NahmiiTypesLib.Trade trade)
+    function settleTrade(TradeTypesLib.Trade trade)
     public
     {
         // Settle trade
@@ -197,7 +199,7 @@ FraudChallengable, WalletLockable {
     /// @notice Settle driip that is a trade
     /// @param wallet The wallet whose side of the trade is to be settled
     /// @param trade The trade to be settled
-    function settleTradeByProxy(address wallet, NahmiiTypesLib.Trade trade)
+    function settleTradeByProxy(address wallet, TradeTypesLib.Trade trade)
     public
     onlyOperator
     {
@@ -210,7 +212,7 @@ FraudChallengable, WalletLockable {
 
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
-    function settlePayment(NahmiiTypesLib.Payment payment)
+    function settlePayment(PaymentTypesLib.Payment payment)
     public
     {
         // Settle payment
@@ -223,7 +225,7 @@ FraudChallengable, WalletLockable {
     /// @notice Settle driip that is a payment
     /// @param wallet The wallet whose side of the payment is to be settled
     /// @param payment The payment to be settled
-    function settlePaymentByProxy(address wallet, NahmiiTypesLib.Payment payment)
+    function settlePaymentByProxy(address wallet, PaymentTypesLib.Payment payment)
     public
     onlyOperator
     {
@@ -234,7 +236,7 @@ FraudChallengable, WalletLockable {
         emit SettlePaymentByProxyEvent(msg.sender, wallet, payment);
     }
 
-    function _settleTrade(address wallet, NahmiiTypesLib.Trade trade)
+    function _settleTrade(address wallet, TradeTypesLib.Trade trade)
     private
     onlySealedTrade(trade)
     {
@@ -291,7 +293,7 @@ FraudChallengable, WalletLockable {
         else
             settlement.target.done = true;
 
-        NahmiiTypesLib.TradeParty memory party = validator.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
+        TradeTypesLib.TradeParty memory party = validator.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
 
         // If wallet has previously settled balance of the intended currency with higher driip nonce, then don't
         // settle its balance again
@@ -342,7 +344,7 @@ FraudChallengable, WalletLockable {
             maxDriipNonce = trade.nonce;
     }
 
-    function _settlePayment(address wallet, NahmiiTypesLib.Payment payment)
+    function _settlePayment(address wallet, PaymentTypesLib.Payment payment)
     private
     onlySealedPayment(payment)
     {
@@ -427,7 +429,7 @@ FraudChallengable, WalletLockable {
             maxDriipNonce = payment.nonce;
     }
 
-    function getSettlementRoleFromTrade(NahmiiTypesLib.Trade trade, address wallet)
+    function getSettlementRoleFromTrade(TradeTypesLib.Trade trade, address wallet)
     private
     pure
     returns (SettlementTypesLib.SettlementRole)
@@ -437,7 +439,7 @@ FraudChallengable, WalletLockable {
         SettlementTypesLib.SettlementRole.Target);
     }
 
-    function getSettlementRoleFromPayment(NahmiiTypesLib.Payment payment, address wallet)
+    function getSettlementRoleFromPayment(PaymentTypesLib.Payment payment, address wallet)
     private
     pure
     returns (SettlementTypesLib.SettlementRole)

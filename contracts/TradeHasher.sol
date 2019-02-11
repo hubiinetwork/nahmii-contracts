@@ -11,6 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 
 /**
@@ -139,7 +140,7 @@ contract TradeHasher is Ownable {
     }
 
     function hashIntendedConjugateSingleTotalInt256(
-        TradeTypesLib.IntendedConjugateSingleTotalInt256 intededConjugateSingleTotalInt256)
+        NahmiiTypesLib.IntendedConjugateSingleTotalInt256 intededConjugateSingleTotalInt256)
     public
     pure
     returns (bytes32)
@@ -153,7 +154,7 @@ contract TradeHasher is Ownable {
     }
 
     function hashCurrentPreviousInt256(
-        TradeTypesLib.CurrentPreviousInt256 currentPreviousInt256)
+        NahmiiTypesLib.CurrentPreviousInt256 currentPreviousInt256)
     public
     pure
     returns (bytes32)
@@ -165,7 +166,7 @@ contract TradeHasher is Ownable {
     }
 
     function hashIntendedConjugateCurrentPreviousInt256(
-        TradeTypesLib.IntendedConjugateCurrentPreviousInt256 intendedConjugateCurrentPreviousInt256)
+        NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 intendedConjugateCurrentPreviousInt256)
     public
     pure
     returns (bytes32)
@@ -190,7 +191,7 @@ contract TradeHasher is Ownable {
             ));
     }
 
-    function hashOriginFigures(TradeTypesLib.OriginFigure[] originFigures)
+    function hashOriginFigures(NahmiiTypesLib.OriginFigure[] originFigures)
     public
     pure
     returns (bytes32)
@@ -225,7 +226,7 @@ contract TradeHasher is Ownable {
         return keccak256(abi.encodePacked(_address));
     }
 
-    function hashSignature(TradeTypesLib.Signature signature)
+    function hashSignature(NahmiiTypesLib.Signature signature)
     public
     pure
     returns (bytes32)

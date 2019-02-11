@@ -9,7 +9,8 @@
 pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
-import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "../PaymentTypesLib.sol";
+import {TradeTypesLib} from "../TradeTypesLib.sol";
 
 /**
  * @title MockedDriipSettlementDispute
@@ -30,26 +31,26 @@ contract MockedDriipSettlementDispute {
         _challengeByPaymentCount = 0;
     }
 
-    function challengeByOrder(NahmiiTypesLib.Order, address)
+    function challengeByOrder(TradeTypesLib.Order, address)
     public
     {
         _challengeByOrderCount++;
     }
 
-    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order, NahmiiTypesLib.Trade,
+    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order, TradeTypesLib.Trade,
         address)
     public
     {
         _unchallengeOrderCandidateByTradeCount++;
     }
 
-    function challengeByTrade(address, NahmiiTypesLib.Trade, address)
+    function challengeByTrade(address, TradeTypesLib.Trade, address)
     public
     {
         _challengeByTradeCount++;
     }
 
-    function challengeByPayment(address, NahmiiTypesLib.Payment, address)
+    function challengeByPayment(address, PaymentTypesLib.Payment, address)
     public
     {
         _challengeByPaymentCount++;

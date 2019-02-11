@@ -20,6 +20,8 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 
@@ -78,7 +80,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// @param challenger The address of the challenger
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
-    function challengeByOrder(NahmiiTypesLib.Order order, address challenger) public
+    function challengeByOrder(TradeTypesLib.Order order, address challenger) public
     onlyDriipSettlementChallenge
     onlySealedOrder(order)
     {
@@ -136,7 +138,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
     /// @param unchallenger The address of the unchallenger
-    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade, address unchallenger)
+    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order order, TradeTypesLib.Trade trade, address unchallenger)
     public
     onlyDriipSettlementChallenge
     onlySealedOrder(order)
@@ -210,7 +212,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// @param challenger The address of the challenger
     /// @dev If wallet is buyer in (candidate) trade consider single _conjugate_ transfer in (candidate) trade. Else
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
-    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade, address challenger)
+    function challengeByTrade(address wallet, TradeTypesLib.Trade trade, address challenger)
     public
     onlyDriipSettlementChallenge
     onlySealedTrade(trade)
@@ -270,7 +272,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// @param wallet The concerned party
     /// @param payment The payment candidate that challenges the challenged driip
     /// @param challenger The address of the challenger
-    function challengeByPayment(address wallet, NahmiiTypesLib.Payment payment, address challenger)
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment, address challenger)
     public
     onlyDriipSettlementChallenge
     onlySealedPayment(payment)
@@ -324,12 +326,12 @@ FraudChallengable, CancelOrdersChallengable {
     // Get the candidate order currency
     // Buy order -> Conjugate currency
     // Sell order -> Intended currency
-    function _orderCurrency(NahmiiTypesLib.Order order)
+    function _orderCurrency(TradeTypesLib.Order order)
     private
     pure
     returns (MonetaryTypesLib.Currency)
     {
-        return NahmiiTypesLib.Intention.Sell == order.placement.intention ?
+        return TradeTypesLib.Intention.Sell == order.placement.intention ?
         order.placement.currencies.intended :
         order.placement.currencies.conjugate;
     }
@@ -337,17 +339,17 @@ FraudChallengable, CancelOrdersChallengable {
     // Get the candidate order transfer
     // Buy order -> Conjugate transfer
     // Sell order -> Intended transfer
-    function _orderTransferAmount(NahmiiTypesLib.Order order)
+    function _orderTransferAmount(TradeTypesLib.Order order)
     private
     pure
     returns (int256)
     {
-        return NahmiiTypesLib.Intention.Sell == order.placement.intention ?
+        return TradeTypesLib.Intention.Sell == order.placement.intention ?
         order.placement.amount :
         order.placement.amount.div(order.placement.rate);
     }
 
-    function _tradeOrderHash(NahmiiTypesLib.Trade trade, address wallet)
+    function _tradeOrderHash(TradeTypesLib.Trade trade, address wallet)
     private
     view
     returns (bytes32)
@@ -360,7 +362,7 @@ FraudChallengable, CancelOrdersChallengable {
     // Get the candidate trade currency
     // Wallet is buyer in (candidate) trade -> Conjugate currency
     // Wallet is seller in (candidate) trade -> Intended currency
-    function _tradeCurrency(NahmiiTypesLib.Trade trade, address wallet)
+    function _tradeCurrency(TradeTypesLib.Trade trade, address wallet)
     private
     view
     returns (MonetaryTypesLib.Currency)
@@ -373,7 +375,7 @@ FraudChallengable, CancelOrdersChallengable {
     // Get the candidate trade transfer amount
     // Wallet is buyer in (candidate) trade -> Conjugate transfer
     // Wallet is seller in (candidate) trade -> Intended transfer
-    function _tradeTransferAmount(NahmiiTypesLib.Trade trade, address wallet)
+    function _tradeTransferAmount(TradeTypesLib.Trade trade, address wallet)
     private
     view
     returns (int256)
@@ -386,7 +388,7 @@ FraudChallengable, CancelOrdersChallengable {
     // Get the candidate trade balance amount
     // Wallet is buyer in (candidate) trade -> Buyer's conjugate balance
     // Wallet is seller in (candidate) trade -> Seller's intended balance
-    function _tradeBalanceAmount(NahmiiTypesLib.Trade trade, address wallet)
+    function _tradeBalanceAmount(TradeTypesLib.Trade trade, address wallet)
     private
     view
     returns (int256)

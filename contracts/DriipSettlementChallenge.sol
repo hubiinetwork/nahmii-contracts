@@ -18,6 +18,8 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
@@ -150,7 +152,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     /// @param trade The challenged trade
     /// @param intendedStageAmount Amount of intended currency to be staged
     /// @param conjugateStageAmount Amount of conjugate currency to be staged
-    function startChallengeFromTrade(NahmiiTypesLib.Trade trade, int256 intendedStageAmount,
+    function startChallengeFromTrade(TradeTypesLib.Trade trade, int256 intendedStageAmount,
         int256 conjugateStageAmount)
     public
     {
@@ -169,7 +171,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     /// @param trade The challenged trade
     /// @param intendedStageAmount Amount of intended currency to be staged
     /// @param conjugateStageAmount Amount of conjugate currency to be staged
-    function startChallengeFromTradeByProxy(address wallet, NahmiiTypesLib.Trade trade, int256 intendedStageAmount,
+    function startChallengeFromTradeByProxy(address wallet, TradeTypesLib.Trade trade, int256 intendedStageAmount,
         int256 conjugateStageAmount)
     public
     onlyOperator
@@ -184,7 +186,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     /// @notice Start settlement challenge on payment
     /// @param payment The challenged payment
     /// @param stageAmount Amount of payment currency to be staged
-    function startChallengeFromPayment(NahmiiTypesLib.Payment payment, int256 stageAmount)
+    function startChallengeFromPayment(PaymentTypesLib.Payment payment, int256 stageAmount)
     public
     {
         // Require that wallet is not temporarily disqualified
@@ -201,7 +203,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     /// @param wallet The concerned party
     /// @param payment The challenged payment
     /// @param stageAmount Amount of payment currency to be staged
-    function startChallengeFromPaymentByProxy(address wallet, NahmiiTypesLib.Payment payment, int256 stageAmount)
+    function startChallengeFromPaymentByProxy(address wallet, PaymentTypesLib.Payment payment, int256 stageAmount)
     public
     onlyOperator
     {
@@ -518,7 +520,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
 
     /// @notice Challenge the settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged driip
-    function challengeByOrder(NahmiiTypesLib.Order order)
+    function challengeByOrder(TradeTypesLib.Order order)
     public
     onlyOperationalModeNormal
     {
@@ -528,7 +530,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     /// @notice Unchallenge settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
-    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order order, NahmiiTypesLib.Trade trade)
+    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order order, TradeTypesLib.Trade trade)
     public
     onlyOperationalModeNormal
     {
@@ -538,7 +540,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     /// @notice Challenge the settlement by providing trade candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param trade The trade candidate that challenges the challenged driip
-    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade)
+    function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
     public
     onlyOperationalModeNormal
     {
@@ -548,7 +550,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     /// @notice Challenge the settlement by providing payment candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param payment The payment candidate that challenges the challenged driip
-    function challengeByPayment(address wallet, NahmiiTypesLib.Payment payment)
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
     {
@@ -558,7 +560,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _startChallengeFromTrade(address wallet, NahmiiTypesLib.Trade trade,
+    function _startChallengeFromTrade(address wallet, TradeTypesLib.Trade trade,
         int256 intendedStageAmount, int256 conjugateStageAmount, bool balanceReward)
     private
     onlySealedTrade(trade)
@@ -589,7 +591,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         challengeTradeHashIndicesByWallet[wallet].push(challengeTradeHashes.length);
     }
 
-    function _startChallengeFromPayment(address wallet, NahmiiTypesLib.Payment payment,
+    function _startChallengeFromPayment(address wallet, PaymentTypesLib.Payment payment,
         int256 stageAmount, bool balanceReward)
     private
     onlySealedPayment(payment)
@@ -618,7 +620,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         challengePaymentHashIndicesByWallet[wallet].push(challengePaymentHashes.length);
     }
 
-    function _addIntendedProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
+    function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
     private
     {
         _addProposalFromTrade(
@@ -628,7 +630,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         );
     }
 
-    function _addConjugateProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
+    function _addConjugateProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
     private
     {
         _addProposalFromTrade(
@@ -638,7 +640,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         );
     }
 
-    function _addProposalFromTrade(address wallet, NahmiiTypesLib.Trade trade, int256 stageAmount,
+    function _addProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount,
         int256 balanceAmount, MonetaryTypesLib.Currency currency, bool balanceReward)
     private
     {
@@ -669,7 +671,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         proposalIndicesByWallet[wallet].push(proposals.length);
     }
 
-    function _addProposalFromPayment(address wallet, NahmiiTypesLib.Payment payment, int256 stageAmount,
+    function _addProposalFromPayment(address wallet, PaymentTypesLib.Payment payment, int256 stageAmount,
         bool balanceReward)
     private
     {
@@ -703,7 +705,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         proposalIndicesByWallet[wallet].push(proposals.length);
     }
 
-    function _tradeIntendedBalanceAmount(NahmiiTypesLib.Trade trade, address wallet)
+    function _tradeIntendedBalanceAmount(TradeTypesLib.Trade trade, address wallet)
     private
     view
     returns (int256)
@@ -713,7 +715,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         trade.seller.balances.intended.current;
     }
 
-    function _tradeConjugateBalanceAmount(NahmiiTypesLib.Trade trade, address wallet)
+    function _tradeConjugateBalanceAmount(TradeTypesLib.Trade trade, address wallet)
     private
     view
     returns (int256)
@@ -723,7 +725,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, Validatable, WalletLock
         trade.seller.balances.conjugate.current;
     }
 
-    function _paymentBalanceAmount(NahmiiTypesLib.Payment payment, address wallet)
+    function _paymentBalanceAmount(PaymentTypesLib.Payment payment, address wallet)
     private
     view
     returns (int256)

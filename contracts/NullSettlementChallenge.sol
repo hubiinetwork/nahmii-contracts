@@ -17,7 +17,8 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDispute} from "./NullSettlementDispute.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
@@ -374,7 +375,7 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
 
     /// @notice Challenge the settlement by providing order candidate
     /// @param order The order candidate that challenges the null
-    function challengeByOrder(NahmiiTypesLib.Order order)
+    function challengeByOrder(TradeTypesLib.Order order)
     public
     onlyOperationalModeNormal
     {
@@ -384,7 +385,7 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     /// @notice Challenge the settlement by providing trade candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param trade The trade candidate that challenges the null
-    function challengeByTrade(address wallet, NahmiiTypesLib.Trade trade)
+    function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
     public
     onlyOperationalModeNormal
     {
@@ -394,7 +395,7 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     /// @notice Challenge the settlement by providing payment candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param payment The payment candidate that challenges the null
-    function challengeByPayment(address wallet, NahmiiTypesLib.Payment payment)
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
     {

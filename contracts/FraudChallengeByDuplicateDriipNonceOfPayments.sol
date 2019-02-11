@@ -14,7 +14,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 
 /**
  * @title FraudChallengeByDuplicateDriipNonceOfPayments
@@ -42,8 +42,8 @@ SecurityBondable {
     /// @param payment1 First payment with duplicate driip nonce
     /// @param payment2 Second payment with duplicate driip nonce
     function challenge(
-        NahmiiTypesLib.Payment payment1,
-        NahmiiTypesLib.Payment payment2
+        PaymentTypesLib.Payment payment1,
+        PaymentTypesLib.Payment payment2
     )
     public
     onlyOperationalModeNormal
