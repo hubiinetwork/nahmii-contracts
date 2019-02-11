@@ -9,48 +9,47 @@
 pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
-import {Hasher} from "./Hasher.sol";
+import {TradeHasher} from "./TradeHasher.sol";
 
-// TODO Remove
 /**
- * @title Hashable
- * @notice An ownable that has a hasher property
+ * @title TradeHashable
+ * @notice An ownable that has a trade hasher property
  */
-contract Hashable is Ownable {
+contract TradeHashable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Hasher public hasher;
+    TradeHasher public tradeHasher;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetHasherEvent(Hasher oldHasher, Hasher newHasher);
+    event SetTradeHasherEvent(TradeHasher oldTradeHasher, TradeHasher newTradeHasher);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Set the hasher contract
-    /// @param newHasher The (address of) Hasher contract instance
-    function setHasher(Hasher newHasher)
+    /// @notice Set the trade hasher contract
+    /// @param newTradeHasher The (address of) TradeHasher contract instance
+    function setTradeHasher(TradeHasher newTradeHasher)
     public
     onlyDeployer
-    notNullAddress(newHasher)
-    notSameAddresses(newHasher, hasher)
+    notNullAddress(newTradeHasher)
+    notSameAddresses(newTradeHasher, tradeHasher)
     {
-        //set new hasher
-        Hasher oldHasher = hasher;
-        hasher = newHasher;
+        // Set new trade hasher
+        TradeHasher oldTradeHasher = tradeHasher;
+        tradeHasher = newTradeHasher;
 
         // Emit event
-        emit SetHasherEvent(oldHasher, newHasher);
+        emit SetTradeHasherEvent(oldTradeHasher, newTradeHasher);
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier hasherInitialized() {
-        require(hasher != address(0));
+    modifier tradeHasherInitialized() {
+        require(tradeHasher != address(0));
         _;
     }
 }
