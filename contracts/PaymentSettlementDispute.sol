@@ -23,7 +23,7 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
-import {DriipSettlementState} from "./DriipSettlementState.sol";
+import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 
 /**
  * @title PaymentSettlementDispute
@@ -43,13 +43,13 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    DriipSettlementState public driipSettlementState;
+    DriipSettlementChallengeState public driipSettlementChallengeState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
-        DriipSettlementState newDriipSettlementState);
+    event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
+        DriipSettlementChallengeState newDriipSettlementChallengeState);
     event ChallengeByPaymentEvent(address wallet, PaymentTypesLib.Payment payment,
         address challenger);
 
@@ -60,14 +60,14 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     }
 
     /// @notice Set the driip settlement state contract
-    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
-    function setDriipSettlementState(DriipSettlementState newDriipSettlementState) public
+    /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
+    function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState) public
     onlyDeployer
-    notNullAddress(newDriipSettlementState)
+    notNullAddress(newDriipSettlementChallengeState)
     {
-        DriipSettlementState oldDriipSettlementState = driipSettlementState;
-        driipSettlementState = newDriipSettlementState;
-        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+        DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
+        driipSettlementChallengeState = newDriipSettlementChallengeState;
+        emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
     }
 
     /// @notice Challenge the driip settlement by providing payment candidate
@@ -85,21 +85,21 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
 
         // Require that proposal has not expired
-        require(!driipSettlementState.hasProposalExpired(wallet, payment.currency));
+        require(!driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
-        require(payment.blockNumber >= driipSettlementState.proposalBlockNumber(
+        require(payment.blockNumber >= driipSettlementChallengeState.proposalBlockNumber(
             wallet, payment.currency
         ));
-        require(payment.blockNumber >= driipSettlementState.proposalDisqualificationBlockNumber(
+        require(payment.blockNumber >= driipSettlementChallengeState.proposalDisqualificationBlockNumber(
             wallet, payment.currency
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for the provided payment to be a valid challenge candidate.
-        require(payment.transfers.single > driipSettlementState.proposalTargetBalanceAmount(
+        require(payment.transfers.single > driipSettlementChallengeState.proposalTargetBalanceAmount(
             wallet, payment.currency
         ));
 
@@ -107,7 +107,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger, 0);
 
         // Disqualify proposal, effectively overriding any previous disqualification
-        driipSettlementState.disqualifyProposal(
+        driipSettlementChallengeState.disqualifyProposal(
             wallet, payment.currency, challenger, payment.blockNumber,
             payment.seals.operator.hash, SettlementTypesLib.CandidateType.Payment
         );
@@ -124,7 +124,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
-        if (driipSettlementState.proposalBalanceReward(wallet, currency))
+        if (driipSettlementChallengeState.proposalBalanceReward(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
@@ -136,12 +136,12 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     private
     {
         // Unlock wallet/currency for existing challenger if previously locked
-        if (SettlementTypesLib.Status.Disqualified == driipSettlementState.proposalStatus(
+        if (SettlementTypesLib.Status.Disqualified == driipSettlementChallengeState.proposalStatus(
             wallet, currency
         ))
             walletLocker.unlockFungibleByProxy(
                 wallet,
-                driipSettlementState.proposalDisqualificationChallenger(
+                driipSettlementChallengeState.proposalDisqualificationChallenger(
                     wallet, currency
                 ),
                 currency.ct, currency.id
@@ -161,11 +161,11 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     private
     {
         // Deprive existing challenger of reward if previously locked
-        if (SettlementTypesLib.Status.Disqualified == driipSettlementState.proposalStatus(
+        if (SettlementTypesLib.Status.Disqualified == driipSettlementChallengeState.proposalStatus(
             wallet, currency
         ))
             securityBond.depriveAbsolute(
-                driipSettlementState.proposalDisqualificationChallenger(
+                driipSettlementChallengeState.proposalDisqualificationChallenger(
                     wallet, currency
                 ),
                 currency.ct, currency.id

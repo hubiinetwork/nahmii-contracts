@@ -31,6 +31,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 /**
  * @title DriipSettlement
  * @notice Where driip settlements are finalized
+ * @dev This contract is deprecated in favor of PaymentSettlement and TradeSettlement
  */
 contract DriipSettlement is Ownable, Configurable, ValidatableV2, ClientFundable, CommunityVotable,
 FraudChallengable, WalletLockable {
@@ -339,7 +340,7 @@ FraudChallengable, WalletLockable {
         if (address(0) != address(tradesRevenueFund))
             stageFees(wallet, party.fees.total, tradesRevenueFund, trade.nonce);
 
-        // If payment nonce is beyond max driip nonce then update max driip nonce
+        // If trade nonce is beyond max driip nonce then update max driip nonce
         if (trade.nonce > maxDriipNonce)
             maxDriipNonce = trade.nonce;
     }

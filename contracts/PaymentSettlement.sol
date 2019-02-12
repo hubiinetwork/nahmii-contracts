@@ -18,7 +18,7 @@ import {FraudChallengable} from "./FraudChallengable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {PartnerFund} from "./PartnerFund.sol";
-import {DriipSettlementState} from "./DriipSettlementState.sol";
+import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -49,7 +49,7 @@ FraudChallengable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     uint256 public maxDriipNonce;
 
-    DriipSettlementState public driipSettlementState;
+    DriipSettlementChallengeState public driipSettlementChallengeState;
     RevenueFund public paymentsRevenueFund;
     PartnerFund public partnerFund;
 
@@ -66,8 +66,8 @@ FraudChallengable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     event SettlePaymentEvent(address wallet, PaymentTypesLib.Payment payment);
     event SettlePaymentByProxyEvent(address proxy, address wallet, PaymentTypesLib.Payment payment);
-    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
-        DriipSettlementState newDriipSettlementState);
+    event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
+        DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetPaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event SetPartnerFundEvent(PartnerFund oldPartnerFund, PartnerFund newPartnerFund);
     event StageFeesEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
@@ -83,14 +83,14 @@ FraudChallengable, WalletLockable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the driip settlement challenge contract
-    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
-    function setDriipSettlementState(DriipSettlementState newDriipSettlementState) public
+    /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
+    function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState) public
     onlyDeployer
-    notNullAddress(newDriipSettlementState)
+    notNullAddress(newDriipSettlementChallengeState)
     {
-        DriipSettlementState oldDriipSettlementState = driipSettlementState;
-        driipSettlementState = newDriipSettlementState;
-        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+        DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
+        driipSettlementChallengeState = newDriipSettlementChallengeState;
+        emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
     }
 
     /// @notice Set the payments revenue fund contract
@@ -209,15 +209,15 @@ FraudChallengable, WalletLockable {
         require(!walletLocker.isLocked(wallet));
 
         // Require that proposal has expired
-        require(driipSettlementState.hasProposalExpired(wallet, payment.currency));
+        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Require that driip settlement challenge proposal qualified
-        require(SettlementTypesLib.Status.Qualified == driipSettlementState.proposalStatus(
+        require(SettlementTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
             wallet, payment.currency
         ));
 
         // Require that the wallet's current driip settlement challenge is wrt this payment
-        require(payment.nonce == driipSettlementState.proposalNonce(wallet, payment.currency));
+        require(payment.nonce == driipSettlementChallengeState.proposalNonce(wallet, payment.currency));
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce
@@ -268,7 +268,7 @@ FraudChallengable, WalletLockable {
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
-                wallet, driipSettlementState.proposalStageAmount(wallet, payment.currency),
+                wallet, driipSettlementChallengeState.proposalStageAmount(wallet, payment.currency),
                 payment.currency.ct, payment.currency.id, ""
             );
         }

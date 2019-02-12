@@ -19,10 +19,10 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
- * @title DriipSettlementState
- * @notice Where driip settlement state is managed
+ * @title DriipSettlementChallengeState
+ * @notice Where driip settlement challenge state is managed
  */
-contract DriipSettlementState is Ownable, Servable, Configurable {
+contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 

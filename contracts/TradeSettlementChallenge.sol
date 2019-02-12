@@ -16,7 +16,7 @@ import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {TradeSettlementDispute} from "./TradeSettlementDispute.sol";
-import {DriipSettlementState} from "./DriipSettlementState.sol";
+import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
@@ -34,15 +34,15 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     TradeSettlementDispute public tradeSettlementDispute;
-    DriipSettlementState public driipSettlementState;
+    DriipSettlementChallengeState public driipSettlementChallengeState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetTradeSettlementDisputeEvent(TradeSettlementDispute oldTradeSettlementDispute,
         TradeSettlementDispute newTradeSettlementDispute);
-    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
-        DriipSettlementState newDriipSettlementState);
+    event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
+        DriipSettlementChallengeState newDriipSettlementChallengeState);
     event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
     event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
@@ -70,15 +70,15 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     }
 
     /// @notice Set the settlement state contract
-    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
-    function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
+    /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
+    function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementState)
+    notNullAddress(newDriipSettlementChallengeState)
     {
-        DriipSettlementState oldDriipSettlementState = driipSettlementState;
-        driipSettlementState = newDriipSettlementState;
-        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+        DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
+        driipSettlementChallengeState = newDriipSettlementChallengeState;
+        emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
     }
 
     /// @notice Start settlement challenge on trade
@@ -126,7 +126,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (bool)
     {
-        return driipSettlementState.hasProposalExpired(
+        return driipSettlementChallengeState.hasProposalExpired(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -141,7 +141,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (uint256)
     {
-        return driipSettlementState.proposalNonce(
+        return driipSettlementChallengeState.proposalNonce(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -156,7 +156,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (uint256)
     {
-        return driipSettlementState.proposalBlockNumber(
+        return driipSettlementChallengeState.proposalBlockNumber(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -171,7 +171,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (uint256)
     {
-        return driipSettlementState.proposalExpirationTime(
+        return driipSettlementChallengeState.proposalExpirationTime(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -186,7 +186,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (SettlementTypesLib.Status)
     {
-        return driipSettlementState.proposalStatus(
+        return driipSettlementChallengeState.proposalStatus(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -201,7 +201,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (int256)
     {
-        return driipSettlementState.proposalStageAmount(
+        return driipSettlementChallengeState.proposalStageAmount(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -216,7 +216,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (int256)
     {
-        return driipSettlementState.proposalTargetBalanceAmount(
+        return driipSettlementChallengeState.proposalTargetBalanceAmount(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -231,7 +231,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (bytes32)
     {
-        return driipSettlementState.proposalDriipHash(
+        return driipSettlementChallengeState.proposalDriipHash(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -246,7 +246,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (NahmiiTypesLib.DriipType)
     {
-        return driipSettlementState.proposalDriipType(
+        return driipSettlementChallengeState.proposalDriipType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -261,7 +261,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (bool)
     {
-        return driipSettlementState.proposalBalanceReward(
+        return driipSettlementChallengeState.proposalBalanceReward(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -276,7 +276,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (address)
     {
-        return driipSettlementState.proposalDisqualificationChallenger(
+        return driipSettlementChallengeState.proposalDisqualificationChallenger(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -290,7 +290,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (uint256)
     {
-        return driipSettlementState.proposalDisqualificationBlockNumber(
+        return driipSettlementChallengeState.proposalDisqualificationBlockNumber(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -305,7 +305,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (SettlementTypesLib.CandidateType)
     {
-        return driipSettlementState.proposalDisqualificationCandidateType(
+        return driipSettlementChallengeState.proposalDisqualificationCandidateType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -320,7 +320,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     view
     returns (bytes32)
     {
-        return driipSettlementState.proposalDisqualificationCandidateHash(
+        return driipSettlementChallengeState.proposalDisqualificationCandidateHash(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -370,10 +370,10 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
 
         // Require that wallet has no overlap with active proposals
         require(
-            driipSettlementState.hasProposalExpired(wallet, trade.currencies.intended)
+            driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended)
         );
         require(
-            driipSettlementState.hasProposalExpired(wallet, trade.currencies.conjugate)
+            driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate)
         );
 
         // Create proposals
@@ -391,7 +391,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         require(balanceAmount >= stageAmount);
 
         // Add proposal
-        driipSettlementState.addProposalFromDriip(
+        driipSettlementChallengeState.addProposalFromDriip(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended, trade.nonce,
             trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
         );
@@ -407,7 +407,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         require(balanceAmount >= stageAmount);
 
         // Add proposal
-        driipSettlementState.addProposalFromDriip(
+        driipSettlementChallengeState.addProposalFromDriip(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate, trade.nonce,
             trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
         );
