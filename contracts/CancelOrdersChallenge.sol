@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {Challenge} from "./Challenge.sol";
-import {Validatable} from "./Validatable.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {Ownable} from "./Ownable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
@@ -21,7 +21,7 @@ import {TradeTypesLib} from "./TradeTypesLib.sol";
  * @title CancelOrdersChallenge
  * @notice Where orders are cancelled and cancellations challenged
  */
-contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
+contract CancelOrdersChallenge is Ownable, Challenge, ValidatableV2 {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 

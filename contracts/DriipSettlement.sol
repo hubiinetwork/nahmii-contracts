@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Validatable} from "./Validatable.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
@@ -32,7 +32,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
  * @title DriipSettlement
  * @notice Where driip settlements are finalized
  */
-contract DriipSettlement is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable,
+contract DriipSettlement is Ownable, Configurable, ValidatableV2, ClientFundable, CommunityVotable,
 FraudChallengable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Challenge} from "./Challenge.sol";
-import {Validatable} from "./Validatable.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
@@ -24,7 +24,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
  * @title FraudChallengeByTradeSucceedingPayment
  * @notice Where driips are challenged wrt fraud by mismatch in trade succeeding payment
  */
-contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Challenge, Validatable,
+contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, Challenge, ValidatableV2,
 SecurityBondable, WalletLockable {
     using SafeMathIntLib for int256;
 

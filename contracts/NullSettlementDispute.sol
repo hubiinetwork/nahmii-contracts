@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Validatable} from "./Validatable.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
@@ -29,7 +29,7 @@ import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
  * @title NullSettlementDispute
  * @notice The workhorse of null settlement challenges, utilized by NullSettlementChallenge
  */
-contract NullSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
+contract NullSettlementDispute is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
 FraudChallengable, CancelOrdersChallengable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
