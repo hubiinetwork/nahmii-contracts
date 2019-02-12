@@ -16,6 +16,7 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
+import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
@@ -23,7 +24,6 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
-import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {DriipSettlementState} from "./DriipSettlementState.sol";
 
 /**
@@ -31,21 +31,26 @@ import {DriipSettlementState} from "./DriipSettlementState.sol";
  * @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
  */
 contract DriipSettlementDispute is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
-FraudChallengable, CancelOrdersChallengable {
+FraudChallengable, CancelOrdersChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
     //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant public CHALLENGE_BY_ORDER_ACTION = "challenge_by_order";
+    string constant public UNCHALLENGE_ORDER_CANDIDATE_BY_TRADE_ACTION = "unchallenge_order_candidate_by_trade";
+    string constant public CHALLENGE_BY_TRADE_ACTION = "challenge_by_trade";
+    string constant public CHALLENGE_BY_PAYMENT_ACTION = "challenge_by_payment";
+
+    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    DriipSettlementChallenge public driipSettlementChallenge; // TODO Remove if possible
     DriipSettlementState public driipSettlementState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
-        DriipSettlementChallenge newDriipSettlementChallenge);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
         DriipSettlementState newDriipSettlementState);
     event ChallengeByOrderEvent(address wallet, uint256 nonce,
@@ -68,17 +73,6 @@ FraudChallengable, CancelOrdersChallengable {
     constructor(address deployer) Ownable(deployer) public {
     }
 
-    /// @notice Set the driip settlement challenge contract
-    /// @param newDriipSettlementChallenge The (address of) DriipSettlementChallenge contract instance
-    function setDriipSettlementChallenge(DriipSettlementChallenge newDriipSettlementChallenge) public
-    onlyDeployer
-    notNullAddress(newDriipSettlementChallenge)
-    {
-        DriipSettlementChallenge oldDriipSettlementChallenge = driipSettlementChallenge;
-        driipSettlementChallenge = newDriipSettlementChallenge;
-        emit SetDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
-    }
-
     /// @notice Set the driip settlement state contract
     /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
     function setDriipSettlementState(DriipSettlementState newDriipSettlementState) public
@@ -96,7 +90,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
     function challengeByOrder(TradeTypesLib.Order order, address challenger) public
-    onlyDriipSettlementChallenge
+    onlyEnabledServiceAction(CHALLENGE_BY_ORDER_ACTION)
     onlySealedOrder(order)
     {
         // Require that candidate order is not labelled fraudulent or cancelled
@@ -155,7 +149,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// @param unchallenger The address of the unchallenger
     function unchallengeOrderCandidateByTrade(TradeTypesLib.Order order, TradeTypesLib.Trade trade, address unchallenger)
     public
-    onlyDriipSettlementChallenge
+    onlyEnabledServiceAction(UNCHALLENGE_ORDER_CANDIDATE_BY_TRADE_ACTION)
     onlySealedOrder(order)
     onlySealedTrade(trade)
     onlyTradeParty(trade, order.wallet)
@@ -210,15 +204,16 @@ FraudChallengable, CancelOrdersChallengable {
         // Reward unchallenger
         securityBond.rewardFractional(unchallenger, configuration.walletSettlementStakeFraction(), 0);
 
+        // TODO Uncomment below and refactor function if contract is needed
         // Emit event
-        emit UnchallengeOrderCandidateByTradeEvent(
-            order.wallet,
-            driipSettlementState.proposalNonce(order.wallet, currency),
-            driipSettlementState.proposalDriipHash(order.wallet, currency),
-            driipSettlementState.proposalDriipType(order.wallet, currency),
-            candidateHash, challenger,
-            trade.seal.hash, unchallenger
-        );
+//        emit UnchallengeOrderCandidateByTradeEvent(
+//            order.wallet,
+//            driipSettlementState.proposalNonce(order.wallet, currency),
+//            driipSettlementState.proposalDriipHash(order.wallet, currency),
+//            driipSettlementState.proposalDriipType(order.wallet, currency),
+//            candidateHash, challenger,
+//            trade.seal.hash, unchallenger
+//        );
     }
 
     /// @notice Challenge the driip settlement by providing trade candidate
@@ -229,7 +224,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
     function challengeByTrade(address wallet, TradeTypesLib.Trade trade, address challenger)
     public
-    onlyDriipSettlementChallenge
+    onlyEnabledServiceAction(CHALLENGE_BY_TRADE_ACTION)
     onlySealedTrade(trade)
     onlyTradeParty(trade, wallet)
     {
@@ -289,7 +284,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// @param challenger The address of the challenger
     function challengeByPayment(address wallet, PaymentTypesLib.Payment payment, address challenger)
     public
-    onlyDriipSettlementChallenge
+    onlyEnabledServiceAction(CHALLENGE_BY_PAYMENT_ACTION)
     onlySealedPayment(payment)
     onlyPaymentSender(payment, wallet)
     {
@@ -487,14 +482,5 @@ FraudChallengable, CancelOrdersChallengable {
     {
         (int256 amount, address currencyCt, uint256 currencyId) = configuration.operatorSettlementStake();
         return MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    // TODO Replace by registered service action
-    modifier onlyDriipSettlementChallenge() {
-        require(msg.sender == address(driipSettlementChallenge));
-        _;
     }
 }
