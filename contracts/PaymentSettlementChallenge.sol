@@ -15,7 +15,7 @@ import {Validatable} from "./Validatable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
+import {PaymentSettlementDispute} from "./PaymentSettlementDispute.sol";
 import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
@@ -33,14 +33,14 @@ contract PaymentSettlementChallenge is Ownable, Challenge, Validatable, WalletLo
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    DriipSettlementDispute public driipSettlementDispute;
+    PaymentSettlementDispute public paymentSettlementDispute;
     DriipSettlementState public driipSettlementState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute,
-        DriipSettlementDispute newDriipSettlementDispute);
+    event SetPaymentSettlementDisputeEvent(PaymentSettlementDispute oldPaymentSettlementDispute,
+        PaymentSettlementDispute newPaymentSettlementDispute);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
         DriipSettlementState newDriipSettlementState);
     event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
@@ -57,15 +57,15 @@ contract PaymentSettlementChallenge is Ownable, Challenge, Validatable, WalletLo
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the settlement dispute contract
-    /// @param newDriipSettlementDispute The (address of) DriipSettlementDispute contract instance
-    function setDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute)
+    /// @param newPaymentSettlementDispute The (address of) PaymentSettlementDispute contract instance
+    function setPaymentSettlementDispute(PaymentSettlementDispute newPaymentSettlementDispute)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementDispute)
+    notNullAddress(newPaymentSettlementDispute)
     {
-        DriipSettlementDispute oldDriipSettlementDispute = driipSettlementDispute;
-        driipSettlementDispute = newDriipSettlementDispute;
-        emit SetDriipSettlementDisputeEvent(oldDriipSettlementDispute, driipSettlementDispute);
+        PaymentSettlementDispute oldPaymentSettlementDispute = paymentSettlementDispute;
+        paymentSettlementDispute = newPaymentSettlementDispute;
+        emit SetPaymentSettlementDisputeEvent(oldPaymentSettlementDispute, paymentSettlementDispute);
     }
 
     /// @notice Set the settlement state contract
@@ -327,7 +327,7 @@ contract PaymentSettlementChallenge is Ownable, Challenge, Validatable, WalletLo
     public
     onlyOperationalModeNormal
     {
-        driipSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
+        paymentSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
     }
 
     //
