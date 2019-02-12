@@ -20,6 +20,7 @@ import {WalletLockable} from "./WalletLockable.sol";
 import {TransferController} from "./TransferController.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {TokenHolderRevenueFund} from "./TokenHolderRevenueFund.sol";
+import "./ERC20TransferController.sol";
 
 /**
  * @title Client fund
@@ -523,6 +524,8 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
                 )
             );
 
+            // TODO Equip each transfer controller with standard property (so that ERC20TransferController.standard() returns "ERC20")
+            // and use controller.standard() as last parameter instead of standard argument (https://github.com/hubiinetwork/nahmii-contracts/issues/309)
             // Transfer funds to the beneficiary
             beneficiary.receiveTokensTo(destWallet, "", value, currencyCt, currencyId, standard);
         }
