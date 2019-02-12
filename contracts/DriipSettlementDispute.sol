@@ -24,6 +24,7 @@ import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
+import {DriipSettlementState} from "./DriipSettlementState.sol";
 
 /**
  * @title DriipSettlementDispute
@@ -37,13 +38,16 @@ FraudChallengable, CancelOrdersChallengable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    DriipSettlementChallenge public driipSettlementChallenge;
+    DriipSettlementChallenge public driipSettlementChallenge; // TODO Remove if possible
+    DriipSettlementState public driipSettlementState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetDriipSettlementChallengeEvent(DriipSettlementChallenge oldDriipSettlementChallenge,
         DriipSettlementChallenge newDriipSettlementChallenge);
+    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
+        DriipSettlementState newDriipSettlementState);
     event ChallengeByOrderEvent(address wallet, uint256 nonce,
         bytes32 driipHash, NahmiiTypesLib.DriipType driipType,
         bytes32 candidateHash, address challenger);
@@ -75,6 +79,17 @@ FraudChallengable, CancelOrdersChallengable {
         emit SetDriipSettlementChallengeEvent(oldDriipSettlementChallenge, driipSettlementChallenge);
     }
 
+    /// @notice Set the driip settlement state contract
+    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
+    function setDriipSettlementState(DriipSettlementState newDriipSettlementState) public
+    onlyDeployer
+    notNullAddress(newDriipSettlementState)
+    {
+        DriipSettlementState oldDriipSettlementState = driipSettlementState;
+        driipSettlementState = newDriipSettlementState;
+        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+    }
+
     /// @notice Challenge the driip settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged driip
     /// @param challenger The address of the challenger
@@ -92,22 +107,22 @@ FraudChallengable, CancelOrdersChallengable {
         MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
 
         // Require that proposal has not expired
-        require(!driipSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
+        require(!driipSettlementState.hasProposalExpired(order.wallet, currency));
 
         // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
-        require(order.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
-            order.wallet, currency.ct, currency.id
+        require(order.blockNumber >= driipSettlementState.proposalBlockNumber(
+            order.wallet, currency
         ));
-        require(order.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
-            order.wallet, currency.ct, currency.id
+        require(order.blockNumber >= driipSettlementState.proposalDisqualificationBlockNumber(
+            order.wallet, currency
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for this order to be a valid challenge candidate
-        require(_orderTransferAmount(order) > driipSettlementChallenge.proposalTargetBalanceAmount(
-            order.wallet, currency.ct, currency.id
+        require(_orderTransferAmount(order) > driipSettlementState.proposalTargetBalanceAmount(
+            order.wallet, currency
         ));
 
         // Reward challenger
@@ -118,18 +133,18 @@ FraudChallengable, CancelOrdersChallengable {
         );
 
         // Disqualify proposal, effectively overriding any previous disqualification
-        driipSettlementChallenge.disqualifyProposal(
-            order.wallet, currency.ct, currency.id, challenger, order.blockNumber,
+        driipSettlementState.disqualifyProposal(
+            order.wallet, currency, challenger, order.blockNumber,
             order.seals.operator.hash, SettlementTypesLib.CandidateType.Order
         );
 
         // Emit event
         emit ChallengeByOrderEvent(
             order.wallet,
-            driipSettlementChallenge.proposalNonce(order.wallet, currency.ct, currency.id),
-            driipSettlementChallenge.proposalDriipHash(order.wallet, currency.ct, currency.id),
-            driipSettlementChallenge.proposalDriipType(order.wallet, currency.ct, currency.id),
-            driipSettlementChallenge.proposalDisqualificationCandidateHash(order.wallet, currency.ct, currency.id),
+            driipSettlementState.proposalNonce(order.wallet, currency),
+            driipSettlementState.proposalDriipHash(order.wallet, currency),
+            driipSettlementState.proposalDriipType(order.wallet, currency),
+            driipSettlementState.proposalDisqualificationCandidateHash(order.wallet, currency),
             challenger
         );
     }
@@ -149,24 +164,24 @@ FraudChallengable, CancelOrdersChallengable {
         MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
 
         // Require that proposal has not expired
-        require(!driipSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
+        require(!driipSettlementState.hasProposalExpired(order.wallet, currency));
 
         // Require that proposal has been disqualified
-        require(SettlementTypesLib.Status.Disqualified == driipSettlementChallenge.proposalStatus(
-            order.wallet, currency.ct, currency.id
+        require(SettlementTypesLib.Status.Disqualified == driipSettlementState.proposalStatus(
+            order.wallet, currency
         ));
 
         // Require that candidate type is order
-        require(SettlementTypesLib.CandidateType.Order == driipSettlementChallenge.proposalDisqualificationCandidateType(
-            order.wallet, currency.ct, currency.id
+        require(SettlementTypesLib.CandidateType.Order == driipSettlementState.proposalDisqualificationCandidateType(
+            order.wallet, currency
         ));
 
         // Require that trade and order are not labelled fraudulent
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
         require(!fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash));
 
-        bytes32 candidateHash = driipSettlementChallenge.proposalDisqualificationCandidateHash(
-            order.wallet, currency.ct, currency.id
+        bytes32 candidateHash = driipSettlementState.proposalDisqualificationCandidateHash(
+            order.wallet, currency
         );
 
         // Require that the order's and trade' order hashes equal the candidate (order's) hash,
@@ -177,19 +192,19 @@ FraudChallengable, CancelOrdersChallengable {
         require(candidateHash == _tradeOrderHash(trade, order.wallet));
 
         // Store old challenger
-        address challenger = driipSettlementChallenge.proposalDisqualificationChallenger(
-            order.wallet, currency.ct, currency.id
+        address challenger = driipSettlementState.proposalDisqualificationChallenger(
+            order.wallet, currency
         );
 
         // Unlock wallet's balances or deprive challenger
-        if (driipSettlementChallenge.proposalBalanceReward(order.wallet, currency.ct, currency.id))
+        if (driipSettlementState.proposalBalanceReward(order.wallet, currency))
             walletLocker.unlockFungibleByProxy(order.wallet, challenger, currency.ct, currency.id);
         else
             securityBond.depriveAbsolute(challenger, currency.ct, currency.id);
 
         // Requalify proposal
-        driipSettlementChallenge.qualifyProposal(
-            order.wallet, currency.ct, currency.id
+        driipSettlementState.qualifyProposal(
+            order.wallet, currency
         );
 
         // Reward unchallenger
@@ -198,9 +213,9 @@ FraudChallengable, CancelOrdersChallengable {
         // Emit event
         emit UnchallengeOrderCandidateByTradeEvent(
             order.wallet,
-            driipSettlementChallenge.proposalNonce(order.wallet, currency.ct, currency.id),
-            driipSettlementChallenge.proposalDriipHash(order.wallet, currency.ct, currency.id),
-            driipSettlementChallenge.proposalDriipType(order.wallet, currency.ct, currency.id),
+            driipSettlementState.proposalNonce(order.wallet, currency),
+            driipSettlementState.proposalDriipHash(order.wallet, currency),
+            driipSettlementState.proposalDriipType(order.wallet, currency),
             candidateHash, challenger,
             trade.seal.hash, unchallenger
         );
@@ -229,40 +244,40 @@ FraudChallengable, CancelOrdersChallengable {
         MonetaryTypesLib.Currency memory currency = _tradeCurrency(trade, wallet);
 
         // Require that proposal has not expired
-        require(!driipSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
+        require(!driipSettlementState.hasProposalExpired(wallet, currency));
 
         // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
-        require(trade.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
-            wallet, currency.ct, currency.id
+        require(trade.blockNumber >= driipSettlementState.proposalBlockNumber(
+            wallet, currency
         ));
-        require(trade.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
-            wallet, currency.ct, currency.id
+        require(trade.blockNumber >= driipSettlementState.proposalDisqualificationBlockNumber(
+            wallet, currency
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for this trade to be a valid challenge candidate
-        require(_tradeTransferAmount(trade, wallet) > driipSettlementChallenge.proposalTargetBalanceAmount(
-            wallet, currency.ct, currency.id
+        require(_tradeTransferAmount(trade, wallet) > driipSettlementState.proposalTargetBalanceAmount(
+            wallet, currency
         ));
 
         // Reward challenger
         _settleRewards(wallet, _tradeBalanceAmount(trade, wallet), currency, challenger, 0);
 
         // Disqualify proposal, effectively overriding any previous disqualification
-        driipSettlementChallenge.disqualifyProposal(
-            wallet, currency.ct, currency.id, challenger, trade.blockNumber,
+        driipSettlementState.disqualifyProposal(
+            wallet, currency, challenger, trade.blockNumber,
             trade.seal.hash, SettlementTypesLib.CandidateType.Trade
         );
 
         // Emit event
         emit ChallengeByTradeEvent(
             wallet,
-            driipSettlementChallenge.proposalNonce(wallet, currency.ct, currency.id),
-            driipSettlementChallenge.proposalDriipHash(wallet, currency.ct, currency.id),
-            driipSettlementChallenge.proposalDriipType(wallet, currency.ct, currency.id),
-            driipSettlementChallenge.proposalDisqualificationCandidateHash(wallet, currency.ct, currency.id),
+            driipSettlementState.proposalNonce(wallet, currency),
+            driipSettlementState.proposalDriipHash(wallet, currency),
+            driipSettlementState.proposalDriipType(wallet, currency),
+            driipSettlementState.proposalDisqualificationCandidateHash(wallet, currency),
             challenger
         );
     }
@@ -282,40 +297,40 @@ FraudChallengable, CancelOrdersChallengable {
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
 
         // Require that proposal has not expired
-        require(!driipSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
+        require(!driipSettlementState.hasProposalExpired(wallet, payment.currency));
 
         // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
-        require(payment.blockNumber >= driipSettlementChallenge.proposalBlockNumber(
-            wallet, payment.currency.ct, payment.currency.id
+        require(payment.blockNumber >= driipSettlementState.proposalBlockNumber(
+            wallet, payment.currency
         ));
-        require(payment.blockNumber >= driipSettlementChallenge.proposalDisqualificationBlockNumber(
-            wallet, payment.currency.ct, payment.currency.id
+        require(payment.blockNumber >= driipSettlementState.proposalDisqualificationBlockNumber(
+            wallet, payment.currency
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for the provided payment to be a valid challenge candidate.
-        require(payment.transfers.single > driipSettlementChallenge.proposalTargetBalanceAmount(
-            wallet, payment.currency.ct, payment.currency.id
+        require(payment.transfers.single > driipSettlementState.proposalTargetBalanceAmount(
+            wallet, payment.currency
         ));
 
         // Reward challenger
         _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger, 0);
 
         // Disqualify proposal, effectively overriding any previous disqualification
-        driipSettlementChallenge.disqualifyProposal(
-            wallet, payment.currency.ct, payment.currency.id, challenger, payment.blockNumber,
+        driipSettlementState.disqualifyProposal(
+            wallet, payment.currency, challenger, payment.blockNumber,
             payment.seals.operator.hash, SettlementTypesLib.CandidateType.Payment
         );
 
         // Emit event
         emit ChallengeByPaymentEvent(
             wallet,
-            driipSettlementChallenge.proposalNonce(wallet, payment.currency.ct, payment.currency.id),
-            driipSettlementChallenge.proposalDriipHash(wallet, payment.currency.ct, payment.currency.id),
-            driipSettlementChallenge.proposalDriipType(wallet, payment.currency.ct, payment.currency.id),
-            driipSettlementChallenge.proposalDisqualificationCandidateHash(wallet, payment.currency.ct, payment.currency.id),
+            driipSettlementState.proposalNonce(wallet, payment.currency),
+            driipSettlementState.proposalDriipHash(wallet, payment.currency),
+            driipSettlementState.proposalDriipType(wallet, payment.currency),
+            driipSettlementState.proposalDisqualificationCandidateHash(wallet, payment.currency),
             challenger
         );
     }
@@ -403,7 +418,7 @@ FraudChallengable, CancelOrdersChallengable {
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
-        if (driipSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
+        if (driipSettlementState.proposalBalanceReward(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
@@ -415,13 +430,13 @@ FraudChallengable, CancelOrdersChallengable {
     private
     {
         // Unlock wallet/currency for existing challenger if previously locked
-        if (SettlementTypesLib.Status.Disqualified == driipSettlementChallenge.proposalStatus(
-            wallet, currency.ct, currency.id
+        if (SettlementTypesLib.Status.Disqualified == driipSettlementState.proposalStatus(
+            wallet, currency
         ))
             walletLocker.unlockFungibleByProxy(
                 wallet,
-                driipSettlementChallenge.proposalDisqualificationChallenger(
-                    wallet, currency.ct, currency.id
+                driipSettlementState.proposalDisqualificationChallenger(
+                    wallet, currency
                 ),
                 currency.ct, currency.id
             );
@@ -440,12 +455,12 @@ FraudChallengable, CancelOrdersChallengable {
     private
     {
         // Deprive existing challenger of reward if previously locked
-        if (SettlementTypesLib.Status.Disqualified == driipSettlementChallenge.proposalStatus(
-            wallet, currency.ct, currency.id
+        if (SettlementTypesLib.Status.Disqualified == driipSettlementState.proposalStatus(
+            wallet, currency
         ))
             securityBond.depriveAbsolute(
-                driipSettlementChallenge.proposalDisqualificationChallenger(
-                    wallet, currency.ct, currency.id
+                driipSettlementState.proposalDisqualificationChallenger(
+                    wallet, currency
                 ),
                 currency.ct, currency.id
             );
@@ -477,6 +492,7 @@ FraudChallengable, CancelOrdersChallengable {
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO Replace by registered service action
     modifier onlyDriipSettlementChallenge() {
         require(msg.sender == address(driipSettlementChallenge));
         _;
