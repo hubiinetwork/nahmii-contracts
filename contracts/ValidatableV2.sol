@@ -9,39 +9,39 @@
 pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
-import {Validator} from "./Validator.sol";
+import {ValidatorV2} from "./ValidatorV2.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 
 /**
- * @title Validatable
- * @notice An ownable that has a validator property
+ * @title ValidatableV2
+ * @notice An ownable that has a validator (V2) property
  */
-contract Validatable is Ownable {
+contract ValidatableV2 is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Validator public validator;
+    ValidatorV2 public validator;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetValidatorEvent(Validator oldValidator, Validator newValidator);
+    event SetValidatorEvent(ValidatorV2 oldValidator, ValidatorV2 newValidator);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the validator contract
     /// @param newValidator The (address of) Validator contract instance
-    function setValidator(Validator newValidator)
+    function setValidator(ValidatorV2 newValidator)
     public
     onlyDeployer
     notNullAddress(newValidator)
     notSameAddresses(newValidator, validator)
     {
         //set new validator
-        Validator oldValidator = validator;
+        ValidatorV2 oldValidator = validator;
         validator = newValidator;
 
         // Emit event
@@ -56,6 +56,21 @@ contract Validatable is Ownable {
         _;
     }
 
+    modifier onlySealedOrder(TradeTypesLib.Order order) {
+        require(validator.isGenuineOrderSeals(order));
+        _;
+    }
+
+    modifier onlyOperatorSealedOrder(TradeTypesLib.Order order) {
+        require(validator.isGenuineOrderOperatorSeal(order));
+        _;
+    }
+
+    modifier onlySealedTrade(TradeTypesLib.Trade trade) {
+        require(validator.isGenuineTradeSeal(trade));
+        _;
+    }
+
     modifier onlyOperatorSealedPayment(PaymentTypesLib.Payment payment) {
         require(validator.isGenuinePaymentOperatorSeal(payment));
         _;
@@ -63,6 +78,11 @@ contract Validatable is Ownable {
 
     modifier onlySealedPayment(PaymentTypesLib.Payment payment) {
         require(validator.isGenuinePaymentSeals(payment));
+        _;
+    }
+
+    modifier onlyTradeParty(TradeTypesLib.Trade trade, address wallet) {
+        require(validator.isTradeParty(trade, wallet));
         _;
     }
 
