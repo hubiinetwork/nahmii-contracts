@@ -15,7 +15,7 @@ import {ValidatableV2} from "./ValidatableV2.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {DriipSettlementDispute} from "./DriipSettlementDispute.sol";
+import {TradeSettlementDispute} from "./TradeSettlementDispute.sol";
 import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
@@ -33,14 +33,14 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    DriipSettlementDispute public driipSettlementDispute;
+    TradeSettlementDispute public tradeSettlementDispute;
     DriipSettlementState public driipSettlementState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetDriipSettlementDisputeEvent(DriipSettlementDispute oldDriipSettlementDispute,
-        DriipSettlementDispute newDriipSettlementDispute);
+    event SetTradeSettlementDisputeEvent(TradeSettlementDispute oldTradeSettlementDispute,
+        TradeSettlementDispute newTradeSettlementDispute);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
         DriipSettlementState newDriipSettlementState);
     event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
@@ -58,15 +58,15 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the settlement dispute contract
-    /// @param newDriipSettlementDispute The (address of) DriipSettlementDispute contract instance
-    function setDriipSettlementDispute(DriipSettlementDispute newDriipSettlementDispute)
+    /// @param newTradeSettlementDispute The (address of) TradeSettlementDispute contract instance
+    function setTradeSettlementDispute(TradeSettlementDispute newTradeSettlementDispute)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementDispute)
+    notNullAddress(newTradeSettlementDispute)
     {
-        DriipSettlementDispute oldDriipSettlementDispute = driipSettlementDispute;
-        driipSettlementDispute = newDriipSettlementDispute;
-        emit SetDriipSettlementDisputeEvent(oldDriipSettlementDispute, driipSettlementDispute);
+        TradeSettlementDispute oldTradeSettlementDispute = tradeSettlementDispute;
+        tradeSettlementDispute = newTradeSettlementDispute;
+        emit SetTradeSettlementDisputeEvent(oldTradeSettlementDispute, tradeSettlementDispute);
     }
 
     /// @notice Set the settlement state contract
@@ -331,7 +331,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     public
     onlyOperationalModeNormal
     {
-        driipSettlementDispute.challengeByOrder(order, msg.sender);
+        tradeSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
     /// @notice Unchallenge settlement by providing trade that shows that challenge order candidate has been filled
@@ -341,7 +341,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     public
     onlyOperationalModeNormal
     {
-        driipSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+        tradeSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
     /// @notice Challenge the settlement by providing trade candidate
@@ -351,7 +351,7 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     public
     onlyOperationalModeNormal
     {
-        driipSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
+        tradeSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
     //
