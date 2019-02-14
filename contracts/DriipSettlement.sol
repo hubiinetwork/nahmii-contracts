@@ -467,7 +467,7 @@ FraudChallengable, WalletLockable {
     returns (SettlementTypesLib.Settlement storage)
     {
         SettlementTypesLib.Settlement memory settlement;
-        settlement.nonce = nonce;
+        //        settlement.nonce = nonce; // NOTE Commented out in splitting of driip type specific contracts
         settlement.driipType = driipType;
         settlement.origin = SettlementTypesLib.SettlementParty(originNonce, originWallet, false);
         settlement.target = SettlementTypesLib.SettlementParty(targetNonce, targetWallet, false);

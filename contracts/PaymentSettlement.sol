@@ -19,6 +19,7 @@ import {WalletLockable} from "./WalletLockable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {PartnerFund} from "./PartnerFund.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
+import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -37,29 +38,12 @@ FraudChallengable, WalletLockable {
     using SafeMathUintLib for uint256;
 
     //
-    // Structures
-    // -----------------------------------------------------------------------------------------------------------------
-    struct Total {
-        uint256 nonce;
-        int256 amount;
-    }
-
-    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint256 public maxDriipNonce;
-
     DriipSettlementChallengeState public driipSettlementChallengeState;
-    RevenueFund public paymentsRevenueFund;
+    DriipSettlementState public driipSettlementState;
+    RevenueFund public revenueFund;
     PartnerFund public partnerFund;
-
-    SettlementTypesLib.Settlement[] public settlements;
-    mapping(uint256 => uint256) public nonceSettlementIndex;
-    mapping(address => uint256[]) public walletSettlementIndices;
-    mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxDriipNonce;
-
-    mapping(address => mapping(address => mapping(address => mapping(address => mapping(uint256 => Total))))) public feeTotalsMap;
 
     //
     // Events
@@ -68,7 +52,9 @@ FraudChallengable, WalletLockable {
     event SettlePaymentByProxyEvent(address proxy, address wallet, PaymentTypesLib.Payment payment);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
-    event SetPaymentsRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
+    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
+        DriipSettlementState newDriipSettlementState);
+    event SetRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
     event SetPartnerFundEvent(PartnerFund oldPartnerFund, PartnerFund newPartnerFund);
     event StageFeesEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
         address currencyCt, uint256 currencyId);
@@ -82,9 +68,10 @@ FraudChallengable, WalletLockable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Set the driip settlement challenge contract
+    /// @notice Set the driip settlement challenge state contract
     /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
-    function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState) public
+    function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
+    public
     onlyDeployer
     notNullAddress(newDriipSettlementChallengeState)
     {
@@ -93,20 +80,34 @@ FraudChallengable, WalletLockable {
         emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
     }
 
-    /// @notice Set the payments revenue fund contract
-    /// @param newPaymentsRevenueFund The (address of) payments RevenueFund contract instance
-    function setPaymentsRevenueFund(RevenueFund newPaymentsRevenueFund) public
+    /// @notice Set the driip settlement state contract
+    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
+    function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
+    public
     onlyDeployer
-    notNullAddress(newPaymentsRevenueFund)
+    notNullAddress(newDriipSettlementState)
     {
-        RevenueFund oldPaymentsRevenueFund = paymentsRevenueFund;
-        paymentsRevenueFund = newPaymentsRevenueFund;
-        emit SetPaymentsRevenueFundEvent(oldPaymentsRevenueFund, paymentsRevenueFund);
+        DriipSettlementState oldDriipSettlementState = driipSettlementState;
+        driipSettlementState = newDriipSettlementState;
+        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+    }
+
+    /// @notice Set the revenue fund contract
+    /// @param newRevenueFund The (address of) RevenueFund contract instance
+    function setRevenueFund(RevenueFund newRevenueFund)
+    public
+    onlyDeployer
+    notNullAddress(newRevenueFund)
+    {
+        RevenueFund oldRevenueFund = revenueFund;
+        revenueFund = newRevenueFund;
+        emit SetRevenueFundEvent(oldRevenueFund, revenueFund);
     }
 
     /// @notice Set the partner fund contract
     /// @param newPartnerFund The (address of) partner contract instance
-    function setPartnerFund(PartnerFund newPartnerFund) public
+    function setPartnerFund(PartnerFund newPartnerFund)
+    public
     onlyDeployer
     notNullAddress(newPartnerFund)
     {
@@ -116,56 +117,47 @@ FraudChallengable, WalletLockable {
     }
 
     /// @notice Get the count of settlements
-    function settlementsCount() public view returns (uint256) {
-        return settlements.length;
-    }
-
-    /// @notice Return boolean indicating whether there is already a settlement for the given (global) nonce
-    /// @param nonce The nonce for which to check for settlement
-    /// @return true if there exists a settlement for the provided nonce, false otherwise
-    function hasSettlementByNonce(uint256 nonce) public view returns (bool) {
-        return 0 < nonceSettlementIndex[nonce];
-    }
-
-    /// @notice Get the settlement for the given (global) nonce
-    /// @param nonce The nonce of the settlement
-    /// @return settlement of the provided nonce
-    function settlementByNonce(uint256 nonce) public view returns (SettlementTypesLib.Settlement) {
-        require(hasSettlementByNonce(nonce));
-        return settlements[nonceSettlementIndex[nonce] - 1];
+    function settlementsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return driipSettlementState.settlementsCount();
     }
 
     /// @notice Get the count of settlements for given wallet
     /// @param wallet The address for which to return settlement count
     /// @return count of settlements for the provided wallet
-    function settlementsCountByWallet(address wallet) public view returns (uint256) {
-        return walletSettlementIndices[wallet].length;
+    function settlementsCountByWallet(address wallet)
+    public
+    view
+    returns (uint256)
+    {
+        return driipSettlementState.settlementsCountByWallet(wallet);
     }
 
     /// @notice Get settlement of given wallet and index
     /// @param wallet The address for which to return settlement
     /// @param index The wallet's settlement index
     /// @return settlement for the provided wallet and index
-    function settlementByWalletAndIndex(address wallet, uint256 index) public view returns (SettlementTypesLib.Settlement) {
-        require(walletSettlementIndices[wallet].length > index);
-        return settlements[walletSettlementIndices[wallet][index] - 1];
+    function settlementByWalletAndIndex(address wallet, uint256 index)
+    public
+    view
+    returns (SettlementTypesLib.Settlement)
+    {
+        return driipSettlementState.settlementByWalletAndIndex(wallet, index);
     }
 
-    /// @notice Get settlement of given wallet and (wallet) nonce
+    /// @notice Get settlement of given wallet and wallet nonce
     /// @param wallet The address for which to return settlement
     /// @param nonce The wallet's nonce
     /// @return settlement for the provided wallet and index
-    function settlementByWalletAndNonce(address wallet, uint256 nonce) public view returns (SettlementTypesLib.Settlement) {
-        require(0 < walletNonceSettlementIndex[wallet][nonce]);
-        return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
-    }
-
-    /// @notice Update the max driip nonce property from CommunityVote contract
-    function updateMaxDriipNonce() public {
-        uint256 _maxDriipNonce = communityVote.getMaxDriipNonce();
-        if (_maxDriipNonce > 0) {
-            maxDriipNonce = _maxDriipNonce;
-        }
+    function settlementByWalletAndNonce(address wallet, uint256 nonce)
+    public
+    view
+    returns (SettlementTypesLib.Settlement)
+    {
+        return driipSettlementState.settlementByWalletAndNonce(wallet, nonce);
     }
 
     /// @notice Settle driip that is a payment
@@ -200,9 +192,9 @@ FraudChallengable, WalletLockable {
     function _settlePayment(address wallet, PaymentTypesLib.Payment payment)
     private
     onlySealedPayment(payment)
+    onlyPaymentParty(payment, wallet)
     {
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
-        require(validator.isPaymentParty(payment, wallet));
         require(!communityVote.isDoubleSpenderWallet(wallet));
 
         // Require that wallet is not locked
@@ -216,50 +208,42 @@ FraudChallengable, WalletLockable {
             wallet, payment.currency
         ));
 
-        // Require that the wallet's current driip settlement challenge is wrt this payment
+        // Require that the wallet's current driip settlement challenge proposal is defined wrt this payment
         require(payment.nonce == driipSettlementChallengeState.proposalNonce(wallet, payment.currency));
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce
         require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-            || (payment.nonce < maxDriipNonce));
+            || payment.nonce < driipSettlementState.maxDriipNonce());
 
-        // Get settlement, or create one if no such settlement exists for the trade nonce
-        SettlementTypesLib.Settlement storage settlement = hasSettlementByNonce(payment.nonce) ?
-        getSettlement(payment.nonce, NahmiiTypesLib.DriipType.Payment) :
-        createSettlement(payment.nonce, NahmiiTypesLib.DriipType.Payment,
-            payment.sender.nonce, payment.sender.wallet, payment.recipient.nonce, payment.recipient.wallet);
-
-        // Get settlement role
-        SettlementTypesLib.SettlementRole settlementRole = getSettlementRoleFromPayment(payment, wallet);
-
-        // If exists settlement of nonce then require that wallet has not already settled
-        require(
-            (SettlementTypesLib.SettlementRole.Origin == settlementRole && !settlement.origin.done) ||
-            (SettlementTypesLib.SettlementRole.Target == settlementRole && !settlement.target.done)
+        // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
+        driipSettlementState.initSettlement(
+            payment.sender.wallet, payment.sender.nonce,
+            payment.recipient.wallet, payment.recipient.nonce,
+            NahmiiTypesLib.DriipType.Payment
         );
 
+        // Extract properties depending on settlement role
+        (
+        SettlementTypesLib.SettlementRole settlementRole,uint256 walletNonce,
+        NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
+        ) = _getRoleProperties(payment, wallet);
+
+        // If exists settlement of nonce then require that wallet has not already settled
+        require(!driipSettlementState.isSettlementRoleDone(
+            wallet, walletNonce, settlementRole
+        ));
+
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
-        if (SettlementTypesLib.SettlementRole.Origin == settlementRole)
-            settlement.origin.done = true;
-        else
-            settlement.target.done = true;
+        driipSettlementState.setSettlementRoleDone(
+            wallet, walletNonce, settlementRole, true
+        );
 
-        NahmiiTypesLib.OriginFigure[] memory totalFees;
-        int256 currentBalance;
-        if (validator.isPaymentSender(payment, wallet)) {
-            totalFees = payment.sender.fees.total;
-            currentBalance = payment.sender.balances.current;
-        } else {
-            totalFees = payment.recipient.fees.total;
-            currentBalance = payment.recipient.balances.current;
-        }
-
-        // If wallet has previously settled balance of the concerned currency with higher driip nonce, then don't
+        // If wallet has previously settled balance of the concerned currency with higher wallet nonce, then don't
         // settle balance again
-        if (walletCurrencyMaxDriipNonce[wallet][payment.currency.ct][payment.currency.id] < payment.nonce) {
+        if (driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < walletNonce) {
             // Update settled nonce of wallet and currency
-            walletCurrencyMaxDriipNonce[wallet][payment.currency.ct][payment.currency.id] = payment.nonce;
+            driipSettlementState.setMaxNonceByWalletAndCurrency(wallet, payment.currency, walletNonce);
 
             // Update settled balance
             clientFund.updateSettledBalance(
@@ -274,60 +258,38 @@ FraudChallengable, WalletLockable {
         }
 
         // Stage fees to revenue fund
-        if (address(0) != address(paymentsRevenueFund))
-            stageFees(wallet, totalFees, paymentsRevenueFund, payment.nonce);
+        if (address(0) != address(revenueFund))
+            _stageFees(wallet, totalFees, revenueFund, walletNonce);
 
-        // If payment nonce is beyond max driip nonce then update max driip nonce
-        if (payment.nonce > maxDriipNonce)
-            maxDriipNonce = payment.nonce;
+        // If payment global nonce is beyond max driip nonce then update max driip nonce
+        // TODO TBM when global nonce goes away
+        if (payment.nonce > driipSettlementState.maxDriipNonce())
+            driipSettlementState.setMaxDriipNonce(payment.nonce);
     }
 
-    function getSettlementRoleFromPayment(PaymentTypesLib.Payment payment, address wallet)
-    private
-    pure
-    returns (SettlementTypesLib.SettlementRole)
-    {
-        return (wallet == payment.sender.wallet ?
-        SettlementTypesLib.SettlementRole.Origin :
-        SettlementTypesLib.SettlementRole.Target);
-    }
-
-    function getSettlement(uint256 nonce, NahmiiTypesLib.DriipType driipType)
+    function _getRoleProperties(PaymentTypesLib.Payment payment, address wallet)
     private
     view
-    returns (SettlementTypesLib.Settlement storage)
+    returns (
+        SettlementTypesLib.SettlementRole settlementRole, uint256 walletNonce,
+        NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
+    )
     {
-        uint256 index = nonceSettlementIndex[nonce];
-        SettlementTypesLib.Settlement storage settlement = settlements[index - 1];
-        require(driipType == settlement.driipType);
-        return settlement;
+        if (validator.isPaymentSender(payment, wallet)) {
+            settlementRole = SettlementTypesLib.SettlementRole.Origin;
+            walletNonce = payment.sender.nonce;
+            totalFees = payment.sender.fees.total;
+            currentBalance = payment.sender.balances.current;
+
+        } else {
+            settlementRole = SettlementTypesLib.SettlementRole.Target;
+            walletNonce = payment.recipient.nonce;
+            totalFees = payment.recipient.fees.total;
+            currentBalance = payment.recipient.balances.current;
+        }
     }
 
-    function createSettlement(uint256 nonce, NahmiiTypesLib.DriipType driipType,
-        uint256 originNonce, address originWallet, uint256 targetNonce, address targetWallet)
-    private
-    returns (SettlementTypesLib.Settlement storage)
-    {
-        SettlementTypesLib.Settlement memory settlement;
-        settlement.nonce = nonce;
-        settlement.driipType = driipType;
-        settlement.origin = SettlementTypesLib.SettlementParty(originNonce, originWallet, false);
-        settlement.target = SettlementTypesLib.SettlementParty(targetNonce, targetWallet, false);
-
-        settlements.push(settlement);
-
-        // Index is 1 based
-        uint256 index = settlements.length;
-        nonceSettlementIndex[nonce] = index;
-        walletSettlementIndices[originWallet].push(index);
-        walletSettlementIndices[targetWallet].push(index);
-        walletNonceSettlementIndex[originWallet][originNonce] = index;
-        walletNonceSettlementIndex[targetWallet][targetNonce] = index;
-
-        return settlements[index - 1];
-    }
-
-    function stageFees(address wallet, NahmiiTypesLib.OriginFigure[] fees,
+    function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] fees,
         Beneficiary protocolBeneficiary, uint256 nonce)
     private
     {
@@ -337,17 +299,12 @@ FraudChallengable, WalletLockable {
             (Beneficiary beneficiary, address destination) =
             (0 == fees[i].originId) ? (protocolBeneficiary, address(0)) : (partnerFund, address(fees[i].originId));
 
-            Total storage feeTotal = feeTotalsMap[wallet][address(beneficiary)][destination][fees[i].figure.currency.ct][fees[i].figure.currency.id];
-
-            // If wallet has previously settled fee of the concerned currency with higher driip nonce then don't settle again
-            if (feeTotal.nonce < nonce) {
-                feeTotal.nonce = nonce;
-
+            if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
-                int256 deltaAmount = fees[i].figure.amount - feeTotal.amount;
+                int256 deltaAmount = fees[i].figure.amount - driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount;
 
-                // Update the fee total amount
-                feeTotal.amount = fees[i].figure.amount;
+                // Update fee total
+                driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
 
                 // Transfer to beneficiary
                 clientFund.transferToBeneficiary(

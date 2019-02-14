@@ -71,7 +71,7 @@ library SettlementTypesLib {
     }
 
     struct Settlement {
-        uint256 nonce;
+//        uint256 nonce;
         NahmiiTypesLib.DriipType driipType;
         SettlementParty origin;
         SettlementParty target;
