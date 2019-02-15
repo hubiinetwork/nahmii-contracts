@@ -26,10 +26,10 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 
 /**
- * @title TradeSettlementDispute
+ * @title DriipSettlementDisputeByTrade
  * @notice The where trade related disputes of driip settlement challenge happens
  */
-contract TradeSettlementDispute is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
+contract DriipSettlementDisputeByTrade is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
 FraudChallengable, CancelOrdersChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
@@ -37,7 +37,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register TradeSettlementChallenge as service and enable actions
+    // TODO Register DriipSettlementChallengeByTrade as service and enable actions
     string constant public CHALLENGE_BY_ORDER_ACTION = "challenge_by_order";
     string constant public UNCHALLENGE_ORDER_CANDIDATE_BY_TRADE_ACTION = "unchallenge_order_candidate_by_trade";
     string constant public CHALLENGE_BY_TRADE_ACTION = "challenge_by_trade";

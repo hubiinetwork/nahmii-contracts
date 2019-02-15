@@ -31,7 +31,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 /**
  * @title DriipSettlement
  * @notice Where driip settlements are finalized
- * @dev This contract is deprecated in favor of PaymentSettlement and TradeSettlement
+ * @dev This contract is deprecated in favor of DriipSettlementByPayment and DriipSettlementByTrade
  */
 contract DriipSettlement is Ownable, Configurable, ValidatableV2, ClientFundable, CommunityVotable,
 FraudChallengable, WalletLockable {

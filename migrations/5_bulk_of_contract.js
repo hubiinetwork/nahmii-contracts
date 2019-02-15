@@ -57,9 +57,9 @@ const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const PartnerFund = artifacts.require('PartnerFund');
 const PaymentHasher = artifacts.require('PaymentHasher');
-const PaymentSettlement = artifacts.require('PaymentSettlement');
-const PaymentSettlementChallenge = artifacts.require('PaymentSettlementChallenge');
-const PaymentSettlementDispute = artifacts.require('PaymentSettlementDispute');
+const DriipSettlementByPayment = artifacts.require('DriipSettlementByPayment');
+const DriipSettlementChallengeByPayment = artifacts.require('DriipSettlementChallengeByPayment');
+const DriipSettlementDisputeByPayment = artifacts.require('DriipSettlementDisputeByPayment');
 const PaymentTypesLib = artifacts.require('PaymentTypesLib');
 const RevenueFund = artifacts.require('RevenueFund');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
@@ -71,9 +71,9 @@ const SignerManager = artifacts.require('SignerManager');
 const Strings = artifacts.require('Strings');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TradeHasher = artifacts.require('TradeHasher');
-const TradeSettlement = artifacts.require('TradeSettlement');
-const TradeSettlementChallenge = artifacts.require('TradeSettlementChallenge');
-const TradeSettlementDispute = artifacts.require('TradeSettlementDispute');
+const DriipSettlementByTrade = artifacts.require('DriipSettlementByTrade');
+const DriipSettlementChallengeByTrade = artifacts.require('DriipSettlementChallengeByTrade');
+const DriipSettlementDisputeByTrade = artifacts.require('DriipSettlementDisputeByTrade');
 const TradeTypesLib = artifacts.require('TradeTypesLib');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TransactionTracker = artifacts.require('TransactionTracker');
@@ -195,16 +195,16 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementDispute,
                 PartnerFund,
                 PaymentHasher,
-                PaymentSettlement,
-                PaymentSettlementChallenge,
-                PaymentSettlementDispute,
+                DriipSettlementByPayment,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementDisputeByPayment,
                 RevenueFund,
                 SecurityBond,
                 TokenHolderRevenueFund,
                 TradeHasher,
-                TradeSettlement,
-                TradeSettlementChallenge,
-                TradeSettlementDispute,
+                DriipSettlementByTrade,
+                DriipSettlementChallengeByTrade,
+                DriipSettlementDisputeByTrade,
                 Validator,
                 ValidatorV2
 
@@ -239,13 +239,13 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementChallenge,
                 NullSettlementDispute,
                 PaymentHasher,
-                PaymentSettlement,
-                PaymentSettlementChallenge,
-                PaymentSettlementDispute,
+                DriipSettlementByPayment,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementDisputeByPayment,
                 TradeHasher,
-                TradeSettlement,
-                TradeSettlementChallenge,
-                TradeSettlementDispute,
+                DriipSettlementByTrade,
+                DriipSettlementChallengeByTrade,
+                DriipSettlementDisputeByTrade,
                 Validatable,
                 Validator,
                 ValidatorV2
@@ -272,9 +272,9 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementChallenge,
                 NullSettlementDispute,
                 PaymentHasher,
-                PaymentSettlement,
-                PaymentSettlementChallenge,
-                PaymentSettlementDispute,
+                DriipSettlementByPayment,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementDisputeByPayment,
                 Validatable,
                 ValidatableV2,
                 Validator,
@@ -299,15 +299,15 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementChallenge,
                 NullSettlementDispute,
                 PartnerFund,
-                PaymentSettlement,
-                PaymentSettlementChallenge,
-                PaymentSettlementDispute,
+                DriipSettlementByPayment,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementDisputeByPayment,
                 RevenueFund,
                 SecurityBond,
                 TokenHolderRevenueFund,
-                TradeSettlement,
-                TradeSettlementChallenge,
-                TradeSettlementDispute,
+                DriipSettlementByTrade,
+                DriipSettlementChallengeByTrade,
+                DriipSettlementDisputeByTrade,
                 Validator,
                 ValidatorV2
 
@@ -324,17 +324,17 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlement,
                 NullSettlementChallenge,
                 NullSettlementDispute,
-                PaymentSettlement,
-                PaymentSettlementChallenge,
-                PaymentSettlementDispute,
+                DriipSettlementByPayment,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementDisputeByPayment,
                 RevenueFund,
                 RevenueTokenManager,
                 SecurityBond,
                 SignerManager,
                 TokenHolderRevenueFund,
-                TradeSettlement,
-                TradeSettlementChallenge,
-                TradeSettlementDispute,
+                DriipSettlementByTrade,
+                DriipSettlementChallengeByTrade,
+                DriipSettlementDisputeByTrade,
                 Validator,
                 ValidatorV2,
                 WalletLocker
@@ -350,12 +350,12 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlement,
                 NullSettlementChallenge,
                 NullSettlementDispute,
-                PaymentSettlement,
-                PaymentSettlementChallenge,
-                PaymentSettlementDispute,
-                TradeSettlement,
-                TradeSettlementChallenge,
-                TradeSettlementDispute
+                DriipSettlementByPayment,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementDisputeByPayment,
+                DriipSettlementByTrade,
+                DriipSettlementChallengeByTrade,
+                DriipSettlementDisputeByTrade
             ]);
             await deployer.link(Strings, [
                 PartnerFund
@@ -383,9 +383,9 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementChallenge,
                 NullSettlementDispute,
                 TradeHasher,
-                TradeSettlement,
-                TradeSettlementChallenge,
-                TradeSettlementDispute,
+                DriipSettlementByTrade,
+                DriipSettlementChallengeByTrade,
+                DriipSettlementDisputeByTrade,
                 Validatable,
                 ValidatableV2,
                 Validator,
@@ -522,11 +522,11 @@ module.exports = (deployer, network, accounts) => {
 
             await execDeploy(ctl, 'PaymentHasher', '', PaymentHasher);
 
-            await execDeploy(ctl, 'PaymentSettlement', '', PaymentSettlement);
+            await execDeploy(ctl, 'DriipSettlementByPayment', '', DriipSettlementByPayment);
 
-            await execDeploy(ctl, 'PaymentSettlementChallenge', '', PaymentSettlementChallenge);
+            await execDeploy(ctl, 'DriipSettlementChallengeByPayment', '', DriipSettlementChallengeByPayment);
 
-            await execDeploy(ctl, 'PaymentSettlementDispute', '', PaymentSettlementDispute);
+            await execDeploy(ctl, 'DriipSettlementDisputeByPayment', '', DriipSettlementDisputeByPayment);
 
             await execDeploy(ctl, 'RevenueFund', 'TradesRevenueFund', RevenueFund);
 
@@ -538,11 +538,11 @@ module.exports = (deployer, network, accounts) => {
 
             await execDeploy(ctl, 'TradeHasher', '', TradeHasher);
 
-            await execDeploy(ctl, 'TradeSettlement', '', TradeSettlement);
+            await execDeploy(ctl, 'DriipSettlementByTrade', '', DriipSettlementByTrade);
 
-            await execDeploy(ctl, 'TradeSettlementChallenge', '', TradeSettlementChallenge);
+            await execDeploy(ctl, 'DriipSettlementChallengeByTrade', '', DriipSettlementChallengeByTrade);
 
-            await execDeploy(ctl, 'TradeSettlementDispute', '', TradeSettlementDispute);
+            await execDeploy(ctl, 'DriipSettlementDisputeByTrade', '', DriipSettlementDisputeByTrade);
 
             await execDeploy(ctl, 'PartnerFund', '', PartnerFund);
 

@@ -29,10 +29,10 @@ import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
- * @title TradeSettlement
- * @notice Where trade settlements are finalized
+ * @title DriipSettlementByTrade
+ * @notice Where driip settlements pertaining to trade are finalized
  */
-contract TradeSettlement is Ownable, Configurable, ValidatableV2, ClientFundable, CommunityVotable,
+contract DriipSettlementByTrade is Ownable, Configurable, ValidatableV2, ClientFundable, CommunityVotable,
 FraudChallengable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

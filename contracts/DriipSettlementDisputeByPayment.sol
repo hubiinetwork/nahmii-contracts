@@ -26,10 +26,10 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 
 /**
- * @title PaymentSettlementDispute
+ * @title DriipSettlementDisputeByPayment
  * @notice The where payment related disputes of driip settlement challenge happens
  */
-contract PaymentSettlementDispute is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
+contract DriipSettlementDisputeByPayment is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
 FraudChallengable, CancelOrdersChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
@@ -37,7 +37,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register PaymentSettlementChallenge as service and enable action
+    // TODO Register DriipSettlementChallengeByPayment as service and enable action
     string constant public CHALLENGE_BY_PAYMENT_ACTION = "challenge_by_payment";
 
     //

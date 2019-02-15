@@ -29,10 +29,10 @@ import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
- * @title PaymentSettlement
- * @notice Where payment settlements are finalized
+ * @title DriipSettlementByPayment
+ * @notice Where driip settlements pertaining to payment are finalized
  */
-contract PaymentSettlement is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable,
+contract DriipSettlementByPayment is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable,
 FraudChallengable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;

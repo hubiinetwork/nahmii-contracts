@@ -26,8 +26,8 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 /**
  * @title DriipSettlementChallenge
  * @notice Where driip settlements are started and disputed
- * @dev This contract is deprecated in favor of PaymentSettlementChallenge and
- *    TradeSettlementChallenge
+ * @dev This contract is deprecated in favor of DriipSettlementChallengeByPayment and
+ *    DriipSettlementChallengeByTrade
  */
 contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLockable {
     using SafeMathIntLib for int256;

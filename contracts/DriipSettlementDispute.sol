@@ -29,8 +29,8 @@ import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol
 /**
  * @title DriipSettlementDispute
  * @notice The workhorse of driip settlement challenges, utilized by DriipSettlementChallenge
- * @dev This contract is deprecated in favor of PaymentSettlementDispute and
- *    TradeSettlementDispute
+ * @dev This contract is deprecated in favor of DriipSettlementDisputeByPayment and
+ *    DriipSettlementDisputeByTrade
 */
 contract DriipSettlementDispute is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
 FraudChallengable, CancelOrdersChallengable, Servable {

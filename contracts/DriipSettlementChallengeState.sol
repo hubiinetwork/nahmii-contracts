@@ -29,7 +29,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register TradeSettlementChallenge, TradeSettlementDispute, PaymentSettlementChallenge and PaymentSettlementDispute as services and enable actions
+    // TODO Register DriipSettlementChallengeByTrade, DriipSettlementDisputeByTrade, DriipSettlementChallengeByPayment and DriipSettlementDisputeByPayment as services and enable actions
     string constant public SET_PROPOSAL_EXPIRATION_TIME_ACTION = "set_proposal_expiration_time";
     string constant public SET_PROPOSAL_STATUS_ACTION = "set_proposal_status";
     string constant public ADD_PROPOSAL_ACTION = "add_proposal";

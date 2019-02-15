@@ -11,42 +11,41 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Challenge} from "./Challenge.sol";
-import {ValidatableV2} from "./ValidatableV2.sol";
+import {Validatable} from "./Validatable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {TradeSettlementDispute} from "./TradeSettlementDispute.sol";
+import {DriipSettlementDisputeByPayment} from "./DriipSettlementDisputeByPayment.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {TradeTypesLib} from "./TradeTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 
 /**
- * @title TradeSettlementChallenge
- * @notice Where settlements pertaining to trades are started and disputed
+ * @title DriipSettlementChallengeByPayment
+ * @notice Where driip settlements pertaining to payments are started and disputed
  */
-contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLockable {
+contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    TradeSettlementDispute public tradeSettlementDispute;
+    DriipSettlementDisputeByPayment public driipSettlementDisputeByPayment;
     DriipSettlementChallengeState public driipSettlementChallengeState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetTradeSettlementDisputeEvent(TradeSettlementDispute oldTradeSettlementDispute,
-        TradeSettlementDispute newTradeSettlementDispute);
+    event SetDriipSettlementDisputeByPaymentEvent(DriipSettlementDisputeByPayment oldDriipSettlementDisputeByPayment,
+        DriipSettlementDisputeByPayment newDriipSettlementDisputeByPayment);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
-    event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
-        int256 intendedStageAmount, int256 conjugateStageAmount);
-    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
-        int256 intendedStageAmount, int256 conjugateStageAmount);
+    event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
+    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
+        int256 stageAmount);
 
     //
     // Constructor
@@ -58,18 +57,18 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the settlement dispute contract
-    /// @param newTradeSettlementDispute The (address of) TradeSettlementDispute contract instance
-    function setTradeSettlementDispute(TradeSettlementDispute newTradeSettlementDispute)
+    /// @param newDriipSettlementDisputeByPayment The (address of) DriipSettlementDisputeByPayment contract instance
+    function setDriipSettlementDisputeByPayment(DriipSettlementDisputeByPayment newDriipSettlementDisputeByPayment)
     public
     onlyDeployer
-    notNullAddress(newTradeSettlementDispute)
+    notNullAddress(newDriipSettlementDisputeByPayment)
     {
-        TradeSettlementDispute oldTradeSettlementDispute = tradeSettlementDispute;
-        tradeSettlementDispute = newTradeSettlementDispute;
-        emit SetTradeSettlementDisputeEvent(oldTradeSettlementDispute, tradeSettlementDispute);
+        DriipSettlementDisputeByPayment oldDriipSettlementDisputeByPayment = driipSettlementDisputeByPayment;
+        driipSettlementDisputeByPayment = newDriipSettlementDisputeByPayment;
+        emit SetDriipSettlementDisputeByPaymentEvent(oldDriipSettlementDisputeByPayment, driipSettlementDisputeByPayment);
     }
 
-    /// @notice Set the settlement state contract
+    /// @notice Set the settlement challenge state contract
     /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
@@ -81,39 +80,35 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
     }
 
-    /// @notice Start settlement challenge on trade
-    /// @param trade The challenged trade
-    /// @param intendedStageAmount Amount of intended currency to be staged
-    /// @param conjugateStageAmount Amount of conjugate currency to be staged
-    function startChallengeFromTrade(TradeTypesLib.Trade trade, int256 intendedStageAmount,
-        int256 conjugateStageAmount)
+    /// @notice Start settlement challenge on payment
+    /// @param payment The challenged payment
+    /// @param stageAmount Amount of payment currency to be staged
+    function startChallengeFromPayment(PaymentTypesLib.Payment payment, int256 stageAmount)
     public
     {
         // Require that wallet is not temporarily disqualified
         require(!walletLocker.isLocked(msg.sender));
 
-        // Start challenge
-        _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
+        // Start challenge for wallet
+        _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
 
         // Emit event
-        emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
     }
 
-    /// @notice Start settlement challenge on trade by proxy
+    /// @notice Start settlement challenge on payment
     /// @param wallet The concerned party
-    /// @param trade The challenged trade
-    /// @param intendedStageAmount Amount of intended currency to be staged
-    /// @param conjugateStageAmount Amount of conjugate currency to be staged
-    function startChallengeFromTradeByProxy(address wallet, TradeTypesLib.Trade trade, int256 intendedStageAmount,
-        int256 conjugateStageAmount)
+    /// @param payment The challenged payment
+    /// @param stageAmount Amount of payment currency to be staged
+    function startChallengeFromPaymentByProxy(address wallet, PaymentTypesLib.Payment payment, int256 stageAmount)
     public
     onlyOperator
     {
         // Start challenge for wallet
-        _startChallengeFromTrade(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
+        _startChallengeFromPayment(wallet, payment, stageAmount, false);
 
         // Emit event
-        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -325,111 +320,50 @@ contract TradeSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         );
     }
 
-    /// @notice Challenge the settlement by providing order candidate
-    /// @param order The order candidate that challenges the challenged driip
-    function challengeByOrder(TradeTypesLib.Order order)
-    public
-    onlyOperationalModeNormal
-    {
-        tradeSettlementDispute.challengeByOrder(order, msg.sender);
-    }
-
-    /// @notice Unchallenge settlement by providing trade that shows that challenge order candidate has been filled
-    /// @param order The order candidate that challenged driip
-    /// @param trade The trade in which order has been filled
-    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order order, TradeTypesLib.Trade trade)
-    public
-    onlyOperationalModeNormal
-    {
-        tradeSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
-    }
-
-    /// @notice Challenge the settlement by providing trade candidate
+    /// @notice Challenge the settlement by providing payment candidate
     /// @param wallet The wallet whose settlement is being challenged
-    /// @param trade The trade candidate that challenges the challenged driip
-    function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
+    /// @param payment The payment candidate that challenges the challenged driip
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
     {
-        tradeSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
+        driipSettlementDisputeByPayment.challengeByPayment(wallet, payment, msg.sender);
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _startChallengeFromTrade(address wallet, TradeTypesLib.Trade trade,
-        int256 intendedStageAmount, int256 conjugateStageAmount, bool balanceReward)
+    function _startChallengeFromPayment(address wallet, PaymentTypesLib.Payment payment,
+        int256 stageAmount, bool balanceReward)
     private
-    onlySealedTrade(trade)
+    onlySealedPayment(payment)
     {
         // Require that current block number is beyond the earliest settlement challenge block number
         require(block.number >= configuration.earliestSettlementBlockNumber());
 
-        // Require that given wallet is a trade party
-        require(validator.isTradeParty(trade, wallet));
+        // Require that given wallet is a payment party
+        require(validator.isPaymentParty(payment, wallet));
 
-        // Require that wallet has no overlap with active proposals
-        require(
-            driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended)
-        );
-        require(
-            driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate)
-        );
+        // Require that wallet has no overlap with active proposal
+        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
-        // Create proposals
-        _addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, balanceReward);
-        _addConjugateProposalFromTrade(wallet, trade, conjugateStageAmount, balanceReward);
-    }
-
-    function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
-    private
-    {
         // Deduce the concerned balance amount
-        int256 balanceAmount = _tradeIntendedBalanceAmount(trade, wallet);
-
-        // Require that balance amount is not less than stage amount
-        require(balanceAmount >= stageAmount);
+        int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
 
         // Add proposal
         driipSettlementChallengeState.addProposalFromDriip(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended, trade.nonce,
-            trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
+            wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.nonce,
+            payment.blockNumber, balanceReward, payment.seals.operator.hash, NahmiiTypesLib.DriipType.Payment
         );
     }
 
-    function _addConjugateProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
-    private
-    {
-        // Deduce the concerned balance amount
-        int256 balanceAmount = _tradeConjugateBalanceAmount(trade, wallet);
-
-        // Require that balance amount is not less than stage amount
-        require(balanceAmount >= stageAmount);
-
-        // Add proposal
-        driipSettlementChallengeState.addProposalFromDriip(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate, trade.nonce,
-            trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
-        );
-    }
-
-    function _tradeIntendedBalanceAmount(TradeTypesLib.Trade trade, address wallet)
+    function _paymentBalanceAmount(PaymentTypesLib.Payment payment, address wallet)
     private
     view
     returns (int256)
     {
-        return validator.isTradeBuyer(trade, wallet) ?
-        trade.buyer.balances.intended.current :
-        trade.seller.balances.intended.current;
-    }
-
-    function _tradeConjugateBalanceAmount(TradeTypesLib.Trade trade, address wallet)
-    private
-    view
-    returns (int256)
-    {
-        return validator.isTradeBuyer(trade, wallet) ?
-        trade.buyer.balances.conjugate.current :
-        trade.seller.balances.conjugate.current;
+        return validator.isPaymentSender(payment, wallet) ?
+        payment.sender.balances.current :
+        payment.recipient.balances.current;
     }
 }
