@@ -16,42 +16,44 @@ import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
+import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
-import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
+import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 
 /**
- * @title NullSettlementDispute
- * @notice The workhorse of null settlement challenges, utilized by NullSettlementChallenge
- * @dev This contract is deprecated in favor of NullSettlementDisputeByPayment and
- *    NullSettlementDisputeByTrade
+ * @title NullSettlementDisputeByTrade
+ * @notice The where trade related disputes of null settlement challenge happens
  */
-contract NullSettlementDispute is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
-FraudChallengable, CancelOrdersChallengable {
+contract NullSettlementDisputeByTrade is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
+FraudChallengable, CancelOrdersChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
     //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    // TODO Register NullSettlementChallengeByPayment as service and enable action
+    string constant public CHALLENGE_BY_ORDER_ACTION = "challenge_by_order";
+    string constant public CHALLENGE_BY_TRADE_ACTION = "challenge_by_trade";
+
+    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    NullSettlementChallenge public nullSettlementChallenge;
+    NullSettlementChallengeState public nullSettlementChallengeState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetNullSettlementChallengeEvent(NullSettlementChallenge oldNullSettlementChallenge,
-        NullSettlementChallenge newNullSettlementChallenge);
-    event ChallengeByOrderEvent(address wallet, uint256 nonce,
-        bytes32 candidateHash, address challenger);
-    event ChallengeByTradeEvent(address wallet, uint256 nonce,
-        bytes32 candidateHash, address challenger);
-    event ChallengeByPaymentEvent(address wallet, uint256 nonce,
-        bytes32 candidateHash, address challenger);
+    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
+        NullSettlementChallengeState newNullSettlementChallengeState);
+    event ChallengeByOrderEvent(TradeTypesLib.Order order, address challenger);
+    event ChallengeByTradeEvent(address wallet, TradeTypesLib.Trade trade,
+        address challenger);
 
     //
     // Constructor
@@ -59,15 +61,15 @@ FraudChallengable, CancelOrdersChallengable {
     constructor(address deployer) Ownable(deployer) public {
     }
 
-    /// @notice Set the settlement challenge contract
-    /// @param newNullSettlementChallenge The (address of) NullSettlementChallenge contract instance
-    function setNullSettlementChallenge(NullSettlementChallenge newNullSettlementChallenge) public
+    /// @notice Set the settlement challenge state contract
+    /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
+    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState) public
     onlyDeployer
-    notNullAddress(newNullSettlementChallenge)
+    notNullAddress(newNullSettlementChallengeState)
     {
-        NullSettlementChallenge oldNullSettlementChallenge = nullSettlementChallenge;
-        nullSettlementChallenge = newNullSettlementChallenge;
-        emit SetNullSettlementChallengeEvent(oldNullSettlementChallenge, nullSettlementChallenge);
+        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
+        nullSettlementChallengeState = newNullSettlementChallengeState;
+        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
     /// @notice Challenge the settlement by providing order candidate
@@ -77,7 +79,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// if (candidate) order has sell intention consider _intended_ currency and amount
     function challengeByOrder(TradeTypesLib.Order order, address challenger)
     public
-    onlyNullSettlementChallenge
+    onlyEnabledServiceAction(CHALLENGE_BY_ORDER_ACTION)
     onlySealedOrder(order)
     {
         // Require that order candidate is not labelled fraudulent or cancelled
@@ -88,22 +90,22 @@ FraudChallengable, CancelOrdersChallengable {
         MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
 
         // Require that proposal has not expired
-        require(!nullSettlementChallenge.hasProposalExpired(order.wallet, currency.ct, currency.id));
+        require(!nullSettlementChallengeState.hasProposalExpired(order.wallet, currency));
 
         // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
-        require(order.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
-            order.wallet, currency.ct, currency.id
+        require(order.blockNumber >= nullSettlementChallengeState.proposalBlockNumber(
+            order.wallet, currency
         ));
-        require(order.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
-            order.wallet, currency.ct, currency.id
+        require(order.blockNumber >= nullSettlementChallengeState.proposalDisqualificationBlockNumber(
+            order.wallet, currency
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for this order to be a valid challenge candidate
-        require(_orderTransferAmount(order) > nullSettlementChallenge.proposalTargetBalanceAmount(
-            order.wallet, currency.ct, currency.id
+        require(_orderTransferAmount(order) > nullSettlementChallengeState.proposalTargetBalanceAmount(
+            order.wallet, currency
         ));
 
         // Reward challenger
@@ -111,18 +113,13 @@ FraudChallengable, CancelOrdersChallengable {
         _settleRewards(order.wallet, _orderTransferAmount(order), currency, challenger, 0);
 
         // Disqualify proposal, effectively overriding any previous disqualification
-        nullSettlementChallenge.disqualifyProposal(
-            order.wallet, currency.ct, currency.id, challenger, order.blockNumber,
+        nullSettlementChallengeState.disqualifyProposal(
+            order.wallet, currency, challenger, order.blockNumber,
             order.seals.operator.hash, SettlementTypesLib.CandidateType.Order
         );
 
         // Emit event
-        emit ChallengeByOrderEvent(
-            order.wallet,
-            nullSettlementChallenge.proposalNonce(order.wallet, currency.ct, currency.id),
-            nullSettlementChallenge.proposalDisqualificationCandidateHash(order.wallet, currency.ct, currency.id),
-            challenger
-        );
+        emit ChallengeByOrderEvent(order, challenger);
     }
 
     /// @notice Challenge the settlement by providing trade candidate
@@ -133,7 +130,7 @@ FraudChallengable, CancelOrdersChallengable {
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
     function challengeByTrade(address wallet, TradeTypesLib.Trade trade, address challenger)
     public
-    onlyNullSettlementChallenge
+    onlyEnabledServiceAction(CHALLENGE_BY_TRADE_ACTION)
     onlySealedTrade(trade)
     onlyTradeParty(trade, wallet)
     {
@@ -148,91 +145,35 @@ FraudChallengable, CancelOrdersChallengable {
         MonetaryTypesLib.Currency memory currency = _tradeCurrency(trade, wallet);
 
         // Require that proposal has not expired
-        require(!nullSettlementChallenge.hasProposalExpired(wallet, currency.ct, currency.id));
+        require(!nullSettlementChallengeState.hasProposalExpired(wallet, currency));
 
         // TODO Replace by wallet nonce
         // Require that payment's block number is not earlier than proposal's block number or its current
         // disqualification block number
-        require(trade.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
-            wallet, currency.ct, currency.id
+        require(trade.blockNumber >= nullSettlementChallengeState.proposalBlockNumber(
+            wallet, currency
         ));
-        require(trade.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
-            wallet, currency.ct, currency.id
+        require(trade.blockNumber >= nullSettlementChallengeState.proposalDisqualificationBlockNumber(
+            wallet, currency
         ));
 
         // Require that transfer amount is strictly greater than the proposal's target balance amount
         // for this trade to be a valid challenge candidate
-        require(_tradeTransferAmount(trade, wallet) > nullSettlementChallenge.proposalTargetBalanceAmount(
-            wallet, currency.ct, currency.id
+        require(_tradeTransferAmount(trade, wallet) > nullSettlementChallengeState.proposalTargetBalanceAmount(
+            wallet, currency
         ));
 
         // Reward challenger
         _settleRewards(wallet, _tradeBalanceAmount(trade, wallet), currency, challenger, 0);
 
         // Disqualify proposal, effectively overriding any previous disqualification
-        nullSettlementChallenge.disqualifyProposal(
-            wallet, currency.ct, currency.id, challenger, trade.blockNumber,
+        nullSettlementChallengeState.disqualifyProposal(
+            wallet, currency, challenger, trade.blockNumber,
             trade.seal.hash, SettlementTypesLib.CandidateType.Trade
         );
 
         // Emit event
-        emit ChallengeByTradeEvent(
-            wallet,
-            nullSettlementChallenge.proposalNonce(wallet, currency.ct, currency.id),
-            nullSettlementChallenge.proposalDisqualificationCandidateHash(wallet, currency.ct, currency.id),
-            challenger
-        );
-    }
-
-    /// @notice Challenge the settlement by providing payment candidate
-    /// @dev This challenges the payment sender's side of things
-    /// @param wallet The wallet whose settlement is being challenged
-    /// @param payment The payment candidate that challenges
-    /// @param challenger The address of the challenger
-    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment, address challenger)
-    public
-    onlyNullSettlementChallenge
-    onlySealedPayment(payment)
-    onlyPaymentParty(payment, wallet)
-    {
-        // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
-
-        // Require that proposal has not expired
-        require(!nullSettlementChallenge.hasProposalExpired(wallet, payment.currency.ct, payment.currency.id));
-
-        // TODO Replace by wallet nonce
-        // Require that payment's block number is not earlier than proposal's block number or its current
-        // disqualification block number
-        require(payment.blockNumber >= nullSettlementChallenge.proposalBlockNumber(
-            wallet, payment.currency.ct, payment.currency.id
-        ));
-        require(payment.blockNumber >= nullSettlementChallenge.proposalDisqualificationBlockNumber(
-            wallet, payment.currency.ct, payment.currency.id
-        ));
-
-        // Require that transfer amount is strictly greater than the proposal's target balance amount
-        // for this payment to be a valid challenge candidate
-        require(payment.transfers.single > nullSettlementChallenge.proposalTargetBalanceAmount(
-            wallet, payment.currency.ct, payment.currency.id
-        ));
-
-        // Reward challenger
-        _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger, 0);
-
-        // Disqualify proposal, effectively overriding any previous disqualification
-        nullSettlementChallenge.disqualifyProposal(
-            wallet, payment.currency.ct, payment.currency.id, challenger, payment.blockNumber,
-            payment.seals.operator.hash, SettlementTypesLib.CandidateType.Payment
-        );
-
-        // Emit event
-        emit ChallengeByPaymentEvent(
-            wallet,
-            nullSettlementChallenge.proposalNonce(wallet, payment.currency.ct, payment.currency.id),
-            nullSettlementChallenge.proposalDisqualificationCandidateHash(wallet, payment.currency.ct, payment.currency.id),
-            challenger
-        );
+        emit ChallengeByTradeEvent(wallet, trade, challenger);
     }
 
     //
@@ -317,7 +258,7 @@ FraudChallengable, CancelOrdersChallengable {
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
-        if (nullSettlementChallenge.proposalBalanceReward(wallet, currency.ct, currency.id))
+        if (nullSettlementChallengeState.proposalBalanceReward(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
@@ -329,13 +270,13 @@ FraudChallengable, CancelOrdersChallengable {
     private
     {
         // Unlock wallet/currency for existing challenger if previously locked
-        if (SettlementTypesLib.Status.Disqualified == nullSettlementChallenge.proposalStatus(
-            wallet, currency.ct, currency.id
+        if (SettlementTypesLib.Status.Disqualified == nullSettlementChallengeState.proposalStatus(
+            wallet, currency
         ))
             walletLocker.unlockFungibleByProxy(
                 wallet,
-                nullSettlementChallenge.proposalDisqualificationChallenger(
-                    wallet, currency.ct, currency.id
+                nullSettlementChallengeState.proposalDisqualificationChallenger(
+                    wallet, currency
                 ),
                 currency.ct, currency.id
             );
@@ -354,12 +295,12 @@ FraudChallengable, CancelOrdersChallengable {
     private
     {
         // Deprive existing challenger of reward if previously locked
-        if (SettlementTypesLib.Status.Disqualified == nullSettlementChallenge.proposalStatus(
-            wallet, currency.ct, currency.id
+        if (SettlementTypesLib.Status.Disqualified == nullSettlementChallengeState.proposalStatus(
+            wallet, currency
         ))
             securityBond.depriveAbsolute(
-                nullSettlementChallenge.proposalDisqualificationChallenger(
-                    wallet, currency.ct, currency.id
+                nullSettlementChallengeState.proposalDisqualificationChallenger(
+                    wallet, currency
                 ),
                 currency.ct, currency.id
             );
@@ -386,13 +327,5 @@ FraudChallengable, CancelOrdersChallengable {
     {
         (int256 amount, address currencyCt, uint256 currencyId) = configuration.operatorSettlementStake();
         return MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));
-    }
-
-    //
-    // Modifiers
-    // -----------------------------------------------------------------------------------------------------------------
-    modifier onlyNullSettlementChallenge() {
-        require(msg.sender == address(nullSettlementChallenge));
-        _;
     }
 }
