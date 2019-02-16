@@ -46,9 +46,11 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
+    event SetProposalExpirationTimeEvent(address wallet, MonetaryTypesLib.Currency currency,
+        uint256 expirationTime);
+    event SetProposalStatusEvent(address wallet, MonetaryTypesLib.Currency currency,
+        SettlementTypesLib.Status status);
     event AddProposalEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber, bool balanceReward);
-    event AddProposalFromDriipEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber, bool balanceReward,
         bytes32 driipHash, NahmiiTypesLib.DriipType driipType);
     event DisqualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
@@ -288,6 +290,9 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
         proposals[index - 1].expirationTime = expirationTime;
+
+        // Emit event
+        emit SetProposalExpirationTimeEvent(wallet, currency, expirationTime);
     }
 
     /// @notice Set settlement proposal status property of the given wallet
@@ -303,6 +308,9 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
         proposals[index - 1].status = status;
+
+        // Emit event
+        emit SetProposalStatusEvent(wallet, currency, status);
     }
 
     /// @notice Add proposal
@@ -313,41 +321,17 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param nonce The proposal nonce
     /// @param blockNumber The proposal block number
     /// @param balanceReward The candidate balance reward
-    function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber,
-        bool balanceReward)
-    public
-    onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
-    {
-        // Add proposal
-        _addProposal(
-            wallet, stageAmount, targetBalanceAmount,
-            currency, nonce, blockNumber, balanceReward
-        );
-
-        // Emit event
-        emit AddProposalEvent(
-            wallet, stageAmount, targetBalanceAmount, currency, nonce,
-            blockNumber, balanceReward
-        );
-    }
-
-    /// @notice Add proposal from driip
-    /// @param wallet The address of the concerned challenged wallet
-    /// @param stageAmount The proposal stage amount
-    /// @param targetBalanceAmount The proposal target balance amount
-    /// @param currency The concerned currency
-    /// @param nonce The proposal nonce
-    /// @param blockNumber The proposal block number
-    /// @param balanceReward The candidate balance reward
     /// @param driipHash The candidate driip hash
     /// @param driipType The candidate driip type
-    function addProposalFromDriip(address wallet, int256 stageAmount, int256 targetBalanceAmount,
+    function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber,
         bool balanceReward, bytes32 driipHash, NahmiiTypesLib.DriipType driipType)
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
+        // Require that wallet has no overlap with active proposal
+        require(hasProposalExpired(wallet, currency));
+
         // Add proposal
         SettlementTypesLib.Proposal storage proposal = _addProposal(
             wallet, stageAmount, targetBalanceAmount,
@@ -359,7 +343,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         proposal.driipType = driipType;
 
         // Emit event
-        emit AddProposalFromDriipEvent(
+        emit AddProposalEvent(
             wallet, stageAmount, targetBalanceAmount, currency, nonce,
             blockNumber, balanceReward, driipHash, driipType
         );

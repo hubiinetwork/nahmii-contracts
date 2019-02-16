@@ -456,7 +456,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         require(balanceAmount >= stageAmount);
 
         // Add proposal
-        driipSettlementChallengeState.addProposalFromDriip(
+        driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended, trade.nonce,
             trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
         );
@@ -472,7 +472,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         require(balanceAmount >= stageAmount);
 
         // Add proposal
-        driipSettlementChallengeState.addProposalFromDriip(
+        driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate, trade.nonce,
             trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
         );
@@ -486,7 +486,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
 
         // Add proposal
-        driipSettlementChallengeState.addProposalFromDriip(
+        driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.nonce,
             payment.blockNumber, balanceReward, payment.seals.operator.hash, NahmiiTypesLib.DriipType.Payment
         );

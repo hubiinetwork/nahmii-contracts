@@ -368,14 +368,6 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
         // Require that given wallet is a trade party
         require(validator.isTradeParty(trade, wallet));
 
-        // Require that wallet has no overlap with active proposals
-        require(
-            driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended)
-        );
-        require(
-            driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate)
-        );
-
         // Create proposals
         _addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, balanceReward);
         _addConjugateProposalFromTrade(wallet, trade, conjugateStageAmount, balanceReward);
@@ -390,8 +382,8 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
         // Require that balance amount is not less than stage amount
         require(balanceAmount >= stageAmount);
 
-        // Add proposal
-        driipSettlementChallengeState.addProposalFromDriip(
+        // Add proposal, including assurance that there is no overlap with active proposal
+        driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended, trade.nonce,
             trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
         );
@@ -406,8 +398,8 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
         // Require that balance amount is not less than stage amount
         require(balanceAmount >= stageAmount);
 
-        // Add proposal
-        driipSettlementChallengeState.addProposalFromDriip(
+        // Add proposal, including assurance that there is no overlap with active proposal
+        driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate, trade.nonce,
             trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
         );

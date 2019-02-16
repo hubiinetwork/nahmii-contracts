@@ -344,14 +344,11 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
         // Require that given wallet is a payment party
         require(validator.isPaymentParty(payment, wallet));
 
-        // Require that wallet has no overlap with active proposal
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
-
         // Deduce the concerned balance amount
         int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
 
-        // Add proposal
-        driipSettlementChallengeState.addProposalFromDriip(
+        // Add proposal, including assurance that there is no overlap with active proposal
+        driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.nonce,
             payment.blockNumber, balanceReward, payment.seals.operator.hash, NahmiiTypesLib.DriipType.Payment
         );
