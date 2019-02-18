@@ -22,6 +22,7 @@ import {DriipSettlementChallenge} from "./DriipSettlementChallenge.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {Strings} from "solidity-util/lib/Strings.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
@@ -37,6 +38,7 @@ contract DriipSettlement is Ownable, Configurable, ValidatableV2, ClientFundable
 FraudChallengable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using Strings for string;
 
     //
     // Structures
@@ -272,10 +274,10 @@ FraudChallengable, WalletLockable {
         // Get settlement, or create one if no such settlement exists for the trade nonce
         SettlementTypesLib.Settlement storage settlement = hasSettlementByNonce(trade.nonce) ?
         getSettlement(
-            trade.nonce, NahmiiTypesLib.DriipType.Trade
+            trade.nonce, TradeTypesLib.TRADE_TYPE()
         ) :
         createSettlement(
-            trade.nonce, NahmiiTypesLib.DriipType.Trade, trade.seller.nonce,
+            trade.nonce, TradeTypesLib.TRADE_TYPE(), trade.seller.nonce,
             trade.seller.wallet, trade.buyer.nonce, trade.buyer.wallet
         );
 
@@ -374,8 +376,8 @@ FraudChallengable, WalletLockable {
 
         // Get settlement, or create one if no such settlement exists for the trade nonce
         SettlementTypesLib.Settlement storage settlement = hasSettlementByNonce(payment.nonce) ?
-        getSettlement(payment.nonce, NahmiiTypesLib.DriipType.Payment) :
-        createSettlement(payment.nonce, NahmiiTypesLib.DriipType.Payment,
+        getSettlement(payment.nonce, PaymentTypesLib.PAYMENT_TYPE()) :
+        createSettlement(payment.nonce, PaymentTypesLib.PAYMENT_TYPE(),
             payment.sender.nonce, payment.sender.wallet, payment.recipient.nonce, payment.recipient.wallet);
 
         // Get settlement role
@@ -450,18 +452,18 @@ FraudChallengable, WalletLockable {
         SettlementTypesLib.SettlementRole.Target);
     }
 
-    function getSettlement(uint256 nonce, NahmiiTypesLib.DriipType driipType)
+    function getSettlement(uint256 nonce, string driipType)
     private
     view
     returns (SettlementTypesLib.Settlement storage)
     {
         uint256 index = nonceSettlementIndex[nonce];
         SettlementTypesLib.Settlement storage settlement = settlements[index - 1];
-        require(driipType == settlement.driipType);
+        require(driipType.compareTo(settlement.driipType));
         return settlement;
     }
 
-    function createSettlement(uint256 nonce, NahmiiTypesLib.DriipType driipType,
+    function createSettlement(uint256 nonce, string driipType,
         uint256 originNonce, address originWallet, uint256 targetNonce, address targetWallet)
     private
     returns (SettlementTypesLib.Settlement storage)

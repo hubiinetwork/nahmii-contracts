@@ -31,7 +31,7 @@ contract MockedNullSettlementChallenge {
     address public _proposalDisqualificationChallenger;
     uint256 public _proposalDisqualificationBlockNumber;
     bytes32 public _proposalDisqualificationCandidateHash;
-    SettlementTypesLib.CandidateType public _proposalDisqualificationCandidateType;
+    string public _proposalDisqualificationCandidateType;
     NullSettlementDispute public _nullSettlementDispute;
 
     function _reset()
@@ -207,7 +207,7 @@ contract MockedNullSettlementChallenge {
         return _proposalDisqualificationCandidateHash;
     }
 
-    function _setProposalDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
+    function _setProposalDisqualificationCandidateType(string candidateType)
     public
     {
         _proposalDisqualificationCandidateType = candidateType;
@@ -216,13 +216,13 @@ contract MockedNullSettlementChallenge {
     function proposalDisqualificationCandidateType(address, address, uint256)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         return _proposalDisqualificationCandidateType;
     }
 
     function disqualifyProposal(address, address, uint256, address challenger, uint256 blockNumber,
-        bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType)
+        bytes32 candidateHash, string candidateType)
     public
     {
         _proposalStatus = SettlementTypesLib.Status.Disqualified;

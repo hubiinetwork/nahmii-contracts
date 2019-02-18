@@ -11,8 +11,7 @@ pragma solidity ^0.4.25;
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 // TODO Consider removal vs strip-down
-//   * possibly keep it for CurrencyRole, DriipType and ChallengePhase
-//   * DriipType is too rigid and should rather have dynamic size.
+//   * possibly keep it for CurrencyRole and ChallengePhase
 /**
  * @title     NahmiiTypesLib
  * @dev       Data types of general nahmii character
@@ -23,7 +22,6 @@ library NahmiiTypesLib {
     // -----------------------------------------------------------------------------------------------------------------
     enum LiquidityRole {Maker, Taker} // TODO Remove
     enum CurrencyRole {Intended, Conjugate}
-    enum DriipType {Trade, Payment} // TODO Make dynamic
     enum Intention {Buy, Sell} // TODO Remove
     enum TradePartyRole {Buyer, Seller} // TODO Remove
     enum PaymentPartyRole {Sender, Recipient} // TODO Remove

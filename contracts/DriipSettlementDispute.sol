@@ -19,6 +19,7 @@ import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {Strings} from "solidity-util/lib/Strings.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
@@ -36,6 +37,7 @@ contract DriipSettlementDispute is Ownable, Configurable, ValidatableV2, Securit
 FraudChallengable, CancelOrdersChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using Strings for string;
 
     //
     // Constants
@@ -56,17 +58,17 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event ChallengeByOrderEvent(address wallet, uint256 nonce,
-        bytes32 driipHash, NahmiiTypesLib.DriipType driipType,
+        bytes32 driipHash, string driipType,
         bytes32 candidateHash, address challenger);
     event UnchallengeOrderCandidateByTradeEvent(address wallet, uint256 nonce,
-        bytes32 driipHash, NahmiiTypesLib.DriipType driipType,
+        bytes32 driipHash, string driipType,
         bytes32 challengeCandidateHash, address challenger,
         bytes32 unchallengeCandidateHash, address unchallenger);
     event ChallengeByTradeEvent(address wallet, uint256 nonce,
-        bytes32 driipHash, NahmiiTypesLib.DriipType driipType,
+        bytes32 driipHash, string driipType,
         bytes32 candidateHash, address challenger);
     event ChallengeByPaymentEvent(address wallet, uint256 nonce,
-        bytes32 driipHash, NahmiiTypesLib.DriipType driipType,
+        bytes32 driipHash, string driipType,
         bytes32 candidateHash, address challenger);
 
     //
@@ -131,7 +133,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             order.wallet, currency, challenger, order.blockNumber,
-            order.seals.operator.hash, SettlementTypesLib.CandidateType.Order
+            order.seals.operator.hash, TradeTypesLib.ORDER_TYPE()
         );
 
         // Emit event
@@ -168,9 +170,11 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         ));
 
         // Require that candidate type is order
-        require(SettlementTypesLib.CandidateType.Order == driipSettlementChallengeState.proposalDisqualificationCandidateType(
-            order.wallet, currency
-        ));
+        require(
+            TradeTypesLib.ORDER_TYPE().compareTo(driipSettlementChallengeState.proposalDisqualificationCandidateType(
+                order.wallet, currency
+            ))
+        );
 
         // Require that trade and order are not labelled fraudulent
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
@@ -265,7 +269,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             wallet, currency, challenger, trade.blockNumber,
-            trade.seal.hash, SettlementTypesLib.CandidateType.Trade
+            trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
 
         // Emit event
@@ -318,7 +322,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             wallet, payment.currency, challenger, payment.blockNumber,
-            payment.seals.operator.hash, SettlementTypesLib.CandidateType.Payment
+            payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
 
         // Emit event

@@ -244,7 +244,7 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
     function proposalDriipType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (NahmiiTypesLib.DriipType)
+    returns (string)
     {
         return driipSettlementChallengeState.proposalDriipType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -303,7 +303,7 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
     function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         return driipSettlementChallengeState.proposalDisqualificationCandidateType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -385,7 +385,7 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended, trade.nonce,
-            trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
+            trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
 
@@ -401,7 +401,7 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate, trade.nonce,
-            trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
+            trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
 

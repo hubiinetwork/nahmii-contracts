@@ -28,13 +28,13 @@ contract MockedDriipSettlementChallenge {
     int256 public _proposalTargetBalanceAmount;
     uint256 public _proposalExpirationTime;
     SettlementTypesLib.Status public _proposalStatus;
-    NahmiiTypesLib.DriipType public _proposalDriipType;
+    string public _proposalDriipType;
     bytes32 public _proposalDriipHash;
     bool public _proposalBalanceReward;
     address public _proposalDisqualificationChallenger;
     uint256 public _proposalDisqualificationBlockNumber;
     bytes32 public _proposalDisqualificationCandidateHash;
-    SettlementTypesLib.CandidateType public _proposalDisqualificationCandidateType;
+    string public _proposalDisqualificationCandidateType;
     DriipSettlementDispute public _driipSettlementDispute;
 
     function _reset()
@@ -159,7 +159,7 @@ contract MockedDriipSettlementChallenge {
     function proposalDriipType(address, address, uint256)
     public
     view
-    returns (NahmiiTypesLib.DriipType)
+    returns (string)
     {
         return _proposalDriipType;
     }
@@ -228,7 +228,7 @@ contract MockedDriipSettlementChallenge {
         return _proposalDisqualificationCandidateHash;
     }
 
-    function _setProposalDisqualificationCandidateType(SettlementTypesLib.CandidateType candidateType)
+    function _setProposalDisqualificationCandidateType(string candidateType)
     public
     {
         _proposalDisqualificationCandidateType = candidateType;
@@ -237,13 +237,13 @@ contract MockedDriipSettlementChallenge {
     function proposalDisqualificationCandidateType(address, address, uint256)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         return _proposalDisqualificationCandidateType;
     }
 
     function disqualifyProposal(address, address, uint256, address challenger, uint256 blockNumber,
-        bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType)
+        bytes32 candidateHash, string candidateType)
     public
     {
         _proposalStatus = SettlementTypesLib.Status.Disqualified;

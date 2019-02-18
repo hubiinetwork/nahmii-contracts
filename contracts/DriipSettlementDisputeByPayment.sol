@@ -109,7 +109,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             wallet, payment.currency, challenger, payment.blockNumber,
-            payment.seals.operator.hash, SettlementTypesLib.CandidateType.Payment
+            payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
 
         // Emit event

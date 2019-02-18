@@ -86,4 +86,23 @@ library TradeTypesLib {
         uint256 blockNumber;
         uint256 operatorId;
     }
+
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function TRADE_TYPE()
+    public
+    pure
+    returns (string)
+    {
+        return "trade";
+    }
+
+    function ORDER_TYPE()
+    public
+    pure
+    returns (string)
+    {
+        return "order";
+    }
 }

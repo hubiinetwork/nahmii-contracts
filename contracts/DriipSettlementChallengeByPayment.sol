@@ -239,7 +239,7 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
     function proposalDriipType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (NahmiiTypesLib.DriipType)
+    returns (string)
     {
         return driipSettlementChallengeState.proposalDriipType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -298,7 +298,7 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
     function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         return driipSettlementChallengeState.proposalDisqualificationCandidateType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -350,7 +350,7 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.nonce,
-            payment.blockNumber, balanceReward, payment.seals.operator.hash, NahmiiTypesLib.DriipType.Payment
+            payment.blockNumber, balanceReward, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
     }
 

@@ -281,7 +281,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     function proposalDriipType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (NahmiiTypesLib.DriipType)
+    returns (string)
     {
         return driipSettlementChallengeState.proposalDriipType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -340,7 +340,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
     function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         return driipSettlementChallengeState.proposalDisqualificationCandidateType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -458,7 +458,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         // Add proposal
         driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended, trade.nonce,
-            trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
+            trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
 
@@ -474,7 +474,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         // Add proposal
         driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate, trade.nonce,
-            trade.blockNumber, balanceReward, trade.seal.hash, NahmiiTypesLib.DriipType.Trade
+            trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
 
@@ -488,7 +488,7 @@ contract DriipSettlementChallenge is Ownable, Challenge, ValidatableV2, WalletLo
         // Add proposal
         driipSettlementChallengeState.addProposal(
             wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.nonce,
-            payment.blockNumber, balanceReward, payment.seals.operator.hash, NahmiiTypesLib.DriipType.Payment
+            payment.blockNumber, balanceReward, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
     }
 

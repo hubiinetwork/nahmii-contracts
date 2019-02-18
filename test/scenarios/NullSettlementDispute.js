@@ -344,7 +344,7 @@ module.exports = (glob) => {
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                         .should.equal(order.seals.operator.hash);
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                        .should.equal(mocks.candidateTypes.indexOf('Order'));
+                        .should.equal('order');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(0);
@@ -393,7 +393,7 @@ module.exports = (glob) => {
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                         .should.equal(order.seals.operator.hash);
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                        .should.equal(mocks.candidateTypes.indexOf('Order'));
+                        .should.equal('order');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -439,7 +439,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(order.seals.operator.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Order'));
+                            .should.equal('order');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -489,7 +489,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(order.seals.operator.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Order'));
+                            .should.equal('order');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -550,7 +550,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(order.seals.operator.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Order'));
+                            .should.equal('order');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -603,7 +603,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(order.seals.operator.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Order'));
+                            .should.equal('order');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -792,7 +792,7 @@ module.exports = (glob) => {
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                         .should.equal(trade.seal.hash);
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                        .should.equal(mocks.candidateTypes.indexOf('Trade'));
+                        .should.equal('trade');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(0);
@@ -843,7 +843,7 @@ module.exports = (glob) => {
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                         .should.equal(trade.seal.hash);
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                        .should.equal(mocks.candidateTypes.indexOf('Trade'));
+                        .should.equal('trade');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -889,7 +889,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(trade.seal.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Trade'));
+                            .should.equal('trade');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -939,7 +939,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(trade.seal.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Trade'));
+                            .should.equal('trade');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1000,7 +1000,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(trade.seal.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Trade'));
+                            .should.equal('trade');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1053,7 +1053,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(trade.seal.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Trade'));
+                            .should.equal('trade');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1231,7 +1231,7 @@ module.exports = (glob) => {
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                         .should.equal(payment.seals.operator.hash);
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                        .should.equal(mocks.candidateTypes.indexOf('Payment'));
+                        .should.equal('payment');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(0);
@@ -1282,7 +1282,7 @@ module.exports = (glob) => {
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                         .should.equal(payment.seals.operator.hash);
                     (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                        .should.equal(mocks.candidateTypes.indexOf('Payment'));
+                        .should.equal('payment');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -1330,7 +1330,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(payment.seals.operator.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Payment'));
+                            .should.equal('payment');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1382,7 +1382,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(payment.seals.operator.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Payment'));
+                            .should.equal('payment');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1445,7 +1445,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(payment.seals.operator.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Payment'));
+                            .should.equal('payment');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1500,7 +1500,7 @@ module.exports = (glob) => {
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateHash())
                             .should.equal(payment.seals.operator.hash);
                         (await ethersNullSettlementChallenge._proposalDisqualificationCandidateType())
-                            .should.equal(mocks.candidateTypes.indexOf('Payment'));
+                            .should.equal('payment');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);

@@ -55,7 +55,7 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
         address stageCurrencyCt, uint stageCurrencyId);
     event DisqualifyProposalEvent(address challengedWallet, address currencyCt, uint256 currencyId,
-        address challengerWallet, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType);
+        address challengerWallet, bytes32 candidateHash, string candidateType);
 
     //
     // Constructor
@@ -293,7 +293,7 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currencyCt][currencyId];
         require(0 != index);
@@ -353,7 +353,7 @@ contract NullSettlementChallenge is Ownable, Challenge, BalanceTrackable, Wallet
     /// @param candidateHash The candidate hash
     /// @param candidateType The candidate type
     function disqualifyProposal(address challengedWallet, address currencyCt, uint256 currencyId, address challengerWallet,
-        uint256 blockNumber, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType)
+        uint256 blockNumber, bytes32 candidateHash, string candidateType)
     public
     onlyNullSettlementDispute
     {

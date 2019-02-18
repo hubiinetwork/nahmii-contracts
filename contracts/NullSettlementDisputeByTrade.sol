@@ -115,7 +115,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallengeState.disqualifyProposal(
             order.wallet, currency, challenger, order.blockNumber,
-            order.seals.operator.hash, SettlementTypesLib.CandidateType.Order
+            order.seals.operator.hash, TradeTypesLib.ORDER_TYPE()
         );
 
         // Emit event
@@ -169,7 +169,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallengeState.disqualifyProposal(
             wallet, currency, challenger, trade.blockNumber,
-            trade.seal.hash, SettlementTypesLib.CandidateType.Trade
+            trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
 
         // Emit event

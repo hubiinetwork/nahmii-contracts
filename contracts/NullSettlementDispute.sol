@@ -113,7 +113,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallenge.disqualifyProposal(
             order.wallet, currency.ct, currency.id, challenger, order.blockNumber,
-            order.seals.operator.hash, SettlementTypesLib.CandidateType.Order
+            order.seals.operator.hash, TradeTypesLib.ORDER_TYPE()
         );
 
         // Emit event
@@ -172,7 +172,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallenge.disqualifyProposal(
             wallet, currency.ct, currency.id, challenger, trade.blockNumber,
-            trade.seal.hash, SettlementTypesLib.CandidateType.Trade
+            trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
 
         // Emit event
@@ -223,7 +223,7 @@ FraudChallengable, CancelOrdersChallengable {
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallenge.disqualifyProposal(
             wallet, payment.currency.ct, payment.currency.id, challenger, payment.blockNumber,
-            payment.seals.operator.hash, SettlementTypesLib.CandidateType.Payment
+            payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
 
         // Emit event

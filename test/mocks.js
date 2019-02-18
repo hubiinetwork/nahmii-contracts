@@ -4,11 +4,9 @@ const {util: {cryptography}} = require('omphalos-commons');
 
 exports.liquidityRoles = ['Maker', 'Taker'];
 exports.intentions = ['Buy', 'Sell'];
-exports.driipTypes = ['Trade', 'Payment'];
 exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
 exports.settlementStatuses = ['Qualified', 'Disqualified'];
-exports.candidateTypes = ['None', 'Order', 'Trade', 'Payment'];
 
 exports.hash0 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 

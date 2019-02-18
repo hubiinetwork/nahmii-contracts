@@ -52,11 +52,11 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         SettlementTypesLib.Status status);
     event AddProposalEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber, bool balanceReward,
-        bytes32 driipHash, NahmiiTypesLib.DriipType driipType);
+        bytes32 driipHash, string driipType);
     event DisqualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
-        address challengerWallet, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType);
+        address challengerWallet, bytes32 candidateHash, string candidateType);
     event QualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
-        address challengerWallet, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType);
+        address challengerWallet, bytes32 candidateHash, string candidateType);
 
     //
     // Constructor
@@ -200,7 +200,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     function proposalDriipType(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
-    returns (NahmiiTypesLib.DriipType)
+    returns (string)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
@@ -256,7 +256,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     function proposalDisqualificationCandidateType(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
@@ -325,7 +325,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param driipType The candidate driip type
     function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber,
-        bool balanceReward, bytes32 driipHash, NahmiiTypesLib.DriipType driipType)
+        bool balanceReward, bytes32 driipHash, string driipType)
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
@@ -358,7 +358,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param candidateHash The candidate hash
     /// @param candidateType The candidate type
     function disqualifyProposal(address wallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType)
+        uint256 blockNumber, bytes32 candidateHash, string candidateType)
     public
     onlyEnabledServiceAction(DISQUALIFY_PROPOSAL_ACTION)
     {

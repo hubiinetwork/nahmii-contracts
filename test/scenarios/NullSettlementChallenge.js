@@ -759,7 +759,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     ethersNullSettlementChallenge.disqualifyProposal(
                         glob.user_a, mocks.address0, 0, glob.user_b,
-                        10, cryptography.hash('some_message'), mocks.candidateTypes.indexOf('Payment'),
+                        10, cryptography.hash('some_message'), 'payment',
                         {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
@@ -773,7 +773,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     ethersNullSettlementChallenge.disqualifyProposal(
                         glob.user_a, mocks.address0, 0, glob.user_b,
-                        10, cryptography.hash('some_message'), mocks.candidateTypes.indexOf('Payment'),
+                        10, cryptography.hash('some_message'), 'payment',
                         {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
@@ -794,7 +794,7 @@ module.exports = (glob) => {
                 it('should successfully push the array element', async () => {
                     await ethersNullSettlementChallenge.disqualifyProposal(
                         glob.user_a, mocks.address0, 0, glob.user_b,
-                        10, cryptography.hash('some_message'), mocks.candidateTypes.indexOf('Payment'),
+                        10, cryptography.hash('some_message'), 'payment',
                         {gasLimit: 3e6}
                     );
 
@@ -812,7 +812,7 @@ module.exports = (glob) => {
                     )).should.equal(cryptography.hash('some_message'));
                     (await ethersNullSettlementChallenge.proposalDisqualificationCandidateType(
                         glob.user_a, mocks.address0, 0
-                    )).should.equal(mocks.candidateTypes.indexOf('Payment'));
+                    )).should.equal('payment');
                 });
             });
         });

@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
+// TODO Consider splitting SettlementTypesLib into part for SettlementChallengeTypesLib
 /**
  * @title     SettlementTypesLib
  * @dev       Types for settlements
@@ -21,7 +22,6 @@ library SettlementTypesLib {
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     enum Status {Qualified, Disqualified}
-    enum CandidateType {None, Order, Trade, Payment}
     enum SettlementRole {Origin, Target}
 
     struct Proposal {
@@ -43,9 +43,9 @@ library SettlementTypesLib {
         // Balances after amounts have been staged
         int256 targetBalanceAmount;
 
-        // Driip info
-        bytes32 driipHash;
-        NahmiiTypesLib.DriipType driipType;
+        // Challenged info
+        string driipType; // TODO Rename to challengedType
+        bytes32 driipHash; // TODO Rename to challengedHash
 
         // True if reward is from wallet balance
         bool balanceReward;
@@ -60,8 +60,8 @@ library SettlementTypesLib {
         uint256 blockNumber;
 
         // Candidate info
+        string candidateType;
         bytes32 candidateHash;
-        CandidateType candidateType;
     }
 
     struct SettlementParty {
@@ -72,7 +72,7 @@ library SettlementTypesLib {
 
     struct Settlement {
 //        uint256 nonce;
-        NahmiiTypesLib.DriipType driipType;
+        string driipType;
         SettlementParty origin;
         SettlementParty target;
     }

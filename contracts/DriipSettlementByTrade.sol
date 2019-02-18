@@ -225,7 +225,7 @@ FraudChallengable, WalletLockable {
         driipSettlementState.initSettlement(
             trade.seller.wallet, trade.seller.nonce,
             trade.buyer.wallet, trade.buyer.nonce,
-            NahmiiTypesLib.DriipType.Trade
+            TradeTypesLib.TRADE_TYPE()
         );
 
         // Extract properties depending on settlement role

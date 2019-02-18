@@ -271,7 +271,7 @@ contract NullSettlementChallengeByTrade is Ownable, Challenge, BalanceTrackable,
     function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         return nullSettlementChallengeState.proposalDisqualificationCandidateType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)

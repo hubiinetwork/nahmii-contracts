@@ -55,7 +55,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event InitSettlementEvent(address originWallet, uint256 originNonce, address targetWallet,
-        uint256 targetNonce, NahmiiTypesLib.DriipType driipType);
+        uint256 targetNonce, string driipType);
     event SetSettlementRoleDoneEvent(address wallet, uint256 nonce,
         SettlementTypesLib.SettlementRole settlementRole, bool done);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
@@ -126,7 +126,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param targetNonce The wallet nonce of the target wallet
     /// @param driipType The type of driip of the settlement
     function initSettlement(address originWallet, uint256 originNonce, address targetWallet,
-        uint256 targetNonce, NahmiiTypesLib.DriipType driipType)
+        uint256 targetNonce, string driipType)
     public
     onlyEnabledServiceAction(INIT_SETTLEMENT_ACTION)
     {

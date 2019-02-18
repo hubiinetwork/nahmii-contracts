@@ -220,7 +220,7 @@ FraudChallengable, WalletLockable {
         driipSettlementState.initSettlement(
             payment.sender.wallet, payment.sender.nonce,
             payment.recipient.wallet, payment.recipient.nonce,
-            NahmiiTypesLib.DriipType.Payment
+            PaymentTypesLib.PAYMENT_TYPE()
         );
 
         // Extract properties depending on settlement role

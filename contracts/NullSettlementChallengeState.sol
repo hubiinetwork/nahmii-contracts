@@ -56,9 +56,9 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     event AddProposalEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber, bool balanceReward);
     event DisqualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
-        address challengerWallet, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType);
+        address challengerWallet, bytes32 candidateHash, string candidateType);
     event QualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
-        address challengerWallet, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType);
+        address challengerWallet, bytes32 candidateHash, string candidateType);
 
     //
     // Constructor
@@ -230,7 +230,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     function proposalDisqualificationCandidateType(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
-    returns (SettlementTypesLib.CandidateType)
+    returns (string)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
@@ -325,7 +325,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     /// @param candidateHash The candidate hash
     /// @param candidateType The candidate type
     function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, bytes32 candidateHash, SettlementTypesLib.CandidateType candidateType)
+        uint256 blockNumber, bytes32 candidateHash, string candidateType)
     public
     onlyEnabledServiceAction(DISQUALIFY_PROPOSAL_ACTION)
     {

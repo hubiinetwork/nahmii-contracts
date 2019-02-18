@@ -19,6 +19,7 @@ import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {Strings} from "solidity-util/lib/Strings.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
@@ -33,6 +34,7 @@ contract DriipSettlementDisputeByTrade is Ownable, Configurable, ValidatableV2, 
 FraudChallengable, CancelOrdersChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using Strings for string;
 
     //
     // Constants
@@ -120,7 +122,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             order.wallet, currency, challenger, order.blockNumber,
-            order.seals.operator.hash, SettlementTypesLib.CandidateType.Order
+            order.seals.operator.hash, TradeTypesLib.ORDER_TYPE()
         );
 
         // Emit event
@@ -150,9 +152,11 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         ));
 
         // Require that candidate type is order
-        require(SettlementTypesLib.CandidateType.Order == driipSettlementChallengeState.proposalDisqualificationCandidateType(
-            order.wallet, currency
-        ));
+        require(
+            TradeTypesLib.ORDER_TYPE().compareTo(driipSettlementChallengeState.proposalDisqualificationCandidateType(
+                order.wallet, currency
+            ))
+        );
 
         // Require that trade and order are not labelled fraudulent
         require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
@@ -239,7 +243,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             wallet, currency, challenger, trade.blockNumber,
-            trade.seal.hash, SettlementTypesLib.CandidateType.Trade
+            trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
 
         // Emit event

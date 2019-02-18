@@ -58,4 +58,15 @@ library PaymentTypesLib {
         uint256 blockNumber;
         uint256 operatorId;
     }
+
+    //
+    // Functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function PAYMENT_TYPE()
+    public
+    pure
+    returns (string)
+    {
+        return "payment";
+    }
 }

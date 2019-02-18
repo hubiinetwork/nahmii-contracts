@@ -353,11 +353,11 @@ module.exports = (glob) => {
                     intendedProposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     intendedProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    intendedProposal.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                    intendedProposal.driipType.should.equal('trade');
                     intendedProposal.balanceReward.should.be.true;
                     intendedProposal.disqualification.challenger.should.equal(mocks.address0);
                     intendedProposal.disqualification.candidateHash.should.equal(mocks.hash0);
-                    intendedProposal.disqualification.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
+                    intendedProposal.disqualification.candidateType.should.be.a('string').that.is.empty;
 
                     const conjugateProposal = await ethersDriipSettlementChallenge.proposals(conjugateIndex.sub(1));
                     conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
@@ -366,11 +366,11 @@ module.exports = (glob) => {
                     conjugateProposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     conjugateProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    conjugateProposal.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                    conjugateProposal.driipType.should.equal('trade');
                     conjugateProposal.balanceReward.should.be.true;
                     conjugateProposal.disqualification.challenger.should.equal(mocks.address0);
                     conjugateProposal.disqualification.candidateHash.should.equal(mocks.hash0);
-                    conjugateProposal.disqualification.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
+                    conjugateProposal.disqualification.candidateType.should.be.a('string').that.is.empty;
 
                     (await ethersDriipSettlementChallenge.challengeWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -517,11 +517,11 @@ module.exports = (glob) => {
                     intendedProposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     intendedProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    intendedProposal.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                    intendedProposal.driipType.should.equal('trade');
                     intendedProposal.balanceReward.should.be.false;
                     intendedProposal.disqualification.challenger.should.equal(mocks.address0);
                     intendedProposal.disqualification.candidateHash.should.equal(mocks.hash0);
-                    intendedProposal.disqualification.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
+                    intendedProposal.disqualification.candidateType.should.be.a('string').that.is.empty;
 
                     const conjugateProposal = await ethersDriipSettlementChallenge.proposals(conjugateIndex.sub(1));
                     conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
@@ -530,11 +530,11 @@ module.exports = (glob) => {
                     conjugateProposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     conjugateProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    conjugateProposal.driipType.should.equal(mocks.driipTypes.indexOf('Trade'));
+                    conjugateProposal.driipType.should.equal('trade');
                     conjugateProposal.balanceReward.should.be.false;
                     conjugateProposal.disqualification.challenger.should.equal(mocks.address0);
                     conjugateProposal.disqualification.candidateHash.should.equal(mocks.hash0);
-                    conjugateProposal.disqualification.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
+                    conjugateProposal.disqualification.candidateType.should.be.a('string').that.is.empty;
 
                     (await ethersDriipSettlementChallenge.challengeWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -664,11 +664,11 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     proposal.stageAmount._bn.should.eq.BN(payment.sender.balances.current._bn);
                     proposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    proposal.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
+                    proposal.driipType.should.equal('payment');
                     proposal.balanceReward.should.be.true;
                     proposal.disqualification.challenger.should.equal(mocks.address0);
                     proposal.disqualification.candidateHash.should.equal(mocks.hash0);
-                    proposal.disqualification.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
+                    proposal.disqualification.candidateType.should.be.a('string').that.is.empty;
 
                     (await ethersDriipSettlementChallenge.challengeWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -793,11 +793,11 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     proposal.stageAmount._bn.should.eq.BN(payment.sender.balances.current._bn);
                     proposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    proposal.driipType.should.equal(mocks.driipTypes.indexOf('Payment'));
+                    proposal.driipType.should.equal('payment');
                     proposal.balanceReward.should.be.false;
                     proposal.disqualification.challenger.should.equal(mocks.address0);
                     proposal.disqualification.candidateHash.should.equal(mocks.hash0);
-                    proposal.disqualification.candidateType.should.equal(mocks.candidateTypes.indexOf('None'));
+                    proposal.disqualification.candidateType.should.be.a('string').that.is.empty;
 
                     (await ethersDriipSettlementChallenge.challengeWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -1094,7 +1094,7 @@ module.exports = (glob) => {
                 it('should return status of proposal', async () => {
                     (await ethersDriipSettlementChallenge.proposalDriipType(
                         payment.sender.wallet, payment.currency.ct, payment.currency.id
-                    )).should.equal(mocks.driipTypes.indexOf('Payment'));
+                    )).should.equal('payment');
                 });
             });
         });
@@ -1292,7 +1292,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.disqualifyProposal(
                         challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
-                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, 'payment',
                         {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
@@ -1306,7 +1306,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallenge.disqualifyProposal(
                         challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
-                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, 'payment',
                         {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
@@ -1324,7 +1324,7 @@ module.exports = (glob) => {
                 it('should successfully push the array element', async () => {
                     await ethersDriipSettlementChallenge.disqualifyProposal(
                         challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
-                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, 'payment',
                         {gasLimit: 3e6}
                     );
 
@@ -1342,7 +1342,7 @@ module.exports = (glob) => {
                     )).should.equal(candidatePayment.seals.operator.hash);
                     (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateType(
                         challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
-                    )).should.equal(mocks.candidateTypes.indexOf('Payment'));
+                    )).should.equal('payment');
                 });
             });
         });
@@ -1376,7 +1376,7 @@ module.exports = (glob) => {
 
                     await ethersDriipSettlementChallenge.disqualifyProposal(
                         challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id, glob.user_a,
-                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, mocks.candidateTypes.indexOf('Payment'),
+                        candidatePayment.blockNumber, candidatePayment.seals.operator.hash, 'payment',
                         {gasLimit: 3e6}
                     );
                 });
@@ -1400,7 +1400,7 @@ module.exports = (glob) => {
                     )).should.equal(mocks.hash0);
                     (await ethersDriipSettlementChallenge.proposalDisqualificationCandidateType(
                         challengedPayment.sender.wallet, challengedPayment.currency.ct, challengedPayment.currency.id
-                    )).should.equal(mocks.candidateTypes.indexOf('None'));
+                    )).should.be.a('string').that.is.empty;
                 });
             });
         });
