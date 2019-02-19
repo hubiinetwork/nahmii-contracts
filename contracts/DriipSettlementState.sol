@@ -55,7 +55,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event InitSettlementEvent(address originWallet, uint256 originNonce, address targetWallet,
-        uint256 targetNonce, string driipType);
+        uint256 targetNonce, string settledType);
     event SetSettlementRoleDoneEvent(address wallet, uint256 nonce,
         SettlementTypesLib.SettlementRole settlementRole, bool done);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
@@ -124,9 +124,9 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param originNonce The wallet nonce of the origin wallet
     /// @param targetWallet The address of the target wallet
     /// @param targetNonce The wallet nonce of the target wallet
-    /// @param driipType The type of driip of the settlement
+    /// @param settledType The type of driip of the settlement
     function initSettlement(address originWallet, uint256 originNonce, address targetWallet,
-        uint256 targetNonce, string driipType)
+        uint256 targetNonce, string settledType)
     public
     onlyEnabledServiceAction(INIT_SETTLEMENT_ACTION)
     {
@@ -145,7 +145,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
             settlements[index].origin.wallet = originWallet;
             settlements[index].target.nonce = targetNonce;
             settlements[index].target.wallet = targetWallet;
-            settlements[index].driipType = driipType;
+            settlements[index].settledType = settledType;
 
             // Store 1-based index value
             index++;
@@ -155,7 +155,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
             walletNonceSettlementIndex[targetWallet][targetNonce] = index;
 
             // Emit event
-            emit InitSettlementEvent(originWallet, originNonce, targetWallet, targetNonce, driipType);
+            emit InitSettlementEvent(originWallet, originNonce, targetWallet, targetNonce, settledType);
         }
     }
 

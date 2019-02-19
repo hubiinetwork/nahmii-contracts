@@ -353,7 +353,7 @@ module.exports = (glob) => {
                     intendedProposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     intendedProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    intendedProposal.driipType.should.equal('trade');
+                    intendedProposal.challengedType.should.equal('trade');
                     intendedProposal.balanceReward.should.be.true;
                     intendedProposal.disqualification.challenger.should.equal(mocks.address0);
                     intendedProposal.disqualification.candidateHash.should.equal(mocks.hash0);
@@ -366,7 +366,7 @@ module.exports = (glob) => {
                     conjugateProposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     conjugateProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    conjugateProposal.driipType.should.equal('trade');
+                    conjugateProposal.challengedType.should.equal('trade');
                     conjugateProposal.balanceReward.should.be.true;
                     conjugateProposal.disqualification.challenger.should.equal(mocks.address0);
                     conjugateProposal.disqualification.candidateHash.should.equal(mocks.hash0);
@@ -517,7 +517,7 @@ module.exports = (glob) => {
                     intendedProposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     intendedProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    intendedProposal.driipType.should.equal('trade');
+                    intendedProposal.challengedType.should.equal('trade');
                     intendedProposal.balanceReward.should.be.false;
                     intendedProposal.disqualification.challenger.should.equal(mocks.address0);
                     intendedProposal.disqualification.candidateHash.should.equal(mocks.hash0);
@@ -530,7 +530,7 @@ module.exports = (glob) => {
                     conjugateProposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     conjugateProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    conjugateProposal.driipType.should.equal('trade');
+                    conjugateProposal.challengedType.should.equal('trade');
                     conjugateProposal.balanceReward.should.be.false;
                     conjugateProposal.disqualification.challenger.should.equal(mocks.address0);
                     conjugateProposal.disqualification.candidateHash.should.equal(mocks.hash0);
@@ -664,7 +664,7 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     proposal.stageAmount._bn.should.eq.BN(payment.sender.balances.current._bn);
                     proposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    proposal.driipType.should.equal('payment');
+                    proposal.challengedType.should.equal('payment');
                     proposal.balanceReward.should.be.true;
                     proposal.disqualification.challenger.should.equal(mocks.address0);
                     proposal.disqualification.candidateHash.should.equal(mocks.hash0);
@@ -793,7 +793,7 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     proposal.stageAmount._bn.should.eq.BN(payment.sender.balances.current._bn);
                     proposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    proposal.driipType.should.equal('payment');
+                    proposal.challengedType.should.equal('payment');
                     proposal.balanceReward.should.be.false;
                     proposal.disqualification.challenger.should.equal(mocks.address0);
                     proposal.disqualification.candidateHash.should.equal(mocks.hash0);
@@ -1043,10 +1043,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalDriipHash()', () => {
+        describe('proposalChallengedHash()', () => {
             describe('if no settlement challenge has been started for the wallet and currency', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementChallenge.proposalDriipHash(
+                    ethersDriipSettlementChallenge.proposalChallengedHash(
                         glob.owner, mocks.address0, 0
                     ).should.be.rejected
                 });
@@ -1063,18 +1063,18 @@ module.exports = (glob) => {
                     );
                 });
 
-                it('should return status of proposal', async () => {
-                    (await ethersDriipSettlementChallenge.proposalDriipHash(
+                it('should return challenged hash of proposal', async () => {
+                    (await ethersDriipSettlementChallenge.proposalChallengedHash(
                         payment.sender.wallet, payment.currency.ct, payment.currency.id
                     )).should.equal(payment.seals.operator.hash);
                 });
             });
         });
 
-        describe('proposalDriipType()', () => {
+        describe('proposalChallengedType()', () => {
             describe('if no settlement challenge has been started for the wallet and currency', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementChallenge.proposalDriipType(
+                    ethersDriipSettlementChallenge.proposalChallengedType(
                         glob.owner, mocks.address0, 0
                     ).should.be.rejected
                 });
@@ -1091,8 +1091,8 @@ module.exports = (glob) => {
                     );
                 });
 
-                it('should return status of proposal', async () => {
-                    (await ethersDriipSettlementChallenge.proposalDriipType(
+                it('should return challenged type of proposal', async () => {
+                    (await ethersDriipSettlementChallenge.proposalChallengedType(
                         payment.sender.wallet, payment.currency.ct, payment.currency.id
                     )).should.equal('payment');
                 });

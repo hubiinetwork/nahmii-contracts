@@ -28,8 +28,8 @@ contract MockedDriipSettlementChallenge {
     int256 public _proposalTargetBalanceAmount;
     uint256 public _proposalExpirationTime;
     SettlementTypesLib.Status public _proposalStatus;
-    string public _proposalDriipType;
-    bytes32 public _proposalDriipHash;
+    string public _proposalChallengedType;
+    bytes32 public _proposalChallengedHash;
     bool public _proposalBalanceReward;
     address public _proposalDisqualificationChallenger;
     uint256 public _proposalDisqualificationBlockNumber;
@@ -46,8 +46,8 @@ contract MockedDriipSettlementChallenge {
         delete _proposalTargetBalanceAmount;
         delete _proposalExpirationTime;
         delete _proposalStatus;
-        delete _proposalDriipType;
-        delete _proposalDriipHash;
+        delete _proposalChallengedType;
+        delete _proposalChallengedHash;
         delete _proposalBalanceReward;
         delete _proposalDisqualificationChallenger;
         delete _proposalDisqualificationBlockNumber;
@@ -156,20 +156,20 @@ contract MockedDriipSettlementChallenge {
         return _proposalStatus;
     }
 
-    function proposalDriipType(address, address, uint256)
+    function proposalChallengedType(address, address, uint256)
     public
     view
     returns (string)
     {
-        return _proposalDriipType;
+        return _proposalChallengedType;
     }
 
-    function proposalDriipHash(address, address, uint256)
+    function proposalChallengedHash(address, address, uint256)
     public
     view
     returns (bytes32)
     {
-        return _proposalDriipHash;
+        return _proposalChallengedHash;
     }
 
     function _setProposalBalanceReward(bool balanceReward)

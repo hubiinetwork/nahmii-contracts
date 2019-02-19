@@ -44,8 +44,8 @@ library SettlementTypesLib {
         int256 targetBalanceAmount;
 
         // Challenged info
-        string driipType; // TODO Rename to challengedType
-        bytes32 driipHash; // TODO Rename to challengedHash
+        string challengedType;
+        bytes32 challengedHash;
 
         // True if reward is from wallet balance
         bool balanceReward;
@@ -71,8 +71,8 @@ library SettlementTypesLib {
     }
 
     struct Settlement {
-//        uint256 nonce;
-        string driipType;
+        //        uint256 nonce;
+        string settledType;
         SettlementParty origin;
         SettlementParty target;
     }

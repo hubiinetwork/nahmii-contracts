@@ -53,7 +53,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Nonce
         SettlementTypesLib.Status status);
     event AddProposalEvent(uint256 nonce, address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward,
-        bytes32 driipHash, string driipType);
+        bytes32 challengedHash, string challengedType);
     event DisqualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
         address challengerWallet, bytes32 candidateHash, string candidateType);
     event QualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
@@ -184,28 +184,28 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Nonce
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal driip hash
-    function proposalDriipHash(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalChallengedHash(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (bytes32)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].driipHash;
+        return proposals[index - 1].challengedHash;
     }
 
     /// @notice Get the settlement proposal driip type of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal driip type
-    function proposalDriipType(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalChallengedType(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (string)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].driipType;
+        return proposals[index - 1].challengedType;
     }
 
     /// @notice Get the balance reward of the given wallet's settlement proposal
@@ -321,11 +321,11 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Nonce
     /// @param currency The concerned currency
     /// @param blockNumber The proposal block number
     /// @param balanceReward The candidate balance reward
-    /// @param driipHash The candidate driip hash
-    /// @param driipType The candidate driip type
+    /// @param challengedHash The candidate driip hash
+    /// @param challengedType The candidate driip type
     function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward,
-        bytes32 driipHash, string driipType)
+        bytes32 challengedHash, string challengedType)
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
@@ -339,13 +339,13 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Nonce
         );
 
         // Update driip specifics
-        proposal.driipHash = driipHash;
-        proposal.driipType = driipType;
+        proposal.challengedHash = challengedHash;
+        proposal.challengedType = challengedType;
 
         // Emit event
         emit AddProposalEvent(
             proposal.nonce, wallet, stageAmount, targetBalanceAmount, currency,
-            blockNumber, balanceReward, driipHash, driipType
+            blockNumber, balanceReward, challengedHash, challengedType
         );
     }
 

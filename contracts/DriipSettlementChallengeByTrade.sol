@@ -242,12 +242,12 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal driip hash
-    function proposalDriipHash(address wallet, address currencyCt, uint256 currencyId)
+    function proposalChallengedHash(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bytes32)
     {
-        return driipSettlementChallengeState.proposalDriipHash(
+        return driipSettlementChallengeState.proposalChallengedHash(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -257,12 +257,12 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal driip type
-    function proposalDriipType(address wallet, address currencyCt, uint256 currencyId)
+    function proposalChallengedType(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (string)
     {
-        return driipSettlementChallengeState.proposalDriipType(
+        return driipSettlementChallengeState.proposalChallengedType(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
