@@ -18,14 +18,11 @@ const CommunityVote = artifacts.require('CommunityVote');
 const Configuration = artifacts.require('Configuration');
 const ConstantsLib = artifacts.require('ConstantsLib');
 const CurrenciesLib = artifacts.require('CurrenciesLib');
-// const DriipSettlement = artifacts.require('DriipSettlement');
 const DriipSettlementByPayment = artifacts.require('DriipSettlementByPayment');
 const DriipSettlementByTrade = artifacts.require('DriipSettlementByTrade');
-// const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementChallengeState = artifacts.require('DriipSettlementChallengeState');
 const DriipSettlementChallengeByPayment = artifacts.require('DriipSettlementChallengeByPayment');
 const DriipSettlementChallengeByTrade = artifacts.require('DriipSettlementChallengeByTrade');
-// const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
 const DriipSettlementDisputeByPayment = artifacts.require('DriipSettlementDisputeByPayment');
 const DriipSettlementDisputeByTrade = artifacts.require('DriipSettlementDisputeByTrade');
 const DriipSettlementState = artifacts.require('DriipSettlementState');
@@ -45,7 +42,6 @@ const FraudChallengeByTrade = artifacts.require('FraudChallengeByTrade');
 const FraudChallengeByTradeOrderResiduals = artifacts.require('FraudChallengeByTradeOrderResiduals');
 const FraudChallengeByTradeSucceedingPayment = artifacts.require('FraudChallengeByTradeSucceedingPayment');
 const FungibleBalanceLib = artifacts.require('FungibleBalanceLib');
-const Hasher = artifacts.require('Hasher');
 const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
 const MockedClientFund = artifacts.require('MockedClientFund');
@@ -60,11 +56,9 @@ const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
 const NonceManager = artifacts.require('NonceManager');
 const NonFungibleBalanceLib = artifacts.require('NonFungibleBalanceLib');
 const NullSettlement = artifacts.require('NullSettlement');
-// const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
 const NullSettlementChallengeByPayment = artifacts.require('NullSettlementChallengeByPayment');
 const NullSettlementChallengeByTrade = artifacts.require('NullSettlementChallengeByTrade');
 const NullSettlementChallengeState = artifacts.require('NullSettlementChallengeState');
-// const NullSettlementDispute = artifacts.require('NullSettlementDispute');
 const NullSettlementDisputeByPayment = artifacts.require('NullSettlementDisputeByPayment');
 const NullSettlementDisputeByTrade = artifacts.require('NullSettlementDisputeByTrade');
 const NullSettlementState = artifacts.require('NullSettlementState');
@@ -199,7 +193,6 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
-                Hasher,
                 MockedBeneficiary,
                 MockedClientFund,
                 NullSettlement,
@@ -240,7 +233,6 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByTrade,
                 FraudChallengeByTradeOrderResiduals,
                 FraudChallengeByTradeSucceedingPayment,
-                Hasher,
                 MockedCancelOrdersChallenge,
                 MockedDriipSettlementChallenge,
                 MockedDriipSettlementDispute,
@@ -470,7 +462,6 @@ module.exports = (deployer, network, accounts) => {
             }
 
             await execDeploy(ctl, 'SignerManager', '', SignerManager);
-            await execDeploy(ctl, 'Hasher', '', Hasher);
             await execDeploy(ctl, 'Validator', '', Validator, true);
             await execDeploy(ctl, 'CommunityVote', '', CommunityVote);
             await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
