@@ -57,6 +57,8 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    /// @notice Set the max null nonce
+    /// @param _maxNullNonce The max nonce
     function setMaxNullNonce(uint256 _maxNullNonce)
     public
     onlyEnabledServiceAction(SET_MAX_NULL_NONCE_ACTION)
@@ -67,6 +69,10 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
         emit SetMaxNullNonceEvent(_maxNullNonce);
     }
 
+    /// @notice Get the max null nonce of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @return The max nonce
     function maxNullNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -74,6 +80,10 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
         return walletCurrencyMaxNullNonce[wallet][currency.ct][currency.id];
     }
 
+    /// @notice Set the max null nonce of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @param _maxNullNonce The max nonce
     function setMaxNullNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency,
         uint256 _maxNullNonce)
     public
@@ -85,7 +95,6 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
         emit SetMaxNullNonceByWalletAndCurrencyEvent(wallet, currency, _maxNullNonce);
     }
 
-    // TODO Consider if this scheme is reasonable
     /// @notice Update the max null settlement nonce property from CommunityVote contract
     function updateMaxNullNonce()
     public
