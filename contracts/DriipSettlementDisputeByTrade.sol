@@ -54,10 +54,10 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
-    event ChallengeByOrderEvent(TradeTypesLib.Order order, address challenger);
-    event UnchallengeOrderCandidateByTradeEvent(TradeTypesLib.Order order,
+    event ChallengeByOrderEvent(uint256 nonce, TradeTypesLib.Order order, address challenger);
+    event UnchallengeOrderCandidateByTradeEvent(uint256 nonce, TradeTypesLib.Order order,
         TradeTypesLib.Trade trade, address unchallenger);
-    event ChallengeByTradeEvent(address wallet, TradeTypesLib.Trade trade,
+    event ChallengeByTradeEvent(address wallet, uint256 nonce, TradeTypesLib.Trade trade,
         address challenger);
 
     //
@@ -126,7 +126,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         );
 
         // Emit event
-        emit ChallengeByOrderEvent(order, challenger);
+        emit ChallengeByOrderEvent(
+            driipSettlementChallengeState.proposalNonce(order.wallet, currency), order, challenger
+        );
     }
 
     /// @notice Unchallenge driip settlement by providing trade that shows that challenge order candidate has been filled
@@ -193,7 +195,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         securityBond.rewardFractional(unchallenger, configuration.walletSettlementStakeFraction(), 0);
 
         // Emit event
-        emit UnchallengeOrderCandidateByTradeEvent(order, trade, unchallenger);
+        emit UnchallengeOrderCandidateByTradeEvent(
+            driipSettlementChallengeState.proposalNonce(order.wallet, currency), order, trade, unchallenger
+        );
     }
 
     /// @notice Challenge the driip settlement by providing trade candidate
@@ -247,7 +251,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         );
 
         // Emit event
-        emit ChallengeByTradeEvent(wallet, trade, challenger);
+        emit ChallengeByTradeEvent(
+            wallet, driipSettlementChallengeState.proposalNonce(wallet, currency), trade, challenger
+        );
     }
 
     //

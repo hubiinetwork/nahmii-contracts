@@ -51,8 +51,8 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event ChallengeByOrderEvent(TradeTypesLib.Order order, address challenger);
-    event ChallengeByTradeEvent(address wallet, TradeTypesLib.Trade trade,
+    event ChallengeByOrderEvent(uint256 nonce, TradeTypesLib.Order order, address challenger);
+    event ChallengeByTradeEvent(address wallet, uint256 nonce, TradeTypesLib.Trade trade,
         address challenger);
 
     //
@@ -119,7 +119,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         );
 
         // Emit event
-        emit ChallengeByOrderEvent(order, challenger);
+        emit ChallengeByOrderEvent(nullSettlementChallengeState.proposalNonce(order.wallet, currency), order, challenger);
     }
 
     /// @notice Challenge the settlement by providing trade candidate
@@ -173,7 +173,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         );
 
         // Emit event
-        emit ChallengeByTradeEvent(wallet, trade, challenger);
+        emit ChallengeByTradeEvent(wallet, nullSettlementChallengeState.proposalNonce(wallet, currency), trade, challenger);
     }
 
     //

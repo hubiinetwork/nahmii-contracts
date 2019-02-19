@@ -50,7 +50,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event ChallengeByPaymentEvent(address wallet, PaymentTypesLib.Payment payment,
+    event ChallengeByPaymentEvent(address wallet, uint256 nonce, PaymentTypesLib.Payment payment,
         address challenger);
 
     //
@@ -113,7 +113,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         );
 
         // Emit event
-        emit ChallengeByPaymentEvent(wallet, payment, challenger);
+        emit ChallengeByPaymentEvent(wallet, nullSettlementChallengeState.proposalNonce(wallet, payment.currency), payment, challenger);
     }
 
     //
