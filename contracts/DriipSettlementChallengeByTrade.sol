@@ -17,6 +17,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDisputeByTrade} from "./DriipSettlementDisputeByTrade.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
+import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
@@ -35,6 +36,7 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementDisputeByTrade public driipSettlementDisputeByTrade;
     DriipSettlementChallengeState public driipSettlementChallengeState;
+    NullSettlementChallengeState public nullSettlementChallengeState;
 
     //
     // Events
@@ -43,6 +45,8 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
         DriipSettlementDisputeByTrade newDriipSettlementDisputeByTrade);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
+    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
+        NullSettlementChallengeState newNullSettlementChallengeState);
     event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
     event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
@@ -69,7 +73,7 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
         emit SetDriipSettlementDisputeByTradeEvent(oldDriipSettlementDisputeByTrade, driipSettlementDisputeByTrade);
     }
 
-    /// @notice Set the settlement challenge state contract
+    /// @notice Set the driip settlement challenge state contract
     /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
@@ -79,6 +83,18 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
         emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
+    }
+
+    /// @notice Set the null settlement challenge state contract
+    /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
+    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
+    public
+    onlyDeployer
+    notNullAddress(newNullSettlementChallengeState)
+    {
+        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
+        nullSettlementChallengeState = newNullSettlementChallengeState;
+        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
     /// @notice Start settlement challenge on trade
@@ -376,6 +392,9 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
     function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
     private
     {
+        // Require that there is no ongoing overlapping null settlement challenge
+        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended));
+
         // Deduce the concerned balance amount
         int256 balanceAmount = _tradeIntendedBalanceAmount(trade, wallet);
 
@@ -392,6 +411,9 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
     function _addConjugateProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
     private
     {
+        // Require that there is no ongoing overlapping null settlement challenge
+        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate));
+
         // Deduce the concerned balance amount
         int256 balanceAmount = _tradeConjugateBalanceAmount(trade, wallet);
 

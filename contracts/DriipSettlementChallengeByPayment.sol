@@ -17,6 +17,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDisputeByPayment} from "./DriipSettlementDisputeByPayment.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
+import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
@@ -35,6 +36,7 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementDisputeByPayment public driipSettlementDisputeByPayment;
     DriipSettlementChallengeState public driipSettlementChallengeState;
+    NullSettlementChallengeState public nullSettlementChallengeState;
 
     //
     // Events
@@ -43,6 +45,8 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
         DriipSettlementDisputeByPayment newDriipSettlementDisputeByPayment);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
+    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
+        NullSettlementChallengeState newNullSettlementChallengeState);
     event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
     event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
         int256 stageAmount);
@@ -68,7 +72,7 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
         emit SetDriipSettlementDisputeByPaymentEvent(oldDriipSettlementDisputeByPayment, driipSettlementDisputeByPayment);
     }
 
-    /// @notice Set the settlement challenge state contract
+    /// @notice Set the driip settlement challenge state contract
     /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
@@ -78,6 +82,18 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
         emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
+    }
+
+    /// @notice Set the null settlement challenge state contract
+    /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
+    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
+    public
+    onlyDeployer
+    notNullAddress(newNullSettlementChallengeState)
+    {
+        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
+        nullSettlementChallengeState = newNullSettlementChallengeState;
+        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
     /// @notice Start settlement challenge on payment
@@ -343,6 +359,9 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
 
         // Require that given wallet is a payment party
         require(validator.isPaymentParty(payment, wallet));
+
+        // Require that there is no ongoing overlapping null settlement challenge
+        require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Deduce the concerned balance amount
         int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
