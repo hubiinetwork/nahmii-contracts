@@ -71,8 +71,8 @@ library SettlementTypesLib {
     }
 
     struct Settlement {
-        //        uint256 nonce;
         string settledType;
+        bytes32 settledHash;
         SettlementParty origin;
         SettlementParty target;
     }

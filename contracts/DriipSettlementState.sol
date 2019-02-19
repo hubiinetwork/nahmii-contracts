@@ -54,8 +54,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event InitSettlementEvent(address originWallet, uint256 originNonce, address targetWallet,
-        uint256 targetNonce, string settledType);
+    event InitSettlementEvent(SettlementTypesLib.Settlement settlement);
     event SetSettlementRoleDoneEvent(address wallet, uint256 nonce,
         SettlementTypesLib.SettlementRole settlementRole, bool done);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
@@ -120,13 +119,14 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
 
     /// @notice Initialize settlement, i.e. create one if no such settlement exists
     /// for the double pair of wallets and nonces
+    /// @param settledType The type of driip of the settlement
+    /// @param settledHash The hash of driip of the settlement
     /// @param originWallet The address of the origin wallet
     /// @param originNonce The wallet nonce of the origin wallet
     /// @param targetWallet The address of the target wallet
     /// @param targetNonce The wallet nonce of the target wallet
-    /// @param settledType The type of driip of the settlement
-    function initSettlement(address originWallet, uint256 originNonce, address targetWallet,
-        uint256 targetNonce, string settledType)
+    function initSettlement(string settledType, bytes32 settledHash, address originWallet,
+        uint256 originNonce, address targetWallet, uint256 targetNonce)
     public
     onlyEnabledServiceAction(INIT_SETTLEMENT_ACTION)
     {
@@ -141,11 +141,15 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
             uint256 index = settlements.length - 1;
 
             // Update settlement
+            settlements[index].settledType = settledType;
+            settlements[index].settledHash = settledHash;
             settlements[index].origin.nonce = originNonce;
             settlements[index].origin.wallet = originWallet;
             settlements[index].target.nonce = targetNonce;
             settlements[index].target.wallet = targetWallet;
-            settlements[index].settledType = settledType;
+
+            // Emit event
+            emit InitSettlementEvent(settlements[index]);
 
             // Store 1-based index value
             index++;
@@ -153,9 +157,6 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
             walletSettlementIndices[targetWallet].push(index);
             walletNonceSettlementIndex[originWallet][originNonce] = index;
             walletNonceSettlementIndex[targetWallet][targetNonce] = index;
-
-            // Emit event
-            emit InitSettlementEvent(originWallet, originNonce, targetWallet, targetNonce, settledType);
         }
     }
 
