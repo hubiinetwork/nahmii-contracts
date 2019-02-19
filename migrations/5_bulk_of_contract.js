@@ -18,11 +18,17 @@ const CommunityVote = artifacts.require('CommunityVote');
 const Configuration = artifacts.require('Configuration');
 const ConstantsLib = artifacts.require('ConstantsLib');
 const CurrenciesLib = artifacts.require('CurrenciesLib');
-const DriipSettlement = artifacts.require('DriipSettlement');
-const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
-const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
-const DriipSettlementState = artifacts.require('DriipSettlementState');
+// const DriipSettlement = artifacts.require('DriipSettlement');
+const DriipSettlementByPayment = artifacts.require('DriipSettlementByPayment');
+const DriipSettlementByTrade = artifacts.require('DriipSettlementByTrade');
+// const DriipSettlementChallenge = artifacts.require('DriipSettlementChallenge');
 const DriipSettlementChallengeState = artifacts.require('DriipSettlementChallengeState');
+const DriipSettlementChallengeByPayment = artifacts.require('DriipSettlementChallengeByPayment');
+const DriipSettlementChallengeByTrade = artifacts.require('DriipSettlementChallengeByTrade');
+// const DriipSettlementDispute = artifacts.require('DriipSettlementDispute');
+const DriipSettlementDisputeByPayment = artifacts.require('DriipSettlementDisputeByPayment');
+const DriipSettlementDisputeByTrade = artifacts.require('DriipSettlementDisputeByTrade');
+const DriipSettlementState = artifacts.require('DriipSettlementState');
 const ERC20TransferController = artifacts.require('ERC20TransferController');
 const ERC721TransferController = artifacts.require('ERC721TransferController');
 const FraudChallenge = artifacts.require('FraudChallenge');
@@ -53,13 +59,16 @@ const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
 const NonFungibleBalanceLib = artifacts.require('NonFungibleBalanceLib');
 const NullSettlement = artifacts.require('NullSettlement');
-const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
-const NullSettlementDispute = artifacts.require('NullSettlementDispute');
+// const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
+const NullSettlementChallengeByPayment = artifacts.require('NullSettlementChallengeByPayment');
+const NullSettlementChallengeByTrade = artifacts.require('NullSettlementChallengeByTrade');
+const NullSettlementChallengeState = artifacts.require('NullSettlementChallengeState');
+// const NullSettlementDispute = artifacts.require('NullSettlementDispute');
+const NullSettlementDisputeByPayment = artifacts.require('NullSettlementDisputeByPayment');
+const NullSettlementDisputeByTrade = artifacts.require('NullSettlementDisputeByTrade');
+const NullSettlementState = artifacts.require('NullSettlementState');
 const PartnerFund = artifacts.require('PartnerFund');
 const PaymentHasher = artifacts.require('PaymentHasher');
-const DriipSettlementByPayment = artifacts.require('DriipSettlementByPayment');
-const DriipSettlementChallengeByPayment = artifacts.require('DriipSettlementChallengeByPayment');
-const DriipSettlementDisputeByPayment = artifacts.require('DriipSettlementDisputeByPayment');
 const PaymentTypesLib = artifacts.require('PaymentTypesLib');
 const RevenueFund = artifacts.require('RevenueFund');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
@@ -71,9 +80,6 @@ const SignerManager = artifacts.require('SignerManager');
 const Strings = artifacts.require('Strings');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TradeHasher = artifacts.require('TradeHasher');
-const DriipSettlementByTrade = artifacts.require('DriipSettlementByTrade');
-const DriipSettlementChallengeByTrade = artifacts.require('DriipSettlementChallengeByTrade');
-const DriipSettlementDisputeByTrade = artifacts.require('DriipSettlementDisputeByTrade');
 const TradeTypesLib = artifacts.require('TradeTypesLib');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TransactionTracker = artifacts.require('TransactionTracker');
@@ -184,27 +190,32 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(MonetaryTypesLib, [
                 Configuration,
-                DriipSettlement,
-                DriipSettlementChallenge,
+                // DriipSettlement,
+                DriipSettlementByPayment,
+                DriipSettlementByTrade,
+                // DriipSettlementChallenge,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                DriipSettlementDispute,
+                // DriipSettlementDispute,
+                DriipSettlementDisputeByPayment,
+                DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 Hasher,
                 MockedBeneficiary,
                 MockedClientFund,
-                NullSettlementDispute,
+                NullSettlement,
+                NullSettlementChallengeState,
+                // NullSettlementDispute,
+                NullSettlementDisputeByPayment,
+                NullSettlementDisputeByTrade,
+                NullSettlementState,
                 PartnerFund,
                 PaymentHasher,
-                DriipSettlementByPayment,
-                DriipSettlementChallengeByPayment,
-                DriipSettlementDisputeByPayment,
                 RevenueFund,
                 SecurityBond,
                 TokenHolderRevenueFund,
                 TradeHasher,
-                DriipSettlementByTrade,
-                DriipSettlementChallengeByTrade,
-                DriipSettlementDisputeByTrade,
                 Validator,
                 ValidatorV2
 
@@ -212,10 +223,16 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(NahmiiTypesLib, [
                 CancelOrdersChallenge,
                 ClientFundable,
-                DriipSettlement,
-                DriipSettlementChallenge,
+                // DriipSettlement,
+                DriipSettlementByPayment,
+                DriipSettlementByTrade,
+                // DriipSettlementChallenge,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                DriipSettlementDispute,
+                // DriipSettlementDispute,
+                DriipSettlementDisputeByPayment,
+                DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 FraudChallengeByDoubleSpentOrders,
                 FraudChallengeByDuplicateDriipNonceOfPayments,
@@ -236,16 +253,11 @@ module.exports = (deployer, network, accounts) => {
                 MockedNullSettlementChallenge,
                 MockedNullSettlementDispute,
                 MockedValidator,
-                NullSettlementChallenge,
-                NullSettlementDispute,
+                NullSettlementChallengeState,
+                // NullSettlementChallenge,
+                // NullSettlementDispute,
                 PaymentHasher,
-                DriipSettlementByPayment,
-                DriipSettlementChallengeByPayment,
-                DriipSettlementDisputeByPayment,
                 TradeHasher,
-                DriipSettlementByTrade,
-                DriipSettlementChallengeByTrade,
-                DriipSettlementDisputeByTrade,
                 Validatable,
                 Validator,
                 ValidatorV2
@@ -255,9 +267,12 @@ module.exports = (deployer, network, accounts) => {
                 BalanceTracker
             ]);
             await deployer.link(PaymentTypesLib, [
-                DriipSettlement,
-                DriipSettlementChallenge,
-                DriipSettlementDispute,
+                // DriipSettlement,
+                DriipSettlementByPayment,
+                // DriipSettlementChallenge,
+                DriipSettlementChallengeByPayment,
+                // DriipSettlementDispute,
+                DriipSettlementDisputeByPayment,
                 FraudChallengeByDuplicateDriipNonceOfPayments,
                 FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
                 FraudChallengeByPayment,
@@ -269,12 +284,11 @@ module.exports = (deployer, network, accounts) => {
                 MockedNullSettlementChallenge,
                 MockedNullSettlementDispute,
                 MockedValidator,
-                NullSettlementChallenge,
-                NullSettlementDispute,
+                // NullSettlementChallenge,
+                NullSettlementChallengeByPayment,
+                // NullSettlementDispute,
+                NullSettlementDisputeByPayment,
                 PaymentHasher,
-                DriipSettlementByPayment,
-                DriipSettlementChallengeByPayment,
-                DriipSettlementDisputeByPayment,
                 Validatable,
                 ValidatableV2,
                 Validator,
@@ -286,28 +300,34 @@ module.exports = (deployer, network, accounts) => {
                 CancelOrdersChallenge,
                 ClientFund,
                 Configuration,
-                DriipSettlement,
-                DriipSettlementChallenge,
+                // DriipSettlement,
+                DriipSettlementByPayment,
+                DriipSettlementByTrade,
+                // DriipSettlementChallenge,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                DriipSettlementDispute,
+                // DriipSettlementDispute,
+                DriipSettlementDisputeByPayment,
+                DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 FraudChallengeBySuccessiveTrades,
                 FraudChallengeByTrade,
                 FraudChallengeByTradeOrderResiduals,
                 FraudChallengeByTradeSucceedingPayment,
                 NullSettlement,
-                NullSettlementChallenge,
-                NullSettlementDispute,
+                // NullSettlementChallenge,
+                NullSettlementChallengeByPayment,
+                NullSettlementChallengeByTrade,
+                NullSettlementChallengeState,
+                // NullSettlementDispute,
+                NullSettlementDisputeByPayment,
+                NullSettlementDisputeByTrade,
+                NullSettlementState,
                 PartnerFund,
-                DriipSettlementByPayment,
-                DriipSettlementChallengeByPayment,
-                DriipSettlementDisputeByPayment,
                 RevenueFund,
                 SecurityBond,
                 TokenHolderRevenueFund,
-                DriipSettlementByTrade,
-                DriipSettlementChallengeByTrade,
-                DriipSettlementDisputeByTrade,
                 Validator,
                 ValidatorV2
 
@@ -316,55 +336,70 @@ module.exports = (deployer, network, accounts) => {
                 BalanceTracker,
                 CancelOrdersChallenge,
                 ClientFund,
-                DriipSettlement,
-                DriipSettlementChallenge,
+                // DriipSettlement,
+                DriipSettlementByPayment,
+                DriipSettlementByTrade,
+                // DriipSettlementChallenge,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                DriipSettlementDispute,
+                // DriipSettlementDispute,
+                DriipSettlementDisputeByPayment,
+                DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 NullSettlement,
-                NullSettlementChallenge,
-                NullSettlementDispute,
-                DriipSettlementByPayment,
-                DriipSettlementChallengeByPayment,
-                DriipSettlementDisputeByPayment,
+                // NullSettlementChallenge,
+                NullSettlementChallengeByPayment,
+                NullSettlementChallengeByTrade,
+                NullSettlementChallengeState,
+                // NullSettlementDispute,
+                NullSettlementDisputeByPayment,
+                NullSettlementDisputeByTrade,
+                NullSettlementState,
                 RevenueFund,
                 RevenueTokenManager,
                 SecurityBond,
                 SignerManager,
                 TokenHolderRevenueFund,
-                DriipSettlementByTrade,
-                DriipSettlementChallengeByTrade,
-                DriipSettlementDisputeByTrade,
                 Validator,
                 ValidatorV2,
                 WalletLocker
             ]);
             await deployer.link(SettlementTypesLib, [
-                DriipSettlement,
-                DriipSettlementChallenge,
+                // DriipSettlement,
+                DriipSettlementByPayment,
+                DriipSettlementByTrade,
+                // DriipSettlementChallenge,
+                DriipSettlementChallengeByPayment,
+                DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                DriipSettlementDispute,
+                // DriipSettlementDispute,
+                DriipSettlementDisputeByPayment,
+                DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 MockedDriipSettlementChallenge,
                 MockedNullSettlementChallenge,
                 NullSettlement,
-                NullSettlementChallenge,
-                NullSettlementDispute,
-                DriipSettlementByPayment,
-                DriipSettlementChallengeByPayment,
-                DriipSettlementDisputeByPayment,
-                DriipSettlementByTrade,
-                DriipSettlementChallengeByTrade,
-                DriipSettlementDisputeByTrade
+                // NullSettlementChallenge,
+                NullSettlementChallengeByPayment,
+                NullSettlementChallengeByTrade,
+                NullSettlementChallengeState,
+                // NullSettlementDispute,
+                NullSettlementDisputeByPayment,
+                NullSettlementDisputeByTrade,
+                NullSettlementState
             ]);
             await deployer.link(Strings, [
                 PartnerFund
             ]);
             await deployer.link(TradeTypesLib, [
                 CancelOrdersChallenge,
-                DriipSettlement,
-                DriipSettlementChallenge,
-                DriipSettlementDispute,
+                // DriipSettlement,
+                DriipSettlementByTrade,
+                // DriipSettlementChallenge,
+                DriipSettlementChallengeByTrade,
+                // DriipSettlementDispute,
+                DriipSettlementDisputeByTrade,
                 FraudChallengeByDoubleSpentOrders,
                 FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
                 FraudChallengeByDuplicateDriipNonceOfTrades,
@@ -380,12 +415,11 @@ module.exports = (deployer, network, accounts) => {
                 MockedNullSettlementChallenge,
                 MockedNullSettlementDispute,
                 MockedValidator,
-                NullSettlementChallenge,
-                NullSettlementDispute,
+                // NullSettlementChallenge,
+                NullSettlementChallengeByTrade,
+                // NullSettlementDispute,
+                NullSettlementDisputeByTrade,
                 TradeHasher,
-                DriipSettlementByTrade,
-                DriipSettlementChallengeByTrade,
-                DriipSettlementDisputeByTrade,
                 Validatable,
                 ValidatableV2,
                 Validator,
@@ -469,85 +503,51 @@ module.exports = (deployer, network, accounts) => {
             }
 
             await execDeploy(ctl, 'SignerManager', '', SignerManager);
-
             await execDeploy(ctl, 'Hasher', '', Hasher);
-
             await execDeploy(ctl, 'Validator', '', Validator, true);
-
             await execDeploy(ctl, 'CommunityVote', '', CommunityVote);
-
-            await execDeploy(ctl, 'DriipSettlement', '', DriipSettlement);
-
-            await execDeploy(ctl, 'DriipSettlementChallengeState', '', DriipSettlementChallengeState);
-
-            await execDeploy(ctl, 'DriipSettlementState', '', DriipSettlementState);
-
-            await execDeploy(ctl, 'NullSettlement', '', NullSettlement);
-
             await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
-
-            await execDeploy(ctl, 'DriipSettlementChallenge', '', DriipSettlementChallenge);
-
-            await execDeploy(ctl, 'DriipSettlementDispute', '', DriipSettlementDispute);
-
-            await execDeploy(ctl, 'NullSettlementChallenge', '', NullSettlementChallenge);
-
-            await execDeploy(ctl, 'NullSettlementDispute', '', NullSettlementDispute);
-
-            await execDeploy(ctl, 'FraudChallengeByOrder', '', FraudChallengeByOrder);
-
-            await execDeploy(ctl, 'FraudChallengeByTrade', '', FraudChallengeByTrade);
-
-            await execDeploy(ctl, 'FraudChallengeByPayment', '', FraudChallengeByPayment);
-
-            await execDeploy(ctl, 'FraudChallengeBySuccessiveTrades', '', FraudChallengeBySuccessiveTrades);
-
-            await execDeploy(ctl, 'FraudChallengeBySuccessivePayments', '', FraudChallengeBySuccessivePayments);
-
-            await execDeploy(ctl, 'FraudChallengeByPaymentSucceedingTrade', '', FraudChallengeByPaymentSucceedingTrade);
-
-            await execDeploy(ctl, 'FraudChallengeByTradeSucceedingPayment', '', FraudChallengeByTradeSucceedingPayment);
-
-            await execDeploy(ctl, 'FraudChallengeByTradeOrderResiduals', '', FraudChallengeByTradeOrderResiduals);
-
-            await execDeploy(ctl, 'FraudChallengeByDoubleSpentOrders', '', FraudChallengeByDoubleSpentOrders);
-
-            await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTrades', '', FraudChallengeByDuplicateDriipNonceOfTrades);
-
-            await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfPayments', '', FraudChallengeByDuplicateDriipNonceOfPayments);
-
-            await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', '', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment);
-
-            await execDeploy(ctl, 'FraudChallenge', '', FraudChallenge);
-
-            await execDeploy(ctl, 'PaymentHasher', '', PaymentHasher);
-
+            // await execDeploy(ctl, 'DriipSettlement', '', DriipSettlement);
             await execDeploy(ctl, 'DriipSettlementByPayment', '', DriipSettlementByPayment);
-
-            await execDeploy(ctl, 'DriipSettlementChallengeByPayment', '', DriipSettlementChallengeByPayment);
-
-            await execDeploy(ctl, 'DriipSettlementDisputeByPayment', '', DriipSettlementDisputeByPayment);
-
-            await execDeploy(ctl, 'RevenueFund', 'TradesRevenueFund', RevenueFund);
-
-            await execDeploy(ctl, 'RevenueFund', 'PaymentsRevenueFund', RevenueFund);
-
-            await execDeploy(ctl, 'SecurityBond', '', SecurityBond);
-
-            await execDeploy(ctl, 'TokenHolderRevenueFund', '', TokenHolderRevenueFund);
-
-            await execDeploy(ctl, 'TradeHasher', '', TradeHasher);
-
             await execDeploy(ctl, 'DriipSettlementByTrade', '', DriipSettlementByTrade);
-
+            // await execDeploy(ctl, 'DriipSettlementChallenge', '', DriipSettlementChallenge);
+            await execDeploy(ctl, 'DriipSettlementChallengeByPayment', '', DriipSettlementChallengeByPayment);
             await execDeploy(ctl, 'DriipSettlementChallengeByTrade', '', DriipSettlementChallengeByTrade);
-
+            await execDeploy(ctl, 'DriipSettlementChallengeState', '', DriipSettlementChallengeState);
+            // await execDeploy(ctl, 'DriipSettlementDispute', '', DriipSettlementDispute);
+            await execDeploy(ctl, 'DriipSettlementDisputeByPayment', '', DriipSettlementDisputeByPayment);
             await execDeploy(ctl, 'DriipSettlementDisputeByTrade', '', DriipSettlementDisputeByTrade);
-
+            await execDeploy(ctl, 'DriipSettlementState', '', DriipSettlementState);
+            await execDeploy(ctl, 'NullSettlement', '', NullSettlement);
+            // await execDeploy(ctl, 'NullSettlementChallenge', '', NullSettlementChallenge);
+            await execDeploy(ctl, 'NullSettlementChallengeByPayment', '', NullSettlementChallengeByPayment);
+            await execDeploy(ctl, 'NullSettlementChallengeByTrade', '', NullSettlementChallengeByTrade);
+            await execDeploy(ctl, 'NullSettlementChallengeState', '', NullSettlementChallengeState);
+            // await execDeploy(ctl, 'NullSettlementDispute', '', NullSettlementDispute);
+            await execDeploy(ctl, 'NullSettlementDisputeByPayment', '', NullSettlementDisputeByPayment);
+            await execDeploy(ctl, 'NullSettlementDisputeByTrade', '', NullSettlementDisputeByTrade);
+            await execDeploy(ctl, 'NullSettlementState', '', NullSettlementState);
+            await execDeploy(ctl, 'FraudChallenge', '', FraudChallenge);
+            await execDeploy(ctl, 'FraudChallengeByOrder', '', FraudChallengeByOrder);
+            await execDeploy(ctl, 'FraudChallengeByTrade', '', FraudChallengeByTrade);
+            await execDeploy(ctl, 'FraudChallengeByPayment', '', FraudChallengeByPayment);
+            await execDeploy(ctl, 'FraudChallengeBySuccessiveTrades', '', FraudChallengeBySuccessiveTrades);
+            await execDeploy(ctl, 'FraudChallengeBySuccessivePayments', '', FraudChallengeBySuccessivePayments);
+            await execDeploy(ctl, 'FraudChallengeByPaymentSucceedingTrade', '', FraudChallengeByPaymentSucceedingTrade);
+            await execDeploy(ctl, 'FraudChallengeByTradeSucceedingPayment', '', FraudChallengeByTradeSucceedingPayment);
+            await execDeploy(ctl, 'FraudChallengeByTradeOrderResiduals', '', FraudChallengeByTradeOrderResiduals);
+            await execDeploy(ctl, 'FraudChallengeByDoubleSpentOrders', '', FraudChallengeByDoubleSpentOrders);
+            await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTrades', '', FraudChallengeByDuplicateDriipNonceOfTrades);
+            await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfPayments', '', FraudChallengeByDuplicateDriipNonceOfPayments);
+            await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', '', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment);
+            await execDeploy(ctl, 'PaymentHasher', '', PaymentHasher);
+            await execDeploy(ctl, 'RevenueFund', 'TradesRevenueFund', RevenueFund);
+            await execDeploy(ctl, 'RevenueFund', 'PaymentsRevenueFund', RevenueFund);
+            await execDeploy(ctl, 'SecurityBond', '', SecurityBond);
+            await execDeploy(ctl, 'TokenHolderRevenueFund', '', TokenHolderRevenueFund);
+            await execDeploy(ctl, 'TradeHasher', '', TradeHasher);
             await execDeploy(ctl, 'PartnerFund', '', PartnerFund);
-
             await execDeploy(ctl, 'ValidatorV2', '', ValidatorV2, true);
-
             await execDeploy(ctl, 'WalletLocker', '', WalletLocker);
 
             instance = await Configuration.at(addressStorage.get('Configuration'));
@@ -583,8 +583,8 @@ module.exports = (deployer, network, accounts) => {
             await instance.registerBeneficiary(addressStorage.get('PaymentsRevenueFund'));
             await instance.registerBeneficiary(addressStorage.get('TradesRevenueFund'));
             await instance.registerBeneficiary(addressStorage.get('PartnerFund'));
-            await instance.registerService(addressStorage.get('DriipSettlement'));
-            await instance.authorizeInitialService(addressStorage.get('DriipSettlement'));
+            // await instance.registerService(addressStorage.get('DriipSettlement'));
+            // await instance.authorizeInitialService(addressStorage.get('DriipSettlement'));
             await instance.registerService(addressStorage.get('NullSettlement'));
             await instance.authorizeInitialService(addressStorage.get('NullSettlement'));
             // await instance.disableInitialServiceAuthorization();
@@ -593,54 +593,54 @@ module.exports = (deployer, network, accounts) => {
             await instance.setValidator(addressStorage.get('Validator'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
 
-            instance = await DriipSettlement.at(addressStorage.get('DriipSettlement'));
-            await instance.setClientFund(addressStorage.get('ClientFund'));
-            await instance.setValidator(addressStorage.get('Validator'));
-            await instance.setCommunityVote(addressStorage.get('CommunityVote'));
-            await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-            await instance.setWalletLocker(addressStorage.get('WalletLocker'));
-            await instance.setDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
-            await instance.setTradesRevenueFund(addressStorage.get('TradesRevenueFund'));
-            await instance.setPaymentsRevenueFund(addressStorage.get('PaymentsRevenueFund'));
-            await instance.setPartnerFund(addressStorage.get('PartnerFund'));
-
-            instance = await DriipSettlementChallenge.at(addressStorage.get('DriipSettlementChallenge'));
-            await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setValidator(addressStorage.get('Validator'));
-            await instance.setWalletLocker(addressStorage.get('WalletLocker'));
-            await instance.setDriipSettlementDispute(addressStorage.get('DriipSettlementDispute'));
-            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
-
-            instance = await DriipSettlementDispute.at(addressStorage.get('DriipSettlementDispute'));
-            await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setValidator(addressStorage.get('Validator'));
-            await instance.setSecurityBond(addressStorage.get('SecurityBond'));
-            await instance.setWalletLocker(addressStorage.get('WalletLocker'));
-            await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-            await instance.setCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
-            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
+            // instance = await DriipSettlement.at(addressStorage.get('DriipSettlement'));
+            // await instance.setClientFund(addressStorage.get('ClientFund'));
+            // await instance.setValidator(addressStorage.get('Validator'));
+            // await instance.setCommunityVote(addressStorage.get('CommunityVote'));
+            // await instance.setConfiguration(addressStorage.get('Configuration'));
+            // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            // await instance.setDriipSettlementChallenge(addressStorage.get('DriipSettlementChallenge'));
+            // await instance.setTradesRevenueFund(addressStorage.get('TradesRevenueFund'));
+            // await instance.setPaymentsRevenueFund(addressStorage.get('PaymentsRevenueFund'));
+            // await instance.setPartnerFund(addressStorage.get('PartnerFund'));
+            //
+            // instance = await DriipSettlementChallenge.at(addressStorage.get('DriipSettlementChallenge'));
+            // await instance.setConfiguration(addressStorage.get('Configuration'));
+            // await instance.setValidator(addressStorage.get('Validator'));
+            // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            // await instance.setDriipSettlementDispute(addressStorage.get('DriipSettlementDispute'));
+            // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
+            //
+            // instance = await DriipSettlementDispute.at(addressStorage.get('DriipSettlementDispute'));
+            // await instance.setConfiguration(addressStorage.get('Configuration'));
+            // await instance.setValidator(addressStorage.get('Validator'));
+            // await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            // await instance.setCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+            // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
 
             instance = await NullSettlement.at(addressStorage.get('NullSettlement'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
             await instance.setClientFund(addressStorage.get('ClientFund'));
             await instance.setCommunityVote(addressStorage.get('CommunityVote'));
-            await instance.setNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
+            // await instance.setNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
 
-            instance = await NullSettlementChallenge.at(addressStorage.get('NullSettlementChallenge'));
-            await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
-            await instance.setWalletLocker(addressStorage.get('WalletLocker'));
-            await instance.setNullSettlementDispute(addressStorage.get('NullSettlementDispute'));
-
-            instance = await NullSettlementDispute.at(addressStorage.get('NullSettlementDispute'));
-            await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setValidator(addressStorage.get('Validator'));
-            await instance.setSecurityBond(addressStorage.get('SecurityBond'));
-            await instance.setWalletLocker(addressStorage.get('WalletLocker'));
-            await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-            await instance.setCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
-            await instance.setNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
+            // instance = await NullSettlementChallenge.at(addressStorage.get('NullSettlementChallenge'));
+            // await instance.setConfiguration(addressStorage.get('Configuration'));
+            // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
+            // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            // await instance.setNullSettlementDispute(addressStorage.get('NullSettlementDispute'));
+            //
+            // instance = await NullSettlementDispute.at(addressStorage.get('NullSettlementDispute'));
+            // await instance.setConfiguration(addressStorage.get('Configuration'));
+            // await instance.setValidator(addressStorage.get('Validator'));
+            // await instance.setSecurityBond(addressStorage.get('SecurityBond'));
+            // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
+            // await instance.setCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
+            // await instance.setNullSettlementChallenge(addressStorage.get('NullSettlementChallenge'));
 
             instance = await FraudChallenge.at(addressStorage.get('FraudChallenge'));
             await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
@@ -777,11 +777,11 @@ module.exports = (deployer, network, accounts) => {
             await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'), 'reward');
             await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
             await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), 'reward');
-            await instance.registerService(addressStorage.get('DriipSettlementDispute'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'reward');
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'deprive');
-            await instance.registerService(addressStorage.get('NullSettlementDispute'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlementDispute'), 'reward');
+            // await instance.registerService(addressStorage.get('DriipSettlementDispute'));
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'reward');
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'deprive');
+            // await instance.registerService(addressStorage.get('NullSettlementDispute'));
+            // await instance.enableServiceAction(addressStorage.get('NullSettlementDispute'), 'reward');
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
@@ -795,10 +795,10 @@ module.exports = (deployer, network, accounts) => {
             await instance.setPaymentHasher(addressStorage.get('PaymentHasher'));
 
             instance = await WalletLocker.at(addressStorage.get('WalletLocker'));
-            await instance.registerService(addressStorage.get('DriipSettlementDispute'));
-            await instance.authorizeInitialService(addressStorage.get('DriipSettlementDispute'));
-            await instance.registerService(addressStorage.get('NullSettlementDispute'));
-            await instance.authorizeInitialService(addressStorage.get('NullSettlementDispute'));
+            // await instance.registerService(addressStorage.get('DriipSettlementDispute'));
+            // await instance.authorizeInitialService(addressStorage.get('DriipSettlementDispute'));
+            // await instance.registerService(addressStorage.get('NullSettlementDispute'));
+            // await instance.authorizeInitialService(addressStorage.get('NullSettlementDispute'));
 
         } finally {
             if (!helpers.isTestNetwork(network)) {

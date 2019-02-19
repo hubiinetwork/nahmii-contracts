@@ -13,7 +13,7 @@ import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "../PaymentTypesLib.sol";
 import {TradeTypesLib} from "../TradeTypesLib.sol";
 import {SettlementTypesLib} from "../SettlementTypesLib.sol";
-import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
+//import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
 
 /**
  * @title MockedDriipSettlementChallenge
@@ -35,7 +35,7 @@ contract MockedDriipSettlementChallenge {
     uint256 public _proposalDisqualificationBlockNumber;
     bytes32 public _proposalDisqualificationCandidateHash;
     string public _proposalDisqualificationCandidateType;
-    DriipSettlementDispute public _driipSettlementDispute;
+    //    DriipSettlementDispute public _driipSettlementDispute;
 
     function _reset()
     public
@@ -265,33 +265,33 @@ contract MockedDriipSettlementChallenge {
         delete _proposalDisqualificationCandidateType;
     }
 
-    function setDriipSettlementDispute(DriipSettlementDispute driipSettlementDispute)
-    public
-    {
-        _driipSettlementDispute = driipSettlementDispute;
-    }
+    //    function setDriipSettlementDispute(DriipSettlementDispute driipSettlementDispute)
+    //    public
+    //    {
+    //        _driipSettlementDispute = driipSettlementDispute;
+    //    }
 
     function challengeByOrder(TradeTypesLib.Order order)
     public
     {
-        _driipSettlementDispute.challengeByOrder(order, msg.sender);
+        //        _driipSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
     function unchallengeOrderCandidateByTrade(TradeTypesLib.Order order, TradeTypesLib.Trade trade)
     public
     {
-        _driipSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+        //        _driipSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
     function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
     public
     {
-        _driipSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
+        //        _driipSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
     function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
     public
     {
-        _driipSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
+        //        _driipSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
     }
 }

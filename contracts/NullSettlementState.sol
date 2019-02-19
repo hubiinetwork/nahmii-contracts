@@ -13,7 +13,6 @@ import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
-import {NullSettlementChallenge} from "./NullSettlementChallenge.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";

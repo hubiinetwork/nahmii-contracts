@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 import {PaymentTypesLib} from "../PaymentTypesLib.sol";
 import {TradeTypesLib} from "../TradeTypesLib.sol";
 import {SettlementTypesLib} from "../SettlementTypesLib.sol";
-import {NullSettlementDispute} from "../NullSettlementDispute.sol";
+//import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 
 /**
  * @title MockedNullSettlementChallenge
@@ -32,7 +32,7 @@ contract MockedNullSettlementChallenge {
     uint256 public _proposalDisqualificationBlockNumber;
     bytes32 public _proposalDisqualificationCandidateHash;
     string public _proposalDisqualificationCandidateType;
-    NullSettlementDispute public _nullSettlementDispute;
+    //    NullSettlementDispute public _nullSettlementDispute;
 
     function _reset()
     public
@@ -233,28 +233,28 @@ contract MockedNullSettlementChallenge {
         _proposalDisqualificationCandidateType = candidateType;
     }
 
-    function setNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
-    public
-    {
-
-        _nullSettlementDispute = nullSettlementDispute;
-    }
+    //    function setNullSettlementDispute(NullSettlementDispute nullSettlementDispute)
+    //    public
+    //    {
+    //
+    //        _nullSettlementDispute = nullSettlementDispute;
+    //    }
 
     function challengeByOrder(TradeTypesLib.Order order)
     public
     {
-        _nullSettlementDispute.challengeByOrder(order, msg.sender);
+        //        _nullSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
     function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
     public
     {
-        _nullSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
+        //        _nullSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
     function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
     public
     {
-        _nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
+        //        _nullSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
     }
 }
